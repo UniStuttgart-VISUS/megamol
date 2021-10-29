@@ -21,11 +21,11 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/Point.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/Vector.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <climits>
 #include <cmath>
 
@@ -162,15 +162,15 @@ bool PoreNetExtractor::Render(core::view::CallRender3DGL& call) {
  * PoreNetExtractor::create
  */
 bool PoreNetExtractor::create(void) {
-    using vislib::graphics::gl::GLSLShader;
+    using vislib_gl::graphics::gl::GLSLShader;
     using megamol::core::utility::log::Log;
-    using vislib::graphics::gl::ShaderSource;
+    using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         Log::DefaultLog.WriteError("Unable to initialise GLSL extension");
         return false;
     }
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions()) {
         Log::DefaultLog.WriteError("Unable to initialise framebuffer object extension");
         return false;
     }
@@ -361,7 +361,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     if (this->tile != NULL) {
         delete this->tile;
     }
-    this->tile = new vislib::graphics::gl::FramebufferObject();
+    this->tile = new vislib_gl::graphics::gl::FramebufferObject();
     GLenum datatypetype;
     GLenum datatypeinterntype;
     switch (sizeof(ArxelBuffer::ArxelType)) {

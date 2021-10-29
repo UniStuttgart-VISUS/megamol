@@ -135,12 +135,12 @@ void CartoonTessellationRenderer2000GT::waitSignal(GLsync& syncObj) {
  * moldyn::SimpleSphereRenderer2000GT::create
  */
 bool CartoonTessellationRenderer2000GT::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
-    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLTesselationShader::InitialiseExtensions()) return false;
 
-    // vislib::graphics::gl::ShaderSource vert, frag;
+    // vislib_gl::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
     tessCont = new ShaderSource();
     tessEval = new ShaderSource();
@@ -171,10 +171,10 @@ bool CartoonTessellationRenderer2000GT::create(void) {
         if (!this->splineShader.Link()) {
             throw vislib::Exception("Could not link spline shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -220,10 +220,10 @@ bool CartoonTessellationRenderer2000GT::create(void) {
         if (!this->tubeShader.Link()) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -411,10 +411,10 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
             if (!this->tubeShader.Link()) {
                 throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
             }
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile tessellation shader (@%s): %s\n",
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             return false;
         } catch (vislib::Exception e) {

@@ -9,7 +9,7 @@
 #if (_MSC_VER > 1000)
 #    pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #if (_MSC_VER > 1000)
 #    pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */

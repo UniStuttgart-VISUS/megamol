@@ -8,8 +8,8 @@
 #include "mmcore/utility/ShaderSourceFactory.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol {
@@ -43,8 +43,8 @@ namespace misc {
 
     private:
         GLuint fboHandle, volumeHandle;
-        vislib::graphics::gl::GLSLGeometryShader volumeShader;
-        vislib::graphics::gl::GLSLComputeShader mipmapShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader volumeShader;
+        vislib_gl::graphics::gl::GLSLComputeShader mipmapShader;
         megamol::core::utility::ShaderSourceFactory *factory;
         unsigned int dataVersion;
         bool computeAvailable, clearAvailable;

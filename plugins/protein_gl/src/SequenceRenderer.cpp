@@ -11,7 +11,7 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -22,7 +22,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_gl;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 using namespace megamol::protein_calls;
 using megamol::core::utility::log::Log;
 
@@ -721,8 +721,8 @@ bool SequenceRenderer::LoadTexture(vislib::StringA filename) {
                     img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
                 }
             }
-            markerTextures.Add( vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
-            markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
+            markerTextures.Add( vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>());
+            markerTextures.Last() = new vislib_gl::graphics::gl::OpenGLTexture2D();
             if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);

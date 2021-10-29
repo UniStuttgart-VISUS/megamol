@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "FlagStorage.h"
 #include "glowl/BufferObject.hpp"

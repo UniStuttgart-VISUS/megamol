@@ -11,7 +11,7 @@
 
 #include "VolumeSliceRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 
@@ -42,10 +42,10 @@ VolumeSliceRenderer::~VolumeSliceRenderer( void ) {
  * VolumeSliceRenderer::create
  */
 bool VolumeSliceRenderer::create() {
-	if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
+	if( !vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions() )
 		return false;
     
-	using namespace vislib::graphics::gl;
+	using namespace vislib_gl::graphics::gl;
 
 	ShaderSource vertSrc;
 	ShaderSource fragSrc;

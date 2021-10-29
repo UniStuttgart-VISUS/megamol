@@ -27,9 +27,9 @@
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/sys/File.h"
 
@@ -241,7 +241,7 @@ bool MoleculeCartoonRenderer::create(void) {
         ASSERT(areExtsAvailable("GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform"));
         ASSERT(ogl_IsVersionGEQ(2, 0));
     }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -253,7 +253,7 @@ bool MoleculeCartoonRenderer::create(void) {
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;

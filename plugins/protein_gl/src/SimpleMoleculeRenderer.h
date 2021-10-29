@@ -19,8 +19,8 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 
 
 namespace megamol {
@@ -277,21 +277,21 @@ namespace protein_gl {
         float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
-		vislib::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
-        vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShaderOR;
+        vislib_gl::graphics::gl::GLSLGeometryShader sphereShaderGeom;
+		vislib_gl::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
+        vislib_gl::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
-        vislib::graphics::gl::GLSLShader cylinderShader;
-        vislib::graphics::gl::GLSLShader cylinderShaderOR;
-        vislib::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
-        vislib::graphics::gl::GLSLShader cylinderClipPlaneShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShaderOR;
+        vislib_gl::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
+        vislib_gl::graphics::gl::GLSLShader cylinderClipPlaneShader;
         /** Shader that uses filter information */
-        vislib::graphics::gl::GLSLShader filterSphereShader;
-        vislib::graphics::gl::GLSLShader filterSphereShaderOR;
-        vislib::graphics::gl::GLSLShader filterCylinderShader;
-        vislib::graphics::gl::GLSLShader filterCylinderShaderOR;
+        vislib_gl::graphics::gl::GLSLShader filterSphereShader;
+        vislib_gl::graphics::gl::GLSLShader filterSphereShaderOR;
+        vislib_gl::graphics::gl::GLSLShader filterCylinderShader;
+        vislib_gl::graphics::gl::GLSLShader filterCylinderShaderOR;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;

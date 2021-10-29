@@ -13,7 +13,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
 
 #include "glm/glm.hpp"
@@ -80,7 +80,7 @@ BoundingBoxRenderer::~BoundingBoxRenderer(void) { this->Release(); }
  */
 bool BoundingBoxRenderer::create(void) {
     // TODO the vislib shaders have to die a slow and painful death
-    vislib::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
+    vislib_gl::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
     }
@@ -96,7 +96,7 @@ bool BoundingBoxRenderer::create(void) {
         return false;
     }
 
-    vislib::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
+    vislib_gl::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::vertex", vcVertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
     }

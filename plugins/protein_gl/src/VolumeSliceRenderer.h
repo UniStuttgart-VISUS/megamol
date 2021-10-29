@@ -15,7 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
 #include "protein/VolumeSliceCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -113,7 +113,7 @@ namespace protein_gl {
 		core::CallerSlot volDataCallerSlot;
 
         // shader for volume slice rendering
-        vislib::graphics::gl::GLSLShader volumeSliceShader;
+        vislib_gl::graphics::gl::GLSLShader volumeSliceShader;
 
         // the mouse position
         vislib::math::Vector<float, 3> mousePos;

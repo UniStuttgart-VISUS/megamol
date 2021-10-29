@@ -88,7 +88,7 @@ ImageWrapper megamol::core::view::View3DGL::Render(double time, double instanceT
 
 ImageWrapper megamol::core::view::View3DGL::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
-        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        ImageWrapper::DataChannels::RGBA8; // vislib_gl::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
         _fbo->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
     size_t fbo_width = _fbo->getWidth();

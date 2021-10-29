@@ -10,7 +10,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
 

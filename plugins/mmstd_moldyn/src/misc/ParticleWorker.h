@@ -15,10 +15,10 @@
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol {
@@ -69,7 +69,7 @@ namespace misc {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
                 && ogl_IsVersionGEQ(4, 3);
         }
 
@@ -131,19 +131,19 @@ namespace misc {
 		vislib::Array<GLuint> glCB;
 		
 		GLuint glClusterInfos;
-		vislib::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
 
 		/*
 		GLuint glParticleList;
 		GLuint glPrefixIn;
 		GLuint glPrefixOut;
 		
-		vislib::graphics::gl::GLSLComputeShader shaderComputeInitParticleList;
-		vislib::graphics::gl::GLSLComputeShader shaderComputeMakeParticleList;
-		vislib::graphics::gl::GLSLComputeShader shaderComputeCompactToClusterList;
-		vislib::graphics::gl::GLSLComputeShader shaderComputeGrid;
-		vislib::graphics::gl::GLSLComputeShader shaderComputeGriddify;
-		vislib::graphics::gl::GLSLComputeShader shaderComputePrefixSum;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeInitParticleList;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeMakeParticleList;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeCompactToClusterList;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGrid;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGriddify;
+		vislib_gl::graphics::gl::GLSLComputeShader shaderComputePrefixSum;
 		*/
     };
 

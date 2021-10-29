@@ -16,7 +16,7 @@
 
 #include "mmcore/utility/ShaderFactory.h"
 
-#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -155,7 +155,7 @@ namespace stdplugin {
             bool valRangeNeedsUpdate = false;
 
             /** FBO for chaining renderers */
-            vislib::graphics::gl::FramebufferObject fbo;
+            vislib_gl::graphics::gl::FramebufferObject fbo;
         };
 
     } // namespace volume

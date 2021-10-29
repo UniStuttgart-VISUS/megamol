@@ -27,9 +27,9 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/sys/File.h"
 
 using namespace megamol;
@@ -295,7 +295,7 @@ bool MoleculeSESRenderer::create(void) {
     allowPuxels = false;
 #endif
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
         return false;
 
     // glEnable( GL_NORMALIZE);
@@ -309,7 +309,7 @@ bool MoleculeSESRenderer::create(void) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource compSrc;
     ShaderSource vertSrc;

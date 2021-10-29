@@ -6,7 +6,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "vislib/graphics/ColourRGBAu8.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cstdint>
 #include "vislib/math/ShallowPoint.h"
 #include "mmcore/param/EnumParam.h"

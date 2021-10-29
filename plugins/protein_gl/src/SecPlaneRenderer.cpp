@@ -141,14 +141,14 @@ SecPlaneRenderer::~SecPlaneRenderer(void) {
  * SecPlaneRenderer::create
  */
 bool SecPlaneRenderer::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
     if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
         return false;
     }
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 

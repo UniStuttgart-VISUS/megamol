@@ -3,10 +3,10 @@
 
 #include "mmcore/view/Renderer2DModuleGL.h"
 
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLTesselationShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 
 namespace megamol {
 namespace infovis_gl {

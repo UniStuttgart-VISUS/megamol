@@ -87,7 +87,7 @@ GlyphRenderer::~GlyphRenderer(void) { this->Release(); }
 
 bool GlyphRenderer::create(void) {
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
 
     bool retVal = true;
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
@@ -110,9 +110,9 @@ bool GlyphRenderer::create(void) {
 }
 
 bool GlyphRenderer::makeShader(
-    std::string vertexName, std::string fragmentName, vislib::graphics::gl::GLSLShader& shader) {
+    std::string vertexName, std::string fragmentName, vislib_gl::graphics::gl::GLSLShader& shader) {
     using namespace megamol::core::utility::log;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -136,7 +136,7 @@ bool GlyphRenderer::makeShader(
     } catch (AbstractOpenGLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "GlyphRenderer: unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception& e) {
@@ -346,7 +346,7 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
 
-    vislib::graphics::gl::GLSLShader* shader;
+    vislib_gl::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
     case Glyph::BOX:
         shader = &this->boxShader;

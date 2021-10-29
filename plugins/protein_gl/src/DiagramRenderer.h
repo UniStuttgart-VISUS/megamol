@@ -16,9 +16,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
 #include "protein_calls/DiagramCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 #include "protein_calls/IntSelectionCall.h"
 
 namespace megamol {
@@ -183,7 +183,7 @@ namespace protein_gl {
         /** the mouse position */
         vislib::math::Vector<float, 3> mousePos;
 
-        vislib::graphics::gl::OutlineFont theFont;
+        vislib_gl::graphics::gl::OutlineFont theFont;
 
         vislib::Pair<float, float> xRange;
         vislib::Pair<float, float> yRange;
@@ -225,7 +225,7 @@ namespace protein_gl {
 
         vislib::Array<vislib::Array<int> > localXIndexToGlobal;
 
-        vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > markerTextures;
+        vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D> > > markerTextures;
 
         float xAxis;
 

@@ -12,7 +12,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/Array.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -51,7 +51,7 @@ namespace demos {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** Ctor. */
@@ -100,7 +100,7 @@ namespace demos {
          * TODO: Document
          */
         void resizeVolume();
-        void uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib::graphics::gl::GLSLShader* sphereShader);
+        void uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
         void renderParticles(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
         void renderParticles(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol);
         void renderParticlesVBO(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
@@ -138,10 +138,10 @@ namespace demos {
 
 
         /** The sphere shader */
-        vislib::graphics::gl::GLSLShader sphereShaderAOMainAxes[4];
+        vislib_gl::graphics::gl::GLSLShader sphereShaderAOMainAxes[4];
 
         /** The sphere shader */
-        vislib::graphics::gl::GLSLShader sphereShaderAONormals[4];
+        vislib_gl::graphics::gl::GLSLShader sphereShaderAONormals[4];
 
         /** The call for data */
         megamol::core::CallerSlot getDataSlot;
@@ -195,7 +195,7 @@ namespace demos {
         GLuint volFBO;
 
         /** The volume generation shader */
-        vislib::graphics::gl::GLSLShader updateVolumeShader;
+        vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
         
 		// VBO for all particles
 		GLuint particleVBO;

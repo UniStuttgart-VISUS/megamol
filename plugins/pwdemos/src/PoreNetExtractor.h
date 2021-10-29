@@ -14,9 +14,9 @@
 #include "LoopBuffer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/File.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/glfunctions.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore/utility/sys/RunnableThread.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "QuartzCrystalDataCall.h"
@@ -58,9 +58,9 @@ namespace demos {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && (vislib::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable()
+                && (vislib_gl::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
         }
 
         /**
@@ -241,7 +241,7 @@ namespace demos {
         vislib::sys::File *saveFile;
 
         /** The rendering tile */
-        vislib::graphics::gl::FramebufferObject *tile;
+        vislib_gl::graphics::gl::FramebufferObject *tile;
 
         /** The tile buffer */
         ArxelBuffer::ArxelType *tileBuffer;
@@ -256,7 +256,7 @@ namespace demos {
         unsigned int slice;
 
         /** The crystalite shader */
-        vislib::graphics::gl::GLSLShader cryShader;
+        vislib_gl::graphics::gl::GLSLShader cryShader;
 
         /** The pore-net slice processor thread */
         vislib::sys::RunnableThread<PoreNetSliceProcessor> sliceProcessor;

@@ -20,8 +20,8 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace core {
@@ -94,7 +94,7 @@ public:
      * Bind convenience (to be used with tfconvenience snippet). Usually, one
      * wants to set `activeTexture` to `GL_TEXTURE0` and `textureUniform` to `0`.
      */
-    void BindConvenience(vislib::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
+    void BindConvenience(vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
 
     void BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
 

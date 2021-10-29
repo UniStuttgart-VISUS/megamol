@@ -58,11 +58,11 @@ ArrowRenderer::~ArrowRenderer(void) {
 
 bool ArrowRenderer::create(void) {
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
-    vislib::graphics::gl::ShaderSource vert, frag;
+    vislib_gl::graphics::gl::ShaderSource vert, frag;
 
     if (!instance()->ShaderSourceFactory().MakeShaderSource("arrow::vertex", vert)) {
         return false;
@@ -78,10 +78,10 @@ bool ArrowRenderer::create(void) {
             return false;
         }
 
-    } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch(vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile arrow shader (@%s): %s\n", 
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {

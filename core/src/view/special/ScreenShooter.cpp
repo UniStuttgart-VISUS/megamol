@@ -29,7 +29,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"

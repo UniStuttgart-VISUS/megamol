@@ -11,8 +11,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/glfunctions.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
 
 
 namespace megamol {
@@ -48,8 +48,8 @@ namespace demos {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && (vislib::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && (vislib_gl::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
         }
 
         /**
@@ -99,7 +99,7 @@ namespace demos {
     private:
 
         /** The crystalite shader */
-        vislib::graphics::gl::GLSLShader cryShader;
+        vislib_gl::graphics::gl::GLSLShader cryShader;
 
         /** Use clipping plane or grain colour for grains */
         core::param::ParamSlot useClipColSlot;

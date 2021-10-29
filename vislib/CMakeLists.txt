@@ -7,51 +7,21 @@ if(BUILD_VISLIB)
 
   require_external(spdlog)
 
-  require_external(glad)
-
   # Build vislib
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-
-  list(REMOVE_ITEM source_files
-    "src/sys/DynamicFunctionPointer.cpp"
-    "src/sys/PAMException.cpp"
-    "src/sys/LinuxDaemon.cpp"
-    "src/graphics/d3d/AbstractD3D11WindowImpl.cpp"
-    "src/graphics/d3d/AbstractD3DAdapterInformation.cpp"
-    "src/graphics/d3d/D3D9AdapterInformation.cpp"
-    "src/graphics/d3d/D3D11Window.cpp"
-    "src/graphics/d3d/D3DCamera.cpp"
-    "src/graphics/d3d/D3DException.cpp"
-    "src/graphics/d3d/D3DMatrix.cpp"
-    "src/graphics/d3d/D3DPoint3D.cpp"
-    "src/graphics/d3d/d3dutils.cpp"
-    "src/graphics/d3d/D3DVector3D.cpp"
-    "src/graphics/d3d/d3dverify.cpp"
-    "src/graphics/d3d/D3DVISLogo.cpp"
-    "src/graphics/gl/GlutMouseInteractionAdapter.cpp"
-    )
 
   # Target definition
   add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files})
 
   target_link_libraries(vislib 
     PRIVATE ${CMAKE_THREAD_LIBS_INIT} 
-    PUBLIC glad ${OPENGL_LIBRARIES} 
     PUBLIC spdlog fmt)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
   target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN)
-
-  if(UNIX)
-    set(CURSES_NEED_NCURSES True)
-    find_package(Curses REQUIRED)
-    find_package(UUID REQUIRED)
-    find_package(X11 REQUIRED)
-    target_link_libraries(vislib PRIVATE ${X11_LIBRARIES} ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
-  endif()
 
   # Grouping in Visual Studio
   set_target_properties(vislib PROPERTIES FOLDER base)

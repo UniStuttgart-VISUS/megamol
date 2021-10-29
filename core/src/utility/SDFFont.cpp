@@ -757,7 +757,7 @@ void SDFFont::render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int gly
     }
 
     // Check if per vertex color should be used
-    const vislib::graphics::gl::GLSLShader* usedShader = &this->shaderglobcol;
+    const vislib_gl::graphics::gl::GLSLShader* usedShader = &this->shaderglobcol;
     if (color_ptr == nullptr) {
         usedShader = &this->shadervertcol;
     }
@@ -1122,9 +1122,9 @@ bool SDFFont::loadFontShader(megamol::core::utility::ShaderSourceFactory& shader
         }
     }
 
-    vislib::graphics::gl::ShaderSource vs, fs;
+    vislib_gl::graphics::gl::ShaderSource vs, fs;
     // Create array of shaders to loop over
-    vislib::graphics::gl::GLSLShader* shaderPtr[2];
+    vislib_gl::graphics::gl::GLSLShader* shaderPtr[2];
     shaderPtr[0] = &this->shaderglobcol;
     shaderPtr[1] = &this->shadervertcol;
     // Loop over all shaders in array
@@ -1169,9 +1169,9 @@ bool SDFFont::loadFontShader(megamol::core::utility::ShaderSourceFactory& shader
                 return false;
             }
         }
-        catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to compile \"sdffont\"-shader (@%s): %s. [%s, %s, line %d]\n",
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
             return false;
         }
         catch (vislib::Exception e) {

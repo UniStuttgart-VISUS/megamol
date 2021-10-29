@@ -15,8 +15,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 
@@ -159,7 +159,7 @@ bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     glEnable( GL_LINE_STIPPLE);
     glLineStipple( 2, 0x00FF);
     if( diagram->Marker() ) {
-        vislib::graphics::gl::SimpleFont f;
+        vislib_gl::graphics::gl::SimpleFont f;
         vislib::StringA tmpStr;
         if( f.Initialise() ) {
             tmpStr.Format( " %.2f", diagram->GetX());
@@ -252,7 +252,7 @@ bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     glEnd(); // GL_LINES
     glDisable( GL_LINE_STIPPLE);
     vislib::StringA ctStr;
-    vislib::graphics::gl::SimpleFont ctFont;
+    vislib_gl::graphics::gl::SimpleFont ctFont;
     if( ctFont.Initialise() ) {
         ctStr.Format( " %.2f", diagram->CallTime());
         s /= 2.0f;
@@ -302,17 +302,17 @@ void Diagram2DRenderer::generateDiagramTextures() {
     int res = this->resolutionParam.Param<param::IntParam>()->Value();
     // create both FBOs, if necessary
     if( this->resolutionParam.IsDirty() ) {
-        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         this->resolutionParam.ResetDirty();
         clearFbo = true;
     }
     if( !this->fbo[0].IsValid() ) {
-        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         clearFbo = true;
     }
     if( !this->fbo[1].IsValid() ) {
-        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         clearFbo = true;
     }
 

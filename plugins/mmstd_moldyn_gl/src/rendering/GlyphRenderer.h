@@ -15,8 +15,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/SSBOBufferArray.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
 
@@ -50,7 +50,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable(); }
+    static bool IsAvailable(void) { return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable(); }
 
     /** Ctor. */
     GlyphRenderer(void);
@@ -66,7 +66,7 @@ protected:
      */
     bool create(void) override;
 
-    bool makeShader(std::string vertexName, std::string fragmentName, vislib::graphics::gl::GLSLShader& shader);
+    bool makeShader(std::string vertexName, std::string fragmentName, vislib_gl::graphics::gl::GLSLShader& shader);
 
     /**
      * The get extents callback. The module should set the members of
@@ -106,8 +106,8 @@ private:
     enum glyph_options { USE_GLOBAL = 1 << 0, USE_TRANSFER_FUNCTION = 1 << 1, USE_FLAGS = 1 << 2, USE_CLIP = 1 << 3, USE_PER_AXIS = 1 << 4 };
 
     /**The ellipsoid shader*/
-    vislib::graphics::gl::GLSLShader ellipsoidShader;
-    vislib::graphics::gl::GLSLShader boxShader;
+    vislib_gl::graphics::gl::GLSLShader ellipsoidShader;
+    vislib_gl::graphics::gl::GLSLShader boxShader;
 
     std::vector<core::utility::SSBOBufferArray> position_buffers;
     std::vector<core::utility::SSBOBufferArray> radius_buffers;

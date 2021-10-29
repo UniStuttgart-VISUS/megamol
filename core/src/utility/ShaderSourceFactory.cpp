@@ -175,7 +175,7 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
 /*
  * utility::ShaderSourceFactory::MakeShaderSnippet
  */
-vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
+vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
 utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
         UINT32 flags) {
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
@@ -188,7 +188,7 @@ utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
  * utility::ShaderSourceFactory::MakeShaderSource
  */
 bool utility::ShaderSourceFactory::MakeShaderSource(const vislib::StringA& name,
-        vislib::graphics::gl::ShaderSource& outShaderSrc,
+        vislib_gl::graphics::gl::ShaderSource& outShaderSrc,
         UINT32 flags) {
     using megamol::core::utility::log::Log;
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
@@ -255,7 +255,7 @@ utility::ShaderSourceFactory::getBTFElement(const vislib::StringA& name) {
  */
 bool utility::ShaderSourceFactory::makeShaderSource(
         utility::BTFParser::BTFShader *s,
-        vislib::graphics::gl::ShaderSource& o, UINT32 flags) {
+        vislib_gl::graphics::gl::ShaderSource& o, UINT32 flags) {
     ASSERT(s != NULL);
 
     unsigned int idx = 0;
@@ -273,7 +273,7 @@ bool utility::ShaderSourceFactory::makeShaderSource(
         BTFParser::BTFSnippet *c = e.DynamicCast<BTFParser::BTFSnippet>();
         if (c != NULL) {
             vislib::SingleLinkedList<vislib::StringA> keys = s->NameIDs().FindKeys(idx);
-            vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
+            vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
                 snip = this->makeSnippet(c, flags);
             if (snip.IsNull()) {
                 return false;
@@ -310,13 +310,13 @@ bool utility::ShaderSourceFactory::makeShaderSource(
 /*
  * utility::ShaderSourceFactory::makeSnippet
  */
-vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
+vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
 utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UINT32 flags) {
     if (s == NULL) return NULL;
 
     if (s->Type() == BTFParser::BTFSnippet::VERSION_SNIPPET) {
         try {
-            return new vislib::graphics::gl::ShaderSource::VersionSnippet(
+            return new vislib_gl::graphics::gl::ShaderSource::VersionSnippet(
                 vislib::CharTraitsA::ParseInt(s->Content()));
         } catch(...) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -346,5 +346,5 @@ utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UIN
 
     }
 
-    return new vislib::graphics::gl::ShaderSource::StringSnippet(content);
+    return new vislib_gl::graphics::gl::ShaderSource::StringSnippet(content);
 }

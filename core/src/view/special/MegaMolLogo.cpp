@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/special/MegaMolLogo.h"
 #include "MegaMolLogoData.inl"
 #include "vislib/assert.h"

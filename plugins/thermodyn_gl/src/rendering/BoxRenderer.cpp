@@ -35,7 +35,7 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
     core::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
 
     try {
-        vislib::graphics::gl::ShaderSource vert, frag;
+        vislib_gl::graphics::gl::ShaderSource vert, frag;
 
         factory.MakeShaderSource("therm_box::vertex", vert);
         factory.MakeShaderSource("therm_box::fragment", frag);
@@ -43,12 +43,12 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
         boxShader_.Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count());
 
         boxShader_.Link();
-    } catch (vislib::graphics::gl::GLSLShader::CompileException& ce) {
+    } catch (vislib_gl::graphics::gl::GLSLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "BoxRenderer: Unable to compile therm_box shader: %s ... %s\n",
-            vislib::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+            vislib_gl::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
-    } catch (vislib::graphics::gl::OpenGLException& oe) {
+    } catch (vislib_gl::graphics::gl::OpenGLException& oe) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "BoxRenderer: Failed to create therm_box shader: %s\n", oe.GetMsgA());
 

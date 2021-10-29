@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "FlagCollections.h"
 #include "FlagStorage.h"

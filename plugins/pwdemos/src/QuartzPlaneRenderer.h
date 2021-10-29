@@ -11,7 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -101,7 +101,7 @@ namespace demos {
          *
          * @return The shader
          */
-        virtual vislib::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+        virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
 
     private:
 

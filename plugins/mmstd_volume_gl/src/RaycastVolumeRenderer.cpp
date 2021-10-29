@@ -15,7 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <algorithm>
 #include <array>
@@ -201,7 +201,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (this->fbo.IsValid()) this->fbo.Release();
             this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
         }
 

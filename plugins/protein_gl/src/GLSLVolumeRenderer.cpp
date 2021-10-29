@@ -22,18 +22,18 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/glverify.h"
+#include "vislib_gl/graphics/gl/glverify.h"
 #include "vislib/sys/File.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>
@@ -219,9 +219,9 @@ bool protein_gl::GLSLVolumeRenderer::create ( void ) {
         return false;
     if( !isExtAvailable( "GL_ARB_vertex_program" ) )
         return false;
-    if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
-    if( !vislib::graphics::gl::FramebufferObject::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions() )
         return false;
 
     glEnable( GL_DEPTH_TEST );
@@ -230,7 +230,7 @@ bool protein_gl::GLSLVolumeRenderer::create ( void ) {
     glEnable( GL_VERTEX_PROGRAM_TWO_SIDE );
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;

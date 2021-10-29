@@ -8,7 +8,7 @@
 #ifndef _FONTDATA_HELVETICA_ULTRACOMPRESSED_INCLUDED
 #define _FONTDATA_HELVETICA_ULTRACOMPRESSED_INCLUDED
 
-namespace vislib {
+namespace vislib_gl {
 namespace graphics {
 namespace gl {
 

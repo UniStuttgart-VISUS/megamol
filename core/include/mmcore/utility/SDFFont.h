@@ -17,8 +17,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/RenderUtils.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include <glm/glm.hpp>
 
@@ -574,8 +574,8 @@ namespace utility {
         // Render data --------------------------------------------------------
 
         /** The shaders of the font for different color modes. */
-        vislib::graphics::gl::GLSLShader shaderglobcol;
-        vislib::graphics::gl::GLSLShader shadervertcol;
+        vislib_gl::graphics::gl::GLSLShader shaderglobcol;
+        vislib_gl::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
         std::shared_ptr<glowl::Texture2D> texture;

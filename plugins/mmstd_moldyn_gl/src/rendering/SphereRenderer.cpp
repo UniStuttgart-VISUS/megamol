@@ -15,7 +15,7 @@
 using namespace megamol::core;
 using namespace megamol::geocalls;
 using namespace megamol::stdplugin::moldyn_gl::rendering;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 
 
 //#define CHRONOTIMING
@@ -687,8 +687,8 @@ bool SphereRenderer::createResources() {
             std::vector<glm::vec4> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
-            vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
-                new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
+            vislib_gl::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
+                new vislib_gl::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
             this->fragShader->Append(dirSnippet);
             this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
@@ -742,10 +742,10 @@ bool SphereRenderer::createResources() {
             return false;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -851,7 +851,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_IsVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -901,7 +901,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_IsVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -1763,7 +1763,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
 
     // Choose shader
     bool useGeo = this->enableGeometryShader.Param<param::BoolParam>()->Value();
-    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
+    vislib_gl::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     // Rebuild and reupload working data if neccessary
     this->rebuildWorkingData(call, mpdc, theShader);
@@ -1888,7 +1888,7 @@ bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleData
 }
 
 
-bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
+bool SphereRenderer::enableBufferData(const vislib_gl::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
     GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
@@ -2021,7 +2021,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
 }
 
 
-bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableBufferData(const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -2036,7 +2036,7 @@ bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& s
 }
 
 
-bool SphereRenderer::enableShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
+bool SphereRenderer::enableShaderData(vislib_gl::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     // colour
     bool useGlobalColor = false;
@@ -2094,7 +2094,7 @@ bool SphereRenderer::disableShaderData(void) {
 }
 
 
-bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::enableTransferFunctionTexture(vislib_gl::graphics::gl::GLSLShader& shader) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
@@ -2125,7 +2125,7 @@ bool SphereRenderer::disableTransferFunctionTexture(void) {
 }
 
 
-bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::enableFlagStorage(const vislib_gl::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
     if (!this->flags_available) return false;
     if (mpdc == nullptr) return false;
@@ -2153,7 +2153,7 @@ bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& s
 }
 
 
-bool SphereRenderer::disableFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableFlagStorage(const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     if (!this->flags_available) return false;
 
@@ -2347,10 +2347,10 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
             return nullptr;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
@@ -2368,7 +2368,7 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
 }
 
 
-std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
+std::shared_ptr<vislib_gl::graphics::gl::GLSLShader> SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
 
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
@@ -2566,7 +2566,7 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (this->stateInvalid) {

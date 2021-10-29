@@ -24,18 +24,18 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/glverify.h"
+#include "vislib_gl/graphics/gl/glverify.h"
 #include "vislib/sys/File.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>
@@ -264,8 +264,8 @@ void protein_gl::SolventVolumeRenderer::release ( void ) {
 }
 
 
-bool protein_gl::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
-    using namespace vislib::graphics::gl;
+bool protein_gl::SolventVolumeRenderer::loadShader(vislib_gl::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
+    using namespace vislib_gl::graphics::gl;
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
@@ -297,9 +297,9 @@ bool protein_gl::SolventVolumeRenderer::create ( void ) {
         return false;
     if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
         return false;
-    if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
-    if( !vislib::graphics::gl::FramebufferObject::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions() )
         return false;
 
     glEnable( GL_DEPTH_TEST );
@@ -309,7 +309,7 @@ bool protein_gl::SolventVolumeRenderer::create ( void ) {
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -1157,7 +1157,7 @@ void protein_gl::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDa
         str += tmpStr;
         megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, "Solvent Molecule Type %i, count: %i", i, int( counter[i]));
     }
-/*    vislib::graphics::gl::SimpleFont f;
+/*    vislib_gl::graphics::gl::SimpleFont f;
     if( f.Initialise() ) {
         glColor3f( 0.5f, 0.5f, 0.5f);    
         f.DrawString( 0.0, 0.0, 10.0f, true, str.PeekBuffer());
@@ -2249,7 +2249,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *
 
     accumulateFactor = accumulateColors ? this->accumulateFactor.Param<param::FloatParam>()->Value() : 1.0f;
 //    megamol::core::utility::log::Log::DefaultLog.WriteMsg ( megamol::core::utility::log::Log::LEVEL_INFO, "rendering %d solvent atoms", atomCntColor );
-    vislib::graphics::gl::GLSLShader& volumeColorShader =  coloringByHydroBonds ? this->updateVolumeShaderHBondColor : this->updateVolumeShaderSolventColor;
+    vislib_gl::graphics::gl::GLSLShader& volumeColorShader =  coloringByHydroBonds ? this->updateVolumeShaderHBondColor : this->updateVolumeShaderSolventColor;
     volumeColorShader.Enable();
         // set shader params
         glUniform1f( volumeColorShader.ParameterLocation( "filterRadius"), this->colorFilterRadiusParam.Param<param::FloatParam>()->Value()/*this->volFilterRadius*/);

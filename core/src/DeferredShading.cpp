@@ -5,7 +5,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/light/PointLight.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 megamol::core::DeferredShading::DeferredShading() 
     : Renderer3DModuleGL()
@@ -56,8 +56,8 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.generic_u8string());
 
-        vislib::graphics::gl::ShaderSource vert_shader_src;
-        vislib::graphics::gl::ShaderSource frag_shader_src;
+        vislib_gl::graphics::gl::ShaderSource vert_shader_src;
+        vislib_gl::graphics::gl::ShaderSource frag_shader_src;
         // TODO get rid of vislib StringA...
         vislib::StringA shader_base_name(filename.c_str());
 
@@ -70,10 +70,10 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
         try {
             m_deferred_shading_prgm->Create(
                 vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
                 shader_base_name.PeekBuffer(),
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             // return false;
         } catch (vislib::Exception e) {

@@ -8,7 +8,7 @@
 #pragma once
 
 #include "AbstractQuartzRenderer.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -26,7 +26,7 @@ namespace demos {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /**
@@ -61,16 +61,16 @@ namespace demos {
          *
          * @return The shader
          */
-        virtual vislib::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c) = 0;
+        virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c) = 0;
 
         /** The number of shader slots */
         unsigned int cntShaders;
 
         /** The crystalite shaders */
-        vislib::graphics::gl::GLSLShader **shaders;
+        vislib_gl::graphics::gl::GLSLShader **shaders;
 
         /** The error shader indicating that the correct shader is not yet loaded */
-        vislib::graphics::gl::GLSLShader errShader;
+        vislib_gl::graphics::gl::GLSLShader errShader;
 
     };
 

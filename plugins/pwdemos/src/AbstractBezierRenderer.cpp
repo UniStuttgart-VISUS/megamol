@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "AbstractBezierRenderer.h"
 #include "mmcore/AbstractGetData3DCall.h"
 
@@ -38,7 +38,7 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
  * AbstractBezierRenderer::create
  */
 bool AbstractBezierRenderer::create(void) {
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
     return true;
 }
 

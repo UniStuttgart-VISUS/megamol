@@ -11,7 +11,7 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -89,7 +89,7 @@ namespace demos {
         SIZE_T objsHash;
 
         /** The selected shader */
-        vislib::graphics::gl::GLSLShader *shader;
+        vislib_gl::graphics::gl::GLSLShader *shader;
 
     private:
 

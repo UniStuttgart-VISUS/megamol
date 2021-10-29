@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLTesselationShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -30,7 +30,7 @@ namespace protein_gl {
 
 	using namespace megamol::core;
 	using namespace megamol::protein_calls;
-	using namespace vislib::graphics::gl;
+	using namespace vislib_gl::graphics::gl;
 
     /**
      * Renderer for simple sphere glyphs
@@ -70,8 +70,8 @@ namespace protein_gl {
             ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable()
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && vislib_gl::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable()
                 && isExtAvailable("GL_ARB_buffer_storage")
                 && ogl_IsVersionGEQ(4,4);
         }
@@ -150,7 +150,7 @@ namespace protein_gl {
 #endif
 
         /** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
+        //vislib_gl::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
         std::vector<GLsync> fences;
@@ -179,11 +179,11 @@ namespace protein_gl {
         vislib::Array<vislib::Array<float> > positionsO;
 
         /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
         /** shader for spline rendering */
-        vislib::graphics::gl::GLSLTesselationShader splineShader;
+        vislib_gl::graphics::gl::GLSLTesselationShader splineShader;
 		/** shader for the tubes */
-		vislib::graphics::gl::GLSLTesselationShader tubeShader;
+		vislib_gl::graphics::gl::GLSLTesselationShader tubeShader;
 
 		std::vector<CAlpha> mainchain;
     };

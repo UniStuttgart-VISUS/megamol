@@ -21,9 +21,9 @@
 #include "mmcore/utility/RenderUtils.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \
@@ -112,7 +112,7 @@ protected:
      * @return whether shader loading/creation was sucessful
      */
     bool loadShader(
-        vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag);
+        vislib_gl::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag);
 
     /**
      * Implementation of 'release'.
@@ -292,27 +292,27 @@ private:
     megamol::core::param::ParamSlot countSolMolParam;
 
     // shader for the spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader sphereSolventShader;
+    vislib_gl::graphics::gl::GLSLShader sphereSolventShader;
     // shader for the cylinders (raycasting view)
-    vislib::graphics::gl::GLSLShader cylinderSolventShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderSolventShader;
     // shader for hygrogen bonds
-    vislib::graphics::gl::GLSLShader hbondLineSolventShader;
+    vislib_gl::graphics::gl::GLSLShader hbondLineSolventShader;
     // shader for the clipped spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader clippedSphereShader;
+    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
-    vislib::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
-    vislib::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
-    vislib::graphics::gl::GLSLShader updateVolumeShaderHBondColor;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderHBondColor;
     // shader for volume rendering
-    vislib::graphics::gl::GLSLShader volumeShader;
-    vislib::graphics::gl::GLSLShader dualIsosurfaceShader;
-    vislib::graphics::gl::GLSLShader volRayStartShader;
-    vislib::graphics::gl::GLSLShader volRayStartEyeShader;
-    vislib::graphics::gl::GLSLShader volRayLengthShader;
+    vislib_gl::graphics::gl::GLSLShader volumeShader;
+    vislib_gl::graphics::gl::GLSLShader dualIsosurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
     // DEBUG
-    vislib::graphics::gl::GLSLShader sphereShader;
-    vislib::graphics::gl::GLSLShader visMolShader;
-    vislib::graphics::gl::GLSLShader solTypeCountShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader visMolShader;
+    vislib_gl::graphics::gl::GLSLShader solTypeCountShader;
 
     // attribute locations for GLSL-Shader
     GLint attribLocInParams;

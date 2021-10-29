@@ -16,7 +16,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 #include "mmcore/param/ButtonParam.h"

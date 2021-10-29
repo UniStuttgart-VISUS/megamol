@@ -21,7 +21,7 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 
 using namespace megamol::core;

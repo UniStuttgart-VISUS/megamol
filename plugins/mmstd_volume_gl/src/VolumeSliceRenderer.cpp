@@ -16,8 +16,8 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
 #include "mmcore/utility/log/Log.h"
@@ -65,9 +65,9 @@ megamol::stdplugin::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
 bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::create(void) {
 	try {
 		// create shader program
-		vislib::graphics::gl::ShaderSource compute_shader_src;
-		vislib::graphics::gl::ShaderSource vertex_shader_src;
-		vislib::graphics::gl::ShaderSource fragment_shader_src;
+		vislib_gl::graphics::gl::ShaderSource compute_shader_src;
+		vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
+		vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
 		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::compute", compute_shader_src))
 			return false;
@@ -84,9 +84,9 @@ bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::create(void) {
 			return false;
 		if (!this->render_shader.Link()) return false;
 	}
-	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+	catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
 		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+			vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
 			ce.GetMsgA());
 		return false;
 	}

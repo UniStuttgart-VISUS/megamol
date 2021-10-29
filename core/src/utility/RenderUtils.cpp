@@ -457,7 +457,7 @@ bool RenderUtils::createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
     megamol::core::utility::ShaderSourceFactory& shader_factory, const std::string& vertex_btf_snipprt,
     const std::string& fragment_btf_snippet) {
 
-    vislib::graphics::gl::ShaderSource source;
+    vislib_gl::graphics::gl::ShaderSource source;
     if (!shader_factory.MakeShaderSource(vertex_btf_snipprt.c_str(), source)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

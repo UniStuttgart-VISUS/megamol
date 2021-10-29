@@ -2,7 +2,7 @@
 
 #include "glTFRenderTasksDataSource.h"
 #include "tiny_gltf.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 #include "mmcore/param/FilePathParam.h"
 

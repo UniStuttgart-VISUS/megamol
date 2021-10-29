@@ -2,7 +2,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/param/ParamSlot.h"
 #include "thermodyn/BoxDataCall.h"
@@ -42,7 +42,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif     // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
     }
 
     /** Ctor. */
@@ -216,7 +216,7 @@ private:
 
     unsigned int frameID_ = 0;
 
-    vislib::graphics::gl::GLSLShader boxShader_;
+    vislib_gl::graphics::gl::GLSLShader boxShader_;
 
     GLuint vao_, vvbo_, cvbo_;
 

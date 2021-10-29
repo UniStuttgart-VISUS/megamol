@@ -20,7 +20,7 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -107,10 +107,10 @@ private:
     core::view::Camera cameraInfo;
 
     /// Shader for the spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
 
     /// Shader for the cylinders (raycasting view)
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
 
     /// Position attribute location for GLSL-Shader
     GLint attribLocInParams;

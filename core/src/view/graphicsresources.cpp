@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "mmcore/view/graphicsresources.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 namespace megamol {
 namespace core {
@@ -18,9 +18,9 @@ namespace view {
      * __openGLInfoFont
      */
     static const vislib::graphics::AbstractFont& __openGLVerdanaOutline(void) {
-        const static vislib::graphics::gl::OutlineFont font(
-            vislib::graphics::gl::FontInfo_Verdana,
-            vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
+        const static vislib_gl::graphics::gl::OutlineFont font(
+            vislib_gl::graphics::gl::FontInfo_Verdana,
+            vislib_gl::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
         return font;
     }
 

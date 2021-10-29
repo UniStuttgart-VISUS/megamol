@@ -13,9 +13,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/light/PointLight.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/glfunctions.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/memutils.h"
 #include "mmcore/utility/log/Log.h"
@@ -254,14 +254,14 @@ bool QuartzRenderer::Render(core::view::CallRender3DGL& call) {
                 }
 
                 //::glColor3ub(255, 127, 0);
-                // vislib::graphics::gl::DrawCuboidLines(cell.ClipBox());
+                // vislib_gl::graphics::gl::DrawCuboidLines(cell.ClipBox());
                 //::glColor3fv(this->grainCol);
 
                 for (unsigned int l = 0; l < cell.Count(); l++) {
                     const ParticleGridDataCall::List& list = cell.Lists()[l];
                     // if (list.Type() != 0) continue; // TODO: DEBUG! Remove me!
 
-                    vislib::graphics::gl::GLSLShader* shader = this->shaders[list.Type() % this->cntShaders];
+                    vislib_gl::graphics::gl::GLSLShader* shader = this->shaders[list.Type() % this->cntShaders];
                     if ((shader == NULL) && (shaderInitCnt > 0)) {
                         unsigned int t = list.Type() % this->cntShaders;
                         try {
@@ -430,11 +430,11 @@ bool QuartzRenderer::Render(core::view::CallRender3DGL& call) {
  * QuartzRenderer::create
  */
 bool QuartzRenderer::create(void) {
-    using vislib::graphics::gl::GLSLShader;
-    using vislib::graphics::gl::ShaderSource;
+    using vislib_gl::graphics::gl::GLSLShader;
+    using vislib_gl::graphics::gl::ShaderSource;
     using megamol::core::utility::log::Log;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
@@ -504,9 +504,9 @@ void QuartzRenderer::release(void) {
 /*
  * QuartzRenderer::makeShader
  */
-vislib::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
-    using vislib::graphics::gl::GLSLShader;
-    using vislib::graphics::gl::ShaderSource;
+vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
+    using vislib_gl::graphics::gl::GLSLShader;
+    using vislib_gl::graphics::gl::ShaderSource;
     using megamol::core::utility::log::Log;
 
     GLSLShader* s = new GLSLShader();

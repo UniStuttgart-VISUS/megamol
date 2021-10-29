@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "AbstractTexQuartzRenderer.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <vector>
 
 namespace megamol {

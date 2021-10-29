@@ -2,7 +2,7 @@
 #include "MoleculeSequenceRenderer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/CallerSlot.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 //#include "vislib/
 
@@ -127,7 +127,7 @@ bool MoleculeSequenceRenderer::Render(CallRender2DGL& call)
 
 void MoleculeSequenceRenderer::paintButton(float x, float y, float w, float h, float r, float g, float b, const char* text)
 {
-	using namespace vislib::graphics::gl;
+	using namespace vislib_gl::graphics::gl;
 	glBegin(GL_POLYGON);
 	glColor3f(r, g, b); 
 

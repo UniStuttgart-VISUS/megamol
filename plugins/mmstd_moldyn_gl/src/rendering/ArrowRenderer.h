@@ -21,8 +21,8 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {
@@ -63,7 +63,7 @@ namespace rendering {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** Ctor. */
@@ -124,7 +124,7 @@ namespace rendering {
         core::CallerSlot getLightsSlot;
 
         /** The arrow shader */
-        vislib::graphics::gl::GLSLShader arrowShader;
+        vislib_gl::graphics::gl::GLSLShader arrowShader;
 
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;

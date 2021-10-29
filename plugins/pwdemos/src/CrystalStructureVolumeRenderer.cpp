@@ -37,11 +37,11 @@
 #include "mmcore/utility/ColourParser.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <thrust/version.h>
 #include "cuda_gl_interop.h"
@@ -1275,7 +1275,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init random number generator
     srand((unsigned)time(0));
@@ -1291,7 +1291,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
         || !isExtAvailable("GL_ARB_draw_buffers")) {
         return false;
     }
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if(!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -1494,7 +1494,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
 bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating raycasting fbo.", this->ClassName());
@@ -1530,7 +1530,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
 bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, size_t height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating source fbo.", this->ClassName());

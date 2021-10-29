@@ -17,9 +17,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 
 namespace megamol {
@@ -125,16 +125,16 @@ private:
     float maxCol;
 
     /// The texturing shader
-    vislib::graphics::gl::GLSLShader matrixTexShader;
+    vislib_gl::graphics::gl::GLSLShader matrixTexShader;
 
     /// The texturing shader
-    vislib::graphics::gl::GLSLShader colorMapShader;
+    vislib_gl::graphics::gl::GLSLShader colorMapShader;
 
     /// The matix texture handle
     GLuint matrixTex;
 
     /// The outline font
-    vislib::graphics::gl::OutlineFont thefont;
+    vislib_gl::graphics::gl::OutlineFont thefont;
 
     float fontSize;
 

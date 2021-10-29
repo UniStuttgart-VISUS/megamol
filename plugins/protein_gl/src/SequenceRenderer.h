@@ -21,14 +21,14 @@
 #include "mmcore/view/Input.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 #include "protein_calls/ResidueSelectionCall.h"
 
 namespace megamol {
@@ -177,9 +177,9 @@ namespace protein_gl {
         
         // font rendering
 #ifdef USE_SIMPLE_FONT
-        vislib::graphics::gl::SimpleFont theFont;
+        vislib_gl::graphics::gl::SimpleFont theFont;
 #else
-        vislib::graphics::gl::OutlineFont theFont;
+        vislib_gl::graphics::gl::OutlineFont theFont;
 #endif
         // the array of amino acid 1-letter codes
         vislib::Array<vislib::StringA> aminoAcidStrings;
@@ -211,7 +211,7 @@ namespace protein_gl {
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         
-        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+        vislib::Array<vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D> > markerTextures;
 
         // mouse hover
         vislib::math::Vector<float, 2> mousePos;

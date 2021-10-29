@@ -15,7 +15,7 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/BTFParser.h"
 #include "vislib/Array.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/String.h"
 
 
@@ -81,7 +81,7 @@ namespace utility {
          * @return The requested shader source snippet or 'NULL' in case of
          *         an error (an error messages will be logged).
          */
-        vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
+        vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
         MakeShaderSnippet(const vislib::StringA& name,
             UINT32 flags = FLAGS_DEFAULT_FLAGS);
 
@@ -98,7 +98,7 @@ namespace utility {
          *         be created (an error messages will be logged).
          */
         bool MakeShaderSource(const vislib::StringA& name,
-            vislib::graphics::gl::ShaderSource& outShaderSrc,
+            vislib_gl::graphics::gl::ShaderSource& outShaderSrc,
             UINT32 flags = FLAGS_DEFAULT_FLAGS);
 
     private:
@@ -194,7 +194,7 @@ namespace utility {
          *         be created (an error messages will be logged).
          */
         bool makeShaderSource(BTFParser::BTFShader *s,
-            vislib::graphics::gl::ShaderSource& o, UINT32 flags);
+            vislib_gl::graphics::gl::ShaderSource& o, UINT32 flags);
 
         /**
          * Makes the requested snippet.
@@ -203,7 +203,7 @@ namespace utility {
          *
          * @return The snippet object.
          */
-        vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet>
+        vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
         makeSnippet(BTFParser::BTFSnippet *s, UINT32 flags);
 
         /** The configuration */

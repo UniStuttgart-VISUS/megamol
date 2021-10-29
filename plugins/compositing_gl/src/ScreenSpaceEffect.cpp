@@ -12,7 +12,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing/CompositingCalls.h"
 
@@ -66,9 +66,9 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         m_ssao_blur_prgm = std::make_unique<GLSLComputeShader>();
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_ssao_src;
-        vislib::graphics::gl::ShaderSource compute_ssao_blur_src;
-        vislib::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_blur_src;
+        vislib_gl::graphics::gl::ShaderSource compute_fxaa_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", compute_ssao_src)) return false;
         if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
@@ -83,9 +83,9 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count())) return false;
         if (!m_fxaa_prgm->Link()) return false;
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {

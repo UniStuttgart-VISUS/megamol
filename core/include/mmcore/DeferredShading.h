@@ -8,7 +8,7 @@
 #ifndef Deferred_SHADING_H_INCLUDED
 #define Deferred_SHADING_H_INCLUDED
 
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/param/ParamSlot.h"
@@ -97,7 +97,7 @@ protected:
     void PreRender(core::view::CallRender3DGL& call);
 
 private:
-    typedef vislib::graphics::gl::GLSLShader GLSLShader;
+    typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
 
     /** Shader program for deferred shading pass */
     std::unique_ptr<GLSLShader> m_deferred_shading_prgm;

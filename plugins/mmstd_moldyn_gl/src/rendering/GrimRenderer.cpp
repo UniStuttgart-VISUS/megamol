@@ -108,7 +108,7 @@ bool GrimRenderer::create(void) {
 
     ASSERT(IsAvailable());
 
-    vislib::graphics::gl::ShaderSource vert, geom, frag;
+    vislib_gl::graphics::gl::ShaderSource vert, geom, frag;
 
     const char *shaderName = "sphere";
     try {
@@ -235,10 +235,10 @@ bool GrimRenderer::create(void) {
         }
 
 
-    } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch(vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader (@%s): %s\n", shaderName,
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {
@@ -305,7 +305,7 @@ void GrimRenderer::release(void) {
 }
 
 
-void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+void GrimRenderer::set_cam_uniforms(vislib_gl::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
     glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
     glm::vec4 camPos, glm::vec4 curlightDir) {
 
@@ -340,8 +340,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     bool speakCellPerc = speak /*&& useCellCull*/ && this->speakCellPercSlot.Param<param::BoolParam>()->Value();
     bool speakVertCount = /*speak && */this->speakVertCountSlot.Param<param::BoolParam>()->Value();
     bool deferredShading = this->deferredShadingSlot.Param<param::BoolParam>()->Value();
-    vislib::graphics::gl::GLSLShader * daSphereShader = useVertCull ? &this->sphereShader : &this->vanillaSphereShader;
-    vislib::graphics::gl::GLSLShader * daPointShader = &this->pointShader;
+    vislib_gl::graphics::gl::GLSLShader * daSphereShader = useVertCull ? &this->sphereShader : &this->vanillaSphereShader;
+    vislib_gl::graphics::gl::GLSLShader * daPointShader = &this->pointShader;
     if (deferredShading) {
         daSphereShader = useVertCull ? &this->deferredSphereShader : &this->deferredVanillaSphereShader;
         daPointShader = &this->deferredPointShader;
@@ -449,7 +449,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         this->fbo.Release();
         this->fbo.Create(fbo->getWidth(), fbo->getHeight(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
         unsigned int dmw = vislib::math::NextPowerOfTwo(fbo->getWidth());
@@ -459,7 +459,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             for (int i = 0; i < 2; i++) {
                 this->depthmap[i].Release();
                 this->depthmap[i].Create(dmw, dmh, GL_LUMINANCE32F_ARB, GL_LUMINANCE, GL_FLOAT,
-                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED);
+                    vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED);
             }
         }
 
@@ -470,7 +470,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             //  normal (RGBA-float16; xyz + confidence)
             //  depth (24 bit)
             //  stencil (none)
-            vislib::graphics::gl::FramebufferObject::ColourAttachParams cap[3];
+            vislib_gl::graphics::gl::FramebufferObject::ColourAttachParams cap[3];
             cap[0].format = GL_RGBA;
             cap[0].internalFormat = GL_RGBA8;
             cap[0].type = GL_UNSIGNED_BYTE;
@@ -480,11 +480,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             cap[2].format = GL_RGBA;
             cap[2].internalFormat = GL_RGBA32F;
             cap[2].type = GL_FLOAT;
-            vislib::graphics::gl::FramebufferObject::DepthAttachParams dap;
-            dap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
+            vislib_gl::graphics::gl::FramebufferObject::DepthAttachParams dap;
+            dap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
             dap.format = GL_DEPTH_COMPONENT24;
-            vislib::graphics::gl::FramebufferObject::StencilAttachParams sap;
-            sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
+            vislib_gl::graphics::gl::FramebufferObject::StencilAttachParams sap;
+            sap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
             sap.format = GL_STENCIL_INDEX;
 
             try {

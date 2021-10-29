@@ -14,10 +14,10 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/memutils.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/glfunctions.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
 #include "vislib/graphics/graphicsfunctions.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cfloat>
 #include <glm/ext.hpp>
 
@@ -307,7 +307,7 @@ bool QuartzTexRenderer::Render(core::view::CallRender3DGL& call) {
                 }
 
                 //::glColor3ub(255, 127, 0);
-                //vislib::graphics::gl::DrawCuboidLines(cell.ClipBox());
+                //vislib_gl::graphics::gl::DrawCuboidLines(cell.ClipBox());
                 //::glColor3fv(this->grainCol);
 
                 for (unsigned int l = 0; l < cell.Count(); l++) {
@@ -432,11 +432,11 @@ bool QuartzTexRenderer::Render(core::view::CallRender3DGL& call) {
  * QuartzTexRenderer::create
  */
 bool QuartzTexRenderer::create(void) {
-    using vislib::graphics::gl::GLSLShader;
+    using vislib_gl::graphics::gl::GLSLShader;
     using megamol::core::utility::log::Log;
-    using vislib::graphics::gl::ShaderSource;
+    using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }

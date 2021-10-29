@@ -31,7 +31,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing/CompositingCalls.h"
 
@@ -268,18 +268,18 @@ bool megamol::compositing::ASSAO::create() {
             m_nonSmartApplyPrgm = std::make_unique<GLSLComputeShader>();
             m_nonSmartHalfApplyPrgm = std::make_unique<GLSLComputeShader>();
 
-            vislib::graphics::gl::ShaderSource csPrepareDepths;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsHalf;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsAndNormals;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsAndNormalsHalf;
-            std::vector<vislib::graphics::gl::ShaderSource> csPrepareDepthMip(SSAODepth_MIP_LEVELS - 1);
-            std::vector<vislib::graphics::gl::ShaderSource> csGenerate(5);
-            vislib::graphics::gl::ShaderSource csSmartBlur;
-            vislib::graphics::gl::ShaderSource csSmartBlur_wide;
-            vislib::graphics::gl::ShaderSource csApply;
-            vislib::graphics::gl::ShaderSource csNonSmartBlur;
-            vislib::graphics::gl::ShaderSource csNonSmartApply;
-            vislib::graphics::gl::ShaderSource csNonSmartHalfApply;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepths;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsHalf;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormals;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormalsHalf;
+            std::vector<vislib_gl::graphics::gl::ShaderSource> csPrepareDepthMip(SSAODepth_MIP_LEVELS - 1);
+            std::vector<vislib_gl::graphics::gl::ShaderSource> csGenerate(5);
+            vislib_gl::graphics::gl::ShaderSource csSmartBlur;
+            vislib_gl::graphics::gl::ShaderSource csSmartBlur_wide;
+            vislib_gl::graphics::gl::ShaderSource csApply;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartBlur;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartApply;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartHalfApply;
 
             std::cout << "Compiling: Compositing::assao::CSPrepareDepths\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
@@ -402,9 +402,9 @@ bool megamol::compositing::ASSAO::create() {
             std::cout << "Done Compiling\n";
         }
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {

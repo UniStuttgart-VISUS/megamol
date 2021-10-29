@@ -13,8 +13,8 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/special/AbstractStereoDisplay.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -51,8 +51,8 @@ namespace special {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable();
         }
 
         /** Ctor. */
@@ -81,10 +81,10 @@ namespace special {
         virtual void release(void);
 
         /** the intermediate fbo */
-        vislib::graphics::gl::FramebufferObject fbo;
+        vislib_gl::graphics::gl::FramebufferObject fbo;
 
         /** the compositing shader */
-        vislib::graphics::gl::GLSLShader compShader;
+        vislib_gl::graphics::gl::GLSLShader compShader;
 
         /** flip the eye configuration for the columns */
         param::ParamSlot flipEyes;

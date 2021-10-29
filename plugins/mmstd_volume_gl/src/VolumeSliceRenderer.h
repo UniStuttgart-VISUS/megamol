@@ -15,8 +15,8 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -101,8 +101,8 @@ namespace volume_gl {
         core::CallerSlot getClipPlaneSlot;
 
 		/** Shader */
-		vislib::graphics::gl::GLSLComputeShader compute_shader;
-		vislib::graphics::gl::GLSLShader render_shader;
+		vislib_gl::graphics::gl::GLSLComputeShader compute_shader;
+		vislib_gl::graphics::gl::GLSLShader render_shader;
     };
 
 } /* end namespace volume */

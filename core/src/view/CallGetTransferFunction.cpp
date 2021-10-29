@@ -27,7 +27,7 @@ view::CallGetTransferFunction::~CallGetTransferFunction(void) {
     // intentionally empty
 }
 
-void view::CallGetTransferFunction::BindConvenience(vislib::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform) {
+void view::CallGetTransferFunction::BindConvenience(vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);

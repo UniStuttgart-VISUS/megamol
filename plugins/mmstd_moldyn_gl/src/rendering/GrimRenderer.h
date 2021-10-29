@@ -20,11 +20,11 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/forceinline.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/Pair.h"
 #include "vislib/math/Point.h"
 #include "vislib/SmartPtr.h"
@@ -37,7 +37,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Vector.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <climits>
 
@@ -80,8 +80,8 @@ namespace rendering {
             * @return 'true' if the module is available, 'false' otherwise.
             */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable()
                 && (isExtAvailable("GL_NV_occlusion_query") != GL_FALSE)
                 && (isExtAvailable("GL_ARB_multitexture") != GL_FALSE)
                 && (isExtAvailable("GL_ARB_vertex_buffer_object") != GL_FALSE);
@@ -214,42 +214,42 @@ namespace rendering {
         static bool depthSort(const vislib::Pair<unsigned int, float> &lhs,
             const vislib::Pair<unsigned int, float> &rhs);
 
-        void set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+        void set_cam_uniforms(vislib_gl::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
             glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp,
             glm::mat4 mvp_matrix_inv, glm::vec4 camPos, glm::vec4 curlightDir);
 
         /** The sphere shader */
-        vislib::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
 
         /** The vanilla sphere shader */
-        vislib::graphics::gl::GLSLShader vanillaSphereShader;
+        vislib_gl::graphics::gl::GLSLShader vanillaSphereShader;
 
         /** The shader to init the depth fbo */
-        vislib::graphics::gl::GLSLShader initDepthShader;
+        vislib_gl::graphics::gl::GLSLShader initDepthShader;
 
         /** The shader to init the depth mip-map generation */
-        vislib::graphics::gl::GLSLShader initDepthMapShader;
+        vislib_gl::graphics::gl::GLSLShader initDepthMapShader;
 
         /** The shader for the depth mip-mapping ping-ponging */
-        vislib::graphics::gl::GLSLShader depthMipShader;
+        vislib_gl::graphics::gl::GLSLShader depthMipShader;
 
         /** The shader to render far-away, solid-coloured points */
-        vislib::graphics::gl::GLSLShader pointShader;
+        vislib_gl::graphics::gl::GLSLShader pointShader;
 
         /** The shader to init the depth buffer with points */
-        vislib::graphics::gl::GLSLShader initDepthPointShader;
+        vislib_gl::graphics::gl::GLSLShader initDepthPointShader;
 
         /** Von Guido aus */
-        vislib::graphics::gl::GLSLShader vertCntShader;
+        vislib_gl::graphics::gl::GLSLShader vertCntShader;
 
         /** Von Guido aus */
-        vislib::graphics::gl::GLSLShader vertCntShade2r;
+        vislib_gl::graphics::gl::GLSLShader vertCntShade2r;
 
         /** The frame buffer object for the depth estimate */
-        vislib::graphics::gl::FramebufferObject fbo;
+        vislib_gl::graphics::gl::FramebufferObject fbo;
 
         /** buffers for depth-max mip map */
-        vislib::graphics::gl::FramebufferObject depthmap[2];
+        vislib_gl::graphics::gl::FramebufferObject depthmap[2];
 
         /** The call for data */
         core::CallerSlot getDataSlot;
@@ -291,19 +291,19 @@ namespace rendering {
         SIZE_T cacheSizeUsed;
 
         /** Frame buffer object used for deferred shading */
-        vislib::graphics::gl::FramebufferObject dsFBO;
+        vislib_gl::graphics::gl::FramebufferObject dsFBO;
 
         /** The sphere shader */
-        vislib::graphics::gl::GLSLShader deferredSphereShader;
+        vislib_gl::graphics::gl::GLSLShader deferredSphereShader;
 
         /** The vanilla sphere shader */
-        vislib::graphics::gl::GLSLShader deferredVanillaSphereShader;
+        vislib_gl::graphics::gl::GLSLShader deferredVanillaSphereShader;
 
         /** The shader to render far-away, solid-coloured points */
-        vislib::graphics::gl::GLSLShader deferredPointShader;
+        vislib_gl::graphics::gl::GLSLShader deferredPointShader;
 
         /** The deferred shader */
-        vislib::graphics::gl::GLSLShader deferredShader;
+        vislib_gl::graphics::gl::GLSLShader deferredShader;
 
         /** The hash of the incoming data */
         SIZE_T inhash;

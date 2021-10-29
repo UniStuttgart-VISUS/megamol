@@ -42,8 +42,8 @@ CrystalDataCall *AbstractMultiShaderQuartzRenderer::getCrystaliteData(void) {
             this->releaseShaders();
             ASSERT(this->shaders == NULL);
             this->cntShaders = tdc->GetCount();
-            this->shaders = new vislib::graphics::gl::GLSLShader*[this->cntShaders];
-            ::memset(this->shaders, 0, sizeof(vislib::graphics::gl::GLSLShader*) * this->cntShaders);
+            this->shaders = new vislib_gl::graphics::gl::GLSLShader*[this->cntShaders];
+            ::memset(this->shaders, 0, sizeof(vislib_gl::graphics::gl::GLSLShader*) * this->cntShaders);
             this->typesDataHash = tdc->DataHash();
         }
     } else if (this->shaders != NULL) {

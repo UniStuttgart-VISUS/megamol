@@ -17,7 +17,7 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/TimeControl.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Rectangle.h"
 
 namespace megamol {
@@ -49,7 +49,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
+    static bool IsAvailable() { return vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
 
     /**
      * Answer whether or not this module supports being used in a

@@ -12,8 +12,8 @@
 
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -52,7 +52,7 @@ namespace protein_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** ctor */
@@ -101,10 +101,10 @@ namespace protein_gl {
         core::CallerSlot getdataslot;
 
         /** The shader for shading the path lines */
-        vislib::graphics::gl::GLSLShader pathlineShader;
+        vislib_gl::graphics::gl::GLSLShader pathlineShader;
 
         /** The shader for shading the dots */
-        vislib::graphics::gl::GLSLShader dotsShader;
+        vislib_gl::graphics::gl::GLSLShader dotsShader;
 
     };
 

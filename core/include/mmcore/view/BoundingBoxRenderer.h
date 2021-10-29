@@ -14,7 +14,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace core {
@@ -140,10 +140,10 @@ private:
     GLuint va;
 
     /** Shader program for lines */
-    vislib::graphics::gl::GLSLShader lineShader;
+    vislib_gl::graphics::gl::GLSLShader lineShader;
 
     /** Shader program for a cube */
-    vislib::graphics::gl::GLSLShader cubeShader;
+    vislib_gl::graphics::gl::GLSLShader cubeShader;
 
     /** Bounding Boxes */
     megamol::core::BoundingBoxes_2 boundingBoxes;

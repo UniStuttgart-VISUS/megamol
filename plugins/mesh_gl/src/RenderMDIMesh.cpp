@@ -11,7 +11,7 @@
 #include "RenderMDIMesh.h"
 
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 

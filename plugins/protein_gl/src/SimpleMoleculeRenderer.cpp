@@ -9,7 +9,7 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <GL/glu.h>
 #include <omp.h>
@@ -28,8 +28,8 @@
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
 
@@ -200,7 +200,7 @@ bool SimpleMoleculeRenderer::create(void) {
     if (!ogl_IsVersionGEQ(2, 0))
         return false;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
         return false;
 
     glEnable(GL_DEPTH_TEST);
@@ -210,7 +210,7 @@ bool SimpleMoleculeRenderer::create(void) {
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;

@@ -11,7 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
@@ -70,7 +70,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
+        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
                isExtAvailable("GL_ARB_shader_draw_parameters") && ogl_IsVersionGEQ(4, 3);
     }
 

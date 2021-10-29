@@ -20,7 +20,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -172,7 +172,7 @@ private:
     /* Rendering */
 
     /// Shader for slice rendering
-    vislib::graphics::gl::GLSLShader sliceShader;
+    vislib_gl::graphics::gl::GLSLShader sliceShader;
 
     /// Random noise texture for LIC
     GLuint randNoiseTex;

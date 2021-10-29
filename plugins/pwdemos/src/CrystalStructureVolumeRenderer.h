@@ -21,9 +21,9 @@
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/view/CallRender3D.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "mmcore/BoundingBoxes.h"
 
 namespace megamol {
@@ -65,7 +65,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if(!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
+        if(!vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable())
             return false;
         return true;
     }
@@ -673,10 +673,10 @@ private:
     GLuint uniGridColorTex;
 
     /// Frame buffer object for raycasting
-    vislib::graphics::gl::FramebufferObject rcFbo;
+    vislib_gl::graphics::gl::FramebufferObject rcFbo;
 
     /// Frame buffer object for opaque objects of the scene
-    vislib::graphics::gl::FramebufferObject srcFbo;
+    vislib_gl::graphics::gl::FramebufferObject srcFbo;
 
     /// Texture for curl magnitude
     GLuint curlMagTex;
@@ -686,25 +686,25 @@ private:
 
 
     /// Shader for rendering volume slice
-    vislib::graphics::gl::GLSLShader vrShader;
+    vislib_gl::graphics::gl::GLSLShader vrShader;
 
     /// Shader for rendering spheres
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
 
     /// Shader for rendering arrows
-    vislib::graphics::gl::GLSLGeometryShader arrowShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
 
     /// Shader for rendering cylinders
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
 
     /// Shader for raycasting
-    vislib::graphics::gl::GLSLShader rcShader;
+    vislib_gl::graphics::gl::GLSLShader rcShader;
 
     /// Shader for rendering the cube backface
-    vislib::graphics::gl::GLSLShader rcShaderDebug;
+    vislib_gl::graphics::gl::GLSLShader rcShaderDebug;
 
     /// Shader for per pixel lighting and clipping
-    vislib::graphics::gl::GLSLShader pplShaderClip;
+    vislib_gl::graphics::gl::GLSLShader pplShaderClip;
 
     /// Attribute array for cylinder shader
     GLint attribLocInParams;
@@ -719,7 +719,7 @@ private:
     GLint attribLocColor2;
 
     /// Shader for per pixel lighting
-    vislib::graphics::gl::GLSLShader pplShader;
+    vislib_gl::graphics::gl::GLSLShader pplShader;
 
 
     /// Array for current frame

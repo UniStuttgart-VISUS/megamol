@@ -7,12 +7,12 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/cluster/InfoIconRenderer.h"
 #include "mmcore/view/graphicsresources.h"
 #include <cmath>
 #include "vislib/math/mathfunctions.h"
-#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -210,14 +210,14 @@ void cluster::InfoIconRenderer::RenderInfoIconBorder(unsigned char colR,
         unsigned char colG, unsigned char colB) {
     const static float borderStubSize = 0.04f;
     const static vislib::StringW compName = infoIconBorderCaption();
-    const static vislib::graphics::gl::OutlineFont font(
-        vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed,
-        vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
+    const static vislib_gl::graphics::gl::OutlineFont font(
+        vislib_gl::graphics::gl::FontInfo_Helvetica_UltraCompressed,
+        vislib_gl::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
     const static float fontSize = borderSize
-        / vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed.charHeight;
+        / vislib_gl::graphics::gl::FontInfo_Helvetica_UltraCompressed.charHeight;
     const static float fontTopLine = fontSize
-        * (vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed.charHeight
-        - vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed.baseline);
+        * (vislib_gl::graphics::gl::FontInfo_Helvetica_UltraCompressed.charHeight
+        - vislib_gl::graphics::gl::FontInfo_Helvetica_UltraCompressed.baseline);
     const static float captionMaxWidth = 1.0f
         - 2.0f * (cornerBigRad + borderStubSize);
     const static float captionRealWidth = font.LineWidth(fontSize, compName);

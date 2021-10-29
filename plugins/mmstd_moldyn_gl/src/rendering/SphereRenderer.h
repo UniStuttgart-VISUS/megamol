@@ -34,10 +34,10 @@
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/Cuboid.h"
 
@@ -98,7 +98,7 @@ namespace rendering {
 
     using namespace megamol::core;
     using namespace megamol::geocalls;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
 
     /**

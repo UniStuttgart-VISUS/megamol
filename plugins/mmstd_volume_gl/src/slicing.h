@@ -23,7 +23,7 @@
 #ifndef _SLICING_H_
 #define _SLICING_H_
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #  include <windows.h>
 #endif

@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "slicing.h"
 #include "protein/Color.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -20,9 +20,9 @@
 #include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include <list>
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
@@ -223,19 +223,19 @@ namespace protein_gl {
         megamol::core::param::ParamSlot renderProteinParam;
 
         // shader for the spheres (raycasting view)
-        vislib::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
         // shader for the cylinders (raycasting view)
-        vislib::graphics::gl::GLSLShader cylinderShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShader;
         // shader for the clipped spheres (raycasting view)
-        vislib::graphics::gl::GLSLShader clippedSphereShader;
+        vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
         // shader for volume texture generation
-        vislib::graphics::gl::GLSLShader updateVolumeShader;
+        vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
         // shader for volume rendering
-        vislib::graphics::gl::GLSLShader volumeShader;
-        vislib::graphics::gl::GLSLShader volRayStartShader;
-        vislib::graphics::gl::GLSLShader volRayStartEyeShader;
-        vislib::graphics::gl::GLSLShader volRayLengthShader;
-        vislib::graphics::gl::GLSLShader colorWriterShader;
+        vislib_gl::graphics::gl::GLSLShader volumeShader;
+        vislib_gl::graphics::gl::GLSLShader volRayStartShader;
+        vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
+        vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
+        vislib_gl::graphics::gl::GLSLShader colorWriterShader;
         
         // current coloring mode
         protein::Color::ColoringMode currentColoringMode;

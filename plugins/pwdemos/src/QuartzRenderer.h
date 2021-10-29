@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -95,7 +95,7 @@ private:
      *
      * @return The shader
      */
-    virtual vislib::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
 
     /** Shows/Hides the axes (x and y) of the clipping plane */
     core::param::ParamSlot showClipAxesSlot;

@@ -17,7 +17,7 @@
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"
 
@@ -99,7 +99,7 @@ view::ImageWrapper view::View2DGL::Render(double time, double instanceTime) {
 
 view::ImageWrapper megamol::core::view::View2DGL::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
-        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        ImageWrapper::DataChannels::RGBA8; // vislib_gl::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
         _fbo->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
     size_t fbo_width = _fbo->getWidth();

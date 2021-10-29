@@ -57,7 +57,7 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
+    PUBLIC vislib vislib_gl glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   if(UNIX)

@@ -9,7 +9,7 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "AOSphereRenderer.h"
@@ -131,7 +131,7 @@ AOSphereRenderer::~AOSphereRenderer(void) {
  * AOSphereRenderer::create
  */
 bool AOSphereRenderer::create(void) {
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
     if (!::areExtsAvailable("GL_ARB_multitexture GL_EXT_framebuffer_object") || !ogl_IsVersionGEQ(2,0)) {
@@ -148,7 +148,7 @@ bool AOSphereRenderer::create(void) {
         "AOSphere::normals::fragAO",
         "AOSphere::normals::fragMultipleRT"};
     vislib::StringA shaderName("unknown");
-    vislib::graphics::gl::ShaderSource vert, frag;
+    vislib_gl::graphics::gl::ShaderSource vert, frag;
 
     try {
 
@@ -179,10 +179,10 @@ bool AOSphereRenderer::create(void) {
 
         }
 
-    } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch(vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (%s) (@%s): %s\n", shaderName.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {
@@ -452,7 +452,7 @@ void AOSphereRenderer::resizeVolume() {
     }
 }
 
-void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib::graphics::gl::GLSLShader *sphereShader) {
+void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader *sphereShader) {
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -497,7 +497,7 @@ void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL&
  */
 void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2) {
 
-    vislib::graphics::gl::GLSLShader *sphereShader = NULL;
+    vislib_gl::graphics::gl::GLSLShader *sphereShader = NULL;
 
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
     if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
@@ -658,7 +658,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call
  */
 void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol) {
 
-    vislib::graphics::gl::GLSLShader *sphereShader = NULL;
+    vislib_gl::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
     if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
         sphereShader = &this->sphereShaderAONormals[shadMod];
@@ -768,7 +768,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call
  */
 void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2) {
 
-    vislib::graphics::gl::GLSLShader *sphereShader = NULL;
+    vislib_gl::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
     if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
         sphereShader = &this->sphereShaderAONormals[shadMod];
@@ -857,7 +857,7 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& c
  */
 void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol) {
 
-    vislib::graphics::gl::GLSLShader *sphereShader = NULL;
+    vislib_gl::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
     if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
         sphereShader = &this->sphereShaderAONormals[shadMod];

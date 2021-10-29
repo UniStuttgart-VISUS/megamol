@@ -8,7 +8,7 @@
 #ifndef DRAW_TO_SCREEN_H_INCLUDED
 #define DRAW_TO_SCREEN_H_INCLUDED
 
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
@@ -97,7 +97,7 @@ protected:
     void PreRender(core::view::CallRender3DGL& call);
 
 private:
-    typedef vislib::graphics::gl::GLSLShader GLSLShader;
+    typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
 
     /** Dummy depth texture to use when no depth texture is connected */
     std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;

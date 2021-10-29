@@ -11,7 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-#    include "vislib/graphics/gl/IncludeAllGL.h"
+#    include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 #ifdef PROFILING
 #    include "mmcore/CoreInstance.h"

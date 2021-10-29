@@ -8,21 +8,21 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include <math.h>
 //#include "mmcore/misc/ImageViewer.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <float.h>
 #include "vislib/math/FastMap.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_gl;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 using megamol::core::utility::log::Log;
 
 vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;

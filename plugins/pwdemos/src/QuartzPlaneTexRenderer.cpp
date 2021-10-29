@@ -10,9 +10,9 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/graphicsfunctions.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
@@ -52,11 +52,11 @@ QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer(void) {
  * QuartzPlaneTexRenderer::create
  */
 bool QuartzPlaneTexRenderer::create(void) {
-    using vislib::graphics::gl::GLSLShader;
+    using vislib_gl::graphics::gl::GLSLShader;
     using megamol::core::utility::log::Log;
-    using vislib::graphics::gl::ShaderSource;
+    using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
