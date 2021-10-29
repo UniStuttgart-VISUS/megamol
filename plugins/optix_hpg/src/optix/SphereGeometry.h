@@ -74,5 +74,9 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _data_hash = std::numeric_limits<std::size_t>::max();
+
+    uint64_t sbt_version = 0;
+
+    uint64_t program_version = 0;
 };
 } // namespace megamol::hpg::optix

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TableToParticles.h"
 
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -10,6 +10,8 @@
 
 #define GLM_FORCE_SWIZZLE
 #include <glm/gtx/string_cast.hpp>
+
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -139,14 +141,14 @@ TableToParticles::TableToParticles(void)
 
     /* Register calls. */
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
+        geocalls::MultiParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+        geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
 
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
 
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
@@ -302,16 +304,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     float radius = 0.0f;
 
     std::vector<uint32_t> indicesToCollect;
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString());
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString());
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
     if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // particle
         if (!pushColumnIndex(
-                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
+                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
             retValue = false;
         } else {
             radius = ft->GetColumnsInfos()[indicesToCollect.back()].MaximumValue();
@@ -323,14 +325,15 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
     case 0: // RGB
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         break;
     case 1: // I
-        if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString())) {
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
             retValue = false;
         } else {
             iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
@@ -352,11 +355,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
 
     if (vx && vy && vz) {
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
         haveVelocities = true;
         stride += 3;
@@ -385,7 +388,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         if (this->haveTensorMagnitudes) {
             // we can copy the radii AKA magnitudes directly
             for (auto& x : this->slotTensorMagnitudeColumn) {
-                pushColumnIndex(indicesToCollect, x.Param<core::param::FlexEnumParam>()->ValueString());
+                pushColumnIndex(indicesToCollect, x.Param<core::param::FlexEnumParam>()->ValueString().c_str());
             }
         }
     }
@@ -529,8 +532,8 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
  */
 bool TableToParticles::getMultiParticleData(core::Call& call) {
     try {
-        auto* c = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-        auto* e = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&call);
+        auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+        auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         auto* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == nullptr) return false;
 
@@ -550,10 +553,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             c->SetParticleListCount(1);
             c->AccessParticles(0).SetCount(ft->GetRowsCount());
             c->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
-            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().IsEmpty()) {
+            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().empty()) {
                 float r, g, b;
                 core::utility::ColourParser::FromString(
-                    this->slotGlobalColor.Param<core::param::StringParam>()->Value(), r, g, b);
+                    this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
                 c->AccessParticles(0).SetGlobalColour(static_cast<unsigned int>(r * 255.0f),
                     static_cast<unsigned int>(g * 255.0f), static_cast<unsigned int>(b * 255.0f));
             }
@@ -563,13 +566,13 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
                     c->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
                     c->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -578,22 +581,22 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     c->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
                 case 2: // global RGB
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
                 if (haveVelocities) {
-                    c->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    c->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 }
             }
@@ -614,10 +617,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             e->SetParticleListCount(1);
             e->AccessParticles(0).SetCount(ft->GetRowsCount());
             e->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
-            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().IsEmpty()) {
+            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().empty()) {
                 float r, g, b;
                 core::utility::ColourParser::FromString(
-                    this->slotGlobalColor.Param<core::param::StringParam>()->Value(), r, g, b);
+                    this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
                 e->AccessParticles(0).SetGlobalColour(static_cast<unsigned int>(r * 255.0f),
                     static_cast<unsigned int>(g * 255.0f), static_cast<unsigned int>(b * 255.0f));
             }
@@ -627,13 +630,13 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
                     e->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
                     e->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -642,22 +645,22 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     e->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
                 case 2: // global RGB
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
                 // if (haveVelocities) {
-                //    e->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                //    e->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                 //        this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 //}
 
@@ -690,8 +693,8 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
  */
 bool TableToParticles::getMultiparticleExtent(core::Call& call) {
     try {
-        auto* c = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-        auto* e = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&call);
+        auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+        auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == nullptr) return false;
 

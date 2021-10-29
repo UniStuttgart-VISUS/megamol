@@ -68,20 +68,25 @@ ButtonParam::~ButtonParam(void) {
 /*
  * ButtonParam::Definition
  */
-void ButtonParam::Definition(vislib::RawStorage& outDef) const {
-
-    outDef.AssertSize(6 + (2 * sizeof(WORD)));
-    memcpy(outDef.AsAt<char>(0), "MMBUTN", 6);
-    *outDef.AsAt<WORD>(6) = (WORD)this->keycode.key;
-    core::view::Modifiers mods = this->keycode.mods;
-    *outDef.AsAt<WORD>(6 + sizeof(WORD)) = (WORD)mods.toInt();
+std::string ButtonParam::Definition() const {
+    std::string name = "MMBUTN";
+    std::string return_str;
+    return_str.resize(name.size() + (2 * sizeof(WORD)));
+    std::copy(name.begin(), name.end(), return_str.begin());
+    std::copy(reinterpret_cast<char const*>(&this->keycode.key),
+        reinterpret_cast<char const*>(&this->keycode.key) + sizeof(WORD), return_str.begin() + name.size());
+    auto const mods = this->keycode.mods.toInt();
+    std::copy(reinterpret_cast<char const*>(&this->keycode.key),
+        reinterpret_cast<char const*>(&mods) + sizeof(WORD),
+        return_str.begin() + name.size() + sizeof(WORD));
+    return return_str;
 }
 
 
 /*
  * ButtonParam::ParseValue
  */
-bool ButtonParam::ParseValue(const vislib::TString& v) {
+bool ButtonParam::ParseValue(std::string const& v) {
 
     this->setDirty();
     return true;
@@ -91,10 +96,10 @@ bool ButtonParam::ParseValue(const vislib::TString& v) {
 /*
  * ButtonParam::ValueString
  */
-vislib::TString ButtonParam::ValueString(void) const {
+std::string ButtonParam::ValueString(void) const {
 
     // intentionally empty
-    return _T("");
+    return std::string();
 }
 
 void ButtonParam::initialize() {

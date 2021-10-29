@@ -9,6 +9,7 @@
 #include "GrimRenderer.h"
 
 #include "mmcore/view/light/DistantLight.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include <glm/ext.hpp>
 
@@ -596,32 +597,32 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vbpp = 3 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vbpp = 4 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     vbpp = 3 * sizeof(short);
                     break;
                 default:
                     continue;
             }
             switch (ptype.GetColourDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     cbpp = 3;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     cbpp = 4;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     cbpp = 3 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     cbpp = 4 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                     cbpp = sizeof(float);
                     break;
                 default:
@@ -673,9 +674,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
             // radius and position
             switch (ptype.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -684,7 +685,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                         glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -695,7 +696,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             parts.GetVertexData());
                     }
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
@@ -767,32 +768,32 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vbpp = 3 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vbpp = 4 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     vbpp = 3 * sizeof(short);
                     break;
                 default:
                     continue;
             }
             switch (ptype.GetColourDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     cbpp = 3;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     cbpp = 4;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     cbpp = 3 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     cbpp = 4 * sizeof(float);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                     cbpp = sizeof(float);
                     break;
                 default:
@@ -844,9 +845,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
             // radius and position
             switch (ptype.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
@@ -856,7 +857,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                         glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
@@ -866,7 +867,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                         glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
@@ -1228,9 +1229,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 // radius and position
                 switch (ptype.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
                             glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
@@ -1243,7 +1244,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
                             glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
@@ -1256,7 +1257,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
@@ -1365,10 +1366,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 // colour
                 switch (ptype.GetColourDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
                         glColor3ubv(ptype.GetGlobalColour());
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1378,7 +1379,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1388,7 +1389,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1398,7 +1399,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1408,7 +1409,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                         glEnableVertexAttribArrayARB(cial2);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1441,9 +1442,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 // radius and position
                 switch (ptype.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -1454,7 +1455,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
@@ -1467,7 +1468,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
@@ -1554,10 +1555,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 // colour
                 switch (ptype.GetColourDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
                         glColor3ubv(ptype.GetGlobalColour());
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1567,7 +1568,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1577,7 +1578,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1587,7 +1588,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1597,7 +1598,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                         glEnableVertexAttribArrayARB(cial);
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1630,9 +1631,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 // radius and position
                 switch (ptype.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -1643,7 +1644,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
@@ -1654,7 +1655,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
                             glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
@@ -1714,32 +1715,32 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
                 unsigned int vbpp = 1, cbpp = 1;
                 switch (ptype.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vbpp = 3 * sizeof(float);
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vbpp = 4 * sizeof(float);
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                         vbpp = 3 * sizeof(short);
                         break;
                     default:
                         continue;
                 }
                 switch (ptype.GetColourDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         cbpp = 3;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         cbpp = 4;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         cbpp = 3 * sizeof(float);
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         cbpp = 4 * sizeof(float);
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                         cbpp = sizeof(float);
                         break;
                     default:

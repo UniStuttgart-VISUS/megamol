@@ -58,7 +58,7 @@ datatools::ParticleIColFilter::~ParticleIColFilter() {
 }
 
 bool datatools::ParticleIColFilter::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     if ((frameId != inData.FrameID()) || (dataHash != inData.DataHash()) || (inData.DataHash() == 0) || isDirty()) {
         frameId = inData.FrameID();
@@ -84,7 +84,7 @@ bool datatools::ParticleIColFilter::reset(core::param::ParamSlot&) {
     return true;
 }
 
-void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall& inDat) {
+void datatools::ParticleIColFilter::setData(geocalls::MultiParticleDataCall& inDat) {
     unsigned int cnt = inDat.GetParticleListCount();
     parts.resize(cnt);
     data.resize(cnt);
@@ -116,11 +116,11 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall&
 //    }
 //}
 
-void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d,
-    const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox,
+void datatools::ParticleIColFilter::setData(geocalls::MultiParticleDataCall::Particles& p, vislib::RawStorage& d,
+    const geocalls::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox,
     ParticleFilterMapDataCall::index_t& mapOffset) {
-    using core::moldyn::MultiParticleDataCall;
-    using core::moldyn::SimpleSphericalParticles;
+    using geocalls::MultiParticleDataCall;
+    using geocalls::SimpleSphericalParticles;
     using vislib::RawStorage;
 
     p.SetCount(0);

@@ -9,7 +9,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
 #include "TransferFunctionQuery.h"
@@ -41,10 +41,10 @@ namespace datatools {
         virtual ~ParticleDensityOpacityModule(void);
     private:
 
-        class Unlocker : public core::moldyn::MultiParticleDataCall::Unlocker {
+        class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
         public:
-            Unlocker(core::moldyn::MultiParticleDataCall::Unlocker *inner) :
-                    core::moldyn::MultiParticleDataCall::Unlocker(), inner(inner) {
+            Unlocker(geocalls::MultiParticleDataCall::Unlocker *inner) :
+                    geocalls::MultiParticleDataCall::Unlocker(), inner(inner) {
                 // intentionally empty
             }
             virtual ~Unlocker(void) {
@@ -57,7 +57,7 @@ namespace datatools {
                 }
             }
         private:
-            core::moldyn::MultiParticleDataCall::Unlocker *inner;
+            geocalls::MultiParticleDataCall::Unlocker *inner;
         };
 
         enum class DensityAlgorithmType : int {
@@ -78,11 +78,11 @@ namespace datatools {
         bool getDataCallback(core::Call& caller);
         bool getExtentCallback(core::Call& caller);
 
-        void makeData(core::moldyn::MultiParticleDataCall *dat);
+        void makeData(geocalls::MultiParticleDataCall *dat);
 
-        size_t count_all_particles(core::moldyn::MultiParticleDataCall *dat);
-        void compute_density_grid(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
-        void compute_density_grid_grouped(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
+        size_t count_all_particles(geocalls::MultiParticleDataCall *dat);
+        void compute_density_grid(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
+        void compute_density_grid_grouped(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
 
         core::CalleeSlot putDataSlot;
         core::CallerSlot getDataSlot;

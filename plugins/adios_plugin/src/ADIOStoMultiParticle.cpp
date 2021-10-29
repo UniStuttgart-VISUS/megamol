@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "ADIOStoMultiParticle.h"
 #include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include <numeric>
 
@@ -21,10 +21,10 @@ ADIOStoMultiParticle::ADIOStoMultiParticle(void)
     , mpSlot("mpSlot", "Slot to send multi particle data.")
     , adiosSlot("adiosSlot", "Slot to request ADIOS IO") {
 
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ADIOStoMultiParticle::getDataCallback);
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ADIOStoMultiParticle::getExtentCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ADIOStoMultiParticle::getDataCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ADIOStoMultiParticle::getExtentCallback);
     this->MakeSlotAvailable(&this->mpSlot);
 
     this->adiosSlot.SetCompatibleCall<CallADIOSDataDescription>();
@@ -38,7 +38,7 @@ bool ADIOStoMultiParticle::create(void) { return true; }
 void ADIOStoMultiParticle::release(void) {}
 
 bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
@@ -122,9 +122,9 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 X = cad->getData("xyz")->GetAsUChar();
                 stride += 3 * cad->getData("xyz")->getTypeSize();
                 if (cad->getData("xyz")->getTypeSize() == 4) {
-                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                    vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
                 } else {
-                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                    vertType = geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
                 }
             } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
                 X = cad->getData("x")->GetAsUChar();
@@ -132,9 +132,9 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 Z = cad->getData("z")->GetAsUChar();
                 stride += 3 * cad->getData("x")->getTypeSize();
                 if (cad->getData("x")->getTypeSize() == 4) {
-                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                    vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
                 } else {
-                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                    vertType = geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -231,14 +231,14 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 plist_count.emplace_back(particleCount);
 
                 // Set types
-                colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-                idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+                colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
+                idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
 
                 if (cad->isInVars("global_radius")) {
                     auto flt_radius = cad->getData("global_radius")->GetAsFloat();
                     mpdc->AccessParticles(k).SetGlobalRadius(flt_radius[0]);
                 } else if (cad->isInVars("radius")) {
-                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
+                    vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
                 } else {
                     mpdc->AccessParticles(k).SetGlobalRadius(1.0f);
                 }
@@ -250,24 +250,24 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                     mpdc->AccessParticles(k).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
                 } else if (cad->isInVars("r")) {
                     if (cad->getData("r")->getType() == "float") {
-                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+                        colType = geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
                     } else {
-                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
+                        colType = geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
                     }
                 } else if (cad->isInVars("i")) {
                     if (cad->getData("i")->getType() == "float") {
-                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+                        colType = geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I;
                     } else {
-                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I;
+                        colType = geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I;
                     }
                 } else {
                     mpdc->AccessParticles(k).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
                 }
                 if (cad->isInVars("id")) {
                     if (cad->getData("id")->getType() == "uint64_t") {
-                        idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT64;
+                        idType = geocalls::SimpleSphericalParticles::IDDATA_UINT64;
                     } else if (cad->getData("id")->getType() == "uint32_t") {
-                        idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
+                        idType = geocalls::SimpleSphericalParticles::IDDATA_UINT32;
                     }
                 }
 
@@ -329,10 +329,10 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
         mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
         mpdc->AccessParticles(k).SetColourData(
-            colType, mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+            colType, mix[k].data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
         mpdc->AccessParticles(k).SetIDData(idType,
-            mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
-                core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
+            mix[k].data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
+                geocalls::SimpleSphericalParticles::ColorDataSize[colType],
             stride);
         if (cad->isInVars("list_box")) {
             vislib::math::Cuboid<float> lbox(list_box[6 * k + 0], list_box[6 * k + 1], std::min(list_box[6 * k + 2], list_box[6 * k + 5]),
@@ -350,7 +350,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
 bool ADIOStoMultiParticle::getExtentCallback(core::Call& call) {
 
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();

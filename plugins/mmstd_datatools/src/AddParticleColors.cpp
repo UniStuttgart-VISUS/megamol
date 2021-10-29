@@ -38,7 +38,7 @@ glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(
 
 
 bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
-    core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf == nullptr)
@@ -58,8 +58,8 @@ bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
 
         for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
             auto& parts = outData.AccessParticles(plidx);
-            if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
-                parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I)
+            if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+                parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)
                 continue;
 
             auto const p_count = parts.GetCount();
@@ -91,7 +91,7 @@ bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
     auto const pl_count = outData.GetParticleListCount();
     for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
         outData.AccessParticles(plidx).SetColourData(
-            core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
+            geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
     }
 
     outData.SetDataHash(_out_data_hash);

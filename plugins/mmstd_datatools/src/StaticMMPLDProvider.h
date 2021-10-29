@@ -3,7 +3,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "mmpld.h"
 #include "vislib/math/mathtypes.h"
@@ -50,28 +50,28 @@ protected:
     core::param::ParamSlot filenamesSlot;
 
 private:
-    static core::moldyn::SimpleSphericalParticles::ColourDataType ColorTypeTranslator(mmpld::color_type ct) {
+    static geocalls::SimpleSphericalParticles::ColourDataType ColorTypeTranslator(mmpld::color_type ct) {
         switch (ct) {
         case mmpld::color_type::UINT8_RGB:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB;
+            return geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB;
         case mmpld::color_type::UINT8_RGBA:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
+            return geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
         case mmpld::color_type::FLOAT_RGB:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB;
+            return geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB;
         case mmpld::color_type::FLOAT_RGBA:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+            return geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
         case mmpld::color_type::FLOAT_I:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+            return geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I;
         case mmpld::color_type::DOUBLE_I:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I;
+            return geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I;
         case mmpld::color_type::SHORT_RGBA:
-            return core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA;
+            return geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA;
         }
 
-        return core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
+        return geocalls::SimpleSphericalParticles::COLDATA_NONE;
     }
 
-    bool assertData(core::moldyn::MultiParticleDataCall& outCall);
+    bool assertData(geocalls::MultiParticleDataCall& outCall);
 
     bool getDataCallback(core::Call& c);
 

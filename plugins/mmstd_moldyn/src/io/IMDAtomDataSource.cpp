@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "io/IMDAtomDataSource.h"
 #include <climits>
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -907,7 +907,7 @@ void IMDAtomDataSource::release(void) { this->clear(); }
  * IMDAtomDataSource::getDataCallback
  */
 bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == NULL) return false;
     this->assertData();
 
@@ -915,7 +915,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         this->colourSlot.ResetDirty();
         float r, g, b;
         if (core::utility::ColourParser::FromString(
-                this->colourSlot.Param<core::param::StringParam>()->Value(), r, g, b)) {
+                this->colourSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b)) {
             this->defCol[0] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(r * 255.0f), 0, 255));
             this->defCol[1] =
@@ -925,7 +925,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default colour \"%s\"\n",
-                vislib::StringA(this->colourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+                this->colourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
     vislib::Array<int> colMode(this->posData.Count(), this->colourModeSlot.Param<core::param::EnumParam>()->Value(),
@@ -939,7 +939,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         this->dircolourSlot.ResetDirty();
         float r, g, b;
         if (core::utility::ColourParser::FromString(
-                this->dircolourSlot.Param<core::param::StringParam>()->Value(), r, g, b)) {
+                this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b)) {
             this->dirdefCol[0] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(r * 255.0f), 0, 255));
             this->dirdefCol[1] =
@@ -949,7 +949,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default dir::colour \"%s\"\n",
-                vislib::StringA(this->dircolourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+                this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
     int dircolMode = this->dircolourModeSlot.Param<core::param::EnumParam>()->Value();
@@ -970,14 +970,14 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "IMDAtomDataSource: inconsistent positions and directions, disabling data");
                     mpdc->AccessParticles(idx).SetVertexData(
-                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     mpdc->AccessParticles(idx).SetDirData(
-                        core::moldyn::MultiParticleDataCall::Particles::DIRDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::DIRDATA_NONE, NULL);
                 } else {
                     mpdc->AccessParticles(idx).SetVertexData(
-                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->allDirData[idx]->As<void>(), fpp * sizeof(float));
                     if (dircolMode == 1) {
                         if (this->dirautoColumnRangeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -988,18 +988,18 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                                 this->dirmaxColumnValSlot.Param<core::param::FloatParam>()->Value());
                         }
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                             this->allDirData[idx]->At(3 * sizeof(float)), fpp * sizeof(float));
                     } else if (dircolMode == 2) {
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                             this->allDirData[idx]->At(3 * sizeof(float)), fpp * sizeof(float));
                     } else {
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     }
                     mpdc->AccessParticles(idx).SetDirData(
-                        core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->allDirData[idx]->At(
                             ((dircolMode == 1) ? 4 : ((dircolMode == 2) ? 6 : 3)) * sizeof(float)),
                         fpp * sizeof(float));
@@ -1008,7 +1008,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                 switch (colMode[idx]) {
                 case 0:
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 case 1:
                     if (this->autoColumnRangeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -1019,22 +1019,22 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                             this->maxColumnValSlot.Param<core::param::FloatParam>()->Value());
                     }
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->colData[idx]->As<void>());
                     break;
                 default:
                     mpdc->AccessParticles(idx).SetColourData( // some internal error
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 }
             }
 
             if (!this->posData[idx]->IsEmpty()) {
                 mpdc->AccessParticles(idx).SetVertexData(
-                    core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData[idx]->As<void>());
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData[idx]->As<void>());
             } else {
                 mpdc->AccessParticles(idx).SetVertexData(
-                    core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
             }
         }
         mpdc->SetUnlocker(nullptr);
@@ -1048,7 +1048,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
  * IMDAtomDataSource::getExtentCallback
  */
 bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == NULL) return false;
     this->assertData();
 
@@ -1154,9 +1154,9 @@ void IMDAtomDataSource::assertData(void) {
     bool machineLittleEndian = ((endianTestBytes[0] == 0x78) && (endianTestBytes[1] == 0x56) &&
                                 (endianTestBytes[2] == 0x34) && (endianTestBytes[3] == 0x12));
 
-    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value();
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value().c_str();
     INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
     INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
     INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
@@ -1477,9 +1477,9 @@ bool IMDAtomDataSource::readData(
     vislib::PtrArray<vislib::RawStorageWriter> dirWriters;
 
     bool normaliseDir = this->dirNormDirSlot.Param<core::param::BoolParam>()->Value();
-    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value();
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value().c_str();
     INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
     INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
     INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
@@ -1490,7 +1490,7 @@ bool IMDAtomDataSource::readData(
 
     if (true) {
         // type from column
-        vislib::StringA typecolname(this->typeColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA typecolname(this->typeColumnSlot.Param<core::param::StringParam>()->Value().c_str());
 
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
@@ -1533,7 +1533,7 @@ bool IMDAtomDataSource::readData(
 
     if (this->colourModeSlot.Param<core::param::EnumParam>()->Value() == 1) {
         // column colouring mode
-        vislib::StringA colcolname(this->colourColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA colcolname(this->colourColumnSlot.Param<core::param::StringParam>()->Value().c_str());
 
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
@@ -1576,7 +1576,7 @@ bool IMDAtomDataSource::readData(
 
     if (dircolMode == 1) {
         // column colouring mode
-        vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<core::param::StringParam>()->Value().c_str());
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
             if (header.captions[i].Equals(dircolcolname)) {

@@ -13,7 +13,7 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 #include <array>
 #include <vector>
@@ -91,13 +91,13 @@ namespace volume {
         /** The distance volume */
         std::vector<float> volume;
 
-		/** Metadata */
-		const std::array<float, 3> resolution;
-		const std::array<float, 3> sliceDists;
-		const double minValue;
-		const double maxValue;
+	/** Metadata */
+	const std::array<float, 3> resolution;
+	const std::array<float, 3> sliceDists;
+	const double minValue;
+	const double maxValue;
 
-		core::misc::VolumetricMetadata_t metaData;
+	geocalls::VolumetricMetadata_t metaData;
     };
 
 } /* end namespace volume */

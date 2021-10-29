@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "MPIVolumeAggregator.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include <chrono>
@@ -47,8 +47,8 @@ datatools::MPIVolumeAggregator::~MPIVolumeAggregator(void) { this->Release(); }
  * datatools::MPIVolumeAggregator::manipulateData
  */
 bool datatools::MPIVolumeAggregator::manipulateData(
-    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
-    using megamol::core::misc::VolumetricDataCall;
+    geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData) {
+    using geocalls::VolumetricDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
 

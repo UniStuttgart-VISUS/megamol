@@ -26,7 +26,7 @@ LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
         geocalls::CallTriMeshData::ClassName(), "GetExtent", &LocalBoundingBoxExtractor::getExtentCallback);
     this->MakeSlotAvailable(&this->outMeshSlot);
 
-    this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->colorSlot << new megamol::core::param::ColorParam(0.8 ,0.8, 0.8, 1.0);
@@ -48,13 +48,13 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
     
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
-    core::moldyn::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr) return false;
 
     if (!(*mpdc)(0)) return false;
 
 
-    core::moldyn::MultiParticleDataCall::Particles& parts =  mpdc->AccessParticles(0);
+    geocalls::MultiParticleDataCall::Particles& parts =  mpdc->AccessParticles(0);
 
     vislib::math::Cuboid<float> a = parts.GetBBox();
         
@@ -210,7 +210,7 @@ bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
     
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
-    core::moldyn::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr) return false;
 
     if (!(*mpdc)(1)) return false;
@@ -229,7 +229,7 @@ bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
 }
 
 void LocalBoundingBoxExtractor::calcLocalBox(
-    core::moldyn::MultiParticleDataCall::Particles& parts, vislib::math::Cuboid<float>& box) {
+    geocalls::MultiParticleDataCall::Particles& parts, vislib::math::Cuboid<float>& box) {
     
     if (!(parts.GetCount() > 0)) return;
 

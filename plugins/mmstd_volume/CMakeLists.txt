@@ -6,7 +6,9 @@
 megamol_plugin(mmstd_volume
   BUILD_DEFAULT ON
   DEPENDS_EXTERNALS
-    glowl)
+    glowl 
+  DEPENDS_PLUGINS
+    geometry_calls)
 
 if (mmstd_volume_PLUGIN_ENABLED)
   #XXX: hacky appraoch to include datraw

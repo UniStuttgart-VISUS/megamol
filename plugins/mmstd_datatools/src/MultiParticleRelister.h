@@ -15,7 +15,7 @@
 #include "vislib/graphics/ColourRGBAu8.h"
 #include <vector>
 #include <cstdint>
-#include "mmcore/moldyn/ParticleRelistCall.h"
+#include "geometry_calls/ParticleRelistCall.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -33,12 +33,12 @@ namespace datatools {
     protected:
 
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData,
+            geocalls::MultiParticleDataCall& inData);
 
     private:
 
-        void copyData(const core::moldyn::SimpleSphericalParticles& inData, const core::moldyn::ParticleRelistCall& relist);
+        void copyData(const geocalls::SimpleSphericalParticles& inData, const geocalls::ParticleRelistCall& relist);
 
         core::CallerSlot getRelistInfoSlot;
 
@@ -47,9 +47,9 @@ namespace datatools {
         size_t inRelistHash;
         size_t outRelistHash;
 
-        core::moldyn::SimpleSphericalParticles::ColourDataType colDatTyp;
+        geocalls::SimpleSphericalParticles::ColourDataType colDatTyp;
         vislib::graphics::ColourRGBAu8 globCol;
-        core::moldyn::SimpleSphericalParticles::VertexDataType verDatTyp;
+        geocalls::SimpleSphericalParticles::VertexDataType verDatTyp;
         float globRad;
         size_t partSize;
         size_t colOffset;

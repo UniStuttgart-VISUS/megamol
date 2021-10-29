@@ -7,7 +7,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "vislib/math/Point.h"
 
@@ -78,7 +78,7 @@ private:
     std::vector<BrickLet> gridify(
         std::vector<Particle>& particles, Box const& bbox, size_t maxSize, size_t begin, size_t end);
 
-    std::vector<core::moldyn::SimpleSphericalParticles> separate(
+    std::vector<geocalls::SimpleSphericalParticles> separate(
         std::vector<Particle> const& particles, std::vector<BrickLet> const& bricks, float radius);
 
     core::CalleeSlot data_out_slot_;
@@ -95,7 +95,7 @@ private:
 
     std::vector<std::vector<Particle>> data_;
 
-    std::vector<core::moldyn::SimpleSphericalParticles> output_;
+    std::vector<geocalls::SimpleSphericalParticles> output_;
 }; // class MPDCGrid
 
 inline vislib::math::Vector<float, 3> span(vislib::math::Cuboid<float> const& box) {

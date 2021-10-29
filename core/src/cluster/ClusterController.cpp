@@ -167,8 +167,11 @@ bool cluster::ClusterController::create(void) {
         = this->GetCoreInstance()->Configuration();
 
     if (cfg.IsConfigValueSet("cdsname")) {
-        this->cdsNameSlot.Param<param::StringParam>()->SetValue(
-            cfg.ConfigValue("cdsname").PeekBuffer());
+        auto cdsname_wstr = std::wstring(cfg.ConfigValue("cdsname").PeekBuffer());
+        std::string cdsname_str;
+        cdsname_str.resize(cdsname_wstr.length());
+        std::wcstombs(cdsname_str.data(), cdsname_wstr.data(), cdsname_wstr.length());
+        this->cdsNameSlot.Param<param::StringParam>()->SetValue(cdsname_str);
     }
     if (cfg.IsConfigValueSet("cdsaddress")) { // for legacy configuration
         try {
@@ -270,7 +273,7 @@ DWORD cluster::ClusterController::Run(void *userData) {
             if (run) {
                 try {
                     vislib::StringA name(
-                        this->cdsNameSlot.Param<param::StringParam>()->Value());
+                        this->cdsNameSlot.Param<param::StringParam>()->Value().c_str());
                     unsigned short port = static_cast<unsigned short>(this->cdsPortSlot.Param<param::IntParam>()->Value());
                     vislib::SmartPtr<DiscoveryService::DiscoveryConfig> cfg;
 

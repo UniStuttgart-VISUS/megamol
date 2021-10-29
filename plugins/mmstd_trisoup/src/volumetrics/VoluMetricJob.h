@@ -13,7 +13,6 @@
 
 #include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "CallVolumetricData.h"

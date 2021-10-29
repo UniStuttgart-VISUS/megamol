@@ -7,11 +7,12 @@
 #include "TunnelToParticles.h"
 
 #include "protein_calls/TunnelResidueDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 
 /*
  * TunnelToParticles::TunnelToParticles

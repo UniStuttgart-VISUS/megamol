@@ -55,7 +55,7 @@ bool megamol::core::utility::LuaHostSettingsModule::portSlotChanged(core::param:
     LuaHostService* ser = getHostService();
     if (ser == nullptr) return false;
 
-    ser->SetAddress(std::string(vislib::StringA(portSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()));
+    ser->SetAddress(portSlot.Param<core::param::StringParam>()->Value());
 
     return true;
 }

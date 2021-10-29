@@ -8,7 +8,7 @@
 #define MEGAMOL_DATATOOLS_MULTIPARTICLEDATAADAPTOR_H_INCLUDED
 #pragma once
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -36,7 +36,7 @@ namespace datatools {
         } list_data;
 
     public:
-        MultiParticleDataAdaptor(core::moldyn::MultiParticleDataCall& data);
+        MultiParticleDataAdaptor(geocalls::MultiParticleDataCall& data);
         ~MultiParticleDataAdaptor();
 
         inline size_t get_count() const {
@@ -69,7 +69,7 @@ namespace datatools {
 
     protected:
 
-        const core::moldyn::MultiParticleDataCall& data;
+        const geocalls::MultiParticleDataCall& data;
 
     private:
 
