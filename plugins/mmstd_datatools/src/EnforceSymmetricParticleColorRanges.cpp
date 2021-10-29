@@ -34,15 +34,15 @@ datatools::EnforceSymmetricParticleColorRanges::~EnforceSymmetricParticleColorRa
  * datatools::EnforceSymmetricParticleColorRanges::manipulateData
  */
 bool datatools::EnforceSymmetricParticleColorRanges::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
     unsigned int plc = outData.GetParticleListCount();
     for (unsigned int i = 0; i < plc; i++) {
         auto& p = outData.AccessParticles(i);
-        if (p.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+        if (p.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            continue;
         float colIdxVal = std::max<float>(std::abs(p.GetMinColourIndexValue()), std::abs(p.GetMaxColourIndexValue()));
         p.SetColourMapIndexValues(-colIdxVal, colIdxVal);
     }

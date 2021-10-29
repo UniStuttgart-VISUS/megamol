@@ -8,9 +8,10 @@
 #include "stdafx.h"
 #include "ls1ParticleFormat.h"
 #include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "MinSphereWrapper.h"
 #include <numeric>
@@ -24,12 +25,13 @@ ls1ParticleFormat::ls1ParticleFormat(void)
     , mpSlot("mpSlot", "Slot to send multi particle data.")
     , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
     , representationSlot("representation", "Chose between displaying molecules or atoms")
+    , forceFloatSlot("force float", "")
     , transferfunctionSlot("transferfunctionSlot", "") {
 
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ls1ParticleFormat::getDataCallback);
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ls1ParticleFormat::getExtentCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ls1ParticleFormat::getDataCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ls1ParticleFormat::getExtentCallback);
     this->MakeSlotAvailable(&this->mpSlot);
 
     this->adiosSlot.SetCompatibleCall<CallADIOSDataDescription>();
@@ -42,6 +44,9 @@ ls1ParticleFormat::ls1ParticleFormat(void)
     this->representationSlot << displayEnum;
     this->representationSlot.SetUpdateCallback(&ls1ParticleFormat::representationChanged);
     this->MakeSlotAvailable(&this->representationSlot);
+
+    forceFloatSlot << new core::param::BoolParam(false);
+    MakeSlotAvailable(&forceFloatSlot);
 
 
     this->transferfunctionSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -57,7 +62,7 @@ bool ls1ParticleFormat::create(void) { return true; }
 void ls1ParticleFormat::release(void) {}
 
 bool ls1ParticleFormat::getDataCallback(core::Call& call) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
@@ -84,10 +89,15 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             cad->inquireVar("ry");
             cad->inquireVar("rz");
             cad->inquireVar("component_id");
-            cad->inquireVar("qw");
-            cad->inquireVar("qx");
-            cad->inquireVar("qy");
-            cad->inquireVar("qz");
+            cad->inquireVar("vx");
+            cad->inquireVar("vy");
+            cad->inquireVar("vz");
+            if (cad->isInVars("qw")) {
+                cad->inquireVar("qw");
+                cad->inquireVar("qx");
+                cad->inquireVar("qy");
+                cad->inquireVar("qz");
+            }
 
             cad->inquireVar("global_box");
 
@@ -96,10 +106,18 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 return false;
             }
 
-            auto qw = cad->getData("qw")->GetAsDouble();
-            auto qx = cad->getData("qx")->GetAsDouble();
-            auto qy = cad->getData("qy")->GetAsDouble();
-            auto qz = cad->getData("qz")->GetAsDouble();
+            std::vector<double> qw;
+            std::vector<double> qx;
+            std::vector<double> qy;
+            std::vector<double> qz;
+
+            if (cad->isInVars("qw")) {
+                qw = cad->getData("qw")->GetAsDouble();
+                qx = cad->getData("qx")->GetAsDouble();
+                qy = cad->getData("qy")->GetAsDouble();
+                qz = cad->getData("qz")->GetAsDouble();
+            }
+
 
             auto comp_id = cad->getData("component_id")->GetAsUInt64();
 
@@ -110,13 +128,24 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             stride += 3 * cad->getData("rx")->getTypeSize();
             uint64_t p_count = X.size() / cad->getData("rx")->getTypeSize();
 
+            auto VX = cad->getData("vx")->GetAsUChar();
+            auto VY = cad->getData("vy")->GetAsUChar();
+            auto VZ = cad->getData("vz")->GetAsUChar();
+
+            auto const forceFloat = forceFloatSlot.Param<core::param::BoolParam>()->Value();
+
             int pos_size = 0;
-            if (cad->getData("rx")->getTypeSize() == 4) {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-                pos_size = sizeof(float);
+            int dir_size = 0;
+            if (cad->getData("rx")->getTypeSize() == 4 || forceFloat) {
+                vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                dirType = geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
+                pos_size = cad->getData("rx")->getTypeSize();
+                dir_size = cad->getData("vx")->getTypeSize();
             } else {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
-                pos_size = sizeof(double);
+                vertType = geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                dirType = geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
+                pos_size = cad->getData("rx")->getTypeSize();
+                dir_size = cad->getData("vx")->getTypeSize();
             }
             bbox = cad->getData("global_box")->GetAsFloat();
 
@@ -144,24 +173,58 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
             plist_count.clear();
             mix.clear();
+            dirs.clear();
             num_plists = 0;
-            if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0) {
+            if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0 || qw.empty()) {
                 num_plists = num_components;
                 mix.clear();
                 mix.resize(num_plists);
+                dirs.clear();
+                dirs.resize(num_plists);
                 list_radii.clear();
                 list_radii.resize(num_plists);
                 plist_count.resize(num_plists,0);
 
-                for (int i = 0; i < p_count; ++i) {
-                    mix[comp_id[i]].insert(
-                        mix[comp_id[i]].end(), X.begin() + pos_size * i, X.begin() + pos_size * (i + 1));
-                    mix[comp_id[i]].insert(
-                        mix[comp_id[i]].end(), Y.begin() + pos_size * i, Y.begin() + pos_size * (i + 1));
-                    mix[comp_id[i]].insert(
-                        mix[comp_id[i]].end(), Z.begin() + pos_size * i, Z.begin() + pos_size * (i + 1));
-                    plist_count[comp_id[i]] += 1;
+                if (forceFloat && !(pos_size == 4)) {
+                    for (int i = 0; i < p_count; ++i) {
+                        auto const x = static_cast<float>(*reinterpret_cast<double*>(&X[pos_size * i]));
+                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&x),
+                            reinterpret_cast<uint8_t const*>(&x) + sizeof(x));
+                        auto const y = static_cast<float>(*reinterpret_cast<double*>(&Y[pos_size * i]));
+                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&y),
+                            reinterpret_cast<uint8_t const*>(&y) + sizeof(y));
+                        auto const z = static_cast<float>(*reinterpret_cast<double*>(&Z[pos_size * i]));
+                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&z),
+                            reinterpret_cast<uint8_t const*>(&z) + sizeof(z));
+                        auto const vx = static_cast<float>(*reinterpret_cast<double*>(&VX[dir_size * i]));
+                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vx),
+                            reinterpret_cast<uint8_t const*>(&vx) + sizeof(vx));
+                        auto const vy = static_cast<float>(*reinterpret_cast<double*>(&VY[dir_size * i]));
+                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vy),
+                            reinterpret_cast<uint8_t const*>(&vy) + sizeof(vy));
+                        auto const vz = static_cast<float>(*reinterpret_cast<double*>(&VZ[dir_size * i]));
+                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vz),
+                            reinterpret_cast<uint8_t const*>(&vz) + sizeof(vz));
+                        plist_count[comp_id[i]] += 1;
+                    }
+                } else {
+                    for (int i = 0; i < p_count; ++i) {
+                        mix[comp_id[i]].insert(
+                            mix[comp_id[i]].end(), X.begin() + pos_size * i, X.begin() + pos_size * (i + 1));
+                        mix[comp_id[i]].insert(
+                            mix[comp_id[i]].end(), Y.begin() + pos_size * i, Y.begin() + pos_size * (i + 1));
+                        mix[comp_id[i]].insert(
+                            mix[comp_id[i]].end(), Z.begin() + pos_size * i, Z.begin() + pos_size * (i + 1));
+                        dirs[comp_id[i]].insert(
+                            dirs[comp_id[i]].end(), VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
+                        dirs[comp_id[i]].insert(
+                            dirs[comp_id[i]].end(), VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
+                        dirs[comp_id[i]].insert(
+                            dirs[comp_id[i]].end(), VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
+                        plist_count[comp_id[i]] += 1;
+                    }
                 }
+                
 
                 // calc circumsphere
                 for (int j = 0; j < num_components; ++j) {
@@ -182,6 +245,8 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 num_plists = num_atoms_total;
                 mix.clear();
                 mix.resize(num_plists);
+                dirs.clear();
+                dirs.resize(num_plists);
                 list_radii.clear();
                 list_radii.reserve(num_plists);
                 plist_count.resize(num_plists, 0);
@@ -221,6 +286,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                             auto uchar_pos = reinterpret_cast<std::vector<unsigned char>&>(pos);
                             mix[component_offset[comp_id[i]] + j].insert(mix[component_offset[comp_id[i]] + j].end(), uchar_pos.begin(), uchar_pos.end());
                         }
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
                         plist_count[component_offset[comp_id[i]] + j] += 1;
                     }
                 }
@@ -263,25 +334,36 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     }
 
     for (auto k = 0; k < mix.size(); k++) {
+        auto& parts = mpdc->AccessParticles(k);
         if (!list_colors.empty()) {
-            mpdc->AccessParticles(k).SetGlobalColour(
+            parts.SetGlobalColour(
                 list_colors[k][0] * 255, list_colors[k][1] * 255, list_colors[k][2] * 255, list_colors[k][3] * 255);
         } else {
             auto step = 255 / (num_plists - 1);
-            mpdc->AccessParticles(k).SetGlobalColour(k * step, k * step, k * step);
+            parts.SetGlobalColour(k * step, k * step, k * step);
         }
         // Set particles
-        mpdc->AccessParticles(k).SetCount(plist_count[k]);
+        parts.SetCount(plist_count[k]);
 
-        mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
-        mpdc->AccessParticles(k).SetGlobalRadius(list_radii[k]);
+        if (mix[k].data()== nullptr) {
+            parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
+        } else {
+            parts.SetVertexData(vertType, mix[k].data());
+        }
+        
+        if (dirs[k].data() == nullptr) {
+            parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
+        } else {
+            parts.SetDirData(dirType, dirs[k].data());
+        }
+        parts.SetGlobalRadius(list_radii[k]);
 
         // add id and velocity?
         //         mpdc->AccessParticles(k).SetColourData(
-        //    colType, mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+        //    colType, mix[k].data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
         //mpdc->AccessParticles(k).SetIDData(idType,
-        //    mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
-        //        core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
+        //    mix[k].data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
+        //        geocalls::SimpleSphericalParticles::ColorDataSize[colType],
         //    stride);
 
     }
@@ -296,7 +378,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
 bool ls1ParticleFormat::getExtentCallback(core::Call& call) {
 
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();

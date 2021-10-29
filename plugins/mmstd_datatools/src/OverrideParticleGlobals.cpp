@@ -74,9 +74,8 @@ datatools::OverrideParticleGlobals::~OverrideParticleGlobals(void) {
  * datatools::OverrideParticleGlobals::manipulateData
  */
 bool datatools::OverrideParticleGlobals::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     // TODO BUG no proper dirty checking and no own hash. In practice this will blow up on several occasions!
     bool overrideAll = this->overrideAllListSlot.Param<core::param::BoolParam>()->Value();

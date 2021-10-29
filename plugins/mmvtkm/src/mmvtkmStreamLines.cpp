@@ -151,11 +151,13 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psNumStreamlineSteps_.SetParameter(new core::param::IntParam(numSteps_, 1));
     this->MakeSlotAvailable(&this->psNumStreamlineSteps_);
 
-    this->psLowerStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam({0, 0, 0}));
+    this->psLowerStreamlineSeedBound_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0, 0, 0)));
     this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->psLowerStreamlineSeedBound_);
 
-    this->psUpperStreamlineSeedBound_.SetParameter(new core::param::Vector3fParam({1, 1, 1}));
+    this->psUpperStreamlineSeedBound_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->psUpperStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->psUpperStreamlineSeedBound_);
 
@@ -165,25 +167,29 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psSeedPlaneMode_.SetUpdateCallback(&mmvtkmStreamLines::planeModeChanged);
     this->MakeSlotAvailable(&this->psSeedPlaneMode_);
 
-    this->psPlaneOrigin_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
+    this->psPlaneOrigin_.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.f, 0.f, 0.f)));
     this->MakeSlotAvailable(&this->psPlaneOrigin_);
     this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
-    this->psPlaneConnectionVertex1_.SetParameter(new core::param::Vector3fParam({-50.f, -50.f, 0.f}));
+    this->psPlaneConnectionVertex1_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(-50.f, -50.f, 0.f)));
     this->MakeSlotAvailable(&this->psPlaneConnectionVertex1_);
     this->psPlaneConnectionVertex1_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
-    this->psPlaneConnectionVertex2_.SetParameter(new core::param::Vector3fParam({50.f, 50.f, 100.f}));
+    this->psPlaneConnectionVertex2_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(50.f, 50.f, 100.f)));
     this->MakeSlotAvailable(&this->psPlaneConnectionVertex2_);
     this->psPlaneConnectionVertex2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
-    this->psSeedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
+    this->psSeedPlaneNormal_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.f, 0.f, 0.f)));
     this->psSeedPlaneNormal_.SetUpdateCallback(&mmvtkmStreamLines::ghostPlane);
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Direction);
 
-    this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 50.f}));
+    this->psSeedPlanePoint_.SetParameter(
+        new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.f, 0.f, 50.f)));
     this->MakeSlotAvailable(&this->psSeedPlanePoint_);
 
 	this->psSeedPlaneSTPQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));

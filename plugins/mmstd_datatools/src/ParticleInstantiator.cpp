@@ -51,9 +51,8 @@ void datatools::ParticleInstantiator::InterfaceResetDirty() {
 }
 
 bool datatools::ParticleInstantiator::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -94,18 +93,18 @@ bool datatools::ParticleInstantiator::manipulateData(
             int vert_components = 3;
             has_global_radius[i] = true;
 
-            if (p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
+            if (p.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
                 vert_components = 4;
                 has_global_radius[i] = false;
             }
 
             vertData[i].resize(p.GetCount() * vert_components * numTotalInstances);
-            if (p.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            if (p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                 colData[i].resize(0);
             } else {
                 colData[i].resize(p.GetCount() * 4 * numTotalInstances);
             }
-            if (p.GetDirDataType() == core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+            if (p.GetDirDataType() == geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                 dirData[i].resize(0);
             } else {
                 dirData[i].resize(p.GetCount() * 3 * numTotalInstances);
@@ -120,7 +119,7 @@ bool datatools::ParticleInstantiator::manipulateData(
             const auto& cbacc = s.GetCBAcc();
             const auto& caacc = s.GetCAAcc();
 
-            if (p.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            if (p.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                 for (uint64_t j = 0; j < p.GetCount(); ++j) {
                     colData[i][j * 4 + 0] = cracc->Get_f(j) * 255;
                     colData[i][j * 4 + 1] = cgacc->Get_f(j) * 255;
@@ -129,7 +128,7 @@ bool datatools::ParticleInstantiator::manipulateData(
                 }
             }
 
-            if (p.GetDirDataType() != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+            if (p.GetDirDataType() != geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                 const auto& dxacc = s.GetDXAcc();
                 const auto& dyacc = s.GetDYAcc();
                 const auto& dzacc = s.GetDZAcc();
@@ -156,14 +155,14 @@ bool datatools::ParticleInstantiator::manipulateData(
                             }
                         }
                         if (instX + instY + instZ > 0) {
-                            if (p.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+                            if (p.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                                 const auto colInstSize = p.GetCount() * 4;
                                 const auto coloffset = (colInstSize * instX) + (colInstSize * numInstances.x * instY) +
                                                        (colInstSize * numInstances.x * numInstances.y * instZ);
                                 memcpy(&colData[i][coloffset], &colData[i][0], colInstSize * sizeof(uint8_t));
                             }
 
-                            if (p.GetDirDataType() != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+                            if (p.GetDirDataType() != geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                                 const auto dirInstSize = p.GetCount() * 3;
                                 const auto diroffset = (dirInstSize * instX) + (dirInstSize * numInstances.x * instY) + (dirInstSize * numInstances.x * numInstances.y * instZ);
                                 memcpy(&dirData[i][diroffset], &dirData[i][0], dirInstSize * sizeof(float));
@@ -180,24 +179,24 @@ bool datatools::ParticleInstantiator::manipulateData(
         outData.AccessParticles(i).SetCount(p.GetCount() * numTotalInstances);
         if (has_global_radius[i]) {
             outData.AccessParticles(i).SetVertexData(
-                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, vertData[i].data(), 0);
+                geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, vertData[i].data(), 0);
             outData.AccessParticles(i).SetGlobalRadius(p.GetGlobalRadius());
         } else {
             outData.AccessParticles(i).SetVertexData(
-                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, vertData[i].data(), 0);
+                geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, vertData[i].data(), 0);
         }
-        if (p.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+        if (p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_NONE) {
             outData.AccessParticles(i).SetGlobalColour(p.GetGlobalColour()[0], p.GetGlobalColour()[1], p.GetGlobalColour()[2], p.GetGlobalColour()[3]);
-            outData.AccessParticles(i).SetColourData(
-                core::moldyn::SimpleSphericalParticles::COLDATA_NONE, nullptr, 0);
+            outData.AccessParticles(i).SetColourData(geocalls::SimpleSphericalParticles::COLDATA_NONE, nullptr, 0);
         } else {
             outData.AccessParticles(i).SetColourData(
-                core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, colData[i].data(), 0);
+                geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA, colData[i].data(), 0);
         }
         if (p.GetDirData() != nullptr) {
-            outData.AccessParticles(i).SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirData[i].data(), 0);
+            outData.AccessParticles(i).SetDirData(
+                geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirData[i].data(), 0);
         } else {
-            outData.AccessParticles(i).SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_NONE, nullptr, 0);
+            outData.AccessParticles(i).SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr, 0);
         }
     }
     outData.SetDataHash(my_hash);
@@ -205,8 +204,8 @@ bool datatools::ParticleInstantiator::manipulateData(
     return true;
 }
 
-bool datatools::ParticleInstantiator::manipulateExtent(core::moldyn::MultiParticleDataCall &outData,
-    core::moldyn::MultiParticleDataCall &inData) {
+bool datatools::ParticleInstantiator::manipulateExtent(
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     auto ni_temp = this->numInstancesParam.Param<core::param::Vector3fParam>()->Value();
     glm::ivec3 numInstances = glm::ivec3(static_cast<int>(ni_temp.X()), static_cast<int>(ni_temp.Y()), static_cast<int>(ni_temp.Z()));

@@ -9,8 +9,7 @@
 #include "io/VIMDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "mmcore/utility/log/Log.h"
@@ -400,8 +399,8 @@ VIMDataSource::VIMDataSource(void) : core::view::AnimDataModule(),
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData", &VIMDataSource::getDataCallback);
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &VIMDataSource::getExtentCallback);
-    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
-    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
+    this->getData.SetCallback(geocalls::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
+    this->getData.SetCallback(geocalls::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
@@ -859,8 +858,8 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
  * VIMDataSource::getDataCallback
  */
 bool VIMDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
-    core::moldyn::EllipsoidalParticleDataCall *c3 = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::EllipsoidalParticleDataCall *c3 = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&caller);
     if ((c2 == nullptr) && (c3 == nullptr)) return false;
 
     unsigned int fid = (c2 != nullptr) ? c2->FrameID() : c3->FrameID();
@@ -875,11 +874,11 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
             c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
             c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
             c2->AccessParticles(i).SetCount(f->PartCnt(i));
-            c2->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            c2->AccessParticles(i).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
             const float *vd = f->PartPoss(i);
             c2->AccessParticles(i).SetVertexData((vd == NULL)
-                ? core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
-                : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
+                : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
         }
     } else {
@@ -894,14 +893,14 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
             c3->AccessParticles(i).SetCount(f->PartCnt(i));
 
             c3->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
-            c3->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            c3->AccessParticles(i).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
 
             const float *vd = f->PartPoss(i);
             const float *qd = f->PartQuats(i);
             const float *rd = f->PartRadii(i, this->types[i]);
             c3->AccessParticles(i).SetVertexData((vd == NULL)
-                ? core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
-                : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
+                : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
             if (qd) c3->AccessParticles(i).SetQuatData(qd);
             if (rd) c3->AccessParticles(i).SetRadData(rd);

@@ -26,8 +26,8 @@ public:
     virtual ~ParticleIColClustering(void);
 
 protected:
-    bool manipulateData(megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) override;
 
 private:
     bool isDirty() {

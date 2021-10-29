@@ -13,6 +13,7 @@
 
 #include "mmstd_datatools/AbstractVolumeManipulator.h"
 #include "mmcore/param/ParamSlot.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 #ifdef WITH_MPI
 #include "mpi.h"
@@ -69,7 +70,7 @@ namespace datatools {
          * @return True on success
          */
         bool manipulateData (
-            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) override;
+            geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData) override;
         bool initMPI();
 
         void release(void) override;
@@ -86,7 +87,7 @@ namespace datatools {
 
         core::param::ParamSlot operatorSlot;
 
-        core::misc::VolumetricDataCall::Metadata metadata;
+        geocalls::VolumetricDataCall::Metadata metadata;
 
         int mpiRank = 0;
         int mpiSize = 0;

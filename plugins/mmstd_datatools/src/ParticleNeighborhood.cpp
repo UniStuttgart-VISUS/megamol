@@ -59,11 +59,12 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
     this->particleNumberSlot.SetParameter(new core::param::IntParam(-1));
     this->MakeSlotAvailable(&this->particleNumberSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleNeighborhood::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleNeighborhood::getExtentCallback);
+    this->outDataSlot.SetCallback(
+        geocalls::MultiParticleDataCall::ClassName(), "GetData", &ParticleNeighborhood::getDataCallback);
+    this->outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleNeighborhood::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -90,7 +91,7 @@ void datatools::ParticleNeighborhood::release(void) {
 }
 
 bool isListOK(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(c);
     if (mpdc != nullptr) {
@@ -104,7 +105,7 @@ bool isListOK(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
 }
 
 UINT64 getListCount(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(c);
     if (mpdc != nullptr) {
@@ -116,7 +117,7 @@ UINT64 getListCount(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
 bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3DCall *in,
         megamol::core::AbstractGetData3DCall *out) {
 
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(out);
     MultiParticleDataCall *inMpdc = dynamic_cast<MultiParticleDataCall*>(in);
@@ -297,7 +298,8 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
             outMpdc->AccessParticles(i).SetDirData(inMpdc->AccessParticles(i).GetDirDataType(),
                     inMpdc->AccessParticles(i).GetDirData(), inMpdc->AccessParticles(i).GetDirDataStride());
-            outMpdc->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+            outMpdc->AccessParticles(i).SetColourData(
+                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
             outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
             allpartcnt += theCount;
@@ -309,7 +311,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
 
 bool datatools::ParticleNeighborhood::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;
@@ -344,7 +346,7 @@ bool datatools::ParticleNeighborhood::getExtentCallback(megamol::core::Call& c) 
 }
 
 bool datatools::ParticleNeighborhood::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;

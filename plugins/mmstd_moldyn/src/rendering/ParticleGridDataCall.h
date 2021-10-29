@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
@@ -43,10 +43,10 @@ public:
     public:
 
         /** type alias for the vertex data type */
-        typedef core::moldyn::MultiParticleDataCall::Particles::VertexDataType VertexDataType;
+        typedef geocalls::MultiParticleDataCall::Particles::VertexDataType VertexDataType;
 
         /** type alias for the vertex data type */
-        typedef core::moldyn::MultiParticleDataCall::Particles::ColourDataType ColourDataType;
+        typedef geocalls::MultiParticleDataCall::Particles::ColourDataType ColourDataType;
 
         /**
          * Ctor

@@ -11,8 +11,8 @@ megamol::stdplugin::datatools::ParticleIdentitySort::~ParticleIdentitySort(void)
 
 
 bool megamol::stdplugin::datatools::ParticleIdentitySort::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
 
@@ -24,7 +24,7 @@ bool megamol::stdplugin::datatools::ParticleIdentitySort::manipulateData(
     for (unsigned int i = 0; i < plc; ++i) {
         auto& p = outData.AccessParticles(i);
 
-        if (p.GetIDDataType() == core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
+        if (p.GetIDDataType() == geocalls::SimpleSphericalParticles::IDDATA_NONE) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleIdentitySort: Particlelist %d has no indentity array\n", i);
             continue;
         }
@@ -49,9 +49,9 @@ bool megamol::stdplugin::datatools::ParticleIdentitySort::manipulateData(
         bool const sep = (vs == 0) || (cs == 0) || (is == 0);
 
         if (sep) {
-            vs = core::moldyn::SimpleSphericalParticles::VertexDataSize[p.GetVertexDataType()];
-            cs = core::moldyn::SimpleSphericalParticles::ColorDataSize[p.GetColourDataType()];
-            is = core::moldyn::SimpleSphericalParticles::IDDataSize[p.GetIDDataType()];
+            vs = geocalls::SimpleSphericalParticles::VertexDataSize[p.GetVertexDataType()];
+            cs = geocalls::SimpleSphericalParticles::ColorDataSize[p.GetColourDataType()];
+            is = geocalls::SimpleSphericalParticles::IDDataSize[p.GetIDDataType()];
 
             ts = vs + cs + is;
 

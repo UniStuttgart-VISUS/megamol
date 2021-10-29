@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TableToParticles.h"
 
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -10,6 +10,8 @@
 
 #define GLM_FORCE_SWIZZLE
 #include <glm/gtx/string_cast.hpp>
+
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -139,14 +141,14 @@ TableToParticles::TableToParticles(void)
 
     /* Register calls. */
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
+        geocalls::MultiParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+        geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
 
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
-        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
 
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
@@ -530,8 +532,8 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
  */
 bool TableToParticles::getMultiParticleData(core::Call& call) {
     try {
-        auto* c = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-        auto* e = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&call);
+        auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+        auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         auto* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == nullptr) return false;
 
@@ -564,13 +566,13 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
                     c->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
                     c->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -579,22 +581,22 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     c->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
                 case 2: // global RGB
                     c->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
                 if (haveVelocities) {
-                    c->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    c->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 }
             }
@@ -628,13 +630,13 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
                     e->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
                     e->AccessParticles(0).SetVertexData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -643,22 +645,22 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     e->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
                 case 2: // global RGB
                     e->AccessParticles(0).SetColourData(
-                        megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
                 // if (haveVelocities) {
-                //    e->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                //    e->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                 //        this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 //}
 
@@ -691,8 +693,8 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
  */
 bool TableToParticles::getMultiparticleExtent(core::Call& call) {
     try {
-        auto* c = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-        auto* e = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&call);
+        auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+        auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == nullptr) return false;
 

@@ -12,17 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/RawStorage.h"
-
 
 namespace megamol {
 namespace protein {
-
-
 
     /**
      * zeug

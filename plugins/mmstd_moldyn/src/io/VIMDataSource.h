@@ -14,7 +14,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
@@ -413,7 +413,7 @@ namespace io {
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-        class Unlocker : public core::moldyn::MultiParticleDataCall::Unlocker {
+        class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
         public:
 
             /**
@@ -421,7 +421,7 @@ namespace io {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : core::moldyn::MultiParticleDataCall::Unlocker(),
+            Unlocker(Frame& frame) : geocalls::MultiParticleDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }

@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "vislib/math/Vector.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <vector>
 #include <map>
 
@@ -83,8 +83,7 @@ namespace datatools {
          */
         bool getExtentCallback(megamol::core::Call& c);
 
-        bool assertData(megamol::core::moldyn::MultiParticleDataCall *in,
-            core::moldyn::MultiParticleDataCall *outMPDC);
+        bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);
 
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
@@ -98,7 +97,7 @@ namespace datatools {
         std::vector<float> cachedGlobalRadius;
         std::vector<size_t> cachedListLength;
         std::vector<size_t> cachedStride;
-        std::vector<megamol::core::moldyn::MultiParticleDataCall::Particles::VertexDataType> cachedVertexDataType;
+        std::vector<geocalls::MultiParticleDataCall::Particles::VertexDataType> cachedVertexDataType;
         std::vector<void*> cachedVertexData;
         std::vector<float*> cachedDirData;
 

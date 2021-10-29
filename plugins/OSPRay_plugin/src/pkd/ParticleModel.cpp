@@ -12,7 +12,7 @@ using namespace megamol;
 
 
 VISLIB_FORCEINLINE float floatFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     // const float* parts = static_cast<const float*>(p.GetVertexData());
     // return parts[index * stride + offset];
     return static_cast<const float*>(p.GetVertexData())[index];
@@ -20,30 +20,30 @@ VISLIB_FORCEINLINE float floatFromVoidArray(
 
 
 VISLIB_FORCEINLINE unsigned char byteFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     return static_cast<const unsigned char*>(p.GetVertexData())[index];
 }
 
 
 VISLIB_FORCEINLINE float floatColFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     return static_cast<const float*>(p.GetColourData())[index];
 }
 
 
 VISLIB_FORCEINLINE unsigned char byteColFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     return static_cast<const unsigned char*>(p.GetColourData())[index];
 }
 
 
-typedef float (*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef float (*floatFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char (*byteFromArrayFunc)(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
-typedef float (*floatColFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef float (*floatColFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char (*byteColFromArrayFunc)(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+    const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
 
 inline rkcommon::math::vec3f makeRandomColor(const int i) {
@@ -63,16 +63,16 @@ rkcommon::math::box3f ospray::ParticleModel::getBounds() const {
 }
 
 
-void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSphericalParticles parts) {
+void megamol::ospray::ParticleModel::fill(geocalls::SimpleSphericalParticles parts) {
     // Attribute rgba("rgba");
 
     size_t vertexLength;
     size_t colorLength;
 
     // Vertex data type check
-    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+    if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
         vertexLength = 3;
-    } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+    } else if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
         vertexLength = 4;
     }
 

@@ -272,13 +272,11 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             if (this->reader && dataHashChanged) {
                 this->reader->Close();
-                this->adiosInst->AtIO("Input").RemoveAllVariables();
-                this->adiosInst->AtIO("Input").RemoveAllAttributes();
-                this->reader =
-                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+                io->RemoveAllVariables();
+                io->RemoveAllAttributes();
+                this->reader = std::make_shared<adios2::Engine>(io->Open(fname, adios2::Mode::Read));
             } else if (!this->reader) {
-                this->reader =
-                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+                this->reader = std::make_shared<adios2::Engine>(io->Open(fname, adios2::Mode::Read));
             }
             
 

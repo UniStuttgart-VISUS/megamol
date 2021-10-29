@@ -9,8 +9,8 @@
 #include "../../protein/src/Color.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "mmcore/Call.h"
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls//MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "ospray/ospray_cpp.h"
@@ -21,9 +21,8 @@
 using namespace megamol::ospray;
 
 
-typedef float (*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char (*byteFromArrayFunc)(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef float (*floatFromArrayFunc)(const megamol::geocalls::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteFromArrayFunc)(const megamol::geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
 
 OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
@@ -35,10 +34,10 @@ OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
     , getVolSlot("getVol", "Connects to the density volume provider")
     , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure") {
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getVolSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+    this->getVolSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
 
     this->samplingRateSlot << new core::param::FloatParam(1.0f, 0.0f, std::numeric_limits<float>::max());
@@ -66,14 +65,14 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
-    auto vd = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
+    auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    auto vd = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
     if (vd == nullptr) return false;
 
     if (cd == nullptr) return false;
 
     auto particleExtentsOK = (*cd)(1);
-    auto volExtentsOK = (*vd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS);
+    auto volExtentsOK = (*vd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS);
 
     auto const minFrameCount = std::min(cd->FrameCount(), vd->FrameCount());
 
@@ -104,8 +103,8 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
     auto particleDataOK = (*cd)(0);
 
-    auto volMetaOK = (*vd)(core::misc::VolumetricDataCall::IDX_GET_METADATA);
-    auto volDataOK = (*vd)(core::misc::VolumetricDataCall::IDX_GET_DATA);
+    auto volMetaOK = (*vd)(geocalls::VolumetricDataCall::IDX_GET_METADATA);
+    auto volDataOK = (*vd)(geocalls::VolumetricDataCall::IDX_GET_DATA);
 
 
     if (cd->GetParticleListCount() == 0) recompute = false;
@@ -152,9 +151,9 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     if (volDataOK && volMetaOK && volExtentsOK && particleDataOK && particleExtentsOK && recompute) {
         for (unsigned int plist = 0; plist < cd->GetParticleListCount(); ++plist) {
 
-            core::moldyn::MultiParticleDataCall::Particles& parts = cd->AccessParticles(plist);
+            geocalls::MultiParticleDataCall::Particles& parts = cd->AccessParticles(plist);
 
-            if (parts.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) continue;
+            if (parts.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE) continue;
 
             unsigned int const partCount = parts.GetCount();
             float const globalRadius = parts.GetGlobalRadius();
@@ -163,47 +162,47 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             size_t vertexLength;
 
             // Vertex data type check
-            if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+            if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
                 vertexLength = 3;
             } else if (parts.GetVertexDataType() ==
-                       core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                       geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 vertexLength = 4;
             }
 
             // Color data type check
-            if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+            if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
                 colorLength = 4;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                 colorLength = 1;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+            } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
                 colorLength = 3;
             } else if (parts.GetColourDataType() ==
-                       core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+                       geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
                 colorLength = 4;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_NONE) {
                 colorLength = 0;
             }
 
             unsigned long long vertStride = parts.GetVertexDataStride();
             if (vertStride == 0) {
-                vertStride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+                vertStride = geocalls::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
             }
 
-            if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
-                parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE &&
+                parts.GetColourDataType() != geocalls::MultiParticleDataCall::Particles::COLDATA_NONE) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Only color data is not allowed.");
             }
 
             // get the volume stuff
             auto const volSDT = vd->GetScalarType(); //< unfortunately only float is part of the intersection
-            if (volSDT != core::misc::VolumetricDataCall::ScalarType::FLOATING_POINT) {
+            if (volSDT != geocalls::VolumetricDataCall::ScalarType::FLOATING_POINT) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: Only float is supported as AOVol data type\n");
                 continue;
             }
             auto const volGT = vd->GetGridType();
-            if (volGT != core::misc::VolumetricDataCall::GridType::CARTESIAN &&
-                volGT != core::misc::VolumetricDataCall::GridType::RECTILINEAR) {
+            if (volGT != geocalls::VolumetricDataCall::GridType::CARTESIAN &&
+                volGT != geocalls::VolumetricDataCall::GridType::RECTILINEAR) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: Currently only grids are supported as AOVol grid type\n");
                 continue;
@@ -256,16 +255,16 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                     geo.back().setParam("radius", globalRadius);
                 }
                 if (parts.GetColourDataType() ==
-                        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
+                        geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
                     parts.GetColourDataType() ==
-                        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
+                        geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
                     geo.back().setParam("color_offset",
                         vertexLength * sizeof(float)); // TODO: This won't work if there are radii in the array
                     geo.back().setParam("color_stride", parts.GetColourDataStride());
                     geo.back().setParam("color", vertexData);
                     if (parts.GetColourDataType() ==
-                        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                        geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
                         geo.back().setParam("color_format", OSP_VEC3F);
                     } else {
                         geo.back().setParam("color_format", OSP_VEC4F);
@@ -401,7 +400,7 @@ bool megamol::ospray::OSPRayAOVSphereGeometry::InterfaceIsDirtyNoReset() const {
 
 bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
     if (cd == nullptr) return false;
     cd->SetFrameID(os->FrameID());
@@ -415,7 +414,7 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
 
 bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
     if (cd == nullptr) return false;
     if (this->InterfaceIsDirtyNoReset()) {

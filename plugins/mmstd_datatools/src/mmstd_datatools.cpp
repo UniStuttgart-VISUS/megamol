@@ -92,6 +92,9 @@
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
+#include "ParticleListFilter.h"
+#include "AddClusterColours.h"
+#include "SiffCSplineFitter.h"
 
 namespace megamol::stdplugin::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -197,7 +200,9 @@ public:
             .RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
-
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddClusterColours>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SiffCSplineFitter>();
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();

@@ -4,7 +4,7 @@
 #include <numeric>
 #include <cmath>
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -23,7 +23,7 @@ megamol::thermodyn::PhaseSeparator::PhaseSeparator()
     , gasColorSlot_("gasColor", "Color of the box representing the gas")
     , axisSlot_("axis", "Main axis for density analysis")
     , numSlicesSlot_("numSlices", "Number of slices for density analysis") {
-    dataInSlot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
     dataOutSlot_.SetCallback(BoxDataCall::ClassName(), BoxDataCall::FunctionName(0), &PhaseSeparator::getDataCallback);
@@ -78,7 +78,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
     // Interface width
     auto const D = 1.720f * std::pow((Tc - T) / Tc, 1.89f) + 1.103 * std::pow((Tc - T) / Tc, -0.62f);
 
-    auto inCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
     if (inCall == nullptr) return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);
@@ -98,8 +98,8 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         auto const& bbox = inCall->AccessBoundingBoxes().ObjectSpaceBBox();
         auto const& parts = inCall->AccessParticles(0);
 
-        if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_DOUBLE_I) {
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_I &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_DOUBLE_I) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: Require density as ICol stream\n");
             return false;
         }
@@ -111,7 +111,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         auto const& yAcc = store.GetYAcc();
         auto const& zAcc = store.GetZAcc();
         auto const& iAcc = store.GetCRAcc();
-        std::shared_ptr<core::moldyn::Accessor> pAcc;
+        std::shared_ptr<geocalls::Accessor> pAcc;
 
         auto const axis = axisSlot_.Param<core::param::EnumParam>()->Value();
         auto const numSlices = numSlicesSlot_.Param<core::param::IntParam>()->Value();
@@ -291,7 +291,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
 
 
 bool megamol::thermodyn::PhaseSeparator::getExtentCallback(core::Call& c) {
-    auto inCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
     if (inCall == nullptr) return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);

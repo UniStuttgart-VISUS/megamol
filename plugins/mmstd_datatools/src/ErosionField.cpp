@@ -31,8 +31,7 @@ ErosionField::~ErosionField() {
 }
 
 bool ErosionField::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inPtData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inPtData) {
 
     GraphDataCall *inNDataPtr = inNDataSlot.CallAs<stdplugin::datatools::GraphDataCall>();
     if (inNDataPtr == nullptr) return false;
@@ -105,7 +104,7 @@ bool ErosionField::manipulateData(
     const float *data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
         auto &plist = outData.AccessParticles(list);
-        plist.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
+        plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(0.0f, maxCol);
         data += plist.GetCount();
     }

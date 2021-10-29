@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "misc/ParticleWorker.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -34,7 +33,7 @@ ParticleWorker::ParticleWorker(void) : Module(),
 	//	glPrefixIn(0), glPrefixOut(0)
         {
 
-    this->inParticlesDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetData", &ParticleWorker::getDataCallback);
@@ -212,7 +211,7 @@ void ParticleWorker::release(void)
  * ParticleWorker::getData
  */
 bool ParticleWorker::getDataCallback(Call& call) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outMpdc == NULL) 
 		return false;
@@ -284,7 +283,7 @@ bool ParticleWorker::getDataCallback(Call& call) {
 	unsigned int particleCount = 0;
 	unsigned int particleStride = 0;
 	float particleRadius = 0.0f;
-    using core::moldyn::SimpleSphericalParticles;
+    using geocalls::SimpleSphericalParticles;
 	SimpleSphericalParticles::ClusterInfos *clusterInfos;
 	count = (inMpdc->GetParticleListCount() < 1) ? inMpdc->GetParticleListCount() : 1;
 	for(unsigned int i = 0; i < count; ++i)
@@ -745,7 +744,7 @@ bool ParticleWorker::getDataCallback(Call& call) {
  * io::DirPartColModulate::getExtent
  */
 bool ParticleWorker::getExtentCallback(Call& call) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using megamol::geocalls::MultiParticleDataCall;
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outMpdc == NULL) return false;
 

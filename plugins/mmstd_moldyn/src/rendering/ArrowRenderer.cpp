@@ -13,7 +13,7 @@
 #include <glm/ext.hpp>
 
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 

@@ -15,7 +15,7 @@
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/DataWriterCtrlCall.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
@@ -100,7 +100,7 @@ private:
      *
      * @return True on success
      */
-    bool writeFrame(std::string datpath, std::string rawpath, core::misc::VolumetricDataCall& data);
+    bool writeFrame(std::string datpath, std::string rawpath, geocalls::VolumetricDataCall& data);
 
     /** The file name of the file to be written */
     core::param::ParamSlot filenameSlot;
