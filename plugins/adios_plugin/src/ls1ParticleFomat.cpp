@@ -285,13 +285,13 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         if (mix[k].data()== nullptr) {
             parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
         } else {
-            parts.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, mix[k].data());
+            parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, mix[k].data());
         }
         
         if (dirs[k].data() == nullptr) {
             parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
         } else {
-            parts.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirs[k].data());
+            parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirs[k].data());
         }
         parts.SetGlobalRadius(list_radii[k]);
 

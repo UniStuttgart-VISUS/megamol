@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ParticlesToTable.h"
 
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -40,8 +40,8 @@ ParticlesToTable::ParticlesToTable(void)
 
     this->MakeSlotAvailable(&this->slotTableOut);
 
-    this->slotParticlesIn.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
-    this->slotParticlesIn.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
+    this->slotParticlesIn.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
+    this->slotParticlesIn.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->slotParticlesIn);
 }
 
@@ -59,7 +59,7 @@ bool ParticlesToTable::create(void) {
     return true;
 }
 
-bool ParticlesToTable::assertMPDC(core::moldyn::MultiParticleDataCall *in, table::TableDataCall *tc) {
+bool ParticlesToTable::assertMPDC(geocalls::MultiParticleDataCall *in, table::TableDataCall *tc) {
     in->SetFrameID(tc->GetFrameID(), true);
     do {
         if (!(*in)(1)) return false;
@@ -130,7 +130,7 @@ bool ParticlesToTable::assertMPDC(core::moldyn::MultiParticleDataCall *in, table
     return true;
 }
 
-bool ParticlesToTable::assertEPDC(core::moldyn::EllipsoidalParticleDataCall* c, table::TableDataCall* tc) {
+bool ParticlesToTable::assertEPDC(geocalls::EllipsoidalParticleDataCall* c, table::TableDataCall* tc) {
     core::utility::log::Log::DefaultLog.WriteError("ParticlesToTable: ellipsoidal particles not implemented yet!");
     return false;
 }
@@ -139,8 +139,8 @@ bool ParticlesToTable::assertEPDC(core::moldyn::EllipsoidalParticleDataCall* c, 
  * megamol::pcl::PclDataSource::getMultiParticleData
  */
 bool ParticlesToTable::getTableData(core::Call& call) {
-    auto* c = this->slotParticlesIn.CallAs<core::moldyn::MultiParticleDataCall>();
-    auto* e = this->slotParticlesIn.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
+    auto* c = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
+    auto* e = this->slotParticlesIn.CallAs<geocalls::EllipsoidalParticleDataCall>();
 
     auto* ft = dynamic_cast<table::TableDataCall*>(&call);
     if (ft == nullptr) return false;
@@ -156,8 +156,8 @@ bool ParticlesToTable::getTableData(core::Call& call) {
 
 
 bool ParticlesToTable::getTableHash(core::Call& call) {
-    auto* c = this->slotParticlesIn.CallAs<core::moldyn::MultiParticleDataCall>();
-    auto* e = this->slotParticlesIn.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
+    auto* c = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
+    auto* e = this->slotParticlesIn.CallAs<geocalls::EllipsoidalParticleDataCall>();
 
     auto* ft = dynamic_cast<table::TableDataCall*>(&call);
     if (ft == nullptr) return false;

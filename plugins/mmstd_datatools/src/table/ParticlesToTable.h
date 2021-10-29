@@ -4,8 +4,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls//MultiParticleDataCall.h"
+#include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include <map>
@@ -79,8 +79,8 @@ namespace datatools {
 
     private:
 
-        bool assertMPDC(core::moldyn::MultiParticleDataCall *in, table::TableDataCall *tc);
-        bool assertEPDC(core::moldyn::EllipsoidalParticleDataCall *c, table::TableDataCall *tc);
+        bool assertMPDC(geocalls::MultiParticleDataCall *in, table::TableDataCall *tc);
+        bool assertEPDC(geocalls::EllipsoidalParticleDataCall *c, table::TableDataCall *tc);
 
         /** The slot for retrieving the data as multi particle data. */
         core::CalleeSlot slotTableOut;
