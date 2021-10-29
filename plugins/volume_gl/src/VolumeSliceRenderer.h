@@ -5,11 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MMSTD_VOLUME_RENDERVOLUMESLICE_H_INCLUDED
-#define MMSTD_VOLUME_RENDERVOLUMESLICE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -108,5 +104,3 @@ namespace volume_gl {
 } /* end namespace volume */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MMSTD_VOLUME_RENDERVOLUMESLICE_H_INCLUDED */

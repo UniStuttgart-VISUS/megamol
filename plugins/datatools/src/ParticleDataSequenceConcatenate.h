@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMSTD_DATATOOLS_PARTICLEDATASEQUENCECONCATENATE_H_INCLUDED
-#define MMSTD_DATATOOLS_PARTICLEDATASEQUENCECONCATENATE_H_INCLUDED
 #pragma once
 
 #include "mmcore/Module.h"
@@ -44,5 +42,3 @@ namespace datatools {
 }
 }
 }
-
-#endif /* MMSTD_DATATOOLS_PARTICLEDATASEQUENCECONCATENATE_H_INCLUDED */

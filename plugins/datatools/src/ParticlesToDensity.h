@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMSTD_DATATOOLS_PARTICLESTODENSITY_H_INCLUDED
-#define MMSTD_DATATOOLS_PARTICLESTODENSITY_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -145,5 +143,3 @@ private:
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MMSTD_DATATOOLS_PARTICLESTODENSITY_H_INCLUDED */

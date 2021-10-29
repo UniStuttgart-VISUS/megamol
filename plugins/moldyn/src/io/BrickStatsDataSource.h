@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMSTD_MOLDYN_BRICKSTATSDATASOURCE_H_INCLUDED
-#define MMSTD_MOLDYN_BRICKSTATSDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "moldyn/BrickStatsCall.h"
 #include "mmcore/Module.h"
@@ -136,5 +132,3 @@ namespace moldyn {
 } /* end namespace moldyn */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MMSTD_MOLDYN_BRICKSTATSDATASOURCE_H_INCLUDED */

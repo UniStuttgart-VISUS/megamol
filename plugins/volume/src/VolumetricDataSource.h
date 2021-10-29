@@ -5,11 +5,7 @@
  * Alle rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMSTD_VOLUME_VOLUMETRICDATASOURCE_H_INCLUDED
-#define MEGAMOL_MMSTD_VOLUME_VOLUMETRICDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#pragma once
 
 #include <atomic>
 #include <memory>
@@ -424,5 +420,3 @@ private:
 } /* end namespace volume */
 } // namespace stdplugin
 } // namespace megamol
-
-#endif /* MEGAMOL_CORE_VOLUMEDATACALL_H_INCLUDED */

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMSTD_DATATOOLS_PARTICLETHERMOMETER_H_INCLUDED
-#define MMSTD_DATATOOLS_PARTICLETHERMOMETER_H_INCLUDED
 #pragma once
 
 #include "mmcore/param/ParamSlot.h"
@@ -151,5 +149,3 @@ namespace datatools {
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MMSTD_DATATOOLS_PARTICLETHERMOMETER_H_INCLUDED */
