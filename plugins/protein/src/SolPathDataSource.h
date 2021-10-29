@@ -13,7 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "SolPathDataCall.h"
+#include "protein/SolPathDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"

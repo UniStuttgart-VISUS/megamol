@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "KeyframeKeeper.h"
-#include "CallKeyframeKeeper.h"
+#include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"

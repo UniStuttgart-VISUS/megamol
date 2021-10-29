@@ -5,7 +5,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()

@@ -10,13 +10,14 @@
 #include "mmvtkm/mmvtkmMeshRenderTasks.h"
 
 #include "mesh/MeshCalls.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 using namespace megamol;
 using namespace megamol::mmvtkm;
 
 mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks()
         : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {
-    this->m_material_slot.SetCompatibleCall<mesh::CallGPUMaterialDataDescription>();
+    this->m_material_slot.SetCompatibleCall<mesh_gl::CallGPUMaterialDataDescription>();
     this->MakeSlotAvailable(&this->m_material_slot);
 }
 
@@ -24,12 +25,12 @@ mmvtkmMeshRenderTasks ::~mmvtkmMeshRenderTasks () {}
 
 bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
     
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) return false;
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -41,8 +42,8 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
+    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
     if (mtlc != nullptr && mc != nullptr) {
         if (!(*mtlc)(0))

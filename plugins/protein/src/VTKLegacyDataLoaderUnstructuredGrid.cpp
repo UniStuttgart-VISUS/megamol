@@ -14,7 +14,7 @@
 #include <cmath>
 #include <ctype.h>
 #include <sstream>
-#include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -222,11 +222,9 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
 //#define CONTEST2016
 #ifndef CONTEST2016
             // Set attribute array as float 'color' value
-            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().IsEmpty()) {
+            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().empty()) {
                 mpdc->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                    fr->PeekPointDataByName(this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())
-                        ->PeekData(),
-                    0);
+                    fr->PeekPointDataByName(this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().c_str()),0);
             }
 #else
             std::vector<float> dataVec;
