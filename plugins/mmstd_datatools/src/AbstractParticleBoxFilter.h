@@ -108,7 +108,7 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 
-    auto const box = getBoxFromString(boxSlot_.Param<core::param::StringParam>()->Value());
+    auto const box = getBoxFromString(boxSlot_.Param<core::param::StringParam>()->Value().c_str());
 
     data_.clear();
     numPts_.clear();

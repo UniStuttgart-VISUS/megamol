@@ -29,6 +29,7 @@
 #include "mmcore/FlagCall.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/ParamCalls.h"
 
 using namespace megamol::core;
 
@@ -61,4 +62,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<FlagCallRead_CPU>();
     instance.RegisterAutoDescription<FlagCallWrite_CPU>();
     instance.RegisterAutoDescription<view::CallRender3D>();
+    instance.RegisterAutoDescription<param::FloatParamCall>();
+    instance.RegisterAutoDescription<param::IntParamCall>();
 }

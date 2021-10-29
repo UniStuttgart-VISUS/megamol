@@ -281,21 +281,25 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
     bool retValue = true;
 
     std::vector<size_t> indicesToCollect;
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString())) {
+    if (!pushColumnIndex(
+            indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
         retValue = false;
     }
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString())) {
+    if (!pushColumnIndex(
+            indicesToCollect, this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
         retValue = false;
     }
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString())) {
+    if (!pushColumnIndex(
+            indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
         retValue = false;
     }
 
     switch (this->slotConnectionType.Param<core::param::EnumParam>()->Value()) {
-    case 0: //Grid
+    case 0: // Grid
         break;
-    case 1: //Index
-        if (!pushColumnIndex(indicesToCollect, this->slotColumnIndex.Param<core::param::FlexEnumParam>()->ValueString())) {
+    case 1: // Index
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnIndex.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
             retValue = false;
         }
         break;
@@ -304,18 +308,22 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
 
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
         case 0: // RGB
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString())) {
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
                 retValue = false;
             }
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString())) {
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
                 retValue = false;
             }
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString())) {
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
                 retValue = false;
             }
             break;
         case 1: // I
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString())) {
+            if (!pushColumnIndex(
+                    indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
                 retValue = false;
             } else {
                 iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
@@ -520,7 +528,7 @@ bool TableToLines::getLineData(core::Call& call) {
         for (size_t loop = 0; loop < lineVerts.size(); loop++) {
             if (this->slotColorMode.Param<core::param::EnumParam>()->Value() == 2) {
                 unsigned char rgb[3];
-                core::utility::ColourParser::FromString(this->slotGlobalColor.Param<core::param::StringParam>()->Value(), 3, rgb);
+                core::utility::ColourParser::FromString(this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), 3, rgb);
                 lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), vislib::graphics::ColourRGBAu8(rgb[0], rgb[1], rgb[2], 255));
             } else {
                 lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), lineColor[loop].data(), false);

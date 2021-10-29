@@ -32,7 +32,7 @@ AbstractQuartzRenderer::AbstractQuartzRenderer(void) : AbstractQuartzModule(),
     this->grainCol[0] = this->grainCol[1] = this->grainCol[2] = 192.0f / 255.0f;
     this->grainColSlot << new core::param::StringParam(
         core::utility::ColourParser::ToString(
-        this->grainCol[0], this->grainCol[1], this->grainCol[2]));
+        this->grainCol[0], this->grainCol[1], this->grainCol[2]).PeekBuffer());
 
     this->showClipPlanePolySlot << new core::param::BoolParam(true);
 
@@ -56,7 +56,7 @@ void AbstractQuartzRenderer::assertGrainColour(void) {
         this->grainColSlot.ResetDirty();
         try {
             core::utility::ColourParser::FromString(
-                this->grainColSlot.Param<core::param::StringParam>()->Value(),
+                this->grainColSlot.Param<core::param::StringParam>()->Value().c_str(),
                 this->grainCol[0], this->grainCol[1], this->grainCol[2]);
         } catch(...) {
         }

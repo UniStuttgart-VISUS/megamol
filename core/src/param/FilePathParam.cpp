@@ -34,21 +34,15 @@ FilePathParam::FilePathParam(const char * initVal, Flags_t flags, const Extensio
 };
 
 
-void FilePathParam::Definition(vislib::RawStorage& outDef) const {
-
-    outDef.AssertSize(6);
-#if defined(UNICODE) || defined(_UNICODE)
-    memcpy(outDef.AsAt<char>(0), "MMFILW", 6);
-#else  /* defined(UNICODE) || defined(_UNICODE) */
-    memcpy(outDef.AsAt<char>(0), "MMFILA", 6);
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+std::string FilePathParam::Definition() const {
+    return "MMFILA";
 }
 
 
-bool FilePathParam::ParseValue(const vislib::TString& v) {
+bool FilePathParam::ParseValue(std::string const& v) {
 
     try {
-        this->SetValue(std::string(v.PeekBuffer()));
+        this->SetValue(v);
         return true;
     } catch(...) {
     }

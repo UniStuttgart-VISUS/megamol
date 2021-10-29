@@ -254,21 +254,21 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         fluid_be.box_ = fluidbox;
         fluid_be.name_ = std::string("fluid");
         auto const fluidColor = fluidColorSlot_.Param<core::param::StringParam>()->Value();
-        auto fluid_c = getColor(fluidColor);
+        auto fluid_c = getColor(fluidColor.c_str());
         memcpy(fluid_be.color_, fluid_c.data(), 4 * sizeof(float));
 
         BoxDataCall::box_entry_t interface_be;
         interface_be.box_ = interfacebox;
         interface_be.name_ = std::string("interface");
         auto const interfaceColor = interfaceColorSlot_.Param<core::param::StringParam>()->Value();
-        auto interface_c = getColor(interfaceColor);
+        auto interface_c = getColor(interfaceColor.c_str());
         memcpy(interface_be.color_, interface_c.data(), 4 * sizeof(float));
 
         BoxDataCall::box_entry_t gas_be;
         gas_be.box_ = gasbox;
         gas_be.name_ = std::string("gas");
         auto const gasColor = gasColorSlot_.Param<core::param::StringParam>()->Value();
-        auto gas_c = getColor(gasColor);
+        auto gas_c = getColor(gasColor.c_str());
         memcpy(gas_be.color_, gas_c.data(), 4 * sizeof(float));
 
         boxes_.clear();

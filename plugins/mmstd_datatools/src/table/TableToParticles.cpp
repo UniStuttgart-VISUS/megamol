@@ -304,16 +304,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     float radius = 0.0f;
 
     std::vector<uint32_t> indicesToCollect;
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString());
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString());
-    retValue = retValue &&
-               pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+    retValue = retValue && pushColumnIndex(indicesToCollect,
+                               this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
     if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // particle
         if (!pushColumnIndex(
-                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
+                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
             retValue = false;
         } else {
             radius = ft->GetColumnsInfos()[indicesToCollect.back()].MaximumValue();
@@ -325,14 +325,15 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
     case 0: // RGB
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         break;
     case 1: // I
-        if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString())) {
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
             retValue = false;
         } else {
             iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
@@ -354,11 +355,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
 
     if (vx && vy && vz) {
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString());
+                                   this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
         haveVelocities = true;
         stride += 3;
@@ -387,7 +388,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         if (this->haveTensorMagnitudes) {
             // we can copy the radii AKA magnitudes directly
             for (auto& x : this->slotTensorMagnitudeColumn) {
-                pushColumnIndex(indicesToCollect, x.Param<core::param::FlexEnumParam>()->ValueString());
+                pushColumnIndex(indicesToCollect, x.Param<core::param::FlexEnumParam>()->ValueString().c_str());
             }
         }
     }
@@ -552,10 +553,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             c->SetParticleListCount(1);
             c->AccessParticles(0).SetCount(ft->GetRowsCount());
             c->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
-            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().IsEmpty()) {
+            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().empty()) {
                 float r, g, b;
                 core::utility::ColourParser::FromString(
-                    this->slotGlobalColor.Param<core::param::StringParam>()->Value(), r, g, b);
+                    this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
                 c->AccessParticles(0).SetGlobalColour(static_cast<unsigned int>(r * 255.0f),
                     static_cast<unsigned int>(g * 255.0f), static_cast<unsigned int>(b * 255.0f));
             }
@@ -616,10 +617,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             e->SetParticleListCount(1);
             e->AccessParticles(0).SetCount(ft->GetRowsCount());
             e->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
-            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().IsEmpty()) {
+            if (!this->slotGlobalColor.Param<core::param::StringParam>()->Value().empty()) {
                 float r, g, b;
                 core::utility::ColourParser::FromString(
-                    this->slotGlobalColor.Param<core::param::StringParam>()->Value(), r, g, b);
+                    this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
                 e->AccessParticles(0).SetGlobalColour(static_cast<unsigned int>(r * 255.0f),
                     static_cast<unsigned int>(g * 255.0f), static_cast<unsigned int>(b * 255.0f));
             }

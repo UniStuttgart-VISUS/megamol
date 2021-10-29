@@ -413,7 +413,7 @@ bool megamol::infovis::DepthFunction::apply(megamol::stdplugin::datatools::table
 
     assertData(inCall);
 
-    std::string columnGroupsString(this->columnGroupsSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+    std::string columnGroupsString(this->columnGroupsSlot.Param<core::param::StringParam>()->Value());
     std::vector<std::vector<int>> columnGroups = parseColumnGroups(columnGroupsString);
 
     // Default to one group, containing all columns, if empty.
