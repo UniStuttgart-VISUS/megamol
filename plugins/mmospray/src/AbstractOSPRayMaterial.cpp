@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "AbstractOSPRayMaterial.h"
-#include "OSPRay_plugin/CallOSPRayMaterial.h"
+#include "mmospray/CallOSPRayMaterial.h"
 #include "mmcore/utility/log/Log.h"
 
 

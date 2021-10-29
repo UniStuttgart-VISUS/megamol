@@ -20,7 +20,7 @@
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 using megamol::core::utility::log::Log;
 
@@ -57,7 +57,7 @@ inline float rangeToSmallStep(double min, double max) {
     return mantissa * power;
 }
 
-std::optional<size_t> nameToIndex(stdplugin::datatools::table::TableDataCall* tableDataCall, const std::string& name) {
+std::optional<size_t> nameToIndex(datatools::table::TableDataCall* tableDataCall, const std::string& name) {
     auto columnInfos = tableDataCall->GetColumnsInfos();
     const size_t colCount = tableDataCall->GetColumnsCount();
 

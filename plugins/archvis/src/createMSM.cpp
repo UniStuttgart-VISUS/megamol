@@ -1,6 +1,6 @@
 #include "CreateMSM.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include "ArchVisCalls.h"
 #include "ScaleModel.h"
@@ -24,19 +24,19 @@ megamol::archvis::CreateMSM::CreateMSM() : Module()
     // TODO GetExtents?
 
     this->m_node_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_node_floatTable_slot);
 
     this->m_element_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_element_floatTable_slot);
 
     this->m_inputElement_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_inputElement_floatTable_slot);
 
     this->m_displacement_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_displacement_floatTable_slot);
 }
 
@@ -54,12 +54,12 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
         return false;
     }
 
-    auto node_ft = this->m_node_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    auto element_ft = this->m_element_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+    auto node_ft = this->m_node_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
+    auto element_ft = this->m_element_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
     auto inputElement_ft =
-        this->m_inputElement_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        this->m_inputElement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
     auto displacement_ft =
-        this->m_displacement_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        this->m_displacement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
 
     // node and element data are mandatory, return false is either is not available
     if (node_ft == NULL || element_ft == NULL || inputElement_ft == NULL || displacement_ft == NULL) {

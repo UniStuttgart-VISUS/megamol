@@ -11,7 +11,7 @@
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include <glowl/FramebufferObject.hpp>
 #include <memory>
@@ -267,7 +267,7 @@ private:
     size_t dataHash;
     unsigned int dataTime;
 
-    stdplugin::datatools::table::TableDataCall* floatTable;
+    datatools::table::TableDataCall* floatTable;
 
     core_gl::view::CallGetTransferFunctionGL* transferFunction;
 

@@ -22,7 +22,7 @@
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -33,7 +33,7 @@
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         : Renderer2D()
@@ -375,8 +375,8 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
-    auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+bool ParallelCoordinatesRenderer2D::assertData(ore_gl::view::CallRender2DGL& call) {
+    auto floats = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (floats == nullptr)
         return false;
     auto tc = getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
@@ -479,7 +479,7 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
 }
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
-    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+    auto fc = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (fc == nullptr)
         return;
 

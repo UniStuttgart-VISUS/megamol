@@ -8,7 +8,7 @@ megamol_plugin(protein_gl
   DEPENDS_GL
   DEPENDS_PLUGINS
     protein
-    mmstd_trisoup
+    trisoup
     protein_calls
     geometry_calls
   DEPENDS_EXTERNALS

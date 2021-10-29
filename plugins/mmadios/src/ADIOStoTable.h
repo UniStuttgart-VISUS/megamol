@@ -9,7 +9,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 
 namespace megamol {
@@ -60,7 +60,7 @@ private:
     std::vector<float> _floatBlob;
     size_t _cols = 0;
     size_t _rows = 0;
-    std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> _colinfo;
+    std::vector<datatools::table::TableDataCall::ColumnInfo> _colinfo;
 };
 
 } // namespace adios

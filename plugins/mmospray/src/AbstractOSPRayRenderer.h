@@ -7,7 +7,7 @@
 
 #include <map>
 #include <stdint.h>
-#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "mmospray/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"

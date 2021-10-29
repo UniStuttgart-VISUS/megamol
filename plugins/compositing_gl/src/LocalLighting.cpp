@@ -13,7 +13,7 @@
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 #include <glm/ext.hpp>
 

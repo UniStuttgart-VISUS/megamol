@@ -8,7 +8,7 @@
 #include <map>
 #include "mmcore/CallerSlot.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 #include "rkcommon/math/box.h"
 #include "rkcommon/math/vec.h"
 
@@ -25,7 +25,7 @@ static __forceinline size_t parentOf(const size_t nodeID) { return (nodeID - 1) 
 
 
 
-class PkdBuilder : public megamol::stdplugin::datatools::AbstractParticleManipulator {
+class PkdBuilder : public megamol::datatools::AbstractParticleManipulator {
 public:
     static const char* ClassName(void) { return "PkdBuilder"; }
     static const char* Description(void) { return "Converts MMPLD files to Pkd sorted MMPLD files."; }

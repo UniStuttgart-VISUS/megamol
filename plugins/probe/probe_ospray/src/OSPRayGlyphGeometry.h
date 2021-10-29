@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "OSPRay_plugin/AbstractOSPRayStructure.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "mmospray/AbstractOSPRayStructure.h"
+#include "mmospray/CallOSPRayStructure.h"
 
 namespace megamol {
 namespace probe {

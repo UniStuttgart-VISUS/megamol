@@ -13,7 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mesh/MeshCalls.h"
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 
 typedef vislib::math::Point<float, 3> visPoint3f;

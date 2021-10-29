@@ -8,7 +8,7 @@ megamol_plugin(infovis_gl
   DEPENDS_GL
   DEPENDS_PLUGINS
     infovis
-    mmstd_datatools
+    datatools
     compositing_gl
   DEPENDS_EXTERNALS
     Delaunator)

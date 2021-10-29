@@ -7,7 +7,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "OSPRay_plugin/AbstractOSPRayStructure.h"
+#include "mmospray/AbstractOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {

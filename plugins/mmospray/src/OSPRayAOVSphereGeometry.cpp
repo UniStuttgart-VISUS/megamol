@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "OSPRayAOVSphereGeometry.h"
-#include "OSPRay_plugin/CallOSPRayAPIObject.h"
+#include "mmospray/CallOSPRayAPIObject.h"
 #include "mmcore/Call.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "geometry_calls//MultiParticleDataCall.h"

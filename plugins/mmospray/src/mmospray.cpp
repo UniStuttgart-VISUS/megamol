@@ -29,9 +29,9 @@
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayTransform.h"
 #include "OSPRayVelvetMaterial.h"
-#include "OSPRay_plugin/CallOSPRayAPIObject.h"
-#include "OSPRay_plugin/CallOSPRayMaterial.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "mmospray/CallOSPRayAPIObject.h"
+#include "mmospray/CallOSPRayMaterial.h"
+#include "mmospray/CallOSPRayStructure.h"
 #include "Pkd.h"
 
 namespace megamol::ospray {

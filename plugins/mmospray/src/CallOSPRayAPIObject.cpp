@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "OSPRay_plugin/CallOSPRayAPIObject.h"
+#include "mmospray/CallOSPRayAPIObject.h"
 #include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
