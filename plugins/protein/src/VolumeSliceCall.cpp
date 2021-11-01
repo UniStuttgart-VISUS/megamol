@@ -7,7 +7,7 @@
  */
 
 #include "stdafx.h"
-#include "VolumeSliceCall.h"
+#include "protein/VolumeSliceCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/math/mathfunctions.h"

@@ -143,7 +143,7 @@ bool VTIWriter::Start(void) {
 #endif
 
     // Create output directories if necessary
-    if (!this->createDirectories(this->outDirSlot.Param<core::param::StringParam>()->Value())) {
+    if (!this->createDirectories(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())) {
         this->jobDone = true;
         return false;
     }
@@ -425,9 +425,9 @@ bool VTIWriter::writeFile(protein_calls::VTIDataCall *dc) {
     ss.fill('0');
     std::string digits;
     ss << dc->FrameID();
-    filename.append((const char *)(this->outDirSlot.Param<core::param::StringParam>()->Value().PeekBuffer())); // Set output folder
+    filename.append((const char *)(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
     filename.append("/");
-    filename.append((const char *)(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().PeekBuffer())); // Set prefix
+    filename.append((const char *)(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str())); // Set prefix
     filename.append(".");
     filename.append((ss.str()).c_str());
     filename.append(".vti");

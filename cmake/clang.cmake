@@ -1,6 +1,14 @@
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99 ${OpenMP_C_FLAGS}")
+if (MSVC)
+    set(CLANG_FPIC "")
+    set(CLANG_OS "-DWIN32")
+else()
+    set(CLANG_FPIC "-fPIC")
+    set(CLANG_OS "-DUNIX")
+endif()
 
-set(COMMON_CXX_FLAGS "-Wall -Wno-narrowing -Wno-non-pod-varargs -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -fsized-deallocation ${OpenMP_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 ${CLANG_FPIC} ${CLANG_OS} -pedantic -std=c99 ${OpenMP_C_FLAGS}")
+
+set(COMMON_CXX_FLAGS "-Wall -Wno-narrowing -Wno-non-pod-varargs -pedantic ${CLANG_FPIC} ${CLANG_OS} -D_GNU_SOURCE -D_LIN${BITS} -fsized-deallocation ${OpenMP_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${COMMON_CXX_FLAGS} -DDEBUG -D_DEBUG -g -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${COMMON_CXX_FLAGS} -DNDEBUG -D_NDEBUG -O3 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${COMMON_CXX_FLAGS} -DNDEBUG -D_NDEBUG -O3 -g")

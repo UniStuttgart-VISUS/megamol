@@ -44,9 +44,9 @@ ColorModule::ColorModule(void) : core::Module(),
 	maxDistanceParam("comparison::maxDistance","The upper end of the colored distance interval"),
 	molDataCallerSlot("getdataCompare","Connects the protein rendering with the protein data storage of the comparison base protein") {
 
-	vislib::StringA filename("colors.txt");
-	ReadColorTableFromFile(filename, this->colorLookupTable);
-	this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+	std::string filename("colors.txt");
+	ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
+	this->colorTableFileParam.SetParameter(new param::StringParam(filename));
 	this->MakeSlotAvailable(&this->colorTableFileParam);
 
 	// the color for the minimum value (gradient coloring)
@@ -216,7 +216,7 @@ bool ColorModule::getColor(core::Call& call) {
     // TODO are the next four commands executed only once??
 	vislib::Array<vislib::math::Vector<float, 3> >* rainbowColorTable = col->GetRainbowColorTable();
 	vislib::Array<vislib::math::Vector<float, 3> >* cLT = col->GetColorLookupTable();
-	ReadColorTableFromFile(this->colorTableFileParam.Param<param::StringParam>()->Value(),
+	ReadColorTableFromFile(this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(),
 		*cLT);
 	MakeRainbowColorTable(col->GetNumEntries(), 
 		*rainbowColorTable);
@@ -559,9 +559,9 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
     vislib::math::Vector<float, 3> color;
     float r, g, b;
 
-	vislib::TString minGradColor = this->minGradColorParam.Param<param::StringParam>()->Value();
-	vislib::TString midGradColor = this->midGradColorParam.Param<param::StringParam>()->Value();
-	vislib::TString maxGradColor = this->maxGradColorParam.Param<param::StringParam>()->Value();
+	vislib::TString minGradColor = this->minGradColorParam.Param<param::StringParam>()->Value().c_str();
+	vislib::TString midGradColor = this->midGradColorParam.Param<param::StringParam>()->Value().c_str();
+	vislib::TString maxGradColor = this->maxGradColorParam.Param<param::StringParam>()->Value().c_str();
 
     // if recomputation is forced: clear current color table
     if( forceRecompute ) {
@@ -1203,20 +1203,20 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
 	// get colors
 	float r,g,b;
 	utility::ColourParser::FromString(
-		this->minGradColorParam.Param<param::StringParam>()->Value(),
+		this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
 		r,g,b);
 	vislib::math::Vector<float, 3> colMin( r, g, b);
 	utility::ColourParser::FromString(
-		this->midGradColorParam.Param<param::StringParam>()->Value(),
+		this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
 		r,g,b);
 	vislib::math::Vector<float, 3> colMid( r, g, b);
 	utility::ColourParser::FromString(
-		this->maxGradColorParam.Param<param::StringParam>()->Value(),
+		this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(),
 		r,g,b);
 	vislib::math::Vector<float, 3> colMax( r, g, b);
 
 	utility::ColourParser::FromString(
-		this->colorParam.Param<param::StringParam>()->Value(),
+		this->colorParam.Param<param::StringParam>()->Value().c_str(),
 		r,g,b);
 	vislib::math::Vector<float, 3> col( r, g, b);
 

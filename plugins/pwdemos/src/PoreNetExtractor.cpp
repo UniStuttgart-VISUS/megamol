@@ -73,11 +73,11 @@ cryShader(), sliceProcessor(), meshProcessor(), debugLoopDataEntryObject() {
 
     vislib::StringA val;
     val.Format("%u;%u;%u", this->sizeX, this->sizeY, this->sizeZ);
-    this->extractSizeSlot << new core::param::StringParam(val);
+    this->extractSizeSlot << new core::param::StringParam(val.PeekBuffer());
     this->MakeSlotAvailable(&this->extractSizeSlot);
 
     val = "1024;1024";
-    this->extractTileSizeSlot << new core::param::StringParam(val);
+    this->extractTileSizeSlot << new core::param::StringParam(val.PeekBuffer());
     this->MakeSlotAvailable(&this->extractTileSizeSlot);
 
     this->saveBtnSlot << new core::param::ButtonParam();
@@ -261,7 +261,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     }
     this->edir = extDir;
 
-    vislib::TString val = this->extractSizeSlot.Param<core::param::StringParam>()->Value();
+    vislib::TString val = this->extractSizeSlot.Param<core::param::StringParam>()->Value().c_str();
     vislib::Array<vislib::TString> hit = vislib::TStringTokeniser::Split(val, _T(";"));
     if (hit.Count() == 3) {
         try {
@@ -299,7 +299,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     }
 
     int tileW = 1024, tileH = 1024;
-    val = this->extractTileSizeSlot.Param<core::param::StringParam>()->Value();
+    val = this->extractTileSizeSlot.Param<core::param::StringParam>()->Value().c_str();
     hit = vislib::TStringTokeniser::Split(val, _T(";"));
     if (hit.Count() == 2) {
         try {

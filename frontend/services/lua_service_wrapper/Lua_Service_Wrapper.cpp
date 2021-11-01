@@ -600,7 +600,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 return Error{"graph could not find parameter: " + paramName};
             }
 
-            return StringResult{param->ValueString().PeekBuffer()};
+            return StringResult{param->ValueString()};
         }});
 
     callbacks.add<VoidResult, std::string, std::string>(

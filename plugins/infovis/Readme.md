@@ -4,7 +4,7 @@ The Infovis plugin provides all kinds of Information Visualization modules, like
 Jump to [Modules](#modules), jump to [Calls](#calls)
 
 ## Build
-This plugin is switched on by default. It depends on mmstd_datatools.
+This plugin is switched on by default. It depends on datatools.
 
 ---
 

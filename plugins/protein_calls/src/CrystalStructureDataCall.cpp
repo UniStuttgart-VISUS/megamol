@@ -13,13 +13,13 @@
 using namespace megamol;
 
 /*
- * core::moldyn::CrystalStructureDataCallCallForGetData
+ * CrystalStructureDataCallCallForGetData
  */
 const unsigned int protein_calls::CrystalStructureDataCall::CallForGetData = 0;
 
 
 /*
- * core::moldyn::CrystalStructureDataCall:CallForGetExtent
+ * CrystalStructureDataCall:CallForGetExtent
  */
 const unsigned int protein_calls::CrystalStructureDataCall::CallForGetExtent = 1;
 
@@ -37,7 +37,7 @@ protein_calls::CrystalStructureDataCall::CrystalStructureDataCall(void) :
 
 
 /*
- * core::moldyn::CrystalStructureDataCall::~core::moldyn::CrystalStructureDataCall::
+ * CrystalStructureDataCall::~CrystalStructureDataCall::
  */
 protein_calls::CrystalStructureDataCall::~CrystalStructureDataCall(void) {
 }
