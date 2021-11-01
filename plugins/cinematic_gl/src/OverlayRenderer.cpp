@@ -29,7 +29,7 @@ using namespace megamol::cinematic_gl;
 
 
 OverlayRenderer::OverlayRenderer()
-        : view::RendererModule<core_gl::view::CallRender3DGL>()
+        : view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
         , megamol::core::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")

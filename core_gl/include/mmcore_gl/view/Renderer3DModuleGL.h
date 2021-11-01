@@ -14,6 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
 
 namespace megamol {
 namespace core_gl {
@@ -22,7 +23,7 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModuleGL : public core::view::RendererModule<CallRender3DGL> {
+class MEGAMOLCORE_API Renderer3DModuleGL : public core::view::RendererModule<CallRender3DGL,ModuleGL> {
 public:
     /** Ctor. */
     Renderer3DModuleGL(void);

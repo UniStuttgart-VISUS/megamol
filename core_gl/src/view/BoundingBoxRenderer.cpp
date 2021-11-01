@@ -32,7 +32,7 @@ using namespace megamol::core_gl::view;
  * BoundingBoxRenderer::BoundingBoxRenderer
  */
 BoundingBoxRenderer::BoundingBoxRenderer(void)
-    : RendererModule<CallRender3DGL>()
+    : RendererModule<CallRender3DGL, ModuleGL>()
     , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
     , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
     , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")

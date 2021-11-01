@@ -5,7 +5,7 @@
 #
 option(BUILD_CONSOLE "Build console" ON)
 
-if(BUILD_CONSOLE)
+if(BUILD_CONSOLE AND ENABLE_GL)
   project(${CONSOLE_NAME})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -46,7 +46,6 @@ if(BUILD_CONSOLE)
   endif ()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-
   if(UNIX)
     include(GNUInstallDirs)
     set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir

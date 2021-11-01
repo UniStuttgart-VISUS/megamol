@@ -5,7 +5,7 @@
 #include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
-    : core::view::RendererModule<core_gl::view::CallRender3DGL>()
+    : core::view::RendererModule<core_gl::view::CallRender3DGL, ModuleGL>()
     , m_version(0)
     , m_GBuffer(nullptr)
     , m_last_used_camera(glm::mat4(1.0f),glm::mat4(1.0f))

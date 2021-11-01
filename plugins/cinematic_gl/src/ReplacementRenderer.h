@@ -14,7 +14,7 @@
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
-
+#include "mmcore_gl/ModuleGL.h"
 #include "cinematic/CinematicUtils.h"
 
 
@@ -24,7 +24,7 @@ namespace cinematic_gl {
     /*
      * Replacement rendering.
      */
-    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL>
+    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>
     {
     public:
 

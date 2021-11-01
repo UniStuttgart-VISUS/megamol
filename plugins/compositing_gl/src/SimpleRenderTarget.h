@@ -14,6 +14,7 @@
 #include "mmcore/view/RendererModule.h"
 
 #include "glowl/FramebufferObject.hpp"
+#include "mmcore_gl/ModuleGL.h"
 
 namespace megamol {
 namespace compositing {
@@ -21,7 +22,7 @@ namespace compositing {
 /**
  * TODO
  */
-class SimpleRenderTarget : public core::view::RendererModule<core_gl::view::CallRender3DGL> {
+class SimpleRenderTarget : public core::view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
     public:
     /**
      * Answer the name of this module.

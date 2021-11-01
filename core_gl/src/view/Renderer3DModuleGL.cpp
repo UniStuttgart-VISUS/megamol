@@ -16,7 +16,7 @@ using namespace megamol::core_gl::view;
  * Renderer3DModuleGL::Renderer3DModuleGL
  */
 Renderer3DModuleGL::Renderer3DModuleGL(void)
-    : RendererModule<CallRender3DGL>() {
+    : RendererModule<CallRender3DGL, ModuleGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 

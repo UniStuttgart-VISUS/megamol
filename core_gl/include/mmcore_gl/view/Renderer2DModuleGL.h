@@ -13,6 +13,8 @@
 
 #include "CallRender2DGL.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
 
 
 namespace megamol {
@@ -22,10 +24,10 @@ namespace view {
 /**
  * Base class of rendering graph 2D renderer modules.
  */
-class MEGAMOLCORE_API Renderer2DModuleGL : public core::view::RendererModule<CallRender2DGL> {
+class MEGAMOLCORE_API Renderer2DModuleGL : public core::view::RendererModule<CallRender2DGL, ModuleGL> {
 public:
     /** Ctor. */
-    Renderer2DModuleGL() :  RendererModule<CallRender2DGL>() {
+    Renderer2DModuleGL() : core::view::RendererModule<CallRender2DGL, ModuleGL>() {
 	    this->MakeSlotAvailable(&this->renderSlot);
 	}
 

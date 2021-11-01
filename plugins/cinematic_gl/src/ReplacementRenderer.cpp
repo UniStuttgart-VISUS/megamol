@@ -20,7 +20,7 @@ using namespace megamol::cinematic_gl;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL>()
+ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
     , alphaParam("alpha", "The alpha value of the replacement rendering.")
     , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
     , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")

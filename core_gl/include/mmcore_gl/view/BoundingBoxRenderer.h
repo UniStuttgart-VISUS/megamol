@@ -14,6 +14,7 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
@@ -25,7 +26,7 @@ namespace view {
  * This is a special renderer without the typical structure of other renderers, since it does not inherit from
  * core_gl::view::Renderer3DModuleGL.
  */
-class MEGAMOLCORE_API BoundingBoxRenderer : public core::view::RendererModule<CallRender3DGL> {
+class MEGAMOLCORE_API BoundingBoxRenderer : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
     /**
      * Answer the name of this module.

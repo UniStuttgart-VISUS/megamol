@@ -14,6 +14,7 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,7 +28,7 @@ namespace cinematic_gl {
     /** ************************************************************************
      * Renders various kinds of overlays
      */
-    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL>,
+    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>,
                             megamol::core::utility::RenderUtils {
     public:
         virtual std::vector<std::string> requested_lifetime_resources() {

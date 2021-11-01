@@ -53,7 +53,6 @@ public:
         return
         {
             "GlobalValueStore"
-            , "IOpenGL_Context" // request for this resource may be deleted any time - this is just an example. but GL modules should request the GL context resource.
         };
     }
 
