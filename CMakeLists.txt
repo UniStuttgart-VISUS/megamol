@@ -71,8 +71,10 @@ if (ENABLE_GL)
 endif()
 
 # Console
-set(CONSOLE_NAME mmconsole)
-add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+if(ENABLE_GL)
+  set(CONSOLE_NAME mmconsole)
+  add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+endif()
 
 # Remoteconsole
 add_subdirectory(remoteconsole)
@@ -89,7 +91,9 @@ endif()
 # Plugins
 add_subdirectory(plugins)
 if (BUILD_CONSOLE)
-  target_link_libraries(mmconsole PRIVATE plugins)
+  if (ENABLE_GL)
+    target_link_libraries(mmconsole PRIVATE plugins)
+  endif()
 endif()
 if (BUILD_FRONTEND)
   target_link_libraries(megamol PRIVATE plugins)
