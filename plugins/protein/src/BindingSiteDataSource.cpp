@@ -11,7 +11,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/math/mathfunctions.h"
 #include <math.h>
-#include "Color.h"
+#include "protein/Color.h"
 
 using namespace megamol::core;
 using namespace megamol::protein;

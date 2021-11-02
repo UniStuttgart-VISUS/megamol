@@ -2,7 +2,7 @@
 
 #include "SimpleRenderTarget.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
     : RendererModule<core::view::CallRender3DGL>()

@@ -158,11 +158,11 @@ bool FrodockLoader::getData( core::Call& call) {
     vislib::StringA receptorFilename( frodockInput.receptor);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
-    if( !fileServerNameSlot.Param<param::StringParam>()->Value().IsEmpty() ) {
+    if( !fileServerNameSlot.Param<param::StringParam>()->Value().empty() ) {
         if( receptorFilename.StartsWith( '/') ) {
             receptorFilename.Replace( '/', '\\');
         }
-        receptorFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value());
+        receptorFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value().c_str());
         receptorFilename.Prepend( "\\\\");
     }
 #endif
@@ -198,11 +198,11 @@ bool FrodockLoader::getData( core::Call& call) {
     vislib::StringA ligandFilename( frodockInput.ligand);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
-    if( !fileServerNameSlot.Param<param::StringParam>()->Value().IsEmpty() ) {
+    if( !fileServerNameSlot.Param<param::StringParam>()->Value().empty() ) {
         if( ligandFilename.StartsWith( '/') ) {
             ligandFilename.Replace( '/', '\\');
         }
-        ligandFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value());
+        ligandFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value().c_str());
         ligandFilename.Prepend( "\\\\");
     }
 #endif
@@ -501,7 +501,7 @@ void FrodockLoader::loadFile( const vislib::TString& filename) {
     try {
         // connect to frodock
         this->socket.Connect( vislib::net::IPEndPoint::CreateIPv4(
-            T2A( this->hostAddressSlot.Param<param::StringParam>()->Value()),
+            T2A( this->hostAddressSlot.Param<param::StringParam>()->Value().c_str()),
             this->portSlot.Param<param::IntParam>()->Value()));    
         // send input data
         this->socket.Send( &(frodockInput), sizeof(FrodockInput), vislib::net::Socket::TIMEOUT_INFINITE, 0, true);

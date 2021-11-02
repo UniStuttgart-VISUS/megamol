@@ -6,7 +6,7 @@
 megamol_plugin(astro
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    mmstd_datatools
+    datatools
   DEPENDS_EXTERNALS
     nanoflann
     sim_sort

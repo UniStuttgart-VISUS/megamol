@@ -1,6 +1,6 @@
 #include "InteractionRenderTarget.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::InteractionRenderTarget::InteractionRenderTarget() 
     : SimpleRenderTarget(), m_objId_render_target("ObjectId","Access the object id render target texture") 

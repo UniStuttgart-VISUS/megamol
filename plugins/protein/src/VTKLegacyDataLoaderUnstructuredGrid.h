@@ -14,8 +14,8 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "VTKLegacyDataUnstructuredGrid.h"
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
+#include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
