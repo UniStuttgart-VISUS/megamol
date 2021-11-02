@@ -17,7 +17,7 @@ using namespace megamol::core::param;
 
 
 view::TransferFunctionGL::TransferFunctionGL(void)
-    : Module()
+    : ModuleGL()
     , getTFSlot("gettransferfunction", "Provides the transfer function")
     , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
     , texID(0)

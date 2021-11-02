@@ -15,7 +15,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
+#include "mmcore_gl/ModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
@@ -32,7 +32,7 @@ namespace view {
     /**
      * Module defining a transfer function.
      */
-    class MEGAMOLCORE_API TransferFunctionGL : public core::Module {
+    class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL {
     public:
         
         /**

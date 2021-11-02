@@ -51,6 +51,10 @@
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
+#ifdef WITH_GL
+#include "mmcore_gl/factories/CallClassRegistryGL.h"
+#include "mmcore_gl/factories/ModuleClassRegistryGL.h"
+#endif
 #include "utility/ServiceManager.h"
 
 #include "png.h"
@@ -160,8 +164,12 @@ megamol::core::CoreInstance::CoreInstance(void)
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
     factories::register_module_classes(this->module_descriptions);
-    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
+#ifdef WITH_GL
+    core_gl::factories::register_module_classes_gl(this->module_descriptions);
+    core_gl::factories::register_call_classes_gl(this->call_descriptions);
+#endif
+    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
 
     // megamol::core::utility::LuaHostService::ID =

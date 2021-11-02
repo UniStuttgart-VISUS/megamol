@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "factories/ModuleClassRegistry.h"
+#include "mmcore_gl/factories/ModuleClassRegistryGL.h"
 
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
@@ -29,7 +29,7 @@
 /*
  * factories::register_module_classes
  */
-void megamol::core::factories::register_module_classes(megamol::core::factories::ModuleDescriptionManager& instance) {
+void megamol::core_gl::factories::register_module_classes_gl(megamol::core::factories::ModuleDescriptionManager& instance) {
 
     //////////////////////////////////////////////////////////////////////
     // Register all rendering graph module descriptions here

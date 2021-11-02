@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "factories/CallClassRegistry.h"
+#include "mmcore_gl/factories/CallClassRegistryGL.h"
 
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -22,7 +22,7 @@
 /*
  * factories::register_call_classes
  */
-void megamol::core::factories::register_call_classes(megamol::core::factories::CallDescriptionManager& instance) {
+void megamol::core_gl::factories::register_call_classes_gl(megamol::core::factories::CallDescriptionManager& instance) {
     //////////////////////////////////////////////////////////////////////
     // Register all rendering graph call descriptions here
     //////////////////////////////////////////////////////////////////////
