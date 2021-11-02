@@ -203,8 +203,10 @@ MMPLDDataSource::MMPLDDataSource(void) :AnimDataModule(),
     this->overrideBBoxSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->overrideBBoxSlot);
 
-    this->getData.SetCallback("geocalls::MultiParticleDataCall", "GetData", &MMPLDDataSource::getDataCallback);
-    this->getData.SetCallback("geocalls::MultiParticleDataCall", "GetExtent", &MMPLDDataSource::getExtentCallback);
+    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &MMPLDDataSource::getDataCallback);
+    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &MMPLDDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
