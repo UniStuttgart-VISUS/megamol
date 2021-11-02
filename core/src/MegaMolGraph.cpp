@@ -593,16 +593,42 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
+        auto m = find_module_by_prefix(request.from);
+        std::string slot_names = "none.";
+        if (m != this->module_list_.end()) {
+            const auto slots = m->modulePtr->GetSlots<CallerSlot>();
+            if (!slots.empty()) {
+                slot_names = "";
+                for (auto x = 0; x < slots.size() - 1; ++x) {
+                    slot_names += slots[x]->Name();
+                }
+                slot_names += slots[slots.size() - 1]->Name();
+            }
+        }
         log_error("error. could not find from-slot: " + request.from +
-            " for call: " + std::string(call_description->ClassName()));
+            " for call: " + std::string(call_description->ClassName()) +
+            "; possible slots: " + slot_names);
         return false; // error when looking for from-slot
     }
     CallerSlot* caller = dynamic_cast<CallerSlot*>(from_slot.first);
 
     auto to_slot = getCallSlotOfModule(request.to);
     if (!to_slot.first) {
+        auto m = find_module_by_prefix(request.to);
+        std::string slot_names = "none.";
+        if (m != this->module_list_.end()) {
+            const auto slots = m->modulePtr->GetSlots<CalleeSlot>();
+            if (!slots.empty()) {
+                slot_names = "";
+                for (auto x = 0; x < slots.size() - 1; ++x) {
+                    slot_names += slots[x]->Name();
+                }
+                slot_names += slots[slots.size() - 1]->Name();
+            }
+        }
         log_error("error. could not find to-slot: " + request.to +
-            " for call: " + std::string(call_description->ClassName()));
+            " for call: " + std::string(call_description->ClassName()) +
+            "; possible slots: " + slot_names);
         return false; // error when looking for to-slot
     }
     CalleeSlot* callee = dynamic_cast<CalleeSlot*>(to_slot.first);
