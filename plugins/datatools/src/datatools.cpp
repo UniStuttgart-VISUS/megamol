@@ -92,6 +92,8 @@
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
+#include "table/ParticlesToTable.h"
+#include "table/TableViewer.h"
 #include "ParticleListFilter.h"
 #include "AddClusterColours.h"
 #include "SiffCSplineFitter.h"
@@ -200,6 +202,8 @@ public:
             .RegisterAutoDescription<megamol::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToTable>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableViewer>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddClusterColours>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SiffCSplineFitter>();

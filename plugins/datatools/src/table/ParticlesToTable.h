@@ -7,12 +7,11 @@
 #include "geometry_calls//MultiParticleDataCall.h"
 #include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include <map>
 #include <array>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -97,5 +96,4 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

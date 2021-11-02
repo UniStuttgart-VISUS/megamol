@@ -5,11 +5,11 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 using namespace megamol;
 
 /*
- * Table::ParticlesToTable
+ * megamol::datatools::TableViewer::TableViewer
  */
 TableViewer::TableViewer(void)
     : Module()
@@ -32,20 +32,20 @@ TableViewer::TableViewer(void)
 
 
 /*
- * TableToParticles::~TableToParticles
+ * megamol::datatools::TableViewer::~TableViewer
  */
 TableViewer::~TableViewer(void) { this->Release(); }
 
 
 /*
- * megamol::pcl::PclDataSource::create
+ * megamol::datatools::TableViewer::create
  */
 bool TableViewer::create(void) {
     return true;
 }
 
 /*
- * megamol::pcl::PclDataSource::getMultiParticleData
+ * megamol::datatools::TableViewer::getTableData
  */
 bool TableViewer::getTableData(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
@@ -71,6 +71,9 @@ bool TableViewer::getTableData(core::Call& call) {
 }
 
 
+/*
+ * megamol::datatools::TableViewer::getTableHash
+ */
 bool TableViewer::getTableHash(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
 
@@ -89,13 +92,16 @@ bool TableViewer::getTableHash(core::Call& call) {
 
 
 /*
- * megamol::pcl::PclDataSource::release
+ * megamol::datatools::TableViewer::release
  */
 void TableViewer::release(void) {
     
 }
 
 
+/*
+ * megamol::datatools::TableViewer::drawTable
+ */
 void TableViewer::drawTable(table::TableDataCall* t_in) {
     bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope) return;
