@@ -1,5 +1,5 @@
 #include "stdafx.h"
-
+#include <fstream>
 #include "ObjWriter.h"
 
 #include "mmcore/param/FilePathParam.h"

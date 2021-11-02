@@ -8,13 +8,13 @@
 #ifndef MMVTKM_MESH_RENDER_TASKS_H_INCLUDED
 #define MMVTKM_MESH_RENDER_TASKS_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mmcore/CallGeneric.h"
 
 namespace megamol {
 namespace mmvtkm {
 
-class mmvtkmMeshRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
+class mmvtkmMeshRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.

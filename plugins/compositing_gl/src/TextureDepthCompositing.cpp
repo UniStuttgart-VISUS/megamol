@@ -8,7 +8,7 @@
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     : core::Module()

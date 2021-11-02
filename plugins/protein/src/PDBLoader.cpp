@@ -1266,7 +1266,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
         this->atomResidueIdx.SetCount(atomEntries.Count());
 
         // check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
-        const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
+        const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value().c_str();
         // get all the solvent residue names to filter out
         vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split(solventResiduesStr, ';', true);
         //this->solventResidueIdx.SetCount(solventResidueNames);

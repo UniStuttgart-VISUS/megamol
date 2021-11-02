@@ -11,7 +11,7 @@
 #include "vislib/RawStorageWriter.h"
 #include "vislib/math/Point.h"
 #include <vector>
-#include "Color.h"
+#include "protein/Color.h"
 #include "vislib/graphics/NamedColours.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -224,9 +224,9 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
         col_mix,       // blending factor between both color maps
         1.0f - col_mix, // 
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorSlot.Param<core::param::StringParam>()->Value(),
-        this->mixGradColorSlot.Param<core::param::StringParam>()->Value(),
-        this->maxGradColorSlot.Param<core::param::StringParam>()->Value(),
+        this->minGradColorSlot.Param<core::param::StringParam>()->Value().c_str(),
+        this->mixGradColorSlot.Param<core::param::StringParam>()->Value().c_str(),
+        this->maxGradColorSlot.Param<core::param::StringParam>()->Value().c_str(),
         true);
 
     for (unsigned int mi = 0; mi < dat.MoleculeCount(); mi++) {

@@ -1,6 +1,6 @@
 #include "ProbeInteraction.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 #include "ProbeGlCalls.h"
 
 #include "mmcore/CoreInstance.h"

@@ -4,4 +4,5 @@
 #
 
 megamol_plugin(megamol101
-  BUILD_DEFAULT OFF)
+  BUILD_DEFAULT OFF
+  DEPENDS_GL)

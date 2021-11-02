@@ -71,7 +71,13 @@ if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
+
+# GL
+option(ENABLE_GL "Enable GL support" ON)
+if (ENABLE_GL)
+  add_compile_definitions(WITH_GL)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
