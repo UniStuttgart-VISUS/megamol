@@ -12,7 +12,7 @@ namespace datatools {
     /**
      * This module renders a table via ImGui.
      */
-    class TableViewer : public megamol::core::Module {
+    class TableInspector : public megamol::core::Module {
 
     public:
 
@@ -22,7 +22,7 @@ namespace datatools {
          * @return The name of this module.
          */
         static inline const char *ClassName(void)  {
-            return "TableViewer";
+            return "TableInspector";
         }
 
         /**
@@ -46,12 +46,12 @@ namespace datatools {
         /**
          * Initialises a new instance.
          */
-        TableViewer(void);
+        TableInspector(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~TableViewer(void);
+        virtual ~TableInspector(void);
 
     protected:
 

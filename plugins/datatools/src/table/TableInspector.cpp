@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "TableViewer.h"
+#include "TableInspector.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "imgui.h"
@@ -10,20 +10,20 @@ using namespace megamol::datatools;
 using namespace megamol;
 
 /*
- * megamol::datatools::TableViewer::TableViewer
+ * megamol::datatools::TableInspector::TableInspector
  */
-TableViewer::TableViewer(void)
-    : Module()
-    , slotTableOut("floattableout", "Provides the table.")
-    , slotTableIn("floattablein", "Ingests the table.") {
+TableInspector::TableInspector(void)
+        : Module()
+        , slotTableOut("floattableout", "Provides the table.")
+        , slotTableIn("floattablein", "Ingests the table.") {
 
     /* Register parameters. */
 
     /* Register calls. */
     this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetData", &TableViewer::getTableData);
+        table::TableDataCall::ClassName(), "GetData", &TableInspector::getTableData);
     this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetHash", &TableViewer::getTableHash);
+        table::TableDataCall::ClassName(), "GetHash", &TableInspector::getTableHash);
 
     this->MakeSlotAvailable(&this->slotTableOut);
 
@@ -33,22 +33,22 @@ TableViewer::TableViewer(void)
 
 
 /*
- * megamol::datatools::TableViewer::~TableViewer
+ * megamol::datatools::TableInspector::~TableInspector
  */
-TableViewer::~TableViewer(void) { this->Release(); }
+TableInspector::~TableInspector(void) { this->Release(); }
 
 
 /*
- * megamol::datatools::TableViewer::create
+ * megamol::datatools::TableInspector::create
  */
-bool TableViewer::create(void) {
+bool TableInspector::create(void) {
     return true;
 }
 
 /*
- * megamol::datatools::TableViewer::getTableData
+ * megamol::datatools::TableInspector::getTableData
  */
-bool TableViewer::getTableData(core::Call& call) {
+bool TableInspector::getTableData(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
 
     auto* t_out = dynamic_cast<table::TableDataCall*>(&call);
@@ -73,9 +73,9 @@ bool TableViewer::getTableData(core::Call& call) {
 
 
 /*
- * megamol::datatools::TableViewer::getTableHash
+ * megamol::datatools::TableInspector::getTableHash
  */
-bool TableViewer::getTableHash(core::Call& call) {
+bool TableInspector::getTableHash(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
 
     auto* t_out = dynamic_cast<table::TableDataCall*>(&call);
@@ -93,17 +93,17 @@ bool TableViewer::getTableHash(core::Call& call) {
 
 
 /*
- * megamol::datatools::TableViewer::release
+ * megamol::datatools::TableInspector::release
  */
-void TableViewer::release(void) {
+void TableInspector::release(void) {
     
 }
 
 
 /*
- * megamol::datatools::TableViewer::drawTable
+ * megamol::datatools::TableInspector::drawTable
  */
-void TableViewer::drawTable(table::TableDataCall* t_in) {
+void TableInspector::drawTable(table::TableDataCall* t_in) {
     bool valid_imgui_scope =
         ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope)
