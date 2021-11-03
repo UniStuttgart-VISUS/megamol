@@ -3,11 +3,13 @@
 # All rights reserved.
 #
 
-megamol_plugin(mmvtkm
+megamol_plugin(mmvtkm_gl
   BUILD_DEFAULT OFF
+  DEPENDS_GL
   DEPENDS_PLUGINS
-    PUBLIC mesh
+    mesh_gl
     mmadios
+    mmvtkm
   DEPENDS_EXTERNALS
     vtkm)
 
@@ -23,5 +25,5 @@ if (mmvtkm_PLUGIN_ENABLED)
     "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
 
-  target_link_libraries(mmvtkm PRIVATE vtkm_worklet)
+  target_link_libraries(mmvtkm PRIVATE vtkm_renderer vtkm_worklet)
 endif ()

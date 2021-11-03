@@ -7,13 +7,12 @@
 
 #include "stdafx.h"
 
-#include "mmvtkm/mmvtkmMeshRenderTasks.h"
+#include "mmvtkm_gl/mmvtkmMeshRenderTasks.h"
 
-#include "mesh/MeshCalls.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
 using namespace megamol;
-using namespace megamol::mmvtkm;
+using namespace megamol::mmvtkm_gl;
 
 mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks()
         : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {

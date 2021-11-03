@@ -25,7 +25,7 @@
 
 
 namespace megamol {
-namespace mmvtkm {
+namespace mmvtkm_gl {
 
 /**
  * Renderer for vtkm data
@@ -103,8 +103,8 @@ private:
     core::param::ParamSlot psColorTables_;
 
     /** Some vtkm data set */
-    std::shared_ptr<VtkmData> vtkmDataSet_;
-    VtkmMetaData vtkmMetaData_;
+    std::shared_ptr<mmvtkm::VtkmData> vtkmDataSet_;
+    mmvtkm::VtkmMetaData vtkmMetaData_;
 
     /** The vtkm structures used for rendering */
     // vtkm::rendering::Scene scene_;

@@ -12,7 +12,7 @@
 #include "mmcore/CallGeneric.h"
 
 namespace megamol {
-namespace mmvtkm {
+namespace mmvtkm_gl {
 
 class mmvtkmMeshRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:

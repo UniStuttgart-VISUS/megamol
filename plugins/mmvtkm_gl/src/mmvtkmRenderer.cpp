@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmvtkm/mmvtkmRenderer.h"
+#include "mmvtkm_gl/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmDataCall.h"
 
 #include "mmcore/param/EnumParam.h"
@@ -15,7 +15,7 @@
 
 
 using namespace megamol;
-using namespace megamol::mmvtkm;
+using namespace megamol::mmvtkm_gl;
 
 
 /**
@@ -83,7 +83,7 @@ void mmvtkmDataRenderer::release() {
  * mmvtkmDataRenderer::Render
  */
 bool mmvtkmDataRenderer::Render(core::view::CallRender3DGL& call) {
-    mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
+    mmvtkm::mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
 
     // if (rhsVtkmDc == nullptr) {
     //     core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. rhsVtkmDc is nullptr.", __FILE__, __LINE__);
@@ -183,7 +183,7 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3DGL& call) {
  * mmvtkmDataRenderer::GetExtents
  */
 bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3DGL& call) {
-    mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
+    mmvtkm::mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
     if (rhsVtkmDc == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. rhsVtkmDc is nullptr.", __FILE__, __LINE__);
         return false;
