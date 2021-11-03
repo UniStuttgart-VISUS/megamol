@@ -103,40 +103,45 @@ void TableViewer::release(void) {
  * megamol::datatools::TableViewer::drawTable
  */
 void TableViewer::drawTable(table::TableDataCall* t_in) {
-    bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
-    if (!valid_imgui_scope) return;
+    bool valid_imgui_scope =
+        ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+    if (!valid_imgui_scope)
+        return;
 
     std::string table_name = "##table";
     table_name += this->Name();
 
-    ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
-            | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_NoBordersInBody
-            | ImGuiTableFlags_ScrollY;
+    ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
+                            ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV |
+                            ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY;
 
-    if (ImGui::BeginTable(table_name.c_str(), t_in->GetColumnsCount() + 1, flags)) {
-        ImGui::TableSetupColumn("row", ImGuiTableColumnFlags_WidthFixed);
-        for(auto c_idx = 0; c_idx < t_in->GetColumnsCount(); ++c_idx) {
-            auto c = t_in->GetColumnsInfos()[c_idx];
-            ImGui::TableSetupColumn(c.Name().c_str(), ImGuiTableColumnFlags_WidthFixed);
-        }
-        ImGui::TableSetupScrollFreeze(0, 1);
-        ImGui::TableHeadersRow();
-        ImGuiListClipper clipper;
-        clipper.Begin(t_in->GetRowsCount());
-        while(clipper.Step()) {
-            for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
-                ImGui::PushID(row);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("%010d", row);
-                const auto row_data = t_in->GetData(row);
-                for(auto c_idx = 0; c_idx < t_in->GetColumnsCount(); ++c_idx) {
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%04.4f", row_data[c_idx]);
-                }
-                ImGui::PopID();
+    if (ImGui::Begin(this->Name())) {
+        if (ImGui::BeginTable(table_name.c_str(), t_in->GetColumnsCount() + 1, flags)) {
+            ImGui::TableSetupColumn("row", ImGuiTableColumnFlags_WidthFixed);
+            for (auto c_idx = 0; c_idx < t_in->GetColumnsCount(); ++c_idx) {
+                auto c = t_in->GetColumnsInfos()[c_idx];
+                ImGui::TableSetupColumn(c.Name().c_str(), ImGuiTableColumnFlags_WidthFixed);
             }
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableHeadersRow();
+            ImGuiListClipper clipper;
+            clipper.Begin(t_in->GetRowsCount());
+            while (clipper.Step()) {
+                for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
+                    ImGui::PushID(row);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%010d", row);
+                    const auto row_data = t_in->GetData(row);
+                    for (auto c_idx = 0; c_idx < t_in->GetColumnsCount(); ++c_idx) {
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%04.4f", row_data[c_idx]);
+                    }
+                    ImGui::PopID();
+                }
+            }
+            ImGui::EndTable();
         }
-        ImGui::EndTable();
     }
+    ImGui::End();
 }
