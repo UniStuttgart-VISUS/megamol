@@ -111,7 +111,7 @@ void ParticleViewer::release(void) {
 /*
  * megamol::datatools::TableViewer::drawTable
  */
-void ParticleViewer::drawTable(geocalls::MultiParticleDataCall* t_in) {
+void ParticleViewer::drawTable(geocalls::MultiParticleDataCall* p_in) {
     bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope) return;
 
@@ -125,11 +125,11 @@ void ParticleViewer::drawTable(geocalls::MultiParticleDataCall* t_in) {
 
     if (ImGui::Begin(this->Name())) {
         ImGui::BeginTabBar("#Lists");
-        for (auto l = 0; l < t_in->GetParticleListCount(); ++l) {
+        for (auto l = 0; l < p_in->GetParticleListCount(); ++l) {
             std::string label = "list ";
             label += std::to_string(l);
             if (ImGui::BeginTabItem(label.c_str())) {
-                const auto& list = t_in->AccessParticles(l);
+                const auto& list = p_in->AccessParticles(l);
                 int32_t num_columns = 0;
                 ImGui::Text("particles: %lu", list.GetCount());
                 ImGui::Text("global color: %u, %u, %u, %u", list.GetGlobalColour()[0], list.GetGlobalColour()[1],
