@@ -379,28 +379,22 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
 }
 
 bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
-    this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+    this->provided_resources_lookup = {resources};
 
-    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
-        [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == "ImagePresentationEntryPoints";
-        });
+    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
+    {
+        "ImagePresentationEntryPoints",
+        megamol::frontend_resources::CommandRegistry_Req_Name
+    });
 
-    if (find_it == provided_resources.end()) {
+    if (!success)
         return false;
-    }
 
     m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
-        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+        graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
 
-    auto find_it2 = std::find_if(provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == megamol::frontend_resources::CommandRegistry_Req_Name;
-        });
-    if (find_it2 == provided_resources.end()) {
-        return false;
-    }
     m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
-        find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
+        graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
 
     return true;
 }
@@ -478,9 +472,9 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     auto module_lifetime_resource_request = module_ptr->requested_lifetime_resources();
 
-    auto module_lifetime_dependencies = get_requested_resources(module_lifetime_resource_request);
+    auto [success, module_lifetime_dependencies] = provided_resources_lookup.get_requested_resources(module_lifetime_resource_request);
 
-    if (module_lifetime_dependencies.size() != module_lifetime_resource_request.size()) {
+    if (!success) {
         std::string requested_deps = "";
         std::string found_deps = "";
         for (auto& req : module_lifetime_resource_request) requested_deps += " " + req;
@@ -757,22 +751,5 @@ megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_b
 
 megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
-}
-
-std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
-    std::vector<megamol::frontend::FrontendResource> result;
-    result.reserve(resource_requests.size());
-
-    for (auto& request : resource_requests) {
-        auto dependency_it = std::find_if(this->provided_resources.begin(), this->provided_resources.end(), [&](megamol::frontend::FrontendResource& dependency){
-            return request == dependency.getIdentifier();
-        });
-
-        if (dependency_it != provided_resources.end())
-            result.push_back(*dependency_it);
-    }
-
-
-    return result;
 }
 

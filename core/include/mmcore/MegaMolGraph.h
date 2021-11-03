@@ -20,6 +20,7 @@
 #include "mmcore/RootModuleNamespace.h"
 
 #include "FrontendResource.h"
+#include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
 #include "CommandRegistry.h"
 
@@ -118,8 +119,6 @@ private:
 
     bool delete_call(CallDeletionRequest_t const& request);
 
-    std::vector<megamol::frontend::FrontendResource> get_requested_resources(std::vector<std::string> resource_requests);
-
 
     // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all
     // calls and modules during ~MegaMolGraph()
@@ -131,7 +130,7 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-    std::vector<megamol::frontend::FrontendResource> provided_resources;
+    megamol::frontend_resources::FrontendResourcesLookup provided_resources_lookup;
 
     // for each View in the MegaMol graph we create a GraphEntryPoint
     // that entry point is used by the Image Presentation Service to
