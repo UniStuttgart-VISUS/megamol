@@ -22,7 +22,7 @@ megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", "
         CallGeometry::ClassName(), CallGeometry::FunctionName(1), &SphereGeometry::get_extents_cb);
     MakeSlotAvailable(&_out_geo_slot);
 
-    _in_data_slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    _in_data_slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&_in_data_slot);
 }
 
@@ -75,7 +75,7 @@ void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
 }
 
 
-bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx) {
+bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataCall& call, Context const& ctx) {
     auto const pl_count = call.GetParticleListCount();
 
     for (auto const& el : particle_data_) {
@@ -100,9 +100,9 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
             continue;
 
         auto const color_type = particles.GetColourDataType();
-        auto const has_color = (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) &&
-                               (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) &&
-                               (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I);
+        auto const has_color = (color_type != geocalls::SimpleSphericalParticles::COLDATA_NONE) &&
+                               (color_type != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I) &&
+                               (color_type != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I);
 
         std::vector<device::Particle> data(p_count);
         auto x_acc = particles.GetParticleStore().GetXAcc();
@@ -230,7 +230,7 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     auto out_geo = dynamic_cast<CallGeometry*>(&c);
     if (out_geo == nullptr)
         return false;
-    auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_data = _in_data_slot.CallAs<geocalls::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
 
@@ -271,7 +271,7 @@ bool megamol::optix_hpg::SphereGeometry::get_extents_cb(core::Call& c) {
     auto out_geo = dynamic_cast<CallGeometry*>(&c);
     if (out_geo == nullptr)
         return false;
-    auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_data = _in_data_slot.CallAs<geocalls::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
 

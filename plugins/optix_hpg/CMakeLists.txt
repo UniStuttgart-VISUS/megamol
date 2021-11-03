@@ -8,6 +8,7 @@ megamol_plugin(optix_hpg
   DEPENDS_CUDA
   DEPENDS_PLUGINS
     mesh
+    geometry_calls
   DEPENDS_EXTERNALS
     glm)
 

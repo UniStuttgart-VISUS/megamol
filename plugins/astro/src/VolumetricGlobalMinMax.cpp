@@ -18,21 +18,21 @@ megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax(void) : Module(),
         slotVolumetricDataIn("volumetricDataIn", "Input slot for volumetric data"),
         slotVolumetricDataOut("volumetricDataOut", "Output slot for volumetric data") {
     // Publish the slots.
-    this->slotVolumetricDataIn.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
+    this->slotVolumetricDataIn.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->slotVolumetricDataIn);
 
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_DATA), &VolumetricGlobalMinMax::onGetData);
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_EXTENTS), &VolumetricGlobalMinMax::onGetExtents);
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA), &VolumetricGlobalMinMax::onGetMetadata);
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
-    this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &VolumetricGlobalMinMax::onUnsupportedCallback);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_DATA), &VolumetricGlobalMinMax::onGetData);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_EXTENTS), &VolumetricGlobalMinMax::onGetExtents);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_METADATA), &VolumetricGlobalMinMax::onGetMetadata);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_START_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_STOP_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
+    this->slotVolumetricDataOut.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+            geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_TRY_GET_DATA), &VolumetricGlobalMinMax::onUnsupportedCallback);
     this->MakeSlotAvailable(&this->slotVolumetricDataOut);
 }
 
@@ -56,15 +56,15 @@ bool megamol::astro::VolumetricGlobalMinMax::create(void) {
 void megamol::astro::VolumetricGlobalMinMax::release(void) { }
 
 bool megamol::astro::VolumetricGlobalMinMax::onGetData(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_DATA);
+    return pipeVolumetricDataCall(call, geocalls::VolumetricDataCall::IDX_GET_DATA);
 }
 
 bool megamol::astro::VolumetricGlobalMinMax::onGetExtents(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_EXTENTS);
+    return pipeVolumetricDataCall(call, geocalls::VolumetricDataCall::IDX_GET_EXTENTS);
 }
 
 bool megamol::astro::VolumetricGlobalMinMax::onGetMetadata(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA);
+    return pipeVolumetricDataCall(call, geocalls::VolumetricDataCall::IDX_GET_METADATA);
 }
 
 bool megamol::astro::VolumetricGlobalMinMax::onUnsupportedCallback(megamol::core::Call &call) {
@@ -72,7 +72,7 @@ bool megamol::astro::VolumetricGlobalMinMax::onUnsupportedCallback(megamol::core
 }
 
 bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::core::Call &call, unsigned int funcIdx) {
-    using megamol::core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall*>(&call);

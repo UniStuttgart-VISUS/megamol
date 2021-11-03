@@ -28,7 +28,7 @@ The current dependencies are: [rkcommon](https://github.com/ospray/rkcommon), [o
     - We have found the following to work quickest (on Windows, for Linux adapt the environment setting and slashes to ```export``` etc.):
 ```bash
     set TBB_ROOT=<megamol_build_dir>\_deps\tbb-install
-    cmake -S scripts/superbuild -B build/super -D DOWNLOAD_TBB=false -D BUILD_EMBREE_FROM_SOURCE=false -D CMAKE_INSTALL_PREFIX=build/super/install -G Ninja
+    cmake -S scripts/superbuild -B build/super -D DOWNLOAD_TBB=false -D BUILD_EMBREE_FROM_SOURCE=false -D CMAKE_INSTALL_PREFIX=build/super/install -D CMAKE_BUILD_TYPE=Release -G Ninja
     cmake --build build/super --config Release
 ```
 

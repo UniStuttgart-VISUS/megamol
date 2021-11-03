@@ -8,4 +8,5 @@ megamol_plugin(moldyn_gl
   DEPENDS_GL
   DEPENDS_PLUGINS 
     moldyn
-    geometry_calls)
+    geometry_calls
+    imgui)
