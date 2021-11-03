@@ -15,7 +15,7 @@
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol::megamol101 {
+namespace megamol::megamol101_gl {
 
 /**
  * Loader module for simple ASCII comma seperated files

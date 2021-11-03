@@ -16,7 +16,7 @@
 #include "vislib/StringTokeniser.h"
 
 using namespace megamol;
-using namespace megamol::megamol101;
+using namespace megamol::megamol101_gl;
 
 /*
  * ASCIISphereLoader::ASCIISphereLoader

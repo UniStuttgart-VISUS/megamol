@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-namespace megamol::megamol101 {
+namespace megamol::megamol101_gl {
 
 /**
  * Renders incoming spheres to the screen, either using GL_POINTS or more

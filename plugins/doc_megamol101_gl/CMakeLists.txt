@@ -3,6 +3,6 @@
 # All rights reserved.
 #
 
-megamol_plugin(megamol101
+megamol_plugin(megamol101_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL)

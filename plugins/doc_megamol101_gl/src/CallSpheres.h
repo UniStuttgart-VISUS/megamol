@@ -10,7 +10,7 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol::megamol101 {
+namespace megamol::megamol101_gl {
 
 /**
  * Call for sphere data.

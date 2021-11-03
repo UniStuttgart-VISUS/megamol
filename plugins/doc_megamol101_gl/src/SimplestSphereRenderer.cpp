@@ -17,7 +17,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 using namespace megamol;
-using namespace megamol::megamol101;
+using namespace megamol::megamol101_gl;
 
 /*
  * SimplestSphereRenderer::SimplestSphereRenderer
@@ -65,14 +65,14 @@ bool SimplestSphereRenderer::create() {
 
     using namespace megamol::core::utility::log;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
         simpleShader = core::utility::make_glowl_shader(
-            "simplePoints", shader_options, "megamol101/simple_points.vert.glsl", "megamol101/simple_points.frag.glsl");
+            "simplePoints", shader_options, "megamol101_gl/simple_points.vert.glsl", "megamol101_gl/simple_points.frag.glsl");
         sphereShader =
-            core::utility::make_glowl_shader("prettyPoints", shader_options, "megamol101/pretty_points.vert.glsl",
-                "megamol101/pretty_points.geom.glsl", "megamol101/pretty_points.frag.glsl");
+            core::utility::make_glowl_shader("prettyPoints", shader_options, "megamol101_gl/pretty_points.vert.glsl",
+                "megamol101_gl/pretty_points.geom.glsl", "megamol101_gl/pretty_points.frag.glsl");
 
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());

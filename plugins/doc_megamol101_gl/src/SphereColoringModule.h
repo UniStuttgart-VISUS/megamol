@@ -13,7 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::megamol101 {
+namespace megamol::megamol101_gl {
 
 /**
  * Module that assigns colors to incoming spheres.
