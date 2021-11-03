@@ -81,6 +81,8 @@ namespace misc {
 
         /** The data callee slot. */
         core::CallerSlot slotParticlesIn;
+
+        uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
     };
 
 } /* end namespace misc */

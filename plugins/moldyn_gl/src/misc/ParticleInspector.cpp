@@ -3,6 +3,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "mmcore/CoreInstance.h"
 
 using namespace megamol::moldyn_gl::misc;
 using namespace megamol;
@@ -50,25 +51,19 @@ bool ParticleInspector::getParticleData(core::Call& call) {
     auto* p_in = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
 
     auto* p_out = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (p_out == nullptr) return false;
+    if (p_out == nullptr)
+        return false;
 
     if (p_in != nullptr) {
-        p_in->SetFrameID(p_out->FrameID());
-        if (!(*p_in)(0)) return false;
-
+        *p_in = *p_out;
+        if (!(*p_in)(0))
+            return false;
+        *p_out = *p_in;
         if (p_in->GetParticleListCount() > 0) {
             drawTable(p_in);
         }
-
-        p_out->SetFrameCount(p_in->FrameCount());
-        p_out->SetFrameID(p_in->FrameID());
-        p_out->SetDataHash(p_in->DataHash());
-        p_out->SetTimeStamp(p_in->GetTimeStamp());
-        p_out->SetParticleListCount(p_in->GetParticleListCount());
-        p_out->SetUnlocker(p_in->GetUnlocker());
-        for (auto x = 0; x < p_in->GetParticleListCount(); ++x) {
-            p_out->AccessParticles(x) = p_in->AccessParticles(x);
-        }
+        p_in->SetUnlocker(nullptr, false);
+        p_in->Unlock();
     } else {
         return false;
     }
@@ -83,16 +78,16 @@ bool ParticleInspector::getParticleExtents(core::Call& call) {
     auto* p_in = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
 
     auto* p_out = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (p_out == nullptr) return false;
+    if (p_out == nullptr)
+        return false;
 
     if (p_in != nullptr) {
-        p_in->SetFrameID(p_out->FrameID());
-        if (!(*p_in)(1)) return false;
-
-        p_out->SetFrameCount(p_in->FrameCount());
-        p_out->SetFrameID(p_in->FrameID());
-        p_out->SetDataHash(p_in->DataHash());
-        p_out->SetTimeStamp(p_in->GetTimeStamp());
+        *p_in = *p_out;
+        if (!(*p_in)(1))
+            return false;
+        *p_out = *p_in;
+        p_in->SetUnlocker(nullptr, false);
+        p_in->Unlock();
     } else {
         return false;
     }
@@ -114,6 +109,9 @@ void ParticleInspector::release(void) {
 void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
     bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope) return;
+
+    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame) return;
+    lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
 
     std::string table_name = "##table";
     table_name += this->Name();
@@ -184,8 +182,9 @@ void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableHeadersRow();
                     ImGuiListClipper clipper;
-                    auto storage = list.GetParticleStore();
-                    clipper.Begin(list.GetCount());
+                    const auto& storage = list.GetParticleStore();
+                    const int modified_count = static_cast<int>(std::min<UINT64>(list.GetCount(), std::numeric_limits<int>::max()));
+                    clipper.Begin(modified_count);
                     while (clipper.Step()) {
                         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
                             ImGui::PushID(row);
