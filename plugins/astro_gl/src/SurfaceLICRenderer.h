@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace megamol {
-namespace astro {
+namespace astro_gl {
 
     class SurfaceLICRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:

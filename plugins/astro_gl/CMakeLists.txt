@@ -3,8 +3,9 @@
 # All rights reserved.
 #
 
-megamol_plugin(astro
+megamol_plugin(astro_gl
   BUILD_DEFAULT OFF
+  DEPENDS_GL
   DEPENDS_PLUGINS
     datatools
     geometry_calls

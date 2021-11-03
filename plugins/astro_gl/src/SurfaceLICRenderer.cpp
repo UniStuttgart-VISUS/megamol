@@ -2,7 +2,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -29,7 +29,7 @@
 #include <random>
 
 namespace megamol {
-namespace astro {
+namespace astro_gl {
 
     SurfaceLICRenderer::SurfaceLICRenderer()
             : input_renderer("input_renderer", "Renderer producing the surface and depth used for drawing the LIC upon")
@@ -54,7 +54,7 @@ namespace astro {
         this->input_renderer.SetCompatibleCall<core::view::CallRender3DGLDescription>();
         this->MakeSlotAvailable(&this->input_renderer);
 
-        this->input_velocities.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+        this->input_velocities.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
         this->MakeSlotAvailable(&this->input_velocities);
 
         this->input_transfer_function.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -157,7 +157,7 @@ namespace astro {
 
     bool SurfaceLICRenderer::GetExtents(core::view::CallRender3DGL& call) {
         auto ci = this->input_renderer.CallAs<core::view::CallRender3DGL>();
-        auto cd = this->input_velocities.CallAs<core::misc::VolumetricDataCall>();
+        auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
 
         if (ci == nullptr)
             return false;
@@ -173,7 +173,7 @@ namespace astro {
 
         if (!(*ci)(core::view::CallRender3DGL::FnGetExtents))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
 
         call.SetTimeFramesCount(cd->FrameCount());
@@ -235,11 +235,11 @@ namespace astro {
         this->fbo.Disable();
 
         // Get input velocities
-        auto cd = this->input_velocities.CallAs<core::misc::VolumetricDataCall>();
+        auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
         if (cd == nullptr)
             return false;
 
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
             return false;
 
         cd->SetFrameID(req_frame, true);
