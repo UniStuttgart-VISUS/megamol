@@ -4,6 +4,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "mmcore/CoreInstance.h"
 
 using namespace megamol::datatools;
 using namespace megamol;
@@ -107,6 +108,9 @@ void TableViewer::drawTable(table::TableDataCall* t_in) {
         ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope)
         return;
+
+    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame) return;
+    lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
 
     std::string table_name = "##table";
     table_name += this->Name();

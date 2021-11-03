@@ -10,7 +10,7 @@ namespace megamol {
 namespace datatools {
 
     /**
-     * This module converts from a generic table to the MultiParticleDataCall.
+     * This module renders a table via ImGui.
      */
     class TableViewer : public megamol::core::Module {
 
@@ -80,6 +80,8 @@ namespace datatools {
 
         /** The data callee slot. */
         core::CallerSlot slotTableIn;
+
+        uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
     };
 
 } /* end namespace datatools */
