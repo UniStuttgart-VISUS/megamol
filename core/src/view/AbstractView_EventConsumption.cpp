@@ -113,7 +113,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
 }
 
 std::vector<std::string> get_view_runtime_resources_requests() {
-    return {"ViewRenderInput", "KeyboardEvents", "MouseEvents", "WindowEvents"};
+    return {"ViewRenderInputs", "KeyboardEvents", "MouseEvents", "WindowEvents"};
 }
 
 bool view_rendering_execution(

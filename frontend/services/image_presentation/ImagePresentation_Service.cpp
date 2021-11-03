@@ -20,6 +20,9 @@
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
+#include <any>
+#include <utility>
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
@@ -144,7 +147,7 @@ const std::vector<std::string> ImagePresentation_Service::getRequestedResourceNa
 void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
 
-    m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+    m_frontend_resources_lookup = {m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>()};
 
     auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
@@ -226,6 +229,8 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
 
 namespace {
     struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
+        static constexpr const char* Name = "ViewRenderInputs";
+
         // individual inputs used by view for rendering of next frame
         megamol::frontend_resources::RenderInput render_input;
 
@@ -242,57 +247,107 @@ namespace {
             render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
             render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
         }
+
+        FrontendResource get_resource() override{
+            return {Name, render_input};
+        };
     };
-} // namespace
 #define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
 
-std::tuple<
-    std::vector<FrontendResource>,
-    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>
-> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+    // this is a somewhat improvised factory to abstract away instantiation of different RenderInputUpdate types
+    struct RenderInputsFactory {
+        std::tuple<std::string, std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>>
+            get(std::string const& request) {
+            auto renderinputs = std::make_unique<ImagePresentation_Service::RenderInputsUpdate>();
 
-    std::vector<FrontendResource> resources;
+            if (request == ViewRenderInputs::Name) {
+                renderinputs = std::make_unique<ViewRenderInputs>();
+                accessViewRenderInput(renderinputs).render_input_framebuffer_size_handler = fromservice<std::function<ImagePresentation_Service::UintPair()>>(0);
+                accessViewRenderInput(renderinputs).render_input_tile_handler = fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1);
+
+                return {ViewRenderInputs::Name, std::move(renderinputs)};
+            }
+        }
+
+        template <typename T>
+        T const& fromservice(size_t index) {
+            return *std::any_cast<T*>(service_data[index]);
+        }
+
+        std::vector<std::any> service_data; // holding ptrs to image presentation members/resources we need to pass to the stuff the factory produces
+    };
+} // namespace
+
+std::tuple<
+    bool, // success
+    std::vector<FrontendResource>, // resources
+    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
+>
+ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+    static RenderInputsFactory renderinputs_factory{
+        // the factory needs to pass certain data/handlers to the RenderInput structs/implementations
+        {
+              {&m_framebuffer_size_handler}
+            , {&m_viewport_tile_handler}
+        }};
 
     // this unique_data/reindering input handler thing is a bit convoluted but the idea is that we want to give the view (or any other type of entry point)
     // the ability to get updated with newest frame data, e.g. framebuffer size
     // but we also want to maintain the "empty" handler throughout the code path to avoid checking for a null ptr
     auto unique_data = std::make_unique<RenderInputsUpdate>();
 
-    for (auto& request: requests) {
-        auto find_it = std::find_if(m_frontend_resources.begin(), m_frontend_resources.end(),
-            [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
-        bool found_request = find_it != m_frontend_resources.end();
+    bool success = false;
+    std::vector<FrontendResource> resources;
 
-        // intercept view requests for individual rendering inputs
-        // which are not global resources but managed for each entry point individually
-        if (request == "ViewRenderInput") {
-            unique_data = std::make_unique<ViewRenderInputs>();
-            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_handler;
-            accessViewRenderInput(unique_data).render_input_tile_handler = m_viewport_tile_handler;
+    auto handle_resource_requests = [&](auto from, auto to) -> bool
+    {
+        if (from == to)
+            return true;
 
-            // wrap render input for view in locally handled resource
-            resources.push_back({request, accessViewRenderInput(unique_data).render_input});
-            continue;
+        std::vector<std::string> requests{from, to};
+        auto [lookup_success, lookup_resources] = m_frontend_resources_lookup.get_requested_resources(requests);
+        resources.insert(resources.end(), lookup_resources.begin(), lookup_resources.end());
+
+        return lookup_success;
+    };
+
+    // find resource request for input update of this entry point
+    // currently there is only one such request
+    // we then split up the requests into the ones before and after the request for the input update
+    // and look up those resource requests in the frontend resources
+    // the input update resource is not known in the frontend, so we need to fiddle a bit here
+    for (auto request_it = requests.begin(); request_it != requests.end(); request_it++) {
+        if (auto [name, result_unique_ptr] = renderinputs_factory.get(*request_it); result_unique_ptr != nullptr) {
+            unique_data = std::move(result_unique_ptr);
+            success = true;
+
+            success &= handle_resource_requests(requests.begin(), request_it);
+
+            // put the resource for input update at position where it was requested
+            resources.emplace_back(unique_data->get_resource());
+
+            success &= handle_resource_requests(request_it+1, requests.end());
+
+            break;
         }
-
-        if (!found_request) {
-            log_error("could not find requested resource " + request);
-            return {};
-        }
-
-        resources.push_back(*find_it);
     }
 
-    return {resources, std::move(unique_data)};
+    if (!success) {
+        log_error("could not find a requested resource for an entry point");
+        return {};
+    }
+
+    return {success, resources, std::move(unique_data)};
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
     auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
-    auto [resources, unique_data] = map_resources(resource_requests);
 
-    if (resources.empty() && !resource_requests.empty()) {
+    auto [success, resources, unique_data] = map_resources(resource_requests);
+
+    if (!success) {
         log_error("could not assign resources requested by entry point " + name + ". Entry point not created.");
         return false;
     }
