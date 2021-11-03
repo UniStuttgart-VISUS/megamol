@@ -851,7 +851,7 @@ namespace ospray {
                                 if (attrib.component_type == ParticleDataAccessCollection::ValueType::FLOAT) {
                                     auto count = attrib.byte_size / attrib.stride;
                                     auto osp_type = OSP_VEC3F;
-                                    if (attrib.component_cnt == 4);
+                                    if (attrib.component_cnt == 4)
                                         osp_type = OSP_VEC4F;
                                     colorData = ::ospray::cpp::SharedData(
                                         &attrib.data[attrib.offset], osp_type, count, attrib.stride);

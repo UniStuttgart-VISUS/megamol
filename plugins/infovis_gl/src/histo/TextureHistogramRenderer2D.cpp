@@ -38,9 +38,9 @@ TextureHistogramRenderer2D::~TextureHistogramRenderer2D() {
 bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         calcMinMaxLinesProgram_ = core::utility::make_glowl_shader(
-            "histo_tex_minmax_lines", shaderOptions, "infovis/histo/tex_minmax_lines.comp.glsl");
+            "histo_tex_minmax_lines", shaderOptions, "infovis_gl/histo/tex_minmax_lines.comp.glsl");
         calcMinMaxAllProgram_ = core::utility::make_glowl_shader(
-            "histo_tex_minmax_all", shaderOptions, "infovis/histo/tex_minmax_all.comp.glsl");
+            "histo_tex_minmax_all", shaderOptions, "infovis_gl/histo/tex_minmax_all.comp.glsl");
         calcHistogramProgram_ =
             core::utility::make_glowl_shader("histo_tex_calc", shaderOptions, "infovis_gl/histo/tex_calc.comp.glsl");
         selectionProgram_ =
