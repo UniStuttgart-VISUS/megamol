@@ -23,8 +23,6 @@
 #include "Remote_Service.hpp"
 #include "Profiling_Service.hpp"
 
-#include <glad/glad.h> /// XXX see temporary fix below
-
 
 static void log(std::string const& text) {
     const std::string msg = "Main: " + text;
@@ -130,11 +128,20 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
+    imagepresentationConfig.local_viewport_tile = config.local_viewport_tile.has_value()
+        ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
+            config.local_viewport_tile.value().global_framebuffer_resolution,
+            config.local_viewport_tile.value().tile_start_pixel,
+            config.local_viewport_tile.value().tile_resolution
+        })
+        : std::nullopt;
+    imagepresentation_service.setPriority(3);
+  
+    megamol::frontend::Command_Service command_service;
 #ifdef PROFILING
     megamol::frontend::Profiling_Service profiling_service;
 #endif
-    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
-    megamol::frontend::Command_Service command_service;
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -232,8 +239,6 @@ int main(const int argc, const char** argv) {
 
             imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
-            /// XXX temporary fix to make sure that everything that happens post-draw ends up in default window fbo...
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 

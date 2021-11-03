@@ -16,6 +16,8 @@
 #include "ImageWrapper_to_GLTexture.h"
 #include "ImagePresentation_Sinks.hpp"
 
+#include "LuaCallbacksCollection.h"
+
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -76,7 +78,53 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "WindowManipulation"
         , "FramebufferEvents"
         , "GUIState"
+        , "RegisterLuaCallbacks"
     };
+
+    m_framebuffer_size_handler = [&]() -> UintPair {
+        return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
+    };
+
+    m_viewport_tile_handler =
+        [&]() -> ViewportTile
+        {
+            return {m_framebuffer_size_handler(), {0.0, 0.0}, {1.0, 1.0}};
+        };
+
+    if (config.local_viewport_tile.has_value()) {
+        auto value = config.local_viewport_tile.value();
+
+        auto global_size = value.global_framebuffer_resolution;
+        auto tile_start = value.tile_start_pixel;
+        auto tile_size = value.tile_resolution;
+
+        auto diff = [](auto const& point, auto const& size) -> DoublePair {
+            return {point.first / static_cast<double>(size.first), point.second / static_cast<double>(size.second)};
+        };
+
+        DoublePair start = diff(tile_start, global_size);
+        DoublePair end = diff(UintPair{tile_start.first+tile_size.first,tile_start.second+tile_size.second}, global_size);
+
+        m_framebuffer_size_handler = [=]() -> UintPair {
+            return {tile_size.first, tile_size.second};
+        };
+
+        m_viewport_tile_handler =
+            [=]() -> ViewportTile
+            {
+                return {{global_size.first, global_size.second}, start, end};
+            };
+    }
+
+    // if framebuffer size is set via CLI
+    // overwrite the framebuffer size handler maybe set by the tile CLI option (see above)
+    if (config.local_framebuffer_resolution.has_value()) {
+        auto value = config.local_framebuffer_resolution.value();
+
+        m_framebuffer_size_handler = [=]() -> UintPair {
+            return {value.first, value.second};
+        };
+    }
 
     log("initialized successfully");
     return true;
@@ -97,6 +145,11 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     this->m_requestedResourceReferences = resources;
 
     m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+
+    auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
+
+    fill_lua_callbacks();
 }
 #define m_frontend_resources (*m_frontend_resources_ptr)
 
@@ -104,7 +157,11 @@ void ImagePresentation_Service::updateProvidedResources() {
 }
 
 void ImagePresentation_Service::digestChangedRequestedResources() {
+    auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
 
+    if (framebuffer_events.size_events.size()) {
+        m_window_framebuffer_size = {framebuffer_events.size_events.back().width, framebuffer_events.size_events.back().height};
+    }
 }
 
 void ImagePresentation_Service::resetProvidedResources() {
@@ -118,6 +175,9 @@ void ImagePresentation_Service::postGraphRender() {
 
 void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
+
+        entry.entry_point_data->update();
+
         entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image);
     }
 }
@@ -146,8 +206,6 @@ using EntryPointInitFunctions =
 std::tuple<
     // rendering execution function
     EntryPointExecutionCallback,
-    // set inital state function
-    EntryPointExecutionCallback,
     // get requested resources function
     std::function<std::vector<std::string>()>
 >;
@@ -157,8 +215,7 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
         if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
             return EntryPointInitFunctions{
                 std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::view_init_rendering_state},
-                std::function{megamol::core::view::get_gl_view_runtime_resources_requests}
+                std::function{megamol::core::view::get_view_runtime_resources_requests},
             };
         }
     }
@@ -167,31 +224,73 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
     throw std::exception();
 }
 
-std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
-    std::vector<FrontendResource> result;
+namespace {
+    struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
+        // individual inputs used by view for rendering of next frame
+        megamol::frontend_resources::RenderInput render_input;
+
+        // sets (local) fbo resolution of render_input from various sources
+        std::function<ImagePresentation_Service::UintPair()> render_input_framebuffer_size_handler;
+        std::function<ImagePresentation_Service::ViewportTile()> render_input_tile_handler;
+
+        void update() override {
+            auto fbo_size = render_input_framebuffer_size_handler();
+            render_input.local_view_framebuffer_resolution = {fbo_size.first, fbo_size.second};
+
+            auto tile = render_input_tile_handler();
+            render_input.global_framebuffer_resolution = {tile.global_resolution.first, tile.global_resolution.second};
+            render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
+            render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
+        }
+    };
+} // namespace
+#define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
+
+std::tuple<
+    std::vector<FrontendResource>,
+    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>
+> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+
+    std::vector<FrontendResource> resources;
+
+    // this unique_data/reindering input handler thing is a bit convoluted but the idea is that we want to give the view (or any other type of entry point)
+    // the ability to get updated with newest frame data, e.g. framebuffer size
+    // but we also want to maintain the "empty" handler throughout the code path to avoid checking for a null ptr
+    auto unique_data = std::make_unique<RenderInputsUpdate>();
 
     for (auto& request: requests) {
         auto find_it = std::find_if(m_frontend_resources.begin(), m_frontend_resources.end(),
             [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
         bool found_request = find_it != m_frontend_resources.end();
 
+        // intercept view requests for individual rendering inputs
+        // which are not global resources but managed for each entry point individually
+        if (request == "ViewRenderInput") {
+            unique_data = std::make_unique<ViewRenderInputs>();
+            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_handler;
+            accessViewRenderInput(unique_data).render_input_tile_handler = m_viewport_tile_handler;
+
+            // wrap render input for view in locally handled resource
+            resources.push_back({request, accessViewRenderInput(unique_data).render_input});
+            continue;
+        }
 
         if (!found_request) {
             log_error("could not find requested resource " + request);
             return {};
         }
 
-        result.push_back(*find_it);
+        resources.push_back(*find_it);
     }
 
-    return result;
+    return {resources, std::move(unique_data)};
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    auto [execute_etry, init_entry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+    auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
-    auto resources = map_resources(resource_requests);
+    auto [resources, unique_data] = map_resources(resource_requests);
 
     if (resources.empty() && !resource_requests.empty()) {
         log_error("could not assign resources requested by entry point " + name + ". Entry point not created.");
@@ -202,17 +301,12 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         name,
         module_raw_ptr,
         resources,
+        std::move(unique_data), // render inputs and their update
         execute_etry,
         {name} // image
         });
 
     auto& entry_point = m_entry_points.back();
-
-    if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image)) {
-        log_error("init function for entry point " + entry_point.moduleName + " failed. Entry point not created.");
-        m_entry_points.pop_back();
-        return false;
-    }
 
     return true;
 }
@@ -250,6 +344,8 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 
+    glfw_sink.set_framebuffer_active();
+
     // glfw sink needs to know current glfw framebuffer size
     auto framebuffer_width = window_framebuffer_events.previous_state.width;
     auto framebuffer_height = window_framebuffer_events.previous_state.height;
@@ -268,6 +364,47 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
 
     window_manipulation.swap_buffers();
 }
+
+void ImagePresentation_Service::fill_lua_callbacks() {
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
+
+    LuaCallbacksCollection callbacks;
+
+    callbacks.add<VoidResult, std::string, int, int>(
+        "mmSetViewFramebufferSize",
+        "(string view, int width, int height)\n\tSet framebuffer dimensions of view to width x height.",
+        {[&](std::string view, int width, int height) -> VoidResult
+        {
+            if (width <= 0 || height <= 0) {
+                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+            }
+
+            auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
+            [&](GraphEntryPoint& entry) {
+                return entry.moduleName == view;
+            });
+
+            if (entry_it == m_entry_points.end()) {
+                return Error {"no view found with name: " + view};
+            }
+
+            accessViewRenderInput(entry_it->entry_point_data).render_input_framebuffer_size_handler =
+            [=]() -> UintPair {
+                return {width, height};
+            };
+
+            return VoidResult{};
+        }});
+
+    auto& register_callbacks = m_requestedResourceReferences[4].getResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>();
+    register_callbacks(callbacks);
+}
+
 
 } // namespace frontend
 } // namespace megamol

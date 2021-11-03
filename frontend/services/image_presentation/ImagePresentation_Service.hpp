@@ -20,8 +20,25 @@ namespace frontend {
 
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
+    using UintPair = std::pair<unsigned int, unsigned int>;
+    using DoublePair = std::pair<double, double>;
+
+    struct ViewportTile {
+        UintPair global_resolution;
+        DoublePair tile_start_normalized;
+        DoublePair tile_end_normalized;
+    };
 
     struct Config {
+        struct Tile {
+            UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
+            UintPair tile_start_pixel;
+            UintPair tile_resolution;
+        };
+        std::optional<Tile> local_viewport_tile = std::nullopt; // defaults to local framebuffer == local tile
+
+        // e.g. window resolution or powerwall projector resolution, will be applied to all views/entry points
+        std::optional<UintPair> local_framebuffer_resolution = std::nullopt;
     };
 
     std::string serviceName() const override { return "ImagePresentation_Service"; }
@@ -65,6 +82,11 @@ public:
             , ImageWrapper&
             )>;
 
+    struct RenderInputsUpdate {
+        virtual ~RenderInputsUpdate(){};
+        virtual void update() {};
+    };
+
 private:
 
     std::vector<FrontendResource> m_providedResourceReferences;
@@ -81,6 +103,8 @@ private:
         std::string moduleName;
         void* modulePtr = nullptr;
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
+        // pimpl to some implementation handling rendering input data
+        std::unique_ptr<RenderInputsUpdate> entry_point_data = std::make_unique<RenderInputsUpdate>();
 
         EntryPointExecutionCallback execute;
         ImageWrapper execution_result_image;
@@ -95,9 +119,19 @@ private:
     std::list<ImagePresentationSink> m_presentation_sinks;
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
-    std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
+    std::tuple<
+        std::vector<FrontendResource>,
+        std::unique_ptr<RenderInputsUpdate>
+    >
+    map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
+    // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
+    UintPair m_window_framebuffer_size = {0, 0};
+    std::function<UintPair()> m_framebuffer_size_handler;
+    std::function<ViewportTile()> m_viewport_tile_handler;
+
+    void fill_lua_callbacks();
 };
 
 } // namespace frontend
