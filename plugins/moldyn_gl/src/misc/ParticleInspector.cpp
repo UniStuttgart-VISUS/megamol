@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ParticleViewer.h"
+#include "ParticleInspector.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -8,9 +8,9 @@ using namespace megamol::moldyn_gl::misc;
 using namespace megamol;
 
 /*
- * megamol::moldyn_gl::misc::ParticleViewer
+ * megamol::moldyn_gl::misc::ParticleInspector::ParticleInspector
  */
-ParticleViewer::ParticleViewer(void)
+ParticleInspector::ParticleInspector(void)
     : Module()
     , slotParticlesOut("particlesout", "Provides the particles.")
     , slotParticlesIn("particlesin", "Ingests the particles.") {
@@ -19,9 +19,9 @@ ParticleViewer::ParticleViewer(void)
 
     /* Register calls. */
     this->slotParticlesOut.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-        geocalls::MultiParticleDataCall::FunctionName(0), &ParticleViewer::getParticleData);
+        geocalls::MultiParticleDataCall::FunctionName(0), &ParticleInspector::getParticleData);
     this->slotParticlesOut.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-        geocalls::MultiParticleDataCall::FunctionName(1), &ParticleViewer::getParticleExtents);
+        geocalls::MultiParticleDataCall::FunctionName(1), &ParticleInspector::getParticleExtents);
 
     this->MakeSlotAvailable(&this->slotParticlesOut);
 
@@ -31,22 +31,22 @@ ParticleViewer::ParticleViewer(void)
 
 
 /*
- * megamol::datatools::TableViewer::~TableViewer
+ * megamol::moldyn_gl::misc::ParticleInspector::~ParticleInspector
  */
-ParticleViewer::~ParticleViewer(void) { this->Release(); }
+ParticleInspector::~ParticleInspector(void) { this->Release(); }
 
 
 /*
- * megamol::datatools::TableViewer::create
+ * megamol::moldyn_gl::misc::ParticleInspector::create
  */
-bool ParticleViewer::create(void) {
+bool ParticleInspector::create(void) {
     return true;
 }
 
 /*
- * megamol::datatools::TableViewer::getTableData
+ * megamol::moldyn_gl::misc::ParticleInspector::getParticleData
  */
-bool ParticleViewer::getParticleData(core::Call& call) {
+bool ParticleInspector::getParticleData(core::Call& call) {
     auto* p_in = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
 
     auto* p_out = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
@@ -77,9 +77,9 @@ bool ParticleViewer::getParticleData(core::Call& call) {
 
 
 /*
- * megamol::datatools::TableViewer::getTableHash
+ * megamol::moldyn_gl::misc::ParticleInspector::getParticleExtents
  */
-bool ParticleViewer::getParticleExtents(core::Call& call) {
+bool ParticleInspector::getParticleExtents(core::Call& call) {
     auto* p_in = this->slotParticlesIn.CallAs<geocalls::MultiParticleDataCall>();
 
     auto* p_out = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
@@ -101,17 +101,17 @@ bool ParticleViewer::getParticleExtents(core::Call& call) {
 
 
 /*
- * megamol::datatools::TableViewer::release
+ * megamol::moldyn_gl::misc::ParticleInspector::release
  */
-void ParticleViewer::release(void) {
+void ParticleInspector::release(void) {
     
 }
 
 
 /*
- * megamol::datatools::TableViewer::drawTable
+ * megamol::moldyn_gl::misc::ParticleInspector::drawTable
  */
-void ParticleViewer::drawTable(geocalls::MultiParticleDataCall* p_in) {
+void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
     bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (!valid_imgui_scope) return;
 

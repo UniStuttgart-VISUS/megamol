@@ -13,7 +13,7 @@ namespace misc {
     /**
      * This module shows a table for debugging MultiParticleDataCall.
      */
-    class ParticleViewer : public megamol::core::Module {
+    class ParticleInspector : public megamol::core::Module {
 
     public:
 
@@ -23,7 +23,7 @@ namespace misc {
          * @return The name of this module.
          */
         static inline const char *ClassName(void)  {
-            return "ParticleViewer";
+            return "ParticleInspector";
         }
 
         /**
@@ -47,12 +47,12 @@ namespace misc {
         /**
          * Initialises a new instance.
          */
-        ParticleViewer(void);
+        ParticleInspector(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~ParticleViewer(void);
+        virtual ~ParticleInspector(void);
 
     protected:
 
