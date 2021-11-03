@@ -88,23 +88,6 @@ megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
     dummy_namespace->SetCoreInstance(core);
 }
 
-/**
- * A move of the graph should be OK, even without changing state of Modules in graph.
- */
-megamol::core::MegaMolGraph::MegaMolGraph(MegaMolGraph&& rhs) noexcept {}
-
-/**
- * Same is true for move-assignment.
- */
-megamol::core::MegaMolGraph& megamol::core::MegaMolGraph::operator=(MegaMolGraph&& rhs) noexcept { return *this; }
-
-/**
- * Construction from serialized string.
- */
-// megamol::core::MegaMolGraph::MegaMolGraph(std::string const& descr) {
-//}
-
-/** dtor */
 megamol::core::MegaMolGraph::~MegaMolGraph() {
     moduleProvider_ptr = nullptr;
     callProvider_ptr = nullptr;
