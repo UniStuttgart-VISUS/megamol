@@ -105,6 +105,10 @@ jobs:
     displayName: 'Run File Checks'
     inputs:
       filePath: '.ci/check_files.sh'
+  - task: Bash@3
+    displayName: 'Run Plugin Structure Checks'
+    inputs:
+      filePath: '.ci/check_plugins.sh'
 
 - job: ClangFormatCheck
   displayName: 'Run ClangFormat Check'
