@@ -298,7 +298,15 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Start new ImGui frame --------------------------------------------------
-    ImGui_ImplOpenGL3_NewFrame();
+    switch (this->initialized_api) {
+    case (GUIImGuiAPI::OPEN_GL): {
+        ImGui_ImplOpenGL3_NewFrame();
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    } break;
+    }
     ImGui::NewFrame();
 
 /// DOCKING
@@ -372,19 +380,11 @@ bool GUIManager::PostDraw() {
 
         ///////////////////////////////////////////////////////////////////////////
 
-        /// TODO - SEPARATE RENDERING OF OPENGL-STUFF DEPENDING ON AVAILABLE API?!
-
+        // Render the current ImGui frame ------------------------------------------
         /// XXX Actual rendering of GUI is done in ImagePresentation_Service
         /// XXX Other OpenGL rendering of GUI is currently omitted (e.g. ViewCube)
-        /// DrawUiToScreen();
-        /// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        // Render the current ImGui frame ------------------------------------------
-        glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
         ImGui::Render();
         this->draw_data = ImGui::GetDrawData();
-        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 
         // Loading new font -------------------------------------------------------
         // (after first imgui frame for default fonts being available)
@@ -927,13 +927,23 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
 
 void megamol::gui::GUIManager::DrawUiToScreen() {
-    if (!draw_data)
-        return;
 
     // draw_data is filled in PostDraw() and should have a valid value here
+    if (!draw_data) {
+        return;
+    }
+
     ImGuiIO& io = ImGui::GetIO();
-    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
-    ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+    switch (this->initialized_api) {
+    case (GUIImGuiAPI::OPEN_GL): {
+        glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
+        ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    } break;
+    }
 }
 
 
