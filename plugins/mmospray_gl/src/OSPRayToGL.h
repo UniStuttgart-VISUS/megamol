@@ -2,7 +2,7 @@
 
 #include "mmcore/view/ContextToGL.h"
 
-namespace megamol::ospray {
+namespace megamol::ospray_gl {
 
 inline constexpr char ospraytogl_name[] = "OSPRayToGL";
 
