@@ -9,6 +9,7 @@
 #include "vislib/Map.h"
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
+#include <array>
 
 
 namespace megamol::geocalls {
@@ -32,6 +33,11 @@ public:
         // TODO: what about DOUBLE_XYZR?
     };
 
+    const inline static std::array<std::string, 5> VertexDataTypeNames = {
+            "VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"
+    };
+    const inline static std::array<uint32_t, 5> VertexDataTypeComponents = { 0, 3, 4, 3, 3 };
+
     /** possible values for the colour data */
     enum ColourDataType {
         COLDATA_NONE = 0, //< use global colour
@@ -44,11 +50,22 @@ public:
         COLDATA_DOUBLE_I = 7
     };
 
+    const inline static std::array<std::string, 8> ColourDataTypeNames = {"COLDATA_NONE", "COLDATA_UINT8_RGB",
+        "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_FLOAT_I", "COLDATA_USHORT_RGBA",
+        "COLDATA_DOUBLE_I"};
+    const inline static std::array<uint32_t, 8> ColorDataTypeComponents = { 0, 3, 4, 3, 4, 1, 4, 1 };
+
     /** possible values for the direction data */
     enum DirDataType { DIRDATA_NONE = 0, DIRDATA_FLOAT_XYZ = 1 };
 
+    const inline static std::array<std::string, 2> DirDataTypeNames = {"DIRDATA_NONE", "DIRDATA_FLOAT_XYZ"};
+    const inline static std::array<uint32_t, 2> DirDataTypeComponents = { 0, 3 };
+
     /** possible values for the id data */
     enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
+
+    const inline static std::array<std::string, 3> IDDataTypeNames = {"IDDATA_NONE", "IDDATA_UINT32", "IDDATA_UINT32"};
+    const inline static std::array<uint32_t, 3> IDDataTypeComponents = { 0, 1, 1 };
 
     /**
      * This class holds the accessors to the current data.

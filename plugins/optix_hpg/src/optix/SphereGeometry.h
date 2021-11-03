@@ -4,7 +4,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "optix/CallContext.h"
 
@@ -45,7 +45,7 @@ protected:
 private:
     void init(Context const& ctx);
 
-    bool assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx);
+    bool assertData(geocalls::MultiParticleDataCall& call, Context const& ctx);
 
     bool get_data_cb(core::Call& c);
 

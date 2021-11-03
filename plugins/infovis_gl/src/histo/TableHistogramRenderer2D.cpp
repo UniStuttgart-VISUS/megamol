@@ -41,9 +41,9 @@ TableHistogramRenderer2D::~TableHistogramRenderer2D() {
 bool TableHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         calcHistogramProgram_ =
-            core::utility::make_glowl_shader("histo_table_calc", shaderOptions, "infovis/histo/table_calc.comp.glsl");
+            core::utility::make_glowl_shader("histo_table_calc", shaderOptions, "infovis_gl/histo/table_calc.comp.glsl");
         selectionProgram_ = core::utility::make_glowl_shader(
-            "histo_table_select", shaderOptions, "infovis/histo/table_select.comp.glsl");
+            "histo_table_select", shaderOptions, "infovis_gl/histo/table_select.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;

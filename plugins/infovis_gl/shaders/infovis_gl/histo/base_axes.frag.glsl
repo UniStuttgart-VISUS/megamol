@@ -1,5 +1,7 @@
 #version 430
 
+layout(location = 0) out vec4 col;
+
 void main(void) {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    col = vec4(1.0, 1.0, 1.0, 1.0);
 }
