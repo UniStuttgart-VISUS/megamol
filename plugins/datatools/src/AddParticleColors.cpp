@@ -90,7 +90,11 @@ bool megamol::datatools::AddParticleColors::manipulateData(
 
     auto const pl_count = outData.GetParticleListCount();
     for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
-        outData.AccessParticles(plidx).SetColourData(
+        auto& parts = outData.AccessParticles(plidx);
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)
+            continue;
+        parts.SetColourData(
             geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
     }
 
