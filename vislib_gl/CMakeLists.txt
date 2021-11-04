@@ -1,8 +1,6 @@
 if(BUILD_VISLIB)
   project(vislib_gl)
-
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
+  
   require_external(glad)
 
   # Build vislib
