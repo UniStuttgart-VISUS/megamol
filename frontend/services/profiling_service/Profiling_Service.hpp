@@ -9,6 +9,7 @@
 
 #include "AbstractFrontendService.hpp"
 #include "mmcore/CallProfiling.h"
+#include "PerformanceManager.h"
 
 namespace megamol {
 namespace frontend {
@@ -16,7 +17,7 @@ namespace frontend {
 class Profiling_Service final : public AbstractFrontendService {
 public:
     std::string serviceName() const override { return "Profiling_Service"; }
-    bool init(void* configPtr) override { return true;}
+    bool init(void* configPtr) override;
     void close() override {}
     void updateProvidedResources() override {}
     void digestChangedRequestedResources() override {}
@@ -33,6 +34,8 @@ public:
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+
+    frontend_resources::PerformanceManager m_pman;
 };
 
 } // namespace frontend
