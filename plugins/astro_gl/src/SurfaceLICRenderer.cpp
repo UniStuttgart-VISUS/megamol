@@ -8,15 +8,14 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/ScaledBoundingBoxes.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/TransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore_gl/view/TransferFunctionGL.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -51,13 +50,13 @@ namespace astro_gl {
             , light_color("lighting::light color", "Light color")
             , hash(-1) {
 
-        this->input_renderer.SetCompatibleCall<core::view::CallRender3DGLDescription>();
+        this->input_renderer.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
         this->MakeSlotAvailable(&this->input_renderer);
 
         this->input_velocities.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
         this->MakeSlotAvailable(&this->input_velocities);
 
-        this->input_transfer_function.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+        this->input_transfer_function.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
         this->MakeSlotAvailable(&this->input_transfer_function);
 
         this->arc_length << new core::param::FloatParam(0.03f);
@@ -110,10 +109,10 @@ namespace astro_gl {
     bool SurfaceLICRenderer::create() {
         try {
             // create shader program
-            vislib::graphics::gl::ShaderSource precompute_shader_src;
-            vislib::graphics::gl::ShaderSource compute_shader_src;
-            vislib::graphics::gl::ShaderSource vertex_shader_src;
-            vislib::graphics::gl::ShaderSource fragment_shader_src;
+            vislib_gl::graphics::gl::ShaderSource precompute_shader_src;
+            vislib_gl::graphics::gl::ShaderSource compute_shader_src;
+            vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
+            vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "SurfaceLICRenderer::precompute", precompute_shader_src))
@@ -139,9 +138,9 @@ namespace astro_gl {
                 return false;
             if (!this->render_to_framebuffer_shdr.Link())
                 return false;
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             return false;
         } catch (vislib::Exception e) {
@@ -155,8 +154,8 @@ namespace astro_gl {
 
     void SurfaceLICRenderer::release() {}
 
-    bool SurfaceLICRenderer::GetExtents(core::view::CallRender3DGL& call) {
-        auto ci = this->input_renderer.CallAs<core::view::CallRender3DGL>();
+    bool SurfaceLICRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+        auto ci = this->input_renderer.CallAs<core_gl::view::CallRender3DGL>();
         auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
 
         if (ci == nullptr)
@@ -171,7 +170,7 @@ namespace astro_gl {
 
         *ci = call;
 
-        if (!(*ci)(core::view::CallRender3DGL::FnGetExtents))
+        if (!(*ci)(core_gl::view::CallRender3DGL::FnGetExtents))
             return false;
         if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
@@ -188,11 +187,11 @@ namespace astro_gl {
         return true;
     }
 
-    bool SurfaceLICRenderer::Render(core::view::CallRender3DGL& call) {
+    bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         const auto req_frame = call.Time();
 
         // Get input rendering
-        auto ci = this->input_renderer.CallAs<core::view::CallRender3DGL>();
+        auto ci = this->input_renderer.CallAs<core_gl::view::CallRender3DGL>();
         if (ci == nullptr)
             return false;
 
@@ -205,7 +204,7 @@ namespace astro_gl {
             if (this->fbo.IsValid())
                 this->fbo.Release();
 
-            std::array<vislib::graphics::gl::FramebufferObject::ColourAttachParams, 2> cap;
+            std::array<vislib_gl::graphics::gl::FramebufferObject::ColourAttachParams, 2> cap;
             cap[0].internalFormat = GL_RGBA8;
             cap[0].format = GL_RGBA;
             cap[0].type = GL_UNSIGNED_BYTE;
@@ -213,13 +212,13 @@ namespace astro_gl {
             cap[1].format = GL_RGBA;
             cap[1].type = GL_FLOAT;
 
-            vislib::graphics::gl::FramebufferObject::DepthAttachParams dap;
+            vislib_gl::graphics::gl::FramebufferObject::DepthAttachParams dap;
             dap.format = GL_DEPTH_COMPONENT24;
-            dap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
+            dap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
 
-            vislib::graphics::gl::FramebufferObject::StencilAttachParams sap;
+            vislib_gl::graphics::gl::FramebufferObject::StencilAttachParams sap;
             sap.format = GL_STENCIL_INDEX;
-            sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
+            sap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
 
             this->fbo.Create(viewport.width(), viewport.height(), cap.size(), cap.data(), dap, sap);
         }
@@ -228,7 +227,7 @@ namespace astro_gl {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (!(*ci)(core::view::CallRender3DGL::FnRender))
+        if (!(*ci)(core_gl::view::CallRender3DGL::FnRender))
             return false;
         call.SetTimeFramesCount(ci->TimeFramesCount());
 
@@ -268,7 +267,7 @@ namespace astro_gl {
         }
 
         // Get input transfer function
-        auto ct = this->input_transfer_function.CallAs<core::view::CallGetTransferFunction>();
+        auto ct = this->input_transfer_function.CallAs<core_gl::view::CallGetTransferFunctionGL>();
 
         GLuint tf_texture = 0;
 

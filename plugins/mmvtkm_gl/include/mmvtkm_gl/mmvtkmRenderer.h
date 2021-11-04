@@ -13,7 +13,7 @@
 
 #include "mmvtkm/mmvtkmDataCall.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 
 // #include "vtkm/rendering/Actor.h"
@@ -30,7 +30,7 @@ namespace mmvtkm_gl {
 /**
  * Renderer for vtkm data
  */
-class mmvtkmDataRenderer : public core::view::Renderer3DModuleGL {
+class mmvtkmDataRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -79,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * The get extents callback. The module should set the members of
@@ -90,7 +90,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
 private:
     /** Callback function for psColorTables paramslot */

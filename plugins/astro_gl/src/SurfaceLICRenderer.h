@@ -12,11 +12,11 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -27,7 +27,7 @@
 namespace megamol {
 namespace astro_gl {
 
-    class SurfaceLICRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class SurfaceLICRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.
@@ -81,7 +81,7 @@ namespace astro_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call) override;
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call) override;
 
         /**
          * The render callback.
@@ -90,7 +90,7 @@ namespace astro_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call) override;
+        virtual bool Render(core_gl::view::CallRender3DGL& call) override;
 
     private:
         /** utility functions */
@@ -121,9 +121,9 @@ namespace astro_gl {
         SIZE_T hash;
 
         /** Shader */
-        vislib::graphics::gl::GLSLComputeShader pre_compute_shdr;
-        vislib::graphics::gl::GLSLComputeShader lic_compute_shdr;
-        vislib::graphics::gl::GLSLShader render_to_framebuffer_shdr;
+        vislib_gl::graphics::gl::GLSLComputeShader pre_compute_shdr;
+        vislib_gl::graphics::gl::GLSLComputeShader lic_compute_shdr;
+        vislib_gl::graphics::gl::GLSLShader render_to_framebuffer_shdr;
 
         /** Textures */
         std::unique_ptr<glowl::Texture2D> velocity_target;
@@ -132,7 +132,7 @@ namespace astro_gl {
         std::unique_ptr<glowl::Texture3D> noise_texture;
 
         /** FBO for input */
-        vislib::graphics::gl::FramebufferObject fbo;
+        vislib_gl::graphics::gl::FramebufferObject fbo;
 
         /** Noise texture data */
         std::vector<float> noise;
