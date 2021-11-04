@@ -1,6 +1,6 @@
 if(BUILD_VISLIB)
   project(vislib_gl)
-  
+
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
   require_external(glad)
@@ -21,9 +21,8 @@ if(BUILD_VISLIB)
   if(UNIX)
     set(CURSES_NEED_NCURSES True)
     find_package(Curses REQUIRED)
-    find_package(UUID REQUIRED)
     find_package(X11 REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES} ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES} ${CURSES_LIBRARIES})
   endif()
 
   # Grouping in Visual Studio

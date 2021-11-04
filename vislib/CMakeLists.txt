@@ -18,8 +18,12 @@ if(BUILD_VISLIB)
     PUBLIC spdlog fmt)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-
   target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN)
+  
+  if(UNIX)
+    find_package(UUID REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARIES})
+  endif()
 
   # Grouping in Visual Studio
   set_target_properties(vislib PROPERTIES FOLDER base)
