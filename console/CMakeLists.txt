@@ -3,7 +3,7 @@
 # Copyright 2017, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_CONSOLE "Build console" ON)
+option(BUILD_CONSOLE "Build console" OFF)
 
 if(BUILD_CONSOLE)
   project(${CONSOLE_NAME})
