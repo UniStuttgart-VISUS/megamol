@@ -2,7 +2,7 @@ option(BUILD_VISLIB "Build vislib" ON)
 
 if(BUILD_VISLIB)
   project(vislib)
-  
+
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
   require_external(spdlog)
@@ -24,7 +24,9 @@ if(BUILD_VISLIB)
 
   if(UNIX)
     find_package(UUID REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARIES})
+    set(CURSES_NEED_NCURSES True)
+    find_package(Curses REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
   endif()
 
   # Grouping in Visual Studio
