@@ -13,6 +13,7 @@
 
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
+#include "GUI_Service.hpp"
 
 #include "LuaCallbacksCollection.h"
 
@@ -224,6 +225,12 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
             };
         }
     }
+    if (auto gui_ptr = static_cast<megamol::frontend::GUI_Service*>(ptr); gui_ptr != nullptr) {
+        return EntryPointInitFunctions{
+            std::function{megamol::frontend::GUI_Service::gui_rendering_execution},
+            std::function{megamol::frontend::GUI_Service::get_gl_gui_runtime_resources_requests}
+        };
+    }
 
     log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
     throw std::exception();
@@ -412,11 +419,6 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
         gl_image = image;
         glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
     }
-
-    // EXPERIMENTAL: until the GUI Service provides rendering of the GUI on its own
-    // render UI overlay
-    static auto& gui_state = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::GUIState>();
-    gui_state.provide_gui_render();
 
     window_manipulation.swap_buffers();
 }

@@ -60,6 +60,7 @@ GUIManager::GUIManager()
 
 GUIManager::~GUIManager() {
 
+    this->fbo.reset();
     this->destroy_context();
 }
 
@@ -224,8 +225,6 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     this->gui_state.gui_visible_post = this->gui_state.gui_visible;
     // Early exit when pre step should be omitted
     if (!this->gui_state.gui_visible) {
-        // Clear draw data for invisible GUI
-        this->draw_data = nullptr;
         return true;
     }
 
@@ -347,12 +346,56 @@ bool GUIManager::PostDraw() {
             return false;
         }
 
-        // Set ImGui context
+        // Enable ImGui context
         ImGui::SetCurrentContext(this->imgui_context);
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
+        // Enable backend rendering
+        switch (this->initialized_api) {
+        case (GUIImGuiAPI::OPEN_GL): {
+
+            auto width = static_cast<GLsizei>(io.DisplaySize.x);
+            auto height = static_cast<GLsizei>(io.DisplaySize.y);
+
+            bool create_fbo = false;
+            if (this->fbo == nullptr) {
+                create_fbo = true;
+            } else if (((this->fbo->getWidth() != width) || (this->fbo->getHeight() != height)) && (width != 0) &&
+                       (height != 0)) {
+                create_fbo = true;
+            }
+            if (create_fbo) {
+                try {
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+                    this->fbo.reset();
+                    this->fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+                    this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                    // TODO: check completness and throw if not?
+                } catch (glowl::FramebufferObjectException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Unable to create framebuffer object: %s [%s, %s, line %d]\n", exc.what(), __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
+            }
+
+            ///  ..\examples\testspheres.lua
+
+            this->fbo->bind();
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            // glClearDepth(1.0f);
+            glClear(GL_COLOR_BUFFER_BIT); // | GL_DEPTH_BUFFER_BIT);
+            glViewport(0, 0, width, height);
+
+        } break;
+        default: {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        } break;
+        }
+
         ////////// DRAW GUI ///////////////////////////////////////////////////////
+
         try {
 
             // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
@@ -380,11 +423,26 @@ bool GUIManager::PostDraw() {
 
         ///////////////////////////////////////////////////////////////////////////
 
-        // Render the current ImGui frame ------------------------------------------
-        /// XXX Actual rendering of GUI is done in ImagePresentation_Service
-        /// XXX Other OpenGL rendering of GUI is currently omitted (e.g. ViewCube)
+        // Render the current ImGui frame
         ImGui::Render();
-        this->draw_data = ImGui::GetDrawData();
+        auto draw_data = ImGui::GetDrawData();
+        if (draw_data == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid ImGui draw data pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        // Actual backend rendering
+        switch (this->initialized_api) {
+        case (GUIImGuiAPI::OPEN_GL): {
+            ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        } break;
+        default: {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        } break;
+        }
 
         // Loading new font -------------------------------------------------------
         // (after first imgui frame for default fonts being available)
@@ -923,27 +981,6 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
         sync_success &= param_sync_success;
     }
     return sync_success;
-}
-
-
-void megamol::gui::GUIManager::DrawUiToScreen() {
-
-    // draw_data is filled in PostDraw() and should have a valid value here
-    if (!draw_data) {
-        return;
-    }
-
-    ImGuiIO& io = ImGui::GetIO();
-    switch (this->initialized_api) {
-    case (GUIImGuiAPI::OPEN_GL): {
-        glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
-        ImGui_ImplOpenGL3_RenderDrawData(draw_data);
-    } break;
-    default: {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
-    }
 }
 
 
