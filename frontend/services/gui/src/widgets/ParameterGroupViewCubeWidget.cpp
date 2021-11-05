@@ -442,8 +442,10 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 core_gl::utility::InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
 
     core_gl::utility::InteractVector_t interactions;
-    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction(
+        {core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -600,8 +602,10 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 core_gl::utility::InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
 
     core_gl::utility::InteractVector_t interactions;
-    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction(
+        {core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
