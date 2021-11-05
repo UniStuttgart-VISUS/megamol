@@ -65,13 +65,13 @@ namespace frontend {
         };
 
         // init gui
-        if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) {
+        if (config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
             if (this->m_gui == nullptr) {
                 this->m_gui = std::make_shared<megamol::gui::GUIManager>();
                 if (this->m_gui != nullptr) {
 
                     // Create context
-                    if (this->m_gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL)) {
+                    if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
 
                         // Set function pointer in state resource once
                         this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {
@@ -344,7 +344,7 @@ namespace frontend {
     }
 
 
-    std::vector<std::string> GUI_Service::get_gl_gui_runtime_resources_requests() {
+    std::vector<std::string> GUI_Service::get_gui_runtime_resources_requests() {
 
         /// Already provided via getRequestedResourceNames()
         return {};

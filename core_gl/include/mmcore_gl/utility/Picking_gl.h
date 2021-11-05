@@ -87,6 +87,7 @@ namespace utility {
 
         double cursor_x, cursor_y;
         glm::ivec2 viewport_dim;
+        GLint prev_fbo;
 
         /**
          * Set to true if cursor is on interactable object during current frame with respective obj id as second value

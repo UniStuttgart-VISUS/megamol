@@ -46,7 +46,7 @@ namespace gui {
          *
          * @param core_instance     The currently available core instance.
          */
-        bool CreateContext(GUIImGuiAPI imgui_api);
+        bool CreateContext(ImGuiRenderBackend imgui_rbnd);
 
         /**
          * Setup and enable ImGui context for subsequent use.
@@ -171,8 +171,8 @@ namespace gui {
             unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
             if (this->fbo == nullptr)
                 return;
-            out_fbo_color_buffer_gl_handle =
-                this->fbo->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+            // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+            out_fbo_color_buffer_gl_handle = this->fbo->getColorAttachment(0)->getName();
             out_fbo_width = this->fbo->getWidth();
             out_fbo_height = this->fbo->getHeight();
         }
@@ -318,7 +318,7 @@ namespace gui {
         ImPlotContext* implot_context;
 
         /** The currently initialized ImGui API */
-        GUIImGuiAPI initialized_api;
+        ImGuiRenderBackend imgui_initialized_rbnd;
 
         /** The current local state of the gui. */
         StateBuffer gui_state;
