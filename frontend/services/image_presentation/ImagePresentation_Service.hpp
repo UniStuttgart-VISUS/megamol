@@ -13,6 +13,8 @@
 #include "ImageWrapper.h"
 #include "ImagePresentationSink.h"
 
+#include "FrontendResourcesLookup.h"
+
 #include <list>
 
 namespace megamol {
@@ -85,6 +87,7 @@ public:
     struct RenderInputsUpdate {
         virtual ~RenderInputsUpdate(){};
         virtual void update() {};
+        virtual FrontendResource get_resource() { return {}; };
     };
 
 private:
@@ -120,11 +123,12 @@ private:
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
     std::tuple<
-        std::vector<FrontendResource>,
-        std::unique_ptr<RenderInputsUpdate>
+        bool, // success
+        std::vector<FrontendResource>, // resources
+        std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
     >
     map_resources(std::vector<std::string> const& requests);
-    const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
+    megamol::frontend_resources::FrontendResourcesLookup m_frontend_resources_lookup;
 
     // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
     UintPair m_window_framebuffer_size = {0, 0};
