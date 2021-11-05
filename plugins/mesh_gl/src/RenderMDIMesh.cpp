@@ -11,7 +11,7 @@
 #include "RenderMDIMesh.h"
 
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 
@@ -19,7 +19,7 @@ using namespace megamol;
 using namespace megamol::mesh_gl;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModuleGL()
+	: core_gl::view::Renderer3DModuleGL()
     , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
     , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module")
 {
@@ -129,9 +129,9 @@ void RenderMDIMesh::release()
 	m_per_frame_data.reset();
 }
 
-bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
+bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    megamol::core::view::CallRender3DGL* cr = &call; // dynamic_cast<core::view::CallRender3DGL*>(&call);
+    megamol::core_gl::view::CallRender3DGL* cr = &call; // dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
 	if (cr == NULL)
 		return false;
 
@@ -155,9 +155,9 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
 	return true;
 }
 
-bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
+bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
-	megamol::core::view::CallRender3DGL* cr = &call; //dynamic_cast<core::view::CallRender3DGL*>(&call);
+	megamol::core_gl::view::CallRender3DGL* cr = &call; //dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
 	if (cr == NULL) return false;
 
     // obtain camera information

@@ -16,14 +16,14 @@
 #include "protein/GridNeighbourFinder.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/utility/RenderUtils.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \
@@ -40,7 +40,7 @@ namespace protein_gl {
 /**
  * Protein Renderer class
  */
-class SolventVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
+class SolventVolumeRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -112,7 +112,7 @@ protected:
      * @return whether shader loading/creation was sucessful
      */
     bool loadShader(
-        vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag);
+        vislib_gl::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag);
 
     /**
      * Implementation of 'release'.
@@ -133,7 +133,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -141,7 +141,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
     void UpdateColorTable(megamol::protein_calls::MolecularDataCall* mol);
     void ColorAtom(float* atomColor, megamol::protein_calls::MolecularDataCall* mol, int polymerColorMode,
         int atomIdx, int residueIdx);
@@ -150,7 +150,7 @@ private:
      * Volume rendering using molecular data.
      */
     bool RenderMolecularData(
-        megamol::core::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
+        megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Render the current mouse position on the clipping plane as a small sphere.
@@ -158,12 +158,12 @@ private:
      * @param call The render call
      * @param rad The sphere radius
      */
-    void RenderMousePosition(megamol::core::view::CallRender3DGL* call, float rad);
+    void RenderMousePosition(megamol::core_gl::view::CallRender3DGL* call, float rad);
 
     /**
      * Refresh all parameters.
      */
-    void ParameterRefresh(megamol::core::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
+    void ParameterRefresh(megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Create a volume containing all molecule atoms.
@@ -292,27 +292,27 @@ private:
     megamol::core::param::ParamSlot countSolMolParam;
 
     // shader for the spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader sphereSolventShader;
+    vislib_gl::graphics::gl::GLSLShader sphereSolventShader;
     // shader for the cylinders (raycasting view)
-    vislib::graphics::gl::GLSLShader cylinderSolventShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderSolventShader;
     // shader for hygrogen bonds
-    vislib::graphics::gl::GLSLShader hbondLineSolventShader;
+    vislib_gl::graphics::gl::GLSLShader hbondLineSolventShader;
     // shader for the clipped spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader clippedSphereShader;
+    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
-    vislib::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
-    vislib::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
-    vislib::graphics::gl::GLSLShader updateVolumeShaderHBondColor;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderMoleculeVolume;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderSolventColor;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShaderHBondColor;
     // shader for volume rendering
-    vislib::graphics::gl::GLSLShader volumeShader;
-    vislib::graphics::gl::GLSLShader dualIsosurfaceShader;
-    vislib::graphics::gl::GLSLShader volRayStartShader;
-    vislib::graphics::gl::GLSLShader volRayStartEyeShader;
-    vislib::graphics::gl::GLSLShader volRayLengthShader;
+    vislib_gl::graphics::gl::GLSLShader volumeShader;
+    vislib_gl::graphics::gl::GLSLShader dualIsosurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
     // DEBUG
-    vislib::graphics::gl::GLSLShader sphereShader;
-    vislib::graphics::gl::GLSLShader visMolShader;
-    vislib::graphics::gl::GLSLShader solTypeCountShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader visMolShader;
+    vislib_gl::graphics::gl::GLSLShader solTypeCountShader;
 
     // attribute locations for GLSL-Shader
     GLint attribLocInParams;

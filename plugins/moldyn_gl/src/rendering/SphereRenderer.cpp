@@ -10,12 +10,13 @@
 #include "SphereRenderer.h"
 
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
 
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
 using namespace megamol::moldyn_gl::rendering;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 
 
 //#define CHRONOTIMING
@@ -27,7 +28,7 @@ const GLuint SSBOflagsBindingPoint = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint = 4;
 
-SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
+SphereRenderer::SphereRenderer(void) : core_gl::view::Renderer3DModuleGL()
 , getDataSlot("getdata", "Connects to the data source")
 , getTFSlot("gettransferfunction", "The slot for the transfer function module")
 , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
@@ -117,7 +118,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     this->getDataSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->getTFSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getTFSlot);
 
@@ -128,7 +129,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
-    this->readFlagsSlot.SetCompatibleCall<FlagCallRead_GLDescription>();
+    this->readFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->readFlagsSlot);
 
     // Initialising enum param with all possible modes (needed for configurator)
@@ -202,7 +203,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
-bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
+bool SphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == nullptr) return false;
@@ -687,8 +688,8 @@ bool SphereRenderer::createResources() {
             std::vector<glm::vec4> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
-            vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
-                new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
+            vislib_gl::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
+                new vislib_gl::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
             this->fragShader->Append(dirSnippet);
             this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
@@ -742,10 +743,10 @@ bool SphereRenderer::createResources() {
             return false;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -851,7 +852,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_IsVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -901,7 +902,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_IsVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -937,7 +938,7 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
     if (out_flag_snippet != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
-    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
+    auto flagc = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     // Update parameter visibility
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
@@ -1026,10 +1027,10 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 }
 
 
-bool SphereRenderer::Render(view::CallRender3DGL& call) {
+bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // timer.BeginFrame();
 
-    auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    auto cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
 
     // Get data
     float scaling = 1.0f;
@@ -1206,7 +1207,7 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1276,7 +1277,7 @@ bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataC
 }
 
 
-bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1457,7 +1458,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCal
 }
 
 
-bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // Set OpenGL state -----------------------------------------------
     glDisable(GL_DEPTH_TEST);
@@ -1578,7 +1579,7 @@ bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCa
 }
 
 
-bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1676,7 +1677,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticle
 }
 
 
-bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1744,7 +1745,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParti
 }
 
 
-bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1763,7 +1764,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
 
     // Choose shader
     bool useGeo = this->enableGeometryShader.Param<param::BoolParam>()->Value();
-    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
+    vislib_gl::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     // Rebuild and reupload working data if neccessary
     this->rebuildWorkingData(call, mpdc, theShader);
@@ -1834,7 +1835,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
 }
 
 
-bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1888,7 +1889,7 @@ bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleData
 }
 
 
-bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
+bool SphereRenderer::enableBufferData(const vislib_gl::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
     GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
@@ -2021,7 +2022,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
 }
 
 
-bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableBufferData(const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -2036,7 +2037,7 @@ bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& s
 }
 
 
-bool SphereRenderer::enableShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
+bool SphereRenderer::enableShaderData(vislib_gl::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     // colour
     bool useGlobalColor = false;
@@ -2094,9 +2095,9 @@ bool SphereRenderer::disableShaderData(void) {
 }
 
 
-bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::enableTransferFunctionTexture(vislib_gl::graphics::gl::GLSLShader& shader) {
 
-    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    core_gl::view::CallGetTransferFunctionGL* cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
@@ -2113,7 +2114,7 @@ bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLSha
 
 bool SphereRenderer::disableTransferFunctionTexture(void) {
 
-    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    core_gl::view::CallGetTransferFunctionGL* cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
     }
@@ -2125,17 +2126,17 @@ bool SphereRenderer::disableTransferFunctionTexture(void) {
 }
 
 
-bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::enableFlagStorage(const vislib_gl::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
     if (!this->flags_available) return false;
     if (mpdc == nullptr) return false;
 
     this->flags_enabled = false;
 
-    auto flagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
+    auto flagc = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
     if (flagc == nullptr) return false;
 
-    if ((*flagc)(core::FlagCallRead_GL::CallGetData)) {
+    if ((*flagc)(core_gl::FlagCallRead_GL::CallGetData)) {
         if (flagc->hasUpdate()) {
             uint32_t partsCount = 0;
             uint32_t partlistcount = static_cast<uint32_t>(mpdc->GetParticleListCount());
@@ -2153,7 +2154,7 @@ bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& s
 }
 
 
-bool SphereRenderer::disableFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableFlagStorage(const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     if (!this->flags_available) return false;
 
@@ -2347,10 +2348,10 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
             return nullptr;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
@@ -2368,7 +2369,7 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
 }
 
 
-std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
+std::shared_ptr<vislib_gl::graphics::gl::GLSLShader> SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
 
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
@@ -2566,7 +2567,7 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (this->stateInvalid) {
@@ -2660,7 +2661,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticl
 
 
 
-void SphereRenderer::renderDeferredPass(view::CallRender3DGL& call) {
+void SphereRenderer::renderDeferredPass(core_gl::view::CallRender3DGL& call) {
 
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();

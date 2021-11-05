@@ -11,12 +11,12 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "compositing_gl/CompositingCalls.h"
 
@@ -38,7 +38,7 @@ namespace mesh_gl {
  * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
  * for the indirect draw call is stored and accessed via SSBOs.
  */
-class RenderMDIMesh : public megamol::core::view::Renderer3DModuleGL {
+class RenderMDIMesh : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -70,7 +70,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
+        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
                isExtAvailable("GL_ARB_shader_draw_parameters") && ogl_IsVersionGEQ(4, 3);
     }
 
@@ -102,7 +102,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3DGL& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -111,7 +111,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3DGL& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
     /** GPU buffer object that stores per frame data, i.e. camera parameters */

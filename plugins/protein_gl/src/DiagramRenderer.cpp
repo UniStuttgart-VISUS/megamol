@@ -8,15 +8,15 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/ShallowPoint.h"
 #include <GL/glu.h>
 #include <math.h>
-#include "vislib/graphics/gl/Verdana.inc"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include <float.h>
@@ -24,13 +24,13 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_gl;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 using megamol::core::utility::log::Log;
 
 /*
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
-DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
+DiagramRenderer::DiagramRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ),
         selectionCallerSlot( "getSelection", "Connects the diagram rendering with selection storage." ),
         hiddenCallerSlot( "getHidden", "Connects the diagram rendering with visibility storage." ),
@@ -216,7 +216,7 @@ bool DiagramRenderer::CalcExtents() {
     return true;
 }
 
-bool DiagramRenderer::GetExtents(view::CallRender2DGL& call) {
+bool DiagramRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize, 0,
         this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize, 0);
@@ -251,9 +251,9 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
                     img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
                 }
             }
-            markerTextures.Add(vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> >());
+            markerTextures.Add(vislib::Pair<int, vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D> >());
             markerTextures.Last().First() = ID;
-            markerTextures.Last().SetSecond(new vislib::graphics::gl::OpenGLTexture2D());
+            markerTextures.Last().SetSecond(new vislib_gl::graphics::gl::OpenGLTexture2D());
             if (markerTextures.Last().Second()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
@@ -499,7 +499,7 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
 /*
  * Diagram2DRenderer::Render
  */
-bool DiagramRenderer::Render(view::CallRender2DGL &call) {
+bool DiagramRenderer::Render(core_gl::view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
 	diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
     if( diagram == NULL ) return false;

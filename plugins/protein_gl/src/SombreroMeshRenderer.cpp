@@ -11,8 +11,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "mmcore/FlagCall.h"
 #include "mmcore/param/ButtonParam.h"
@@ -42,7 +42,7 @@ using namespace megamol::core;
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
 SombreroMeshRenderer::SombreroMeshRenderer(void)
-    : Renderer3DModuleGL()
+    : core_gl::view::Renderer3DModuleGL()
     , getDataSlot("getData", "The slot to fetch the tri-mesh data")
     , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
     , getFlagDataSlot("getFlagData", "The slot to fetch the data from the flag storage")
@@ -142,8 +142,8 @@ bool SombreroMeshRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool SombreroMeshRenderer::GetExtents(core::view::CallRender3DGL& call) {
-    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
     megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
@@ -332,8 +332,8 @@ void SombreroMeshRenderer::overrideColors(const int meshIdx, const vislib::math:
 /*
  * SombreroMeshRenderer::Render
  */
-bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
-    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
     megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;

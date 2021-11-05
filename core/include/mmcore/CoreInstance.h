@@ -36,7 +36,9 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/LogEchoTarget.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#ifdef WITH_GL
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#endif
 #include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "vislib/Array.h"
@@ -168,12 +170,14 @@ public:
      */
     inline const megamol::core::utility::Configuration& Configuration(void) const { return this->config; }
 
+#ifdef WITH_GL
     /**
      * Returns the ShaderSourceFactory object of this inatcne.
      *
      * @return The ShaderSourceFactory object of this inatcne.
      */
-    inline utility::ShaderSourceFactory& ShaderSourceFactory(void) { return this->shaderSourceFactory; }
+    inline core_gl::utility::ShaderSourceFactory& ShaderSourceFactory(void) { return this->shaderSourceFactory; }
+#endif
 
     /**
      * Searches for an view description object with the given name.
@@ -1188,8 +1192,10 @@ private:
     /** the cores configuration */
     megamol::core::utility::Configuration config;
 
+#if WITH_GL
     /** The shader source factory */
-    utility::ShaderSourceFactory shaderSourceFactory;
+    core_gl::utility::ShaderSourceFactory shaderSourceFactory;
+#endif
 
     /** The paths to the shaders */
     std::vector<std::filesystem::path> shaderPaths;

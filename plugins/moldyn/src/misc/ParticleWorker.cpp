@@ -15,7 +15,7 @@
 #include "vislib/StringTokeniser.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/CoreInstance.h"
 
 using namespace megamol::core;
@@ -55,8 +55,8 @@ ParticleWorker::~ParticleWorker(void) {
  */
 bool ParticleWorker::create(void) {
 	
-	using namespace megamol::core::utility::log;
-    using namespace vislib::graphics::gl;
+    using namespace megamol::core::utility::log;
+    using namespace vislib_gl::graphics::gl;
 
     ASSERT(IsAvailable());
 

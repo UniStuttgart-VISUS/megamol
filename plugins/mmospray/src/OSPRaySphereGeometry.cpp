@@ -1,6 +1,6 @@
 /*
 * OSPRaySphereGeometry.cpp
-* Copyright (C) 20021 by MegaMol Team
+* Copyright (C) 2021 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
 

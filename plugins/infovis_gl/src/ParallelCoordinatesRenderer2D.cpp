@@ -19,12 +19,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderFactory.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "datatools/table/TableDataCall.h"
 #include "vislib/graphics/InputModifiers.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
@@ -92,12 +93,12 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->readFlagsSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->readFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->readFlagsSlot);
-    this->writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->writeFlagsSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
@@ -193,7 +194,7 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::
     program->use();
     // bindbuffer?
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
-    auto flags = this->readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+    auto flags = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
     flags->getData()->validateFlagCount(this->itemCount);
     flags->getData()->flags->bind(1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
@@ -374,17 +375,17 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
     auto floats = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (floats == nullptr)
         return false;
-    auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    auto tc = getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "ParallelCoordinatesRenderer2D requires a transfer function!");
         return false;
     }
-    auto flagsc = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+    auto flagsc = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
     if (flagsc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
@@ -396,7 +397,7 @@ bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call)
     (*floats)(0);
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
-    (*flagsc)(core::FlagCallRead_GL::CallGetData);
+    (*flagsc)(core_gl::FlagCallRead_GL::CallGetData);
     if (flagsc->hasUpdate()) {
         this->currentFlagsVersion = flagsc->version();
     }
@@ -506,7 +507,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
     bounds.SetBoundingBox(left, bottom, 0, right, top, 0);
 }
 
-bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
 
     if (!this->assertData(call)) {
         return false;
@@ -748,7 +749,7 @@ void ParallelCoordinatesRenderer2D::drawDiscrete(
 
 void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes) {
-    auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    auto tf = this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     if (tf == nullptr)
         return;
 
@@ -916,7 +917,7 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 }
 
 void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
-    auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    auto tf = this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     if (tf == nullptr)
         return;
     debugPush(6, "drawItemsContinuous");
@@ -1036,7 +1037,7 @@ void ParallelCoordinatesRenderer2D::load_filters() {
     }
 }
 
-bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     // get camera
     core::view::Camera cam = call.GetCamera();
@@ -1123,11 +1124,11 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
         this->currentFlagsVersion++;
         // HAZARD: downloading everything over and over is slowish
-        auto readFlags = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
-        auto writeFlags = writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
+        auto readFlags = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
+        auto writeFlags = writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
         if (readFlags != nullptr && writeFlags != nullptr) {
             writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
-            (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
+            (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
 #if 0
             auto flags = readFlags->getData()->flags;
             std::vector<core::FlagStorage::FlagItemType> f(flags->getByteSize()/sizeof(core::FlagStorage::FlagItemType));

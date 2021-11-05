@@ -61,7 +61,7 @@ namespace gui {
 
         inline bool DrawParameters(const std::string& in_search, bool in_extended, bool in_indent,
             megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
-            ImGuiID in_override_header_state, megamol::core::utility::PickingBuffer* inout_picking_buffer) {
+            ImGuiID in_override_header_state, megamol::core_gl::utility::PickingBuffer* inout_picking_buffer) {
 
             return this->gui_param_groups.Draw(this->parameters, in_search, in_extended, in_indent, in_scope,
                 tfeditor_ptr, in_override_header_state, inout_picking_buffer);

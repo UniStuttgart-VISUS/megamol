@@ -18,17 +18,17 @@
 #include "protein/ReducedSurface.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib/math/Quaternion.h"
 
 namespace megamol {
@@ -38,7 +38,7 @@ namespace protein_gl {
      * Molecular Surface Renderer class.
      * Computes and renders the solvent excluded (Connolly) surface.
      */
-    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /** postprocessing modi */
         enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
@@ -77,7 +77,7 @@ namespace protein_gl {
          */
         static bool IsAvailable(void) {
             // return true;
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** ctor */
@@ -249,7 +249,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Open GL Render call.
@@ -257,7 +257,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Deinitialises this renderer. This is only called if there was a
@@ -327,39 +327,39 @@ namespace protein_gl {
         std::vector<protein::ReducedSurface*> reducedSurface;
 
         // shader for the cylinders (raycasting view)
-        vislib::graphics::gl::GLSLShader cylinderShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShader;
         // shader for the spheres (raycasting view)
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShaderOR;
         // shader for the spheres with clipped interior (raycasting view)
-        vislib::graphics::gl::GLSLShader sphereClipInteriorShader;
+        vislib_gl::graphics::gl::GLSLShader sphereClipInteriorShader;
         // shader for the spherical triangles (raycasting view)
-        vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-        vislib::graphics::gl::GLSLShader sphericalTriangleShaderOR;
+        vislib_gl::graphics::gl::GLSLShader sphericalTriangleShader;
+        vislib_gl::graphics::gl::GLSLShader sphericalTriangleShaderOR;
         // shader for torus (raycasting view)
-        vislib::graphics::gl::GLSLShader torusShader;
-        vislib::graphics::gl::GLSLShader torusShaderOR;
+        vislib_gl::graphics::gl::GLSLShader torusShader;
+        vislib_gl::graphics::gl::GLSLShader torusShaderOR;
         // shader for per pixel lighting (polygonal view)
-        vislib::graphics::gl::GLSLShader lightShader;
+        vislib_gl::graphics::gl::GLSLShader lightShader;
         // shader for 1D gaussian filtering (postprocessing)
-        vislib::graphics::gl::GLSLShader hfilterShader;
-        vislib::graphics::gl::GLSLShader vfilterShader;
+        vislib_gl::graphics::gl::GLSLShader hfilterShader;
+        vislib_gl::graphics::gl::GLSLShader vfilterShader;
         // shader for silhouette drawing (postprocessing)
-        vislib::graphics::gl::GLSLShader silhouetteShader;
+        vislib_gl::graphics::gl::GLSLShader silhouetteShader;
         // shader for cheap transparency (postprocessing/blending)
-        vislib::graphics::gl::GLSLShader transparencyShader;
+        vislib_gl::graphics::gl::GLSLShader transparencyShader;
 
         ////////////
         // puxels //
         ////////////
         // shader for clearing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelClearShader;
+        vislib_gl::graphics::gl::GLSLComputeShader puxelClearShader;
         // shader for reordering the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
+        vislib_gl::graphics::gl::GLSLComputeShader puxelOrderShader;
         // shader for drawing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
+        vislib_gl::graphics::gl::GLSLComputeShader puxelDrawShader;
         // shader for rendering the reduced surface into the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
+        vislib_gl::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
 
         // atomic counter for next
         GLuint puxelsAtomicBufferNextId;

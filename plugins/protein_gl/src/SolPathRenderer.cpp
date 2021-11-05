@@ -10,11 +10,11 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/CoreInstance.h"
 #include "protein/SolPathDataCall.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -23,7 +23,7 @@ using namespace megamol::protein_gl;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModuleGL(),
+SolPathRenderer::SolPathRenderer(void) : core_gl::view::Renderer3DModuleGL(),
         getdataslot("getdata", "Fetches data"), pathlineShader() {
 
     this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall> >();
@@ -49,15 +49,15 @@ bool SolPathRenderer::create(void) {
             "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");
         return false;
     }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to initialise opengl extensions for glsl");
         return false;
     }
 
     try {
-        vislib::graphics::gl::ShaderSource vertSrc;
-        vislib::graphics::gl::ShaderSource fragSrc;
+        vislib_gl::graphics::gl::ShaderSource vertSrc;
+        vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::pathline::vert", vertSrc)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline vertex shader source");
@@ -82,8 +82,8 @@ bool SolPathRenderer::create(void) {
     }
 
     try {
-        vislib::graphics::gl::ShaderSource vertSrc;
-        vislib::graphics::gl::ShaderSource fragSrc;
+        vislib_gl::graphics::gl::ShaderSource vertSrc;
+        vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("solpath::dots::vert", vertSrc)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots vertex shader source");
@@ -113,7 +113,7 @@ bool SolPathRenderer::create(void) {
 /*
  * SolPathRenderer::GetExtents
  */
-bool SolPathRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
@@ -140,7 +140,7 @@ void SolPathRenderer::release(void) {
 /*
  * SolPathRenderer::Render
  */
-bool SolPathRenderer::Render(core::view::CallRender3DGL& call) {
+bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 

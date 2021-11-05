@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -27,7 +27,7 @@ namespace trisoup_gl {
     /**
      * Renderer for tri-mesh data
      */
-    class TriSoupRenderer : public core::view::Renderer3DModuleGL {
+    class TriSoupRenderer : public core_gl::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -81,7 +81,7 @@ namespace trisoup_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -95,7 +95,7 @@ namespace trisoup_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
 

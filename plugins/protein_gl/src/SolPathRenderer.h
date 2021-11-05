@@ -10,13 +10,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 
 
 namespace megamol {
@@ -25,7 +25,7 @@ namespace protein_gl {
     /**
      * Renderer for solvent path raw data
      */
-    class SolPathRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -52,7 +52,7 @@ namespace protein_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** ctor */
@@ -79,7 +79,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -93,7 +93,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
 
@@ -101,10 +101,10 @@ namespace protein_gl {
         core::CallerSlot getdataslot;
 
         /** The shader for shading the path lines */
-        vislib::graphics::gl::GLSLShader pathlineShader;
+        vislib_gl::graphics::gl::GLSLShader pathlineShader;
 
         /** The shader for shading the dots */
-        vislib::graphics::gl::GLSLShader dotsShader;
+        vislib_gl::graphics::gl::GLSLShader dotsShader;
 
     };
 

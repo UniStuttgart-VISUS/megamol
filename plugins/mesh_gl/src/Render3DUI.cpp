@@ -121,15 +121,15 @@ bool megamol::mesh_gl::Render3DUI::create() { return true; }
 
 void megamol::mesh_gl::Render3DUI::release() { m_fbo.reset(); }
 
-bool megamol::mesh_gl::Render3DUI::GetExtents(core::view::CallRender3DGL& call) {
+bool megamol::mesh_gl::Render3DUI::GetExtents(core_gl::view::CallRender3DGL& call) {
     RenderMDIMesh::GetExtents(call);
 
     return true;
 }
 
-bool megamol::mesh_gl::Render3DUI::Render(core::view::CallRender3DGL& call) {
+bool megamol::mesh_gl::Render3DUI::Render(core_gl::view::CallRender3DGL& call) {
 
-    core::view::CallRender3DGL* cr = dynamic_cast<core::view::CallRender3DGL*>(&call);
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information

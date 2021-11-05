@@ -13,10 +13,10 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein/Diagram2DCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
@@ -25,7 +25,7 @@ namespace protein_gl {
 	/**
 	 * Protein Renderer class
 	 */
-    class Diagram2DRenderer : public megamol::core::view::Renderer2DModuleGL {
+    class Diagram2DRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
     public:
 		/**
 		 * Answer the name of this module.
@@ -98,7 +98,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::view::CallRender2DGL& call);
+        virtual bool GetExtents( megamol::core_gl::view::CallRender2DGL& call);
 
 		/**
 		* The Open GL Render callback.
@@ -106,7 +106,7 @@ namespace protein_gl {
 		* @param call The calling call.
 		* @return The return value of the function.
 		*/
-        virtual bool Render( megamol::core::view::CallRender2DGL& call);
+        virtual bool Render( megamol::core_gl::view::CallRender2DGL& call);
 
         /**
          * Generate the diagram textures and FBOs.
@@ -143,7 +143,7 @@ namespace protein_gl {
         /** the current fbo (for pingpong rendering) */
         unsigned int currentFbo;
         /** the diagram framebuffer objects */
-        vislib::graphics::gl::FramebufferObject fbo[2];
+        vislib_gl::graphics::gl::FramebufferObject fbo[2];
 
         /** the last data point */
         vislib::math::Vector<float, 2> oldDataPoint;

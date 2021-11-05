@@ -17,7 +17,7 @@
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -26,18 +26,18 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/utility/SSBOStreamer.h"
-#include "mmcore/utility/SSBOBufferArray.h"
+#include "mmcore_gl/utility/SSBOStreamer.h"
+#include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/Cuboid.h"
 
@@ -97,13 +97,13 @@ namespace rendering {
 
     using namespace megamol::core;
     using namespace megamol::geocalls;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
 
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SphereRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class SphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
        
         /**
@@ -204,7 +204,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /** Ctor. */
         SphereRenderer(void);
@@ -233,7 +233,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     private:
 
@@ -450,13 +450,13 @@ namespace rendering {
          *
          * @return           True if success, false otherwise.
          */
-        bool renderSimple(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeometryShader(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-        bool renderSSBO(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-        bool renderSplat(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-        bool renderBufferArray(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-        bool renderAmbientOcclusion(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-		bool renderOutline(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderSimple(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderSSBO(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderSplat(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderBufferArray(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderAmbientOcclusion(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+		bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -635,14 +635,14 @@ namespace rendering {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
+        void rebuildWorkingData(megamol::core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
 
         /**
          * Render deferred pass.
          *
          * @param cr3d  ...
          */
-        void renderDeferredPass(megamol::core::view::CallRender3DGL& cr3d);
+        void renderDeferredPass(megamol::core_gl::view::CallRender3DGL& cr3d);
 
         /**
          * Generate direction shader array string.

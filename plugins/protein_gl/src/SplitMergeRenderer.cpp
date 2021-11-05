@@ -8,21 +8,21 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include <math.h>
 //#include "mmcore/misc/ImageViewer.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <float.h>
 #include "vislib/math/FastMap.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_gl;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 using megamol::core::utility::log::Log;
 
 vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;
@@ -31,7 +31,7 @@ protein_calls::SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
  */
-SplitMergeRenderer::SplitMergeRenderer( void ) : Renderer2DModuleGL (),
+SplitMergeRenderer::SplitMergeRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ),
         selectionCallerSlot( "getSelection", "Connects the diagram rendering with selection storage." ),
         hiddenCallerSlot( "getHidden", "Connects the diagram rendering with visibility storage." ),
@@ -152,7 +152,7 @@ void SplitMergeRenderer::calcExtents() {
     this->bounds.Set(minX, -1.0f - (sortedSeries.Count() - 1) * seriesSpacing, maxX, 1.0f);
 }
 
-bool SplitMergeRenderer::GetExtents(view::CallRender2DGL& call) {
+bool SplitMergeRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     
     if (diagram == NULL) {
@@ -232,7 +232,7 @@ void SplitMergeRenderer::closePath(protein_calls::SplitMergeCall::SplitMergeMapp
 /*
  * SplitMergeRenderer::Render
  */
-bool SplitMergeRenderer::Render(view::CallRender2DGL &call) {
+bool SplitMergeRenderer::Render(core_gl::view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
 	diagram = this->dataCallerSlot.CallAs<protein_calls::SplitMergeCall>();
     if( diagram == NULL ) return false;
