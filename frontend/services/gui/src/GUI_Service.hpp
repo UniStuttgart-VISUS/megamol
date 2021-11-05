@@ -25,10 +25,10 @@ namespace frontend {
     class GUI_Service final : public AbstractFrontendService {
 
     public:
-        enum ImGuiAPI { OPEN_GL };
+        enum ImGuiRenderBackend { OPEN_GL, CPU };
 
         struct Config {
-            ImGuiAPI imgui_api = GUI_Service::ImGuiAPI::OPEN_GL;
+            ImGuiRenderBackend imgui_rbnd = GUI_Service::ImGuiRenderBackend::OPEN_GL;
             megamol::core::CoreInstance* core_instance = nullptr;
             bool gui_show = true;
             float gui_scale = 1.0f;
@@ -66,7 +66,7 @@ namespace frontend {
         // bool shouldShutdown() const; // shutdown initially false
         // void setShutdown(const bool s = true);
 
-        static std::vector<std::string> get_gl_gui_runtime_resources_requests();
+        static std::vector<std::string> get_gui_runtime_resources_requests();
 
         static bool gui_rendering_execution(void* void_ptr,
             std::vector<megamol::frontend::FrontendResource> const& resources,

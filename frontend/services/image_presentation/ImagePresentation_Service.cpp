@@ -217,6 +217,8 @@ std::tuple<
 >;
 // clang-format on
 static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
+    //NOTE: this static_cast thing is totally broken and only works by sheer luck
+
     if (auto module_ptr = static_cast<megamol::core::Module*>(ptr); module_ptr != nullptr) {
         if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
             return EntryPointInitFunctions{
@@ -228,7 +230,7 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
     if (auto gui_ptr = static_cast<megamol::frontend::GUI_Service*>(ptr); gui_ptr != nullptr) {
         return EntryPointInitFunctions{
             std::function{megamol::frontend::GUI_Service::gui_rendering_execution},
-            std::function{megamol::frontend::GUI_Service::get_gl_gui_runtime_resources_requests}
+            std::function{megamol::frontend::GUI_Service::get_gui_runtime_resources_requests}
         };
     }
 
@@ -325,6 +327,7 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
     // we then split up the requests into the ones before and after the request for the input update
     // and look up those resource requests in the frontend resources
     // the input update resource is not known in the frontend, so we need to fiddle a bit here
+    success = requests.empty();
     for (auto request_it = requests.begin(); request_it != requests.end(); request_it++) {
         if (auto [name, result_unique_ptr] = renderinputs_factory.get(*request_it); result_unique_ptr != nullptr) {
             unique_data = std::move(result_unique_ptr);

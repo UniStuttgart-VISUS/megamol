@@ -173,7 +173,7 @@ namespace gui {
     typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
     /** Available ImGui APIs */
-    enum class GUIImGuiAPI { NONE, OPEN_GL };
+    enum class ImGuiRenderBackend { NONE, OPEN_GL, CPU };
 
     // Hotkeys
     enum HotkeyIndex : size_t {
