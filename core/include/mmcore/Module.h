@@ -129,6 +129,9 @@ public:
      */
     AbstractSlot* FindSlot(const vislib::StringA& name);
 
+    template <class S>
+    std::vector<S*> GetSlots();
+
     /**
      * Gets the name of the current instance as specified on the command
      * line, i.e. the name one level below the root namespace.
@@ -223,6 +226,20 @@ protected:
     // usage: auto const& resource = frontend_resources.get<ResourceType>()
     megamol::frontend_resources::FrontendResourcesMap frontend_resources;
 };
+
+template<class S>
+std::vector<S*> Module::GetSlots() {
+    child_list_type::iterator iter, end;
+    iter = this->ChildList_Begin();
+    end = this->ChildList_End();
+    std::vector<S*> res;
+    for (; iter != end; ++iter) {
+        S* slot = dynamic_cast<S*>(iter->get());
+        if (slot == NULL) continue;
+        res.push_back(slot);
+    }
+    return res;
+}
 
 
 } /* end namespace core */

@@ -106,66 +106,51 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 return false;
             }
 
-            std::vector<double> qw;
-            std::vector<double> qx;
-            std::vector<double> qy;
-            std::vector<double> qz;
+            std::vector<float> qw;
+            std::vector<float> qx;
+            std::vector<float> qy;
+            std::vector<float> qz;
 
             if (cad->isInVars("qw")) {
-                qw = cad->getData("qw")->GetAsDouble();
-                qx = cad->getData("qx")->GetAsDouble();
-                qy = cad->getData("qy")->GetAsDouble();
-                qz = cad->getData("qz")->GetAsDouble();
+                qw = cad->getData("qw")->GetAsFloat();
+                qx = cad->getData("qx")->GetAsFloat();
+                qy = cad->getData("qy")->GetAsFloat();
+                qz = cad->getData("qz")->GetAsFloat();
             }
 
 
             auto comp_id = cad->getData("component_id")->GetAsUInt64();
 
-            stride = 0;
-            auto X = cad->getData("rx")->GetAsUChar();
-            auto Y = cad->getData("ry")->GetAsUChar();
-            auto Z = cad->getData("rz")->GetAsUChar();
-            stride += 3 * cad->getData("rx")->getTypeSize();
-            uint64_t p_count = X.size() / cad->getData("rx")->getTypeSize();
+            auto X = cad->getData("rx")->GetAsFloat();
+            auto Y = cad->getData("ry")->GetAsFloat();
+            auto Z = cad->getData("rz")->GetAsFloat();
+            uint64_t p_count = X.size();
 
-            auto VX = cad->getData("vx")->GetAsUChar();
-            auto VY = cad->getData("vy")->GetAsUChar();
-            auto VZ = cad->getData("vz")->GetAsUChar();
-
-            auto const forceFloat = forceFloatSlot.Param<core::param::BoolParam>()->Value();
+            auto VX = cad->getData("vx")->GetAsFloat();
+            auto VY = cad->getData("vy")->GetAsFloat();
+            auto VZ = cad->getData("vz")->GetAsFloat();
 
             int pos_size = 0;
             int dir_size = 0;
-            if (cad->getData("rx")->getTypeSize() == 4 || forceFloat) {
-                vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-                dirType = geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
-                pos_size = cad->getData("rx")->getTypeSize();
-                dir_size = cad->getData("vx")->getTypeSize();
-            } else {
-                vertType = geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
-                dirType = geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
-                pos_size = cad->getData("rx")->getTypeSize();
-                dir_size = cad->getData("vx")->getTypeSize();
-            }
+            
             bbox = cad->getData("global_box")->GetAsFloat();
-
 
             int num_atoms_total = 0;
             auto num_components = cad->getData("num_components")->GetAsInt32()[0];
             std::vector<int> atoms_per_component(num_components);
             std::vector<int> component_offset(num_components);
-            std::vector<std::vector<double>> comp_sigmas(num_components);
-            std::vector<std::vector<double>> comp_centers(num_components);
+            std::vector<std::vector<float>> comp_sigmas(num_components);
+            std::vector<std::vector<float>> comp_centers(num_components);
             std::vector<std::vector<std::string>> comp_element_names(num_components);
             for (int n = 0; n < num_components; ++n) {
                 std::string sigma_string = std::string("component_") + std::to_string(n) + std::string("_sigma");
-                comp_sigmas[n] = cad->getData(sigma_string)->GetAsDouble();
+                comp_sigmas[n] = cad->getData(sigma_string)->GetAsFloat();
                 std::string element_string = std::string("component_") + std::to_string(n) + std::string("_element_names");
                 auto element_name_data = cad->getData(element_string)->GetAsString()[0];
                 comp_element_names[n] = splitElementString(element_name_data);
 
                 std::string centers_string = std::string("component_") + std::to_string(n) + std::string("_centers");
-                comp_centers[n] = cad->getData(centers_string)->GetAsDouble();
+                comp_centers[n] = cad->getData(centers_string)->GetAsFloat();
                 component_offset[n] = num_atoms_total;
                 num_atoms_total += comp_centers[n].size() / 3;
                 atoms_per_component[n] = comp_centers[n].size() / 3;
@@ -185,46 +170,15 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 list_radii.resize(num_plists);
                 plist_count.resize(num_plists,0);
 
-                if (forceFloat && !(pos_size == 4)) {
-                    for (int i = 0; i < p_count; ++i) {
-                        auto const x = static_cast<float>(*reinterpret_cast<double*>(&X[pos_size * i]));
-                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&x),
-                            reinterpret_cast<uint8_t const*>(&x) + sizeof(x));
-                        auto const y = static_cast<float>(*reinterpret_cast<double*>(&Y[pos_size * i]));
-                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&y),
-                            reinterpret_cast<uint8_t const*>(&y) + sizeof(y));
-                        auto const z = static_cast<float>(*reinterpret_cast<double*>(&Z[pos_size * i]));
-                        mix[comp_id[i]].insert(mix[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&z),
-                            reinterpret_cast<uint8_t const*>(&z) + sizeof(z));
-                        auto const vx = static_cast<float>(*reinterpret_cast<double*>(&VX[dir_size * i]));
-                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vx),
-                            reinterpret_cast<uint8_t const*>(&vx) + sizeof(vx));
-                        auto const vy = static_cast<float>(*reinterpret_cast<double*>(&VY[dir_size * i]));
-                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vy),
-                            reinterpret_cast<uint8_t const*>(&vy) + sizeof(vy));
-                        auto const vz = static_cast<float>(*reinterpret_cast<double*>(&VZ[dir_size * i]));
-                        dirs[comp_id[i]].insert(dirs[comp_id[i]].end(), reinterpret_cast<uint8_t const*>(&vz),
-                            reinterpret_cast<uint8_t const*>(&vz) + sizeof(vz));
-                        plist_count[comp_id[i]] += 1;
-                    }
-                } else {
-                    for (int i = 0; i < p_count; ++i) {
-                        mix[comp_id[i]].insert(
-                            mix[comp_id[i]].end(), X.begin() + pos_size * i, X.begin() + pos_size * (i + 1));
-                        mix[comp_id[i]].insert(
-                            mix[comp_id[i]].end(), Y.begin() + pos_size * i, Y.begin() + pos_size * (i + 1));
-                        mix[comp_id[i]].insert(
-                            mix[comp_id[i]].end(), Z.begin() + pos_size * i, Z.begin() + pos_size * (i + 1));
-                        dirs[comp_id[i]].insert(
-                            dirs[comp_id[i]].end(), VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
-                        dirs[comp_id[i]].insert(
-                            dirs[comp_id[i]].end(), VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
-                        dirs[comp_id[i]].insert(
-                            dirs[comp_id[i]].end(), VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
-                        plist_count[comp_id[i]] += 1;
-                    }
-                }
-                
+                for (int i = 0; i < p_count; ++i) {
+                    mix[comp_id[i]].push_back(X[i]);
+                    mix[comp_id[i]].push_back(Y[i]);
+                    mix[comp_id[i]].push_back(Z[i]);
+                    dirs[comp_id[i]].push_back(VX[i]);
+                    dirs[comp_id[i]].push_back(VY[i]);
+                    dirs[comp_id[i]].push_back(VZ[i]);
+                    ++plist_count[comp_id[i]];
+                }                
 
                 // calc circumsphere
                 for (int j = 0; j < num_components; ++j) {
@@ -261,38 +215,21 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 for (int i = 0; i < p_count; ++i) {
 
                     for (int j = 0; j < atoms_per_component[comp_id[i]]; ++j) {
+                        auto com_x = X[i];
+                        auto com_y = Y[i];
+                        auto com_z = Z[i];
+                        auto a_x = comp_centers[comp_id[i]][3 * j + 0];
+                        auto a_y = comp_centers[comp_id[i]][3 * j + 1];
+                        auto a_z = comp_centers[comp_id[i]][3 * j + 2];
 
-                        if (pos_size  == sizeof(float)) {
-                            auto com_x = *reinterpret_cast<float*>(&X[pos_size * i]);
-                            auto com_y = *reinterpret_cast<float*>(&Y[pos_size * i]);
-                            auto com_z = *reinterpret_cast<float*>(&Z[pos_size * i]);
-                            auto a_x = comp_centers[comp_id[i]][3 * j + 0];
-                            auto a_y = comp_centers[comp_id[i]][3 * j + 1];
-                            auto a_z = comp_centers[comp_id[i]][3 * j + 2];
+                        auto pos = calcAtomPos(com_x, com_y, com_z, a_x, a_y, a_z, qw[i], qx[i], qy[i], qz[i]);
+                        mix[component_offset[comp_id[i]] + j].insert(
+                            mix[component_offset[comp_id[i]] + j].end(), pos.begin(), pos.end());
 
-                            auto pos = calcAtomPos(com_x, com_y, com_z, a_x, a_y, a_z, qw[i], qx[i], qy[i], qz[i]);
-                            auto uchar_pos = reinterpret_cast<std::vector<unsigned char>&>(pos);
-                            mix[component_offset[comp_id[i]] + j].insert(mix[component_offset[comp_id[i]] + j].end(), uchar_pos.begin(), uchar_pos.end());
-
-                        } else {
-                            auto com_x = *reinterpret_cast<double*>(&X[pos_size * i]);
-                            auto com_y = *reinterpret_cast<double*>(&Y[pos_size * i]);
-                            auto com_z = *reinterpret_cast<double*>(&Z[pos_size * i]);
-                            auto a_x = comp_centers[comp_id[i]][3 * j + 0];
-                            auto a_y = comp_centers[comp_id[i]][3 * j + 1];
-                            auto a_z = comp_centers[comp_id[i]][3 * j + 2];
-
-                            auto pos = calcAtomPos(com_x, com_y, com_z, a_x, a_y, a_z, qw[i], qx[i], qy[i], qz[i]);
-                            auto uchar_pos = reinterpret_cast<std::vector<unsigned char>&>(pos);
-                            mix[component_offset[comp_id[i]] + j].insert(mix[component_offset[comp_id[i]] + j].end(), uchar_pos.begin(), uchar_pos.end());
-                        }
-                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
-                            VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
-                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
-                            VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
-                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
-                            VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
-                        plist_count[component_offset[comp_id[i]] + j] += 1;
+                        dirs[component_offset[comp_id[i]] + j].push_back(VX[i]);
+                        dirs[component_offset[comp_id[i]] + j].push_back(VY[i]);
+                        dirs[component_offset[comp_id[i]] + j].push_back(VZ[i]);
+                        ++plist_count[component_offset[comp_id[i]] + j];
                     }
                 }
             }
@@ -348,13 +285,13 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         if (mix[k].data()== nullptr) {
             parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
         } else {
-            parts.SetVertexData(vertType, mix[k].data());
+            parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, mix[k].data());
         }
         
         if (dirs[k].data() == nullptr) {
             parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
         } else {
-            parts.SetDirData(dirType, dirs[k].data());
+            parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirs[k].data());
         }
         parts.SetGlobalRadius(list_radii[k]);
 

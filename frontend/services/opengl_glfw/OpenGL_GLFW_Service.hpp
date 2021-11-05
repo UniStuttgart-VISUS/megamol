@@ -107,18 +107,6 @@ private:
     void create_glfw_mouse_cursors();
     void update_glfw_mouse_cursors(const int cursor_id);
 
-    struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
-        void* ptr = nullptr;
-
-        void activate() const override;
-        void close() const override;
-    };
-
-    struct Fake_OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
-        void activate() const override {}
-        void close() const override {}
-    };
-
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
@@ -128,9 +116,7 @@ private:
     MouseEvents m_mouseEvents;
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
-    OpenGL_Context m_opengl_context_impl;
-    Fake_OpenGL_Context m_fake_opengl_context;
-    frontend_resources::IOpenGL_Context* m_opengl_context;
+    frontend_resources::IOpenGL_Context m_opengl_context;
     WindowManipulation m_windowManipulation;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using

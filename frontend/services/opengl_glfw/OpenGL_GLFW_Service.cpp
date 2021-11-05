@@ -337,7 +337,6 @@ void megamol::frontend_resources::WindowManipulation::set_swap_interval(const un
 
 void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
@@ -355,18 +354,6 @@ void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fulls
 
 namespace megamol {
 namespace frontend {
-
-void OpenGL_GLFW_Service::OpenGL_Context::activate() const {
-    if (!ptr) return;
-
-    glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
-}
-
-void OpenGL_GLFW_Service::OpenGL_Context::close() const {
-    if (!ptr) return;
-
-    glfwMakeContextCurrent(nullptr);
-}
 
 
 struct OpenGL_GLFW_Service::PimplData {
@@ -501,7 +488,6 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
     window_ptr = ::glfwCreateWindow(initial_width, initial_height,
         m_pimpl->config.windowTitlePrefix.c_str(), nullptr, nullptr);
-    m_opengl_context_impl.ptr = window_ptr;
 
     if (!window_ptr) {
         log_error("Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
@@ -513,9 +499,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     // we publish a fake GL context to have a resource others can ask for
     // however, we set the actual GL context active for the main thread and leave it active until further design requirements arise
-    m_opengl_context = &m_fake_opengl_context;
     ::glfwMakeContextCurrent(window_ptr);
-    //m_opengl_context_impl.activate();
 
     //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
     if(gladLoadGL() == 0) {
@@ -594,7 +578,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
         {"FramebufferEvents", m_framebufferEvents},
-        {"IOpenGL_Context", *m_opengl_context},
+        {"IOpenGL_Context", m_opengl_context},
         {"WindowManipulation", m_windowManipulation}
     };
 

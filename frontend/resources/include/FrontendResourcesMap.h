@@ -8,6 +8,7 @@
 #pragma once
 
 #include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <vector>
 #include <map>
@@ -32,8 +33,7 @@ struct FrontendResourcesMap {
                     + "\n\tbecause that would lead to ambiguous map entries for your resources "
                     + "\n\tstopping program execution ";
 
-                std::cout << msg << std::endl;
-                std::cerr << msg << std::endl;
+                megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
                 std::exit(1);
             } else {
                 this->resources.insert({hash, resource});

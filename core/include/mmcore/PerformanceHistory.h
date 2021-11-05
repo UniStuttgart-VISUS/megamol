@@ -2,6 +2,7 @@
 
 #include <array>
 #include <algorithm>
+#include <cstdint>
 
 namespace megamol {
 namespace core {

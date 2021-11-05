@@ -812,9 +812,7 @@ namespace ospray {
                         for (auto& attrib : spheres.second.attributes) {
 
                             if (attrib.semantic == ParticleDataAccessCollection::POSITION) {
-                                auto count = attrib.byte_size /
-                                             (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
-                                                 attrib.component_cnt);
+                                auto count = attrib.byte_size / attrib.stride;
 
                                 auto vertexData =
                                     ::ospray::cpp::CopiedData(attrib.data, OSP_VEC3F, count, attrib.stride);
@@ -826,9 +824,7 @@ namespace ospray {
                             // check for radius data
                             if (attrib.semantic == ParticleDataAccessCollection::RADIUS) {
                                 radius_found = true;
-                                auto count = attrib.byte_size /
-                                             (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
-                                                 attrib.component_cnt);
+                                auto count = attrib.byte_size / attrib.stride;
 
                                 auto radiusData = ::ospray::cpp::SharedData(
                                     &attrib.data[attrib.offset], OSP_FLOAT, count, attrib.stride);
@@ -853,9 +849,7 @@ namespace ospray {
                                 color_found = true;
                                 ::ospray::cpp::SharedData colorData;
                                 if (attrib.component_type == ParticleDataAccessCollection::ValueType::FLOAT) {
-                                    auto count = attrib.byte_size /
-                                                 (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
-                                                     attrib.component_cnt);
+                                    auto count = attrib.byte_size / attrib.stride;
                                     auto osp_type = OSP_VEC3F;
                                     if (attrib.component_cnt == 4)
                                         osp_type = OSP_VEC4F;

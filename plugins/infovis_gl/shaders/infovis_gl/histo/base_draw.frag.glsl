@@ -8,10 +8,12 @@ uniform vec4 selectionColor;
 in float binColor;
 in float selection;
 
+layout(location = 0) out vec4 col;
+
 void main(void) {
     if (selection <= 1.0) {
-        gl_FragColor = selectionColor;
+        col = selectionColor;
     } else {
-        gl_FragColor = tflookup(binColor);
+        col = tflookup(binColor);
     }
 }

@@ -16,6 +16,7 @@ namespace megamol::frontend {
         glfw_window_blit();
         ~glfw_window_blit();
 
+        void set_framebuffer_active();
         void set_framebuffer_size(unsigned int width, unsigned int height);
         void blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height);
     };

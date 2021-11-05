@@ -27,6 +27,11 @@ glfw_window_blit::~glfw_window_blit() {
     gl_fbo_handle = 0;
 }
 
+void glfw_window_blit::set_framebuffer_active() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+}
+
 void glfw_window_blit::set_framebuffer_size(unsigned int width, unsigned int height) {
     fbo_width = width;
     fbo_height = height;

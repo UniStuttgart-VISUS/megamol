@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace {
     bool strEqualIgnoreCase(const std::string& a, const std::string& b) {

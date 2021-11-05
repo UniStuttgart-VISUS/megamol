@@ -201,6 +201,10 @@ bool datatools::ParticleThermodyn::assertData(
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
         in->SetFrameID(time, true);
+        do {
+            if (!(*in)(1)) return false;
+            if (!(*in)(0)) return false;
+        } while(in->FrameID() != time);
 
         if (!(*in)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: could not get frame (%u)", time);
@@ -254,7 +258,8 @@ bool datatools::ParticleThermodyn::assertData(
         assert(allpartcnt == totalParts);
         this->myPts = std::make_shared<simplePointcloud>(in, allParts);
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "ParticleThermodyn: building acceleration structure for frame %u...", out->FrameID());
         particleTree = std::make_shared<my_kd_tree_t>(
             3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
@@ -280,9 +285,10 @@ bool datatools::ParticleThermodyn::assertData(
         // bbox.EnforcePositiveSize(); // paranoia
         auto bbox_cntr = bbox.CalcCenter();
 
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: calculating thermodynamics for frame %u...", out->FrameID());
         vislib::sys::ConsoleProgressBar cpb;
         const int progressDivider = 100;
-        cpb.Start("measuring thermodynamics",
+        cpb.Start("calculating",
             static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
 
         float theMinTemp = FLT_MAX;
@@ -298,6 +304,7 @@ bool datatools::ParticleThermodyn::assertData(
         auto const rho_c = rhocSlot.Param<core::param::FloatParam>()->Value();
 
         allpartcnt = 0;
+        INT64 counter = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
             if (!isListOK(in, pli) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, pli)) {
@@ -305,7 +312,6 @@ bool datatools::ParticleThermodyn::assertData(
             }
 
             int num_thr = omp_get_max_threads();
-            INT64 counter = 0;
 
             std::vector<float> metricMin(num_thr, FLT_MAX);
             std::vector<float> metricMax(num_thr, 0.0f);
