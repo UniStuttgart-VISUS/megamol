@@ -66,6 +66,12 @@ namespace frontend {
         // bool shouldShutdown() const; // shutdown initially false
         // void setShutdown(const bool s = true);
 
+        static std::vector<std::string> get_gl_gui_runtime_resources_requests();
+
+        static bool gui_rendering_execution(void* void_ptr,
+            std::vector<megamol::frontend::FrontendResource> const& resources,
+            megamol::frontend_resources::ImageWrapper& result_image);
+
     private:
         double m_time;
         glm::vec2 m_framebuffer_size;
@@ -88,7 +94,6 @@ namespace frontend {
         void resource_provide_gui_state(const std::string& json_state);
         void resource_provide_gui_visibility(bool show);
         void resource_provide_gui_scale(float scale);
-        void resource_provide_gui_render();
 
         void resource_register_window(
             const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)>& func);

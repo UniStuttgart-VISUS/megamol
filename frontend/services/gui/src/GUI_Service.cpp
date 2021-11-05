@@ -7,16 +7,19 @@
 
 
 #include "GUI_Service.hpp"
+
 #include "CommandRegistry.h"
 #include "FrameStatistics.h"
 #include "Framebuffer_Events.h"
 #include "GUIManager.h"
+#include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
+
 #include "mmcore/utility/log/Log.h"
 
 
@@ -45,19 +48,20 @@ namespace frontend {
         this->m_requestedResourceReferences.clear();
         this->m_providedResourceReferences.clear();
         this->m_requestedResourcesNames = {
-            "MegaMolGraph",                              // 0 - sync graph
-            "WindowEvents",                              // 1 - time, size, clipboard
-            "KeyboardEvents",                            // 2 - key press
-            "MouseEvents",                               // 3 - mouse click
-            "IOpenGL_Context",                           // 4 - graphics api for imgui context
-            "FramebufferEvents",                         // 5 - viewport size
-            "GLFrontbufferToPNG_ScreenshotTrigger",      // 6 - trigger screenshot
-            "LuaScriptPaths",                            // 7 - current project path
-            "ProjectLoader",                             // 8 - trigger loading of new running project
-            "FrameStatistics",                           // 9 - current fps and ms value
-            "RuntimeConfig",                             // 10 - resource paths
-            "WindowManipulation",                        // 11 - GLFW window pointer
-            frontend_resources::CommandRegistry_Req_Name // 12 - Command registry
+            "MegaMolGraph",                               // 0 - sync graph
+            "WindowEvents",                               // 1 - time, size, clipboard
+            "KeyboardEvents",                             // 2 - key press
+            "MouseEvents",                                // 3 - mouse click
+            "IOpenGL_Context",                            // 4 - graphics api for imgui context
+            "FramebufferEvents",                          // 5 - viewport size
+            "GLFrontbufferToPNG_ScreenshotTrigger",       // 6 - trigger screenshot
+            "LuaScriptPaths",                             // 7 - current project path
+            "ProjectLoader",                              // 8 - trigger loading of new running project
+            "FrameStatistics",                            // 9 - current fps and ms value
+            "RuntimeConfig",                              // 10 - resource paths
+            "WindowManipulation",                         // 11 - GLFW window pointer
+            frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
+            "ImagePresentationEntryPoints"                // 13 - Entry point
         };
 
         // init gui
@@ -87,9 +91,6 @@ namespace frontend {
                         };
                         this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
                             return this->resource_provide_gui_scale(scale);
-                        };
-                        this->m_providedStateResource.provide_gui_render = [&]() -> void {
-                            this->resource_provide_gui_render();
                         };
                         this->resource_provide_gui_visibility(config.gui_show);
                         this->resource_provide_gui_scale(config.gui_scale);
@@ -322,11 +323,52 @@ namespace frontend {
             this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
         }
 
-        /// Command Registry = resource index = 12
+        /// Command Registry = resource index 12
         auto& command_registry = const_cast<megamol::frontend_resources::CommandRegistry&>(
             this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::CommandRegistry>());
         /// WARNING: Changing a constant type will lead to an undefined behavior!
         this->m_gui->RegisterHotkeys(command_registry, *this->m_megamol_graph);
+
+        /// Image Presentation = resource index 13
+        // the image presentation will issue the rendering and provide the view with resources for rendering
+        // probably we dont care or dont check wheter the same view is added as entry point multiple times
+        auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
+            this->m_requestedResourceReferences[13]
+                .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+        bool view_presentation_ok =
+            image_presentation.add_entry_point("GUI Service", static_cast<void*>(this->m_gui.get()));
+        if (!view_presentation_ok) {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
+        }
+    }
+
+
+    std::vector<std::string> GUI_Service::get_gl_gui_runtime_resources_requests() {
+
+        /// Already provided via getRequestedResourceNames()
+        return {};
+    }
+
+    bool GUI_Service::gui_rendering_execution(void* void_ptr,
+        std::vector<megamol::frontend::FrontendResource> const& resources,
+        megamol::frontend_resources::ImageWrapper& result_image) {
+
+        // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        megamol::frontend_resources::ImageWrapper::DataChannels channels =
+            megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
+
+        auto gui_ptr = static_cast<megamol::gui::GUIManager*>(void_ptr);
+
+        unsigned int fbo_color_buffer_gl_handle = 0;
+        size_t fbo_width = 1;
+        size_t fbo_height = 1;
+        gui_ptr->GetFBOData(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
+
+        result_image =
+            megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
+
+        return true;
     }
 
 
@@ -388,14 +430,6 @@ namespace frontend {
 
         if (this->m_gui != nullptr) {
             this->m_gui->RegisterWindow(name, func);
-        }
-    }
-
-
-    void GUI_Service::resource_provide_gui_render() {
-
-        if (this->m_gui != nullptr) {
-            this->m_gui->DrawUiToScreen();
         }
     }
 
