@@ -14,24 +14,24 @@
 #include <list>
 #include <set>
 #include <vector>
-#include "protein/Color.h"
-#include "protein/ReducedSurface.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/Camera.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "protein/Color.h"
+#include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include "vislib/math/Quaternion.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -449,7 +449,7 @@ namespace protein_gl {
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;
         // flag for SES computation (false = one SES per molecule)
-        bool computeSesPerMolecule;        
+        bool computeSesPerMolecule;
         glm::mat4 view_;
         glm::mat4 proj_;
         glm::mat4 invview_;
@@ -492,10 +492,9 @@ namespace protein_gl {
 
         std::vector<LightParams> pointLights_;
         std::vector<LightParams> directionalLights_;
-
     };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /* MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED */

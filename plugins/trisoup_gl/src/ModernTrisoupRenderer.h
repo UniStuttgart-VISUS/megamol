@@ -9,8 +9,8 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/view/light/CallLight.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 namespace megamol::trisoup_gl {
 class ModernTrisoupRenderer : public core_gl::view::Renderer3DModuleGL {
@@ -82,4 +82,4 @@ private:
 
     GLuint vertexArray_;
 };
-} // namespace megamol::trisoup
+} // namespace megamol::trisoup_gl

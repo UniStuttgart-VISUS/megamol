@@ -9,11 +9,11 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;

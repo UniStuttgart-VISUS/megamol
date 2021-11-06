@@ -11,13 +11,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "protein/Color.h"
 #include "DeferredRenderingProvider.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "mmcore/view/light/CallLight.h"
+#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
@@ -311,7 +311,7 @@ namespace protein_gl {
     };
 
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED

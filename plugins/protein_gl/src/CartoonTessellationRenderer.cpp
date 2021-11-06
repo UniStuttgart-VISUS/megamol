@@ -14,12 +14,12 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
 
 using namespace megamol::core;

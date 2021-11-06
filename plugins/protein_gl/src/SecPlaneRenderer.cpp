@@ -11,15 +11,15 @@
 #include "stdafx.h"
 
 #include "SecPlaneRenderer.h"
-#include "protein_calls/VTIDataCall.h"
 #include "ogl_error_check.h"
+#include "protein_calls/VTIDataCall.h"
 //#include "vislib_vector_typedefs.h"
 
-#include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/CoreInstance.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/AbstractCallRender.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -32,34 +32,35 @@ using namespace megamol::core::utility::log;
 /*
  * SecPlaneRenderer::SecPlaneRenderer
  */
-SecPlaneRenderer::SecPlaneRenderer(void) : core_gl::view::Renderer3DModuleGL(),
-    textureSlot("getData", "Connects the slice rendering with data storage" ),
-    shadingSlot("shading", "Determines the shading mode"),
-    shadingMinTexSlot("min", "The minimum texture value (used for shading)"),
-    shadingMaxTexSlot("max", "The maximum texture value (used for shading)"),
-    licContrastSlot("licContrast", "LIC contrast"),
-    licBrightnessSlot("licBrightness", "LIC licBrightness"),
-    licDirSclSlot("licDirScl", "LIC stepsize scale factor"),
-    licTCSclSlot("licTCScl", "LIC random noise texture coordinates scale"),
-    isoValueSlot("isoValue", "Isovalue for isolines"),
-    isoThreshSlot("isoThresh", "Threshold for isolines"),
-    isoDistributionSlot("isoDistribution", "Determines the amount of isolines"),
-    xPlaneSlot("xPlanePos", "Change the position of the x-Plane"),
-    yPlaneSlot("yPlanePos", "Change the position of the y-Plane"),
-    zPlaneSlot("zPlanePos", "Change the position of the z-Plane"),
-    toggleXPlaneSlot("showXPlane", "Change the position of the x-Plane"),
-    toggleYPlaneSlot("showYPlane", "Change the position of the y-Plane"),
-    toggleZPlaneSlot("showZPlane", "Change the position of the z-Plane") {
+SecPlaneRenderer::SecPlaneRenderer(void)
+        : core_gl::view::Renderer3DModuleGL()
+        , textureSlot("getData", "Connects the slice rendering with data storage")
+        , shadingSlot("shading", "Determines the shading mode")
+        , shadingMinTexSlot("min", "The minimum texture value (used for shading)")
+        , shadingMaxTexSlot("max", "The maximum texture value (used for shading)")
+        , licContrastSlot("licContrast", "LIC contrast")
+        , licBrightnessSlot("licBrightness", "LIC licBrightness")
+        , licDirSclSlot("licDirScl", "LIC stepsize scale factor")
+        , licTCSclSlot("licTCScl", "LIC random noise texture coordinates scale")
+        , isoValueSlot("isoValue", "Isovalue for isolines")
+        , isoThreshSlot("isoThresh", "Threshold for isolines")
+        , isoDistributionSlot("isoDistribution", "Determines the amount of isolines")
+        , xPlaneSlot("xPlanePos", "Change the position of the x-Plane")
+        , yPlaneSlot("yPlanePos", "Change the position of the y-Plane")
+        , zPlaneSlot("zPlanePos", "Change the position of the z-Plane")
+        , toggleXPlaneSlot("showXPlane", "Change the position of the x-Plane")
+        , toggleYPlaneSlot("showYPlane", "Change the position of the y-Plane")
+        , toggleZPlaneSlot("showZPlane", "Change the position of the z-Plane") {
 
     // Make texture slot available
-	this->textureSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
+    this->textureSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
     this->MakeSlotAvailable(&this->textureSlot);
 
 
     /* Init parameter slots */
 
     // Shading modes for slices
-    param::EnumParam *srm = new core::param::EnumParam(0);
+    param::EnumParam* srm = new core::param::EnumParam(0);
     srm->SetTypePair(0, "Density Map");
     srm->SetTypePair(1, "Potential Map");
     srm->SetTypePair(2, "LIC");
@@ -144,7 +145,8 @@ bool SecPlaneRenderer::create(void) {
     using namespace vislib_gl::graphics::gl;
 
     // Init extensions
-    if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
+    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture "
+                                                     "GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
         return false;
     }
 
@@ -155,33 +157,33 @@ bool SecPlaneRenderer::create(void) {
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance *ci = this->GetCoreInstance();
-    if(!ci) return false;
+    core::CoreInstance* ci = this->GetCoreInstance();
+    if (!ci)
+        return false;
 
     // Load slice shader
     if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source: slice shader", this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
     if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;
     }
     try {
         if (!this->sliceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    }
-    catch (vislib::Exception &e){
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to create slice shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception& e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create slice shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Create random noise texture for LIC
 
-    srand((unsigned)time(0));  // Init random number generator
+    srand((unsigned) time(0)); // Init random number generator
     if (!this->initLIC()) {
         return false;
     }
@@ -194,17 +196,17 @@ bool SecPlaneRenderer::create(void) {
  * SecPlaneRenderer::GetExtents
  */
 bool SecPlaneRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
+    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) {
         return false;
     }
 
     // Get extent of texture
-	protein_calls::VTIDataCall *vti = this->textureSlot.CallAs<protein_calls::VTIDataCall>();
+    protein_calls::VTIDataCall* vti = this->textureSlot.CallAs<protein_calls::VTIDataCall>();
     if (vti == NULL) {
         return false;
     }
-	if (!(*vti)(protein_calls::VTIDataCall::CallForGetExtent)) {
+    if (!(*vti)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -223,10 +225,10 @@ bool SecPlaneRenderer::initLIC() {
     using namespace vislib::sys;
 
     // Create randbuffer
-    float *randBuff = new float[32*32*32];
-    for (int i = 0; i < 32*32*32; ++i) {
-        float randVal = (float)rand()/float(RAND_MAX);
-        randBuff[i]= randVal;
+    float* randBuff = new float[32 * 32 * 32];
+    for (int i = 0; i < 32 * 32 * 32; ++i) {
+        float randVal = (float) rand() / float(RAND_MAX);
+        randBuff[i] = randVal;
     }
 
     // Setup random noise texture
@@ -237,19 +239,12 @@ bool SecPlaneRenderer::initLIC() {
     glGenTextures(1, &this->randNoiseTex);
     glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
 
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_ALPHA,
-            32, // Create random buffer with 32x32x32
-            32,
-            32,
-            0,
-            GL_ALPHA,
-            GL_FLOAT,
-            randBuff);
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA,
+        32, // Create random buffer with 32x32x32
+        32, 32, 0, GL_ALPHA, GL_FLOAT, randBuff);
 
-    //glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -258,7 +253,8 @@ bool SecPlaneRenderer::initLIC() {
     glBindTexture(GL_TEXTURE_3D, 0);
     glDisable(GL_TEXTURE_3D);
 
-    return CheckForGLError();;
+    return CheckForGLError();
+    ;
 }
 
 
@@ -280,12 +276,12 @@ void SecPlaneRenderer::release(void) {
  */
 bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // Get render call
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
+    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) {
         return false;
     }
 
-	protein_calls::VTIDataCall *vti = this->textureSlot.CallAs<protein_calls::VTIDataCall>();
+    protein_calls::VTIDataCall* vti = this->textureSlot.CallAs<protein_calls::VTIDataCall>();
     if (vti == NULL) {
         return false;
     }
@@ -295,7 +291,7 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
     vti->SetFrameID(static_cast<int>(cr3d->Time()), true);
 
     // Get data for this frame
-	if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) {
+    if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) {
         return false;
     }
 
@@ -303,11 +299,11 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return true;
     }
 
-//    // DEBUG print texture values
-//    for (int i = 0; i < vti->GetPiecePointArraySize(0, 0); ++i) {
-//        printf("%f\n", ((const float*)(vti->GetPointDataByIdx(0, 0)))[i]);
-//    }
-//    // END DEBUG
+    //    // DEBUG print texture values
+    //    for (int i = 0; i < vti->GetPiecePointArraySize(0, 0); ++i) {
+    //        printf("%f\n", ((const float*)(vti->GetPointDataByIdx(0, 0)))[i]);
+    //    }
+    //    // END DEBUG
 
     /* Init texture */
 
@@ -320,16 +316,8 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glGenTextures(1, &this->tex);
     }
     glBindTexture(GL_TEXTURE_3D, this->tex);
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_RGBA32F,
-            vti->GetGridsize().X(),
-            vti->GetGridsize().Y(),
-            vti->GetGridsize().Z(),
-            0,
-            GL_ALPHA,
-            GL_FLOAT,
-            vti->GetPointDataByIdx(0, 0));
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_RGBA32F, vti->GetGridsize().X(), vti->GetGridsize().Y(),
+        vti->GetGridsize().Z(), 0, GL_ALPHA, GL_FLOAT, vti->GetPointDataByIdx(0, 0));
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -339,9 +327,8 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     if (vti->GetPointDataArrayNumberOfComponents(0, 0) == 1) { // Scalar texture
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Invalid texture format (needs to be scalar)\n",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Invalid texture format (needs to be scalar)\n", this->ClassName());
     }
 
     /* Render slices */
@@ -359,41 +346,41 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     Vec3f gridMinCoord = vti->GetOrigin();
     Vec3f gridMaxCoord;
-    gridMaxCoord.SetX(vti->GetOrigin().X() + vti->GetSpacing().X() * (vti->GetGridsize().X()-1));
-    gridMaxCoord.SetY(vti->GetOrigin().Y() + vti->GetSpacing().Y() * (vti->GetGridsize().Y()-1));
-    gridMaxCoord.SetZ(vti->GetOrigin().Z() + vti->GetSpacing().Z() * (vti->GetGridsize().Z()-1));
+    gridMaxCoord.SetX(vti->GetOrigin().X() + vti->GetSpacing().X() * (vti->GetGridsize().X() - 1));
+    gridMaxCoord.SetY(vti->GetOrigin().Y() + vti->GetSpacing().Y() * (vti->GetGridsize().Y() - 1));
+    gridMaxCoord.SetZ(vti->GetOrigin().Z() + vti->GetSpacing().Z() * (vti->GetGridsize().Z() - 1));
 
     // Calc ws positions and tex coords for planes
     float xPlane = this->xPlaneSlot.Param<core::param::FloatParam>()->Value();
     float yPlane = this->yPlaneSlot.Param<core::param::FloatParam>()->Value();
     float zPlane = this->zPlaneSlot.Param<core::param::FloatParam>()->Value();
-    float texCoordX = (xPlane - gridMinCoord[0])/(gridMaxCoord[0] - gridMinCoord[0]);
-    float texCoordY = (yPlane - gridMinCoord[1])/(gridMaxCoord[1] - gridMinCoord[1]);
-    float texCoordZ = (zPlane - gridMinCoord[2])/(gridMaxCoord[2] - gridMinCoord[2]);
+    float texCoordX = (xPlane - gridMinCoord[0]) / (gridMaxCoord[0] - gridMinCoord[0]);
+    float texCoordY = (yPlane - gridMinCoord[1]) / (gridMaxCoord[1] - gridMinCoord[1]);
+    float texCoordZ = (zPlane - gridMinCoord[2]) / (gridMaxCoord[2] - gridMinCoord[2]);
 
     this->sliceShader.Enable();
     glUniform1iARB(this->sliceShader.ParameterLocation("tex"), 0);
     glUniform1iARB(this->sliceShader.ParameterLocation("randNoiseTex"), 1);
     glUniform1fARB(this->sliceShader.ParameterLocation("minTex"),
-            this->shadingMinTexSlot.Param<core::param::FloatParam>()->Value());
+        this->shadingMinTexSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("maxTex"),
-            this->shadingMaxTexSlot.Param<core::param::FloatParam>()->Value());
-    glUniform1iARB(this->sliceShader.ParameterLocation("mode"),
-            this->shadingSlot.Param<core::param::EnumParam>()->Value());
+        this->shadingMaxTexSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1iARB(
+        this->sliceShader.ParameterLocation("mode"), this->shadingSlot.Param<core::param::EnumParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("licContrast"),
-            this->licContrastSlot.Param<core::param::FloatParam>()->Value());
+        this->licContrastSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("licBrightness"),
-            this->licBrightnessSlot.Param<core::param::FloatParam>()->Value());
+        this->licBrightnessSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("licDirScl"),
-            this->licDirSclSlot.Param<core::param::FloatParam>()->Value());
-    glUniform1fARB(this->sliceShader.ParameterLocation("licTCScl"),
-            this->licTCSclSlot.Param<core::param::FloatParam>()->Value());
-    glUniform1fARB(this->sliceShader.ParameterLocation("isoval"),
-            this->isoValueSlot.Param<core::param::FloatParam>()->Value());
+        this->licDirSclSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1fARB(
+        this->sliceShader.ParameterLocation("licTCScl"), this->licTCSclSlot.Param<core::param::FloatParam>()->Value());
+    glUniform1fARB(
+        this->sliceShader.ParameterLocation("isoval"), this->isoValueSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("isoThresh"),
-            this->isoThreshSlot.Param<core::param::FloatParam>()->Value());
+        this->isoThreshSlot.Param<core::param::FloatParam>()->Value());
     glUniform1fARB(this->sliceShader.ParameterLocation("isoDistribution"),
-            this->isoDistributionSlot.Param<core::param::FloatParam>()->Value());
+        this->isoDistributionSlot.Param<core::param::FloatParam>()->Value());
 
     glActiveTextureARB(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
@@ -417,7 +404,7 @@ bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glBegin(GL_QUADS);
         glTexCoord3f(0.0f, texCoordY, 1.0f);
         glVertex3f(gridMinCoord[0], yPlane, gridMaxCoord[2]);
-        glTexCoord3f( 0.0f, texCoordY, 0.0f);
+        glTexCoord3f(0.0f, texCoordY, 0.0f);
         glVertex3f(gridMinCoord[0], yPlane, gridMinCoord[2]);
         glTexCoord3f(1.0f, texCoordY, 0.0f);
         glVertex3f(gridMaxCoord[0], yPlane, gridMinCoord[2]);

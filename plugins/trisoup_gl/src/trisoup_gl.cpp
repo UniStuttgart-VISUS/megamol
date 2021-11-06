@@ -7,29 +7,29 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "TriSoupRenderer.h"
 #include "ModernTrisoupRenderer.h"
+#include "TriSoupRenderer.h"
 #include "vislib/Trace.h"
 
 namespace megamol::trisoup_gl {
-    class TrisoupGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class TrisoupGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(TrisoupGLPluginInstance)
 
-    public:
+public:
     TrisoupGLPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "trisoup_gl", "Plugin for rendering TriSoup mesh data") {
-            vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
-        };
-
-        ~TrisoupGLPluginInstance() override = default;
-
-        // Registers modules and calls
-        void registerClasses() override {
-
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::TriSoupRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::ModernTrisoupRenderer>();
-        }
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "trisoup_gl", "Plugin for rendering TriSoup mesh data") {
+        vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
     };
-} // namespace megamol::trisoup
+
+    ~TrisoupGLPluginInstance() override = default;
+
+    // Registers modules and calls
+    void registerClasses() override {
+
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::TriSoupRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::ModernTrisoupRenderer>();
+    }
+};
+} // namespace megamol::trisoup_gl

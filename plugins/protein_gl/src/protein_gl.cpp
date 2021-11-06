@@ -68,7 +68,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
 
         // register calls
-
     }
 };
-} // namespace megamol::protein
+} // namespace megamol::protein_gl

@@ -10,8 +10,8 @@
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/light/CallLight.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 
 namespace megamol::protein_gl {
 
@@ -60,4 +60,4 @@ private:
     core::param::ParamSlot enableShadingParam;
 };
 
-} // namespace megamol::protein
+} // namespace megamol::protein_gl

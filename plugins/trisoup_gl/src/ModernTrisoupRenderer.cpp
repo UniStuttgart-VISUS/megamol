@@ -13,10 +13,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;
@@ -419,8 +419,8 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
             "ambientColor", glm::make_vec4(ambientColorParam_.Param<core::param::ColorParam>()->Value().data()));
         meshShader_->setUniform(
             "diffuseColor", glm::make_vec4(diffuseColorParam_.Param<core::param::ColorParam>()->Value().data()));
-        meshShader_->setUniform("specularColor",
-            glm::make_vec4(specularColorParam_.Param<core::param::ColorParam>()->Value().data()));
+        meshShader_->setUniform(
+            "specularColor", glm::make_vec4(specularColorParam_.Param<core::param::ColorParam>()->Value().data()));
         meshShader_->setUniform("k_amb", ambientFactorParam_.Param<core::param::FloatParam>()->Value());
         meshShader_->setUniform("k_diff", diffuseFactorParam_.Param<core::param::FloatParam>()->Value());
         meshShader_->setUniform("k_spec", specularFactorParam_.Param<core::param::FloatParam>()->Value());

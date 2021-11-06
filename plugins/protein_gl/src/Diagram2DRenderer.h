@@ -1,7 +1,7 @@
 /*
  * Diagram2DRenderer.h
  *
- * Copyright (C) 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Universitaet Stuttgart (VIS).
  * All Rights reserved.
  */
 
@@ -11,48 +11,55 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein/Diagram2DCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
+#define CHECK_FOR_OGL_ERROR()                                                                 \
+    do {                                                                                      \
+        GLenum err;                                                                           \
+        err = glGetError();                                                                   \
+        if (err != GL_NO_ERROR) {                                                             \
+            fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); \
+        }                                                                                     \
+    } while (0)
 
 namespace megamol {
 namespace protein_gl {
-	/**
-	 * Protein Renderer class
-	 */
+    /**
+     * Protein Renderer class
+     */
     class Diagram2DRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
     public:
-		/**
-		 * Answer the name of this module.
-		 *
-		 * @return The name of this module.
-		 */
-		static const char *ClassName(void) {
-			return "Diagram2DRenderer";
-		}
+        /**
+         * Answer the name of this module.
+         *
+         * @return The name of this module.
+         */
+        static const char* ClassName(void) {
+            return "Diagram2DRenderer";
+        }
 
-		/**
-		 * Answer a human readable description of this module.
-		 *
-		 * @return A human readable description of this module.
-		 */
-		static const char *Description(void) {
-			return "Offers diagram renderings.";
-		}
+        /**
+         * Answer a human readable description of this module.
+         *
+         * @return A human readable description of this module.
+         */
+        static const char* Description(void) {
+            return "Offers diagram renderings.";
+        }
 
-		/**
-		 * Answers whether this module is available on the current system.
-		 *
-		 * @return 'true' if the module is available, 'false' otherwise.
-		 */
-		static bool IsAvailable(void) {
-			return true;
-		}
+        /**
+         * Answers whether this module is available on the current system.
+         *
+         * @return 'true' if the module is available, 'false' otherwise.
+         */
+        static bool IsAvailable(void) {
+            return true;
+        }
 
         /** ctor */
         Diagram2DRenderer(void);
@@ -60,19 +67,18 @@ namespace protein_gl {
         /** dtor */
         ~Diagram2DRenderer(void);
 
-	protected:
-		
-		/**
-		 * Implementation of 'Create'.
-		 *
-		 * @return 'true' on success, 'false' otherwise.
-		 */
-		virtual bool create(void);
-		
-		/**
-		 * Implementation of 'Release'.
-		 */
-		virtual void release(void);
+    protected:
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
+
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release(void);
 
         /**
          * Callback for mouse events (move, press, and release)
@@ -83,11 +89,10 @@ namespace protein_gl {
          */
         virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
-	private:
-
-		/**********************************************************************
-		 * 'render'-functions
-		 **********************************************************************/
+    private:
+        /**********************************************************************
+         * 'render'-functions
+         **********************************************************************/
 
         /**
          * The get extents callback. The module should set the members of
@@ -98,15 +103,15 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core_gl::view::CallRender2DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
 
-		/**
-		* The Open GL Render callback.
-		*
-		* @param call The calling call.
-		* @return The return value of the function.
-		*/
-        virtual bool Render( megamol::core_gl::view::CallRender2DGL& call);
+        /**
+         * The Open GL Render callback.
+         *
+         * @param call The calling call.
+         * @return The return value of the function.
+         */
+        virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
 
         /**
          * Generate the diagram textures and FBOs.
@@ -123,19 +128,19 @@ namespace protein_gl {
          */
         void parameterRefresh();
 
-		/**********************************************************************
-		 * variables
-		 **********************************************************************/
+        /**********************************************************************
+         * variables
+         **********************************************************************/
 
-		/** caller slot */
-		core::CallerSlot dataCallerSlot;
+        /** caller slot */
+        core::CallerSlot dataCallerSlot;
 
-		/** texture resolution parameter */
-		megamol::core::param::ParamSlot resolutionParam;
+        /** texture resolution parameter */
+        megamol::core::param::ParamSlot resolutionParam;
         /** plot color parameter */
-		megamol::core::param::ParamSlot plotColorParam;
+        megamol::core::param::ParamSlot plotColorParam;
         /** clear diagram parameter */
-		megamol::core::param::ParamSlot clearDiagramParam;
+        megamol::core::param::ParamSlot clearDiagramParam;
 
         /** the mouse position */
         vislib::math::Vector<float, 3> mousePos;
@@ -155,7 +160,7 @@ namespace protein_gl {
         vislib::math::Vector<float, 3> labelSpace;
     };
 
-}
-}
+} // namespace protein_gl
+} // namespace megamol
 
 #endif // MEGAMOLCORE_DIAGRAM2DRENDERER_H_INCLUDED

@@ -13,7 +13,6 @@
 
 #include <GL/glu.h>
 #include <omp.h>
-#include "protein/Color.h"
 #include "SimpleMoleculeRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
@@ -24,11 +23,12 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein/Color.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"

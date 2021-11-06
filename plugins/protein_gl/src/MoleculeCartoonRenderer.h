@@ -12,15 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <vector>
-#include "protein/BSpline.h"
-#include "protein/CallColor.h"
-#include "protein/Color.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "protein/BSpline.h"
+#include "protein/CallColor.h"
+#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
@@ -324,7 +324,7 @@ namespace protein_gl {
         std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
 
         // buffer objects
-        // the 6 is missing to match the buffers of 
+        // the 6 is missing to match the buffers of
         enum class Buffers : GLuint {
             POSITION = 0,
             COLOR = 1,
@@ -416,7 +416,7 @@ namespace protein_gl {
     };
 
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED

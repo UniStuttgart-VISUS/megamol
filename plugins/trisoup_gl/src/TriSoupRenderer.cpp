@@ -9,24 +9,23 @@
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "trisoup/trisoupVolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "trisoup/trisoupVolumetricDataCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/mathfunctions.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
+#include "vislib/math/mathfunctions.h"
 
 #include <glm/ext.hpp>
 
@@ -39,16 +38,17 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void) : core_gl::view::Renderer3DModuleGL(),
-        getDataSlot("getData", "The slot to fetch the tri-mesh data"),
-        getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
-        getLightsSlot("lights", "Lights are retrieved over this slot."),
-        showVertices("showVertices", "Flag whether to show the verices of the object"),
-        lighting("lighting", "Flag whether or not use lighting for the surface"),
-        surFrontStyle("frontstyle", "The rendering style for the front surface"),
-        surBackStyle("backstyle", "The rendering style for the back surface"),
-        windRule("windingrule", "The triangle edge winding rule"),
-        colorSlot("color", "The triangle color (if no colors are read from file)") {
+TriSoupRenderer::TriSoupRenderer(void)
+        : core_gl::view::Renderer3DModuleGL()
+        , getDataSlot("getData", "The slot to fetch the tri-mesh data")
+        , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
+        , getLightsSlot("lights", "Lights are retrieved over this slot.")
+        , showVertices("showVertices", "Flag whether to show the verices of the object")
+        , lighting("lighting", "Flag whether or not use lighting for the surface")
+        , surFrontStyle("frontstyle", "The rendering style for the front surface")
+        , surBackStyle("backstyle", "The rendering style for the back surface")
+        , windRule("windingrule", "The triangle edge winding rule")
+        , colorSlot("color", "The triangle color (if no colors are read from file)") {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -65,7 +65,7 @@ TriSoupRenderer::TriSoupRenderer(void) : core_gl::view::Renderer3DModuleGL(),
     this->lighting.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->lighting);
 
-    param::EnumParam *ep = new param::EnumParam(0);
+    param::EnumParam* ep = new param::EnumParam(0);
     ep->SetTypePair(0, "Filled");
     ep->SetTypePair(1, "Wireframe");
     ep->SetTypePair(2, "Points");
@@ -86,10 +86,9 @@ TriSoupRenderer::TriSoupRenderer(void) : core_gl::view::Renderer3DModuleGL(),
     ep->SetTypePair(1, "Clock Wise");
     this->windRule << ep;
     this->MakeSlotAvailable(&this->windRule);
-    
+
     this->colorSlot.SetParameter(new param::StringParam("white"));
     this->MakeSlotAvailable(&this->colorSlot);
-
 }
 
 
@@ -115,10 +114,12 @@ bool TriSoupRenderer::create(void) {
  */
 bool TriSoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
-    if (ctmd == NULL) return false;
+    megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+    if (ctmd == NULL)
+        return false;
     ctmd->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*ctmd)(1)) return false;
+    if (!(*ctmd)(1))
+        return false;
 
     call.SetTimeFramesCount(ctmd->FrameCount());
     call.AccessBoundingBoxes().Clear();
@@ -140,20 +141,23 @@ void TriSoupRenderer::release(void) {
  * TriSoupRenderer::Render
  */
 bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
-    if (ctmd == NULL) return false;
+    megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+    if (ctmd == NULL)
+        return false;
 
     ctmd->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*ctmd)(1)) return false;
+    if (!(*ctmd)(1))
+        return false;
 
     ctmd->SetFrameID(static_cast<int>(call.Time())); // necessary?
-    if (!(*ctmd)(0)) return false;
+    if (!(*ctmd)(0))
+        return false;
 
-	core::view::Camera cam = call.GetCamera();
+    core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
 
-	// lighting setup
+    // lighting setup
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
 
     auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
@@ -225,16 +229,16 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     ::glEnable(GL_NORMALIZE);
 
-    //GLsizei** oldbind = new GLsizei*[16];
-    //for (int i = 0; i < 16; i++) {
+    // GLsizei** oldbind = new GLsizei*[16];
+    // for (int i = 0; i < 16; i++) {
     //    oldbind[i] = new GLsizei();
     //}
     ////glGetVertexAttribPointerv(0, GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
-    //glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
+    // glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
     glVertexAttribPointer(0, 0, GL_FLOAT, GL_FALSE, 0, nullptr);
-    //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glBindVertexArray(0);
+    // glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
 
 
     GLint cfm;
@@ -253,16 +257,34 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     int fpm, bpm, cf = 0;
 
     switch (this->surFrontStyle.Param<param::EnumParam>()->Value()) {
-        default: fpm = GL_FILL; break;
-        case 1: fpm = GL_LINE; break;
-        case 2: fpm = GL_POINT; break;
-        case 3: fpm = GL_FILL; cf = GL_FRONT; break;
+    default:
+        fpm = GL_FILL;
+        break;
+    case 1:
+        fpm = GL_LINE;
+        break;
+    case 2:
+        fpm = GL_POINT;
+        break;
+    case 3:
+        fpm = GL_FILL;
+        cf = GL_FRONT;
+        break;
     }
     switch (this->surBackStyle.Param<param::EnumParam>()->Value()) {
-        default: bpm = GL_FILL; break;
-        case 1: bpm = GL_LINE; break;
-        case 2: bpm = GL_POINT; break;
-        case 3: bpm = GL_FILL; cf = (cf == 0) ? GL_BACK : GL_FRONT_AND_BACK; break;
+    default:
+        bpm = GL_FILL;
+        break;
+    case 1:
+        bpm = GL_LINE;
+        break;
+    case 2:
+        bpm = GL_POINT;
+        break;
+    case 3:
+        bpm = GL_FILL;
+        cf = (cf == 0) ? GL_BACK : GL_FRONT_AND_BACK;
+        break;
     }
     ::glPolygonMode(GL_FRONT, fpm);
     ::glPolygonMode(GL_BACK, bpm);
@@ -283,28 +305,30 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         const megamol::geocalls::CallTriMeshData::Mesh& obj = ctmd->Objects()[i];
 
         switch (obj.GetVertexDataType()) {
-            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
-                break;
-            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
-                break;
-            default: continue;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+            ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
+            break;
+        case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+            ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
+            break;
+        default:
+            continue;
         }
 
         if (obj.HasNormalPointer() != NULL) {
-            if (!normals) { 
+            if (!normals) {
                 ::glEnableClientState(GL_NORMAL_ARRAY);
                 normals = true;
             }
             switch (obj.GetNormalDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (normals) {
             ::glDisableClientState(GL_NORMAL_ARRAY);
@@ -317,16 +341,17 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 colors = true;
             }
             switch (obj.GetColourDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                    ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+                ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (colors) {
             ::glDisableClientState(GL_COLOR_ARRAY);
@@ -339,13 +364,14 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 textures = true;
             }
             switch (obj.GetTextureCoordinateDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
+                break;
+            default:
+                continue;
             }
         } else if (textures) {
             ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -353,15 +379,15 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
 
         if (obj.GetMaterial() != NULL) {
-            const megamol::geocalls::CallTriMeshData::Material &mat = *obj.GetMaterial();
+            const megamol::geocalls::CallTriMeshData::Material& mat = *obj.GetMaterial();
 
             if (doLighting) {
                 ::glDisable(GL_COLOR_MATERIAL);
-                GLfloat mat_ambient[4] = { mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f };
-                GLfloat mat_diffuse[4] = { mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f };
-                GLfloat mat_specular[4] = { mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f };
-                GLfloat mat_emission[4] = { mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f };
-                GLfloat mat_shininess[1] = { mat.GetNs() };
+                GLfloat mat_ambient[4] = {mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f};
+                GLfloat mat_diffuse[4] = {mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f};
+                GLfloat mat_specular[4] = {mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f};
+                GLfloat mat_emission[4] = {mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f};
+                GLfloat mat_shininess[1] = {mat.GetNs()};
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
                 ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -381,11 +407,11 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             }
         } else {
-            GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-            GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
-            GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            GLfloat mat_shininess[1] = { 0.0f };
+            GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+            GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+            GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            GLfloat mat_shininess[1] = {0.0f};
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -393,21 +419,22 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
             ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
             ::glBindTexture(GL_TEXTURE_2D, 0);
             ::glEnable(GL_COLOR_MATERIAL);
-
         }
 
         if (obj.HasTriIndexPointer() != NULL) {
             switch (obj.GetTriDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
-                    ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_BYTE:
+                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT16:
+                ::glDrawElements(
+                    GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_UINT32:
+                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
+                break;
+            default:
+                continue;
             }
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
@@ -418,16 +445,19 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
     }
 
-    if (normals) ::glDisableClientState(GL_NORMAL_ARRAY);
-    if (colors) ::glDisableClientState(GL_COLOR_ARRAY);
-    if (textures) ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    if (normals)
+        ::glDisableClientState(GL_NORMAL_ARRAY);
+    if (colors)
+        ::glDisableClientState(GL_COLOR_ARRAY);
+    if (textures)
+        ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
     {
-        GLfloat mat_ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-        GLfloat mat_diffuse[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
-        GLfloat mat_specular[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        GLfloat mat_emission[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        GLfloat mat_shininess[1] = { 0.0f };
+        GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+        GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+        GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        GLfloat mat_shininess[1] = {0.0f};
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
         ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -446,13 +476,14 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         ::glColor3f(1.0f, 0.0f, 0.0f);
         for (unsigned int i = 0; i < ctmd->Count(); i++) {
             switch (ctmd->Objects()[i].GetVertexDataType()) {
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
-                    break;
-                case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
-                    ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
-                    break;
-                default: continue;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+                ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
+                break;
+            case megamol::geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+                ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
+                break;
+            default:
+                continue;
             }
             ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
@@ -482,24 +513,23 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         ::glPointSize(3);
         ::glBegin(GL_POINTS);
         double offset = 0.5;
-        for(SIZE_T volIdx = 0; volIdx < volumes.Count(); volIdx++) {
+        for (SIZE_T volIdx = 0; volIdx < volumes.Count(); volIdx++) {
             trisoup::trisoupVolumetricDataCall::Volume& v = volumes[volIdx];
             if (!v.volumeData)
                 continue;
 //#define COLOR_BY_VOLID
 #ifdef COLOR_BY_VOLID
-            float col[4] = {0,0,0,1};
-            col[volIdx%3] = 1;
+            float col[4] = {0, 0, 0, 1};
+            col[volIdx % 3] = 1;
             ::glColor4fv(col);
 #endif // COLOR_BY_VOLID
             /* resolution is always off-by-1 ?! */
-            for(int x = 0; x < v.resX-1; x++) {
-                for(int y = 0; y < v.resY-1; y++) {
-                    for(int z = 0; z < v.resZ-1; z++) {
+            for (int x = 0; x < v.resX - 1; x++) {
+                for (int y = 0; y < v.resY - 1; y++) {
+                    for (int z = 0; z < v.resZ - 1; z++) {
                         int index = v.cellIndex(x, y, z);
-                        double position[3] = {v.origin[0] + (x+offset)*v.scaling[0],
-                                              v.origin[1] + (y+offset)*v.scaling[1],
-                                              v.origin[2] + (z+offset)*v.scaling[2]};
+                        double position[3] = {v.origin[0] + (x + offset) * v.scaling[0],
+                            v.origin[1] + (y + offset) * v.scaling[1], v.origin[2] + (z + offset) * v.scaling[2]};
                         trisoup::trisoupVolumetricDataCall::VoxelType voxel = v.volumeData[index];
 #ifndef COLOR_BY_VOLID
                         if (voxel != 0) {
@@ -510,8 +540,8 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
                         } else
                             ::glColor4f(1, 1, 1, 1);
 #endif // !COLOR_BY_VOLID
-                       ::glVertex3dv(position);
-                     }
+                        ::glVertex3dv(position);
+                    }
                 }
             }
         }
@@ -525,7 +555,7 @@ bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ::glFrontFace(twr);
     ::glDisableClientState(GL_VERTEX_ARRAY);
 
-	::glMatrixMode(GL_PROJECTION);
+    ::glMatrixMode(GL_PROJECTION);
     ::glPopMatrix();
     ::glMatrixMode(GL_MODELVIEW);
     ::glPopMatrix();

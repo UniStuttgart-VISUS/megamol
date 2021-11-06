@@ -160,7 +160,7 @@ namespace protein_gl {
         DeferredRenderingProvider deferredProvider_;
     };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */

@@ -11,8 +11,6 @@
 
 #include <math.h>
 #include <time.h>
-#include "protein/CallColor.h"
-#include "protein/Color.h"
 #include "MoleculeCartoonRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -22,21 +20,23 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein/CallColor.h"
+#include "protein/Color.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/sys/File.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -85,7 +85,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->MakeSlotAvailable(&this->molRendererCallerSlot);
 
 
-
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
@@ -131,7 +130,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     // --- set the render mode ---
     // SetRenderMode(CARTOON);
     // SetRenderMode(CARTOON_SIMPLE);
-    //SetRenderMode(CartoonRenderMode::CARTOON_LINE);
+    // SetRenderMode(CartoonRenderMode::CARTOON_LINE);
     SetRenderMode(CartoonRenderMode::CARTOON_GPU);
     param::EnumParam* rm = new param::EnumParam(int(this->currentRenderMode));
     rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON), "Cartoon Hybrid");
