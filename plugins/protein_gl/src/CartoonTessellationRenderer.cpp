@@ -148,18 +148,18 @@ bool CartoonTessellationRenderer::create(void) {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
         cartoonShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
-            std::filesystem::path("cartoontessellation/ctess_common.vert.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_cartoon.tesc.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_cartoon.tese.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_cartoon.geom.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_cartoon.frag.glsl"));
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_common.vert.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_cartoon.tesc.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_cartoon.tese.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_cartoon.geom.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_cartoon.frag.glsl"));
 
         lineShader_ = core::utility::make_shared_glowl_shader("line", shdr_options,
-            std::filesystem::path("cartoontessellation/ctess_common.vert.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_splineline.tesc.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_splineline.tese.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_splineline.geom.glsl"),
-            std::filesystem::path("cartoontessellation/ctess_splineline.frag.glsl"));
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_common.vert.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_splineline.tesc.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_splineline.tese.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_splineline.geom.glsl"),
+            std::filesystem::path("protein_gl/cartoontessellation/ctess_splineline.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(

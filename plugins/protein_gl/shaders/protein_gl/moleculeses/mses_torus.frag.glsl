@@ -1,8 +1,8 @@
 #version 430
 
-#include "simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
 #include "lightdirectional.glsl"
-#include "moleculeses/mses_rootsolver.glsl"
+#include "protein_gl/moleculeses/mses_rootsolver.glsl"
 
 uniform vec4 viewAttr;
 uniform vec3 zValues;

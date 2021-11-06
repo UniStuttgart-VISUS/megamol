@@ -319,16 +319,16 @@ bool MoleculeSESRenderer::create(void) {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
-            std::filesystem::path("moleculeses/mses_sphere.vert.glsl"),
-            std::filesystem::path("moleculeses/mses_sphere.frag.glsl"));
+            std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_sphere.frag.glsl"));
 
         torusShader_ = core::utility::make_shared_glowl_shader("torus", shdr_options,
-            std::filesystem::path("moleculeses/mses_torus.vert.glsl"),
-            std::filesystem::path("moleculeses/mses_torus.frag.glsl"));
+            std::filesystem::path("protein_gl/moleculeses/mses_torus.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_torus.frag.glsl"));
 
         sphericalTriangleShader_ = core::utility::make_shared_glowl_shader("sphericaltriangle", shdr_options,
-            std::filesystem::path("moleculeses/mses_spherical_triangle.vert.glsl"),
-            std::filesystem::path("moleculeses/mses_spherical_triangle.frag.glsl"));
+            std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());

@@ -1,8 +1,8 @@
 #version 430
 
-#include "simplemolecule/sm_common_defines.glsl"
-#include "simplemolecule/sm_common_input_frag.glsl"
-#include "deferred/gbuffer_output.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_input_frag.glsl"
+#include "protein_gl/deferred/gbuffer_output.glsl"
 
 in vec3 move_pos;
 

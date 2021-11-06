@@ -122,7 +122,8 @@ bool ModernTrisoupRenderer::create(void) {
     try {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         meshShader_ = core::utility::make_shared_glowl_shader("mesh", shdr_options,
-            std::filesystem::path("trisoup.vert.glsl"), std::filesystem::path("trisoup.frag.glsl"));
+            std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
+            std::filesystem::path("trisoup_gl/trisoup.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[ModernTrisoupRenderer] %s", ex.what());

@@ -1,35 +1,10 @@
 #version 430
 
-#include "simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_input_vert.glsl"
 
-uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec3 zValues;
-uniform vec3 fogCol;
-
-uniform vec3 camIn;
-uniform vec3 camUp;
-uniform vec3 camRight;
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
-
-out vec4 objPos;
-out vec4 camPos;
-out vec4 lightPos;
 out float squarRad;
 out float rad;
-out vec3 move_color;
-
-#ifdef RETICLE
-out vec2 centerFragment;
-#endif // RETICLE
-
-layout (location = 0) in vec4 vert_position;
-layout (location = 1) in vec3 vert_color;
 
 void main(void) {
 
@@ -38,23 +13,16 @@ void main(void) {
     rad = inPos.w;
     squarRad = rad * rad;
     inPos.w = 1.0;
-
+    
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = viewInverse[3]; // (C) by Christoph
+    camPos = MVinv[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0, 0, 0, 1); // Dummy value
-
+    
     // send color to fragment shader
-    move_color = vert_color;
+    move_color = vec4(vert_color, 1);
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -67,7 +35,7 @@ void main(void) {
     vec2 mins, maxs;
     vec3 testPos;
     vec4 projPos;
-
+    
     // projected camera vector
     vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
 
@@ -76,7 +44,7 @@ void main(void) {
 
     vec3 cpj2 = camIn * c2.z + camUp * c2.y;
     vec3 cpm2 = camIn * c2.y - camUp * c2.z;
-
+    
     d.x = length(cpj1);
     d.y = length(cpj2);
 
@@ -86,7 +54,7 @@ void main(void) {
     q = d - p;
     h = sqrt(p * q);
     //h = vec2(0.0);
-
+    
     p *= dd;
     h *= dd;
 
@@ -97,25 +65,25 @@ void main(void) {
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = mvp * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = mvp * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = mvp * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = mvp * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -126,5 +94,9 @@ void main(void) {
     // for normal crowbaring on very small sprites
     lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 
-    // gl_PointSize = 32.0;
+    if(applyFiltering) {
+        if(vert_filter == 0) {
+            gl_PointSize = 0;
+        }
+    }
 }

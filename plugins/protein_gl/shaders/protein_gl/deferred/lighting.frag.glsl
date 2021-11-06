@@ -33,8 +33,8 @@ uniform bool no_lighting = false;
 
 in vec2 uv_coord;
 
-#include "deferred/blinn_phong.glsl"
-#include "deferred/lambert.glsl"
+#include "protein_gl/deferred/blinn_phong.glsl"
+#include "protein_gl/deferred/lambert.glsl"
 
 vec3 depthToWorldPos(float depth, vec2 uv, mat4 invview, mat4 invproj) {
     float z = depth * 2.0 - 1.0;

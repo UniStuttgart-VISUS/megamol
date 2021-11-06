@@ -1,7 +1,7 @@
 #version 430
 
-#include "simplemolecule/sm_common_defines.glsl"
-#include "simplemolecule/sm_common_input_vert.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_input_vert.glsl"
 
 out vec3 move_pos;
 

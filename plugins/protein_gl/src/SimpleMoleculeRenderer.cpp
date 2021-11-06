@@ -229,16 +229,16 @@ bool SimpleMoleculeRenderer::create(void) {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
-            std::filesystem::path("simplemolecule/sm_sphere.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_sphere.frag.glsl"));
+            std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
+            std::filesystem::path("protein_gl/simplemolecule/sm_sphere.frag.glsl"));
 
         cylinderShader_ = core::utility::make_shared_glowl_shader("cylinder", shdr_options,
-            std::filesystem::path("simplemolecule/sm_cylinder.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
+            std::filesystem::path("protein_gl/simplemolecule/sm_cylinder.vert.glsl"),
+            std::filesystem::path("protein_gl/simplemolecule/sm_cylinder.frag.glsl"));
 
         lineShader_ = core::utility::make_shared_glowl_shader("line", shdr_options,
-            std::filesystem::path("simplemolecule/sm_line.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_line.frag.glsl"));
+            std::filesystem::path("protein_gl/simplemolecule/sm_line.vert.glsl"),
+            std::filesystem::path("protein_gl/simplemolecule/sm_line.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(

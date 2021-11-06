@@ -59,7 +59,8 @@ void DeferredRenderingProvider::setup(core::CoreInstance* coreIntstance) {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(coreIntstance->GetShaderPaths());
 
         lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
-            std::filesystem::path("deferred/lighting.vert.glsl"), std::filesystem::path("deferred/lighting.frag.glsl"));
+            std::filesystem::path("protein_gl/deferred/lighting.vert.glsl"),
+            std::filesystem::path("protein_gl/deferred/lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(

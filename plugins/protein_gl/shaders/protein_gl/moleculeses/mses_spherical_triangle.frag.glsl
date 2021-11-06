@@ -2,7 +2,7 @@
 #extension GL_EXT_gpu_shader4 : enable
 
 
-#include "simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
 #include "lightdirectional.glsl"
 
 uniform vec4 viewAttr;

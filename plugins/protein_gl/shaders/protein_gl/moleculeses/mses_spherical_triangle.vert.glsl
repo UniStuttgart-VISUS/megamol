@@ -1,6 +1,6 @@
 #version 430
 
-#include "simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/simplemolecule/sm_common_defines.glsl"
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 uniform vec3 zValues;
