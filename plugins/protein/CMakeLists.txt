@@ -6,12 +6,10 @@
 megamol_plugin(protein
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    mmstd_trisoup
+    trisoup
     protein_calls
     geometry_calls
-    compositing_gl
   DEPENDS_EXTERNALS
-    glad
     nanoflann)
 
 if (protein_PLUGIN_ENABLED)

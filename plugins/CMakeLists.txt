@@ -14,7 +14,7 @@
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs DEPENDS_CUDA)
+  set(optionArgs DEPENDS_CUDA DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -22,18 +22,36 @@ function(megamol_plugin PLUGIN_NAME)
   # Upper case plugin name
   string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
 
+  # Check feature requirements
+  set(REQUIREMENTS_AVAILABLE TRUE)
+
+  # Check Cuda
+  if (MMPLUGIN_ARGS_DEPENDS_CUDA)
+    if (NOT ENABLE_CUDA)
+      set(REQUIREMENTS_AVAILABLE FALSE)
+    else ()
+      enable_language(CUDA)
+    endif ()
+  endif ()
+
+  # Check GL
+  if (MMPLUGIN_ARGS_DEPENDS_GL)
+    if (NOT ENABLE_GL)
+      set(REQUIREMENTS_AVAILABLE FALSE)
+    endif ()
+  endif ()
+
   # Enable plugin build option
   option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
 
-  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+  # Show plugin option only to user if all requirements are available
+  if (REQUIREMENTS_AVAILABLE)
+    mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+  else ()
+    mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+  endif ()
 
-    # Check Cuda
-    if (MMPLUGIN_ARGS_DEPENDS_CUDA)
-      if (NOT ENABLE_CUDA)
-        message(FATAL_ERROR "The ${PLUGIN_NAME} plugin requires CUDA. Please enable it setting the option ENABLE_CUDA.")
-      endif ()
-      enable_language(CUDA)
-    endif ()
+  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER} AND REQUIREMENTS_AVAILABLE)
 
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
@@ -78,10 +96,17 @@ function(megamol_plugin PLUGIN_NAME)
     endforeach ()
 
     # Link
-    target_link_libraries(${PLUGIN_NAME}
-      PRIVATE core
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    if (ENABLE_GL)
+      target_link_libraries(${PLUGIN_NAME}
+        PRIVATE core_gl
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    else()
+      target_link_libraries(${PLUGIN_NAME}
+        PRIVATE core
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    endif()
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")

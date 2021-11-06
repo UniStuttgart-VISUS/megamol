@@ -139,7 +139,7 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             if ((placement.fullScreen || placement.noDec) && (!utility::HotFixes::Instance().IsHotFixed("DontHideCursor"))) {
                 ::glfwSetInputMode(hWnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
-            vislib::graphics::gl::LoadAllGL();
+            vislib_gl::graphics::gl::LoadAllGL();
             ::glfwSetKeyCallback(hWnd, &Window::glfw_onKey_func);
             ::glfwSetMouseButtonCallback(hWnd, &Window::glfw_onMouseButton_func);
             ::glfwSetCursorPosCallback(hWnd, &Window::glfw_onMouseMove_func);

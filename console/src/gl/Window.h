@@ -12,7 +12,7 @@
 #include "CoreHandle.h"
 #include <memory>
 #include <vector>
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "GLFW/glfw3.h"
 #include "gl/glfwInst.h"
 #include "utility/ConfigHelper.h"

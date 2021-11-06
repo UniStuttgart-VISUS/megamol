@@ -22,6 +22,7 @@
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -581,6 +582,7 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
+
     }
 }
 
@@ -597,9 +599,9 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
     vislib::math::Vector<float, 3> color;
     float r, g, b;
 
-    vislib::TString minGradColor = this->minGradColorParam.Param<param::StringParam>()->Value();
-    vislib::TString midGradColor = this->midGradColorParam.Param<param::StringParam>()->Value();
-    vislib::TString maxGradColor = this->maxGradColorParam.Param<param::StringParam>()->Value();
+    auto minGradColor = this->minGradColorParam.Param<param::StringParam>()->Value();
+    auto midGradColor = this->midGradColorParam.Param<param::StringParam>()->Value();
+    auto maxGradColor = this->maxGradColorParam.Param<param::StringParam>()->Value();
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {
@@ -702,13 +704,13 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
         else if (currentColoringMode == BFACTOR) {
             float r, g, b;
             // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
+            utility::ColourParser::FromString(minGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMin(r, g, b);
             // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
+            utility::ColourParser::FromString(midGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMid(r, g, b);
             // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
+            utility::ColourParser::FromString(maxGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
@@ -752,13 +754,13 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
         else if (currentColoringMode == CHARGE) {
             float r, g, b;
             // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
+            utility::ColourParser::FromString(minGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMin(r, g, b);
             // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
+            utility::ColourParser::FromString(midGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMid(r, g, b);
             // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
+            utility::ColourParser::FromString(maxGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
@@ -802,13 +804,13 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
         else if (currentColoringMode == OCCUPANCY) {
             float r, g, b;
             // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
+            utility::ColourParser::FromString(minGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMin(r, g, b);
             // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
+            utility::ColourParser::FromString(midGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMid(r, g, b);
             // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
+            utility::ColourParser::FromString(maxGradColor.c_str(), r, g, b);
             vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
@@ -1126,6 +1128,7 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
     }
 
 
+
     // compute distances
     for (unsigned int i = 0; i < cAlphas1.size(); i++) {
         float xDist = pos1[3 * i + 0] - pos2[3 * i + 0];
@@ -1185,14 +1188,14 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
 
     // get colors
     float r, g, b;
-    utility::ColourParser::FromString(this->minGradColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->minGradColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> colMin(r, g, b);
-    utility::ColourParser::FromString(this->midGradColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->midGradColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> colMid(r, g, b);
-    utility::ColourParser::FromString(this->maxGradColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> colMax(r, g, b);
 
-    utility::ColourParser::FromString(this->colorParam.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->colorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> col(r, g, b);
 
     if (diff > 0.0000001f) {

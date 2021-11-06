@@ -91,7 +91,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+        std::string Definition() const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -102,14 +102,14 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool ParseValue(const vislib::TString& v);
+        bool ParseValue(std::string const& v) override;
 
         /**
          * Returns the value of the parameter as string.
          *
          * @return The value of the parameter as string.
          */
-        virtual vislib::TString ValueString(void) const;
+        std::string ValueString(void) const override;
 
         inline core::view::KeyCode GetKeyCode(void) const {
             return this->keycode;

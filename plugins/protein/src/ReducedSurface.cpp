@@ -6,7 +6,7 @@
 
 
 #include "stdafx.h"
-#include "ReducedSurface.h"
+#include "protein/ReducedSurface.h"
 #include <ctime>
 #include <iostream>
 #include <math.h>

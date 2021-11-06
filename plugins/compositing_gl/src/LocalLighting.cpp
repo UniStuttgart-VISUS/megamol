@@ -11,9 +11,9 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/DistantLight.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 #include <glm/ext.hpp>
 
@@ -99,8 +99,8 @@ bool megamol::compositing::LocalLighting::create() {
         m_lambert_prgm = std::make_unique<GLSLComputeShader>();
         m_phong_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_lambert_src;
-        vislib::graphics::gl::ShaderSource compute_phong_src;
+        vislib_gl::graphics::gl::ShaderSource compute_lambert_src;
+        vislib_gl::graphics::gl::ShaderSource compute_phong_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::lambert", compute_lambert_src))
             return false;
@@ -113,9 +113,9 @@ bool megamol::compositing::LocalLighting::create() {
         if (!m_phong_prgm->Link()) return false;
 
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {

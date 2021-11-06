@@ -5,7 +5,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls//MultiParticleDataCall.h"
 
 #include "mesh/MeshCalls.h"
 
@@ -52,7 +52,7 @@ protected:
 private:
     bool init();
 
-    bool assertData(mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles, unsigned int frameID);
+    bool assertData(mesh::CallMesh& mesh, geocalls::MultiParticleDataCall& particles, unsigned int frameID);
 
     bool get_data_cb(core::Call& c);
 

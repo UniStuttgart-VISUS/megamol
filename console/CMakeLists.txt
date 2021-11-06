@@ -3,7 +3,7 @@
 # Copyright 2017, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_CONSOLE "Build console" ON)
+option(BUILD_CONSOLE "Build console" OFF)
 
 if(BUILD_CONSOLE)
   project(${CONSOLE_NAME})
@@ -23,7 +23,7 @@ if(BUILD_CONSOLE)
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core_gl)
 
   if(WIN32)
     set(VERSION_LIBRARY "Version.lib")
@@ -46,7 +46,6 @@ if(BUILD_CONSOLE)
   endif ()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-
   if(UNIX)
     include(GNUInstallDirs)
     set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir

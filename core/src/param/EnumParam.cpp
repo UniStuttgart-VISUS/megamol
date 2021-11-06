@@ -47,7 +47,7 @@ void megamol::core::param::EnumParam::ClearTypePairs(void) {
 /*
  * EnumParam::Definition
  */
-void EnumParam::Definition(vislib::RawStorage& outDef) const {
+std::string EnumParam::Definition() const {
     vislib::StringA utf8;
     unsigned int s = 6;
     unsigned int c = 0;
@@ -60,6 +60,7 @@ void EnumParam::Definition(vislib::RawStorage& outDef) const {
     }
     s += sizeof(unsigned int);
 
+    vislib::RawStorage outDef;
     outDef.AssertSize(s);
     memcpy(outDef.AsAt<char>(0), "MMENUM", 6);
     s = 6 + sizeof(unsigned int);
@@ -79,17 +80,22 @@ void EnumParam::Definition(vislib::RawStorage& outDef) const {
         c++;
     }
     *outDef.AsAt<unsigned int>(6) = c;
+
+    std::string return_str;
+    return_str.resize(outDef.GetSize());
+    std::copy(outDef.AsAt<char>(0), outDef.AsAt<char>(0) + outDef.GetSize(), return_str.begin());
+    return return_str;
 }
 
 
 /*
  * EnumParam::ParseValue
  */
-bool EnumParam::ParseValue(const vislib::TString& v) {
+bool EnumParam::ParseValue(std::string const& v) {
     try {
-        vislib::SingleLinkedList<int> keys = this->typepairs.FindKeys(v);
+        vislib::SingleLinkedList<int> keys = this->typepairs.FindKeys(v.c_str());
         if (keys.IsEmpty()) {
-            this->SetValue(vislib::TCharTraits::ParseInt(v));
+            this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
         } else {
             this->SetValue(keys.First());
         }
@@ -143,10 +149,10 @@ void EnumParam::SetValue(int v, bool setDirty) {
 /*
  * EnumParam::ValueString
  */
-vislib::TString EnumParam::ValueString(void) const {
+std::string EnumParam::ValueString(void) const {
     const vislib::TString *v = this->typepairs.FindValue(this->val);
-    if (v != NULL) return *v;
+    if (v != NULL) return (*v).PeekBuffer();
     vislib::TString str;
     str.Format(_T("%d"), this->val);
-    return str;
+    return str.PeekBuffer();
 }

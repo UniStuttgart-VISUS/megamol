@@ -19,7 +19,7 @@
 #include "vislib/math/Cuboid.h"
 #include "mmcore/utility/sys/RunnableThread.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "ForceDataCall.h"
+#include "protein/ForceDataCall.h"
 #include "Stride.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "MDDriverConnector.h"

@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CinematicUtils.h"
+#include "cinematic/CinematicUtils.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 

@@ -21,7 +21,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "astro/AstroDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace astro {

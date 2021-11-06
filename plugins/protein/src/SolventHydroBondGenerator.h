@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "GridNeighbourFinder.h"
+#include "protein/GridNeighbourFinder.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"

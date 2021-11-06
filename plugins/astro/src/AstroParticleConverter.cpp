@@ -14,7 +14,7 @@
 using namespace megamol;
 using namespace megamol::astro;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 
 /*
  * AstroParticleConverter::AstroParticleConverter

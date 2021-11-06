@@ -46,7 +46,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        virtual void Definition(vislib::RawStorage& outDef) const = 0;
+        virtual std::string Definition() const = 0;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -57,14 +57,14 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool ParseValue(const vislib::TString& v) = 0;
+        virtual bool ParseValue(std::string const& v) = 0;
 
         /**
          * Returns the value of the parameter as string.
          *
          * @return The value of the parameter as string.
          */
-        virtual vislib::TString ValueString(void) const = 0;
+        virtual std::string ValueString(void) const = 0;
 
         /**
          * Must be public for Button Press - Manuel Graeber
@@ -78,7 +78,7 @@ namespace param {
          *
          * @return The value of the hash.
          */
-        inline size_t GetHash(void) const {
+        inline uint64_t GetHash(void) const {
             return this->hash;
         }
 
@@ -87,7 +87,7 @@ namespace param {
          *
          * @param hash The value of the hash.
          */
-        inline void SetHash(const size_t &hash) {
+        inline void SetHash(const uint64_t &hash) {
             this->hash = hash;
         }
 
@@ -131,7 +131,7 @@ namespace param {
          * Hash indicating fundamental changes in parameter definition
          * (i.e. requires rebuilding the UI).
          */
-        size_t hash;
+        uint64_t hash;
 
         /**
          * Indicating that the value has changed.

@@ -8,7 +8,12 @@
 #include "stdafx.h"
 #include "MSMSGenus0Generator.h"
 #include <fstream>
-#include "Color.h"
+#include "protein/Color.h"
+
+
+
+
+
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -22,6 +27,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
+
 
 
 using namespace megamol;

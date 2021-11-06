@@ -275,8 +275,8 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         }});
 
     callbacks.add<VoidResult, int, int>(
-        "mmSetFramebufferSize",
-        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
+        "mmSetWindowFramebufferSize",
+        "(int width, int height)\n\tSet framebuffer dimensions of window to width x height.",
         {[&](int width, int height) -> VoidResult
         {
             if (width <= 0 || height <= 0) {
@@ -600,7 +600,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 return Error{"graph could not find parameter: " + paramName};
             }
 
-            return StringResult{param->ValueString().PeekBuffer()};
+            return StringResult{param->ValueString()};
         }});
 
     callbacks.add<VoidResult, std::string, std::string>(

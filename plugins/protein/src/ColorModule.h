@@ -11,12 +11,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CallColor.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein/CallColor.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "protein_calls/BindingSiteCall.h"
+
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
@@ -84,12 +86,16 @@ namespace protein {
         }
 
 
+
         /** Ctor. */
         ColorModule(void);
 
 
+
         /** Dtor. */
         virtual ~ColorModule(void);
+
+
 
 
         /**
@@ -219,6 +225,7 @@ namespace protein {
         virtual bool create(void);
 
 
+
         /**
          * Implementation of 'release'.
          */
@@ -268,6 +275,7 @@ namespace protein {
          * @return The comparison coloring mode.
          */
         ColorModule::ComparisonColoringMode getComparisonColoringModeByIndex(unsigned int idx);
+
 
 
         /**

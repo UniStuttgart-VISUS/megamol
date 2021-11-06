@@ -2,7 +2,7 @@
 #include "BindingSiteDataSource.h"
 
 #include <math.h>
-#include "Color.h"
+#include "protein/Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -12,6 +12,8 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
+
+
 
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -60,7 +62,7 @@ BindingSiteDataSource::~BindingSiteDataSource(void) {
  * BindingSiteDataSource::create
  */
 bool BindingSiteDataSource::create() {
-
+    
     return true;
 }
 
@@ -87,7 +89,7 @@ bool BindingSiteDataSource::getData(Call& call) {
         this->enzymeModeParam.ResetDirty();
         this->gxTypeFlag.ResetDirty();
     }
-
+    
     // try to load file, if necessary
     if (this->pdbFilenameSlot.IsDirty()) {
         this->pdbFilenameSlot.ResetDirty();
@@ -115,7 +117,7 @@ bool BindingSiteDataSource::getData(Call& call) {
  */
 void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
     using megamol::core::utility::log::Log;
-
+    
     // temp variables
     unsigned int i, j, lineCnt, bsIdx, /*resCnt,*/ cnt;
     vislib::StringA line, seqNumString, tmpBSName;
@@ -242,6 +244,7 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
     }
+
 }
 
 

@@ -6,12 +6,14 @@
  */
 #include "stdafx.h"
 #include "MolecularBezierData.h"
+
 #include <vector>
-#include "Color.h"
+#include "protein/Color.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/graphics/NamedColours.h"
@@ -45,9 +47,9 @@ MolecularBezierData::MolecularBezierData(void)
         , colorMixSlot("colorMix", "Mixing value for the two color modes") {
 
     this->outDataSlot.SetCallback(
-        core::misc::BezierCurvesListDataCall::ClassName(), "GetData", &MolecularBezierData::getDataCallback);
+        geocalls::BezierCurvesListDataCall::ClassName(), "GetData", &MolecularBezierData::getDataCallback);
     this->outDataSlot.SetCallback(
-        core::misc::BezierCurvesListDataCall::ClassName(), "GetExtent", &MolecularBezierData::getExtentCallback);
+        geocalls::BezierCurvesListDataCall::ClassName(), "GetExtent", &MolecularBezierData::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -114,7 +116,7 @@ void MolecularBezierData::release(void) {
  * MolecularBezierData::getDataCallback
  */
 bool MolecularBezierData::getDataCallback(core::Call& caller) {
-    core::misc::BezierCurvesListDataCall* bcldc = dynamic_cast<core::misc::BezierCurvesListDataCall*>(&caller);
+    geocalls::BezierCurvesListDataCall* bcldc = dynamic_cast<geocalls::BezierCurvesListDataCall*>(&caller);
     if (bcldc == nullptr)
         return false;
 
@@ -161,6 +163,7 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
                 this->data.Clear();
                 this->data.SetGlobalColour(127, 127, 127);
                 this->data.SetGlobalRadius(0.1f);
+
             }
         }
     }
@@ -178,9 +181,8 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
  * MolecularBezierData::getExtentCallback
  */
 bool MolecularBezierData::getExtentCallback(core::Call& caller) {
-    core::misc::BezierCurvesListDataCall* bcldc = dynamic_cast<core::misc::BezierCurvesListDataCall*>(&caller);
-    if (bcldc == nullptr)
-        return false;
+    geocalls::BezierCurvesListDataCall *bcldc = dynamic_cast<geocalls::BezierCurvesListDataCall *>(&caller);
+    if (bcldc == nullptr) return false;
 
     core::AbstractGetData3DCall* agd3dc = this->inDataSlot.CallAs<core::AbstractGetData3DCall>();
     if (agd3dc == nullptr)
@@ -405,6 +407,7 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
             idx.Write(static_cast<unsigned int>(cnt));
             cnt++;
         }
+
     }
 
     if (pt.Position() > 0) {
@@ -413,9 +416,8 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
         unsigned int* idx_dat = new unsigned int[idx.Position() / sizeof(unsigned int)];
         ::memcpy(idx_dat, idx_blob, idx.Position());
 
-        this->data.Set(core::misc::BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B, pt_dat, cnt, true, idx_dat,
-            idx.Position() / sizeof(unsigned int), true, 0.5f, 127, 127, 127);
+        this->data.Set(geocalls::BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B, pt_dat, cnt, true, idx_dat, idx.Position() / sizeof(unsigned int), true, 0.5f, 127, 127, 127);
     } else {
-        this->data.Set(core::misc::BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
+        this->data.Set(geocalls::BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
     }
 }
