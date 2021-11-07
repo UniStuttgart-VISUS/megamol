@@ -82,6 +82,7 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "FramebufferEvents"
         , "GUIState"
         , "RegisterLuaCallbacks"
+        , "OpenGL_Context"
     };
 
     m_framebuffer_size_handler = [&]() -> UintPair {

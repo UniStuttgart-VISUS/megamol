@@ -19,7 +19,7 @@ class MEGAMOLCORE_API ModuleGL : public core::Module {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back("IOpenGL_Context"); // request for this resource may be deleted any time - this is just an example. but GL modules should request the GL context resource.
+        resources.emplace_back("OpenGL_Context"); // GL modules should request the GL context resource
         return resources;
     }
 };
