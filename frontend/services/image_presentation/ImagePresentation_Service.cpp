@@ -13,7 +13,7 @@
 #include "Framebuffer_Events.h"
 #include "GUIState.h"
 
-#include "ImageWrapper_to_GLTexture.h"
+#include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
 #include "LuaCallbacksCollection.h"
