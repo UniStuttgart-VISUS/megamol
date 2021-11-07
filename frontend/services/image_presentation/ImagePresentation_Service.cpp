@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-// search/replace ImagePresentation_Service with your class name
-// you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
@@ -335,7 +333,6 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
 
     if (!success) {
         log_error("could not find a requested resource for an entry point");
-        return {};
     }
 
     return {success, resources, std::move(unique_data)};
