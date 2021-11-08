@@ -9,7 +9,7 @@
 
 #include "mmvtkm/mmvtkmDataSource.h"
 
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"

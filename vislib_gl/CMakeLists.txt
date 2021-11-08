@@ -1,6 +1,6 @@
 if(BUILD_VISLIB)
   project(vislib_gl)
-  
+
   require_external(glad)
 
   # Build vislib
@@ -17,10 +17,8 @@ if(BUILD_VISLIB)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
   if(UNIX)
-    set(CURSES_NEED_NCURSES True)
-    find_package(Curses REQUIRED)
     find_package(X11 REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES} ${CURSES_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES})
   endif()
 
   # Grouping in Visual Studio

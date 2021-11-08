@@ -11,7 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 
 namespace megamol {
 namespace adios {
