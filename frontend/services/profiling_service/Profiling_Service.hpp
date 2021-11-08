@@ -19,7 +19,7 @@ public:
     std::string serviceName() const override { return "Profiling_Service"; }
     bool init(void* configPtr) override;
     void close() override {}
-    void updateProvidedResources() override {}
+    void updateProvidedResources() override { _pman.startFrame(); }
     void digestChangedRequestedResources() override {}
 
     void resetProvidedResources() override {
@@ -28,14 +28,14 @@ public:
 
     void preGraphRender() override {}
     void postGraphRender() override {}
-    std::vector<FrontendResource>& getProvidedResources() override { return m_providedResourceReferences; }
-    const std::vector<std::string> getRequestedResourceNames() const override { return m_requestedResourcesNames; }
+    std::vector<FrontendResource>& getProvidedResources() override { return _providedResourceReferences; }
+    const std::vector<std::string> getRequestedResourceNames() const override { return _requestedResourcesNames; }
     void setRequestedResources(std::vector<FrontendResource> resources) override {}
 
-    std::vector<FrontendResource> m_providedResourceReferences;
-    std::vector<std::string> m_requestedResourcesNames;
+    std::vector<FrontendResource> _providedResourceReferences;
+    std::vector<std::string> _requestedResourcesNames;
 
-    frontend_resources::PerformanceManager m_pman;
+    frontend_resources::PerformanceManager _pman;
 };
 
 } // namespace frontend
