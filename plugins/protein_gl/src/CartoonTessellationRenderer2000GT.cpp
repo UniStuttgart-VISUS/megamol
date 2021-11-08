@@ -10,13 +10,13 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"
@@ -43,7 +43,7 @@ const GLuint SSBObindingPoint = 2;
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
 CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
-    : view::Renderer3DModuleGL()
+    : core_gl::view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
     , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , fences()
@@ -135,12 +135,12 @@ void CartoonTessellationRenderer2000GT::waitSignal(GLsync& syncObj) {
  * moldyn::SimpleSphereRenderer2000GT::create
  */
 bool CartoonTessellationRenderer2000GT::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
-    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    if (!vislib_gl::graphics::gl::GLSLTesselationShader::InitialiseExtensions()) return false;
 
-    // vislib::graphics::gl::ShaderSource vert, frag;
+    // vislib_gl::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
     tessCont = new ShaderSource();
     tessEval = new ShaderSource();
@@ -171,10 +171,10 @@ bool CartoonTessellationRenderer2000GT::create(void) {
         if (!this->splineShader.Link()) {
             throw vislib::Exception("Could not link spline shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -220,10 +220,10 @@ bool CartoonTessellationRenderer2000GT::create(void) {
         if (!this->tubeShader.Link()) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -315,8 +315,8 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3DGL& call) {
-    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
+bool CartoonTessellationRenderer2000GT::GetExtents(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -361,12 +361,12 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
+bool CartoonTessellationRenderer2000GT::Render(core_gl::view::CallRender3DGL& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;
@@ -411,10 +411,10 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
             if (!this->tubeShader.Link()) {
                 throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
             }
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile tessellation shader (@%s): %s\n",
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             return false;
         } catch (vislib::Exception e) {

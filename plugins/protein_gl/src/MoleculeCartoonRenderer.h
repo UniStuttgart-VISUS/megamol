@@ -17,14 +17,14 @@
 #include "protein/Color.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -39,7 +39,7 @@ namespace protein_gl {
      * - add RenderMode CARTOON_GPU
      */
 
-    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.
@@ -185,7 +185,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -193,7 +193,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
         /**
          * Render protein in hybrid CARTOON mode using the Geometry Shader.
@@ -306,26 +306,26 @@ namespace protein_gl {
         megamol::core::param::ParamSlot recomputeAlwaysParam;
 
         // shader for per pixel lighting (polygonal view)
-        vislib::graphics::gl::GLSLShader lightShader;
+        vislib_gl::graphics::gl::GLSLShader lightShader;
         // shader for tube generation (cartoon view)
-        vislib::graphics::gl::GLSLGeometryShader cartoonShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowShader;
-        vislib::graphics::gl::GLSLGeometryShader helixShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader helixSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader helixSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeORShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowORShader;
-        vislib::graphics::gl::GLSLGeometryShader helixORShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader cartoonShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeSplineShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowSplineShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixSplineShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeORShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowORShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixORShader;
 
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader cylinderShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLShader cylinderShaderOR;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShader;
+        vislib_gl::graphics::gl::GLSLShader sphereShaderOR;
+        vislib_gl::graphics::gl::GLSLShader cylinderShaderOR;
 
         // current render mode
         CartoonRenderMode currentRenderMode;

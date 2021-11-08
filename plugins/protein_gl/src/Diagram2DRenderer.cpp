@@ -15,8 +15,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 
@@ -28,7 +28,7 @@ using namespace megamol::protein_gl;
 /*
  * Diagram2DRenderer::Diagram2DRenderer (CTOR)
  */
-Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModuleGL (),
+Diagram2DRenderer::Diagram2DRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ), 
         resolutionParam( "resolution", "The plotting resolution of the diagram."),
         plotColorParam( "plotcolor", "The color used for plotting the diagram."),
@@ -78,7 +78,7 @@ void Diagram2DRenderer::release() {
     this->fbo[1].Release();
 }
 
-bool Diagram2DRenderer::GetExtents( view::CallRender2DGL& call) {
+bool Diagram2DRenderer::GetExtents( core_gl::view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, 0, 1.0f, 1.0f, 0);
 
@@ -98,7 +98,7 @@ bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * Diagram2DRenderer::Render
  */
-bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
+bool Diagram2DRenderer::Render( core_gl::view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
     protein::Diagram2DCall *diagram = this->dataCallerSlot.CallAs<protein::Diagram2DCall>();
     if( diagram == NULL ) return false;
@@ -159,7 +159,7 @@ bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     glEnable( GL_LINE_STIPPLE);
     glLineStipple( 2, 0x00FF);
     if( diagram->Marker() ) {
-        vislib::graphics::gl::SimpleFont f;
+        vislib_gl::graphics::gl::SimpleFont f;
         vislib::StringA tmpStr;
         if( f.Initialise() ) {
             tmpStr.Format( " %.2f", diagram->GetX());
@@ -252,7 +252,7 @@ bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     glEnd(); // GL_LINES
     glDisable( GL_LINE_STIPPLE);
     vislib::StringA ctStr;
-    vislib::graphics::gl::SimpleFont ctFont;
+    vislib_gl::graphics::gl::SimpleFont ctFont;
     if( ctFont.Initialise() ) {
         ctStr.Format( " %.2f", diagram->CallTime());
         s /= 2.0f;
@@ -302,17 +302,17 @@ void Diagram2DRenderer::generateDiagramTextures() {
     int res = this->resolutionParam.Param<param::IntParam>()->Value();
     // create both FBOs, if necessary
     if( this->resolutionParam.IsDirty() ) {
-        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         this->resolutionParam.ResetDirty();
         clearFbo = true;
     }
     if( !this->fbo[0].IsValid() ) {
-        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[0].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         clearFbo = true;
     }
     if( !this->fbo[1].IsValid() ) {
-        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->fbo[1].Create( res, res, GL_RGB, GL_RGB, GL_FLOAT, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         clearFbo = true;
     }
 

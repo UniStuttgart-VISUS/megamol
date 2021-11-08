@@ -17,9 +17,9 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
 #include <algorithm>
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
@@ -33,12 +33,12 @@ using namespace megamol::protein_gl;
 /*
  * VariantMatchRenderer::VariantMatchRenderer
  */
-VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModuleGL () ,
+VariantMatchRenderer::VariantMatchRenderer(void) : core_gl::view::Renderer2DModuleGL () ,
         dataCallerSlot("getData", "Connects the rendering with data storage" ),
         minColSlot("minCol", "..." ),
         maxColSlot("maxCol", "..." ),
         matrixTex(0),
-        thefont(vislib::graphics::gl::FontInfo_Verdana) {
+        thefont(vislib_gl::graphics::gl::FontInfo_Verdana) {
 
     // Data caller slot to get matching matrix
     this->dataCallerSlot.SetCompatibleCall<protein_calls::VariantMatchDataCallDescription>();
@@ -68,8 +68,8 @@ VariantMatchRenderer::~VariantMatchRenderer(void) {
  * VariantMatchRenderer::create
  */
 bool VariantMatchRenderer::create(void) {
-    vislib::graphics::gl::ShaderSource vertSrc;
-    vislib::graphics::gl::ShaderSource fragSrc;
+    vislib_gl::graphics::gl::ShaderSource vertSrc;
+    vislib_gl::graphics::gl::ShaderSource fragSrc;
 
     megamol::core::CoreInstance *ci = this->GetCoreInstance();
     if(!ci) {
@@ -79,7 +79,7 @@ bool VariantMatchRenderer::create(void) {
     if(!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
         return false;
     }
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if(!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -136,7 +136,7 @@ bool VariantMatchRenderer::create(void) {
 /*
  * VariantMatchRenderer::GetExtents
  */
-bool VariantMatchRenderer::GetExtents(megamol::core::view::CallRender2DGL& call) {
+bool VariantMatchRenderer::GetExtents(megamol::core_gl::view::CallRender2DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return true;
 }
@@ -158,7 +158,7 @@ void VariantMatchRenderer::release(void) {
 /*
  * VariantMatchRenderer::Render
  */
-bool VariantMatchRenderer::Render(megamol::core::view::CallRender2DGL& call) {
+bool VariantMatchRenderer::Render(megamol::core_gl::view::CallRender2DGL& call) {
 
     //float gridHalfStep;
 
@@ -268,7 +268,7 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2DGL& call) {
 
 
     glColor3f(0.0, 0.0, 0.0);
-//    vislib::graphics::gl::SimpleFont f;
+//    vislib_gl::graphics::gl::SimpleFont f;
     vislib::StringA str;
     this->fontSize = std::min(2.0f/static_cast<float>(vmc->GetVariantCnt()), 0.1f);
     float lineHeight = this->thefont.LineHeight(2.0f/static_cast<float>(vmc->GetVariantCnt()));

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/param/ParamSlot.h"
 #include "thermodyn/BoxDataCall.h"
@@ -12,7 +12,7 @@ namespace megamol {
 namespace thermodyn_gl {
 namespace rendering {
 
-class BoxRenderer : public core::view::Renderer3DModuleGL {
+class BoxRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -42,7 +42,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif     // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
     }
 
     /** Ctor. */
@@ -71,9 +71,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(megamol::core::view::CallRender3DGL& call) override;
+    bool Render(megamol::core_gl::view::CallRender3DGL& call) override;
 
-    bool GetExtents(core::view::CallRender3DGL& call) override;
+    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
 
 private:
     std::pair<std::vector<float>, std::vector<float>> drawData;
@@ -216,7 +216,7 @@ private:
 
     unsigned int frameID_ = 0;
 
-    vislib::graphics::gl::GLSLShader boxShader_;
+    vislib_gl::graphics::gl::GLSLShader boxShader_;
 
     GLuint vao_, vvbo_, cvbo_;
 

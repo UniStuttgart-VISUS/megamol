@@ -16,17 +16,17 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 
 namespace megamol {
 namespace protein_gl {
 
 
-class VariantMatchRenderer : public megamol::core::view::Renderer2DModuleGL {
+class VariantMatchRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
 
 public:
 
@@ -81,7 +81,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -94,7 +94,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::view::CallRender2DGL& call);
+    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
 
     /**
      * Update all parameter slots
@@ -125,16 +125,16 @@ private:
     float maxCol;
 
     /// The texturing shader
-    vislib::graphics::gl::GLSLShader matrixTexShader;
+    vislib_gl::graphics::gl::GLSLShader matrixTexShader;
 
     /// The texturing shader
-    vislib::graphics::gl::GLSLShader colorMapShader;
+    vislib_gl::graphics::gl::GLSLShader colorMapShader;
 
     /// The matix texture handle
     GLuint matrixTex;
 
     /// The outline font
-    vislib::graphics::gl::OutlineFont thefont;
+    vislib_gl::graphics::gl::OutlineFont thefont;
 
     float fontSize;
 

@@ -8,9 +8,9 @@
 #ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
 #define GPU_MATERIAL_COLLECTION_H_INCLUDED
 
-//#include "vislib/graphics/gl/GLSLShader.h"
+//#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 
 #include <memory>
 #include <unordered_map>

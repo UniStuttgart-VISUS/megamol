@@ -32,7 +32,7 @@ using namespace megamol::core::utility::log;
 /*
  * SecPlaneRenderer::SecPlaneRenderer
  */
-SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModuleGL(),
+SecPlaneRenderer::SecPlaneRenderer(void) : core_gl::view::Renderer3DModuleGL(),
     textureSlot("getData", "Connects the slice rendering with data storage" ),
     shadingSlot("shading", "Determines the shading mode"),
     shadingMinTexSlot("min", "The minimum texture value (used for shading)"),
@@ -141,14 +141,14 @@ SecPlaneRenderer::~SecPlaneRenderer(void) {
  * SecPlaneRenderer::create
  */
 bool SecPlaneRenderer::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
     if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
         return false;
     }
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -193,7 +193,7 @@ bool SecPlaneRenderer::create(void) {
 /*
  * SecPlaneRenderer::GetExtents
  */
-bool SecPlaneRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool SecPlaneRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {
         return false;
@@ -278,7 +278,7 @@ void SecPlaneRenderer::release(void) {
 /*
  * SecPlaneRenderer::Render
  */
-bool SecPlaneRenderer::Render(core::view::CallRender3DGL& call) {
+bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // Get render call
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {

@@ -6,8 +6,7 @@
 megamol_plugin(mmvtkm
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    mesh
-    mesh_gl
+    PUBLIC mesh
     mmadios
   DEPENDS_EXTERNALS
     vtkm)
@@ -24,5 +23,5 @@ if (mmvtkm_PLUGIN_ENABLED)
     "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
 
-  target_link_libraries(mmvtkm PRIVATE vtkm_renderer vtkm_worklet)
+  target_link_libraries(mmvtkm PRIVATE vtkm_worklet)
 endif ()

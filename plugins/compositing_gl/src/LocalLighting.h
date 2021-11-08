@@ -10,11 +10,11 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
@@ -76,7 +76,7 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     uint32_t m_version;
 

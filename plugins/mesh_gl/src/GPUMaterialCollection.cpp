@@ -9,7 +9,7 @@
 #include "mesh_gl/GPUMaterialCollection.h"
 
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 
 namespace megamol {
@@ -18,11 +18,11 @@ namespace mesh_gl {
     void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
         std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
 
-        vislib::graphics::gl::ShaderSource vert_shader_src;
-        vislib::graphics::gl::ShaderSource frag_shader_src;
-        vislib::graphics::gl::ShaderSource geom_shader_src;
-        vislib::graphics::gl::ShaderSource tessCtrl_shader_src;
-        vislib::graphics::gl::ShaderSource tessEval_shader_src;
+        vislib_gl::graphics::gl::ShaderSource vert_shader_src;
+        vislib_gl::graphics::gl::ShaderSource frag_shader_src;
+        vislib_gl::graphics::gl::ShaderSource geom_shader_src;
+        vislib_gl::graphics::gl::ShaderSource tessCtrl_shader_src;
+        vislib_gl::graphics::gl::ShaderSource tessEval_shader_src;
         // TODO get rid of vislib StringA...
         vislib::StringA shader_base_name(shader_btf_name.c_str());
 

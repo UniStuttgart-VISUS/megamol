@@ -12,7 +12,7 @@ BaseAmortizedRenderer2D::BaseAmortizedRenderer2D()
         : Renderer2D()
         , nextRendererSlot("nextRenderer", "connects to following Renderers, that will render in reduced resolution.")
         , enabledParam("Enabled", "Turn on switch") {
-    this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
+    this->nextRendererSlot.SetCompatibleCall<megamol::core_gl::view::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
     this->enabledParam << new core::param::BoolParam(false);
@@ -35,13 +35,13 @@ void BaseAmortizedRenderer2D::release() {
     releaseImpl();
 }
 
-bool BaseAmortizedRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
-    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
+bool BaseAmortizedRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+    core_gl::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core_gl::view::CallRender2DGL>();
     if (cr2d == nullptr) {
         return false;
     }
 
-    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents)) {
+    if (!(*cr2d)(core_gl::view::CallRender2DGL::FnGetExtents)) {
         return false;
     }
 
@@ -53,8 +53,8 @@ bool BaseAmortizedRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool BaseAmortizedRenderer2D::Render(core::view::CallRender2DGL& call) {
-    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
+bool BaseAmortizedRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+    core_gl::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core_gl::view::CallRender2DGL>();
 
     if (cr2d == nullptr) {
         // Nothing to do really
@@ -83,7 +83,7 @@ bool BaseAmortizedRenderer2D::Render(core::view::CallRender2DGL& call) {
 
 bool BaseAmortizedRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core_gl::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::MouseButton;
@@ -91,52 +91,52 @@ bool BaseAmortizedRenderer2D::OnMouseButton(
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton);
+        return (*cr)(megamol::core_gl::view::CallRender2DGL::FnOnMouseButton);
     }
     return false;
 }
 
 bool BaseAmortizedRenderer2D::OnMouseMove(double x, double y) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core_gl::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove);
+        return (*cr)(megamol::core_gl::view::CallRender2DGL::FnOnMouseMove);
     }
     return false;
 }
 
 bool BaseAmortizedRenderer2D::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core_gl::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll);
+        return (*cr)(megamol::core_gl::view::CallRender2DGL::FnOnMouseScroll);
     }
     return false;
 }
 
 bool BaseAmortizedRenderer2D::OnChar(unsigned int codePoint) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core_gl::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
         cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
+        return (*cr)(megamol::core_gl::view::CallRender2DGL::FnOnChar);
     }
     return false;
 }
 
 bool BaseAmortizedRenderer2D::OnKey(
     megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core_gl::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::Key;
@@ -144,7 +144,7 @@ bool BaseAmortizedRenderer2D::OnKey(
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
+        return (*cr)(megamol::core_gl::view::CallRender2DGL::FnOnKey);
     }
     return false;
 }

@@ -14,7 +14,7 @@
 
 #include "UnstructuredGridRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "vislib/assert.h"
@@ -22,9 +22,9 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 
@@ -37,7 +37,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::UnstructuredGridRenderer::UnstructuredGridRenderer (CTOR)
  */
-protein_gl::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModuleGL(),
+protein_gl::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : core_gl::view::Renderer3DModuleGL(),
     dataCallerSlot( "getData", "Connects the rendering with the data storage"),
     sphereRadSlot("sphereRad", "The sphere radius scale factor") {
 
@@ -73,7 +73,7 @@ bool protein_gl::UnstructuredGridRenderer::create(void)
     if (isExtAvailable("GL_ARB_vertex_program") == 0) {
         return false;
     }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
@@ -83,7 +83,7 @@ bool protein_gl::UnstructuredGridRenderer::create(void)
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -131,7 +131,7 @@ bool protein_gl::UnstructuredGridRenderer::create(void)
 /*
  * protein::UnstructuredGridRenderer::GetExtents
  */
-bool protein_gl::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool protein_gl::UnstructuredGridRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) {
@@ -156,7 +156,7 @@ bool protein_gl::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL
 /*
  * protein::UnstructuredGridRenderer::Render
  */
-bool protein_gl::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call) {
+bool protein_gl::UnstructuredGridRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;

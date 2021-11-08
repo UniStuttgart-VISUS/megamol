@@ -13,16 +13,16 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein/VolumeSliceCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_gl {
 	/**
 	 * Protein Renderer class
 	 */
-    class VolumeSliceRenderer : public megamol::core::view::Renderer2DModuleGL {
+    class VolumeSliceRenderer : public core_gl::view::Renderer2DModuleGL {
     public:
 		/**
 		 * Answer the name of this module.
@@ -95,7 +95,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::view::CallRender2DGL& call);
+        virtual bool GetExtents( megamol::core_gl::view::CallRender2DGL& call);
 
 		/**
 		* The Open GL Render callback.
@@ -103,7 +103,7 @@ namespace protein_gl {
 		* @param call The calling call.
 		* @return The return value of the function.
 		*/
-        virtual bool Render( megamol::core::view::CallRender2DGL& call);
+        virtual bool Render( megamol::core_gl::view::CallRender2DGL& call);
 
 		/**********************************************************************
 		 * variables
@@ -113,7 +113,7 @@ namespace protein_gl {
 		core::CallerSlot volDataCallerSlot;
 
         // shader for volume slice rendering
-        vislib::graphics::gl::GLSLShader volumeSliceShader;
+        vislib_gl::graphics::gl::GLSLShader volumeSliceShader;
 
         // the mouse position
         vislib::math::Vector<float, 3> mousePos;

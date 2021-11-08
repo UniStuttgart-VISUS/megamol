@@ -17,7 +17,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 
 namespace megamol {

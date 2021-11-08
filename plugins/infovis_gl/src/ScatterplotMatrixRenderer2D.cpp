@@ -11,11 +11,12 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib/math/ShallowMatrix.h"
 
 #include <sstream>
 #include "delaunator.hpp"
+#include "mmcore_gl/UniFlagCallsGL.h"
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
@@ -125,13 +126,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
-    this->transferFunctionInSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->transferFunctionInSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->transferFunctionInSlot);
 
-    this->readFlagStorageSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->readFlagStorageSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->readFlagStorageSlot);
 
-    this->writeFlagStorageSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->writeFlagStorageSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->writeFlagStorageSlot);
 
 
@@ -374,7 +375,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
+bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     try {
 
         // get camera
@@ -440,7 +441,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
+bool ScatterplotMatrixRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     this->validate(call, true);
     call.AccessBoundingBoxes() = this->bounds;
     return true;
@@ -474,10 +475,10 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, bool ignoreMVP) {
+bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
-    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0))
         return false;
 
@@ -494,10 +495,10 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, boo
     if (this->floatTable->GetColumnsCount() == 0)
         return false;
 
-    this->readFlags = this->readFlagStorageSlot.CallAs<core::FlagCallRead_GL>();
+    this->readFlags = this->readFlagStorageSlot.CallAs<core_gl::FlagCallRead_GL>();
     if (this->readFlags == nullptr)
         return false;
-    (*this->readFlags)(core::FlagCallRead_GL::CallGetData);
+    (*this->readFlags)(core_gl::FlagCallRead_GL::CallGetData);
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -1377,10 +1378,10 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
 
     this->flagsBufferVersion++;
 
-    auto writeFlags = writeFlagStorageSlot.CallAs<core::FlagCallWrite_GL>();
+    auto writeFlags = writeFlagStorageSlot.CallAs<core_gl::FlagCallWrite_GL>();
     if (this->readFlags != nullptr && writeFlags != nullptr) {
         writeFlags->setData(this->readFlags->getData(), this->flagsBufferVersion);
-        (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
+        (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
     }
     this->debugPop();
     this->screenValid = false;

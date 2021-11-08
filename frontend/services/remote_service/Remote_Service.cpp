@@ -686,7 +686,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 // #include "mmcore/cluster/mpi/MpiCall.h"
 // #include "vislib/RawStorageSerialiser.h"
 // 
-// //  _fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+// //  _fbo = std::make_shared<vislib_gl::graphics::gl::FramebufferObject>();
 // 
 // 
 // void megamol::remote::Remote_Service::MpiNode::Render(const mmcRenderViewContext& context, core::Call* call) {
@@ -762,7 +762,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //             (!this->_fbo->IsValid())) {
 //             this->_fbo->Release();
 //             if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA,
-//                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+//                     GL_UNSIGNED_BYTE, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
 //                     GL_DEPTH_COMPONENT)) {
 //                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
 //                 return;

@@ -18,22 +18,22 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/glverify.h"
+#include "vislib_gl/graphics/gl/glverify.h"
 #include "vislib/sys/File.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>
@@ -52,7 +52,7 @@ using namespace megamol::core::utility::log;
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
 protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
-        : Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
         , coloringModeParam("coloringMode", "Coloring Mode")
@@ -96,7 +96,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
     // set renderer caller slot
-    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
+    this->protRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
@@ -219,9 +219,9 @@ bool protein_gl::GLSLVolumeRenderer::create ( void ) {
         return false;
     if( !isExtAvailable( "GL_ARB_vertex_program" ) )
         return false;
-    if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
-    if( !vislib::graphics::gl::FramebufferObject::InitialiseExtensions() )
+    if( !vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions() )
         return false;
 
     glEnable( GL_DEPTH_TEST );
@@ -230,7 +230,7 @@ bool protein_gl::GLSLVolumeRenderer::create ( void ) {
     glEnable( GL_VERTEX_PROGRAM_TWO_SIDE );
     glEnable( GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -416,8 +416,8 @@ bool protein_gl::GLSLVolumeRenderer::create ( void ) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein_gl::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
-    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL *>(&call);
+bool protein_gl::GLSLVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL *cr3d = dynamic_cast<core_gl::view::CallRender3DGL *>(&call);
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
@@ -453,7 +453,7 @@ bool protein_gl::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
     bbox.SetBoundingBox(boundingBox);
 
     // get the pointer to CallRender3DGL (protein renderer)
-    view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
+    core_gl::view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
     vislib::math::Point<float, 3> protrenbbc;
     if( protrencr3d ) {
         (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents);
@@ -473,7 +473,7 @@ bool protein_gl::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
 /*
  * protein::GLSLVolumeRenderer::Render
  */
-bool protein_gl::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
+bool protein_gl::GLSLVolumeRenderer::Render( core_gl::view::CallRender3DGL& call ) {
 #if 0
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
@@ -579,10 +579,10 @@ bool protein_gl::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
     return true;
 #else
     // cast the call to Render3D
-    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL*>( &call );
+    core_gl::view::CallRender3DGL *cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>( &call );
     if( !cr3d ) return false;
     // get the pointer to CallRender3DGL (protein renderer)
-    view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
+    core_gl::view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
@@ -675,7 +675,7 @@ bool protein_gl::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
 /*
  * Volume rendering using molecular data.
  */
-bool protein_gl::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
+bool protein_gl::GLSLVolumeRenderer::RenderMolecularData( core_gl::view::CallRender3DGL *call, MolecularDataCall *mol) {
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
@@ -759,7 +759,7 @@ bool protein_gl::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *
 /*
  * refresh parameters
  */
-void protein_gl::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) {
+void protein_gl::GLSLVolumeRenderer::ParameterRefresh( core_gl::view::CallRender3DGL *call) {
     
     // parameter refresh
     if( this->coloringModeParam.IsDirty() ) {

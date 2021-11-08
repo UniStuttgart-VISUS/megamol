@@ -7,13 +7,14 @@
 #ifndef MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
 #define MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
 
+#include <glm/glm.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "mesh/MeshCalls.h"
-#include "mesh_gl/MeshCalls_gl.h"
 
 
 typedef vislib::math::Point<float, 3> visPoint3f;
