@@ -6,7 +6,7 @@
 megamol_plugin(probe
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    adios_plugin
+    mmadios
     mesh
   DEPENDS_EXTERNALS
     Eigen
