@@ -70,10 +70,8 @@ function(megamol_plugin PLUGIN_NAME)
     # Target definition
     add_library(${PLUGIN_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
     target_include_directories(${PLUGIN_NAME}
-      PUBLIC
-        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
-      PRIVATE
-        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
+      PUBLIC $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
+      PRIVATE $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
 
     # List of reserved words in plugins or externals dependencies lists.
     # This keywords are passed to target_link_libraries, but are ignored on other processing.
@@ -97,16 +95,13 @@ function(megamol_plugin PLUGIN_NAME)
 
     # Link
     if (ENABLE_GL)
-      target_link_libraries(${PLUGIN_NAME}
-        PRIVATE core_gl
-        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-    else()
-      target_link_libraries(${PLUGIN_NAME}
-        PRIVATE core
-        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-    endif()
+      target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
+    else ()
+      target_link_libraries(${PLUGIN_NAME} PRIVATE core)
+    endif ()
+    target_link_libraries(${PLUGIN_NAME}
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
