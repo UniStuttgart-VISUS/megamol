@@ -8,4 +8,5 @@ megamol_plugin(trisoup_gl
   DEPENDS_GL
   DEPENDS_PLUGINS
     trisoup
-    geometry_calls)
+    geometry_calls
+    compositing_gl)

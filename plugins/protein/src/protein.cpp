@@ -11,6 +11,8 @@
 #include "PDBWriter.h"
 #include "VTIWriter.h"
 
+
+
 // data sources
 #include "AggregatedDensity.h"
 #include "BindingSiteDataSource.h"
@@ -83,14 +85,20 @@ public:
 #ifdef WITH_OPENBABEL
         this->module_descriptions.RegisterAutoDescription<megamol::protein::OpenBabelLoader>();
 #endif // WITH_OPENBABEL
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::BindingSiteDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataSource>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CCP4VolumeData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CoarseGrainDataLoader>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::FrodockLoader>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::IntSelection>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CrystalStructureDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTILoader>();
@@ -98,15 +106,19 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTIWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VMDDXLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TrajectorySmoothFilter>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeBallifier>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ResidueSelection>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::AggregatedDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataLoaderUnstructuredGrid>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularBezierData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
+
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
@@ -117,6 +129,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
+
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();

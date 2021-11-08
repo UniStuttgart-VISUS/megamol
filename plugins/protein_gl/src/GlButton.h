@@ -4,27 +4,26 @@
 #include "GlWidget.h"
 #include "GlWidgetLibrary.h"
 
-//class GlWidgetLibrary;
+// class GlWidgetLibrary;
 
-class GlButton : public GlWidget
-{
-	friend class GlWidgetLibrary;
+class GlButton : public GlWidget {
+    friend class GlWidgetLibrary;
 
 public:
-	void move(float x, float y);
-	void resize(float w, float h);
-	void setColor(float r, float g, float b);
-	void press();
+    void move(float x, float y);
+    void resize(float w, float h);
+    void setColor(float r, float g, float b);
+    void press();
 
 private:
-	GlButton(void);
-	~GlButton(void);
+    GlButton(void);
+    ~GlButton(void);
 
-	void render();
+    void render();
 
-	float x, y, w, h;
-	float r, g, b;
-	volatile bool pressedDown;
+    float x, y, w, h;
+    float r, g, b;
+    volatile bool pressedDown;
 };
 
 #endif

@@ -7,14 +7,14 @@
 #include "stdafx.h"
 
 #include "SolPathRenderer.h"
-#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/CoreInstance.h"
-#include "protein/SolPathDataCall.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein/SolPathDataCall.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -23,10 +23,10 @@ using namespace megamol::protein_gl;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void) : core_gl::view::Renderer3DModuleGL(),
-        getdataslot("getdata", "Fetches data"), pathlineShader() {
+SolPathRenderer::SolPathRenderer(void)
+        : core_gl::view::Renderer3DModuleGL(), getdataslot("getdata", "Fetches data"), pathlineShader() {
 
-    this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall> >();
+    this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall>>();
     this->MakeSlotAvailable(&this->getdataslot);
 }
 
@@ -44,14 +44,13 @@ SolPathRenderer::~SolPathRenderer(void) {
  */
 bool SolPathRenderer::create(void) {
     using megamol::core::utility::log::Log;
-    if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");
+    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");
         return false;
     }
     if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to initialise opengl extensions for glsl");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to initialise opengl extensions for glsl");
         return false;
     }
 
@@ -73,10 +72,10 @@ bool SolPathRenderer::create(void) {
             return false;
         }
 
-    } catch(vislib::Exception e) {
+    } catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader: %s", e.GetMsgA());
         return false;
-    } catch(...) {
+    } catch (...) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
         return false;
     }
@@ -99,10 +98,10 @@ bool SolPathRenderer::create(void) {
             return false;
         }
 
-    } catch(vislib::Exception e) {
+    } catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader: %s", e.GetMsgA());
         return false;
-    } catch(...) {
+    } catch (...) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
         return false;
     }
@@ -114,11 +113,13 @@ bool SolPathRenderer::create(void) {
  * SolPathRenderer::GetExtents
  */
 bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
+    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr3d == NULL)
+        return false;
 
-    protein::SolPathDataCall *spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
-    if (spdc == NULL) return false;
+    protein::SolPathDataCall* spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
+    if (spdc == NULL)
+        return false;
 
     (*spdc)(1); // get extents
 
@@ -141,11 +142,13 @@ void SolPathRenderer::release(void) {
  * SolPathRenderer::Render
  */
 bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
+    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr3d == NULL)
+        return false;
 
-    protein::SolPathDataCall *spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
-    if (spdc == NULL) return false;
+    protein::SolPathDataCall* spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
+    if (spdc == NULL)
+        return false;
 
     (*spdc)(0); // get data
 
@@ -160,25 +163,24 @@ bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
     GLint attrloc = ::glGetAttribLocationARB(this->pathlineShader.ProgramHandle(), "params");
     ::glEnableClientState(GL_VERTEX_ARRAY);
     ::glEnableVertexAttribArrayARB(attrloc);
-    this->pathlineShader.SetParameter("paramSpan",
-        spdc->MinTime(),
-        1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()),
-        spdc->MinSpeed(),
+    this->pathlineShader.SetParameter("paramSpan", spdc->MinTime(),
+        1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()), spdc->MinSpeed(),
         1.0f / vislib::math::Max(1.0f, spdc->MaxSpeed() - spdc->MinSpeed()));
 
-    const protein::SolPathDataCall::Pathline *path = spdc->Pathlines();
+    const protein::SolPathDataCall::Pathline* path = spdc->Pathlines();
     for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
         ::glVertexPointer(4, GL_FLOAT, sizeof(protein::SolPathDataCall::Vertex), path->data);
-        ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(protein::SolPathDataCall::Vertex), &path->data->time);
+        ::glVertexAttribPointerARB(
+            attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(protein::SolPathDataCall::Vertex), &path->data->time);
         ::glDrawArrays(GL_LINE_STRIP, 0, path->length);
     }
     this->pathlineShader.Disable();
 
-    //this->dotsShader.Enable();
+    // this->dotsShader.Enable();
     //::glDisableVertexAttribArrayARB(attrloc);
-    //attrloc = ::glGetAttribLocationARB(this->dotsShader.ProgramHandle(), "params");
+    // attrloc = ::glGetAttribLocationARB(this->dotsShader.ProgramHandle(), "params");
     //::glEnableVertexAttribArrayARB(attrloc);
-    //this->dotsShader.SetParameter("paramSpan",
+    // this->dotsShader.SetParameter("paramSpan",
     //    spdc->MinTime(),
     //    1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()),
     //    spdc->MinSpeed(),
@@ -188,14 +190,15 @@ bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
     //::glEnable(GL_BLEND);
     //::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //::glColor3ub(255, 0, 0);
-    //path = spdc->Pathlines();
-    //for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
+    // path = spdc->Pathlines();
+    // for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
     //    ::glVertexPointer(4, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
-    //    ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex), &path->data->time);
+    //    ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex),
+    //    &path->data->time);
     //    ::glDrawArrays(GL_POINTS, 0, path->length);
     //}
     //::glDisable(GL_POINT_SMOOTH);
-    //this->dotsShader.Disable();
+    // this->dotsShader.Disable();
 
     ::glDisableVertexAttribArrayARB(attrloc);
     ::glDisableClientState(GL_VERTEX_ARRAY);

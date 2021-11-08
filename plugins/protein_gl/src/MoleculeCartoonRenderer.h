@@ -12,13 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <vector>
-#include "protein/BSpline.h"
-#include "protein/CallColor.h"
-#include "protein/Color.h"
+#include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "protein/BSpline.h"
+#include "protein/CallColor.h"
+#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
@@ -74,7 +76,7 @@ namespace protein_gl {
         /** Dtor. */
         virtual ~MoleculeCartoonRenderer(void);
 
-        enum CartoonRenderMode {
+        enum class CartoonRenderMode {
             CARTOON = 0,
             CARTOON_SIMPLE = 1,
             CARTOON_CPU = 2,
@@ -83,7 +85,7 @@ namespace protein_gl {
             CARTOON_TUBE_ONLY = 5
         };
 
-        enum RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
+        enum class RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
 
 
         /**********************************************************************
@@ -105,9 +107,6 @@ namespace protein_gl {
             return numberOfTubeSeg;
         };
 
-        /** Get the color of a certain atom of the protein. */
-        const float* GetProteinAtomColor(unsigned int idx);
-
         /**********************************************************************
          * 'set'-functions
          **********************************************************************/
@@ -115,7 +114,8 @@ namespace protein_gl {
         /** Set current render mode */
         void SetRenderMode(CartoonRenderMode rm) {
             currentRenderMode = rm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -124,7 +124,8 @@ namespace protein_gl {
         /** Set current coloring mode */
         void SetColoringMode0(protein::Color::ColoringMode cm) {
             currentColoringMode0 = cm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -133,7 +134,8 @@ namespace protein_gl {
         /** Set current coloring mode */
         void SetColoringMode1(protein::Color::ColoringMode cm) {
             currentColoringMode1 = cm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -142,7 +144,8 @@ namespace protein_gl {
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon(float rad) {
             radiusCartoon = rad;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -261,12 +264,12 @@ namespace protein_gl {
         megamol::core::CallerSlot molDataCallerSlot;
         // caller slot
         megamol::core::CallerSlot molRendererCallerSlot;
-        // caller slot for offscreen rendering
-        megamol::core::CallerSlot molRendererORCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
         // caller slot for protein coloring
         megamol::core::CallerSlot molColorCallerSlot;
+        // caller slot for light input
+        megamol::core::CallerSlot getLightsSlot;
 
         /** camera information */
         core::view::Camera camera;
@@ -294,8 +297,6 @@ namespace protein_gl {
         megamol::core::param::ParamSlot maxGradColorParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot stickRadiusParam;
-        /** parameter slot for offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
         /** parameter slot for disabling rendering except protein */
@@ -318,14 +319,37 @@ namespace protein_gl {
         vislib_gl::graphics::gl::GLSLGeometryShader tubeSplineShader;
         vislib_gl::graphics::gl::GLSLGeometryShader arrowSplineShader;
         vislib_gl::graphics::gl::GLSLGeometryShader helixSplineShader;
-        vislib_gl::graphics::gl::GLSLGeometryShader tubeORShader;
-        vislib_gl::graphics::gl::GLSLGeometryShader arrowORShader;
-        vislib_gl::graphics::gl::GLSLGeometryShader helixORShader;
 
-        vislib_gl::graphics::gl::GLSLShader sphereShader;
-        vislib_gl::graphics::gl::GLSLShader cylinderShader;
-        vislib_gl::graphics::gl::GLSLShader sphereShaderOR;
-        vislib_gl::graphics::gl::GLSLShader cylinderShaderOR;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
+
+        // buffer objects
+        // the 6 is missing to match the buffers of
+        enum class Buffers : GLuint {
+            POSITION = 0,
+            COLOR = 1,
+            CYL_PARAMS = 2,
+            CYL_QUAT = 3,
+            CYL_COL1 = 4,
+            CYL_COL2 = 5,
+            FILTER = 6,
+            LIGHT_POSITIONAL = 7,
+            LIGHT_DIRECTIONAL = 8,
+            BUFF_COUNT = 9
+        };
+
+        GLuint vertex_array_spheres_;
+        std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
+
+        glm::mat4 MVP;
+        glm::mat4 MVinv;
+        glm::mat4 MVPinv;
+        glm::mat4 MVPtransp;
+        glm::mat4 NormalM;
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::mat4 invProj;
+        glm::vec2 planes;
 
         // current render mode
         CartoonRenderMode currentRenderMode;
@@ -337,15 +361,6 @@ namespace protein_gl {
 
         // is comparison mode enabled?
         bool compare;
-
-        // attribute locations for GLSL-Shader
-        GLint attribLocInParams;
-        GLint attribLocQuatC;
-        GLint attribLocColor1;
-        GLint attribLocColor2;
-
-        // is the geometry shader (and OGL V2) supported?
-        bool geomShaderSupported;
 
         // has the hybrid CARTOON render mode to be prepared?
         bool prepareCartoonHybrid;
@@ -401,7 +416,7 @@ namespace protein_gl {
     };
 
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED

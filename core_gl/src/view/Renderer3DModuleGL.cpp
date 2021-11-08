@@ -52,7 +52,7 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
 
     if (chainedCall != nullptr) {
         auto mybb = call.AccessBoundingBoxes().BoundingBox();
-        mybb.Union(chainedCall->AccessBoundingBoxes().BoundingBox());
+        auto otherbb = chainedCall->AccessBoundingBoxes().BoundingBox();
         auto mycb = call.AccessBoundingBoxes().ClipBox();
         mycb.Union(chainedCall->AccessBoundingBoxes().ClipBox());
         call.AccessBoundingBoxes().SetBoundingBox(mybb);
@@ -80,6 +80,7 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
 
         // chain through the render call
         (*chainedCall)(core::view::AbstractCallRender::FnRender);
+
 
         call = *chainedCall;
     }

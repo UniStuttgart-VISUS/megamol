@@ -10,13 +10,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {
@@ -27,13 +27,12 @@ namespace protein_gl {
      */
     class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
-
         /**
          * Answer the name of this module.
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) {
+        static const char* ClassName(void) {
             return "SolPathRenderer";
         }
 
@@ -42,7 +41,7 @@ namespace protein_gl {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) {
+        static const char* Description(void) {
             return "Renderer for solvent path raw data.";
         }
 
@@ -62,7 +61,6 @@ namespace protein_gl {
         virtual ~SolPathRenderer(void);
 
     protected:
-
         /**
          * Implementation of 'Create'.
          *
@@ -96,7 +94,6 @@ namespace protein_gl {
         virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
-
         /** The slot to get the data */
         core::CallerSlot getdataslot;
 
@@ -105,10 +102,9 @@ namespace protein_gl {
 
         /** The shader for shading the dots */
         vislib_gl::graphics::gl::GLSLShader dotsShader;
-
     };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /*  MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED */
