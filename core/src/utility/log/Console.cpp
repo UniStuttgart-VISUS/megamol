@@ -35,47 +35,49 @@
 #include "mmcore/utility/sys/Thread.h"
 
 
+namespace megamol::core::utility::log {
+
 /*
- * vislib::sys::Console::ConsoleLogTarget::Msg
+ * Console::ConsoleLogTarget::Msg
  */
-void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
+void Console::ConsoleLogTarget::Msg(unsigned int level,
         megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
                 const char *msg) {
-    if (vislib::sys::Console::ColorsEnabled()) {
-        vislib::sys::Console::ColorType color;
+    if (Console::ColorsEnabled()) {
+        Console::ColorType color;
 
-        if (level <= megamol::core::utility::log::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
-        else if (level <= megamol::core::utility::log::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
-        else if (level <= megamol::core::utility::log::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
-        else color = vislib::sys::Console::UNKNOWN_COLOR;
+        if (level <= megamol::core::utility::log::Log::LEVEL_ERROR) color = Console::RED; // error
+        else if (level <= megamol::core::utility::log::Log::LEVEL_WARN) color = Console::YELLOW; // warning
+        else if (level <= megamol::core::utility::log::Log::LEVEL_INFO) color = Console::WHITE; // info
+        else color = Console::UNKNOWN_COLOR;
 
-        if (color != vislib::sys::Console::UNKNOWN_COLOR) {
-            vislib::sys::Console::SetForegroundColor(color);
-            vislib::sys::Console::Write("%.4d", level);
-            vislib::sys::Console::RestoreDefaultColors();
-            vislib::sys::Console::Write("|%s", msg);
+        if (color != Console::UNKNOWN_COLOR) {
+            Console::SetForegroundColor(color);
+            Console::Write("%.4d", level);
+            Console::RestoreDefaultColors();
+            Console::Write("|%s", msg);
         } else {
-            vislib::sys::Console::Write("%.4d|%s", level, msg);
+            Console::Write("%.4d|%s", level, msg);
         }
     } else {
-        vislib::sys::Console::Write("%.4d|%s", level, msg);
+        Console::Write("%.4d|%s", level, msg);
     }
 }
 
 
 /*
- * vislib::sys::Console::ConsoleLogTarget::Msg
+ * Console::ConsoleLogTarget::Msg
  */
-void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level, megamol::core::utility::log::Log::TimeStamp time,
+void Console::ConsoleLogTarget::Msg(unsigned int level, megamol::core::utility::log::Log::TimeStamp time,
     megamol::core::utility::log::Log::SourceID sid, std::string const& msg) {
     Msg(level, time, sid, msg.c_str());
 }
 
 
 /*
- * vislib::sys::Console::LogEchoTarget
+ * Console::LogEchoTarget
  */
-const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget;
+const Console::ConsoleLogTarget Console::LogEchoTarget;
 
 
 /*
@@ -83,34 +85,34 @@ const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget
  */
 static bool __vl_console_useColors
 #ifndef VISLIB_SYMBOL_IMPORT
-    = vislib::sys::Console::ColorsAvailable()
+    = Console::ColorsAvailable()
 #endif /* !VISLIB_SYMBOL_IMPORT */
     ;
 
 
 /*
- * vislib::sys::Console::usecolors
+ * Console::usecolors
  */
-bool& vislib::sys::Console::useColors(__vl_console_useColors);
+bool& Console::useColors(__vl_console_useColors);
 
 
 /* 
- * vislib::sys::Console::defaultFgcolor
+ * Console::defaultFgcolor
  */
-vislib::sys::Console::ColorType vislib::sys::Console::defaultFgcolor = vislib::sys::Console::GetForegroundColor();
+Console::ColorType Console::defaultFgcolor = Console::GetForegroundColor();
 
 
 /* 
- * vislib::sys::Console::defaultBgcolor
+ * Console::defaultBgcolor
  */
-vislib::sys::Console::ColorType vislib::sys::Console::defaultBgcolor = vislib::sys::Console::GetBackgroundColor();
+Console::ColorType Console::defaultBgcolor = Console::GetBackgroundColor();
 
 
 /*
  * Helper class for initializing linux term
  * singelton design pattern
  */
-class vislib::sys::Console::ConsoleHelper {
+class Console::ConsoleHelper {
 public:
 
     static ConsoleHelper * GetInstance() {
@@ -202,7 +204,7 @@ private:
         if (restoreIcons) {
             // Restore console icons on exit.
             HWND console = NULL;
-            DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
+            vislib::sys::DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
             if (getConsoleWindow.IsValid()) {
                 console = getConsoleWindow();
                 if (console != NULL) {
@@ -243,7 +245,7 @@ private:
     }
 
     /** wrapper for color setting */
-    inline void SetColor(bool foreground, vislib::sys::Console::ColorType col) {
+    inline void SetColor(bool foreground, Console::ColorType col) {
         int colType = COLOR_BLACK;
 
         // Translate color codes (the hard way, because of the ANSI-constant screw up
@@ -291,7 +293,7 @@ private:
                 this->isKonsole = false;
 
                 // first check if dcop is available
-                vislib::sys::Console::Run("dcop", &out, &err);
+                Console::Run("dcop", &out, &err);
 
                 this->dcopPresent = (err.Length() == 0);
 
@@ -317,7 +319,7 @@ private:
                 if (this->dcopPresent && this->isKonsole) {
                     vislib::StringA cmd;
                     cmd.Format("dcop $KONSOLE_DCOP_SESSION sessionName");
-                    vislib::sys::Console::Run(cmd.PeekBuffer(), &oldName, NULL);
+                    Console::Run(cmd.PeekBuffer(), &oldName, NULL);
 
                 } else if (this->isXterm) {
                     // getting title from xterm is very unsecure
@@ -342,7 +344,7 @@ private:
                     fflush(stdout);
 
                     {
-                        StringA rd;
+                        vislib::StringA rd;
                         PipeReaderInfo pri;
                         pri.pipe = STDIN_FILENO;
                         pri.target = &rd;
@@ -401,7 +403,7 @@ private:
         if (this->dcopPresent && this->isKonsole) {
             vislib::StringA cmd;
             cmd.Format("dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
-            vislib::sys::Console::Run(cmd.PeekBuffer(), NULL, NULL);
+            Console::Run(cmd.PeekBuffer(), NULL, NULL);
 
         } else if (this->isXterm) {
             // xterm operating system command: echo '\033]0;AAAAA\007'
@@ -473,10 +475,10 @@ private:
 
 
 /*
- * vislib::sys::Console::Run
+ * Console::Run
  */
-int vislib::sys::Console::Run(const char *command, StringA *outStdOut, 
-        StringA *outStdErr) {
+int Console::Run(const char *command, vislib::StringA *outStdOut,
+    vislib::StringA *outStdErr) {
     // TODO: Could use some of the timeout mechanisms?
 #ifdef _WIN32
     HANDLE hErrorRead, hErrorWrite;
@@ -493,19 +495,19 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     // Create pipes
     if (!::CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0)) {
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hInputRead, &hInputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
         ::CloseHandle(hInputRead);
         ::CloseHandle(hInputWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
     ::ZeroMemory(&startInfo, sizeof(STARTUPINFO));
@@ -532,17 +534,17 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
         ::CloseHandle(hInputWrite);
         ::CloseHandle(hOutputRead);
         ::CloseHandle(hOutputWrite);
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
     DWORD exitCode = STILL_ACTIVE;
 
     vislib::sys::Thread outputReader(
-        vislib::sys::Console::ConsoleHelper::ReadFromPipe);
-    vislib::sys::Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
+        Console::ConsoleHelper::ReadFromPipe);
+    Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
     vislib::sys::Thread errorReader(
-        vislib::sys::Console::ConsoleHelper::ReadFromPipe);
-    vislib::sys::Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
+        Console::ConsoleHelper::ReadFromPipe);
+    Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
 
     if (outStdOut != NULL) {
         outputReaderInfo.pipe = hOutputRead;
@@ -599,17 +601,17 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
     /* Create two pipes for redirecting the child console output. */
     if (::pipe(stdOutPipe) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
     if (::pipe(stdErrPipe) == -1) {
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
     /* Spawn a new subprocess for running the command. */
     pid = ::fork();
     if (pid < 0) {
         /* Forking failed. */
-        throw SystemException(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
 
     } else if (pid == 0) {
         /* Subprocess created, I am in the subprocess now. */
@@ -639,11 +641,11 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
     } else {
         /* Subprocess created, I am in parent process. */
         vislib::sys::Thread outputReader(
-            vislib::sys::Console::ConsoleHelper::ReadFromPipe);
-        vislib::sys::Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
+            Console::ConsoleHelper::ReadFromPipe);
+        Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
         vislib::sys::Thread errorReader(
-            vislib::sys::Console::ConsoleHelper::ReadFromPipe);
-        vislib::sys::Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
+            Console::ConsoleHelper::ReadFromPipe);
+        Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
 
         if (outStdOut != NULL) {
             outputReaderInfo.pipe = stdOutPipe[0];
@@ -687,9 +689,9 @@ int vislib::sys::Console::Run(const char *command, StringA *outStdOut,
 
 
 /*
- * vislib::sys::Console::Write
+ * Console::Write
  */
-void vislib::sys::Console::Write(const char *fmt, ...) {
+void Console::Write(const char *fmt, ...) {
     va_list argptr;
     
     va_start(argptr, fmt);
@@ -699,9 +701,9 @@ void vislib::sys::Console::Write(const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Console::WriteLine
+ * Console::WriteLine
  */
-void vislib::sys::Console::WriteLine(const char *fmt, ...) {
+void Console::WriteLine(const char *fmt, ...) {
     va_list argptr;
     
     va_start(argptr, fmt);
@@ -712,53 +714,53 @@ void vislib::sys::Console::WriteLine(const char *fmt, ...) {
 
 
 /*
- * vislib::sys::Console::Console
+ * Console::Console
  */
-vislib::sys::Console::Console(void) {
-    throw UnsupportedOperationException("vislib::sys::Console::Console", 
+Console::Console(void) {
+    throw vislib::UnsupportedOperationException("Console::Console", 
         __FILE__, __LINE__);
 }
 
 
 /*
- * vislib::sys::Console::~Console
+ * Console::~Console
  */
-vislib::sys::Console::~Console(void) {
+Console::~Console(void) {
 }
 
 
 /*
- * vislib::sys::Console::ColorsAvailable
+ * Console::ColorsAvailable
  */
-bool vislib::sys::Console::ColorsAvailable(void) {
+bool Console::ColorsAvailable(void) {
 #ifdef _WIN32
     return true;
 #else // _WIN32
-    return vislib::sys::Console::ConsoleHelper::GetInstance()->AreColorsAvailable();
+    return Console::ConsoleHelper::GetInstance()->AreColorsAvailable();
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::ColorsEnabled
+ * Console::ColorsEnabled
  */
-bool vislib::sys::Console::ColorsEnabled(void) {
-    return vislib::sys::Console::useColors;
+bool Console::ColorsEnabled(void) {
+    return Console::useColors;
 }
 
 
 /*
- * vislib::sys::Console::EnableColors
+ * Console::EnableColors
  */
-void vislib::sys::Console::EnableColors(bool enable) {
-    vislib::sys::Console::useColors = enable && vislib::sys::Console::ColorsAvailable();
+void Console::EnableColors(bool enable) {
+    Console::useColors = enable && Console::ColorsAvailable();
 }
 
 
 /*
- * vislib::sys::Console::Flush
+ * Console::Flush
  */
-void vislib::sys::Console::Flush(void) {
+void Console::Flush(void) {
     ::fflush(stdout);
     ::fflush(stderr);
     ::fflush(stdin);
@@ -766,10 +768,10 @@ void vislib::sys::Console::Flush(void) {
 
 
 /*
- * vislib::sys::Console::RestoreDefaultColors
+ * Console::RestoreDefaultColors
  */
-void vislib::sys::Console::RestoreDefaultColors(void) {
-    if (!vislib::sys::Console::useColors) return;
+void Console::RestoreDefaultColors(void) {
+    if (!Console::useColors) return;
 
 #ifdef _WIN32
     // get handle
@@ -808,17 +810,17 @@ void vislib::sys::Console::RestoreDefaultColors(void) {
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    tputs(exit_attribute_mode, 1, vislib::sys::Console::ConsoleHelper::outputChar);
+    tputs(exit_attribute_mode, 1, Console::ConsoleHelper::outputChar);
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::SetForegroundColor
+ * Console::SetForegroundColor
  */
-void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fgcolor) {
-    if (!vislib::sys::Console::useColors) return;
+void Console::SetForegroundColor(Console::ColorType fgcolor) {
+    if (!Console::useColors) return;
     if (fgcolor == UNKNOWN_COLOR) return;
 
 #ifdef _WIN32
@@ -844,17 +846,17 @@ void vislib::sys::Console::SetForegroundColor(vislib::sys::Console::ColorType fg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetColor(true, fgcolor);
+    Console::ConsoleHelper::GetInstance()->SetColor(true, fgcolor);
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::SetBackgroundColor
+ * Console::SetBackgroundColor
  */
-void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bgcolor) {
-    if (!vislib::sys::Console::useColors) return;
+void Console::SetBackgroundColor(Console::ColorType bgcolor) {
+    if (!Console::useColors) return;
     if (bgcolor == UNKNOWN_COLOR) return;
 
 #ifdef _WIN32
@@ -880,16 +882,16 @@ void vislib::sys::Console::SetBackgroundColor(vislib::sys::Console::ColorType bg
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
 #else // _WIN32
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetColor(false, bgcolor);
+    Console::ConsoleHelper::GetInstance()->SetColor(false, bgcolor);
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::GetForegroundColor
+ * Console::GetForegroundColor
  */
-vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
+Console::ColorType Console::GetForegroundColor(void) {
     if (!useColors) return UNKNOWN_COLOR;
 
 #ifdef _WIN32
@@ -908,19 +910,19 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetForegroundColor(void) {
     if ((info.wAttributes & FOREGROUND_BLUE) != 0) c += 4;
     if ((info.wAttributes & FOREGROUND_INTENSITY) != 0) c += 8;
 
-    return static_cast<vislib::sys::Console::ColorType>(c);
+    return static_cast<Console::ColorType>(c);
 
 #else // _WIN32
-    return vislib::sys::Console::UNKNOWN_COLOR;
+    return Console::UNKNOWN_COLOR;
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::GetBackgroundColor
+ * Console::GetBackgroundColor
  */
-vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
+Console::ColorType Console::GetBackgroundColor(void) {
     if (!useColors) return UNKNOWN_COLOR;
 
 #ifdef _WIN32
@@ -939,19 +941,19 @@ vislib::sys::Console::ColorType vislib::sys::Console::GetBackgroundColor(void) {
     if ((info.wAttributes & BACKGROUND_BLUE) != 0) c += 4;
     if ((info.wAttributes & BACKGROUND_INTENSITY) != 0) c += 8;
 
-    return static_cast<vislib::sys::Console::ColorType>(c);
+    return static_cast<Console::ColorType>(c);
 
 #else // _WIN32
-    return vislib::sys::Console::UNKNOWN_COLOR;
+    return Console::UNKNOWN_COLOR;
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::GetWidth
+ * Console::GetWidth
  */
-unsigned int vislib::sys::Console::GetWidth(void) {
+unsigned int Console::GetWidth(void) {
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -972,9 +974,9 @@ unsigned int vislib::sys::Console::GetWidth(void) {
 
  
 /*
- * vislib::sys::Console::GetHeight
+ * Console::GetHeight
  */
-unsigned int vislib::sys::Console::GetHeight(void) {
+unsigned int Console::GetHeight(void) {
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -995,40 +997,40 @@ unsigned int vislib::sys::Console::GetHeight(void) {
 
 
 /*
- * vislib::sys::Console::SetTitle
+ * Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
+void Console::SetTitle(const vislib::StringA& title) {
 #ifdef _WIN32
     ::SetConsoleTitleA(title);
 
 #else // _WIN32
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
+    Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::SetTitle
+ * Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
+void Console::SetTitle(const vislib::StringW& title) {
 #ifdef _WIN32
     ::SetConsoleTitleW(title);
 
 #else // _WIN32
     // we only support ANSI-Strings for Linux consoles.
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(W2A(title));
+    Console::ConsoleHelper::GetInstance()->SetConsoleTitle(W2A(title));
 
 #endif // _WIN32
 }
 
 
 /*
- * vislib::sys::Console::SetIcon
+ * Console::SetIcon
  */
-void vislib::sys::Console::SetIcon(int id) {
+void Console::SetIcon(int id) {
 #ifdef _WIN32
-    vislib::sys::Console::SetIcon(MAKEINTRESOURCEA(id));
+    Console::SetIcon(MAKEINTRESOURCEA(id));
 #else // _WIN32
     // Linux is stupid
 
@@ -1037,13 +1039,13 @@ void vislib::sys::Console::SetIcon(int id) {
 
 
 /*
- * vislib::sys::Console::SetIcon
+ * Console::SetIcon
  */
-void vislib::sys::Console::SetIcon(char *id) {
+void Console::SetIcon(char *id) {
 #ifdef _WIN32
     // Creates an HWND handle for the console window
     HWND console = NULL;
-    DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
+    vislib::sys::DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
     if (!getConsoleWindow.IsValid()) return; // function not found. Windows too old.
     console = getConsoleWindow();
     if (console == NULL) return; // no console present
@@ -1059,7 +1061,7 @@ void vislib::sys::Console::SetIcon(char *id) {
     if (icon == NULL) return; // icon ressource not found.
 
     // setting the icon.
-    vislib::sys::Console::ConsoleHelper::GetInstance()->MemorizeWindowIcons(console);
+    Console::ConsoleHelper::GetInstance()->MemorizeWindowIcons(console);
     SendMessageA(console, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon));
     SendMessageA(console, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon));
 
@@ -1068,3 +1070,4 @@ void vislib::sys::Console::SetIcon(char *id) {
 
 #endif // _WIN32
 }
+} // end namespace

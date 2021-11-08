@@ -120,7 +120,7 @@ void vislib::sys::ConsoleProgressBar::update(void) {
     static vislib::StringA right;
     static vislib::StringA line;
     static vislib::StringA tmp;
-    unsigned int width = vislib::sys::Console::GetWidth() - 1;
+    unsigned int width = megamol::core::utility::log::Console::GetWidth() - 1;
 
     left = this->title;
 
