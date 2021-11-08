@@ -76,11 +76,11 @@ bool ImagePresentation_Service::init(const Config& config) {
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
-        , "WindowManipulation"
+        , "optional<WindowManipulation>"
         , "FramebufferEvents"
         , "GUIState"
         , "RegisterLuaCallbacks"
-        , "OpenGL_Context"
+        , "optional<OpenGL_Context>"
     };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
@@ -392,8 +392,8 @@ bool ImagePresentation_Service::clear_entry_points() {
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
-    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
-    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static auto const& window_manipulation       = m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowManipulation>().value().get();
+    static auto const& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 
