@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::frontend {
 class Profiling_Service;
@@ -20,6 +21,7 @@ public:
     using timer_index = uint32_t;
     using handle_vector = std::vector<handle_type>;
     using frame_type = uint32_t;
+    using time_point = std::chrono::steady_clock::time_point;
 
     enum class query_api { CPU, OPENGL, CUDA };
 
@@ -38,7 +40,9 @@ public:
         handle_type handle = 0;
         entry_type type = entry_type::START;
         frame_type frame = 0;
-        std::chrono::steady_clock::time_point timestamp;
+        // local index inside one frame (if this region is touched multiple times per frame)
+        uint32_t frame_index = 0;
+        time_point timestamp;
     };
 
     struct frame_info {
@@ -46,8 +50,6 @@ public:
         std::vector<timer_entry> entries;
     };
     using update_callback = std::function<void(frame_info)>;
-
-    // TODO TOXIC EXPLOSION DEATH DECAY a timer can be sensible started+stopped  multiple times per frame! results need to be accumulated somewhere!
 
     class Itimer {
         friend class PerformanceManager;
@@ -59,28 +61,52 @@ public:
         [[nodiscard]] const timer_config& get_conf() const {
             return _conf;
         }
-        [[nodiscard]] const handle_type get_handle() const {
+        [[nodiscard]] handle_type get_handle() const {
             return h;
         }
-        [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> get_start() const {
-            return _start;
+        [[nodiscard]] uint32_t get_region_count() const {
+            return regions.size();
         }
-        [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> get_end() const {
-            return _end;
+        [[nodiscard]] time_point get_start(uint32_t index) const {
+            return regions[index].first;
+        }
+        [[nodiscard]] time_point get_end(uint32_t index) const {
+            return regions[index].second;
         }
         [[nodiscard]] frame_type get_start_frame() const {
-            return _start_frame;
+            return start_frame;
         }
 
     protected:
-        virtual void start(frame_type frame) = 0;
-        virtual void end() = 0;
+        // returns whether this is a new frame from what has been seen
+        virtual bool start(frame_type frame) {
+            auto new_frame = false;
+            if (frame != start_frame) {
+                new_frame = true;
+                regions.clear();
+            }
+            if (!started) {
+                started = true;
+                start_frame = frame;
+            } else {
+                throw std::exception(("timer: region " + _conf.name + "needs to be ended before being started").c_str());
+            }
+            return new_frame;
+        }
+
+        virtual void end() {
+            if (!started) {
+                throw std::exception(("cpu_timer: region " + _conf.name + "needs to be started before being ended").c_str());
+            }
+            started = false;
+        };
         virtual void collect() = 0;
 
         timer_config _conf;
-        std::chrono::time_point<std::chrono::steady_clock> _start, _end;
-        bool _started = false;
-        frame_type _start_frame = std::numeric_limits<frame_type>::max();
+        time_point last_start;
+        std::vector<std::pair<time_point, time_point>> regions;
+        bool started = false;
+        frame_type start_frame = std::numeric_limits<frame_type>::max();
         handle_type h;
     };
 
@@ -104,22 +130,15 @@ public:
     public:
         cpu_timer(const timer_config& conf) : Itimer(conf) {}
 
-        void start(frame_type frame) override {
-            if (!_started) {
-                _start = std::chrono::high_resolution_clock::now();
-                _started = true;
-                _start_frame = frame;
-            } else {
-                throw std::exception("cpu_timer: region needs to be ended before being started");
-            }
+        bool start(frame_type frame) override {
+            const auto ret = Itimer::start(frame);
+            last_start = std::chrono::high_resolution_clock::now();
+            return ret;
         }
         void end() override {
-            if (_started) {
-                _end = std::chrono::high_resolution_clock::now();
-                _started = false;
-            } else {
-                throw std::exception("cpu_timer: region needs to be started before being ended");
-            }
+            Itimer::end();
+            auto end = std::chrono::high_resolution_clock::now();
+            regions.emplace_back(std::make_pair(last_start, end));
         }
 
     protected:
@@ -131,51 +150,62 @@ public:
 
     public:
         gl_timer(const timer_config& conf) : Itimer(conf) {
-            glGenQueries(1, &_start_id);
-            glGenQueries(1, &_end_id);
         }
 
         ~gl_timer() override {
-            glDeleteQueries(1, &_start_id);
-            glDeleteQueries(1, &_end_id);
+            for (auto& q_pair : query_ids) {
+                glDeleteQueries(1, &q_pair.first);
+                glDeleteQueries(1, &q_pair.second);
+            }
         }
 
-        void start(frame_type frame) override {
-            if (!_started) {
-                glQueryCounter(_start_id, GL_TIMESTAMP);
-                _started = true;
-                _start_frame = frame;
-                _last_query = _start_id;
-            } else {
-                throw std::exception("gl_timer: region needs to be ended before being started");
+        bool start(frame_type frame) override {
+            const auto new_frame = Itimer::start(frame);
+            if (new_frame) {
+                query_index = 0;
             }
+            last_query = assert_query(query_index).first;
+            glQueryCounter(last_query, GL_TIMESTAMP);
+            return new_frame;
         }
 
         void end() override {
-            if (_started) {
-                glQueryCounter(_end_id, GL_TIMESTAMP);
-                _started = false;
-                _last_query = _end_id;
-            } else {
-                throw std::exception("gl_timer: region needs to be started before being ended");
-            }
+            Itimer::end();
+            last_query = assert_query(query_index).second;
+            glQueryCounter(last_query, GL_TIMESTAMP);
+            query_index++;
         }
 
     protected:
         void collect() override {
-            GLuint64 time;
-            glGetQueryObjectui64v(_start_id, GL_QUERY_RESULT, &time);
-            //_start =
-            // std::chrono::steady_clock::time_point{std::chrono::duration_cast<std::chrono::steady_clock::time_point::duration>(std::chrono::nanoseconds(time))};
-            _start = std::chrono::steady_clock::time_point{std::chrono::nanoseconds(time)};
-            glGetQueryObjectui64v(_end_id, GL_QUERY_RESULT, &time);
-            _end = std::chrono::steady_clock::time_point{std::chrono::nanoseconds(time)};
+            GLuint64 start_time, end_time;
+            for (uint32_t index = 0; index < query_index; ++index) {
+                const auto& [start, end] = query_ids[index];
+                glGetQueryObjectui64v(start, GL_QUERY_RESULT, &start_time);
+                glGetQueryObjectui64v(end, GL_QUERY_RESULT, &end_time);
+                regions.emplace_back(std::make_pair(
+                    time_point{std::chrono::nanoseconds(start_time)}, time_point{std::chrono::nanoseconds(end_time)}));
+            }
         }
 
     private:
-        uint32_t _start_id = 0;
-        uint32_t _end_id = 0;
-        inline static uint32_t _last_query = 0;
+        std::pair<uint32_t, uint32_t> assert_query(uint32_t index) {
+            if (index > query_ids.size()) {
+                throw std::exception(
+                    ("gl_timer: non-coherent query IDs for timer " + _conf.name + ", something is probably wrong.")
+                        .c_str());
+            }
+            if (index == query_ids.size()) {
+                std::array<uint32_t, 2> ids = {0, 0};
+                glGenQueries(2, ids.data());
+                query_ids.emplace_back(std::make_pair(ids[0], ids[1]));
+            }
+            return query_ids[index];
+        }
+
+        std::vector<std::pair<uint32_t, uint32_t>> query_ids;
+        uint32_t query_index = 0;
+        inline static uint32_t last_query = 0;
     };
 
     // names and API defined explicitly for modules
@@ -247,13 +277,13 @@ private:
     }
 
     void startFrame() {
-        gl_timer::_last_query = 0;
+        gl_timer::last_query = 0;
     }
 
     void endFrame() {
         int done = 0;
         do {
-            glGetQueryObjectiv(gl_timer::_last_query, GL_QUERY_RESULT_AVAILABLE, &done);
+            glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);
         } while (!done);
 
         frame_info this_frame;
@@ -264,8 +294,10 @@ private:
                 // timer did not start this frame
                 continue;
             } else {
-                if (t->_started) {
-                    // timer was not ended this frame
+                if (t->started) {
+                    // timer was not ended this frame, that is not nice
+                    Log::DefaultLog.WriteWarn("PerformanceManager: timer %s was not properly ended in frame %u",
+                        t->get_conf().name.c_str(), this_frame.frame);
                     continue;
                 }
             }
@@ -274,23 +306,25 @@ private:
             timer_entry e;
             e.handle = t->get_handle();
             e.frame = this_frame.frame;
-            e.type = entry_type::START;
-            e.timestamp = t->get_start();
-            this_frame.entries.push_back(e);
 
-            e.type = entry_type::END;
-            e.timestamp = t->get_end();
-            this_frame.entries.push_back(e);
+            for (uint32_t region = 0; region < t->get_region_count(); ++region) {
+                e.frame_index = region;
 
-            e.type = entry_type::DURATION;
-            e.timestamp = std::chrono::time_point<std::chrono::steady_clock>{t->get_end() - t->get_start()};
-            this_frame.entries.push_back(e);
+                e.type = entry_type::START;
+                e.timestamp = t->get_start(region);
+                this_frame.entries.push_back(e);
+
+                e.type = entry_type::END;
+                e.timestamp = t->get_end(region);
+                this_frame.entries.push_back(e);
+
+                e.type = entry_type::DURATION;
+                e.timestamp = time_point{t->get_end(region) - t->get_start(region)};
+                this_frame.entries.push_back(e);
+            }
         }
-        // TODO can/need we move this? probably not needed anyway.
-        frame_log.push_back(this_frame);
 
         for (auto& subscriber : subscribers) {
-            // TODO this is crap: each subscriber must first find the relevant updates!
             subscriber(this_frame);
         }
 
@@ -301,8 +335,6 @@ private:
     std::vector<timer> _timers;
     std::unordered_map<handle_type, std::vector<timer>::size_type> timer_map;
     frame_type current_frame = 0;
-    // TODO should probably not be here
-    std::vector<frame_info> frame_log;
     std::vector<update_callback> subscribers;
 };
 
