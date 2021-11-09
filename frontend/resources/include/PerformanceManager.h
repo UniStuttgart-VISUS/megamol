@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <exception>
 #include "glad/glad.h"
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
