@@ -6,14 +6,12 @@
  */
 
 #include "ImageWrapper.h"
-#include <glowl/GLSLProgram.hpp>
 
 namespace megamol::frontend {
 
     struct glfw_window_blit {
         unsigned int gl_fbo_handle = 0;
         unsigned int fbo_width = 0, fbo_height = 0;
-        std::shared_ptr<glowl::GLSLProgram> blit_shader;
 
         glfw_window_blit();
         ~glfw_window_blit();

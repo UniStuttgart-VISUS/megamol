@@ -6,6 +6,7 @@
  */
 
 #include "ImagePresentation_Sinks.hpp"
+#include <glowl/GLSLProgram.hpp>
 
 #include "glad/glad.h"
 //#include <iostream>
@@ -42,6 +43,7 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
     // credit goes to: https://stackoverflow.com/questions/31482816/opengl-is-there-an-easier-way-to-fill-window-with-a-texture-instead-using-vbo
 
     // Supports no blending:
+    /*
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glNamedFramebufferTexture(gl_fbo_handle, GL_COLOR_ATTACHMENT0, gl_texture_handle, 0);
     //if (glCheckNamedFramebufferStatus(gl_fbo_handle, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -54,9 +56,12 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
         GL_COLOR_BUFFER_BIT, // mask: GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_STENCIL_BUFFER_BIT 
         GL_LINEAR // filter: GL_NEAREST, GL_LINEAR 
         );
-    /*
+    */
+    /**/
 
-    if (this->blit_shader == nullptr) {
+    static std::unique_ptr<glowl::GLSLProgram> blit_shader;
+
+    if (blit_shader == nullptr) {
         std::string vertex_src = "#version 130 \n "
                                  "out vec2 uv_coord; \n "
                                  "void main() { \n "
@@ -86,14 +91,14 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
         try {
-            if (this->blit_shader != nullptr) {
-                this->blit_shader.reset();
+            if (blit_shader != nullptr) {
+                blit_shader.reset();
             }
-            this->blit_shader = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+            blit_shader = std::make_unique<glowl::GLSLProgram>(shader_srcs);
         } catch (glowl::GLSLProgramException const& exc) {
             std::string debug_label;
-            if (this->blit_shader != nullptr) {
-                debug_label = this->blit_shader->getDebugLabel();
+            if (blit_shader != nullptr) {
+                debug_label = blit_shader->getDebugLabel();
             }
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
@@ -101,17 +106,19 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
             return;
         }
     }
+
+    glViewport(0, 0, fbo_width, fbo_height);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    this->blit_shader->use();
+    blit_shader->use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gl_texture_handle);
-    this->blit_shader->setUniform("col_tex", 0);
+    blit_shader->setUniform("col_tex", 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
     glDisable(GL_BLEND);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    */
+    /**/
 }
 
