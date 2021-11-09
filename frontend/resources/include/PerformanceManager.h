@@ -198,8 +198,7 @@ public:
         switch (conf.parent_type) {
         case parent_type::CALL: {
             const auto c = static_cast<megamol::core::Call*>(p);
-            // TODO calls need a proper tag "blah::blub->yada::oink"
-            return c->ClassName();
+            return c->GetDescriptiveText();
         }
         case parent_type::MODULE: {
             const auto m = static_cast<megamol::core::Module*>(p);

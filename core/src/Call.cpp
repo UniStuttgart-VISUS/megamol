@@ -93,6 +93,13 @@ bool Call::operator()(unsigned int func) {
     return res;
 }
 
+std::string Call::GetDescriptiveText() const {
+    if (this->caller != nullptr && this->callee != nullptr) {
+        return caller->Name().PeekBuffer() + std::string("->") + callee->Name().PeekBuffer();
+    }
+    return "";
+}
+
 void Call::SetCallbackNames(std::vector<std::string> names) {
     callback_names = std::move(names);
 #ifdef PROFILING

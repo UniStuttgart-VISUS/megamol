@@ -106,6 +106,8 @@ namespace core {
             return caps;
         }
 
+        std::string GetDescriptiveText() const;
+
         void SetCallbackNames(std::vector<std::string> names);
 
         const std::string& GetCallbackName(uint32_t idx) const;
