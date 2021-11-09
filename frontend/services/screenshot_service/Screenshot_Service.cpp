@@ -192,7 +192,7 @@ bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames =
     {
-        "IOpenGL_Context",
+        "optional<OpenGL_Context>",
         "MegaMolGraph",
         "GUIState",
         "RuntimeConfig",

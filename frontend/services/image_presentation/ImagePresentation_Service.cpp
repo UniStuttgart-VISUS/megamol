@@ -5,15 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-// search/replace ImagePresentation_Service with your class name
-// you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
 #include "Framebuffer_Events.h"
 #include "GUIState.h"
 
-#include "ImageWrapper_to_GLTexture.h"
+#include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
 #include "LuaCallbacksCollection.h"
@@ -78,10 +76,11 @@ bool ImagePresentation_Service::init(const Config& config) {
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
-        , "WindowManipulation"
+        , "optional<WindowManipulation>"
         , "FramebufferEvents"
         , "GUIState"
         , "RegisterLuaCallbacks"
+        , "optional<OpenGL_Context>"
     };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
@@ -334,7 +333,6 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
 
     if (!success) {
         log_error("could not find a requested resource for an entry point");
-        return {};
     }
 
     return {success, resources, std::move(unique_data)};
@@ -394,8 +392,8 @@ bool ImagePresentation_Service::clear_entry_points() {
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
-    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
-    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static auto const& window_manipulation       = m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowManipulation>().value().get();
+    static auto const& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 

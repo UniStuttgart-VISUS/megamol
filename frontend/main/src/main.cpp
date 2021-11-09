@@ -275,7 +275,7 @@ int main(const int argc, const char** argv) {
     }
 
     // load project files via lua
-    if (graph_resources_ok)
+    if (run_megamol && graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
             log_error("Project file \"" + file + "\" did not execute correctly");

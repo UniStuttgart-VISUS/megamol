@@ -6,7 +6,7 @@
  */
 
 
-#include "ImageWrapper_to_GLTexture.h"
+#include "ImageWrapper_to_GLTexture.hpp"
 
 #include "glad/glad.h"
 #include <tuple>
