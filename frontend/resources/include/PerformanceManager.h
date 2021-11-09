@@ -47,6 +47,8 @@ public:
     };
     using update_callback = std::function<void(frame_info)>;
 
+    // TODO TOXIC EXPLOSION DEATH DECAY a timer can be sensible started+stopped  multiple times per frame! results need to be accumulated somewhere!
+
     class Itimer {
         friend class PerformanceManager;
 
@@ -103,9 +105,13 @@ public:
         cpu_timer(const timer_config& conf) : Itimer(conf) {}
 
         void start(frame_type frame) override {
-            _start = std::chrono::high_resolution_clock::now();
-            _started = true;
-            _start_frame = frame;
+            if (!_started) {
+                _start = std::chrono::high_resolution_clock::now();
+                _started = true;
+                _start_frame = frame;
+            } else {
+                throw std::exception("cpu_timer: region needs to be ended before being started");
+            }
         }
         void end() override {
             if (_started) {
@@ -135,9 +141,14 @@ public:
         }
 
         void start(frame_type frame) override {
-            glQueryCounter(_start_id, GL_TIMESTAMP);
-            _started = true;
-            _start_frame = frame;
+            if (!_started) {
+                glQueryCounter(_start_id, GL_TIMESTAMP);
+                _started = true;
+                _start_frame = frame;
+                _last_query = _start_id;
+            } else {
+                throw std::exception("gl_timer: region needs to be ended before being started");
+            }
         }
 
         void end() override {
@@ -250,8 +261,13 @@ private:
 
         for (auto& t : _timers) {
             if (t->get_start_frame() != this_frame.frame) {
-                // timer did not run this frame
+                // timer did not start this frame
                 continue;
+            } else {
+                if (t->_started) {
+                    // timer was not ended this frame
+                    continue;
+                }
             }
             t->collect();
             auto& tconf = t->get_conf();
