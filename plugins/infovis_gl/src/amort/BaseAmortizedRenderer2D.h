@@ -5,8 +5,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/ShaderFactory.h"
-#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 
 #include "Renderer2D.h"
 
@@ -25,9 +25,9 @@ namespace infovis_gl {
 
         void release() override;
 
-        bool GetExtents(core::view::CallRender2DGL& call) final;
+        bool GetExtents(core_gl::view::CallRender2DGL& call) final;
 
-        bool Render(core::view::CallRender2DGL& call) final;
+        bool Render(core_gl::view::CallRender2DGL& call) final;
 
         bool OnMouseButton(
             core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) final;
@@ -45,8 +45,8 @@ namespace infovis_gl {
 
         virtual void releaseImpl() = 0;
 
-        virtual bool renderImpl(core::view::CallRender2DGL& nextRendererCall,
-            std::shared_ptr<core::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) = 0;
+        virtual bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
+            std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) = 0;
 
     private:
         megamol::core::CallerSlot nextRendererSlot;

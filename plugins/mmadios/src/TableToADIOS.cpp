@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "TableToADIOS.h"
 
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "datatools/table/TableDataCall.h"
 

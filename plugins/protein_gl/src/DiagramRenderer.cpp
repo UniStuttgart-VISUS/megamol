@@ -1,77 +1,95 @@
 #include "stdafx.h"
 #include "DiagramRenderer.h"
+#include <float.h>
+#include <math.h>
 #include "mmcore/CoreInstance.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib/math/ShallowPoint.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/ShallowPoint.h"
-#include <GL/glu.h>
-#include <math.h>
-#include "vislib/graphics/gl/Verdana.inc"
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include <float.h>
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_gl;
-using namespace vislib::graphics::gl;
+using namespace vislib_gl::graphics::gl;
 using megamol::core::utility::log::Log;
 
 /*
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
-DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
-        dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ),
-        selectionCallerSlot( "getSelection", "Connects the diagram rendering with selection storage." ),
-        hiddenCallerSlot( "getHidden", "Connects the diagram rendering with visibility storage." ),
-        theFont(FontInfo_Verdana), decorationDepth(0.0f),
-        diagramTypeParam("Type", "The diagram type."),
-        diagramStyleParam("Style", "The diagram style."),
-        numXTicksParam("X Ticks", "The number of X ticks."),
-        numYTicksParam("Y Ticks", "The number of Y ticks."),
-        lineWidthParam("linewidth", "width of the drawn lines."),
-        drawYLogParam("logarithmic", "scale the Y axis logarithmically."),
-        foregroundColorParam("foregroundCol", "The color of the diagram decorations."),
-        drawCategoricalParam("categorical", "Draw column charts as categorical."),
-        showCrosshairParam("show XHair", "bool param for the Crosshair toggle"),
-        showCrosshairToggleParam("toggle XHair", "Show a crosshair to inform the user of the current mouse position."),
-        showAllParam("show all", "Make all series visible."),
-        hideAllParam("hide all", "Make all series invisible."),
-        showGuidesParam("show guides", "Show defined guides in the diagram."),
-        autoAspectParam("auto aspect", "Automatically adjust aspect ratio to fit especially bar data."),
-        aspectRatioParam("acpect ratio", "Aspect ratio for the diagram."),
-        showMarkersParam("show markers", "When to show markers in line charts."),
-        preparedData(NULL), categories(vislib::Array<vislib::StringA>()),
-        hoveredMarker(NULL), hoveredSeries(0), diagram(NULL), selectionCall(NULL), hiddenCall(NULL),
-        markerTextures(), preparedSeries(), localXIndexToGlobal(), xAxis(0.0f), yAxis(0.0f),
-        xTickOff(0.0f), barWidth(0.0f), fontSize(1.0f / 20.0f),
-        legendOffset(0.0f), legendWidth(0.0f), legendHeight(0.0f), legendMargin(0.0f),
-        barWidthRatio(0.8f), selectedSeries(NULL),
-        unselectedColor(vislib::math::Vector<float, 4>(0.5f, 0.5f, 0.5f, 1.0f)),
-        //hovering(false),
-        hoverPoint(), seriesVisible() {
+DiagramRenderer::DiagramRenderer(void)
+        : core_gl::view::Renderer2DModuleGL()
+        , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
+        , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
+        , hiddenCallerSlot("getHidden", "Connects the diagram rendering with visibility storage.")
+        , theFont(FontInfo_Verdana)
+        , decorationDepth(0.0f)
+        , diagramTypeParam("Type", "The diagram type.")
+        , diagramStyleParam("Style", "The diagram style.")
+        , numXTicksParam("X Ticks", "The number of X ticks.")
+        , numYTicksParam("Y Ticks", "The number of Y ticks.")
+        , lineWidthParam("linewidth", "width of the drawn lines.")
+        , drawYLogParam("logarithmic", "scale the Y axis logarithmically.")
+        , foregroundColorParam("foregroundCol", "The color of the diagram decorations.")
+        , drawCategoricalParam("categorical", "Draw column charts as categorical.")
+        , showCrosshairParam("show XHair", "bool param for the Crosshair toggle")
+        , showCrosshairToggleParam("toggle XHair", "Show a crosshair to inform the user of the current mouse position.")
+        , showAllParam("show all", "Make all series visible.")
+        , hideAllParam("hide all", "Make all series invisible.")
+        , showGuidesParam("show guides", "Show defined guides in the diagram.")
+        , autoAspectParam("auto aspect", "Automatically adjust aspect ratio to fit especially bar data.")
+        , aspectRatioParam("acpect ratio", "Aspect ratio for the diagram.")
+        , showMarkersParam("show markers", "When to show markers in line charts.")
+        , preparedData(NULL)
+        , categories(vislib::Array<vislib::StringA>())
+        , hoveredMarker(NULL)
+        , hoveredSeries(0)
+        , diagram(NULL)
+        , selectionCall(NULL)
+        , hiddenCall(NULL)
+        , markerTextures()
+        , preparedSeries()
+        , localXIndexToGlobal()
+        , xAxis(0.0f)
+        , yAxis(0.0f)
+        , xTickOff(0.0f)
+        , barWidth(0.0f)
+        , fontSize(1.0f / 20.0f)
+        , legendOffset(0.0f)
+        , legendWidth(0.0f)
+        , legendHeight(0.0f)
+        , legendMargin(0.0f)
+        , barWidthRatio(0.8f)
+        , selectedSeries(NULL)
+        , unselectedColor(vislib::math::Vector<float, 4>(0.5f, 0.5f, 0.5f, 1.0f))
+        ,
+        // hovering(false),
+        hoverPoint()
+        , seriesVisible() {
 
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<protein_calls::DiagramCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
-	this->selectionCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
+    this->selectionCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
-    
-	this->hiddenCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
+
+    this->hiddenCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->hiddenCallerSlot);
 
-    param::EnumParam *dt = new param::EnumParam(0);
+    param::EnumParam* dt = new param::EnumParam(0);
     dt->SetTypePair(DIAGRAM_TYPE_LINE, "Line");
     dt->SetTypePair(DIAGRAM_TYPE_LINE_STACKED, "Stacked Line");
     dt->SetTypePair(DIAGRAM_TYPE_LINE_STACKED_NORMALIZED, "100% Stacked Line");
@@ -81,7 +99,7 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
     this->diagramTypeParam.SetParameter(dt);
     this->MakeSlotAvailable(&this->diagramTypeParam);
 
-    param::EnumParam *ds = new param::EnumParam(0);
+    param::EnumParam* ds = new param::EnumParam(0);
     ds->SetTypePair(DIAGRAM_STYLE_WIRE, "Wireframe");
     ds->SetTypePair(DIAGRAM_STYLE_FILLED, "Filled");
     this->diagramStyleParam.SetParameter(ds);
@@ -100,13 +118,13 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
     this->fgColor.Set(1.0f, 1.0f, 1.0f, 1.0f);
     this->MakeSlotAvailable(&this->foregroundColorParam);
 
-    param::EnumParam *dc = new param::EnumParam(0);
+    param::EnumParam* dc = new param::EnumParam(0);
     dc->SetTypePair(1, "true");
     dc->SetTypePair(0, "false");
     this->drawCategoricalParam.SetParameter(dc);
     this->MakeSlotAvailable(&this->drawCategoricalParam);
 
-    param::EnumParam *sm = new param::EnumParam(0);
+    param::EnumParam* sm = new param::EnumParam(0);
     sm->SetTypePair(DIAGRAM_MARKERS_SHOW_ALL, "show all");
     sm->SetTypePair(DIAGRAM_MARKERS_SHOW_SELECTED, "show selected");
     sm->SetTypePair(DIAGRAM_MARKERS_SHOW_NONE, "hide all");
@@ -115,7 +133,8 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
 
     this->showCrosshairParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showCrosshairParam);
-    this->showCrosshairToggleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_C, core::view::Modifier::CTRL));
+    this->showCrosshairToggleParam.SetParameter(
+        new param::ButtonParam(core::view::Key::KEY_C, core::view::Modifier::CTRL));
     this->showCrosshairToggleParam.SetUpdateCallback(this, &DiagramRenderer::onCrosshairToggleButton);
     this->MakeSlotAvailable(&this->showCrosshairToggleParam);
     this->showAllParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL));
@@ -124,7 +143,7 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
     this->hideAllParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::CTRL));
     this->hideAllParam.SetUpdateCallback(this, &DiagramRenderer::onHideAllButton);
     this->MakeSlotAvailable(&this->hideAllParam);
-    
+
     this->aspectRatioParam.SetParameter(new param::FloatParam(1.0, 0.0));
     this->MakeSlotAvailable(&this->aspectRatioParam);
     this->autoAspectParam.SetParameter(new param::BoolParam(false));
@@ -139,7 +158,7 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
 /*
  * Diagram2DRenderer::~Diagram2DRenderer (DTOR)
  */
-DiagramRenderer::~DiagramRenderer( void ) {
+DiagramRenderer::~DiagramRenderer(void) {
     this->Release();
 }
 
@@ -148,11 +167,11 @@ DiagramRenderer::~DiagramRenderer( void ) {
  */
 bool DiagramRenderer::create() {
 
-	this->LoadIcon("plop.png", protein_calls::DiagramCall::DIAGRAM_MARKER_DISAPPEAR);
-	this->LoadIcon("bookmark.png", protein_calls::DiagramCall::DIAGRAM_MARKER_BOOKMARK);
-	this->LoadIcon("merge.png", protein_calls::DiagramCall::DIAGRAM_MARKER_MERGE);
-	this->LoadIcon("split.png", protein_calls::DiagramCall::DIAGRAM_MARKER_SPLIT);
-	this->LoadIcon("exit2.png", protein_calls::DiagramCall::DIAGRAM_MARKER_EXIT);
+    this->LoadIcon("plop.png", protein_calls::DiagramCall::DIAGRAM_MARKER_DISAPPEAR);
+    this->LoadIcon("bookmark.png", protein_calls::DiagramCall::DIAGRAM_MARKER_BOOKMARK);
+    this->LoadIcon("merge.png", protein_calls::DiagramCall::DIAGRAM_MARKER_MERGE);
+    this->LoadIcon("split.png", protein_calls::DiagramCall::DIAGRAM_MARKER_SPLIT);
+    this->LoadIcon("exit2.png", protein_calls::DiagramCall::DIAGRAM_MARKER_EXIT);
 
     return true;
 }
@@ -160,17 +179,18 @@ bool DiagramRenderer::create() {
 /*
  * Diagram2DRenderer::release
  */
-void DiagramRenderer::release() {
-}
+void DiagramRenderer::release() {}
 
 bool DiagramRenderer::CalcExtents() {
 
     // TODO dirty checking and shit
 
-	protein_calls::DiagramCall *diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
-    if( diagram == NULL ) return false;
+    protein_calls::DiagramCall* diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
+    if (diagram == NULL)
+        return false;
     // execute the call
-	if (!(*diagram)(protein_calls::DiagramCall::CallForGetData)) return false;
+    if (!(*diagram)(protein_calls::DiagramCall::CallForGetData))
+        return false;
 
     int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
 
@@ -182,9 +202,9 @@ bool DiagramRenderer::CalcExtents() {
     this->yRange.SetSecond(-FLT_MAX);
     bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
     if (autoFit) {
-        for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-			protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-			const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
+        for (int s = 0; s < (int) diagram->GetSeriesCount(); s++) {
+            protein_calls::DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
+            const protein_calls::DiagramCall::DiagramMappable* dm = ds->GetMappable();
             if (seriesVisible[s] && isCategoricalMappable(dm) == drawCategorical) {
                 vislib::Pair<float, float> xR = dm->GetAbscissaRange(0);
                 vislib::Pair<float, float> yR = dm->GetOrdinateRange();
@@ -203,28 +223,28 @@ bool DiagramRenderer::CalcExtents() {
             }
         }
 
-        switch(type) {
-            case DIAGRAM_TYPE_COLUMN_STACKED:
-            case DIAGRAM_TYPE_LINE_STACKED:
-            case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
-            case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
-                this->yRange.SetFirst(0.0f);
-                this->yRange.SetSecond(1.0f);
-                break;
+        switch (type) {
+        case DIAGRAM_TYPE_COLUMN_STACKED:
+        case DIAGRAM_TYPE_LINE_STACKED:
+        case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
+        case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
+            this->yRange.SetFirst(0.0f);
+            this->yRange.SetSecond(1.0f);
+            break;
         }
     }
     return true;
 }
 
-bool DiagramRenderer::GetExtents(view::CallRender2DGL& call) {
+bool DiagramRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize, 0,
         this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize, 0);
 
-    //this->CalcExtents();
+    // this->CalcExtents();
     ////  ( this->yRange.Second() - this->yRange.First())
     ////            * this->aspectRatioParam.Param<param::FloatParam>()->Value() + this->xRange.First()
-    //call.SetBoundingBox(xRange.First(), yRange.First(), xRange.Second(), yRange.Second());
+    // call.SetBoundingBox(xRange.First(), yRange.First(), xRange.Second(), yRange.Second());
     return true;
 }
 
@@ -233,15 +253,15 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void *buf = NULL;
+    void* buf = NULL;
     SIZE_T size = 0;
 
-    //if (pbc.Load(filename)) {
+    // if (pbc.Load(filename)) {
     if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-            this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-            for (unsigned int i = 0; i < img.Width() * img.Height(); i++ ) {
+            for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
                 BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
                 BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
@@ -251,10 +271,11 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
                     img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
                 }
             }
-            markerTextures.Add(vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> >());
+            markerTextures.Add(vislib::Pair<int, vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>>());
             markerTextures.Last().First() = ID;
-            markerTextures.Last().SetSecond(new vislib::graphics::gl::OpenGLTexture2D());
-            if (markerTextures.Last().Second()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+            markerTextures.Last().SetSecond(new vislib_gl::graphics::gl::OpenGLTexture2D());
+            if (markerTextures.Last().Second()->Create(
+                    img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
@@ -290,12 +311,12 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
             vislib::math::Point<float, 2> pt3, pt4;
             vislib::math::ShallowPoint<float, 2> pt(mouse.PeekCoordinates());
             vislib::math::ShallowPoint<float, 2> pt2(mouse.PeekCoordinates());
-            //printf("checking for hits\n");
+            // printf("checking for hits\n");
 
-            vislib::math::Rectangle<float> legend(-legendOffset - legendWidth,
-                1.0f - legendHeight, -legendOffset, 1.0f);
+            vislib::math::Rectangle<float> legend(
+                -legendOffset - legendWidth, 1.0f - legendHeight, -legendOffset, 1.0f);
             if (legend.Contains(aspectlessMouse)) {
-                //printf("i am legend\n");
+                // printf("i am legend\n");
                 if (diagram == NULL) {
                     return false;
                 }
@@ -304,95 +325,94 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                 bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
                 vislib::Array<int> visibleSeries;
                 visibleSeries.SetCapacityIncrement(10);
-				for (int i = 0; i < (int)diagram->GetSeriesCount(); i++) {
+                for (int i = 0; i < (int) diagram->GetSeriesCount(); i++) {
                     if (isCategoricalMappable(diagram->GetSeries(i)->GetMappable()) == drawCategorical) {
                         visibleSeries.Add(i);
                     }
                 }
                 if (series < visibleSeries.Count()) {
-					protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(visibleSeries[static_cast<int>(series)]);
+                    protein_calls::DiagramCall::DiagramSeries* ds =
+                        diagram->GetSeries(visibleSeries[static_cast<int>(series)]);
                     float legendLeft = -legendOffset - legendWidth;
-                    if (legendLeft + legendMargin < x &&
-                            x < legendLeft + legendMargin + 0.6 * fontSize) {
-                        //printf("I think I hit the checkbox of series %s\n", ds->GetName());
-                        //ds->SetVisible(!ds->GetVisible());
+                    if (legendLeft + legendMargin < x && x < legendLeft + legendMargin + 0.6 * fontSize) {
+                        // printf("I think I hit the checkbox of series %s\n", ds->GetName());
+                        // ds->SetVisible(!ds->GetVisible());
                         seriesVisible[static_cast<int>(series)] = !seriesVisible[static_cast<int>(series)];
                     } else {
                         selectedSeries = ds;
-                        //printf("I think I hit series %s\n", selectedSeries->GetName());
+                        // printf("I think I hit series %s\n", selectedSeries->GetName());
                         consumeEvent = true;
                     }
                 }
             } else {
                 float dist = FLT_MAX;
                 int distOffset = -1;
-                if (type == DIAGRAM_TYPE_LINE || type == DIAGRAM_TYPE_LINE_STACKED
-                    || type == DIAGRAM_TYPE_LINE_STACKED_NORMALIZED) {
+                if (type == DIAGRAM_TYPE_LINE || type == DIAGRAM_TYPE_LINE_STACKED ||
+                    type == DIAGRAM_TYPE_LINE_STACKED_NORMALIZED) {
 
-						for (int i = 0; i < (int)preparedData->Count(); i++) {
-                            int leftNeighbor = -1;
-                            int rightNeighbor = -1;
-							for (int j = 0; j < (int)(*preparedData)[i]->Count(); j++) {
-                                if ((*(*preparedData)[i])[j] != NULL) {
-                                    if ((*(*preparedData)[i])[j]->GetX() > mouse.GetX()) {
-                                        break;
-                                    }
-                                    pt.SetPointer((*(*preparedData)[i])[j]->PeekCoordinates());
-                                    leftNeighbor = j;
-                                }
-                            }
-                            for (int j = static_cast<int>((*preparedData)[i]->Count()) - 1; j > -1; j--) {
-                                if ((*(*preparedData)[i])[j] != NULL) {
-                                    if ((*(*preparedData)[i])[j]->GetX() < mouse.GetX()) {
-                                        break;
-                                    }
-                                    pt2.SetPointer((*(*preparedData)[i])[j]->PeekCoordinates());
-                                    rightNeighbor = j;
-                                }
-                            }
-                            if (leftNeighbor == -1 || rightNeighbor == -1
-                                    || (rightNeighbor - leftNeighbor) > 1) {
-                                continue;
-                            }
-                            pt3 = pt.Interpolate(pt2, (mouse.GetX() - pt.X()) / (pt2.X() - pt.X()));
-                            float d = pt3.Distance(mouse);
-                            if (d < dist) {
-                                dist = d;
-                                distOffset = i;
-                            }
-                        }
-                        if (distOffset != -1 && dist < 0.2f) {
-                            //printf("I think I hit series %s[%u]\n", preparedSeries[distOffset]->GetName(), distOffset);
-                            selectedSeries = preparedSeries[distOffset];
-                            consumeEvent = true;
-                        } else {
-                            selectedSeries = NULL;
-                        }
-                } else if (type == DIAGRAM_TYPE_COLUMN || type == DIAGRAM_TYPE_COLUMN_STACKED
-                    || type == DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED) {
-
-						for (int i = 0; i < (int)preparedData->Count(); i++) {
-							for (int j = 0; j < (int)(*preparedData)[i]->Count(); j++) {
-                                if ((*(*preparedData)[i])[j] == NULL) {
-                                    continue;
-                                }
-                                float x2, y2;
-                                getBarXY(i, j, type, &x2, &y2);
-                                float y1 = (*(*preparedData)[i])[j]->GetZ();
-                                float xDiff = xObj - x2;
-                                if (xDiff > 0.0f && xDiff < barWidth && y > y1 && y < y2) {
-                                    //printf("I think I hit series %s[%u][%u]\n", preparedSeries[i]->GetName(), i, j);
-                                    selectedSeries = preparedSeries[i];
-                                    consumeEvent = true;
+                    for (int i = 0; i < (int) preparedData->Count(); i++) {
+                        int leftNeighbor = -1;
+                        int rightNeighbor = -1;
+                        for (int j = 0; j < (int) (*preparedData)[i]->Count(); j++) {
+                            if ((*(*preparedData)[i])[j] != NULL) {
+                                if ((*(*preparedData)[i])[j]->GetX() > mouse.GetX()) {
                                     break;
                                 }
+                                pt.SetPointer((*(*preparedData)[i])[j]->PeekCoordinates());
+                                leftNeighbor = j;
                             }
                         }
-                        if (!consumeEvent) {
-                            selectedSeries = NULL;
+                        for (int j = static_cast<int>((*preparedData)[i]->Count()) - 1; j > -1; j--) {
+                            if ((*(*preparedData)[i])[j] != NULL) {
+                                if ((*(*preparedData)[i])[j]->GetX() < mouse.GetX()) {
+                                    break;
+                                }
+                                pt2.SetPointer((*(*preparedData)[i])[j]->PeekCoordinates());
+                                rightNeighbor = j;
+                            }
                         }
+                        if (leftNeighbor == -1 || rightNeighbor == -1 || (rightNeighbor - leftNeighbor) > 1) {
+                            continue;
+                        }
+                        pt3 = pt.Interpolate(pt2, (mouse.GetX() - pt.X()) / (pt2.X() - pt.X()));
+                        float d = pt3.Distance(mouse);
+                        if (d < dist) {
+                            dist = d;
+                            distOffset = i;
+                        }
+                    }
+                    if (distOffset != -1 && dist < 0.2f) {
+                        // printf("I think I hit series %s[%u]\n", preparedSeries[distOffset]->GetName(), distOffset);
+                        selectedSeries = preparedSeries[distOffset];
+                        consumeEvent = true;
+                    } else {
+                        selectedSeries = NULL;
+                    }
+                } else if (type == DIAGRAM_TYPE_COLUMN || type == DIAGRAM_TYPE_COLUMN_STACKED ||
+                           type == DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED) {
+
+                    for (int i = 0; i < (int) preparedData->Count(); i++) {
+                        for (int j = 0; j < (int) (*preparedData)[i]->Count(); j++) {
+                            if ((*(*preparedData)[i])[j] == NULL) {
+                                continue;
+                            }
+                            float x2, y2;
+                            getBarXY(i, j, type, &x2, &y2);
+                            float y1 = (*(*preparedData)[i])[j]->GetZ();
+                            float xDiff = xObj - x2;
+                            if (xDiff > 0.0f && xDiff < barWidth && y > y1 && y < y2) {
+                                // printf("I think I hit series %s[%u][%u]\n", preparedSeries[i]->GetName(), i, j);
+                                selectedSeries = preparedSeries[i];
+                                consumeEvent = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!consumeEvent) {
+                        selectedSeries = NULL;
+                    }
                 }
-            } 
+            }
         } else {
         }
     }
@@ -400,41 +420,41 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     // propagate selection to selection module
     if (selectionCall != NULL) {
         vislib::Array<int> selectedSeriesIndices;
-		for (int x = 0; x < (int)this->diagram->GetSeriesCount(); x++) {
+        for (int x = 0; x < (int) this->diagram->GetSeriesCount(); x++) {
             if (this->diagram->GetSeries(x) == this->selectedSeries) {
                 selectedSeriesIndices.Add(x);
                 break;
             }
         }
         selectionCall->SetSelectionPointer(&selectedSeriesIndices);
-		(*selectionCall)(protein_calls::IntSelectionCall::CallForSetSelection);
+        (*selectionCall)(protein_calls::IntSelectionCall::CallForSetSelection);
     }
 
     // propagate visibility to hidden module
     if (hiddenCall != NULL) {
         vislib::Array<int> hiddenSeriesIndices;
-		for (int x = 0; x < (int)this->diagram->GetSeriesCount(); x++) {
+        for (int x = 0; x < (int) this->diagram->GetSeriesCount(); x++) {
             if (!seriesVisible[x]) {
                 hiddenSeriesIndices.Add(x);
             }
         }
         hiddenCall->SetSelectionPointer(&hiddenSeriesIndices);
-		(*hiddenCall)(protein_calls::IntSelectionCall::CallForSetSelection);
+        (*hiddenCall)(protein_calls::IntSelectionCall::CallForSetSelection);
     }
 
     // hovering
     hoveredMarker = NULL;
     if (preparedData != NULL) {
-		for (int s = 0; s < (int)preparedData->Count(); s++) {
+        for (int s = 0; s < (int) preparedData->Count(); s++) {
             float markerSize = fontSize;
-			for (int i = 0; i < (int)preparedSeries[s]->GetMarkerCount(); i++) {
-				const protein_calls::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
-				for (int j = 0; j < (int)this->markerTextures.Count(); j++) {
+            for (int i = 0; i < (int) preparedSeries[s]->GetMarkerCount(); i++) {
+                const protein_calls::DiagramCall::DiagramMarker* m = preparedSeries[s]->GetMarker(i);
+                for (int j = 0; j < (int) this->markerTextures.Count(); j++) {
                     if (markerTextures[j].First() == m->GetType()) {
                         markerTextures[j].Second()->Bind();
                         // TODO FIXME BUG WTF does this happen anyway
-                        if ((m->GetIndex() > (*preparedData)[s]->Count() - 1) 
-                                || (*(*preparedData)[s])[m->GetIndex()] == NULL) {
+                        if ((m->GetIndex() > (*preparedData)[s]->Count() - 1) ||
+                            (*(*preparedData)[s])[m->GetIndex()] == NULL) {
                             continue;
                         }
                         float mx = (*(*preparedData)[s])[m->GetIndex()]->X();
@@ -443,7 +463,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                         mx -= markerSize / 2.0f;
                         my -= markerSize / 2.0f;
                         if (mx < x && x < mx + markerSize && my < y && y < my + markerSize) {
-                            //printf("hovering over marker %u of series %s\n", i, preparedSeries[s]->GetName());
+                            // printf("hovering over marker %u of series %s\n", i, preparedSeries[s]->GetName());
                             hoveredMarker = m;
                             hoveredSeries = s;
                         }
@@ -462,7 +482,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
  * DiagramRenderer::onCrosshairToggleButton
  */
 bool DiagramRenderer::onCrosshairToggleButton(param::ParamSlot& p) {
-    param::BoolParam *bp = this->showCrosshairParam.Param<param::BoolParam>();
+    param::BoolParam* bp = this->showCrosshairParam.Param<param::BoolParam>();
     bp->SetValue(!bp->Value());
     return true;
 }
@@ -473,8 +493,8 @@ bool DiagramRenderer::onCrosshairToggleButton(param::ParamSlot& p) {
  */
 bool DiagramRenderer::onShowAllButton(param::ParamSlot& p) {
     if (this->diagram != NULL) {
-		for (int i = 0; i < (int)this->diagram->GetSeriesCount(); i++) {
-            //this->diagram->GetSeries(i)->SetVisible(true);
+        for (int i = 0; i < (int) this->diagram->GetSeriesCount(); i++) {
+            // this->diagram->GetSeries(i)->SetVisible(true);
             seriesVisible[i] = true;
         }
     }
@@ -487,8 +507,8 @@ bool DiagramRenderer::onShowAllButton(param::ParamSlot& p) {
  */
 bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
     if (this->diagram != NULL) {
-		for (int i = 0; i < (int)this->diagram->GetSeriesCount(); i++) {
-            //this->diagram->GetSeries(i)->SetVisible(false);
+        for (int i = 0; i < (int) this->diagram->GetSeriesCount(); i++) {
+            // this->diagram->GetSeries(i)->SetVisible(false);
             seriesVisible[i] = false;
         }
     }
@@ -499,38 +519,39 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
 /*
  * Diagram2DRenderer::Render
  */
-bool DiagramRenderer::Render(view::CallRender2DGL &call) {
+bool DiagramRenderer::Render(core_gl::view::CallRender2DGL& call) {
     // get pointer to Diagram2DCall
-	diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
-    if( diagram == NULL ) return false;
+    diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
+    if (diagram == NULL)
+        return false;
     // execute the call
-	if (!(*diagram)(protein_calls::DiagramCall::CallForGetData)) return false;
+    if (!(*diagram)(protein_calls::DiagramCall::CallForGetData))
+        return false;
 
-	selectionCall = this->selectionCallerSlot.CallAs<protein_calls::IntSelectionCall>();
+    selectionCall = this->selectionCallerSlot.CallAs<protein_calls::IntSelectionCall>();
     if (selectionCall != NULL) {
-		(*selectionCall)(protein_calls::IntSelectionCall::CallForGetSelection);
-        if (selectionCall->GetSelectionPointer() != NULL
-                && selectionCall->GetSelectionPointer()->Count() > 0) {
+        (*selectionCall)(protein_calls::IntSelectionCall::CallForGetSelection);
+        if (selectionCall->GetSelectionPointer() != NULL && selectionCall->GetSelectionPointer()->Count() > 0) {
             selectedSeries = diagram->GetSeries((*selectionCall->GetSelectionPointer())[0]);
         } else {
             selectedSeries = NULL;
         }
     }
 
-    while(seriesVisible.Count() < diagram->GetSeriesCount()) {
+    while (seriesVisible.Count() < diagram->GetSeriesCount()) {
         seriesVisible.Append(true);
     }
-    
+
     // do we have visibility information propagated from outside?
-	hiddenCall = this->hiddenCallerSlot.CallAs<protein_calls::IntSelectionCall>();
+    hiddenCall = this->hiddenCallerSlot.CallAs<protein_calls::IntSelectionCall>();
     if (hiddenCall != NULL) {
-		(*hiddenCall)(protein_calls::IntSelectionCall::CallForGetSelection);
+        (*hiddenCall)(protein_calls::IntSelectionCall::CallForGetSelection);
         if (hiddenCall->GetSelectionPointer() != NULL) {
             for (SIZE_T x = 0; x < seriesVisible.Count(); x++) {
                 seriesVisible[x] = true;
             }
             if (hiddenCall->GetSelectionPointer()->Count() > 0) {
-                vislib::Array<int> *sel = hiddenCall->GetSelectionPointer();
+                vislib::Array<int>* sel = hiddenCall->GetSelectionPointer();
                 for (SIZE_T x = 0; x < sel->Count(); x++) {
                     seriesVisible[(*sel)[x]] = false;
                 }
@@ -539,11 +560,8 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
     }
 
     if (this->foregroundColorParam.IsDirty()) {
-        utility::ColourParser::FromString(
-            this->foregroundColorParam.Param<param::StringParam>()->Value().c_str(),
-            fgColor.PeekComponents()[0],
-            fgColor.PeekComponents()[1],
-            fgColor.PeekComponents()[2],
+        utility::ColourParser::FromString(this->foregroundColorParam.Param<param::StringParam>()->Value().c_str(),
+            fgColor.PeekComponents()[0], fgColor.PeekComponents()[1], fgColor.PeekComponents()[2],
             fgColor.PeekComponents()[3]);
     }
     // TODO dirty checking and shit
@@ -564,17 +582,17 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
         yAxis = -xRange.First() / (xRange.Second() - xRange.First());
     }
 
-    switch(this->diagramTypeParam.Param<param::EnumParam>()->Value()) {
-        case DIAGRAM_TYPE_LINE:
-        case DIAGRAM_TYPE_LINE_STACKED:
-        case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
-            drawLineDiagram();
-            break;
-        case DIAGRAM_TYPE_COLUMN:
-        case DIAGRAM_TYPE_COLUMN_STACKED:
-        case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
-            drawColumnDiagram();
-            break;
+    switch (this->diagramTypeParam.Param<param::EnumParam>()->Value()) {
+    case DIAGRAM_TYPE_LINE:
+    case DIAGRAM_TYPE_LINE_STACKED:
+    case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
+        drawLineDiagram();
+        break;
+    case DIAGRAM_TYPE_COLUMN:
+    case DIAGRAM_TYPE_COLUMN_STACKED:
+    case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
+        drawColumnDiagram();
+        break;
     }
 
     float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
@@ -585,7 +603,7 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
         vislib::StringA tmpString;
         float y;
         if (drawLog) {
-            y = (float)pow(10, hoverPoint.GetY() * log10(yRange.Second() - yRange.First())) + yRange.First();
+            y = (float) pow(10, hoverPoint.GetY() * log10(yRange.Second() - yRange.First())) + yRange.First();
         } else {
             y = hoverPoint.GetY() * (yRange.Second() - yRange.First()) + yRange.First();
         }
@@ -597,13 +615,13 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
         ::glVertex3f(0.0f, hoverPoint.GetY(), decorationDepth);
         ::glVertex3f(aspect, hoverPoint.GetY(), decorationDepth);
         ::glEnd();
-        theFont.DrawString(hoverPoint.GetX(), hoverPoint.GetY(), fontSize * 0.5f, true,
-            tmpString.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+        theFont.DrawString(hoverPoint.GetX(), hoverPoint.GetY(), fontSize * 0.5f, true, tmpString.PeekBuffer(),
+            vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
     }
 
     if (this->showGuidesParam.Param<param::BoolParam>()->Value()) {
-		for (int i = 0; i < (int)diagram->GetGuideCount(); i++) {
-			protein_calls::DiagramCall::DiagramGuide *g = diagram->GetGuide(i);
+        for (int i = 0; i < (int) diagram->GetGuideCount(); i++) {
+            protein_calls::DiagramCall::DiagramGuide* g = diagram->GetGuide(i);
             ::glDisable(GL_BLEND);
             ::glDisable(GL_DEPTH_TEST);
             vislib::StringA tmpString;
@@ -613,28 +631,28 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
             ::glBegin(GL_LINES);
             ::glColor4fv(this->fgColor.PeekComponents());
             float pos;
-            switch(g->GetType()) {
-				case protein_calls::DiagramCall::DIAGRAM_GUIDE_HORIZONTAL:
-                    pos = g->GetPosition() - yRange.First();
-                    pos /= yRange.GetSecond() - yRange.GetFirst();
-                    ::glVertex3f(0.0f, pos, decorationDepth);
-                    ::glVertex3f(aspect, pos, decorationDepth);
-                    ::glEnd();
-                    ::glDisable(GL_LINE_STIPPLE);
-                    theFont.DrawString(aspect, pos, fontSize * 0.5f, true,
-                        tmpString.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
-                    break;
-				case protein_calls::DiagramCall::DIAGRAM_GUIDE_VERTICAL:
-                    pos = g->GetPosition() - xRange.First();
-                    pos /= xRange.GetSecond() - xRange.GetFirst();
-                    pos *= aspect;
-                    ::glVertex3f(pos, 0.0f, decorationDepth);
-                    ::glVertex3f(pos, 1.0f, decorationDepth);
-                    ::glEnd();
-                    ::glDisable(GL_LINE_STIPPLE);
-                    theFont.DrawString(pos, 1.0f, fontSize * 0.5f, true,
-                        tmpString.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
-                    break;
+            switch (g->GetType()) {
+            case protein_calls::DiagramCall::DIAGRAM_GUIDE_HORIZONTAL:
+                pos = g->GetPosition() - yRange.First();
+                pos /= yRange.GetSecond() - yRange.GetFirst();
+                ::glVertex3f(0.0f, pos, decorationDepth);
+                ::glVertex3f(aspect, pos, decorationDepth);
+                ::glEnd();
+                ::glDisable(GL_LINE_STIPPLE);
+                theFont.DrawString(aspect, pos, fontSize * 0.5f, true, tmpString.PeekBuffer(),
+                    vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+                break;
+            case protein_calls::DiagramCall::DIAGRAM_GUIDE_VERTICAL:
+                pos = g->GetPosition() - xRange.First();
+                pos /= xRange.GetSecond() - xRange.GetFirst();
+                pos *= aspect;
+                ::glVertex3f(pos, 0.0f, decorationDepth);
+                ::glVertex3f(pos, 1.0f, decorationDepth);
+                ::glEnd();
+                ::glDisable(GL_LINE_STIPPLE);
+                theFont.DrawString(pos, 1.0f, fontSize * 0.5f, true, tmpString.PeekBuffer(),
+                    vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+                break;
             }
         }
     }
@@ -644,9 +662,9 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
         float y = (*(*preparedData)[hoveredSeries])[hoveredMarker->GetIndex()]->Y();
         x *= aspect;
         y += fontSize / 2.0f;
-        theFont.DrawString(x, y, fontSize * 0.5f, true,
-            hoveredMarker->GetTooltip(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
-            //"w3wt", vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+        theFont.DrawString(x, y, fontSize * 0.5f, true, hoveredMarker->GetTooltip(),
+            vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
+        //"w3wt", vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
     }
 
     return true;
@@ -656,8 +674,8 @@ bool DiagramRenderer::Render(view::CallRender2DGL &call) {
 void DiagramRenderer::drawYAxis() {
     int numYTicks = 0;
     float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
-    vislib::StringA *yTickText = NULL;
-    float *yTicks = NULL;
+    vislib::StringA* yTickText = NULL;
+    float* yTicks = NULL;
     if (this->drawYLogParam.Param<param::BoolParam>()->Value()) {
         int startExp, destExp;
         if (yRange.First() == 0.0f) {
@@ -686,7 +704,7 @@ void DiagramRenderer::drawYAxis() {
 
         for (int i = startExp; i <= destExp; i++) {
             yTickText[i] = vislib::StringA::EMPTY;
-            float yVal = (float)pow(10, static_cast<float>(i));
+            float yVal = (float) pow(10, static_cast<float>(i));
             yTickText[i].Format("%.2f", yVal);
             yTicks[i] = log10(yVal - yRange.First()) / log10(yRange.Second() - yRange.First());
         }
@@ -735,65 +753,63 @@ void DiagramRenderer::drawXAxis(XAxisTypes xType) {
         xTickOff = 0.0f;
     }
     int numXTicks;
-    switch(xType) {
-        case DIAGRAM_XAXIS_FLOAT:
-            numXTicks = this->numXTicksParam.Param<param::IntParam>()->Value();
-            break;
-        case DIAGRAM_XAXIS_INTEGRAL: {
-                //numXTicks = 0;
-                //for (int i = 0; i < diagram->GetSeriesCount(); i++) {
-                //    DiagramCall::DiagramSeries *ds = diagram->GetSeries(i);
-                //    const DiagramCall::DiagramMappable *dm = ds->GetMappable();
-                //    if (dm->GetDataCount() > numXTicks) {
-                //        numXTicks = dm->GetDataCount();
-                //    }
-                //}
-                //numXTicks++;
-                numXTicks = (int)xValues.Count();
-            }
-            break;
-        case DIAGRAM_XAXIS_CATEGORICAL:
-            numXTicks = static_cast<int>(categories.Count() + 1);
-            break;
+    switch (xType) {
+    case DIAGRAM_XAXIS_FLOAT:
+        numXTicks = this->numXTicksParam.Param<param::IntParam>()->Value();
+        break;
+    case DIAGRAM_XAXIS_INTEGRAL: {
+        // numXTicks = 0;
+        // for (int i = 0; i < diagram->GetSeriesCount(); i++) {
+        //    DiagramCall::DiagramSeries *ds = diagram->GetSeries(i);
+        //    const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+        //    if (dm->GetDataCount() > numXTicks) {
+        //        numXTicks = dm->GetDataCount();
+        //    }
+        //}
+        // numXTicks++;
+        numXTicks = (int) xValues.Count();
+    } break;
+    case DIAGRAM_XAXIS_CATEGORICAL:
+        numXTicks = static_cast<int>(categories.Count() + 1);
+        break;
     }
-    vislib::StringA *xTickText = new vislib::StringA[numXTicks];
+    vislib::StringA* xTickText = new vislib::StringA[numXTicks];
     float xTickLabel = (xRange.Second() - xRange.First()) / (numXTicks - 1);
     for (int i = 0; i < numXTicks; i++) {
         xTickText[i] = vislib::StringA::EMPTY;
-        switch(xType) {
-            case DIAGRAM_XAXIS_FLOAT:
-                xTickText[i].Format("%.2f", xTickLabel * i + xRange.First());
-                break;
-            case DIAGRAM_XAXIS_INTEGRAL:
-                xTickText[i].Format("%u", i);
-                break;
-            case DIAGRAM_XAXIS_CATEGORICAL:
-                // not needed
-                break;
+        switch (xType) {
+        case DIAGRAM_XAXIS_FLOAT:
+            xTickText[i].Format("%.2f", xTickLabel * i + xRange.First());
+            break;
+        case DIAGRAM_XAXIS_INTEGRAL:
+            xTickText[i].Format("%u", i);
+            break;
+        case DIAGRAM_XAXIS_CATEGORICAL:
+            // not needed
+            break;
         }
     }
     float aspect;
     if (this->autoAspectParam.Param<param::BoolParam>()->Value()) {
-        switch(xType) {
-            case DIAGRAM_XAXIS_FLOAT:
-                // cannot think of anything better actually
-                aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
-                break;
-            case DIAGRAM_XAXIS_INTEGRAL:
-                aspect = numXTicks * theFont.LineWidth(fontSize, xTickText[numXTicks - 1].PeekBuffer()) * 1.5f;
-                break;
-            case DIAGRAM_XAXIS_CATEGORICAL: {
-                    float wMax = 0.0f;
-					for (int i = 0; i < (int)categories.Count(); i++) {
-                        float w = theFont.LineWidth(fontSize, categories[i].PeekBuffer());
-                        if (w > wMax) {
-                            wMax = w;
-                        }
-                    }
-                    wMax *= 2.0f;
-                    aspect = wMax * categories.Count();
+        switch (xType) {
+        case DIAGRAM_XAXIS_FLOAT:
+            // cannot think of anything better actually
+            aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
+            break;
+        case DIAGRAM_XAXIS_INTEGRAL:
+            aspect = numXTicks * theFont.LineWidth(fontSize, xTickText[numXTicks - 1].PeekBuffer()) * 1.5f;
+            break;
+        case DIAGRAM_XAXIS_CATEGORICAL: {
+            float wMax = 0.0f;
+            for (int i = 0; i < (int) categories.Count(); i++) {
+                float w = theFont.LineWidth(fontSize, categories[i].PeekBuffer());
+                if (w > wMax) {
+                    wMax = w;
                 }
-                break;
+            }
+            wMax *= 2.0f;
+            aspect = wMax * categories.Count();
+        } break;
         }
         this->aspectRatioParam.Param<param::FloatParam>()->SetValue(aspect);
     } else {
@@ -823,30 +839,27 @@ void DiagramRenderer::drawXAxis(XAxisTypes xType) {
     }
     ::glPopMatrix();
 
-    switch(xType) {
-        case DIAGRAM_XAXIS_CATEGORICAL: {
-                for (int i = 0; i < numXTicks - 1; i++) {
-                    theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, categories[i].PeekBuffer(),
-                        vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
-                }
-            }
-            break;
-        case DIAGRAM_XAXIS_INTEGRAL: {
-                float needed = theFont.LineWidth(fontSize, xTickText[numXTicks - 1]);
-                int step = vislib::math::Max(static_cast<int>(needed / (xTickOff / aspect)), 1);
-                for (int i = 0; i < numXTicks - 1; i += step) {
-                    theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
-                        vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
-                }
-            }
-            break;
-        case DIAGRAM_XAXIS_FLOAT: {
-                for (int i = 0; i < numXTicks; i++) {
-                    theFont.DrawString(aspect * (xTickOff * i), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
-                        vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-                }
-            }
-            break;
+    switch (xType) {
+    case DIAGRAM_XAXIS_CATEGORICAL: {
+        for (int i = 0; i < numXTicks - 1; i++) {
+            theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true,
+                categories[i].PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+        }
+    } break;
+    case DIAGRAM_XAXIS_INTEGRAL: {
+        float needed = theFont.LineWidth(fontSize, xTickText[numXTicks - 1]);
+        int step = vislib::math::Max(static_cast<int>(needed / (xTickOff / aspect)), 1);
+        for (int i = 0; i < numXTicks - 1; i += step) {
+            theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
+                vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+        }
+    } break;
+    case DIAGRAM_XAXIS_FLOAT: {
+        for (int i = 0; i < numXTicks; i++) {
+            theFont.DrawString(aspect * (xTickOff * i), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
+                vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+        }
+    } break;
     }
 
     delete[] xTickText;
@@ -856,11 +869,11 @@ void DiagramRenderer::drawLegend() {
     legendWidth = 0.0f;
     vislib::StringA s;
     s.Format("%.2f", yRange.Second());
-    legendOffset = theFont.LineWidth(fontSize, s) + fontSize; //3.0f * fontSize;
+    legendOffset = theFont.LineWidth(fontSize, s) + fontSize; // 3.0f * fontSize;
     bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
     int cnt = 0;
-	for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-		protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+    for (int s = 0; s < (int) diagram->GetSeriesCount(); s++) {
+        protein_calls::DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
         if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
             float w = theFont.LineWidth(fontSize, ds->GetName());
             if (w > legendWidth) {
@@ -882,8 +895,8 @@ void DiagramRenderer::drawLegend() {
     ::glVertex3f(-legendOffset, 1.0f, decorationDepth);
     ::glEnd();
     cnt = 0;
-	for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-		protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+    for (int s = 0; s < (int) diagram->GetSeriesCount(); s++) {
+        protein_calls::DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
         if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
             if (selectedSeries == NULL || *selectedSeries == *ds) {
                 ::glColor4fv(ds->GetColor().PeekComponents());
@@ -891,8 +904,8 @@ void DiagramRenderer::drawLegend() {
                 ::glColor4fv(unselectedColor.PeekComponents());
             }
             float y = 1.0f - legendMargin - theFont.LineHeight(fontSize) * cnt;
-            theFont.DrawString(-legendOffset - legendMargin, y,
-                fontSize, true, ds->GetName(), vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
+            theFont.DrawString(-legendOffset - legendMargin, y, fontSize, true, ds->GetName(),
+                vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
             ::glBegin(GL_LINE_STRIP);
             ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
             ::glVertex3f(legendLeft + legendMargin, y - 0.8f * fontSize, decorationDepth);
@@ -913,7 +926,7 @@ void DiagramRenderer::drawLegend() {
     }
 }
 
-void DiagramRenderer::getBarXY(int series, int index, int type, float *x, float *y) {
+void DiagramRenderer::getBarXY(int series, int index, int type, float* x, float* y) {
     if (isCategoricalMappable(preparedSeries[series]->GetMappable())) {
         *x = (*(*preparedData)[series])[index]->GetX();
     } else {
@@ -940,11 +953,11 @@ int floatComp(const float& lhs, const float& rhs) {
 void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategorical) {
     if (preparedData != NULL) {
         // TODO: why??
-        //preparedData->Clear();
+        // preparedData->Clear();
         delete preparedData;
         preparedData = NULL;
     }
-    preparedData = new vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3> > >();
+    preparedData = new vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3>>>();
     vislib::Array<float> maxYValues;
     xValues.Clear();
     xValues.SetCapacityIncrement(10);
@@ -956,9 +969,9 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     float maxStackedY = -FLT_MAX;
     float x, y, z, tempX;
     // find "broadest" series as well as all distinct abscissa values (for stacking)
-	for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-		protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-		const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
+    for (int s = 0; s < (int) diagram->GetSeriesCount(); s++) {
+        protein_calls::DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
+        const protein_calls::DiagramCall::DiagramMappable* dm = ds->GetMappable();
         if (dm->GetDataCount() > maxCount) {
             maxCount = dm->GetDataCount();
         }
@@ -972,11 +985,11 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
                     int idx = static_cast<int>(categories.IndexOf(tmpString));
                     if (idx == vislib::Array<vislib::StringA>::INVALID_POS) {
                         categories.Add(tmpString);
-                        //idx = static_cast<int>(categories.Count() - 1);
+                        // idx = static_cast<int>(categories.Count() - 1);
                         xValues.Add(static_cast<float>(idx));
                     }
                 }
-            } else  {
+            } else {
                 bool ret = dm->GetAbscissaValue(i, 0, &x);
                 if (ret) {
                     if (!xValues.Contains(x)) {
@@ -988,7 +1001,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     }
     xValues.Sort(&floatComp);
     maxYValues.SetCount(xValues.Count());
-	for (int i = 0; i < (int)maxYValues.Count(); i++) {
+    for (int i = 0; i < (int) maxYValues.Count(); i++) {
         maxYValues[i] = 0.0f;
     }
     // there is a difference between not finding an x value and having a hole which is explicitly returned as NULL
@@ -996,16 +1009,16 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
 
 #if 1
     int cntSeries = 0;
-	for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-		protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-		const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
+    for (int s = 0; s < (int) diagram->GetSeriesCount(); s++) {
+        protein_calls::DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
+        const protein_calls::DiagramCall::DiagramMappable* dm = ds->GetMappable();
         if (!seriesVisible[s] || isCategoricalMappable(dm) != drawCategorical) {
             continue;
         }
         cntSeries++;
         localXIndexToGlobal[cntSeries - 1].SetCount(dm->GetDataCount());
-		if ((int)preparedData->Count() < cntSeries) {
-            preparedData->Append(new vislib::PtrArray<vislib::math::Point<float, 3> >());
+        if ((int) preparedData->Count() < cntSeries) {
+            preparedData->Append(new vislib::PtrArray<vislib::math::Point<float, 3>>());
             preparedSeries.Append(ds);
             (*preparedData)[preparedData->Count() - 1]->SetCount(xValues.Count());
         }
@@ -1048,7 +1061,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
                 }
             }
             if (ret) {
-                z =  0.0f;
+                z = 0.0f;
                 (*(*preparedData)[cntSeries - 1])[globalX] = new vislib::math::Point<float, 3>(x, y, z);
             }
             inHole = !ret;
@@ -1058,15 +1071,15 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     for (int i = 0; i < xValues.Count(); i++) {
         int cntSeries = 0;
         for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-            DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-            const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+            DiagramCall::DiagramSeries* ds = diagram->GetSeries(s);
+            const DiagramCall::DiagramMappable* dm = ds->GetMappable();
             if (!seriesVisible[s] || isCategoricalMappable(dm) != drawCategorical) {
                 continue;
             }
             cntSeries++;
             localXIndexToGlobal[cntSeries - 1].SetCount(dm->GetDataCount());
             if (preparedData->Count() < cntSeries) {
-                preparedData->Append(new vislib::PtrArray<vislib::math::Point<float, 3> >());
+                preparedData->Append(new vislib::PtrArray<vislib::math::Point<float, 3>>());
                 preparedSeries.Append(ds);
                 (*preparedData)[preparedData->Count() - 1]->SetCount(xValues.Count());
             }
@@ -1101,9 +1114,10 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
                     }
                 }
                 if (found) {
-                    z =  0.0f;
-                    //if (y < 1.0f) {
-                    //    printf("Michael luegt und serie %s hat (%f, %f)\n", preparedSeries[cntSeries - 1]->GetName(), x, y);
+                    z = 0.0f;
+                    // if (y < 1.0f) {
+                    //    printf("Michael luegt und serie %s hat (%f, %f)\n", preparedSeries[cntSeries - 1]->GetName(),
+                    //    x, y);
                     //}
                     (*(*preparedData)[cntSeries - 1])[i] = new vislib::math::Point<float, 3>(x, y, z);
                     break;
@@ -1115,11 +1129,12 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
         }
     }
 #endif
-    //for (int s = 0; s < preparedData->Count(); s++) {
+    // for (int s = 0; s < preparedData->Count(); s++) {
     //    printf("series %u:", s);
     //    for (int i = 0; i < xValues.Count(); i++) {
     //        if ((*(*preparedData)[s])[i] != NULL) {
-    //            printf("(%f,%f,%f),", (*(*preparedData)[s])[i]->GetX(), (*(*preparedData)[s])[i]->GetY(), (*(*preparedData)[s])[i]->GetZ());
+    //            printf("(%f,%f,%f),", (*(*preparedData)[s])[i]->GetX(), (*(*preparedData)[s])[i]->GetY(),
+    //            (*(*preparedData)[s])[i]->GetZ());
     //        } else {
     //            printf("(NULL),");
     //        }
@@ -1129,9 +1144,9 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
 
     // now we could directly stack and normalize
     if (stack) {
-		for (int i = 0; i < (int)xValues.Count(); i++) {
+        for (int i = 0; i < (int) xValues.Count(); i++) {
             float sum = 0.0f;
-			for (int s = 0; s < (int)preparedData->Count(); s++) {
+            for (int s = 0; s < (int) preparedData->Count(); s++) {
                 if ((*(*preparedData)[s])[i] != NULL) {
                     float y = (*(*preparedData)[s])[i]->GetY();
                     (*(*preparedData)[s])[i]->SetZ(sum);
@@ -1147,8 +1162,8 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     }
     float norm = yRange.Second() - yRange.First();
     norm = drawLog ? log10(norm) : norm;
-	for (int i = 0; i < (int)xValues.Count(); i++) {
-		for (int s = 0; s < (int)preparedData->Count(); s++) {
+    for (int i = 0; i < (int) xValues.Count(); i++) {
+        for (int s = 0; s < (int) preparedData->Count(); s++) {
             if ((*(*preparedData)[s])[i] != NULL) {
                 float y = (*(*preparedData)[s])[i]->GetY();
                 float z = (*(*preparedData)[s])[i]->GetZ();
@@ -1182,33 +1197,38 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
 // EVIL EVIL HACK HACK
 void DiagramRenderer::dump() {
     vislib::sys::BufferedFile bf;
-    bf.Open("dumm.stat", vislib::sys::BufferedFile::WRITE_ONLY, vislib::sys::BufferedFile::SHARE_READ, vislib::sys::BufferedFile::CREATE_OVERWRITE);
-	for (int i = 0; i < (int)(*preparedData)[0]->Count(); i++) {
+    bf.Open("dumm.stat", vislib::sys::BufferedFile::WRITE_ONLY, vislib::sys::BufferedFile::SHARE_READ,
+        vislib::sys::BufferedFile::CREATE_OVERWRITE);
+    for (int i = 0; i < (int) (*preparedData)[0]->Count(); i++) {
         vislib::sys::WriteFormattedLineToFile(bf, "## Frame %u\n", i);
-		for (int s = 0; s < (int)preparedData->Count(); s++) {
+        for (int s = 0; s < (int) preparedData->Count(); s++) {
             if ((*(*preparedData)[s])[i] != NULL) {
-                vislib::sys::WriteFormattedLineToFile(bf, "#C %u %u\n", s + 1, static_cast<int>(
-                    vislib::math::Min(vislib::math::Max((*(*preparedData)[s])[i]->GetY() * 23000.0f / 70.0f, 3.0f), 20.0f)));
+                vislib::sys::WriteFormattedLineToFile(bf, "#C %u %u\n", s + 1,
+                    static_cast<int>(vislib::math::Min(
+                        vislib::math::Max((*(*preparedData)[s])[i]->GetY() * 23000.0f / 70.0f, 3.0f), 20.0f)));
             }
         }
     }
-	for (int s = 0; s < (int)preparedData->Count(); s++) {
-		for (int i = 0; i < (int)preparedSeries[s]->GetMarkerCount(); i++) {
-            // WARNING s is synchronized to global series counter since no series that cannot be drawn are added for proteins
-            // For the rest of the universe THIS IS WRONG
-			const protein_calls::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
-			if (m->GetType() == protein_calls::DiagramCall::DIAGRAM_MARKER_MERGE && m->GetUserData() != NULL) {
-                vislib::Array<int> *partners = reinterpret_cast<vislib::Array<int> *>(m->GetUserData());
-				for (int p = 0; p < (int)partners->Count(); p++) {
+    for (int s = 0; s < (int) preparedData->Count(); s++) {
+        for (int i = 0; i < (int) preparedSeries[s]->GetMarkerCount(); i++) {
+            // WARNING s is synchronized to global series counter since no series that cannot be drawn are added for
+            // proteins For the rest of the universe THIS IS WRONG
+            const protein_calls::DiagramCall::DiagramMarker* m = preparedSeries[s]->GetMarker(i);
+            if (m->GetType() == protein_calls::DiagramCall::DIAGRAM_MARKER_MERGE && m->GetUserData() != NULL) {
+                vislib::Array<int>* partners = reinterpret_cast<vislib::Array<int>*>(m->GetUserData());
+                for (int p = 0; p < (int) partners->Count(); p++) {
                     int idx = localXIndexToGlobal[s][m->GetIndex()];
-                    vislib::sys::WriteFormattedLineToFile(bf, "#F %u[%u]=>%u[%u] %u\n", (*partners)[p] + 1, idx - 1, s + 1, idx, 3);
+                    vislib::sys::WriteFormattedLineToFile(
+                        bf, "#F %u[%u]=>%u[%u] %u\n", (*partners)[p] + 1, idx - 1, s + 1, idx, 3);
                 }
             } else if (m->GetType() == protein_calls::DiagramCall::DIAGRAM_MARKER_SPLIT && m->GetUserData() != NULL) {
-                vislib::Array<int> *partners = reinterpret_cast<vislib::Array<int> *>(m->GetUserData());
-				for (int p = 0; p < (int)partners->Count(); p++) {
-                    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(), (*partners)[p] + 1, m->GetIndex() + 1, 3);
+                vislib::Array<int>* partners = reinterpret_cast<vislib::Array<int>*>(m->GetUserData());
+                for (int p = 0; p < (int) partners->Count(); p++) {
+                    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(),
+                    // (*partners)[p] + 1, m->GetIndex() + 1, 3);
                     int idx = localXIndexToGlobal[s][m->GetIndex()];
-                    vislib::sys::WriteFormattedLineToFile(bf, "#F %u[%u]=>%u[%u] %u\n", (*partners)[p] + 1, idx - 1, s + 1, idx, 3);
+                    vislib::sys::WriteFormattedLineToFile(
+                        bf, "#F %u[%u]=>%u[%u] %u\n", (*partners)[p] + 1, idx - 1, s + 1, idx, 3);
                 }
             }
         }
@@ -1227,16 +1247,16 @@ void DiagramRenderer::drawLineDiagram() {
     glDisable(GL_BLEND);
     this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
     int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
-    switch(type) {
-        case DIAGRAM_TYPE_LINE:
-            prepareData(false, false, drawCategorical);
-            break;
-        case DIAGRAM_TYPE_LINE_STACKED:
-            prepareData(true, false, drawCategorical);
-            break;
-        case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
-            prepareData(true, true, drawCategorical);
-            break;
+    switch (type) {
+    case DIAGRAM_TYPE_LINE:
+        prepareData(false, false, drawCategorical);
+        break;
+    case DIAGRAM_TYPE_LINE_STACKED:
+        prepareData(true, false, drawCategorical);
+        break;
+    case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
+        prepareData(true, true, drawCategorical);
+        break;
     }
     this->drawYAxis();
     this->drawLegend();
@@ -1257,7 +1277,7 @@ void DiagramRenderer::drawLineDiagram() {
         drawMode = GL_LINE_STRIP;
         ::glDisable(GL_BLEND);
     }
-	for (int s = 0; s < (int)preparedData->Count(); s++) {
+    for (int s = 0; s < (int) preparedData->Count(); s++) {
         if ((*preparedData)[s]->Count() < 2) {
             continue;
         }
@@ -1267,7 +1287,7 @@ void DiagramRenderer::drawLineDiagram() {
         } else {
             ::glColor4fv(unselectedColor.PeekComponents());
         }
-		for (int i = 0; i < (int)(*preparedData)[s]->Count(); i++) {
+        for (int i = 0; i < (int) (*preparedData)[s]->Count(); i++) {
             if ((*(*preparedData)[s])[i] != NULL) {
                 ::glVertex2f((*(*preparedData)[s])[i]->GetX() * aspect, (*(*preparedData)[s])[i]->GetY());
                 if (drawMode == GL_TRIANGLE_STRIP) {
@@ -1289,12 +1309,12 @@ void DiagramRenderer::drawLineDiagram() {
 
     int showMarkers = this->showMarkersParam.Param<param::EnumParam>()->Value();
     if (showMarkers != DIAGRAM_MARKERS_SHOW_NONE) {
-		for (int s = 0; s < (int)preparedData->Count(); s++) {
+        for (int s = 0; s < (int) preparedData->Count(); s++) {
             if (showMarkers == DIAGRAM_MARKERS_SHOW_ALL || preparedSeries[s] == selectedSeries) {
                 float markerSize = fontSize;
-				for (int i = 0; i < (int)preparedSeries[s]->GetMarkerCount(); i++) {
-					const protein_calls::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
-					for (int j = 0; j < (int)this->markerTextures.Count(); j++) {
+                for (int i = 0; i < (int) preparedSeries[s]->GetMarkerCount(); i++) {
+                    const protein_calls::DiagramCall::DiagramMarker* m = preparedSeries[s]->GetMarker(i);
+                    for (int j = 0; j < (int) this->markerTextures.Count(); j++) {
                         if (markerTextures[j].First() == m->GetType()) {
                             int idx = localXIndexToGlobal[s][m->GetIndex()];
                             if ((*(*preparedData)[s])[idx] == NULL) {
@@ -1341,16 +1361,16 @@ void DiagramRenderer::drawColumnDiagram() {
     bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
     int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
 
-    switch(type) {
-        case DIAGRAM_TYPE_COLUMN:
-            prepareData(false, false, drawCategorical);
-            break;
-        case DIAGRAM_TYPE_COLUMN_STACKED:
-            prepareData(true, false, drawCategorical);
-            break;
-        case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
-            prepareData(true, true, drawCategorical);
-            break;
+    switch (type) {
+    case DIAGRAM_TYPE_COLUMN:
+        prepareData(false, false, drawCategorical);
+        break;
+    case DIAGRAM_TYPE_COLUMN_STACKED:
+        prepareData(true, false, drawCategorical);
+        break;
+    case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
+        prepareData(true, true, drawCategorical);
+        break;
     }
     this->drawYAxis();
     this->drawLegend();
@@ -1376,9 +1396,9 @@ void DiagramRenderer::drawColumnDiagram() {
     } else {
         drawMode = GL_LINE_STRIP;
     }
-	for (int s = 0; s < (int)preparedData->Count(); s++) {
+    for (int s = 0; s < (int) preparedData->Count(); s++) {
         float x, y, y1;
-		for (int i = 0; i < (int)(*preparedData)[s]->Count(); i++) {
+        for (int i = 0; i < (int) (*preparedData)[s]->Count(); i++) {
             if ((*(*preparedData)[s])[i] == NULL) {
                 continue;
             }

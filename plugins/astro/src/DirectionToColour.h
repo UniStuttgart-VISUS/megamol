@@ -17,7 +17,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 
 namespace megamol {
@@ -78,7 +78,7 @@ namespace astro {
         static float angle(const glm::vec2& v1, const glm::vec2& v2);
 
         static const std::uint8_t *getDirections(
-            const core::moldyn::SimpleSphericalParticles& particles);
+            const geocalls::SimpleSphericalParticles& particles);
 
         static void hsl2Rgb(float *dst, const float h, const float s,
             const float l);

@@ -8,7 +8,7 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 // 3D renderers
-#include "CartoonTessellationRenderer2000GT.h"
+#include "CartoonTessellationRenderer.h"
 #include "GLSLVolumeRenderer.h"
 #include "MoleculeCartoonRenderer.h"
 #include "MoleculeSESRenderer.h"
@@ -63,12 +63,11 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VariantMatchRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SecPlaneRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UnstructuredGridRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer2000GT>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
 
         // register calls
-
     }
 };
-} // namespace megamol::protein
+} // namespace megamol::protein_gl

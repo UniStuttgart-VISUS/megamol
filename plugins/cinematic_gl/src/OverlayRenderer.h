@@ -10,10 +10,11 @@
 #pragma once
 
 
-#include "mmcore/utility/RenderUtils.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,7 +28,7 @@ namespace cinematic_gl {
     /** ************************************************************************
      * Renders various kinds of overlays
      */
-    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>,
+    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>,
                             megamol::core::utility::RenderUtils {
     public:
         virtual std::vector<std::string> requested_lifetime_resources() {
@@ -89,7 +90,7 @@ namespace cinematic_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * The render callback.
@@ -98,7 +99,7 @@ namespace cinematic_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     private:
         struct Rectangle {

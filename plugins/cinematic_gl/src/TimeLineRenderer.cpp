@@ -28,7 +28,7 @@ using namespace vislib;
 #define CCTLR_Z_MIDDLE (0.25f)
 #define CCTLR_Z_FRONT  (0.75f)
 
-TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModuleGL()
+TimeLineRenderer::TimeLineRenderer(void) : core_gl::view::Renderer2DModuleGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
@@ -131,7 +131,7 @@ void TimeLineRenderer::release(void) {
 }
 
 
-bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
+bool TimeLineRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
 
     call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, this->viewport.x, this->viewport.y, 0.0f);
 
@@ -139,7 +139,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 }
 
 
-bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
+bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     auto lhsFbo = call.GetFramebuffer();
     lhsFbo->bind();

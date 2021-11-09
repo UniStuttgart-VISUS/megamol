@@ -14,7 +14,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -42,7 +42,7 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
     this->scaleSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->MakeSlotAvailable(&this->scaleSlot);
 
-    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
 
@@ -136,8 +136,8 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             //std::vector<float> rgba;
             //rgba.reserve(cnt * 4);
             //unsigned int texSize = 0;
-            //megamol::core::view::CallGetTransferFunction* cgtf =
-            //    this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+            //megamol::core_gl::view::CallGetTransferFunctionGL* cgtf =
+            //    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
             //if (cgtf != NULL && ((*cgtf)())) {
             //    float const* tfTex = cgtf->GetTextureData();
             //    texSize = cgtf->TextureSize();

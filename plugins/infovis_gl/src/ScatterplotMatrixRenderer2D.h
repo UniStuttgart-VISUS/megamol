@@ -5,12 +5,12 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/utility/SSBOBufferArray.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "mmcore_gl/utility/SSBOBufferArray.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "datatools/table/TableDataCall.h"
 
 #include <glowl/FramebufferObject.hpp>
@@ -18,6 +18,7 @@
 #include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
 #include "vislib/math/Matrix.h"
 
 namespace megamol::infovis_gl {
@@ -128,7 +129,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2DGL& call) override;
+    bool Render(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -139,7 +140,7 @@ private:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2DGL& call) override;
+    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     bool hasDirtyData() const;
 
@@ -149,7 +150,7 @@ private:
 
     void resetDirtyScreen();
 
-    bool validate(core::view::CallRender2DGL& call, bool ignoreMVP);
+    bool validate(core_gl::view::CallRender2DGL& call, bool ignoreMVP);
 
     void updateColumns();
 
@@ -268,9 +269,9 @@ private:
 
     datatools::table::TableDataCall* floatTable;
 
-    core::view::CallGetTransferFunction* transferFunction;
+    core_gl::view::CallGetTransferFunctionGL* transferFunction;
 
-    core::FlagCallRead_GL* readFlags;
+    core_gl::FlagCallRead_GL* readFlags;
 
     ParamState map;
 

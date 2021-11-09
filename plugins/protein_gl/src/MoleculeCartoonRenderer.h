@@ -12,19 +12,21 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <vector>
+#include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein/BSpline.h"
 #include "protein/CallColor.h"
 #include "protein/Color.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -39,7 +41,7 @@ namespace protein_gl {
      * - add RenderMode CARTOON_GPU
      */
 
-    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.
@@ -74,7 +76,7 @@ namespace protein_gl {
         /** Dtor. */
         virtual ~MoleculeCartoonRenderer(void);
 
-        enum CartoonRenderMode {
+        enum class CartoonRenderMode {
             CARTOON = 0,
             CARTOON_SIMPLE = 1,
             CARTOON_CPU = 2,
@@ -83,7 +85,7 @@ namespace protein_gl {
             CARTOON_TUBE_ONLY = 5
         };
 
-        enum RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
+        enum class RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
 
 
         /**********************************************************************
@@ -105,9 +107,6 @@ namespace protein_gl {
             return numberOfTubeSeg;
         };
 
-        /** Get the color of a certain atom of the protein. */
-        const float* GetProteinAtomColor(unsigned int idx);
-
         /**********************************************************************
          * 'set'-functions
          **********************************************************************/
@@ -115,7 +114,8 @@ namespace protein_gl {
         /** Set current render mode */
         void SetRenderMode(CartoonRenderMode rm) {
             currentRenderMode = rm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -124,7 +124,8 @@ namespace protein_gl {
         /** Set current coloring mode */
         void SetColoringMode0(protein::Color::ColoringMode cm) {
             currentColoringMode0 = cm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -133,7 +134,8 @@ namespace protein_gl {
         /** Set current coloring mode */
         void SetColoringMode1(protein::Color::ColoringMode cm) {
             currentColoringMode1 = cm;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -142,7 +144,8 @@ namespace protein_gl {
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon(float rad) {
             radiusCartoon = rad;
-            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
+            protein::CallColor* col =
+                this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -185,7 +188,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -193,7 +196,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
         /**
          * Render protein in hybrid CARTOON mode using the Geometry Shader.
@@ -261,12 +264,12 @@ namespace protein_gl {
         megamol::core::CallerSlot molDataCallerSlot;
         // caller slot
         megamol::core::CallerSlot molRendererCallerSlot;
-        // caller slot for offscreen rendering
-        megamol::core::CallerSlot molRendererORCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
         // caller slot for protein coloring
         megamol::core::CallerSlot molColorCallerSlot;
+        // caller slot for light input
+        megamol::core::CallerSlot getLightsSlot;
 
         /** camera information */
         core::view::Camera camera;
@@ -294,8 +297,6 @@ namespace protein_gl {
         megamol::core::param::ParamSlot maxGradColorParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot stickRadiusParam;
-        /** parameter slot for offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
         /** parameter slot for disabling rendering except protein */
@@ -306,26 +307,49 @@ namespace protein_gl {
         megamol::core::param::ParamSlot recomputeAlwaysParam;
 
         // shader for per pixel lighting (polygonal view)
-        vislib::graphics::gl::GLSLShader lightShader;
+        vislib_gl::graphics::gl::GLSLShader lightShader;
         // shader for tube generation (cartoon view)
-        vislib::graphics::gl::GLSLGeometryShader cartoonShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowShader;
-        vislib::graphics::gl::GLSLGeometryShader helixShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader helixSimpleShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader helixSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeORShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowORShader;
-        vislib::graphics::gl::GLSLGeometryShader helixORShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader cartoonShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixSimpleShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader tubeSplineShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader arrowSplineShader;
+        vislib_gl::graphics::gl::GLSLGeometryShader helixSplineShader;
 
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader cylinderShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLShader cylinderShaderOR;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
+
+        // buffer objects
+        // the 6 is missing to match the buffers of
+        enum class Buffers : GLuint {
+            POSITION = 0,
+            COLOR = 1,
+            CYL_PARAMS = 2,
+            CYL_QUAT = 3,
+            CYL_COL1 = 4,
+            CYL_COL2 = 5,
+            FILTER = 6,
+            LIGHT_POSITIONAL = 7,
+            LIGHT_DIRECTIONAL = 8,
+            BUFF_COUNT = 9
+        };
+
+        GLuint vertex_array_spheres_;
+        std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
+
+        glm::mat4 MVP;
+        glm::mat4 MVinv;
+        glm::mat4 MVPinv;
+        glm::mat4 MVPtransp;
+        glm::mat4 NormalM;
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::mat4 invProj;
+        glm::vec2 planes;
 
         // current render mode
         CartoonRenderMode currentRenderMode;
@@ -337,15 +361,6 @@ namespace protein_gl {
 
         // is comparison mode enabled?
         bool compare;
-
-        // attribute locations for GLSL-Shader
-        GLint attribLocInParams;
-        GLint attribLocQuatC;
-        GLint attribLocColor1;
-        GLint attribLocColor2;
-
-        // is the geometry shader (and OGL V2) supported?
-        bool geomShaderSupported;
 
         // has the hybrid CARTOON render mode to be prepared?
         bool prepareCartoonHybrid;
@@ -401,7 +416,7 @@ namespace protein_gl {
     };
 
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED

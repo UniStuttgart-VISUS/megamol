@@ -12,10 +12,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
@@ -27,15 +27,14 @@ namespace trisoup_gl {
     /**
      * Renderer for tri-mesh data
      */
-    class TriSoupRenderer : public core::view::Renderer3DModuleGL {
+    class TriSoupRenderer : public core_gl::view::Renderer3DModuleGL {
     public:
-
         /**
          * Answer the name of this module.
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) {
+        static const char* ClassName(void) {
             return "TriSoupRenderer";
         }
 
@@ -44,7 +43,7 @@ namespace trisoup_gl {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) {
+        static const char* Description(void) {
             return "Renderer for tri-mesh data";
         }
 
@@ -64,7 +63,6 @@ namespace trisoup_gl {
         virtual ~TriSoupRenderer(void);
 
     protected:
-
         /**
          * Implementation of 'Create'.
          *
@@ -81,7 +79,7 @@ namespace trisoup_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -95,10 +93,9 @@ namespace trisoup_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
-
         /** The slot to fetch the data */
         core::CallerSlot getDataSlot;
 
@@ -119,17 +116,16 @@ namespace trisoup_gl {
 
         /** The rendering style for the back surface */
         core::param::ParamSlot surBackStyle;
-        
+
         /** The Triangle winding rule */
         core::param::ParamSlot windRule;
-        
+
         /** The Triangle color */
         core::param::ParamSlot colorSlot;
-
     };
 
 
-} /* end namespace trisoup */
+} // namespace trisoup_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */

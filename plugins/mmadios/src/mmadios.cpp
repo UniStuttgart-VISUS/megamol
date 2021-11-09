@@ -14,7 +14,7 @@
 #include "TableToADIOS.h"
 #include "adiosDataSource.h"
 #include "adiosWriter.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "ls1ParticleFormat.h"
 
 namespace megamol::adios {

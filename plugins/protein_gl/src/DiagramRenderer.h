@@ -12,21 +12,20 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein_calls/DiagramCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "protein_calls/IntSelectionCall.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
 
 namespace megamol {
 namespace protein_gl {
 
-    class DiagramRenderer : public megamol::core::view::Renderer2DModuleGL {
+    class DiagramRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
     public:
-
         enum DiagramTypes {
             DIAGRAM_TYPE_LINE = 0,
             DIAGRAM_TYPE_LINE_STACKED = 1,
@@ -36,16 +35,9 @@ namespace protein_gl {
             DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED = 16
         };
 
-        enum DiagramStyles {
-            DIAGRAM_STYLE_WIRE = 0,
-            DIAGRAM_STYLE_FILLED = 1
-        };
+        enum DiagramStyles { DIAGRAM_STYLE_WIRE = 0, DIAGRAM_STYLE_FILLED = 1 };
 
-        enum XAxisTypes {
-            DIAGRAM_XAXIS_FLOAT = 0,
-            DIAGRAM_XAXIS_INTEGRAL = 1,
-            DIAGRAM_XAXIS_CATEGORICAL = 3
-        };
+        enum XAxisTypes { DIAGRAM_XAXIS_FLOAT = 0, DIAGRAM_XAXIS_INTEGRAL = 1, DIAGRAM_XAXIS_CATEGORICAL = 3 };
 
         enum MarkerVisibility {
             DIAGRAM_MARKERS_SHOW_NONE = 0,
@@ -58,7 +50,7 @@ namespace protein_gl {
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) {
+        static const char* ClassName(void) {
             return "DiagramRenderer";
         }
 
@@ -67,7 +59,7 @@ namespace protein_gl {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) {
+        static const char* Description(void) {
             return "Offers better diagram renderings.";
         }
 
@@ -87,14 +79,13 @@ namespace protein_gl {
         ~DiagramRenderer(void);
 
     protected:
-        
         /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
          */
         virtual bool create(void);
-        
+
         /**
          * Implementation of 'Release'.
          */
@@ -110,7 +101,6 @@ namespace protein_gl {
         virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
     private:
-
         /**********************************************************************
          * 'render'-functions
          **********************************************************************/
@@ -138,15 +128,15 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
 
-        VISLIB_FORCEINLINE bool isCategoricalMappable(const protein_calls::DiagramCall::DiagramMappable *dm) const {
+        VISLIB_FORCEINLINE bool isCategoricalMappable(const protein_calls::DiagramCall::DiagramMappable* dm) const {
             return (dm->IsCategoricalAbscissa(0));
         }
 
         bool LoadIcon(vislib::StringA filename, int ID);
 
-        void getBarXY(int series, int index, int type, float *x, float *y);
+        void getBarXY(int series, int index, int type, float* x, float* y);
 
         bool onCrosshairToggleButton(megamol::core::param::ParamSlot& p);
 
@@ -157,12 +147,12 @@ namespace protein_gl {
         void prepareData(bool stack, bool normalize, bool drawCategorical);
 
         /**
-        * The Open GL Render callback.
-        *
-        * @param call The calling call.
-        * @return The return value of the function.
-        */
-        virtual bool Render(megamol::core::view::CallRender2DGL& call);
+         * The Open GL Render callback.
+         *
+         * @param call The calling call.
+         * @return The return value of the function.
+         */
+        virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
 
         /**********************************************************************
          * variables
@@ -170,7 +160,7 @@ namespace protein_gl {
 
         /** caller slot */
         core::CallerSlot dataCallerSlot;
-        
+
         /** caller slot */
         core::CallerSlot selectionCallerSlot;
 
@@ -178,12 +168,12 @@ namespace protein_gl {
         core::CallerSlot hiddenCallerSlot;
 
         ///** clear diagram parameter */
-        //megamol::core::param::ParamSlot clearDiagramParam;
+        // megamol::core::param::ParamSlot clearDiagramParam;
 
         /** the mouse position */
         vislib::math::Vector<float, 3> mousePos;
 
-        vislib::graphics::gl::OutlineFont theFont;
+        vislib_gl::graphics::gl::OutlineFont theFont;
 
         vislib::Pair<float, float> xRange;
         vislib::Pair<float, float> yRange;
@@ -209,23 +199,23 @@ namespace protein_gl {
         megamol::core::param::ParamSlot lineWidthParam;
 
         vislib::math::Vector<float, 4> fgColor;
-        
+
         const vislib::math::Vector<float, 4> unselectedColor;
 
         const float decorationDepth;
 
         // warning: Z encodes the previous y-coordinate, Y the actual value (draw + click ranges between values!)
-        vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3> > > *preparedData;
+        vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3>>>* preparedData;
 
-        vislib::Array<protein_calls::DiagramCall::DiagramSeries *> preparedSeries;
+        vislib::Array<protein_calls::DiagramCall::DiagramSeries*> preparedSeries;
 
         vislib::Array<vislib::StringA> categories;
 
         vislib::Array<float> xValues;
 
-        vislib::Array<vislib::Array<int> > localXIndexToGlobal;
+        vislib::Array<vislib::Array<int>> localXIndexToGlobal;
 
-        vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > markerTextures;
+        vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>>> markerTextures;
 
         float xAxis;
 
@@ -247,17 +237,17 @@ namespace protein_gl {
 
         const float barWidthRatio;
 
-		megamol::protein_calls::DiagramCall::DiagramSeries *selectedSeries;
+        megamol::protein_calls::DiagramCall::DiagramSeries* selectedSeries;
 
-        //vislib::Array<int> selectedSeriesIndices;
+        // vislib::Array<int> selectedSeriesIndices;
 
-		megamol::protein_calls::DiagramCall *diagram;
+        megamol::protein_calls::DiagramCall* diagram;
 
-		megamol::protein_calls::IntSelectionCall *selectionCall;
-        
-		megamol::protein_calls::IntSelectionCall *hiddenCall;
+        megamol::protein_calls::IntSelectionCall* selectionCall;
 
-		const megamol::protein_calls::DiagramCall::DiagramMarker *hoveredMarker;
+        megamol::protein_calls::IntSelectionCall* hiddenCall;
+
+        const megamol::protein_calls::DiagramCall::DiagramMarker* hoveredMarker;
 
         int hoveredSeries;
 
@@ -281,7 +271,7 @@ namespace protein_gl {
         void dump();
     };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MEGAMOLCORE_DIAGRAMRENDERER_H_INCLUDED

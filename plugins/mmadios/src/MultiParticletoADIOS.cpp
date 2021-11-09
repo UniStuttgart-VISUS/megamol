@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MultiParticletoADIOS.h"
 #include <algorithm>
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"

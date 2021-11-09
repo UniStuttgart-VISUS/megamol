@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/RigRendering.h"
 #include "mmcore/Module.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -20,8 +19,8 @@
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 
 using namespace megamol::core;
@@ -59,7 +58,7 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
-        auto p3_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(this);
+        auto p3_2 = dynamic_cast<core_gl::view::Renderer3DModuleGL*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
         if (p2 || p3 || p3_2) {
             std::string output = this->ClassName();

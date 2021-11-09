@@ -14,7 +14,7 @@
 #include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/Picking_gl.h"
+#include "mmcore_gl/utility/Picking_gl.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -342,7 +342,7 @@ namespace gui {
         // Widgets
         FileBrowserWidget file_browser;
         HoverToolTip tooltip;
-        megamol::core::utility::PickingBuffer picking_buffer;
+        megamol::core_gl::utility::PickingBuffer picking_buffer;
 
         // FUNCTIONS --------------------------------------------------------------
 

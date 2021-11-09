@@ -2,8 +2,8 @@
 
 #include "misc/MDAOVolumeGenerator.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <iostream>
 #include <vector>
@@ -38,7 +38,7 @@ MDAOVolumeGenerator::~MDAOVolumeGenerator()
 }
 
 
-void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
+void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory* factory)
 {
     this->factory = factory;
 }
@@ -82,16 +82,16 @@ bool MDAOVolumeGenerator::Init()
 
     if (computeAvailable) {
         // Try to initialize the compute shader
-        vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
+        vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet> mipmapSrc;
         mipmapSrc = this->factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
         try {
             mipmapShader.Compile(mipmapSrc->PeekCode());
             mipmapShader.Link();
         }
-        catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException &ce) {
+        catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException &ce) {
             outmsg.str("");
             outmsg << "[MDAOVolumeGenerator] Could not compile volume mipmapping shader "
-                << vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
+                << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
                 << ": "
                 << ce.GetMsgA() << std::endl;
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, outmsg.str().c_str());
@@ -100,8 +100,8 @@ bool MDAOVolumeGenerator::Init()
     }
 
     // Initialize our shader
-    vislib::graphics::gl::ShaderSource vert, frag, geom;
-    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
+    vislib_gl::graphics::gl::ShaderSource vert, frag, geom;
+    if (!vislib_gl::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
         std::cerr << "[MDAOVolumeGenerator] Failed to init OpenGL extensions: GLSLGeometryShader" << std::endl;
         return false;
     }
@@ -137,9 +137,9 @@ bool MDAOVolumeGenerator::Init()
         }
 
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         std::cerr << "[MDAOVolumeGenerator]  Could not compile shader "
-            << vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
+            << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
             << ": "
             << ce.GetMsgA() << std::endl;
 
