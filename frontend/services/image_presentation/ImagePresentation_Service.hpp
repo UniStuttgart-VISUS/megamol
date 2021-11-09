@@ -74,15 +74,10 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
-    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    using ImageWrapper = frontend_resources::ImageWrapper;
     using ImagePresentationSink = frontend_resources::ImagePresentationSink;
-
-    using EntryPointExecutionCallback =
-        std::function<bool(
-              void*
-            , std::vector<megamol::frontend::FrontendResource> const&
-            , ImageWrapper&
-            )>;
+    using EntryPointExecutionCallback = frontend_resources::EntryPointExecutionCallback;
+    using EntryPointRenderFunctions = frontend_resources::EntryPointRenderFunctions;
 
     struct RenderInputsUpdate {
         virtual ~RenderInputsUpdate(){};
@@ -114,7 +109,7 @@ private:
     };
     std::list<GraphEntryPoint> m_entry_points;
 
-    bool add_entry_point(std::string name, void* module_raw_ptr);
+    bool add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point);
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();

@@ -336,7 +336,13 @@ namespace frontend {
             this->m_requestedResourceReferences[13]
                 .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
         bool view_presentation_ok =
-            image_presentation.add_entry_point("GUI Service", static_cast<void*>(this->m_gui.get()));
+            image_presentation.add_entry_point("GUI Service",
+                {
+                    static_cast<void*>(this->m_gui.get()),
+                    std::function{gui_rendering_execution},
+                    std::function{get_gui_runtime_resources_requests}
+                });
+
         if (!view_presentation_ok) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");

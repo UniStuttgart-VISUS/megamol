@@ -15,11 +15,9 @@
 
 #include "ImageWrapper_to_GLTexture.h"
 #include "ImagePresentation_Sinks.hpp"
-#include "GUI_Service.hpp"
 
 #include "LuaCallbacksCollection.h"
-
-#include "mmcore/view/AbstractView_EventConsumption.h"
+#include "RenderInput.h"
 
 #include <any>
 #include <utility>
@@ -63,7 +61,7 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
-    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, void* module_raw_ptr)   -> bool { return add_entry_point(name, module_raw_ptr); };
+    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, EntryPointRenderFunctions const& entry_point)   -> bool { return add_entry_point(name, entry_point); };
     m_entry_points_registry_resource.remove_entry_point = [&](std::string name)                         -> bool { return remove_entry_point(name); };
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
@@ -202,40 +200,6 @@ void ImagePresentation_Service::PresentRenderedImages() {
     }
 }
 
-// clang-format off
-using FrontendResource = megamol::frontend::FrontendResource;
-using EntryPointExecutionCallback = megamol::frontend::ImagePresentation_Service::EntryPointExecutionCallback;
-
-using EntryPointInitFunctions =
-std::tuple<
-    // rendering execution function
-    EntryPointExecutionCallback,
-    // get requested resources function
-    std::function<std::vector<std::string>()>
->;
-// clang-format on
-static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
-    //NOTE: this static_cast thing is totally broken and only works by sheer luck
-
-    if (auto module_ptr = static_cast<megamol::core::Module*>(ptr); module_ptr != nullptr) {
-        if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
-            return EntryPointInitFunctions{
-                std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::get_view_runtime_resources_requests},
-            };
-        }
-    }
-    if (auto gui_ptr = static_cast<megamol::frontend::GUI_Service*>(ptr); gui_ptr != nullptr) {
-        return EntryPointInitFunctions{
-            std::function{megamol::frontend::GUI_Service::gui_rendering_execution},
-            std::function{megamol::frontend::GUI_Service::get_gui_runtime_resources_requests}
-        };
-    }
-
-    log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
-    throw std::exception();
-}
-
 namespace {
     struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
         static constexpr const char* Name = "ViewRenderInputs";
@@ -350,8 +314,8 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
     return {success, resources, std::move(unique_data)};
 }
 
-bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point) {
+    auto [module_ptr, execute_etry, entry_resource_requests] = entry_point;
 
     auto resource_requests = entry_resource_requests();
 
@@ -364,14 +328,12 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
-        module_raw_ptr,
+        module_ptr,
         resources,
         std::move(unique_data), // render inputs and their update
         execute_etry,
         {name} // image
         });
-
-    auto& entry_point = m_entry_points.back();
 
     return true;
 }

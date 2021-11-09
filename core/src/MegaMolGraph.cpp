@@ -14,6 +14,8 @@
 
 #include "mmcore/param/ButtonParam.h"
 
+#include "mmcore/view/AbstractView_EventConsumption.h"
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -333,9 +335,19 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module)
     auto& module_ref = *module_shared_ptr;
     auto* module_raw_ptr = &module_ref;
 
+    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_raw_ptr); view_ptr == nullptr) {
+        log_error("error adding graph entry point. module is not an entry point type (AbstractView): " + moduleName);
+        return false;
+    }
+
     // the image presentation will issue the rendering and provide the view with resources for rendering
     // probably we dont care or dont check wheter the same view is added as entry point multiple times
-    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
+    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName,
+        {
+            static_cast<void*>(module_raw_ptr),
+            std::function{megamol::core::view::view_rendering_execution},
+            std::function{megamol::core::view::get_view_runtime_resources_requests}
+        });
 
     if (!view_presentation_ok) {
         log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
