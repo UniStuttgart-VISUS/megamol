@@ -47,6 +47,16 @@ struct FrontendResourcesMap {
         return resources.at(typeid(ResourceType).hash_code()).getResource<ResourceType>();
     }
 
+    template <typename ResourceType>
+    optional<const ResourceType> getOptional() const {
+        auto key = typeid(ResourceType).hash_code();
+        if (resources.count(key) > 0) {
+            return resources.at(typeid(ResourceType).hash_code()).getOptionalResource<ResourceType>();
+        } else {
+            return std::nullopt;
+        }
+    }
+
     private:
     std::map<std::size_t, frontend::FrontendResource> resources;
 };

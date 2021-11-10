@@ -479,7 +479,8 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         std::string found_deps = "";
         for (auto& req : module_lifetime_resource_request) requested_deps += " " + req;
         for (auto& dep : module_lifetime_dependencies) found_deps += " " + dep.getIdentifier();
-        log_error("error. could not create module, not all requested resources available: ");
+        log_error("error. could not create module "
+            + request.className + "(" + request.id + "), not all requested resources available: ");
         log_error("requested: " + requested_deps);
         log_error("found: " + found_deps);
 

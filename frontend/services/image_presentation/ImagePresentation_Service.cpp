@@ -5,15 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-// search/replace ImagePresentation_Service with your class name
-// you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
 #include "Framebuffer_Events.h"
 #include "GUIState.h"
 
-#include "ImageWrapper_to_GLTexture.h"
+#include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
 #include "LuaCallbacksCollection.h"
@@ -22,6 +20,7 @@
 
 #include <any>
 #include <utility>
+#include <filesystem>
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -73,15 +72,18 @@ bool ImagePresentation_Service::init(const Config& config) {
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
+        , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
     };
 
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
-        , "WindowManipulation"
+        , "optional<WindowManipulation>"
         , "FramebufferEvents"
         , "GUIState"
         , "RegisterLuaCallbacks"
+        , "optional<OpenGL_Context>"
+        , "ImageWrapperToPNG_ScreenshotTrigger"
     };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
@@ -334,7 +336,6 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
 
     if (!success) {
         log_error("could not find a requested resource for an entry point");
-        return {};
     }
 
     return {success, resources, std::move(unique_data)};
@@ -394,8 +395,8 @@ bool ImagePresentation_Service::clear_entry_points() {
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
-    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
-    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static auto const& window_manipulation       = m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowManipulation>().value().get();
+    static auto const& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 
@@ -456,7 +457,47 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             return VoidResult{};
         }});
 
+    auto handle_screenshot = [&](std::string const& entrypoint, std::string file) -> megamol::frontend_resources::LuaCallbacksCollection::VoidResult {
+        if (m_entry_points.empty())
+            return Error{"no views registered as entry points. nothing to write as screenshot into "};
+
+        auto find_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
+            [&](GraphEntryPoint const& elem) { return elem.moduleName == entrypoint; });
+
+        if (find_it == m_entry_points.end())
+            return Error{"error writing screenshot into file " + file + ". no such entry point: " + entrypoint};
+
+        auto& entry_result_image = find_it->execution_result_image;
+
+        auto& triggerscreenshot = m_requestedResourceReferences[6].getResource<std::function<bool(ImageWrapper const&, std::filesystem::path const&)>>();
+        bool trigger_ok = triggerscreenshot(entry_result_image, file);
+
+        if (!trigger_ok)
+            return Error{"error writing screenshot for entry point " + entrypoint + " into file " + file};
+
+        return VoidResult{};
+    };
+
+    m_entrypointToPNG_trigger = [handle_screenshot](std::string const& entrypoint, std::string const& file) -> bool {
+        auto result = handle_screenshot(entrypoint, file);
+
+        if (!result.exit_success) {
+            log_warning(result.exit_reason);
+            return false;
+        }
+
+        return true;
+    };
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmScreenshotEntryPoint",
+        "(string entrypoint, string filename)\n\tSave a screen shot of entry point view as 'filename'",
+        {[handle_screenshot](std::string entrypoint, std::string filename) -> VoidResult {
+            return handle_screenshot(entrypoint, filename);
+        }});
+
     auto& register_callbacks = m_requestedResourceReferences[4].getResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>();
+
     register_callbacks(callbacks);
 }
 

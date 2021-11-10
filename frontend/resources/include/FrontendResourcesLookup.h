@@ -41,7 +41,8 @@ struct FrontendResourcesLookup {
 
         for (auto& request : resource_requests) {
             auto dependency_it = std::find_if(this->resources.begin(), this->resources.end(), [&](megamol::frontend::FrontendResource const& dependency) {
-                return request.find(dependency.getIdentifier()) != std::string::npos;
+                auto find_pos = request.find(dependency.getIdentifier());
+                return find_pos == 0 || find_pos == 9;
             });
 
             bool resource_found = dependency_it != resources.end();

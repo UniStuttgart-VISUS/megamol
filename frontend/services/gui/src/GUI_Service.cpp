@@ -49,7 +49,7 @@ namespace frontend {
             "WindowEvents",                              // 1 - time, size, clipboard
             "KeyboardEvents",                            // 2 - key press
             "MouseEvents",                               // 3 - mouse click
-            "IOpenGL_Context",                           // 4 - graphics api for imgui context
+            "optional<OpenGL_Context>",                  // 4 - graphics api for imgui context
             "FramebufferEvents",                         // 5 - viewport size
             "GLFrontbufferToPNG_ScreenshotTrigger",      // 6 - trigger screenshot
             "LuaScriptPaths",                            // 7 - current project path
