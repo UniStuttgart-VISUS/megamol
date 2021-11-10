@@ -15,6 +15,8 @@
 
 #include "FrontendResourcesLookup.h"
 
+#include "Framebuffer_Events.h"
+
 #include <list>
 
 namespace megamol {
@@ -90,6 +92,8 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    frontend_resources::FramebufferEvents m_global_framebuffer_events;
 
     // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
     // the ImagePresentation Service makes sure that the (lifetime and rendering) resources/dependencies requested by the module

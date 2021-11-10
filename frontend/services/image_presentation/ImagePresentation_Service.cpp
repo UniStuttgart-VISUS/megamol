@@ -8,7 +8,6 @@
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
-#include "Framebuffer_Events.h"
 #include "GUIState.h"
 
 #include "ImageWrapper_to_GLTexture.hpp"
@@ -72,6 +71,7 @@ bool ImagePresentation_Service::init(const Config& config) {
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
         , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
+        , {"FramebufferEvents", m_global_framebuffer_events}
     };
 
     this->m_requestedResourcesNames =
