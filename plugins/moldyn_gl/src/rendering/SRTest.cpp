@@ -68,7 +68,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
     auto& rt = rendering_tasks_[method];
 
     param_package_t param;
-    param.front = cam_pose.direction;
+    param.dir = cam_pose.direction;
     param.up = cam_pose.up;
     param.right = cam_pose.right;
     param.pos = cam_pose.position;
@@ -76,9 +76,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
     param.global_col = glm::vec4(0.f, 1.f, 0.f, 1.f);
     auto mvp = proj * view;
     param.mvp = mvp;
-    param.proj = proj;
     param.mvp_inv = glm::inverse(mvp);
-    param.mv_inv = glm::inverse(view);
     param.mvp_trans = glm::transpose(mvp);
     param.attr = glm::vec4(0.f, 0.f, cr_fbo->getWidth(), cr_fbo->getHeight());
     param.light_dir = glm::vec3(0.f, 0.f, 1.f);
@@ -185,15 +183,13 @@ bool megamol::moldyn_gl::rendering::vao_rt::render(param_package_t const& packag
 
     program->setUniform("viewAttr", package.attr);
     program->setUniform("lightDir", package.light_dir);
-    program->setUniform("camIn", package.front);
-    program->setUniform("camUp", glm::normalize(package.up));
+    program->setUniform("camDir", package.dir);
+    program->setUniform("camUp", package.up);
     program->setUniform("camPos", package.pos);
     program->setUniform("camRight", package.right);
     program->setUniform("constRad", package.rad);
     program->setUniform("MVP", package.mvp);
-    program->setUniform("P", package.proj);
     program->setUniform("MVPinv", package.mvp_inv);
-    program->setUniform("MVinv", package.mv_inv);
     program->setUniform("MVPtransp", package.mvp_trans);
     program->setUniform("globalCol", package.global_col);
     program->setUniform("near", package.near_);

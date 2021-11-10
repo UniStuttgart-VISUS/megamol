@@ -18,16 +18,14 @@ struct data_package {
 using data_package_t = data_package;
 
 struct param_package {
-    glm::vec3 front, up, right, pos;
+    glm::vec3 dir, up, right, pos;
     float rad;
     glm::vec3 light_dir;
     glm::vec4 global_col;
     glm::vec4 attr;
     glm::mat4 mvp;
     glm::mat4 mvp_inv;
-    glm::mat4 mv_inv;
     glm::mat4 mvp_trans;
-    glm::mat4 proj;
     float near_;
     float far_;
 };
