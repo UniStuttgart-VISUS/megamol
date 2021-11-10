@@ -24,17 +24,20 @@ public:
     using frame_type = uint32_t;
     using time_point = std::chrono::steady_clock::time_point;
 
-    enum class query_api { CPU, OPENGL, CUDA };
+    enum class query_api { CPU, OPENGL }; // TODO: CUDA, OpenCL, Vulkan, whatnot
 
     enum class entry_type { START, END, DURATION };
 
     enum class parent_type { CALL, MODULE };
 
-    struct timer_config {
+    struct basic_timer_config {
+        std::string name = "unnamed";
+        query_api api = query_api::CPU;
+    };
+
+    struct timer_config : public basic_timer_config {
         parent_type parent_type = parent_type::CALL;
         void* parent_pointer = nullptr;
-        std::string name;
-        query_api api = query_api::CPU;
     };
 
     struct timer_entry {
@@ -210,32 +213,64 @@ public:
     };
 
     // names and API defined explicitly for modules
-    handle_vector add_timers(megamol::core::Module* m, std::vector<timer_config> timers);
-
-    // names and API derived from capabilities and callbacks
-    handle_vector add_timers(megamol::core::Call* c) {
+    handle_vector add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list) {
         handle_vector ret;
-        const auto caps = c->GetCapabilities();
-        for (auto i = 0; i < c->GetCallbackCount(); ++i) {
-            timer_config conf;
-            conf.name = c->GetCallbackName(i);
-            // conf.parent = c->
-            if (caps.OpenGLRequired()) {
-                conf.api = query_api::OPENGL;
+        timer_config conf;
+        conf.parent_pointer = m;
+        conf.parent_type = parent_type::MODULE;
+        for (const auto& btc : timer_list) {
+            conf.api = btc.api;
+            conf.name = btc.name;
+            switch (conf.api) {
+            case query_api::CPU: {
+                cpu_timer t(conf);
+                ret.push_back(add_timer(t));
+                break;
+            }
+            case query_api::OPENGL: {
                 gl_timer t(conf);
                 ret.push_back(add_timer(t));
-            } else {
-                conf.api = query_api::CPU;
-                cpu_timer t(conf);
-                // TODO does this spawn copies? constructor fun? need for std::move??
-                ret.push_back(add_timer(t));
+                break;
+            }
             }
         }
         return ret;
     }
 
+    // names and API derived from capabilities and callbacks
+    // note: a CPU timer is added alongside all accelerator timers!
+    handle_vector add_timers(megamol::core::Call* c) {
+        handle_vector ret;
+        const auto caps = c->GetCapabilities();
+        timer_config conf;
+        conf.parent_pointer = c;
+        conf.parent_type = parent_type::CALL;
+        for (auto i = 0; i < c->GetCallbackCount(); ++i) {
+            if (caps.OpenGLRequired()) {
+                conf.name = c->GetCallbackName(i) + "(GL)";
+                conf.api = query_api::OPENGL;
+                gl_timer t(conf);
+                ret.push_back(add_timer(t));
+            }
+            conf.name = c->GetCallbackName(i);
+            conf.api = query_api::CPU;
+            cpu_timer t(conf);
+            // TODO does this spawn copies? constructor fun? need for std::move??
+            ret.push_back(add_timer(t));
+        }
+        return ret;
+    }
+
+    void remove_timers(handle_vector handles) {
+        for (auto handle : handles) {
+            timers.erase(handle);
+        }
+        handle_holes.insert(handle_holes.end(), handles.begin(), handles.end());
+    }
+
+    // hint: this is not for free, so don't call this all the time
     std::string lookup_parent(handle_type h) {
-        const auto& conf = _timers[timer_map[h]]->get_conf();
+        const auto& conf = timers[h]->get_conf();
         auto p = conf.parent_pointer;
         switch (conf.parent_type) {
         case parent_type::CALL: {
@@ -251,8 +286,9 @@ public:
         }
     }
 
+    // hint: this is not for free, so don't call this all the time
     std::string lookup_name(handle_type h) {
-        return _timers[timer_map[h]]->get_conf().name;
+        return timers[h]->get_conf().name;
     }
 
     void subscribe_to_updates(update_callback& cb) {
@@ -269,11 +305,16 @@ private:
     friend class frontend::Profiling_Service;
 
     handle_type add_timer(timer t) {
-        const handle_type my_handle = current_handle;
+        handle_type my_handle = 0;
+        if (!handle_holes.empty()) {
+            my_handle = handle_holes.back();
+            handle_holes.pop_back();
+        } else {
+            my_handle = current_handle;
+            current_handle++;
+        }
         t->h = my_handle;
-        _timers.push_back(t);
-        timer_map[my_handle] = _timers.size() - 1;
-        current_handle++;
+        timers.emplace(my_handle, t);
         return my_handle;
     }
 
@@ -290,37 +331,37 @@ private:
         frame_info this_frame;
         this_frame.frame = current_frame;
 
-        for (auto& t : _timers) {
-            if (t->get_start_frame() != this_frame.frame) {
+        for (auto& [key, timer] : timers) {
+            if (timer->get_start_frame() != this_frame.frame) {
                 // timer did not start this frame
                 continue;
             } else {
-                if (t->started) {
+                if (timer->started) {
                     // timer was not ended this frame, that is not nice
                     Log::DefaultLog.WriteWarn("PerformanceManager: timer %s was not properly ended in frame %u",
-                        t->get_conf().name.c_str(), this_frame.frame);
+                        timer->get_conf().name.c_str(), this_frame.frame);
                     continue;
                 }
             }
-            t->collect();
-            auto& tconf = t->get_conf();
+            timer->collect();
+            auto& tconf = timer->get_conf();
             timer_entry e;
-            e.handle = t->get_handle();
+            e.handle = timer->get_handle();
             e.frame = this_frame.frame;
 
-            for (uint32_t region = 0; region < t->get_region_count(); ++region) {
+            for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
                 e.frame_index = region;
 
                 e.type = entry_type::START;
-                e.timestamp = t->get_start(region);
+                e.timestamp = timer->get_start(region);
                 this_frame.entries.push_back(e);
 
                 e.type = entry_type::END;
-                e.timestamp = t->get_end(region);
+                e.timestamp = timer->get_end(region);
                 this_frame.entries.push_back(e);
 
                 e.type = entry_type::DURATION;
-                e.timestamp = time_point{t->get_end(region) - t->get_start(region)};
+                e.timestamp = time_point{timer->get_end(region) - timer->get_start(region)};
                 this_frame.entries.push_back(e);
             }
         }
@@ -333,8 +374,10 @@ private:
     }
 
     handle_type current_handle = 0;
-    std::vector<timer> _timers;
-    std::unordered_map<handle_type, std::vector<timer>::size_type> timer_map;
+    //std::vector<timer> _timers;
+    //std::unordered_map<handle_type, std::vector<timer>::size_type> timer_map;
+    std::vector<handle_type> handle_holes;
+    std::unordered_map<handle_type, timer> timers;
     frame_type current_frame = 0;
     std::vector<update_callback> subscribers;
 };

@@ -25,6 +25,7 @@ public:
     void resetProvidedResources() override {
         core::CallProfiling::CollectGPUPerformance();
         _pman.endFrame();
+        // TODO append performance log file
     }
 
     void preGraphRender() override {}
