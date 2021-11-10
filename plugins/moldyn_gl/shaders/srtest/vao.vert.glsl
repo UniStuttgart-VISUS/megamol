@@ -1,14 +1,5 @@
 #version 450
 
-uniform vec4 viewAttr;
-
-uniform vec3 camPos;
-uniform vec3 camUp;
-uniform vec3 camRight;
-uniform vec3 camDir;
-
-uniform mat4 MVP;
-
 uniform vec4 globalCol;
 uniform float globalRad;
 
@@ -20,11 +11,13 @@ flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
 
-layout (location = 0) in vec4 inPosition;
-layout (location = 1) in vec4 inColor;
+#include "srtest_ubo.glsl"
+
+layout(location = 0) in vec4 inPosition;
+layout(location = 1) in vec4 inColor;
 
 void main(void) {
-    if(useGlobalRad) {
+    if (useGlobalRad) {
         rad = globalRad;
     } else {
         rad = inPosition.w;
@@ -78,7 +71,7 @@ void main(void) {
 
     vec2 vw = (v1 - v2).xy;
     vec2 vh = (v3 - v4).xy;
-    
+
     vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0);
     projPos = projPos / projPos.w;
 

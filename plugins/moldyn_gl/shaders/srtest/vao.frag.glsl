@@ -1,24 +1,14 @@
 #version 450
 
-uniform vec4 viewAttr;
-
-uniform mat4 MVPinv;
-uniform mat4 MVPtransp;
-
-uniform vec3 camPos;
-
-uniform vec3 lightDir;
-
-uniform float near;
-uniform float far;
-
 flat in vec3 objPos;
 flat in float rad;
 flat in float sqrRad;
 flat in vec4 pointColor;
 
-layout (location = 0) out vec4 outColor;
-layout (depth_greater) out float gl_FragDepth;
+#include "srtest_ubo.glsl"
+
+layout(location = 0) out vec4 outColor;
+layout(depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 

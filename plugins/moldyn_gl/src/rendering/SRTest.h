@@ -10,17 +10,36 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 
 namespace megamol::moldyn_gl::rendering {
-struct data_package {
-    std::vector<std::vector<float>> positions;
-    std::vector<std::vector<float>> colors;
-    std::vector<uint64_t> data_sizes;
+struct per_list_package {
     std::vector<float> global_radii;
     std::vector<glm::vec4> global_color;
     std::vector<uint8_t> use_global_radii;
     std::vector<uint8_t> use_global_color;
 };
 
+using per_list_package_t = per_list_package;
+
+struct data_package {
+    std::vector<std::vector<float>> positions;
+    std::vector<std::vector<float>> colors;
+    std::vector<uint64_t> data_sizes;
+    per_list_package pl_data;
+};
+
 using data_package_t = data_package;
+
+struct ubo_params {
+    alignas(16) glm::mat4 mvp;
+    alignas(16) glm::mat4 mvp_inv;
+    alignas(16) glm::mat4 mvp_trans;
+    alignas(16) glm::vec4 attr;
+    alignas(16) glm::vec3 dir, up, right, pos;
+    alignas(4)  float near_;
+    alignas(16) glm::vec3 light_dir;
+    alignas(4)  float far_;
+};
+
+using ubo_params_t = ubo_params;
 
 struct param_package {
     glm::vec3 dir, up, right, pos;
@@ -51,7 +70,7 @@ public:
 
     virtual ~rendering_task() = default;
 
-    virtual bool render(param_package_t const& package) = 0;
+    virtual bool render(GLuint ubo) = 0;
 
     virtual bool upload(data_package_t const& package) = 0;
 
@@ -70,7 +89,7 @@ public:
 
     virtual ~vao_rt() = default;
 
-    bool render(param_package_t const& package) override;
+    bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -79,6 +98,7 @@ private:
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;
     std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
 };
 
 class SRTest : public core::view::Renderer3DModuleGL {
@@ -141,5 +161,9 @@ private:
     uint64_t in_data_hash_ = std::numeric_limits<uint64_t>::max();
 
     unsigned int frame_id_ = std::numeric_limits<unsigned int>::max();
+
+    GLuint ubo_;
+
+    core::view::Camera old_cam_;
 };
 } // namespace megamol::moldyn_gl::rendering

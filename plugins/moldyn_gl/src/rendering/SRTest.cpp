@@ -34,11 +34,18 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         return false;
     }
 
+    glGenBuffers(1, &ubo_);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo_params_t), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     return true;
 }
 
 
-void megamol::moldyn_gl::rendering::SRTest::release() {}
+void megamol::moldyn_gl::rendering::SRTest::release() {
+    glDeleteBuffers(1, &ubo_);
+}
 
 
 bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRender3DGL& cr) {
@@ -67,21 +74,28 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
 
     auto& rt = rendering_tasks_[method];
 
-    param_package_t param;
-    param.dir = cam_pose.direction;
-    param.up = cam_pose.up;
-    param.right = cam_pose.right;
-    param.pos = cam_pose.position;
-    param.rad = 0.5f;
-    param.global_col = glm::vec4(0.f, 1.f, 0.f, 1.f);
-    auto mvp = proj * view;
-    param.mvp = mvp;
-    param.mvp_inv = glm::inverse(mvp);
-    param.mvp_trans = glm::transpose(mvp);
-    param.attr = glm::vec4(0.f, 0.f, cr_fbo->getWidth(), cr_fbo->getHeight());
-    param.light_dir = glm::vec3(0.f, 0.f, 1.f);
-    param.near_ = cam.get<core::view::Camera::NearPlane>();
-    param.far_ = cam.get<core::view::Camera::FarPlane>();
+
+    if (!(old_cam_ == cam)) {
+        ubo_params_t ubo_st;
+        ubo_st.dir = cam_pose.direction;
+        ubo_st.up = cam_pose.up;
+        ubo_st.right = cam_pose.right;
+        ubo_st.pos = cam_pose.position;
+        auto mvp = proj * view;
+        ubo_st.mvp = mvp;
+        ubo_st.mvp_inv = glm::inverse(mvp);
+        ubo_st.mvp_trans = glm::transpose(mvp);
+        ubo_st.attr = glm::vec4(0.f, 0.f, cr_fbo->getWidth(), cr_fbo->getHeight());
+        ubo_st.light_dir = glm::vec3(0.f, 0.f, 1.f);
+        ubo_st.near_ = cam.get<core::view::Camera::NearPlane>();
+        ubo_st.far_ = cam.get<core::view::Camera::FarPlane>();
+
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ubo_params_t), &ubo_st);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        old_cam_ = cam;
+    }
 
     cr_fbo->bind();
 
@@ -95,7 +109,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
 
     glQueryCounter(queryID[1], GL_TIMESTAMP);
 
-    rt->render(param);
+    rt->render(ubo_);
 
     glQueryCounter(queryID[2], GL_TIMESTAMP);
 
@@ -149,10 +163,10 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
     data_.positions.resize(pl_count);
     data_.colors.resize(pl_count);
     data_.data_sizes.resize(pl_count);
-    data_.global_radii.resize(pl_count);
-    data_.global_color.resize(pl_count);
-    data_.use_global_radii.resize(pl_count);
-    data_.use_global_color.resize(pl_count);
+    data_.pl_data.global_radii.resize(pl_count);
+    data_.pl_data.global_color.resize(pl_count);
+    data_.pl_data.use_global_radii.resize(pl_count);
+    data_.pl_data.use_global_color.resize(pl_count);
 
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = in_data.AccessParticles(pl_idx);
@@ -160,18 +174,18 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         auto& colors = data_.colors[pl_idx];
 
         if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
-            data_.use_global_color[pl_idx] = 0;
+            data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
-            data_.use_global_color[pl_idx] = 1;
-            data_.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0], parts.GetGlobalColour()[1],
+            data_.pl_data.use_global_color[pl_idx] = 1;
+            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0], parts.GetGlobalColour()[1],
                 parts.GetGlobalColour()[2], parts.GetGlobalColour()[3]);
         }
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
-            data_.use_global_radii[pl_idx] = 1;
-            data_.global_radii[pl_idx] = parts.GetGlobalRadius();
+            data_.pl_data.use_global_radii[pl_idx] = 1;
+            data_.pl_data.global_radii[pl_idx] = parts.GetGlobalRadius();
         } else {
-            data_.use_global_radii[pl_idx] = 0;
+            data_.pl_data.use_global_radii[pl_idx] = 0;
         }
 
         auto const p_count = parts.GetCount();
@@ -209,34 +223,28 @@ megamol::moldyn_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL co
               std::filesystem::path("srtest/vao.frag.glsl")) {}
 
 
-bool megamol::moldyn_gl::rendering::vao_rt::render(param_package_t const& package) {
+bool megamol::moldyn_gl::rendering::vao_rt::render(GLuint ubo) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
     program->use();
 
-    program->setUniform("viewAttr", package.attr);
-    program->setUniform("lightDir", package.light_dir);
-    program->setUniform("camDir", package.dir);
-    program->setUniform("camUp", package.up);
-    program->setUniform("camPos", package.pos);
-    program->setUniform("camRight", package.right);
-    program->setUniform("constRad", package.rad);
-    program->setUniform("MVP", package.mvp);
-    program->setUniform("MVPinv", package.mvp_inv);
-    program->setUniform("MVPtransp", package.mvp_trans);
-    program->setUniform("globalCol", package.global_col);
-    program->setUniform("near", package.near_);
-    program->setUniform("far", package.far_);
-
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
 
     for (int i = 0; i < num_prims_.size(); ++i) {
         auto vao = vaos_[i];
         auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
         glBindVertexArray(vao);
         glDrawArrays(GL_POINTS, 0, num_prims);
     }
     glBindVertexArray(0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
@@ -280,6 +288,8 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    pl_data_ = package.pl_data;
 
     return true;
 }
