@@ -419,6 +419,18 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
     m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
         find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
 
+#ifdef PROFILING
+    auto find_it3 = std::find_if(
+        provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == megamol::frontend_resources::PerformanceManager_Req_Name;
+        });
+    if (find_it3 == provided_resources.end()) {
+        return false;
+    }
+    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
+        find_it3->getResource<frontend_resources::PerformanceManager>());
+#endif PROFILING
+
     return true;
 }
 
@@ -661,6 +673,9 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
+#ifdef PROFILING
+    m_perf_manager->add_timers(call.get());
+#endif
 
     return true;
 }

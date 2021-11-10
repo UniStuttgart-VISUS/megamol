@@ -13,6 +13,8 @@ class Profiling_Service;
 
 namespace megamol::frontend_resources {
 
+static std::string PerformanceManager_Req_Name = "PerformanceManager";
+
 class PerformanceManager {
 public:
     PerformanceManager();
