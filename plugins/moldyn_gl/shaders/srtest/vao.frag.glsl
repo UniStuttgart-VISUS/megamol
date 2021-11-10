@@ -8,7 +8,6 @@ uniform mat4 MVPtransp;
 uniform vec3 camPos;
 
 uniform vec3 lightDir;
-uniform vec4 globalCol;
 
 uniform float near;
 uniform float far;
@@ -16,8 +15,10 @@ uniform float far;
 flat in vec3 objPos;
 flat in float rad;
 flat in float sqrRad;
+flat in vec4 pointColor;
 
-layout(location = 0) out vec4 outColor;
+layout (location = 0) out vec4 outColor;
+layout (depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 
@@ -37,7 +38,7 @@ void main(void) {
     float d = b * b - c;
 
     if (d >= 0.0) {
-        outColor = globalCol;
+        outColor = pointColor;
         float ta = -b - sqrt(d);
         float tb = -b + sqrt(d);
         float t = min(ta, tb);

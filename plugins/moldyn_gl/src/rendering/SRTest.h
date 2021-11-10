@@ -11,8 +11,13 @@
 
 namespace megamol::moldyn_gl::rendering {
 struct data_package {
-    std::vector<std::vector<float>> data;
+    std::vector<std::vector<float>> positions;
+    std::vector<std::vector<float>> colors;
     std::vector<uint64_t> data_sizes;
+    std::vector<float> global_radii;
+    std::vector<glm::vec4> global_color;
+    std::vector<uint8_t> use_global_radii;
+    std::vector<uint8_t> use_global_color;
 };
 
 using data_package_t = data_package;
@@ -72,6 +77,7 @@ public:
 private:
     std::vector<GLuint> vaos_;
     std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
     std::vector<uint64_t> num_prims_;
 };
 

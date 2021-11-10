@@ -9,22 +9,38 @@ uniform vec3 camDir;
 
 uniform mat4 MVP;
 
+uniform vec4 globalCol;
+uniform float globalRad;
+
+uniform bool useGlobalCol;
+uniform bool useGlobalRad;
+
 flat out vec3 objPos;
 flat out float rad;
 flat out float sqrRad;
+flat out vec4 pointColor;
 
-layout(location = 0) in vec4 inPosition;
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec4 inColor;
 
 void main(void) {
+    if(useGlobalRad) {
+        rad = globalRad;
+    } else {
+        rad = inPosition.w;
+    }
 
-    // Remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = inPosition;
-    rad = inPos.w;
-    inPos.w = 1.0;
+    if (useGlobalCol) {
+        pointColor = globalCol;
+    } else {
+        pointColor = inColor;
+    }
+
+    objPos = inPosition.xyz;
 
     vec2 mins, maxs;
 
-    vec3 di = inPos.xyz - camPos;
+    vec3 di = objPos - camPos;
     float dd = dot(di, di);
 
     sqrRad = rad * rad;
@@ -36,10 +52,10 @@ void main(void) {
     vec3 vr = normalize(cross(di, camUp)) * v;
     vec3 vu = normalize(cross(di, vr)) * v;
 
-    vec4 v1 = MVP * vec4(inPos.xyz + vr, 1.0);
-    vec4 v2 = MVP * vec4(inPos.xyz - vr, 1.0);
-    vec4 v3 = MVP * vec4(inPos.xyz + vu, 1.0);
-    vec4 v4 = MVP * vec4(inPos.xyz - vu, 1.0);
+    vec4 v1 = MVP * vec4(objPos + vr, 1.0);
+    vec4 v2 = MVP * vec4(objPos - vr, 1.0);
+    vec4 v3 = MVP * vec4(objPos + vu, 1.0);
+    vec4 v4 = MVP * vec4(objPos - vu, 1.0);
 
     v1 /= v1.w;
     v2 /= v2.w;
@@ -60,13 +76,11 @@ void main(void) {
     v3.xy = 0.5 * v3.xy * viewAttr.zw + 0.5 * viewAttr.zw;
     v4.xy = 0.5 * v4.xy * viewAttr.zw + 0.5 * viewAttr.zw;
 
-    vec4 projPos = MVP * vec4(inPos.xyz + rad * (camDir), 1.0);
-    projPos = projPos / projPos.w;
-
     vec2 vw = (v1 - v2).xy;
     vec2 vh = (v3 - v4).xy;
-
-    objPos = inPos.xyz;
+    
+    vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0);
+    projPos = projPos / projPos.w;
 
     gl_PointSize = max(length(vw), length(vh));
 

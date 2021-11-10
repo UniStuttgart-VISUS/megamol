@@ -111,6 +111,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    core::utility::log::Log::DefaultLog.WriteInfo(
+        "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);
+
     return true;
 }
 
@@ -143,28 +146,59 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core::view::Call
 void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCall& in_data) {
     auto const pl_count = in_data.GetParticleListCount();
 
-    data_.data.resize(pl_count);
+    data_.positions.resize(pl_count);
+    data_.colors.resize(pl_count);
     data_.data_sizes.resize(pl_count);
+    data_.global_radii.resize(pl_count);
+    data_.global_color.resize(pl_count);
+    data_.use_global_radii.resize(pl_count);
+    data_.use_global_color.resize(pl_count);
 
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = in_data.AccessParticles(pl_idx);
-        auto& data = data_.data[pl_idx];
+        auto& positions = data_.positions[pl_idx];
+        auto& colors = data_.colors[pl_idx];
+
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
+            data_.use_global_color[pl_idx] = 0;
+        } else {
+            data_.use_global_color[pl_idx] = 1;
+            data_.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0], parts.GetGlobalColour()[1],
+                parts.GetGlobalColour()[2], parts.GetGlobalColour()[3]);
+        }
+
+        if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
+            data_.use_global_radii[pl_idx] = 1;
+            data_.global_radii[pl_idx] = parts.GetGlobalRadius();
+        } else {
+            data_.use_global_radii[pl_idx] = 0;
+        }
 
         auto const p_count = parts.GetCount();
-        data.clear();
-        data.reserve(p_count * 3);
+        positions.clear();
+        positions.reserve(p_count * 4);
+        colors.clear();
+        colors.reserve(p_count * 4);
         data_.data_sizes[pl_idx] = p_count;
 
         auto const& x_acc = parts.GetParticleStore().GetXAcc();
         auto const& y_acc = parts.GetParticleStore().GetYAcc();
         auto const& z_acc = parts.GetParticleStore().GetZAcc();
         auto const& rad_acc = parts.GetParticleStore().GetRAcc();
+        auto const& cr_acc = parts.GetParticleStore().GetCRAcc();
+        auto const& cg_acc = parts.GetParticleStore().GetCGAcc();
+        auto const& cb_acc = parts.GetParticleStore().GetCBAcc();
+        auto const& ca_acc = parts.GetParticleStore().GetCAAcc();
 
         for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-            data.push_back(x_acc->Get_f(p_idx));
-            data.push_back(y_acc->Get_f(p_idx));
-            data.push_back(z_acc->Get_f(p_idx));
-            data.push_back(rad_acc->Get_f(p_idx));
+            positions.push_back(x_acc->Get_f(p_idx));
+            positions.push_back(y_acc->Get_f(p_idx));
+            positions.push_back(z_acc->Get_f(p_idx));
+            positions.push_back(rad_acc->Get_f(p_idx));
+            colors.push_back(cr_acc->Get_f(p_idx));
+            colors.push_back(cg_acc->Get_f(p_idx));
+            colors.push_back(cb_acc->Get_f(p_idx));
+            colors.push_back(ca_acc->Get_f(p_idx));
         }
     }
 }
@@ -213,7 +247,7 @@ bool megamol::moldyn_gl::rendering::vao_rt::render(param_package_t const& packag
 
 
 bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package) {
-    auto const num_vaos = package.data.size();
+    auto const num_vaos = package.positions.size();
     glDeleteVertexArrays(vaos_.size(), vaos_.data());
     vaos_.resize(num_vaos);
     glGenVertexArrays(vaos_.size(), vaos_.data());
@@ -222,16 +256,26 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
     vbos_.resize(num_vaos);
     glGenBuffers(vbos_.size(), vbos_.data());
 
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+    cbos_.resize(num_vaos);
+    glGenBuffers(cbos_.size(), cbos_.data());
+
     num_prims_ = package.data_sizes;
 
     for (std::decay_t<decltype(num_vaos)> i = 0; i < num_vaos; ++i) {
         glBindVertexArray(vaos_[i]);
         glBindBuffer(GL_ARRAY_BUFFER, vbos_[i]);
         glBufferData(GL_ARRAY_BUFFER,
-            package.data[i].size() * sizeof(std::decay_t<decltype(package.data[i])>::value_type),
-            package.data[i].data(), GL_STATIC_DRAW);
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, cbos_[i]);
+        glBufferData(GL_ARRAY_BUFFER,
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
