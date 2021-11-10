@@ -335,13 +335,9 @@ namespace frontend {
         auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
             this->m_requestedResourceReferences[13]
                 .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
-        bool view_presentation_ok =
-            image_presentation.add_entry_point("GUI Service",
-                {
-                    static_cast<void*>(this->m_gui.get()),
-                    std::function{gui_rendering_execution},
-                    std::function{get_gui_runtime_resources_requests}
-                });
+        bool view_presentation_ok = image_presentation.add_entry_point(
+            "GUI Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+                               std::function{get_gui_runtime_resources_requests}});
 
         if (!view_presentation_ok) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
