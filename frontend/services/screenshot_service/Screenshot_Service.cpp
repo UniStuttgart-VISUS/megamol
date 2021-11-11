@@ -104,7 +104,9 @@ static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData c
 
     // todo: camera settings are not stored without magic knowledge about the view
     std::string project = megamolgraph_ptr->Convenience().SerializeGraph();
-    project.append(guistate_resources_ptr->request_gui_state(true));
+    if (guistate_resources_ptr) {
+        project.append(guistate_resources_ptr->request_gui_state(true));
+    }
     megamol::core::utility::graphics::ScreenShotComments ssc(project);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
@@ -180,7 +182,7 @@ bool Screenshot_Service::init(const Config& config) {
     {
         "optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
         "MegaMolGraph",
-        "GUIState",
+        "optional<GUIState>",
         "RuntimeConfig",
         "optional<GUIRegisterWindow>"
     };
@@ -225,7 +227,11 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
-    guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
+
+    auto maybe_gui_state = resources[2].getOptionalResource<megamol::frontend_resources::GUIState>();
+    if (maybe_gui_state.has_value()) {
+        guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(& maybe_gui_state.value().get());
+    }
 
     auto maybe_gui_window_request_resource = resources[4].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
     if (maybe_gui_window_request_resource.has_value()) {
