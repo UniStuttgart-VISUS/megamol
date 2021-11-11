@@ -73,9 +73,17 @@ bool Call::operator()(unsigned int func) {
         if (caps.OpenGLRequired()) {
             gl_started = CallProfiling::qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
         }
+
+        perf_man->start_timer(cpu_queries[func]);
+        if (caps.OpenGLRequired())
+            perf_man->start_timer(gl_queries[func]);
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
+        perf_man->stop_timer(cpu_queries[func]);
+        if (caps.OpenGLRequired())
+            perf_man->stop_timer(gl_queries[func]);
+
         if (gl_started) {
             CallProfiling::qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
         }

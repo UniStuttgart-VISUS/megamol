@@ -117,22 +117,23 @@ namespace frontend_resources {
         return ret;
     }
 
-    PerformanceManager::handle_vector PerformanceManager::add_timers(megamol::core::Call* c) {
+    PerformanceManager::handle_vector PerformanceManager::add_timers(megamol::core::Call* c, query_api api) {
         handle_vector ret;
         const auto caps = c->GetCapabilities();
         timer_config conf;
         conf.parent_pointer = c;
         conf.parent_type = parent_type::CALL;
+        conf.api = api;
         for (auto i = 0; i < c->GetCallbackCount(); ++i) {
-            if (caps.OpenGLRequired()) {
-                conf.name = c->GetCallbackName(i) + "(GL)";
-                conf.api = query_api::OPENGL;
-                ret.push_back(add_timer(std::make_unique<gl_timer>(conf)));
-            }
             conf.name = c->GetCallbackName(i);
-            conf.api = query_api::CPU;
-            // TODO does this spawn copies? constructor fun? need for std::move??
-            ret.push_back(add_timer(std::make_unique<cpu_timer>(conf)));
+            switch(api) {
+            case query_api::CPU:
+                ret.push_back(add_timer(std::make_unique<cpu_timer>(conf)));
+                break;
+            case query_api::OPENGL:
+                ret.push_back(add_timer(std::make_unique<gl_timer>(conf)));
+                break;
+            }
         }
         return ret;
     }

@@ -142,7 +142,9 @@ namespace core {
         friend class MegaMolGraph;
 
         CallProfiling profiling;
-        megamol::frontend_resources::PerformanceManager* perf_man = nullptr; 
+
+        frontend_resources::PerformanceManager* perf_man = nullptr;
+        frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // PROFILING
     protected:
         CallCapabilities caps;

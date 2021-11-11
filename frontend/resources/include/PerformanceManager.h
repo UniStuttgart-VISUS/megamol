@@ -147,9 +147,8 @@ namespace frontend_resources {
         // names and API defined explicitly for modules
         handle_vector add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list);
 
-        // names and API derived from capabilities and callbacks
-        // note: a CPU timer is added alongside all accelerator timers!
-        handle_vector add_timers(megamol::core::Call* c);
+        // names derived from callbacks
+        handle_vector add_timers(megamol::core::Call* c, query_api api);
 
         void remove_timers(handle_vector handles);
 

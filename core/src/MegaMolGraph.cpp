@@ -674,8 +674,12 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
 #ifdef PROFILING
-    m_perf_manager->add_timers(call.get());
-    call.get()->perf_man = m_perf_manager;
+    auto the_call = call.get();
+    the_call->cpu_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        the_call->gl_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+    }
+    the_call->perf_man = m_perf_manager;
 #endif
 
     return true;
