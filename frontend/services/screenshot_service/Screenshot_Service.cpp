@@ -7,8 +7,7 @@
 
 #include "Screenshot_Service.hpp"
 
- // to grab GL front buffer
-#include <glad/glad.h>
+#include "OpenGL_Context.h"
 #include "GUIState.h"
 
 #include "ImageWrapper.h"
@@ -52,7 +51,7 @@ static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
 static bool screenshot_show_privacy_note = true;
 
-static unsigned char default_alpha_value = 0;
+unsigned char megamol::frontend::Screenshot_Service::default_alpha_value = 0;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -147,61 +146,12 @@ megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resour
         auto r = [&]() { return byte_vector[i++]; };
         auto g = [&]() { return byte_vector[i++]; };
         auto b = [&]() { return byte_vector[i++]; };
-        auto a = [&]() { return (m_image->channels == ImageWrapper::DataChannels::RGBA8) ? byte_vector[i++] : default_alpha_value; }; // alpha either from image or 1.0
+        auto a = [&]() { return (m_image->channels == ImageWrapper::DataChannels::RGBA8) ? byte_vector[i++] : megamol::frontend::Screenshot_Service::default_alpha_value; }; // alpha either from image or 1.0
         ScreenshotImageData::Pixel pixel = { r(), g(), b(), a() };
         screenshot_image.image[j++] = pixel;
     }
 
     return screenshot_image;
-}
-
-void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
-    m_read_buffer = buffer;
-    GLenum read_buffer;
-
-    switch (buffer) {
-    default:
-        [[fallthrough]];
-    case ReadBuffer::FRONT:
-            read_buffer = GL_FRONT;
-        break;
-    case ReadBuffer::BACK:
-            read_buffer = GL_BACK;
-        break;
-    case ReadBuffer::COLOR_ATT0:
-            read_buffer = GL_COLOR_ATTACHMENT0;
-        break;
-    case ReadBuffer::COLOR_ATT1:
-            read_buffer = GL_COLOR_ATTACHMENT0+1;
-        break;
-    case ReadBuffer::COLOR_ATT2:
-            read_buffer = GL_COLOR_ATTACHMENT0+2;
-        break;
-    case ReadBuffer::COLOR_ATT3:
-            read_buffer = GL_COLOR_ATTACHMENT0+3;
-        break;
-    }
-}
-
-megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
-    // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
-    // simpler and more correct approach would be to observe Framebuffer_Events resource
-    // but this is our naive implementation for now
-    GLint viewport_dims[4] = {0};
-    glGetIntegerv(GL_VIEWPORT, viewport_dims);
-    GLint fbWidth = viewport_dims[2];
-    GLint fbHeight = viewport_dims[3];
-
-    static ScreenshotImageData result;
-    result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
-
-    glReadBuffer(m_read_buffer);
-    glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
-
-    for (auto& pixel : result.image)
-        pixel.a = default_alpha_value;
-
-    return result;
 }
 
 bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const {
@@ -227,7 +177,7 @@ bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames =
     {
-        "optional<OpenGL_Context>",
+        "optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
         "MegaMolGraph",
         "GUIState",
         "RuntimeConfig",
