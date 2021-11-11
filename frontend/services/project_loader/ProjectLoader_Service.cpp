@@ -58,7 +58,7 @@ bool ProjectLoader_Service::init(const Config& config) {
     {
         "ExecuteLuaScript",
         "SetScriptPath",
-        "WindowEvents"
+        "optional<WindowEvents>"
     };
 
     log("initialized successfully");
@@ -163,12 +163,16 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     // break this recursion
     if (m_digestion_recursion)
         return;
-    m_digestion_recursion = true;
 
     // execute lua files dropped into megamol window
-    using WindowEventsType = megamol::frontend_resources::WindowEvents;
-    WindowEventsType& window_events =
-        const_cast<WindowEventsType&>(this->m_requestedResourceReferences[2].getResource<WindowEventsType>());
+    auto maybe_window_events = this->m_requestedResourceReferences[2].getOptionalResource<frontend_resources::WindowEvents>();
+    if (!maybe_window_events.has_value()) {
+        return;
+    }
+
+    m_digestion_recursion = true;
+
+    auto& window_events = const_cast<frontend_resources::WindowEvents&>(maybe_window_events.value().get());
 
     // in mmRenderNextFrame recursion the dropped paths get cleared. remember them.
     auto possible_files = window_events.dropped_path_events;
