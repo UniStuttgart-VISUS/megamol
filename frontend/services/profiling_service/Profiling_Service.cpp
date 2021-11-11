@@ -7,6 +7,14 @@ namespace frontend {
         _providedResourceReferences =
         { {"PerformanceManager", _perf_man} };
 
+#ifdef PROFILING
+        auto conf = static_cast<Config*>(configPtr);
+        if (conf != nullptr && !conf->log_file.empty()) {
+            _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+                // TODO append to perf log.
+            });
+        }
+#endif
         return true;
     }
 
@@ -17,7 +25,6 @@ namespace frontend {
     void Profiling_Service::resetProvidedResources() {
         core::CallProfiling::CollectGPUPerformance();
         _perf_man.endFrame();
-        // TODO append performance log file
     }
 } // namespace frontend
 } // namespace megamol

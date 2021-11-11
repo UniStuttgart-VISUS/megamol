@@ -65,7 +65,7 @@ namespace frontend_resources {
             frame_type frame = 0;
             std::vector<timer_entry> entries;
         };
-        using update_callback = std::function<void(frame_info)>;
+        using update_callback = std::function<void(const frame_info&)>;
 
         class Itimer {
             friend class PerformanceManager;
@@ -158,7 +158,7 @@ namespace frontend_resources {
         // hint: this is not for free, so don't call this all the time
         std::string lookup_name(handle_type h);
 
-        void subscribe_to_updates(update_callback& cb);
+        void subscribe_to_updates(update_callback cb);
 
         std::string get_timer_parent(handle_type h);
         std::string get_timer_name(handle_type h);

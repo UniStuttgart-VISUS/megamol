@@ -165,7 +165,7 @@ namespace frontend_resources {
         return timers[h]->get_conf().name;
     }
 
-    void PerformanceManager::subscribe_to_updates(update_callback& cb) {
+    void PerformanceManager::subscribe_to_updates(update_callback cb) {
         subscribers.push_back(cb);
     }
 

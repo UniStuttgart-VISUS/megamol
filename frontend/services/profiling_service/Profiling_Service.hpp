@@ -16,6 +16,11 @@ namespace frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
 public:
+
+    struct Config {
+        std::string log_file;
+    };
+
     std::string serviceName() const override { return "Profiling_Service"; }
     bool init(void* configPtr) override;
     void close() override {}
