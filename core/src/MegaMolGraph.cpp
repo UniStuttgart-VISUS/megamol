@@ -675,6 +675,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     this->call_list_.emplace_front(CallInstance_t{call, request});
 #ifdef PROFILING
     m_perf_manager->add_timers(call.get());
+    call.get()->perf_man = m_perf_manager;
 #endif
 
     return true;

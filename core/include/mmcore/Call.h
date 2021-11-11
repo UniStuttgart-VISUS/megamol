@@ -18,6 +18,7 @@
 #include "CallCapabilities.h"
 #ifdef PROFILING
 #include "CallProfiling.h"
+#include "PerformanceManager.h"
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
@@ -138,8 +139,10 @@ namespace core {
 
 #ifdef PROFILING
         friend class PerformanceQueryManager;
+        friend class MegaMolGraph;
 
         CallProfiling profiling;
+        megamol::frontend_resources::PerformanceManager* perf_man = nullptr; 
 #endif // PROFILING
     protected:
         CallCapabilities caps;

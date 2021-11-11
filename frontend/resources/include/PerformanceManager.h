@@ -2,14 +2,19 @@
 
 #include <chrono>
 #include <exception>
+#include <functional>
 #include <limits>
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
-#include "glad/glad.h"
-#include "mmcore/Call.h"
-#include "mmcore/Module.h"
-#include "mmcore/utility/log/Log.h"
+#include <vector>
 
 namespace megamol {
+namespace core {
+    class Call;
+    class Module;
+} // namespace core
 namespace frontend {
     class Profiling_Service;
 } // namespace frontend
@@ -90,29 +95,10 @@ namespace frontend_resources {
 
         protected:
             // returns whether this is a new frame from what has been seen
-            virtual bool start(frame_type frame) {
-                auto new_frame = false;
-                if (frame != start_frame) {
-                    new_frame = true;
-                    regions.clear();
-                }
-                if (!started) {
-                    started = true;
-                    start_frame = frame;
-                } else {
-                    throw std::exception(
-                        ("timer: region " + _conf.name + "needs to be ended before being started").c_str());
-                }
-                return new_frame;
-            }
+            virtual bool start(frame_type frame);
 
-            virtual void end() {
-                if (!started) {
-                    throw std::exception(
-                        ("cpu_timer: region " + _conf.name + "needs to be started before being ended").c_str());
-                }
-                started = false;
-            };
+            virtual void end();
+            ;
             virtual void collect() = 0;
 
             timer_config _conf;
@@ -123,37 +109,13 @@ namespace frontend_resources {
             handle_type h = 0;
         };
 
-        // class timer {
-        // public:
-        //    template<typename concrete_timer>
-        //    timer(concrete_timer&& t)
-        //            : storage{std::forward<concrete_timer>(t)}
-        //            , getter{[](std::any& a_storage) -> Itimer& { return std::any_cast<concrete_timer&>(a_storage); }}
-        //            {}
-
-        //    Itimer* operator->() {
-        //        return &getter(storage);
-        //    }
-
-        // private:
-        //    std::any storage;
-        //    Itimer& (*getter)(std::any&);
-        //};
-
         class cpu_timer : public Itimer {
         public:
             cpu_timer(const timer_config& conf) : Itimer(conf) {}
 
-            bool start(frame_type frame) override {
-                const auto ret = Itimer::start(frame);
-                last_start = std::chrono::high_resolution_clock::now();
-                return ret;
-            }
-            void end() override {
-                Itimer::end();
-                auto end = std::chrono::high_resolution_clock::now();
-                regions.emplace_back(std::make_pair(last_start, end));
-            }
+            bool start(frame_type frame) override;
+
+            void end() override;
 
         protected:
             void collect() override {}
@@ -165,56 +127,17 @@ namespace frontend_resources {
         public:
             gl_timer(const timer_config& conf) : Itimer(conf) {}
 
-            ~gl_timer() override {
-                for (auto& q_pair : query_ids) {
-                    glDeleteQueries(1, &q_pair.first);
-                    glDeleteQueries(1, &q_pair.second);
-                }
-            }
+            ~gl_timer() override;
 
-            bool start(frame_type frame) override {
-                const auto new_frame = Itimer::start(frame);
-                if (new_frame) {
-                    query_index = 0;
-                }
-                last_query = assert_query(query_index).first;
-                glQueryCounter(last_query, GL_TIMESTAMP);
-                return new_frame;
-            }
+            bool start(frame_type frame) override;
 
-            void end() override {
-                Itimer::end();
-                last_query = assert_query(query_index).second;
-                glQueryCounter(last_query, GL_TIMESTAMP);
-                query_index++;
-            }
+            void end() override;
 
         protected:
-            void collect() override {
-                GLuint64 start_time, end_time;
-                for (uint32_t index = 0; index < query_index; ++index) {
-                    const auto& [start, end] = query_ids[index];
-                    glGetQueryObjectui64v(start, GL_QUERY_RESULT, &start_time);
-                    glGetQueryObjectui64v(end, GL_QUERY_RESULT, &end_time);
-                    regions.emplace_back(std::make_pair(time_point{std::chrono::nanoseconds(start_time)},
-                        time_point{std::chrono::nanoseconds(end_time)}));
-                }
-            }
+            void collect() override;
 
         private:
-            std::pair<uint32_t, uint32_t> assert_query(uint32_t index) {
-                if (index > query_ids.size()) {
-                    throw std::exception(
-                        ("gl_timer: non-coherent query IDs for timer " + _conf.name + ", something is probably wrong.")
-                            .c_str());
-                }
-                if (index == query_ids.size()) {
-                    std::array<uint32_t, 2> ids = {0, 0};
-                    glGenQueries(2, ids.data());
-                    query_ids.emplace_back(std::make_pair(ids[0], ids[1]));
-                }
-                return query_ids[index];
-            }
+            std::pair<uint32_t, uint32_t> assert_query(uint32_t index);
 
             std::vector<std::pair<uint32_t, uint32_t>> query_ids;
             uint32_t query_index = 0;
@@ -222,83 +145,21 @@ namespace frontend_resources {
         };
 
         // names and API defined explicitly for modules
-        handle_vector add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list) {
-            handle_vector ret;
-            timer_config conf;
-            conf.parent_pointer = m;
-            conf.parent_type = parent_type::MODULE;
-            for (const auto& btc : timer_list) {
-                conf.api = btc.api;
-                conf.name = btc.name;
-                switch (conf.api) {
-                case query_api::CPU: {
-                    ret.push_back(add_timer(std::make_unique<cpu_timer>(conf)));
-                    break;
-                }
-                case query_api::OPENGL: {
-                    ret.push_back(add_timer(std::make_unique<gl_timer>(conf)));
-                    break;
-                }
-                }
-            }
-            return ret;
-        }
+        handle_vector add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list);
 
         // names and API derived from capabilities and callbacks
         // note: a CPU timer is added alongside all accelerator timers!
-        handle_vector add_timers(megamol::core::Call* c) {
-            handle_vector ret;
-            const auto caps = c->GetCapabilities();
-            timer_config conf;
-            conf.parent_pointer = c;
-            conf.parent_type = parent_type::CALL;
-            for (auto i = 0; i < c->GetCallbackCount(); ++i) {
-                if (caps.OpenGLRequired()) {
-                    conf.name = c->GetCallbackName(i) + "(GL)";
-                    conf.api = query_api::OPENGL;
-                    ret.push_back(add_timer(std::make_unique<gl_timer>(conf)));
-                }
-                conf.name = c->GetCallbackName(i);
-                conf.api = query_api::CPU;
-                // TODO does this spawn copies? constructor fun? need for std::move??
-                ret.push_back(add_timer(std::make_unique<cpu_timer>(conf)));
-            }
-            return ret;
-        }
+        handle_vector add_timers(megamol::core::Call* c);
 
-        void remove_timers(handle_vector handles) {
-            for (auto handle : handles) {
-                timers.erase(handle);
-            }
-            handle_holes.insert(handle_holes.end(), handles.begin(), handles.end());
-        }
+        void remove_timers(handle_vector handles);
 
         // hint: this is not for free, so don't call this all the time
-        std::string lookup_parent(handle_type h) {
-            const auto& conf = timers[h]->get_conf();
-            const auto p = conf.parent_pointer;
-            switch (conf.parent_type) {
-            case parent_type::CALL: {
-                const auto c = static_cast<megamol::core::Call*>(p);
-                return c->GetDescriptiveText();
-            }
-            case parent_type::MODULE: {
-                const auto m = static_cast<megamol::core::Module*>(p);
-                return m->Name().PeekBuffer();
-            }
-            default:
-                return "";
-            }
-        }
+        std::string lookup_parent(handle_type h);
 
         // hint: this is not for free, so don't call this all the time
-        std::string lookup_name(handle_type h) {
-            return timers[h]->get_conf().name;
-        }
+        std::string lookup_name(handle_type h);
 
-        void subscribe_to_updates(update_callback& cb) {
-            subscribers.push_back(cb);
-        }
+        void subscribe_to_updates(update_callback& cb);
 
         std::string get_timer_parent(handle_type h);
         std::string get_timer_name(handle_type h);
@@ -309,75 +170,13 @@ namespace frontend_resources {
     private:
         friend class frontend::Profiling_Service;
 
-        handle_type add_timer(std::unique_ptr<Itimer> t) {
-            handle_type my_handle = 0;
-            if (!handle_holes.empty()) {
-                my_handle = handle_holes.back();
-                handle_holes.pop_back();
-            } else {
-                my_handle = current_handle;
-                current_handle++;
-            }
-            t->h = my_handle;
-            auto pair = std::make_pair(my_handle, std::move(t));
-            timers.insert(std::move(pair));
-            return my_handle;
-        }
+        handle_type add_timer(std::unique_ptr<Itimer> t);
 
         void startFrame() {
             gl_timer::last_query = 0;
         }
 
-        void endFrame() {
-            int done = (gl_timer::last_query == 0);
-            while (!done) {
-                glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);
-            }
-
-            frame_info this_frame;
-            this_frame.frame = current_frame;
-
-            for (auto& [key, timer] : timers) {
-                if (timer->get_start_frame() != this_frame.frame) {
-                    // timer did not start this frame
-                    continue;
-                } else {
-                    if (timer->started) {
-                        // timer was not ended this frame, that is not nice
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn("PerformanceManager: timer %s was not properly ended in frame %u",
-                            timer->get_conf().name.c_str(), this_frame.frame);
-                        continue;
-                    }
-                }
-                timer->collect();
-                auto& tconf = timer->get_conf();
-                timer_entry e;
-                e.handle = timer->get_handle();
-                e.frame = this_frame.frame;
-
-                for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
-                    e.frame_index = region;
-
-                    e.type = entry_type::START;
-                    e.timestamp = timer->get_start(region);
-                    this_frame.entries.push_back(e);
-
-                    e.type = entry_type::END;
-                    e.timestamp = timer->get_end(region);
-                    this_frame.entries.push_back(e);
-
-                    e.type = entry_type::DURATION;
-                    e.timestamp = time_point{timer->get_end(region) - timer->get_start(region)};
-                    this_frame.entries.push_back(e);
-                }
-            }
-
-            for (auto& subscriber : subscribers) {
-                subscriber(this_frame);
-            }
-
-            current_frame++;
-        }
+        void endFrame();
 
         handle_type current_handle = 0;
         std::vector<handle_type> handle_holes;
