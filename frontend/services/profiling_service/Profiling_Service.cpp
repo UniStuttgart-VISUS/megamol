@@ -12,13 +12,13 @@ namespace frontend {
         if (conf != nullptr && !conf->log_file.empty()) {
             log_file= std::ofstream(conf->log_file, std::ofstream::trunc);
             // header
-            log_file << "frame;parent;name;frame_index;type;time (ms)" << std::endl;
+            log_file << "frame;parent;name;frame_index;api;type;time (ms)" << std::endl;
             _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
                 auto frame = fi.frame;
                 for(auto& e: fi.entries) {
                     auto name = _perf_man.lookup_name(e.handle);
                     auto parent = _perf_man.lookup_parent(e.handle);
-                    std::string type_string, time_string;
+                    std::string type_string, time_string, api_string;
                     switch (e.type) {
                     case frontend_resources::PerformanceManager::entry_type::START:
                         type_string = "start";
@@ -30,10 +30,18 @@ namespace frontend {
                         type_string = "duration";
                         break;
                     }
-                    time_string = std::to_string(
-                        std::chrono::duration_cast<std::chrono::milliseconds>(e.timestamp.time_since_epoch()).count());
+                    switch (e.api) {
+                    case frontend_resources::PerformanceManager::query_api::CPU:
+                        api_string = "CPU";
+                        break;
+                    case frontend_resources::PerformanceManager::query_api::OPENGL:
+                        api_string = "OpenGL";
+                        break;
+                    }
+                    const auto dur = std::chrono::duration<double, std::milli>(e.timestamp.time_since_epoch());
+                    time_string = std::to_string(dur.count());
 
-                    log_file << frame << ";" << parent << ";" << name << ";" << e.frame_index << ";" << type_string
+                    log_file << frame << ";" << parent << ";" << name << ";" << e.frame_index << ";" << api_string << ";"<< type_string
                              << ";" << time_string << std::endl;
                 }
             });

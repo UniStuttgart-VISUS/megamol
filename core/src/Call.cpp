@@ -104,7 +104,7 @@ bool Call::operator()(unsigned int func) {
 
 std::string Call::GetDescriptiveText() const {
     if (this->caller != nullptr && this->callee != nullptr) {
-        return caller->Name().PeekBuffer() + std::string("->") + callee->Name().PeekBuffer();
+        return caller->FullName().PeekBuffer() + std::string("->") + callee->FullName().PeekBuffer();
     }
     return "";
 }

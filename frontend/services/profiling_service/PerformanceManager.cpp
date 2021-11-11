@@ -222,6 +222,7 @@ namespace frontend_resources {
 
             for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
                 e.frame_index = region;
+                e.api = tconf.api;
 
                 e.type = entry_type::START;
                 e.timestamp = timer->get_start(region);

@@ -173,7 +173,7 @@ int main(const int argc, const char** argv) {
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
 #ifdef PROFILING
-    services.add(profiling_service, nullptr);
+    services.add(profiling_service, &profiling_config);
 #endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
