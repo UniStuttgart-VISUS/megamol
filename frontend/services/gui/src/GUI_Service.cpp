@@ -14,10 +14,10 @@
 #include "GUIManager.h"
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
+#include "OpenGL_Context.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
-#include "OpenGL_Context.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
 
@@ -79,9 +79,7 @@ namespace frontend {
         this->m_providedStateResource.provide_gui_visibility = [&](bool show) -> void {
             return this->resource_provide_gui_visibility(show);
         };
-        this->m_providedStateResource.request_gui_scale = [&]() -> float {
-            return this->resource_request_gui_scale();
-        };
+        this->m_providedStateResource.request_gui_scale = [&]() -> float { return this->resource_request_gui_scale(); };
         this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
             return this->resource_provide_gui_scale(scale);
         };
@@ -89,13 +87,11 @@ namespace frontend {
         this->resource_provide_gui_scale(m_config.gui_scale);
 
         this->m_providedRegisterWindowResource.register_window =
-            [&](const std::string& name,
-                std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
+            [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
             this->resource_register_window(name, func);
         };
-        this->m_providedRegisterWindowResource.register_popup =
-            [&](const std::string& name, std::weak_ptr<bool> open,
-                std::function<void(void)> func) -> void {
+        this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, std::weak_ptr<bool> open,
+                                                                    std::function<void(void)> func) -> void {
             this->resource_register_popup(name, open, func);
         };
         this->m_providedRegisterWindowResource.register_notification =
@@ -106,8 +102,7 @@ namespace frontend {
         this->m_gui->SetVisibility(m_config.gui_show);
         this->m_gui->SetScale(m_config.gui_scale);
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "GUI_Service: initialized successfully");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully");
 
         return true;
     }
@@ -141,8 +136,8 @@ namespace frontend {
                 this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
                 this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
             }
-            this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
-                window_events._clipboard_user_data);
+            this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func,
+                window_events._setClipboardString_Func, window_events._clipboard_user_data);
         }
 
         /// KeyboardEvents = resource index 2
@@ -164,7 +159,7 @@ namespace frontend {
             }
             /// WARNING: Changing a constant type will lead to an undefined behavior!
             const_cast<megamol::frontend_resources::KeyboardEvents&>(keyboard_events).key_events = pass_key_events;
-    
+
             std::vector<unsigned int> pass_codepoint_events;
             for (auto& codepoint_event : keyboard_events.codepoint_events) {
                 if (!this->m_gui->OnChar(codepoint_event)) {
@@ -202,10 +197,11 @@ namespace frontend {
                 }
             }
             /// WARNING: Changing a constant type will lead to an undefined behavior!
-            const_cast<megamol::frontend_resources::MouseEvents&>(mouse_events).scroll_events = pass_mouse_scroll_events;
+            const_cast<megamol::frontend_resources::MouseEvents&>(mouse_events).scroll_events =
+                pass_mouse_scroll_events;
 
-            std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction,
-                megamol::frontend_resources::Modifiers>>
+            std::vector<std::tuple<megamol::frontend_resources::MouseButton,
+                megamol::frontend_resources::MouseButtonAction, megamol::frontend_resources::Modifiers>>
                 pass_mouse_btn_events;
             for (auto& button_event : mouse_events.buttons_events) {
                 auto button = std::get<0>(button_event);
@@ -254,12 +250,14 @@ namespace frontend {
             frame_statistics.rendered_frames_count);
 
         /// Get window manipulation resource = resource index 11
-        auto maybe_window_manipulation =
-            this->m_requestedResourceReferences[11].getOptionalResource<megamol::frontend_resources::WindowManipulation>();
+        auto maybe_window_manipulation = this->m_requestedResourceReferences[11]
+                                             .getOptionalResource<megamol::frontend_resources::WindowManipulation>();
         if (maybe_window_manipulation.has_value()) {
-            megamol::frontend_resources::WindowManipulation const& window_manipulation = maybe_window_manipulation.value().get();
+            megamol::frontend_resources::WindowManipulation const& window_manipulation =
+                maybe_window_manipulation.value().get();
 
-            const_cast<megamol::frontend_resources::WindowManipulation&>(window_manipulation).set_mouse_cursor(this->m_gui->GetMouseCursor());
+            const_cast<megamol::frontend_resources::WindowManipulation&>(window_manipulation)
+                .set_mouse_cursor(this->m_gui->GetMouseCursor());
         }
     }
 
@@ -321,7 +319,8 @@ namespace frontend {
             frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
 
             if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized OpenGL backend successfully");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "GUI_Service: initialized OpenGL backend successfully");
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: error creating OpenGL backend");
                 this->setShutdown();
