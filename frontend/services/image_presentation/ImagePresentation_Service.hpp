@@ -119,6 +119,8 @@ private:
     bool clear_entry_points();
 
     std::list<ImagePresentationSink> m_presentation_sinks;
+
+    void add_glfw_sink();
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
     std::tuple<
