@@ -169,6 +169,15 @@ namespace frontend_resources {
         subscribers.push_back(cb);
     }
 
+    void PerformanceManager::start_timer(handle_type h, frame_type frame) {
+        current_frame = frame;
+        timers[h]->start(frame);
+    }
+
+    void PerformanceManager::stop_timer(handle_type h) {
+        timers[h]->end();
+    }
+
     PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<Itimer> t) {
         handle_type my_handle = 0;
         if (!handle_holes.empty()) {
@@ -231,8 +240,6 @@ namespace frontend_resources {
         for (auto& subscriber : subscribers) {
             subscriber(this_frame);
         }
-
-        current_frame++;
     }
 } // namespace frontend_resources
 } // namespace megamol

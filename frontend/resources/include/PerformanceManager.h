@@ -159,10 +159,7 @@ namespace frontend_resources {
 
         void subscribe_to_updates(update_callback cb);
 
-        std::string get_timer_parent(handle_type h);
-        std::string get_timer_name(handle_type h);
-
-        void start_timer(handle_type h);
+        void start_timer(handle_type h, frame_type frame);
         void stop_timer(handle_type h);
 
     private:
