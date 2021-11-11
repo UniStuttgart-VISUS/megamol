@@ -329,10 +329,10 @@ namespace frontend_resources {
         }
 
         void endFrame() {
-            int done = 0;
-            do {
+            int done = (gl_timer::last_query == 0);
+            while (!done) {
                 glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);
-            } while (!done);
+            }
 
             frame_info this_frame;
             this_frame.frame = current_frame;
