@@ -204,9 +204,6 @@ bool Screenshot_Service::init(const Config& config) {
 }
 
 void Screenshot_Service::close() {
-    // close libraries or APIs you manage
-    // wrap up resources your service provides, but don not depend on outside resources to be available here
-    // after this, at some point only the destructor of your service gets called
 }
 
 std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
@@ -217,6 +214,7 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
         {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
         {"ImageWrapperToPNG_ScreenshotTrigger", m_imagewrapperToPNG_trigger}
     };
+
 
     return m_providedResourceReferences;
 }
@@ -246,27 +244,12 @@ void Screenshot_Service::digestChangedRequestedResources() {
 }
 
 void Screenshot_Service::resetProvidedResources() {
-    // this gets called at the end of the main loop iteration
-    // since the current resources state should have been handled in this frame already
-    // you may clean up resources whose state is not needed for the next iteration
-    // e.g. m_keyboardEvents.clear();
-    // network_traffic_buffer.reset_to_empty();
 }
 
 void Screenshot_Service::preGraphRender() {
-    // this gets called right before the graph is told to render something
-    // e.g. you can start a start frame timer here
-
-    // rendering via MegaMol View is called after this function finishes
-    // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
-    // which leads to view.Render()
 }
 
 void Screenshot_Service::postGraphRender() {
-    // the graph finished rendering and you may more stuff here
-    // e.g. end frame timer
-    // update window name
-    // swap buffers, glClear
 }
 
 
