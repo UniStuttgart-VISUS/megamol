@@ -77,7 +77,7 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "optional<WindowManipulation>"
         , "FramebufferEvents"
-        , "GUIState"
+        , "optional<GUIState>" // TODO: unused?
         , "RegisterLuaCallbacks"
         , "optional<OpenGL_Context>"
         , "ImageWrapperToPNG_ScreenshotTrigger"
