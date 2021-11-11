@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <fstream>
+
 #include "AbstractFrontendService.hpp"
 #include "mmcore/CallProfiling.h"
 #include "PerformanceManager.h"
@@ -23,7 +25,7 @@ public:
 
     std::string serviceName() const override { return "Profiling_Service"; }
     bool init(void* configPtr) override;
-    void close() override {}
+    void close() override;
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override {}
 
@@ -39,6 +41,7 @@ public:
     std::vector<std::string> _requestedResourcesNames;
 
     megamol::frontend_resources::PerformanceManager _perf_man;
+    std::ofstream log_file;
 };
 
 } // namespace frontend

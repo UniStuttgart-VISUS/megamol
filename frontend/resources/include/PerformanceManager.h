@@ -55,7 +55,6 @@ namespace frontend_resources {
         struct timer_entry {
             handle_type handle = 0;
             entry_type type = entry_type::START;
-            frame_type frame = 0;
             // local index inside one frame (if this region is touched multiple times per frame)
             uint32_t frame_index = 0;
             time_point timestamp;

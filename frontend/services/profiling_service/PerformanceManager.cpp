@@ -210,7 +210,6 @@ namespace frontend_resources {
             auto& tconf = timer->get_conf();
             timer_entry e;
             e.handle = timer->get_handle();
-            e.frame = this_frame.frame;
 
             for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
                 e.frame_index = region;
