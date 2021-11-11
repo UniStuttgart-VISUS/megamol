@@ -25,12 +25,13 @@
 
 #include "GUIRegisterWindow.h"
 
+static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
 static const std::string service_name = "Screenshot_Service: ";
 static const std::string privacy_note("--- PRIVACY NOTE ---\n"
     "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
     "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
     ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
-static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
+
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -181,7 +182,7 @@ bool Screenshot_Service::init(const Config& config) {
         "MegaMolGraph",
         "GUIState",
         "RuntimeConfig",
-        "GUIRegisterWindow"
+        "optional<GUIRegisterWindow>"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool
@@ -228,8 +229,11 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
 
-    auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
+    auto maybe_gui_window_request_resource = resources[4].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
+    if (maybe_gui_window_request_resource.has_value()) {
+        auto& gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+        gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
+    }
 }
 
 void Screenshot_Service::updateProvidedResources() {
