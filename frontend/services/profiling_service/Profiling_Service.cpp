@@ -12,7 +12,7 @@ namespace frontend {
         if (conf != nullptr && !conf->log_file.empty()) {
             log_file= std::ofstream(conf->log_file, std::ofstream::trunc);
             // header
-            log_file << "frame;parent;name;frame_index;type;time" << std::endl;
+            log_file << "frame;parent;name;frame_index;type;time (ms)" << std::endl;
             _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
                 auto frame = fi.frame;
                 for(auto& e: fi.entries) {
@@ -22,17 +22,17 @@ namespace frontend {
                     switch (e.type) {
                     case frontend_resources::PerformanceManager::entry_type::START:
                         type_string = "start";
-                        time_string = std::to_string(e.timestamp.time_since_epoch().count());
                         break;
                     case frontend_resources::PerformanceManager::entry_type::END:
                         type_string = "end";
-                        time_string = std::to_string(e.timestamp.time_since_epoch().count());
                         break;
                     case frontend_resources::PerformanceManager::entry_type::DURATION:
                         type_string = "duration";
-                        time_string = std::to_string(e.timestamp.time_since_epoch().count());
                         break;
                     }
+                    time_string = std::to_string(
+                        std::chrono::duration_cast<std::chrono::milliseconds>(e.timestamp.time_since_epoch()).count());
+
                     log_file << frame << ";" << parent << ";" << name << ";" << e.frame_index << ";" << type_string
                              << ";" << time_string << std::endl;
                 }
