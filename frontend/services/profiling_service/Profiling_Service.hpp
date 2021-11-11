@@ -19,14 +19,10 @@ public:
     std::string serviceName() const override { return "Profiling_Service"; }
     bool init(void* configPtr) override;
     void close() override {}
-    void updateProvidedResources() override { _pman.startFrame(); }
+    void updateProvidedResources() override;
     void digestChangedRequestedResources() override {}
 
-    void resetProvidedResources() override {
-        core::CallProfiling::CollectGPUPerformance();
-        _pman.endFrame();
-        // TODO append performance log file
-    }
+    void resetProvidedResources() override;
 
     void preGraphRender() override {}
     void postGraphRender() override {}
@@ -37,7 +33,7 @@ public:
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;
 
-    frontend_resources::PerformanceManager _pman;
+    megamol::frontend_resources::PerformanceManager _perf_man;
 };
 
 } // namespace frontend
