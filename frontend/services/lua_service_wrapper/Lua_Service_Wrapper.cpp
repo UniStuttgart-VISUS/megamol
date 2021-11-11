@@ -106,12 +106,12 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
         "optional<WindowManipulation>", // for Framebuffer resize
-        "GUIState", // propagate GUI state and visibility
+        "optional<GUIState>", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
         "GlobalValueStore", // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name,
-        "GUIRegisterWindow",
+        "optional<GUIRegisterWindow>",
         "RuntimeConfig"
 
     }; //= {"ZMQ_Context"};
@@ -160,8 +160,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
 
     luaAPI.AddCallbacks(frontend_resource_callbacks);
 
-    auto &gui_window_request_resource = resources[9].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_notification(version_mismatch_title, std::weak_ptr<bool>(open_version_notification), version_mismatch_notification);
+    auto maybe_gui_window_request_resource = resources[9].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
+    if (maybe_gui_window_request_resource.has_value()) {
+        auto &gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+        gui_window_request_resource.register_notification(version_mismatch_title, std::weak_ptr<bool>(open_version_notification), version_mismatch_notification);
+    }
 }
 
 // -------- main loop callbacks ---------
@@ -320,61 +323,61 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             }});
     }
 
-    callbacks.add<VoidResult, std::string>(
-        "mmSetGUIState",
-        "(string json)\n\tSet GUI state from given 'json' string.",
-        {[&](std::string json) -> VoidResult
-        {
-            auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            gui_resource.provide_gui_state(json);
-            return VoidResult{};
-        }});
-    callbacks.add<StringResult>(
-        "mmGetGUIState",
-        "()\n\tReturns the GUI state as json string.",
-        {[&]() -> StringResult {
-            auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            auto s = gui_resource.request_gui_state(false);
-            return StringResult{s};
-        }});
+    auto maybe_gui_state =
+        m_requestedResourceReferences[4].getOptionalResource<megamol::frontend_resources::GUIState>();
+    if (maybe_gui_state.has_value()) {
+        auto& gui_resource =  maybe_gui_state.value().get();
 
-    callbacks.add<VoidResult, bool>(
-        "mmSetGUIVisible",
-        "(bool state)\n\tShow (true) or hide (false) the GUI.",
-        {[&](bool show) -> VoidResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            gui_resource.provide_gui_visibility(show);
-            return VoidResult{};
-        }});
-    callbacks.add<StringResult>(
-        "mmGetGUIVisible",
-        "()\n\tReturns whether the GUI is visible (true/false).",
-        {[&]() -> StringResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            const auto visible = gui_resource.request_gui_visibility();
-            return StringResult{visible ? "true" : "false"};
-        }});
+        callbacks.add<VoidResult, std::string>(
+            "mmSetGUIState",
+            "(string json)\n\tSet GUI state from given 'json' string.",
+            {[&](std::string json) -> VoidResult
+            {
+                gui_resource.provide_gui_state(json);
+                return VoidResult{};
+            }});
+        callbacks.add<StringResult>(
+            "mmGetGUIState",
+            "()\n\tReturns the GUI state as json string.",
+            {[&]() -> StringResult {
+                auto s = gui_resource.request_gui_state(false);
+                return StringResult{s};
+            }});
 
-    callbacks.add<VoidResult, float>(
-        "mmSetGUIScale",
-        "(float scale)\n\tSet GUI scaling factor.",
-        {[&](float scale) -> VoidResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            gui_resource.provide_gui_scale(scale);
-            return VoidResult{};
-        }});
-    callbacks.add<StringResult>(
-        "mmGetGUIScale",
-        "()\n\tReturns the GUI scaling as float.",
-        {[&]() -> StringResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIState>();
-            const auto scale = gui_resource.request_gui_scale();
-            return StringResult{std::to_string(scale)};
-        }});
+        callbacks.add<VoidResult, bool>(
+            "mmSetGUIVisible",
+            "(bool state)\n\tShow (true) or hide (false) the GUI.",
+            {[&](bool show) -> VoidResult
+            {
+                gui_resource.provide_gui_visibility(show);
+                return VoidResult{};
+            }});
+        callbacks.add<StringResult>(
+            "mmGetGUIVisible",
+            "()\n\tReturns whether the GUI is visible (true/false).",
+            {[&]() -> StringResult
+            {
+                const auto visible = gui_resource.request_gui_visibility();
+                return StringResult{visible ? "true" : "false"};
+            }});
+
+        callbacks.add<VoidResult, float>(
+            "mmSetGUIScale",
+            "(float scale)\n\tSet GUI scaling factor.",
+            {[&](float scale) -> VoidResult
+            {
+                gui_resource.provide_gui_scale(scale);
+                return VoidResult{};
+            }});
+        callbacks.add<StringResult>(
+            "mmGetGUIScale",
+            "()\n\tReturns the GUI scaling as float.",
+            {[&]() -> StringResult
+            {
+                const auto scale = gui_resource.request_gui_scale();
+                return StringResult{std::to_string(scale)};
+            }});
+    }
 
     callbacks.add<VoidResult>(
         "mmQuit",
