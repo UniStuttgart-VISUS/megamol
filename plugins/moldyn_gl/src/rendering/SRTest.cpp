@@ -34,10 +34,8 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         return false;
     }
 
-    glGenBuffers(1, &ubo_);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo_);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo_params_t), nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glCreateBuffers(1, &ubo_);
+    glNamedBufferData(ubo_, sizeof(ubo_params_t), nullptr, GL_DYNAMIC_DRAW);
 
     return true;
 }
@@ -90,9 +88,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
         ubo_st.near_ = cam.get<core::view::Camera::NearPlane>();
         ubo_st.far_ = cam.get<core::view::Camera::FarPlane>();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo_);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ubo_params_t), &ubo_st);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glNamedBufferSubData(ubo_, 0, sizeof(ubo_params_t), &ubo_st);
 
         old_cam_ = cam;
     }
@@ -258,36 +254,35 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
     auto const num_vaos = package.positions.size();
     glDeleteVertexArrays(vaos_.size(), vaos_.data());
     vaos_.resize(num_vaos);
-    glGenVertexArrays(vaos_.size(), vaos_.data());
+    glCreateVertexArrays(vaos_.size(), vaos_.data());
 
     glDeleteBuffers(vbos_.size(), vbos_.data());
     vbos_.resize(num_vaos);
-    glGenBuffers(vbos_.size(), vbos_.data());
+    glCreateBuffers(vbos_.size(), vbos_.data());
 
     glDeleteBuffers(cbos_.size(), cbos_.data());
     cbos_.resize(num_vaos);
-    glGenBuffers(cbos_.size(), cbos_.data());
+    glCreateBuffers(cbos_.size(), cbos_.data());
 
     num_prims_ = package.data_sizes;
 
     for (std::decay_t<decltype(num_vaos)> i = 0; i < num_vaos; ++i) {
-        glBindVertexArray(vaos_[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbos_[i]);
-        glBufferData(GL_ARRAY_BUFFER,
+        glNamedBufferStorage(vbos_[i],
             package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
-            package.positions[i].data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, cbos_[i]);
-        glBufferData(GL_ARRAY_BUFFER,
-            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
-            package.colors[i].data(), GL_STATIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    }
+            package.positions[i].data(), 0);
+        glEnableVertexArrayAttrib(vaos_[i], 0);
+        glVertexArrayAttribFormat(vaos_[i], 0, 4, GL_FLOAT, GL_FALSE, 0);
+        glVertexArrayVertexBuffer(vaos_[i], 0, vbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayAttribBinding(vaos_[i], 0, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+        glNamedBufferStorage(cbos_[i],
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), 0);
+        glEnableVertexArrayAttrib(vaos_[i], 1);
+        glVertexArrayAttribFormat(vaos_[i], 1, 4, GL_FLOAT, GL_FALSE, 0);
+        glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayAttribBinding(vaos_[i], 1, 1);
+    }
 
     pl_data_ = package.pl_data;
 
