@@ -8,15 +8,14 @@
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
-#include "Framebuffer_Events.h"
 #include "GUIState.h"
 
+#include "OpenGL_Context.h"
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
 #include "LuaCallbacksCollection.h"
-
-#include "mmcore/view/AbstractView_EventConsumption.h"
+#include "RenderInput.h"
 
 #include <any>
 #include <utility>
@@ -61,18 +60,16 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
-    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, void* module_raw_ptr)   -> bool { return add_entry_point(name, module_raw_ptr); };
+    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, EntryPointRenderFunctions const& entry_point)   -> bool { return add_entry_point(name, entry_point); };
     m_entry_points_registry_resource.remove_entry_point = [&](std::string name)                         -> bool { return remove_entry_point(name); };
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
-
-    m_presentation_sinks.push_back(
-        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
 
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
         , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
+        , {"FramebufferEvents", m_global_framebuffer_events}
     };
 
     this->m_requestedResourcesNames =
@@ -80,7 +77,7 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "optional<WindowManipulation>"
         , "FramebufferEvents"
-        , "GUIState"
+        , "optional<GUIState>" // TODO: unused?
         , "RegisterLuaCallbacks"
         , "optional<OpenGL_Context>"
         , "ImageWrapperToPNG_ScreenshotTrigger"
@@ -154,9 +151,10 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
 
+    add_glfw_sink();
+
     fill_lua_callbacks();
 }
-#define m_frontend_resources (*m_frontend_resources_ptr)
 
 void ImagePresentation_Service::updateProvidedResources() {
 }
@@ -188,6 +186,10 @@ void ImagePresentation_Service::RenderNextFrame() {
 }
 
 void ImagePresentation_Service::PresentRenderedImages() {
+    // before presenting to the sinks, we need to apply the latest global fbo size changes
+    // this way sinks can access the current fbo size as previous_state
+    m_global_framebuffer_events.clear();
+
     // pull result images into separate list
     static std::vector<ImageWrapper> wrapped_images;
     wrapped_images.clear();
@@ -201,32 +203,6 @@ void ImagePresentation_Service::PresentRenderedImages() {
     for (auto& sink: m_presentation_sinks) {
         sink.present_images(wrapped_images);
     }
-}
-
-// clang-format off
-using FrontendResource = megamol::frontend::FrontendResource;
-using EntryPointExecutionCallback = megamol::frontend::ImagePresentation_Service::EntryPointExecutionCallback;
-
-using EntryPointInitFunctions =
-std::tuple<
-    // rendering execution function
-    EntryPointExecutionCallback,
-    // get requested resources function
-    std::function<std::vector<std::string>()>
->;
-// clang-format on
-static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
-    if (auto module_ptr = static_cast<megamol::core::Module*>(ptr); module_ptr != nullptr) {
-        if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
-            return EntryPointInitFunctions{
-                std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::get_view_runtime_resources_requests},
-            };
-        }
-    }
-
-    log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
-    throw std::exception();
 }
 
 namespace {
@@ -318,6 +294,7 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
     // we then split up the requests into the ones before and after the request for the input update
     // and look up those resource requests in the frontend resources
     // the input update resource is not known in the frontend, so we need to fiddle a bit here
+    success = requests.empty();
     for (auto request_it = requests.begin(); request_it != requests.end(); request_it++) {
         if (auto [name, result_unique_ptr] = renderinputs_factory.get(*request_it); result_unique_ptr != nullptr) {
             unique_data = std::move(result_unique_ptr);
@@ -341,8 +318,8 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
     return {success, resources, std::move(unique_data)};
 }
 
-bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point) {
+    auto [module_ptr, execute_etry, entry_resource_requests] = entry_point;
 
     auto resource_requests = entry_resource_requests();
 
@@ -355,14 +332,12 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
-        module_raw_ptr,
+        module_ptr,
         resources,
         std::move(unique_data), // render inputs and their update
         execute_etry,
         {name} // image
         });
-
-    auto& entry_point = m_entry_points.back();
 
     return true;
 }
@@ -394,6 +369,18 @@ bool ImagePresentation_Service::clear_entry_points() {
     return true;
 }
 
+void ImagePresentation_Service::add_glfw_sink() {
+    auto maybe_gl_context = m_requestedResourceReferences[5].getOptionalResource<megamol::frontend_resources::OpenGL_Context>();
+
+    if (maybe_gl_context == std::nullopt) {
+        log_warning("no GLFW OpenGL_Context resource available");
+        return;
+    }
+
+    m_presentation_sinks.push_back(
+        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+}
+
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
     static auto const& window_manipulation       = m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowManipulation>().value().get();
     static auto const& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
@@ -412,11 +399,6 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
         gl_image = image;
         glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
     }
-
-    // EXPERIMENTAL: until the GUI Service provides rendering of the GUI on its own
-    // render UI overlay
-    static auto& gui_state = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::GUIState>();
-    gui_state.provide_gui_render();
 
     window_manipulation.swap_buffers();
 }
