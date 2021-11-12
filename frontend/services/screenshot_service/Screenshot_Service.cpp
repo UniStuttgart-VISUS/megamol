@@ -7,9 +7,12 @@
 
 #include "Screenshot_Service.hpp"
 
- // to grab GL front buffer
-#include <glad/glad.h>
+#include "OpenGL_Context.h"
 #include "GUIState.h"
+
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_ByteArray.hpp"
+
 #include "mmcore/MegaMolGraph.h"
 
 // to write png files
@@ -22,12 +25,13 @@
 
 #include "GUIRegisterWindow.h"
 
+static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
 static const std::string service_name = "Screenshot_Service: ";
 static const std::string privacy_note("--- PRIVACY NOTE ---\n"
     "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
     "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
     ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
-static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
+
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -48,6 +52,8 @@ static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
 static bool screenshot_show_privacy_note = true;
 
+unsigned char megamol::frontend::Screenshot_Service::default_alpha_value = 0;
+
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
 }
@@ -66,7 +72,7 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::filesystem::path const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData const& image, std::filesystem::path const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -98,7 +104,9 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     // todo: camera settings are not stored without magic knowledge about the view
     std::string project = megamolgraph_ptr->Convenience().SerializeGraph();
-    project.append(guistate_resources_ptr->request_gui_state(true));
+    if (guistate_resources_ptr) {
+        project.append(guistate_resources_ptr->request_gui_state(true));
+    }
     megamol::core::utility::graphics::ScreenShotComments ssc(project);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
@@ -122,57 +130,37 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     return true;
 }
 
-void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
-    m_read_buffer = buffer;
-    GLenum read_buffer;
+megamol::frontend_resources::ImageWrapperScreenshotSource::ImageWrapperScreenshotSource(ImageWrapper const& image)
+    : m_image{& const_cast<ImageWrapper&>(image)}
+{}
 
-    switch (buffer) {
-    default:
-        [[fallthrough]];
-    case ReadBuffer::FRONT:
-            read_buffer = GL_FRONT;
-        break;
-    case ReadBuffer::BACK:
-            read_buffer = GL_BACK;
-        break;
-    case ReadBuffer::COLOR_ATT0:
-            read_buffer = GL_COLOR_ATTACHMENT0;
-        break;
-    case ReadBuffer::COLOR_ATT1:
-            read_buffer = GL_COLOR_ATTACHMENT0+1;
-        break;
-    case ReadBuffer::COLOR_ATT2:
-            read_buffer = GL_COLOR_ATTACHMENT0+2;
-        break;
-    case ReadBuffer::COLOR_ATT3:
-            read_buffer = GL_COLOR_ATTACHMENT0+3;
-        break;
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() const {
+    static ScreenshotImageData screenshot_image;
+
+    // keep allocated vector memory around
+    // note that this initially holds a nullptr texture - bad!
+    static frontend_resources::byte_texture image_bytes({});
+
+    // fill bytes with image data
+    image_bytes = *m_image;
+    auto& byte_vector = image_bytes.as_byte_vector();
+
+    screenshot_image.resize(m_image->size.width, m_image->size.height);
+
+    for (size_t i = 0, j = 0; i < byte_vector.size();) {
+        auto r = [&]() { return byte_vector[i++]; };
+        auto g = [&]() { return byte_vector[i++]; };
+        auto b = [&]() { return byte_vector[i++]; };
+        auto a = [&]() { return (m_image->channels == ImageWrapper::DataChannels::RGBA8) ? byte_vector[i++] : megamol::frontend::Screenshot_Service::default_alpha_value; }; // alpha either from image or 1.0
+        ScreenshotImageData::Pixel pixel = { r(), g(), b(), a() };
+        screenshot_image.image[j++] = pixel;
     }
+
+    return screenshot_image;
 }
 
-megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
-    // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
-    // simpler and more correct approach would be to observe Framebuffer_Events resource
-    // but this is our naive implementation for now
-    GLint viewport_dims[4] = {0};
-    glGetIntegerv(GL_VIEWPORT, viewport_dims);
-    GLint fbWidth = viewport_dims[2];
-    GLint fbHeight = viewport_dims[3];
-
-    ImageData result;
-    result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
-
-    glReadBuffer(m_read_buffer);
-    glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
-
-    for (auto& pixel : result.image)
-        pixel.a = 255;
-
-    return std::move(result);
-}
-
-bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::filesystem::path const& filename) const {
-    return write_png_to_file(std::move(image), filename);
+bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const {
+    return write_png_to_file(image, filename);
 }
 
 namespace megamol {
@@ -194,11 +182,11 @@ bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames =
     {
-        "IOpenGL_Context",
+        "optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
         "MegaMolGraph",
-        "GUIState",
+        "optional<GUIState>",
         "RuntimeConfig",
-        "GUIRegisterWindow"
+        "optional<GUIRegisterWindow>"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool
@@ -209,14 +197,17 @@ bool Screenshot_Service::init(const Config& config) {
 
     screenshot_show_privacy_note = config.show_privacy_note;
 
+    this->m_imagewrapperToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image, std::filesystem::path const& filename) -> bool
+    {
+        log("write screenshot to " + filename.generic_u8string());
+        return m_toFileWriter_resource.write_screenshot(megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename);
+    };
+
     log("initialized successfully");
     return true;
 }
 
 void Screenshot_Service::close() {
-    // close libraries or APIs you manage
-    // wrap up resources your service provides, but don not depend on outside resources to be available here
-    // after this, at some point only the destructor of your service gets called
 }
 
 std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
@@ -224,8 +215,10 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
-        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
+        {"ImageWrapperToPNG_ScreenshotTrigger", m_imagewrapperToPNG_trigger}
     };
+
 
     return m_providedResourceReferences;
 }
@@ -236,10 +229,17 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
-    guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
 
-    auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
+    auto maybe_gui_state = resources[2].getOptionalResource<megamol::frontend_resources::GUIState>();
+    if (maybe_gui_state.has_value()) {
+        guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(& maybe_gui_state.value().get());
+    }
+
+    auto maybe_gui_window_request_resource = resources[4].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
+    if (maybe_gui_window_request_resource.has_value()) {
+        auto& gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+        gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
+    }
 }
 
 void Screenshot_Service::updateProvidedResources() {
@@ -252,27 +252,12 @@ void Screenshot_Service::digestChangedRequestedResources() {
 }
 
 void Screenshot_Service::resetProvidedResources() {
-    // this gets called at the end of the main loop iteration
-    // since the current resources state should have been handled in this frame already
-    // you may clean up resources whose state is not needed for the next iteration
-    // e.g. m_keyboardEvents.clear();
-    // network_traffic_buffer.reset_to_empty();
 }
 
 void Screenshot_Service::preGraphRender() {
-    // this gets called right before the graph is told to render something
-    // e.g. you can start a start frame timer here
-
-    // rendering via MegaMol View is called after this function finishes
-    // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
-    // which leads to view.Render()
 }
 
 void Screenshot_Service::postGraphRender() {
-    // the graph finished rendering and you may more stuff here
-    // e.g. end frame timer
-    // update window name
-    // swap buffers, glClear
 }
 
 

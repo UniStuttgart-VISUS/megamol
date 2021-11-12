@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <any>
 #include <functional>
@@ -14,15 +15,24 @@
 #include <typeinfo>
 
 namespace megamol {
+namespace frontend_resources {
+
+template<typename T>
+using optional = std::optional<std::reference_wrapper<T>>;
+
+}
 namespace frontend {
 
+using megamol::frontend_resources::optional;
 
 class FrontendResource {
 public:
+
     FrontendResource()
         : identifier{""}
         , resource{}
         , type_hash{0}
+        , optional{false}
     {}
 
     template <typename T>
@@ -30,7 +40,11 @@ public:
 
     template <typename T>
     FrontendResource(const std::string& identifier, const T& resource)
-        : identifier{identifier}, resource{std::reference_wrapper<const T>(resource)}, type_hash{typeid(T).hash_code()} {}
+            : identifier{identifier}
+            , resource{std::reference_wrapper<const T>(resource)}
+            , type_hash{typeid(T).hash_code()}
+            , optional{false}
+    {}
 
     const std::string& getIdentifier() const { return identifier; }
 
@@ -39,8 +53,33 @@ public:
     }
 
     template <typename T> T const& getResource() const {
+        if (optional) {
+            std::cout << "FrontendResource fatal error: resource " + this->identifier + " accessed non-optional but is marked as optional";
+            std::cerr << "FrontendResource fatal error: resource " + this->identifier + " accessed non-optional but is marked as optional";
+            std::exit(1);
+        }
+
         //try {
             return std::any_cast<std::reference_wrapper<const T>>(resource).get();
+        //} catch (const std::bad_any_cast& e) {
+        //    return std::nullopt;
+        //}
+    }
+
+    template<typename T>
+    optional<const T> getOptionalResource() const {
+        if (!optional) {
+            std::cout << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";
+            std::cerr << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";
+            std::exit(1);
+        }
+
+        if (!resource.has_value()) {
+            return std::nullopt;
+        }
+
+        //try {
+            return std::make_optional( std::any_cast<std::reference_wrapper<const T>>(resource) );
         //} catch (const std::bad_any_cast& e) {
         //    return std::nullopt;
         //}
@@ -50,10 +89,18 @@ public:
         return type_hash;
     }
 
+    FrontendResource toOptional() const {
+        FrontendResource r = *this;
+        r.optional = true;
+
+        return r;
+    }
+
 private:
     std::string identifier;
     std::any resource;
     std::size_t type_hash = 0;
+    bool optional = false;
 };
 
 

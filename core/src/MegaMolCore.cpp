@@ -11,7 +11,6 @@
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
-#include "mmcore/mmd3d.h"
 #include "mmcore/ApiHandle.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/JobDescription.h"
@@ -743,7 +742,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
  * mmcSendMouseScrollEvent
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
-	float dx, float dy) {
+    float dx, float dy) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseScroll(dx, dy);
@@ -819,8 +818,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), vislib::StringA(
-            param->GetParameter()->ValueString()).PeekBuffer());
+            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
@@ -846,8 +844,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), vislib::StringA(
-            param->GetParameter()->ValueString()).PeekBuffer());
+            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
@@ -946,7 +943,7 @@ MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
     if (param == NULL) return NULL;
-    retval = param->GetParameter()->ValueString();
+    retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
 
 }
@@ -962,7 +959,7 @@ MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
     if (param == NULL) return NULL;
-    retval = param->GetParameter()->ValueString();
+    retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
 }
 
@@ -1118,15 +1115,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
 
     if (len == NULL) return;
     if (param != NULL) {
-        vislib::RawStorage rs;
-        param->GetParameter()->Definition(rs);
+        auto const rs = param->GetParameter()->Definition();
         if (buf != NULL) {
             unsigned int s = vislib::math::Min<unsigned int>(
-                static_cast<unsigned int>(rs.GetSize()), *len);
-            ::memcpy(buf, rs.As<unsigned char>(), s);
+                static_cast<unsigned int>(rs.size()), *len);
+            std::copy_n(rs.begin(), s, buf);
             *len = s;
         } else {
-            *len = static_cast<unsigned int>(rs.GetSize());
+            *len = static_cast<unsigned int>(rs.size());
         }
     } else {
         *len = 0;

@@ -34,6 +34,8 @@ namespace math {
 
     public:
 
+        using ValueT = T;
+
         /**
          * Create a null vector.
          */
@@ -155,6 +157,8 @@ namespace math {
 
     public:
 
+        using ValueT = T;
+
         /** Behaves like primary class template. */
         Vector(void);
 
@@ -173,6 +177,16 @@ namespace math {
         inline Vector(const T& x, const T& y) : Super() {
             this->components[0] = x;
             this->components[1] = y;
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param val Value for all components.
+         */
+        inline Vector(const T& val) : Super() {
+            this->components[0] = val;
+            this->components[1] = val;
         }
 
         /** Behaves like primary class template. */
@@ -257,6 +271,8 @@ namespace math {
 
     public:
 
+        using ValueT = T;
+
         /** Behaves like primary class template. */
         Vector(void);
 
@@ -277,6 +293,17 @@ namespace math {
             this->components[0] = x;
             this->components[1] = y;
             this->components[2] = z;
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param val Value for all components.
+         */
+        inline Vector(const T& val) : Super() {
+            this->components[0] = val;
+            this->components[1] = val;
+            this->components[2] = val;
         }
 
         /** Behaves like primary class template. */
@@ -361,6 +388,8 @@ namespace math {
 
     public:
 
+        using ValueT = T;
+
         /** Behaves like primary class template. */
         Vector(void);
 
@@ -384,6 +413,18 @@ namespace math {
             this->components[1] = y;
             this->components[2] = z;
             this->components[3] = w;
+        }
+
+        /**
+         * Create a new vector.
+         *
+         * @param val Value for all components.
+         */
+        inline Vector(const T& val) : Super() {
+            this->components[0] = val;
+            this->components[1] = val;
+            this->components[2] = val;
+            this->components[3] = val;
         }
 
         /** Behaves like primary class template. */
@@ -459,6 +500,25 @@ namespace math {
      */
     template<class T> const unsigned int Vector<T, 4>::D = 4;
 
+    template <typename T, unsigned int D>
+    bool operator<(Vector<T, D> const& lhs, Vector<T, D> const& rhs) {
+        for (int i = 0; i < D; ++i) {
+            if (lhs[i] >= rhs[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<typename T, unsigned int D>
+    bool operator>(Vector<T, D> const& lhs, Vector<T, D> const& rhs) {
+        for (int i = 0; i < D; ++i) {
+            if (lhs[i] <= rhs[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 } /* end namespace math */
 } /* end namespace vislib */

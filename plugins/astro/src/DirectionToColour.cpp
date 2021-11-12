@@ -34,7 +34,7 @@ megamol::astro::DirectionToColour::DirectionToColour(void) : Module(),
         paramMode("mode", "Changes the colouring mode for mapping direction to colour."),
         slotInput("input", "Obtains the input particle data."),
         slotOutput("output", "Output of the coloured data.") {
-    using namespace core::moldyn;
+    using namespace geocalls;
 
     /* Configure and publish the slots. */
     this->slotInput.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -109,8 +109,8 @@ float megamol::astro::DirectionToColour::angle(const glm::vec2& v1,
  * megamol::astro::DirectionToColour::getDirections
  */
 const std::uint8_t *megamol::astro::DirectionToColour::getDirections(
-        const core::moldyn::SimpleSphericalParticles& particles) {
-    using core::moldyn::SimpleSphericalParticles;
+        const geocalls::SimpleSphericalParticles& particles) {
+    using geocalls::SimpleSphericalParticles;
     using megamol::core::utility::log::Log;
 
     switch (particles.GetDirDataType()) {
@@ -323,8 +323,8 @@ std::array<float, 3> megamol::astro::DirectionToColour::rgb2Hsl(const float r,
  * megamol::astro::DirectionToColour::getData
  */
 bool megamol::astro::DirectionToColour::getData(core::Call& call) {
-    using core::moldyn::MultiParticleDataCall;
-    using core::moldyn::SimpleSphericalParticles;
+    using geocalls::MultiParticleDataCall;
+    using geocalls::SimpleSphericalParticles;
     using core::param::ColorParam;
     using core::param::EnumParam;
     using megamol::core::utility::log::Log;
@@ -466,7 +466,7 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
  * megamol::astro::DirectionToColour::getExtent
  */
 bool megamol::astro::DirectionToColour::getExtent(core::Call& call) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();

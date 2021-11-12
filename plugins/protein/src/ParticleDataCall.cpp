@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "ParticleDataCall.h"
+#include "protein/ParticleDataCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/math/mathfunctions.h"

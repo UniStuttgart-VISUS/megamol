@@ -3,11 +3,11 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 
 namespace megamol {
@@ -69,7 +69,7 @@ namespace infovis {
 
         bool getHashCallback(core::Call& c);
 
-        bool dataProjection(megamol::stdplugin::datatools::table::TableDataCall* inCall);
+        bool dataProjection(megamol::datatools::table::TableDataCall* inCall);
 
         /** Data output slot */
         CalleeSlot dataOutSlot;
@@ -88,7 +88,7 @@ namespace infovis {
         size_t dataInHash;
 
         /** Vector storing information about columns */
-        std::vector<megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo> columnInfos;
+        std::vector<megamol::datatools::table::TableDataCall::ColumnInfo> columnInfos;
 
         /** Vector stroing the actual float data */
         std::vector<float> data;

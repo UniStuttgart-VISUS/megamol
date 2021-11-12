@@ -75,7 +75,7 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeModuleParameters(s
         auto name = std::string{paramSlot->FullName()};
         // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
         name = "::" + name.substr(name.find_first_not_of(':'));
-        auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
+        auto value = paramSlot->Parameter()->ValueString();
         serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
     }
 

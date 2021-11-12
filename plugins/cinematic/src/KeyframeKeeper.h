@@ -17,8 +17,8 @@
 
 #include "vislib/math/Cuboid.h"
 
-#include "Keyframe.h"
-#include "CinematicUtils.h"
+#include "cinematic/Keyframe.h"
+#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {

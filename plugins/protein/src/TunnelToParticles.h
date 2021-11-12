@@ -14,9 +14,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "protein_calls/TunnelResidueDataCall.h"
-
 namespace megamol {
 namespace protein {
 

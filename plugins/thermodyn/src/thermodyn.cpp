@@ -9,7 +9,6 @@
 
 #include "PhaseAnimator.h"
 #include "PhaseSeparator.h"
-#include "rendering/BoxRenderer.h"
 
 #include "thermodyn/BoxDataCall.h"
 
@@ -29,7 +28,6 @@ public:
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseSeparator>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseAnimator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::BoxDataCall>();

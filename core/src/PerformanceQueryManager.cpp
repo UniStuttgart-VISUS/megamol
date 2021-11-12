@@ -3,7 +3,7 @@
 #include <ctime>
 #include "mmcore/Call.h"
 #include "mmcore/PerformanceQueryManager.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;

@@ -324,9 +324,7 @@ function(require_external NAME)
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DFMT_TEST=OFF)
 
     add_external_library(fmt
       LIBRARY ${FMT_LIB}
@@ -733,10 +731,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(quickhull
       LIBRARY ${QUICKHULL_LIB})
@@ -793,9 +788,7 @@ function(require_external NAME)
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
         -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR}
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -Dfmt_DIR=${BINARY_DIR})
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
@@ -820,10 +813,7 @@ function(require_external NAME)
     add_external_project(tinyobjloader STATIC
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
 
     add_external_library(tinyobjloader
       LIBRARY ${TINYOBJLOADER_LIB})
@@ -848,9 +838,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
       DEBUG_SUFFIX d
       CMAKE_ARGS
-        -DSHARED_LIB=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DSHARED_LIB=OFF)
 
     add_external_library(tinyply
       LIBRARY ${TNY_LIB}

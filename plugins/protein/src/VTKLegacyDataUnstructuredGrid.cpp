@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 
-#include "VTKLegacyDataUnstructuredGrid.h"
+#include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;

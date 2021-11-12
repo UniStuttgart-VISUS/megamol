@@ -129,7 +129,7 @@ bool Remote_Service::init(const Config& config) {
     {
           "MegaMolGraph"
         , "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
-        , "GUIRegisterWindow"
+        , "optional<GUIRegisterWindow>"
     };
 
     m_do_remote_things = std::function{[&]() {}};
@@ -326,7 +326,14 @@ void Remote_Service::add_headnode_remote_command(HeadNodeRemoteControl::Command 
 }
 
 void Remote_Service::remote_control_window() {
-    auto &gui_window_request_resource = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    auto maybe_gui_window_request_resource = m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
+
+    if (!maybe_gui_window_request_resource.has_value()) {
+        return;
+    }
+
+    auto& gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+
     gui_window_request_resource.register_window("Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
         window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
 
@@ -686,7 +693,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 // #include "mmcore/cluster/mpi/MpiCall.h"
 // #include "vislib/RawStorageSerialiser.h"
 // 
-// //  _fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+// //  _fbo = std::make_shared<vislib_gl::graphics::gl::FramebufferObject>();
 // 
 // 
 // void megamol::remote::Remote_Service::MpiNode::Render(const mmcRenderViewContext& context, core::Call* call) {
@@ -762,7 +769,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //             (!this->_fbo->IsValid())) {
 //             this->_fbo->Release();
 //             if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA,
-//                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+//                     GL_UNSIGNED_BYTE, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
 //                     GL_DEPTH_COMPONENT)) {
 //                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
 //                 return;

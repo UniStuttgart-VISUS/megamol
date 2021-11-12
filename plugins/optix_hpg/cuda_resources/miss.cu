@@ -13,8 +13,6 @@ namespace optix_hpg {
             prd.radiance = glm::vec3(self.bg);
             prd.done = true;
         }
-
-        MM_OPTIX_MISS_KERNEL(miss_program_occlusion)() {}
     } // namespace device
 } // namespace optix_hpg
 } // namespace megamol

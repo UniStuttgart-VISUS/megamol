@@ -14,7 +14,6 @@
 #include "FilamentFilter.h"
 #include "SimpleAstroFilter.h"
 #include "SpectralIntensityVolume.h"
-#include "SurfaceLICRenderer.h"
 #include "VolumetricGlobalMinMax.h"
 #include "astro/AstroDataCall.h"
 
@@ -37,7 +36,6 @@ namespace megamol::astro {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::VolumetricGlobalMinMax>();
 

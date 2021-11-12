@@ -21,7 +21,7 @@
 #include "mmcore/param/IntParam.h"
 #include "protein_calls/MolecularDataCall.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "TrajectorySmoothFilter.h"

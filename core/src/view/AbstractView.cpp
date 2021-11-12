@@ -154,6 +154,10 @@ void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable)
     _cameraIsMutable = isMutable;
 }
 
+megamol::core::view::Camera megamol::core::view::AbstractView::GetCamera() const {
+    return _camera;
+}
+
 void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
     if (_cameraIsMutable) {
         auto cam_pose = _camera.get<Camera::Pose>();
@@ -448,7 +452,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
  * AbstractView::onRestoreCamera
  */
 bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
-    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().empty()) {
         std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
         Camera cam;
         if (!this->_cameraSerializer.deserialize(cam, camstring)) {

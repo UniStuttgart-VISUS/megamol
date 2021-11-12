@@ -1,11 +1,11 @@
 #ifndef MEGAMOL_DEPTHFUNCTION_INCLUDED
 #define MEGAMOL_DEPTHFUNCTION_INCLUDED
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 #include <Eigen/Core>
 
@@ -57,14 +57,14 @@ namespace infovis {
 
         bool getHashCallback(core::Call& c);
 
-        void assertData(megamol::stdplugin::datatools::table::TableDataCall* inCall);
+        void assertData(megamol::datatools::table::TableDataCall* inCall);
 
         /** check and set parameters dirty/undirty*/
         bool paramsIsDirty();
         void paramsResetDirty();
 
         /** compute function */
-        bool apply(megamol::stdplugin::datatools::table::TableDataCall* inCall);
+        bool apply(megamol::datatools::table::TableDataCall* inCall);
 
         /** compute binomial coefficient */
         static double binomialCoeff(int n, int k);
@@ -95,7 +95,7 @@ namespace infovis {
         size_t dataInHash;
 
         /** Vector storing information about columns and rows*/
-        std::vector<megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo> columnInfos;
+        std::vector<megamol::datatools::table::TableDataCall::ColumnInfo> columnInfos;
 
         /** list of all parameters*/
         std::vector<::megamol::core::param::ParamSlot*> params;

@@ -11,7 +11,7 @@
 #include "mmcore/utility/log/Log.h"
 
 #include "astro/AstroDataCall.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 namespace megamol {
 namespace astro {
@@ -44,17 +44,17 @@ private:
 
     bool dummyCallback(megamol::core::Call& c) { return true; }
 
-    bool createVolumeCPU(core::misc::VolumetricDataCall const& volumeIn, core::misc::VolumetricDataCall const& tempIn,
-        core::misc::VolumetricDataCall const& massIn, core::misc::VolumetricDataCall const& mwIn,
+    bool createVolumeCPU(geocalls::VolumetricDataCall const& volumeIn, geocalls::VolumetricDataCall const& tempIn,
+        geocalls::VolumetricDataCall const& massIn, geocalls::VolumetricDataCall const& mwIn,
         AstroDataCall& astroIn);
 
-    bool createBremsstrahlungVolume(core::misc::VolumetricDataCall const& volumeIn,
-        core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
-        core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
+    bool createBremsstrahlungVolume(geocalls::VolumetricDataCall const& volumeIn,
+        geocalls::VolumetricDataCall const& tempIn, geocalls::VolumetricDataCall const& massIn,
+        geocalls::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
 
-    bool createAbsorptionVolume(core::misc::VolumetricDataCall const& volumeIn,
-        core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
-        core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
+    bool createAbsorptionVolume(geocalls::VolumetricDataCall const& volumeIn,
+        geocalls::VolumetricDataCall const& tempIn, geocalls::VolumetricDataCall const& massIn,
+        geocalls::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
 
     bool anythingDirty() const {
         return this->xResSlot.IsDirty() || this->yResSlot.IsDirty() || this->zResSlot.IsDirty() ||
@@ -120,7 +120,7 @@ private:
     size_t datahash = 0;
     unsigned int time = std::numeric_limits<unsigned int>::max();
 
-    core::misc::VolumetricDataCall::Metadata metadata;
+    geocalls::VolumetricDataCall::Metadata metadata;
 
     int sx = 0;
     int sy = 0;

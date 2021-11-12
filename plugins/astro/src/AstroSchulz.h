@@ -19,11 +19,11 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 
 namespace megamol {
@@ -64,7 +64,7 @@ namespace astro {
 
     private:
 
-        typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
+        typedef megamol::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
         static bool getData(AstroDataCall& call, const unsigned int frameID);
@@ -103,7 +103,7 @@ namespace astro {
         bool getRanges(const unsigned int start, const unsigned int cnt);
 
         inline bool isQuantitative(const std::size_t col) {
-            using megamol::stdplugin::datatools::table::TableDataCall;
+            using megamol::datatools::table::TableDataCall;
             return ((col < this->columns.size()) && (this->columns[col].Type()
                 == TableDataCall::ColumnType::QUANTITATIVE));
         }

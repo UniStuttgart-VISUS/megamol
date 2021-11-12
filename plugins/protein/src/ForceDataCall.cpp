@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "ForceDataCall.h"
+#include "protein/ForceDataCall.h"
 
 using namespace megamol;
 using namespace protein;
