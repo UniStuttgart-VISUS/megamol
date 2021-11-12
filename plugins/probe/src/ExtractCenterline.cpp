@@ -8,8 +8,8 @@
 #include <atomic>
 #include <limits>
 #include "probe/CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"

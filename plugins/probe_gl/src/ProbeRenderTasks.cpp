@@ -29,7 +29,7 @@ megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}
 bool megamol::probe_gl::ProbeRenderTasks::create() {
     AbstractGPURenderTaskDataSource::create();
 
-    m_material_collection = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
     m_material_collection->addMaterial(this->instance(), "ProbeInteraction", "ProbeInteraction");
 
     return true;
@@ -43,13 +43,13 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
         }
     }
 
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
         return false;
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -62,7 +62,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
 
-    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
     if (mc == NULL)
         return false;
     if (!(*mc)(0))
@@ -302,7 +302,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller
     if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
         return false;
 
-    mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
     if (probe_call == NULL)
         return false;

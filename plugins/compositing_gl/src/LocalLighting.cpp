@@ -12,9 +12,11 @@
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/TriDirectionalLighting.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+
+#include <glm/ext.hpp>
 
 megamol::compositing::LocalLighting::LocalLighting() 
     : core::Module()
@@ -98,8 +100,8 @@ bool megamol::compositing::LocalLighting::create() {
         m_lambert_prgm = std::make_unique<GLSLComputeShader>();
         m_phong_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_lambert_src;
-        vislib::graphics::gl::ShaderSource compute_phong_src;
+        vislib_gl::graphics::gl::ShaderSource compute_lambert_src;
+        vislib_gl::graphics::gl::ShaderSource compute_phong_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::lambert", compute_lambert_src))
             return false;
@@ -112,9 +114,9 @@ bool megamol::compositing::LocalLighting::create() {
         if (!m_phong_prgm->Link()) return false;
 
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -201,12 +203,10 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
             }
 
             // obtain camera information
-            core::view::Camera_2 cam = call_camera->getData();
-            cam_type::snapshot_type snapshot;
-            cam_type::matrix_type view_tmp, proj_tmp;
-            cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-            glm::mat4 view_mx = view_tmp;
-            glm::mat4 proj_mx = proj_tmp;
+            core::view::Camera cam = call_camera->getData();
+            auto cam_pose = cam.get<core::view::Camera::Pose>();
+            auto view_mx = cam.getViewMatrix();
+            auto proj_mx = cam.getProjectionMatrix();
 
             if (call_light->hasUpdate()) {
                 auto lights = call_light->getData();
@@ -224,8 +224,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
                 for (auto dl : distant_lights) {
                     if (dl.eye_direction) {
-                        glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
-                        cam_dir = glm::normalize(cam_dir);
+                        auto cam_dir = glm::normalize(cam_pose.direction);
                         m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
                     } else {
                         m_distant_lights.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
@@ -338,8 +337,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                         m_phong_k_exp.Param<core::param::FloatParam>()->Value());
 
                     // Cameraposition
-                    glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
-                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(camPos));
+                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(cam_pose.position));
 
                     m_point_lights_buffer->bind(1);
                     glUniform1i(

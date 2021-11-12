@@ -11,7 +11,6 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
 #include "mmcore/MegaMolGraphTypes.h"
@@ -20,71 +19,19 @@
 #include "mmcore/RootModuleNamespace.h"
 
 #include "FrontendResource.h"
+#include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
+#include "CommandRegistry.h"
 
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API MegaMolGraph { //: public serializable, public deferrable_construction {
-
-    // todo: where do the descriptionmanagers go?
-    // todo: what about the view / job descriptions?
+class MEGAMOLCORE_API MegaMolGraph {
 public:
-    // todo: constructor(s)? see serialization
-    // todo: probably get rid of RootModuleNamespace altogether
-
-    ///////////////////////////// types ////////////////////////////////////////
-
-
-
-    //////////////////////////// ctor / dtor ///////////////////////////////
-
-    /**
-     * Bare construction as stub for deserialization
-     */
     MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
         factories::CallDescriptionManager const& callProvider);
 
-    /**
-     * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
-     */
-    MegaMolGraph(MegaMolGraph const& rhs) = delete;
-
-    /**
-     * Same argument as for copy-construction.
-     */
-    MegaMolGraph& operator=(MegaMolGraph const& rhs) = delete;
-
-    /**
-     * A move of the graph should be OK, even without changing state of Modules in graph.
-     */
-    MegaMolGraph(MegaMolGraph&& rhs) noexcept;
-
-    /**
-     * Same is true for move-assignment.
-     */
-    MegaMolGraph& operator=(MegaMolGraph&& rhs) noexcept;
-
-    /**
-     * Construction from serialized string.
-     */
-    // MegaMolGraph(std::string const& descr);
-
-    /** dtor */
     virtual ~MegaMolGraph();
-
-    //////////////////////////// END ctor / dtor ///////////////////////////////
-
-
-    //////////////////////////// Satisfy some abstract requirements ///////////////////////////////
-
-
-    // TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
-    // serializable
-
-    // deferrable_construction
-
-    //////////////////////////// Modules and Calls loaded from DLLs ///////////////////////////////
 
 private:
     const factories::ModuleDescriptionManager& ModuleProvider();
@@ -143,14 +90,14 @@ public:
 
     MegaMolGraph_Convenience& Convenience();
 
-    // Create View ?
-
-    // Create Chain Call ?
-
-    // int ListInstatiations(lua_State* L);
+    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
+        auto my_p = this->FindParameter(self->parent);
+        if (my_p != nullptr) {
+            my_p->setDirty();
+        }
+    };
 
 private:
-    // get invalidated and the user is helpless
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
     [[nodiscard]] ModuleList_t::iterator find_module_by_prefix(std::string const& name);
 
@@ -171,8 +118,6 @@ private:
 
     bool delete_call(CallDeletionRequest_t const& request);
 
-    std::vector<megamol::frontend::FrontendResource> get_requested_resources(std::vector<std::string> resource_requests);
-
 
     // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all
     // calls and modules during ~MegaMolGraph()
@@ -184,7 +129,7 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-    std::vector<megamol::frontend::FrontendResource> provided_resources;
+    megamol::frontend_resources::FrontendResourcesLookup provided_resources_lookup;
 
     // for each View in the MegaMol graph we create a GraphEntryPoint
     // that entry point is used by the Image Presentation Service to
@@ -192,79 +137,9 @@ private:
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
 
+    megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
+
     MegaMolGraph_Convenience convenience_functions;
-
-    ////////////////////////// old interface stuff //////////////////////////////////////////////
-public:
-    // TODO: pull necessary 'old' functions to active section above
-    /*
-        bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const
-    std::string to); bool QueueParamValueChange(const std::string id, const std::string value);
-        // a JSON serialization of all the requests as above (see updateListener)
-        bool QueueGraphChange(const std::string changes);
-        /// @return group id 0 is invalid and means failure
-        uint32_t CreateParamGroup(const std::string name, int size);
-        bool QueueParamGroupValue(const std::string groupName, const std::string id, const std::string value);
-        bool QueueParamGroupValue(uint32_t groupId, const std::string id, const std::string value);
-        bool QueueUpdateFlush();
-        bool AnythingQueued();
-
-        // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user
-    needs
-        // to lock?
-        ////////////////////////////
-
-        // vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
-
-        // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
-        inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
-
-        // todo: optionally pass Module instead of name
-        template <class A, class C>
-        typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
-            bool>::type
-        EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
-
-        // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
-        template <class A>
-        typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type EnumerateParameterSlots(
-            std::string module_name, std::function<void(param::ParamSlot&)> cb) const;
-
-        size_t GetGlobalParameterHash(void) const;
-
-        // probably just throws everything away?
-        void Cleanup(void);
-
-        // serialize into... JSON? WHY THE FUCK IS THIS IN THE ROOTMODULENAMESPACE!
-        std::string SerializeGraph(void) const;
-
-        // replace the whole graph with whatever is in serialization
-        void Deserialize(std::string othergraph);
-
-        // nope, see below!
-        // void NotifyParameterValueChange(param::ParamSlot& slot) const;
-        // void RegisterParamUpdateListener(param::ParamUpdateListener* pul);
-        // void UnregisterParamUpdateListener(param::ParamUpdateListener* pul);
-
-        // accumulate the stuff the queues ask from the graph and give out a JSON diff right afterwards
-        // bitfield says what (params, modules, whatnot) - and also reports whether something did not happen
-        /// @return some ID to allow for removal of the listener later
-        uint32_t RegisterGraphUpdateListener(
-            std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
-        void UnregisterGraphUpdateListener(uint32_t id);
-
-    private:
-        // todo: signature is weird, data structure might be as well
-        void computeGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
-        static void compareParameterHash(ParamHashMap_t& one, ParamHashMap_t& other) const;
-
-        void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
-        bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
-        void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
-    */
-
-    //    [[nodiscard]] std::shared_ptr<param::AbstractParam> FindParameter(
-    //        std::string const& name, bool quiet = false) const;
 };
 
 

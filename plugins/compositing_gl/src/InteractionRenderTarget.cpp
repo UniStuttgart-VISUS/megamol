@@ -1,6 +1,6 @@
 #include "InteractionRenderTarget.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::InteractionRenderTarget::InteractionRenderTarget() 
     : SimpleRenderTarget(), m_objId_render_target("ObjectId","Access the object id render target texture") 
@@ -22,7 +22,7 @@ bool megamol::compositing::InteractionRenderTarget::create() {
     return true; 
 }
 
-bool megamol::compositing::InteractionRenderTarget::Render(core::view::CallRender3DGL& call) {
+bool megamol::compositing::InteractionRenderTarget::Render(core_gl::view::CallRender3DGL& call) {
 
     SimpleRenderTarget::Render(call);
 

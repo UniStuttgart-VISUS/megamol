@@ -4,4 +4,5 @@
 #
 
 megamol_plugin(compositing_gl
-  BUILD_DEFAULT ON)
+  BUILD_DEFAULT ON
+  DEPENDS_GL)

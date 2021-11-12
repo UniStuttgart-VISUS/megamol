@@ -8,14 +8,14 @@
 #ifndef PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
 #define PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 #include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-    class ProbeDetailViewRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
+    class ProbeDetailViewRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
     public:
         /**
          * Answer the name of this module.
@@ -66,7 +66,7 @@ namespace probe_gl {
         core::CallerSlot m_event_slot;
 
         /** In-place material collection (initialized with probe detail view btf) */
-        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+        std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
         std::shared_ptr<glowl::Mesh> m_ui_mesh; // for depth scale (parallel to probe, offset by cam right vector)
 

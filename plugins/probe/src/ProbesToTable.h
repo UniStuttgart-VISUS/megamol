@@ -7,7 +7,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace probe {
@@ -55,7 +55,7 @@ private:
     bool InterfaceIsDirty();
     uint32_t _currentFrame;
     std::vector<float> _floatBlob;
-    std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> _colinfo;
+    std::vector<datatools::table::TableDataCall::ColumnInfo> _colinfo;
     uint32_t _fixed_cols = 0;
     uint32_t _total_cols = 0;
     uint32_t _rows = 0;

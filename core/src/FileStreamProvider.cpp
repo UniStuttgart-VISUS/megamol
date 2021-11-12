@@ -20,7 +20,7 @@ namespace core {
 
     FileStreamProvider::FileStreamProvider() : filePath("file_path", "Output file path"), append("append", "Append instead of overwriting?")
     {
-        this->filePath << new core::param::FilePathParam("");
+        this->filePath << new core::param::FilePathParam("", core::param::FilePathParam::Flag_File_ToBeCreated);
         this->MakeSlotAvailable(&this->filePath);
 
         this->append << new core::param::BoolParam(true);

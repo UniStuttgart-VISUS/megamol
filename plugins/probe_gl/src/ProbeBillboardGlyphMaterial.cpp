@@ -16,8 +16,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
 
     auto create_progam = [this](vislib::StringA shader_base_name) -> std::shared_ptr<ShaderProgram> {
-        vislib::graphics::gl::ShaderSource vert_shader_src;
-        vislib::graphics::gl::ShaderSource frag_shader_src;
+        vislib_gl::graphics::gl::ShaderSource vert_shader_src;
+        vislib_gl::graphics::gl::ShaderSource frag_shader_src;
 
         vislib::StringA vertShaderName = shader_base_name + "::vertex";
         vislib::StringA fragShaderName = shader_base_name + "::fragment";
@@ -129,7 +129,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
     // Set initial state of module
     ++m_version;
-    m_material_collection.first = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection.first = std::make_shared<mesh_gl::GPUMaterialCollection>();
     m_material_collection.first->addMaterial("ProbeBillboard_Textured", m_textured_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Textured");
     m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);
@@ -146,14 +146,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call& caller) {
 
-    mesh::CallGPUMaterialData* lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
-    mesh::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh::CallGPUMaterialData>();
+    mesh_gl::CallGPUMaterialData* lhs_mtl_call = dynamic_cast<mesh_gl::CallGPUMaterialData*>(&caller);
+    mesh_gl::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh_gl::CallGPUMaterialData>();
 
     if (lhs_mtl_call == NULL) {
         return false;
     }
 
-    std::vector<std::shared_ptr<mesh::GPUMaterialCollection>> gpu_mtl_collections;
+    std::vector<std::shared_ptr<mesh_gl::GPUMaterialCollection>> gpu_mtl_collections;
     // if there is a material connection to the right, issue callback
     if (rhs_mtl_call != nullptr) {
         (*rhs_mtl_call)(0);

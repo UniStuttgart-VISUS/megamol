@@ -11,7 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "poisson.h"
 

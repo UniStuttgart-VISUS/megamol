@@ -3,9 +3,9 @@
 #include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
-#include "mesh/MeshCalls.h"
+#include "mesh_gl/MeshCalls_gl.h"
 #include "mmcore/EventCall.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -22,7 +22,7 @@
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 
-    AbstractGPURenderTaskDataSource::create();
+    mesh_gl::AbstractGPURenderTaskDataSource::create();
 
     // Create local copy of transfer function texture (for compatibility with material pipeline)
     glowl::TextureLayout tex_layout;
@@ -68,13 +68,13 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_tf_range({0.0f,0.0f})
         , m_show_glyphs(true) {
 
-    this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->m_transfer_function_Slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
-    this->m_material_slot.SetCompatibleCall<mesh::CallGPUMaterialDataDescription>();
+    this->m_material_slot.SetCompatibleCall<mesh_gl::CallGPUMaterialDataDescription>();
     this->MakeSlotAvailable(&this->m_material_slot);
 
     this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
@@ -110,14 +110,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             "Unexpeced OpenGL error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
     }
 
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) {
         return false;
     }
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -129,7 +129,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+    mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
     if (mtlc == NULL)
         return false;
     if (!(*mtlc)(0))
@@ -137,13 +137,13 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
-        std::vector<void*> data_ptrs = {};
+        std::vector<void const*> data_ptrs = {};
         std::vector<size_t> byte_sizes = {};
         std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5};
         std::vector<glowl::VertexLayout> vertex_layout = {};
 
         m_billboard_dummy_mesh = std::make_shared<glowl::Mesh>(
-            data_ptrs, byte_sizes, indices.data(), 6 * 4, vertex_layout, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+            data_ptrs, byte_sizes, vertex_layout, indices.data(), 6 * 4, GL_UNSIGNED_INT, GL_TRIANGLES, GL_STATIC_DRAW);
     }
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
@@ -154,7 +154,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         return false;
     }
 
-    auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
+    auto* tfc = this->m_transfer_function_Slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (tfc != NULL) {
         ((*tfc)(0));
     }
@@ -243,7 +243,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            mesh::GPUMaterialCollection::Material mat;
+            mesh_gl::GPUMaterialCollection::Material mat;
             for (int i = 0; i < gpu_mtl_storage.size(); ++i) {
                 auto query = gpu_mtl_storage[i]->getMaterial("ProbeBillboard_Textured");
                 if (mat.shader_program != nullptr) {
@@ -717,7 +717,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
     if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
         return false;
 
-    mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
     if (probe_call == NULL)
         return false;
@@ -747,7 +747,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
 }
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+    mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
     if (mtlc == NULL)
         return false;
     if (!(*mtlc)(0))

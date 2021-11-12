@@ -5,7 +5,7 @@
  */
 
 #include "ManipulateMesh.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/IntParam.h"
 
 
@@ -30,10 +30,10 @@ namespace probe {
             mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ManipulateMesh::getMetaData);
         this->MakeSlotAvailable(&this->_deployMeshSlot);
 
-        this->_pointsDebugSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(0), &ManipulateMesh::getParticleData);
-        this->_pointsDebugSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(1), &ManipulateMesh::getParticleMetaData);
+        this->_pointsDebugSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(0), &ManipulateMesh::getParticleData);
+        this->_pointsDebugSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(1), &ManipulateMesh::getParticleMetaData);
         this->MakeSlotAvailable(&this->_pointsDebugSlot);
 
         this->_getDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
@@ -180,7 +180,7 @@ namespace probe {
         if (cd == nullptr)
             return false;
 
-        auto cpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto cpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (cpd == nullptr)
             return false;
 
@@ -210,7 +210,7 @@ namespace probe {
         cpd->AccessParticles(0).SetGlobalRadius(0.01f);
         cpd->AccessParticles(0).SetGlobalColour(255, 255, 255, 255);
         cpd->AccessParticles(0).SetVertexData(
-            core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, _points.data(), 3 * sizeof(float));
+            geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, _points.data(), 3 * sizeof(float));
         _recalc = false;
 
 
@@ -223,7 +223,7 @@ namespace probe {
         if (cd == nullptr)
             return false;
 
-        auto cpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto cpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (cpd == nullptr)
             return false;
 

@@ -10,6 +10,7 @@
 #include "mesh/AbstractMeshDataSource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/Module.h"
 
 namespace megamol {

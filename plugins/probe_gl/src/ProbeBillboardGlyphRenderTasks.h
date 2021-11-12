@@ -10,7 +10,7 @@
 
 #include <typeindex>
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 #include "probe/ProbeCollection.h"
 
@@ -19,7 +19,7 @@
 namespace megamol {
 namespace probe_gl {
 
-    class ProbeBillboardGlyphRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
+    class ProbeBillboardGlyphRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
     public:
         /**
          * Answer the name of this module.

@@ -6,7 +6,7 @@
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
         : AbstractGPURenderTaskDataSource()
@@ -19,7 +19,7 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
         , m_probes_mesh(nullptr)
         , m_tf_min(0.0f)
         , m_tf_max(1.0f) {
-    this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->m_transfer_function_Slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
@@ -58,7 +58,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     // TODO intialize with value indicating that no transfer function is connected
     this->m_transfer_function->makeResident();
 
-    m_material_collection = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
     m_material_collection->addMaterial(this->instance(), "ProbeDetailView", "ProbeDetailView");
 
     // TODO ui mesh
@@ -85,8 +85,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
             glowl::VertexLayout(12,{glowl::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)})
         };
         try {
-            m_ui_mesh = std::make_shared<glowl::Mesh>(vertices, indices, vertex_layout,
-                GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+            m_ui_mesh = std::make_shared<glowl::Mesh>(vertices, vertex_layout, indices,
+                GL_UNSIGNED_INT, GL_TRIANGLES, GL_STATIC_DRAW);
         } catch (const std::exception& exc) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error on UI mesh creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
@@ -96,13 +96,13 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     
 
     // create an empty dummy mesh, probe mesh
-    std::vector<void*> data_ptrs = {};
+    std::vector<void const*> data_ptrs = {};
     std::vector<size_t> byte_sizes = {};
     std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5};
     std::vector<glowl::VertexLayout> vertex_layout = {};
 
     m_probes_mesh = std::make_shared<glowl::Mesh>(
-        data_ptrs, byte_sizes, indices.data(), 6 * 4, vertex_layout, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+        data_ptrs, byte_sizes, vertex_layout, indices.data(), 6 * 4, GL_UNSIGNED_INT, GL_TRIANGLES, GL_STATIC_DRAW);
 
     return true; 
 }
@@ -111,15 +111,15 @@ void megamol::probe_gl::ProbeDetailViewRenderTasks::release() {}
 
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& caller) {
 
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr){
         return false;
     }
 
     // if there is a render task connection to the right, pass on the render task collection
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -132,7 +132,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     // check/get mesh data 
-    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
     if (mc != NULL){
         if (!(*mc)(0)) return false;
     }
@@ -143,7 +143,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     if (!(*pc)(0)) return false;
 
     // check/get transfer function
-    auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
+    auto* tfc = this->m_transfer_function_Slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (tfc != NULL) {
         if (!(*tfc)(0)) return false;
     }
@@ -354,8 +354,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             glowl::VertexLayout(16,{glowl::VertexLayout::Attribute(4,GL_FLOAT,GL_FALSE,0)})
         };
         try {
-            m_probes_mesh = std::make_shared<glowl::Mesh>(vertex_data, index_data, vertex_layout,
-                GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_PATCHES);
+            m_probes_mesh = std::make_shared<glowl::Mesh>(vertex_data, vertex_layout, index_data,
+                GL_UNSIGNED_INT, GL_PATCHES, GL_STATIC_DRAW);
         } catch (glowl::MeshException const& exc) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error during mesh creation of\"%s\": %s. [%s, %s, line %d]\n", "ProbeDetailVieW",
@@ -510,7 +510,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) {
     if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
 
-    mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
     if (probe_call == NULL) return false;
 

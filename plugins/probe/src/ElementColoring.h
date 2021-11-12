@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "glm/glm.hpp"
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"

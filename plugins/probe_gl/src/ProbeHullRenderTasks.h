@@ -8,12 +8,12 @@
 #ifndef PROBE_HULL_RENDER_TASK_H_INCLUDED
 #define PROBE_HULL_RENDER_TASK_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace probe_gl {
 
-    class ProbeHullRenderTasks : public megamol::mesh::AbstractGPURenderTaskDataSource {
+    class ProbeHullRenderTasks : public megamol::mesh_gl::AbstractGPURenderTaskDataSource {
     public:
         /**
          * Answer the name of this module.
@@ -74,7 +74,7 @@ namespace probe_gl {
         core::CallerSlot m_event_slot;
 
         /** In-place material collection (initialized with probe hull btf) */
-        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+        std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
         /** Slot for setting different rendering mode in hull shader */
         core::param::ParamSlot m_shading_mode_slot;

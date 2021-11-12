@@ -12,10 +12,10 @@ namespace probe {
 
 ProbeToTable::ProbeToTable() : Module(), _getDataSlot("getData", ""), _deployTableSlot("deployTable", "") {
 
-    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ProbeToTable::getData);
-    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ProbeToTable::getMetaData);
+    this->_deployTableSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(0), &ProbeToTable::getData);
+    this->_deployTableSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(1), &ProbeToTable::getMetaData);
     this->MakeSlotAvailable(&this->_deployTableSlot);
 
     this->_getDataSlot.SetCompatibleCall<CallProbesDescription>();
@@ -33,7 +33,7 @@ bool ProbeToTable::InterfaceIsDirty() { return false; }
 
 bool ProbeToTable::getData(core::Call& call) {
 
-    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
     if (ctd == nullptr) return false;
 
     CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();
@@ -230,7 +230,7 @@ bool ProbeToTable::getData(core::Call& call) {
             _colinfo[i].SetName(var_names[i]);
             _colinfo[i].SetMaximumValue(maxes[i]);
             _colinfo[i].SetMinimumValue(mins[i]);
-            _colinfo[i].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+            _colinfo[i].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
         }
 
         _floatBlob.resize(_rows * _total_cols);
@@ -256,7 +256,7 @@ bool ProbeToTable::getData(core::Call& call) {
 
 bool ProbeToTable::getMetaData(core::Call& call) {
 
-    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
     if (ctd == nullptr) return false;
 
     CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();

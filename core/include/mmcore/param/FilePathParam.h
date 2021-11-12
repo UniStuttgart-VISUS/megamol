@@ -43,7 +43,6 @@ namespace param {
 
         typedef uint32_t Flags_t;
         typedef std::vector<std::string> Extensions_t;
-        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -67,7 +66,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        void Definition(vislib::RawStorage& outDef) const override;
+        std::string Definition() const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -78,7 +77,7 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        bool ParseValue(const vislib::TString& v) override;
+        bool ParseValue(std::string const& v) override;
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag
@@ -106,8 +105,8 @@ namespace param {
          *
          * @return The value of the parameter as string.
          */
-        vislib::TString ValueString() const override {
-            return vislib::TString(this->value.generic_u8string().c_str());
+        std::string ValueString() const override {
+            return this->value.generic_u8string();
         }
 
         /**
@@ -126,15 +125,6 @@ namespace param {
          */
         inline const Extensions_t& GetExtensions() const {
             return this->extensions;
-        }
-
-        /**
-         * Register static notifications.
-         */
-        bool RegisterNotifications(const RegisterNotificationCallback_t& pc);
-        // Check if registration is required
-        inline bool RegisterNotifications() const {
-            return !this->registered_notifications;
         }
 
         /**
@@ -157,11 +147,6 @@ namespace param {
 
         /** The file or directory path */
         std::filesystem::path value;
-
-        /** Indicates whether notifications are already registered or not (should be done only once) */
-        bool registered_notifications;
-        /** Flags for opening specific notifications */
-        std::map<Flags_t, std::shared_ptr<bool>> open_notification;
     };
 
 

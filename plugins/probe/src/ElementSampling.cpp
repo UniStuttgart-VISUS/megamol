@@ -7,7 +7,7 @@
 #include "ElementSampling.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "glm/glm.hpp"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"

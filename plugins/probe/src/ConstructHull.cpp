@@ -5,12 +5,12 @@
  */
 
 #include "ConstructHull.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "iterator"
@@ -41,6 +41,8 @@
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Plane_3.h>
+
+#include <glm/gtc/constants.hpp>
 
 namespace megamol {
 namespace probe {
@@ -829,7 +831,7 @@ namespace probe {
             glm::vec3 vert0 = {it->first.x(), it->first.y(), it->first.z()};
             auto difcenter = vert0 - _data_origin;
 
-             if (glm::dot(normal, difcenter) > 0) {
+             if (glm::dot(normal, difcenter) > 0.0f) {
                 normal *= -1;
             }
 

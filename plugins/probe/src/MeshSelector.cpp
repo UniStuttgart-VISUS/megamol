@@ -5,7 +5,7 @@
  */
 
 #include "MeshSelector.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 

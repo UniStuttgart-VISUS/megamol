@@ -10,12 +10,11 @@
 
 #include <memory>
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 

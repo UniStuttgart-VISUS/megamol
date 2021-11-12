@@ -9,7 +9,6 @@
 #if (_MSC_VER > 1000)
 #    pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #if (_MSC_VER > 1000)
 #    pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -49,12 +48,14 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "vislib/vislibversion.h"
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
+#ifdef WITH_GL
+#include "mmcore_gl/factories/CallClassRegistryGL.h"
+#include "mmcore_gl/factories/ModuleClassRegistryGL.h"
+#endif
 #include "utility/ServiceManager.h"
-#include "utility/plugins/PluginManager.h"
 
 #include "png.h"
 #include "vislib/Array.h"
@@ -125,10 +126,12 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void* data, megamol::core:
  */
 megamol::core::CoreInstance::CoreInstance(void)
     : ApiHandle()
-    , factories::AbstractAssemblyInstance()
+    , factories::AbstractObjectFactoryInstance()
     , preInit(new PreInit)
     , config()
+#ifdef WITH_GL
     , shaderSourceFactory(config)
+#endif
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()
@@ -146,7 +149,7 @@ megamol::core::CoreInstance::CoreInstance(void)
     , loadedLuaProjects()
     , timeOffset(0.0)
     , paramUpdateListeners()
-    , plugins(nullptr)
+    , plugins()
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
@@ -154,24 +157,19 @@ megamol::core::CoreInstance::CoreInstance(void)
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
-    this->plugins = new utility::plugins::PluginManager();
     this->services = new utility::ServiceManager(*this);
-
-#ifdef _WIN32
-    WCHAR dll_path[MAX_PATH] = {0};
-    GetModuleFileNameW(mmCoreModuleHandle, dll_path, _countof(dll_path));
-    this->SetAssemblyFileName(dll_path);
-#else
-    this->SetAssemblyFileName("Core <TODO: Fix implementation>");
-#endif
 
     this->namespaceRoot = std::make_shared<RootModuleNamespace>();
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
     factories::register_module_classes(this->module_descriptions);
-    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
+#ifdef WITH_GL
+    core_gl::factories::register_module_classes_gl(this->module_descriptions);
+    core_gl::factories::register_call_classes_gl(this->call_descriptions);
+#endif
+    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
 
     // megamol::core::utility::LuaHostService::ID =
@@ -233,8 +231,7 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     this->module_descriptions.Shutdown();
     this->call_descriptions.Shutdown();
     // finally plugins
-    delete this->plugins;
-    this->plugins = nullptr;
+    this->plugins.clear();
 
     delete this->lua;
     this->lua = nullptr;
@@ -246,9 +243,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
 
 
 /*
- * megamol::core::CoreInstance::GetAssemblyName
+ * megamol::core::CoreInstance::GetObjectFactoryName
  */
-const std::string& megamol::core::CoreInstance::GetAssemblyName(void) const {
+const std::string& megamol::core::CoreInstance::GetObjectFactoryName() const {
     static std::string noname("");
     return noname;
 }
@@ -1344,7 +1341,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::TString val;
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
-            if (!p->ParseValue(val)) {
+            if (!p->ParseValue(val.PeekBuffer())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.",
                     psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 continue;
@@ -1392,7 +1389,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     vislib::TString val;
                     vislib::UTF8Encoder::Decode(val, pr.Value());
 
-                    if (!p->ParseValue(val)) {
+                    if (!p->ParseValue(val.PeekBuffer())) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Setting parameter \"%s\" to \"%s\": ParseValue failed.", pr.Key().PeekBuffer(),
                             pr.Value().PeekBuffer());
@@ -1800,7 +1797,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
     vislib::SmartPtr<core::param::AbstractParam> lastParam;
     while ((param = this->FindParameter(paramName, quiet)) != nullptr) {
         lastParam = param;
-        paramName = param->ValueString();
+        paramName = param->ValueString().c_str();
     }
     return lastParam;
 }
@@ -2022,6 +2019,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 
 std::string megamol::core::CoreInstance::SerializeGraph() {
 
+    std::string serVersion = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\")";
     std::string serInstances;
     std::string serModules;
     std::string serCalls;
@@ -2071,7 +2069,7 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
                 if (slot) {
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
-                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        std::string val = slot->Parameter()->ValueString();
 
                         // Encode to UTF-8 string
                         vislib::StringA valueString;
@@ -2102,7 +2100,7 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
         serParams = confParams.str();
     }
 
-    return serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
+    return serVersion + '\n' + serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
 }
 
 
@@ -2416,7 +2414,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
                     Log::LEVEL_WARN, "Unable to decode parameter value for %s\n", paramName.PeekBuffer());
                 continue;
             }
-            ps->Parameter()->ParseValue(value);
+            ps->Parameter()->ParseValue(value.PeekBuffer());
             // printf("    Param: %s to %s\n", paramName.PeekBuffer(), paramValue.PeekBuffer());
         }
         // printf("\n");
@@ -2659,12 +2657,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
@@ -2672,12 +2670,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />\n");
             }
@@ -2829,7 +2827,7 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
         return Module::ptr_type(nullptr);
     }
 
-    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(modName));
+    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(std::string(modName.PeekBuffer())));
     if (!mod) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "Unable to construct module \"%s\" (%s)", desc->ClassName(), path.PeekBuffer());
@@ -3130,7 +3128,7 @@ void megamol::core::CoreInstance::applyConfigParams(
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Initializing parameter \"%s\" to \"%s\"", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
@@ -3153,7 +3151,7 @@ void megamol::core::CoreInstance::applyConfigParams(
         if (!p.IsNull()) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Setting parameter \"%s\" to \"%s\"",
                 nameA.PeekBuffer(), vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
@@ -3189,23 +3187,30 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
 
     try {
 
-        auto new_plugin = this->plugins->LoadPlugin(pluginDescriptor, *this);
+        auto new_plugin = pluginDescriptor->create();
 
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
-            new_plugin->GetModuleDescriptionManager().Count(), new_plugin->GetCallDescriptionManager().Count());
+        // initialize factories
+        new_plugin->GetModuleDescriptionManager();
+
+        this->plugins.push_back(new_plugin);
+
+        // report success
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin \"%s\" loaded: %u Modules, %u Calls",
+                                                               new_plugin->GetObjectFactoryName().c_str(),
+                                                               new_plugin->GetModuleDescriptionManager().Count(),
+                                                               new_plugin->GetCallDescriptionManager().Count());
 
         for (auto md : new_plugin->GetModuleDescriptionManager()) {
             try {
                 this->all_module_descriptions.Register(md);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
         }
         for (auto cd : new_plugin->GetCallDescriptionManager()) {
             try {
                 this->all_call_descriptions.Register(cd);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }

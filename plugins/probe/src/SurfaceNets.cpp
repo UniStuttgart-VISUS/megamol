@@ -5,8 +5,8 @@
  */
 
 #include "SurfaceNets.h"
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 
@@ -38,13 +38,13 @@ namespace probe {
             mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &SurfaceNets::getMetaData);
         this->MakeSlotAvailable(&this->_deployMeshCall);
 
-        this->_deployNormalsCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(0), &SurfaceNets::getNormalData);
-        this->_deployNormalsCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(1), &SurfaceNets::getNormalMetaData);
+        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(0), &SurfaceNets::getNormalData);
+        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(1), &SurfaceNets::getNormalMetaData);
         this->MakeSlotAvailable(&this->_deployNormalsCall);
 
-        this->_getDataCall.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+        this->_getDataCall.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
         this->MakeSlotAvailable(&this->_getDataCall);
     }
 
@@ -344,15 +344,15 @@ bool SurfaceNets::getData(core::Call& call) {
     if (cm == nullptr)
         return false;
 
-    auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
+    auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
     if (cd == nullptr)
         return false;
 
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
         return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
         return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
         return false;
 
     // get data from volumetric call
@@ -374,9 +374,9 @@ bool SurfaceNets::getData(core::Call& call) {
         _spacing[0] = meta_data->SliceDists[0][0];
         _spacing[1] = meta_data->SliceDists[1][0];
         _spacing[2] = meta_data->SliceDists[2][0];
-        if (cd->GetScalarType() == core::misc::FLOATING_POINT) {
+        if (cd->GetScalarType() == geocalls::FLOATING_POINT) {
             _data = static_cast<float*>(cd->GetData());
-        } else if (cd->GetScalarType() == core::misc::UNSIGNED_INTEGER) {
+        } else if (cd->GetScalarType() == geocalls::UNSIGNED_INTEGER) {
             _converted_data.reserve(_dims[0] * _dims[1] * _dims[2]);
             auto c_data = static_cast<unsigned char*>(cd->GetData());
             for (uint32_t z = 0; z < _dims[2]; ++z) {
@@ -448,7 +448,7 @@ bool SurfaceNets::getData(core::Call& call) {
         if (cm == nullptr)
             return false;
 
-        auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
+        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
         if (cd == nullptr)
             return false;
 
@@ -456,9 +456,9 @@ bool SurfaceNets::getData(core::Call& call) {
 
         // get metadata for volumetric call
         cd->SetFrameID(meta_data.m_frame_ID);
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
             return false;
 
         //if (cd->DataHash() == _old_datahash && !_recalc)
@@ -488,19 +488,19 @@ bool SurfaceNets::getData(core::Call& call) {
     bool SurfaceNets::getNormalData(core::Call& call) {
         bool something_changed = _recalc;
 
-        auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpd == nullptr)
             return false;
 
-        auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
+        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
         if (cd == nullptr)
             return false;
 
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
             return false;
 
         if (cd->DataHash() != _old_datahash) {
@@ -517,7 +517,7 @@ bool SurfaceNets::getData(core::Call& call) {
         _spacing[0] = meta_data->SliceDists[0][0];
         _spacing[1] = meta_data->SliceDists[1][0];
         _spacing[2] = meta_data->SliceDists[2][0];
-        if (cd->GetScalarType() != core::misc::FLOATING_POINT)
+        if (cd->GetScalarType() != geocalls::FLOATING_POINT)
             return false;
         _data = reinterpret_cast<float*>(cd->GetData());
 
@@ -528,9 +528,9 @@ bool SurfaceNets::getData(core::Call& call) {
     mpd->SetParticleListCount(1);
     mpd->AccessParticles(0).SetGlobalRadius(cd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge() * 1e-3);
     mpd->AccessParticles(0).SetCount(_vertices.size());
-    mpd->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+    mpd->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         _vertices.data(), sizeof(std::array<float,4>));
-    mpd->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+    mpd->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
         _normals.data(), sizeof(std::array<float,3>));
 
         _old_datahash = cd->DataHash();
@@ -540,11 +540,11 @@ bool SurfaceNets::getData(core::Call& call) {
     }
 
     bool SurfaceNets::getNormalMetaData(core::Call& call) {
-        auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpd == nullptr)
             return false;
 
-        auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
+        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
         if (cd == nullptr)
             return false;
 
@@ -552,7 +552,7 @@ bool SurfaceNets::getData(core::Call& call) {
             return true;
 
         // get metadata from adios
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
 
         mpd->AccessBoundingBoxes() = cd->AccessBoundingBoxes();

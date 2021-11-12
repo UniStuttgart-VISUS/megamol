@@ -15,7 +15,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 
 
 MultiParticleDataFilter::MultiParticleDataFilter(void) :
@@ -29,12 +29,12 @@ MultiParticleDataFilter::MultiParticleDataFilter(void) :
     
     // Multi stream particle data
     this->dataOutSlot.SetCallback(
-            core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(0),
+            MultiParticleDataCall::ClassName(),
+            MultiParticleDataCall::FunctionName(0),
             &MultiParticleDataFilter::getData);
     this->dataOutSlot.SetCallback(
-            core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(1),
+            MultiParticleDataCall::ClassName(),
+            MultiParticleDataCall::FunctionName(1),
             &MultiParticleDataFilter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -71,8 +71,8 @@ bool MultiParticleDataFilter::getData(core::Call& call) {
     using namespace vislib::sys;
 
     // Try to get pointer to unstructured grid call
-    core::moldyn::MultiParticleDataCall *mpdc =
-        dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    MultiParticleDataCall *mpdc =
+        dynamic_cast<MultiParticleDataCall*>(&call);
 
     if (mpdc != NULL) {        
         // get pointer to MultiParticleDataCall
@@ -120,10 +120,10 @@ bool MultiParticleDataFilter::getData(core::Call& call) {
             mpdc->AccessParticles(i).SetCount( this->colorData[i].Count());
             mpdc->AccessParticles(i).SetGlobalType(0);
             mpdc->AccessParticles(i).SetColourData(
-                core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 (const void*)(this->colorData[i].PeekElements()));
             mpdc->AccessParticles(i).SetVertexData(
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 (const void*)(this->vertexData[i].PeekElements()));
         }
         data->Unlock();

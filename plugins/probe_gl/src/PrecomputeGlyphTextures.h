@@ -7,6 +7,8 @@
 #ifndef PRECOMPUTE_GLYPH_TEXTURES_H_INCLUDED
 #define PRECOMPUTE_GLPYH_TEXTURES_H_INCLUDED
 
+#include "glowl/GLSLProgram.hpp"
+
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

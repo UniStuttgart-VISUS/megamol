@@ -108,6 +108,7 @@ static std::string guishow_option       = "guishow";
 static std::string nogui_option         = "nogui";
 static std::string guiscale_option      = "guiscale";
 static std::string privacynote_option   = "privacynote";
+static std::string versionnote_option   = "versionnote";
 static std::string param_option         = "param";
 static std::string remote_head_option   = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -118,6 +119,8 @@ static std::string remote_rendernode_zmq_source_option = "rendernode-zmq-source"
 static std::string remote_headnode_broadcast_quit_option    = "headnode-broadcast-quit";
 static std::string remote_headnode_broadcast_project_option = "headnode-broadcast-project";
 static std::string remote_headnode_connect_at_start_option  = "headnode-connect-at-start";
+static std::string framebuffer_option   = "framebuffer";
+static std::string viewport_tile_option = "tile";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -153,6 +156,11 @@ static void guiscale_handler(std::string const& option_name, cxxopts::ParseResul
 static void privacynote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.screenshot_show_privacy_note = parsed_options[option_name].as<bool>();
+};
+
+static void versionnote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.show_version_note = parsed_options[option_name].as<bool>();
 };
 
 static void remote_head_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -406,6 +414,44 @@ static void window_handler(std::string const& option_name, cxxopts::ParseResult 
     }
 };
 
+static void framebuffer_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+    // WIDTHxHEIGHT
+    std::regex geometry("(\\d+)x(\\d+)");
+    std::smatch match;
+    if (std::regex_match(string, match, geometry)) {
+        unsigned int width = std::stoul(match[1].str(), nullptr, 10);
+        unsigned int height = std::stoul(match[2].str(), nullptr, 10);
+        config.local_framebuffer_resolution = {{width, height}};
+    } else {
+        exit("framebuffer option needs to be in the following format: WIDTHxHEIGHT, e.g. 200x100");
+    }
+};
+
+static void viewport_tile_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+    // x,y;LWIDTHxLHEIGHT;GWIDTHxGHEIGHT
+    std::regex geometry("(\\d+),(\\d+):(\\d+)x(\\d+):(\\d+)x(\\d+)");
+    std::smatch match;
+    if (std::regex_match(string, match, geometry)) {
+        using UintPair = std::pair<unsigned int, unsigned int>;
+
+        auto read_pair = [&](int index) {
+            return UintPair{std::stoul(match[index].str(), nullptr, 10), std::stoul(match[index+1].str(), nullptr, 10)};
+        };
+
+        UintPair start_pixel       = read_pair(1);
+        UintPair local_resolution  = read_pair(3);
+        UintPair global_resolution = read_pair(5);
+
+        config.local_viewport_tile = {global_resolution, start_pixel, local_resolution};
+    } else {
+        exit("viewport tile option needs to be in the following format: x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT, e.g. 0,0:200x100:400x200");
+    }
+};
+
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
 std::vector<OptionsListEntry> cli_options_list =
@@ -436,6 +482,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nogui_option,         "Dont render GUI overlay",                                                         cxxopts::value<bool>(),                     nogui_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
+        , {versionnote_option,   "Show version warning when loading a project, use '=false' to disable",            cxxopts::value<bool>(),                     versionnote_handler}
         , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
         , {remote_head_option,   "Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
         , {remote_render_option, "Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}
@@ -446,6 +493,11 @@ std::vector<OptionsListEntry> cli_options_list =
         , {remote_headnode_broadcast_quit_option,   "Headnode broadcasts mmQuit to rendernodes on shutdown",                    cxxopts::value<bool>(), remote_head_broadcast_quit_handler}
         , {remote_headnode_broadcast_project_option,"Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(), remote_head_broadcast_project_handler}
         , {remote_headnode_connect_at_start_option, "Headnode starts sender thread at startup",                                 cxxopts::value<bool>(), remote_head_connect_at_start_handler}
+        , {framebuffer_option,   "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT",                         cxxopts::value<std::string>(),              framebuffer_handler}
+        , {viewport_tile_option, "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
+                                 "where x,y is the lower left start pixel of the local tile, "
+                                 "LWIDTHxLHEIGHT is the local framebuffer resolution, "
+                                 "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

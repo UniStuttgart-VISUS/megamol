@@ -5,12 +5,12 @@
  */
 
 #include "ReconstructSurface.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "iterator"
@@ -41,6 +41,8 @@
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Plane_3.h>
+
+#include <glm/gtc/constants.hpp>
 
 namespace megamol {
 namespace probe {
@@ -121,10 +123,10 @@ namespace probe {
             mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ReconstructSurface::getMetaData);
         this->MakeSlotAvailable(&this->_deployMeshCall);
 
-        this->_deployNormalsCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(0), &ReconstructSurface::getNormalData);
-        this->_deployNormalsCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(1), &ReconstructSurface::getNormalMetaData);
+        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(0), &ReconstructSurface::getNormalData);
+        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(1), &ReconstructSurface::getNormalMetaData);
         this->MakeSlotAvailable(&this->_deployNormalsCall);
 
         this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
@@ -1493,7 +1495,7 @@ namespace probe {
     bool ReconstructSurface::getNormalData(core::Call& call) {
         bool something_changed = _recalc;
 
-        auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpd == nullptr)
             return false;
 
@@ -1530,9 +1532,9 @@ namespace probe {
         mpd->SetParticleListCount(1);
         mpd->AccessParticles(0).SetGlobalRadius(_bbox.BoundingBox().LongestEdge() * 1e-3);
         mpd->AccessParticles(0).SetCount(_vertices.size());
-        mpd->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+        mpd->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         _vertices.data(), sizeof(std::array<float,4>));
-        mpd->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+        mpd->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
         _normals.data(), sizeof(std::array<float,3>));
 
         _old_datahash = cd->getDataHash();
@@ -1542,7 +1544,7 @@ namespace probe {
     }
 
     bool ReconstructSurface::getNormalMetaData(core::Call& call) {
-        auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpd == nullptr)
             return false;
 

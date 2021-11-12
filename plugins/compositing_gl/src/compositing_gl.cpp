@@ -1,18 +1,12 @@
-/*
- * compositing.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
-#include "compositing/CompositingCalls.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
@@ -21,40 +15,24 @@
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
 #include "NormalFromDepth.h"
+#include "ASSAO.h"
+#include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
+    class CompositingPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+        REGISTERPLUGIN(CompositingPluginInstance)
+
     public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+        CompositingPluginInstance()
+                : megamol::core::utility::plugins::AbstractPluginInstance(
+                      "compositing_gl", "The compositing_gl plugin."){};
 
-                /* machine-readable plugin assembly name */
-                "compositing_gl", // TODO: Change this!
+        ~CompositingPluginInstance() override = default;
 
-                /* human-readable plugin description */
-                "Describing compositing (TODO: Change this!)") {
+        // Registers modules and calls
+        void registerClasses() override {
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
-
-            // register modules here:
-
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::compositing::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::compositing::MyModule2>();
-            //   ...
-            //
+            // register modules
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::InteractionRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();
@@ -63,20 +41,12 @@ namespace megamol::compositing {
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::NormalFromDepth>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::ASSAO>();
 
-            // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::compositing::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::compositing::MyCall2>();
-            //   ...
-            //
+            // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallCamera>();
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallFramebufferGL>();
-
         }
     };
 } // namespace megamol::compositing

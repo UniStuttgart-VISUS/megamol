@@ -10,11 +10,11 @@
 
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore/view/RendererModule.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
+#include "mmcore_gl/ModuleGL.h"
 
 namespace megamol {
 namespace compositing {
@@ -22,8 +22,8 @@ namespace compositing {
 /**
  * TODO
  */
-class SimpleRenderTarget : public megamol::core::view::Renderer3DModuleGL {
-public:
+class SimpleRenderTarget : public core::view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
+    public:
     /**
      * Answer the name of this module.
      *
@@ -76,7 +76,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3DGL& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -85,14 +85,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3DGL& call);
-
-    /**
-     * Method that gets called before the rendering is started for all changed modules
-     *
-     * @param call The rendering call that contains the camera
-     */
-    void PreRender(core::view::CallRender3DGL& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      *
@@ -136,7 +129,7 @@ protected:
 
 private:
     /** Local copy of last used camera*/
-    core::view::Camera_2 m_last_used_camera;
+    core::view::Camera m_last_used_camera;
 
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;

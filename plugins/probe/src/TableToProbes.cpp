@@ -25,7 +25,7 @@ megamol::probe::TableToProbes::TableToProbes()
     this->MakeSlotAvailable(&this->_probe_slot);
 
 
-    this->_table_slot.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
+    this->_table_slot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->_table_slot);
 
 
@@ -53,8 +53,8 @@ void megamol::probe::TableToProbes::release() {}
 bool megamol::probe::TableToProbes::getData(core::Call& call) {
 
     auto* pc = dynamic_cast<CallProbes*>(&call);
-    stdplugin::datatools::table::TableDataCall* ct =
-        this->_table_slot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* ct =
+        this->_table_slot.CallAs<datatools::table::TableDataCall>();
 
 
     if (ct == nullptr) return false;
@@ -90,8 +90,8 @@ bool megamol::probe::TableToProbes::getData(core::Call& call) {
 bool megamol::probe::TableToProbes::getMetaData(core::Call& call) {
 
     auto* pc = dynamic_cast<CallProbes*>(&call);
-    stdplugin::datatools::table::TableDataCall* ct =
-        this->_table_slot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* ct =
+        this->_table_slot.CallAs<datatools::table::TableDataCall>();
 
     if (ct == nullptr) return false;
 

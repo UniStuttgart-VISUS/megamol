@@ -8,12 +8,12 @@
 #ifndef PROBE_RENDER_TASK_H_INCLUDED
 #define PROBE_RENDER_TASK_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace probe_gl {
 
-    class ProbeRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
+    class ProbeRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
     public:
         /**
          * Answer the name of this module.
@@ -69,7 +69,7 @@ namespace probe_gl {
         uint32_t m_version;
 
         /** In-place material collection (initialized with probe btf) */
-        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+        std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
         std::vector<std::string> m_identifiers;
 

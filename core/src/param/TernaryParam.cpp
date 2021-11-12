@@ -14,9 +14,9 @@ using namespace megamol::core::param;
 /*
  * TernaryParam::TernaryParam
  */
-TernaryParam::TernaryParam(const vislib::math::Ternary& initVal)
-        : AbstractParam(), val(initVal) {
+TernaryParam::TernaryParam(const vislib::math::Ternary& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::TERNARY);
+    this->SetValue(initVal);
 }
 
 
@@ -31,17 +31,16 @@ TernaryParam::~TernaryParam(void) {
 /*
  * TernaryParam::Definition
  */
-void TernaryParam::Definition(vislib::RawStorage& outDef) const {
-    outDef.AssertSize(6);
-    memcpy(outDef.AsAt<char>(0), "MMTRRY", 6);
+std::string TernaryParam::Definition() const {
+    return "MMTRRY";
 }
 
 
 /*
  * TernaryParam::ParseValue
  */
-bool TernaryParam::ParseValue(const vislib::TString& v) {
-    return this->val.Parse(v);
+bool TernaryParam::ParseValue(std::string const& v) {
+    return this->val.Parse(v.c_str());
 }
 
 
@@ -60,10 +59,6 @@ void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
 /*
  * TernaryParam::ValueString
  */
-vislib::TString TernaryParam::ValueString(void) const {
-#if defined(UNICODE) || defined(_UNICODE)
-    return this->val.ToStringW();
-#else /* defined(UNICODE) || defined(_UNICODE) */
-    return this->val.ToStringA();
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+std::string TernaryParam::ValueString(void) const {
+    return this->val.ToStringA().PeekBuffer();
 }

@@ -11,7 +11,6 @@
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
-#include "mmcore/mmd3d.h"
 #include "mmcore/ApiHandle.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/JobDescription.h"
@@ -23,7 +22,6 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
-#include "mmcore/view/AbstractTileView.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
@@ -601,17 +599,11 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
 /*
  * mmcRenderView
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-        mmcRenderViewContext *context, uint32_t frameID) {
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameID) {
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
-    ASSERT(context != NULL);
-    // If the following assert explodes, some one has added a new member to the
-    // context structure in the core and not everything has been rebuilt. Most
-    // likely, you should update the frontend and rebuild it.
-    ASSERT(sizeof(mmcRenderViewContext) == context->Size);
-
+    
     if (view != NULL) {
         vislib::sys::AutoLock lock(view->ModuleGraphLock());
 
@@ -653,11 +645,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             auto core = view->View()->GetCoreInstance();
             core->SetFrameID(frameID);
             double it = core->GetCoreInstanceTime();
-            context->Time = view->View()->DefaultTime(it);
-            context->InstanceTime = it; 
+            auto time = view->View()->DefaultTime(it);
+            auto instanceTime = it; 
 
-            view->View()->Render(*context);
-            context->ContinuousRedraw = true; // TODO: Implement the real thing
+            view->View()->Render(time, instanceTime);
         }
     }
 }
@@ -748,25 +739,10 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
  * mmcSendMouseScrollEvent
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
-	float dx, float dy) {
+    float dx, float dy) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseScroll(dx, dy);
-    }
-    return false;
-}
-
-
-/*
- * mmcDesiredViewWindowConfig
- */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
-        int *x, int *y, int *w, int *h, bool *nd) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    if ((view != NULL) && (view->View() != NULL)) {
-        return view->View()->DesiredWindowPosition(x, y, w, h, nd);
     }
     return false;
 }
@@ -839,8 +815,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), vislib::StringA(
-            param->GetParameter()->ValueString()).PeekBuffer());
+            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
@@ -866,8 +841,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), vislib::StringA(
-            param->GetParameter()->ValueString()).PeekBuffer());
+            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
@@ -966,7 +940,7 @@ MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
     if (param == NULL) return NULL;
-    retval = param->GetParameter()->ValueString();
+    retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
 
 }
@@ -982,7 +956,7 @@ MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
     if (param == NULL) return NULL;
-    retval = param->GetParameter()->ValueString();
+    retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
 }
 
@@ -1138,15 +1112,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
 
     if (len == NULL) return;
     if (param != NULL) {
-        vislib::RawStorage rs;
-        param->GetParameter()->Definition(rs);
+        auto const rs = param->GetParameter()->Definition();
         if (buf != NULL) {
             unsigned int s = vislib::math::Min<unsigned int>(
-                static_cast<unsigned int>(rs.GetSize()), *len);
-            ::memcpy(buf, rs.As<unsigned char>(), s);
+                static_cast<unsigned int>(rs.size()), *len);
+            std::copy_n(rs.begin(), s, buf);
             *len = s;
         } else {
-            *len = static_cast<unsigned int>(rs.GetSize());
+            *len = static_cast<unsigned int>(rs.size());
         }
     } else {
         *len = 0;
@@ -1160,21 +1133,6 @@ MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void * hCore) 
     if (core == NULL) return 0;
     return core->GetGlobalParameterHash();
 }
-
-
-/*
- * mmcFreezeOrUpdateView
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
-        void *hView, bool freeze) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->UpdateFreeze(freeze);
-    }
-}
-
 
 /*
  * mmcWriteStateToXML

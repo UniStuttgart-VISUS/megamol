@@ -25,7 +25,8 @@
 
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/view/TimeControl.h"
 #include "ScriptPaths.h"
 
@@ -115,33 +116,40 @@ public:
     virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
 
     /**
-     * Answer the camera synchronization number.
+     * Set the camera for this view externally
      *
-     * @return The camera synchronization number
+     * @param camera A fully intialized camera to use for rendering the view
+     * @param isMutable Tell the view whether it can modify, i.e. control, the camera or not
      */
-    virtual unsigned int GetCameraSyncNumber(void) const = 0;
+    virtual void SetCamera(Camera camera, bool isMutable = true);
+
+    /**
+     * Return the current camera
+     */
+    virtual Camera GetCamera() const;
+
+    /**
+    * ...
+    */
+    virtual void CalcCameraClippingPlanes(float border);
 
     /**
      * Renders this AbstractView.
+     * The View will use its own camera and framebuffer for the rendering exectuion
      *
-     * @param context The context information like time or GPU affinity.
+     * @param time ...
+     * @param instanceTime ...
      */
-    void Render(const mmcRenderViewContext& context) {
-        this->Render(context, nullptr);
-    };
+    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    virtual ImageWrapper Render(double time, double instanceTime) = 0;
 
-    /**
-     * Renders this AbstractView. Implemented by child classes.
-     *
-     * @param context The context information like time or GPU affinity.
-     */
-    virtual void Render(const mmcRenderViewContext& context, Call* call) = 0;
+    virtual ImageWrapper GetRenderingResult() const = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
-    virtual void ResetView(void) = 0;
+    virtual void ResetView() = 0;
 
     /**
      * Resizes the AbstractView3D.
@@ -149,22 +157,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height);
-
-    /**
-     * Answers the desired window position configuration of this view.
-     *
-     * @param x To receive the coordinate of the upper left corner
-     * @param y To recieve the coordinate of the upper left corner
-     * @param w To receive the width
-     * @param h To receive the height
-     * @param nd To receive the flag deactivating window decorations
-     *
-     * @return 'true' if this view has a desired window position
-     *         configuration, 'false' if not. In the latter case the value
-     *         the parameters are pointing to are not altered.
-     */
-    virtual bool DesiredWindowPosition(int* x, int* y, int* w, int* h, bool* nd);
+    virtual void Resize(unsigned int width, unsigned int height) = 0;
 
     /**
      * Registers a hook
@@ -204,39 +197,6 @@ public:
     virtual bool GetExtents(Call& call);
 
     /**
-     * Callback requesting a rendering of this view
-     *
-     * @param call The calling call
-     *
-     * @return The return value
-     */
-    virtual bool OnFreezeView(Call& call) {
-        this->UpdateFreeze(true);
-        return true;
-    }
-
-    /**
-     * Callback requesting a rendering of this view
-     *
-     * @param call The calling call
-     *
-     * @return The return value
-     */
-    virtual bool OnUnfreezeView(Call& call) {
-        this->UpdateFreeze(false);
-        return true;
-    }
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze) = 0;
-
-    /**
      * Restores the view
      *
      * @param p Must be resetViewSlot
@@ -271,11 +231,6 @@ public:
      */
     bool OnResetView(param::ParamSlot& p);
 
-    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
-    virtual ImageWrapper GetRenderingResult() const {
-        return {};
-    }
-
 protected:
 
     std::vector<std::string> requested_lifetime_resources() override {
@@ -286,23 +241,6 @@ protected:
 
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
-
-    /**
-     * Tries to load the desired window position configuration form the
-     * configuration value with the given name.
-     *
-     * @param str The value to be parsed
-     * @param x To receive the coordinate of the upper left corner
-     * @param y To recieve the coordinate of the upper left corner
-     * @param w To receive the width
-     * @param h To receive the height
-     * @param nd To receive the flag deactivating window decorations
-     *
-     * @return 'true' if this view has a desired window position
-     *         configuration, 'false' if not. In the latter case the value
-     *         the parameters are pointing to are not altered.
-     */
-    bool desiredWindowPosition(const vislib::StringW& str, int* x, int* y, int* w, int* h, bool* nd);
 
     /**
      * Answer if hook code should be executed.
@@ -341,23 +279,14 @@ protected:
     /**
      * ...
      */
-    void beforeRender(const mmcRenderViewContext& context);
+    void beforeRender(double time, double instanceTime);
 
     /**
      * ...
      */
-    void afterRender(const mmcRenderViewContext& context);
+    void afterRender();
 
-    /**
-     * Unpacks the mouse coordinates, which are relative to the virtual
-     * viewport size.
-     *
-     * @param x The x coordinate of the mouse position
-     * @param y The y coordinate of the mouse position
-     */
-    virtual void unpackMouseCoordinates(float& x, float& y);
-
-        /**
+     /**
      * Stores the current camera settings
      *
      * @param p Must be storeCameraSettingsSlot
@@ -397,7 +326,10 @@ protected:
     BoundingBoxes_2 _bboxs;
 
     /** The camera */
-    Camera_2 _camera;
+    Camera _camera;
+
+    /** A flag that decides whether the camera is controllable by the view */
+    bool _cameraIsMutable;
 
     /** Slot containing the settings of the currently stored camera */
     param::ParamSlot _cameraSettingsSlot;
@@ -423,8 +355,14 @@ protected:
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot _resetViewOnBBoxChangeSlot;
 
+    /** Flag showing the look at point */
+    param::ParamSlot _showLookAt;
+
+    /** Shows the view cube helper */
+    param::ParamSlot _showViewCubeParam;
+
     /** Array that holds the saved camera states */
-    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> _savedCameras;
+    std::array<std::pair<Camera, bool>, 11> _savedCameras;
 
     /** The object responsible for camera serialization */
     CameraSerializer _cameraSerializer;

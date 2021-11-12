@@ -853,7 +853,7 @@ bool GROLoader::getData( core::Call& call) {
         ASSERT(mdd != NULL); // make sure memory was able to be allocated
 
         // Set the correct host and port in the mdd
-        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
+        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value().c_str(),
             this->mDDPortSlot.Param<core::param::IntParam>()->Value());
 
         // Check if simulation should be paused at the start
@@ -862,7 +862,7 @@ bool GROLoader::getData( core::Call& call) {
         }
 
         // only start the thread if a valid host is provided (non-blank)
-        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
+        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).empty()) {
             mdd->Start(); // start the mdd thread (also starts up the socket)
         }
     }
@@ -1038,7 +1038,7 @@ bool GROLoader::getExtent( core::Call& call) {
         ASSERT(mdd != NULL); // make sure memory was able to be allocated
 
         // Set the correct host and port in the mdd
-        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value(),
+        this->mdd->Initialize(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value().c_str(),
             this->mDDPortSlot.Param<core::param::IntParam>()->Value());
 
         // Check if simulation should be paused at the start
@@ -1046,7 +1046,7 @@ bool GROLoader::getExtent( core::Call& call) {
             this->mdd->RequestPause(); // if so, request a pause message
         }
 
-        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).IsEmpty()) {
+        if (!(this->mDDHostAddressSlot.Param<core::param::StringParam>()->Value()).empty()) {
             mdd->Start(); // start the mdd thread (also starts up the socket)
         }
     }
@@ -1237,7 +1237,7 @@ void GROLoader::loadFile( const vislib::TString& filename) {
         this->atomResidueIdx.SetCount(totalAtomCnt);
 
         // check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
-        const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
+        const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value().c_str();
         // get all the solvent residue names to filter out
         vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split( solventResiduesStr, ';', true);
         //this->solventResidueIdx.SetCount(solventResidueNames);

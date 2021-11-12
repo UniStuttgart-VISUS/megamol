@@ -8,12 +8,12 @@
 #ifndef PROBE_BILLBOARD_GLYPH_MATERIAL_H_INCLUDED
 #define PROBE_BILLBOARD_GLYPH_MATERIAL_H_INCLUDED
 
-#include "mesh/AbstractGPUMaterialDataSource.h"
+#include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
 namespace megamol {
 namespace probe_gl {
 
-    class ProbeBillboardGlyphMaterial : public mesh::AbstractGPUMaterialDataSource {
+    class ProbeBillboardGlyphMaterial : public mesh_gl::AbstractGPUMaterialDataSource {
     public:
         /**
          * Answer the name of this module.

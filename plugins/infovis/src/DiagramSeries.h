@@ -10,7 +10,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include "DiagramSeriesCall.h"
 
@@ -82,7 +82,7 @@ namespace infovis {
         /**
          * Updates selector parameter and creates info item about selected column.
          */
-        bool assertData(const stdplugin::datatools::table::TableDataCall* const ft);
+        bool assertData(const datatools::table::TableDataCall* const ft);
 
         /**
          * Checks if any parameter is dirty.
@@ -103,8 +103,8 @@ namespace infovis {
          *
          * @return True, if column exists.
          */
-        bool getColumnIdx(uint32_t& colIdx, const vislib::TString& columnName,
-            const stdplugin::datatools::table::TableDataCall* const ft) const;
+        bool getColumnIdx(
+            uint32_t& colIdx, const vislib::TString& columnName, const datatools::table::TableDataCall* const ft) const;
 
         /** Selected columns output call */
         core::CalleeSlot seriesOutSlot;

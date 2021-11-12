@@ -13,7 +13,8 @@
 #include "nanoflann.hpp"
 #include <CGAL/Surface_mesh/Surface_mesh.h>
 #include <CGAL/Surface_mesh_default_triangulation_3.h>
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace probe {

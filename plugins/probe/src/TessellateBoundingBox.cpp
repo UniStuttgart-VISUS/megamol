@@ -7,7 +7,7 @@
 #include "glm/glm.hpp"
 
 #include "TessellateBoundingBox.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mesh/Utility.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"

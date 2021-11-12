@@ -17,14 +17,16 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 #include "CGAL/Exact_predicates_inexact_constructions_kernel.h"
 #include "CGAL/Delaunay_triangulation_3.h"
 #include "CGAL/Delaunay_triangulation_cell_base_3.h"
 #include "CGAL/Triangulation_vertex_base_3.h"
 #include "CGAL/Triangulation_vertex_base_with_info_3.h"
+
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace probe {
@@ -119,7 +121,7 @@ private:
 
     std::shared_ptr<ProbeCollection> _probes;
 
-    const core::misc::VolumetricDataCall::Metadata* _vol_metadata;
+    const geocalls::VolumetricDataCall::Metadata* _vol_metadata;
 
     size_t _old_datahash;
     size_t _old_volume_datahash;

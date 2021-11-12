@@ -7,8 +7,8 @@
 #include "ExtractMesh.h"
 #include <limits>
 #include "probe/CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -89,10 +89,10 @@ namespace probe {
         this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
         this->MakeSlotAvailable(&this->_getDataCall);
 
-        this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
-        this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-            core::moldyn::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
+        this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
+        this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+            geocalls::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
         this->MakeSlotAvailable(&this->_deploySpheresCall);
     }
 
@@ -579,7 +579,7 @@ namespace probe {
     }
 
     bool ExtractMesh::getParticleData(core::Call& call) {
-        auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (cm == nullptr)
             return false;
 
@@ -627,9 +627,9 @@ namespace probe {
         // cm->AccessParticles(0).SetGlobalRadius(0.02f);
         cm->AccessParticles(0).SetGlobalRadius(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-3);
         cm->AccessParticles(0).SetCount(_alphaHullCloud->points.size());
-        cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+        cm->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
             reinterpret_cast<uint8_t*>(&_resultNormalCloud->points[0].x), sizeof(pcl::PointNormal));
-        cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+        cm->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
             &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
 
         _old_datahash = cd->getDataHash();
@@ -639,7 +639,7 @@ namespace probe {
     }
 
     bool ExtractMesh::getParticleMetaData(core::Call& call) {
-        auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (cm == nullptr)
             return false;
 

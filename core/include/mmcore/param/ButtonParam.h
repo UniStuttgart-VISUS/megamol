@@ -36,7 +36,7 @@ namespace param {
          * Be aware, that if you do not assign a key, the button will not be
          * available from viewers without a GUI.
          */
-        ButtonParam(void);
+        ButtonParam();
 
         /**
          * Ctor.
@@ -91,7 +91,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+        std::string Definition() const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -102,36 +102,22 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool ParseValue(const vislib::TString& v);
+        bool ParseValue(std::string const& v) override;
 
         /**
          * Returns the value of the parameter as string.
          *
          * @return The value of the parameter as string.
          */
-        virtual vislib::TString ValueString(void) const;
-
-        inline void SetKeyCode(const core::view::KeyCode& keycode) {
-            this->keycode = keycode;
-        }
-
-        inline void SetKey(const core::view::Key& key) {
-            this->keycode.key = key;
-        }
-
-        inline void SetModifiers(const core::view::Modifiers& mods) {
-            this->keycode.mods = mods;
-        }
-
-        inline void SetModifier(const core::view::Modifier& mod) {
-            this->keycode.mods = core::view::Modifiers(mod);
-        }
+        std::string ValueString(void) const override;
 
         inline core::view::KeyCode GetKeyCode(void) const {
             return this->keycode;
         }
 
     private:
+
+        void initialize();
 
         /** The key of this button */
         core::view::KeyCode keycode;

@@ -7,7 +7,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/IntParam.h"
 
-#include "mmstd_datatools/clustering/DBSCAN.h"
+#include "datatools/clustering/DBSCAN.h"
 
 #include "probe/ProbeCalls.h"
 
@@ -138,9 +138,9 @@ private:
 
     core::param::ParamSlot _angle_threshold_slot;
 
-    std::shared_ptr<stdplugin::datatools::genericPointcloud<float, 3>> _points;
+    std::shared_ptr<datatools::genericPointcloud<float, 3>> _points;
 
-    std::shared_ptr<stdplugin::datatools::clustering::kd_tree_t<float, 3>> _kd_tree;
+    std::shared_ptr<datatools::clustering::kd_tree_t<float, 3>> _kd_tree;
 
     std::shared_ptr<ProbeCollection> _probes = nullptr;
 
@@ -148,7 +148,7 @@ private:
 
     std::vector<glm::vec3> _cur_dirs;
 
-    stdplugin::datatools::clustering::cluster_result_t _cluster_res;
+    datatools::clustering::cluster_result_t _cluster_res;
 
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 

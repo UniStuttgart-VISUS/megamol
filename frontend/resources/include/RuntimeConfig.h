@@ -13,6 +13,8 @@
 #include <tuple>
 #include <optional>
 
+#include "mmcore/versioninfo.h"
+
 namespace megamol {
 namespace frontend_resources {
 
@@ -23,6 +25,7 @@ struct RuntimeConfig {
     // general stuff
     using Path = std::string;
     using StringPair = std::pair<std::string/*Config*/, std::string/*Value*/>;
+    using UintPair = std::pair<unsigned int, unsigned int>;
 
     std::vector<Path> configuration_files = {"megamol_config.lua"};               // set only via (multiple) --config in CLI
     std::vector<std::string> configuration_file_contents = {};
@@ -49,8 +52,8 @@ struct RuntimeConfig {
     bool opengl_vsync = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
         opengl_context_version = {{4, 6, false/*compat*/}};
-    std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
-    std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
+    std::optional<UintPair> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::optional<UintPair> window_position = std::nullopt;
     enum WindowMode {
         fullscreen   = 1 << 0,
         nodecoration = 1 << 1,
@@ -62,6 +65,17 @@ struct RuntimeConfig {
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
+    bool show_version_note = true;
+
+    struct Tile {
+        UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
+        UintPair tile_start_pixel;
+        UintPair tile_resolution;
+    };
+    std::optional<Tile> local_viewport_tile = std::nullopt; // defaults to local framebuffer == local tile
+
+    // e.g. window resolution or powerwall projector resolution, will be applied to all views/entry points
+    std::optional<UintPair> local_framebuffer_resolution = std::nullopt;
 
     bool remote_headnode                        = false;
     bool remote_rendernode                      = false;
@@ -89,6 +103,7 @@ struct RuntimeConfig {
         // clang-format off
         return std::string("RuntimeConfig values: "  ) +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
+            std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +

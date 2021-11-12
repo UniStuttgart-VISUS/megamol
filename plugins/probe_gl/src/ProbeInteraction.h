@@ -8,15 +8,15 @@
 #ifndef PROBE_INTERACTION_H_INCLUDED
 #define PROBE_INTERACTION_H_INCLUDED
 
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "ProbeInteractionCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeInteraction : public megamol::core::view::Renderer3DModuleGL
+class ProbeInteraction : public megamol::core_gl::view::Renderer3DModuleGL
 {
 public:
     /**
@@ -85,7 +85,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3DGL& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -94,7 +94,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3DGL& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
     bool getInteractionMetaData(core::Call& call);
 

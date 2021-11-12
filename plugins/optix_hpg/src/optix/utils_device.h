@@ -31,7 +31,8 @@
 
 #define MM_OPTIX_DIRECT_CALLABLE_KERNEL(name) extern "C" __global__ void __direct_callable__##name
 
-#define MM_OPTIX_CONTINUATION_CALLABLE_KERNEL(name) extern "C" __global__ void __continuation_callable__##name
+#define MM_OPTIX_CONTINUATION_CALLABLE_KERNEL(name) \
+    extern "C" __global__ void __continuation_callable__##name
 
 #define MM_OPTIX_EXCEPTION_KERNEL(name) extern "C" __global__ void __exception__##name
 

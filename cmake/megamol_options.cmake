@@ -45,6 +45,19 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
+option(ENABLE_PROFILING "Enable profiling code" OFF)
+if (ENABLE_PROFILING)
+  add_compile_definitions(PROFILING)
+endif()
+
+# CUE
+if (WIN32)
+  option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
+  if (ENABLE_CUESDK)
+    add_compile_definitions(CUESDK_ENABLED)
+  endif()
+endif()
+
 # GLFW
 option(USE_GLFW "Use GLFW" ON)
 
@@ -58,7 +71,13 @@ if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
+
+# GL
+option(ENABLE_GL "Enable GL support" ON)
+if (ENABLE_GL)
+  add_compile_definitions(WITH_GL)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)

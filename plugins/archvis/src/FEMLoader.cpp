@@ -33,7 +33,7 @@ FEMLoader::FEMLoader()
     , m_femDeformation_filename_slot(
           "FEM displacment filename", "The name of the txt file containing displacements for the FEM nodes")
     , m_getData_slot("getData", "The slot for publishing the loaded data") {
-    this->m_getData_slot.SetCallback(FEMDataCall::ClassName(), "GetData", &FEMLoader::getDataCallback);
+        this->m_getData_slot.SetCallback(CallFEMModel::ClassName(), "GetData", &FEMLoader::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_femNodes_filename_slot << new core::param::FilePathParam("");
@@ -54,7 +54,7 @@ bool FEMLoader::create(void) {
 }
 
 bool FEMLoader::getDataCallback(core::Call& caller) {
-    FEMDataCall* cd = dynamic_cast<FEMDataCall*>(&caller);
+    CallFEMModel* cd = dynamic_cast<CallFEMModel*>(&caller);
 
     if (cd == NULL) return false;
 

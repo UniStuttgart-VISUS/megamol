@@ -6,7 +6,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 
 megamol::probe::ProbeClustering::ProbeClustering()
@@ -29,7 +29,7 @@ megamol::probe::ProbeClustering::ProbeClustering()
     _in_probes_slot.SetCompatibleCall<CallProbesDescription>();
     MakeSlotAvailable(&_in_probes_slot);
 
-    _in_table_slot.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
+    _in_table_slot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     MakeSlotAvailable(&_in_table_slot);
 
     _eps_slot << new core::param::FloatParam(0.1f, 0.0f);
@@ -82,7 +82,7 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
     auto in_probes = _in_probes_slot.CallAs<CallProbes>();
     if (in_probes == nullptr)
         return false;
-    auto in_table = _in_table_slot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    auto in_table = _in_table_slot.CallAs<datatools::table::TableDataCall>();
     if (in_table == nullptr)
         return false;
 
@@ -190,24 +190,24 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 auto const p_bbox = meta_data.m_bboxs.BoundingBox();
                 std::array<float, 6> bbox = {p_bbox.GetLeft(), p_bbox.GetRight(), p_bbox.GetBottom(), p_bbox.GetTop(),
                     p_bbox.GetBack(), p_bbox.GetFront()};
-                _points = std::make_shared<stdplugin::datatools::genericPointcloud<float, 3>>(
+                _points = std::make_shared<datatools::genericPointcloud<float, 3>>(
                     cur_points, bbox, std::array<float, 3>{1.0f, 1.0f, 1.0f});
                 //_points->normalize_data();
-                _kd_tree = std::make_shared<stdplugin::datatools::clustering::kd_tree_t<float, 3>>(
+                _kd_tree = std::make_shared<datatools::clustering::kd_tree_t<float, 3>>(
                     3, *_points, nanoflann::KDTreeSingleIndexAdaptorParams());
                 _kd_tree->buildIndex();
 
 
                 /*auto const cluster_res =
-                    stdplugin::datatools::clustering::DBSCAN_with_similarity<float, 3>(_kd_tree, eps, minpts,
+                    datatools::clustering::DBSCAN_with_similarity<float, 3>(_kd_tree, eps, minpts,
                         [sim_matrix, col_count, row_count, threshold](
-                            stdplugin::datatools::clustering::index_t a, stdplugin::datatools::clustering::index_t b) ->
+                            datatools::clustering::index_t a, datatools::clustering::index_t b) ->
                    bool { auto const val = sim_matrix[a + b * col_count]; return val <= threshold;
                         });*/
-                _cluster_res = stdplugin::datatools::clustering::GROWING_with_similarity_and_score<float, 3>(
+                _cluster_res = datatools::clustering::GROWING_with_similarity_and_score<float, 3>(
                     _kd_tree, eps * eps, minpts,
-                    [this, threshold, angle_threshold](stdplugin::datatools::clustering::index_t a,
-                        stdplugin::datatools::clustering::index_t b) -> bool {
+                    [this, threshold, angle_threshold](datatools::clustering::index_t a,
+                        datatools::clustering::index_t b) -> bool {
                         auto const val = _sim_matrix[a + b * _col_count];
                         auto const crit_a = val <= threshold;
 
@@ -218,9 +218,9 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
 
                         return crit_a && crit_b;
                     },
-                    [this, handwaving](stdplugin::datatools::clustering::index_t pivot,
-                        std::vector<stdplugin::datatools::clustering::index_t> const& cluster)
-                        -> stdplugin::datatools::clustering::index_t {
+                    [this, handwaving](datatools::clustering::index_t pivot,
+                        std::vector<datatools::clustering::index_t> const& cluster)
+                        -> datatools::clustering::index_t {
                         if (cluster.empty())
                             return pivot;
                         std::vector<float> scores;
@@ -239,8 +239,8 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                     });
 
 
-                /*[sim_matrix, col_count, row_count](stdplugin::datatools::clustering::index_t a,
-                    stdplugin::datatools::clustering::search_res_t<float> const& vec) -> float {
+                /*[sim_matrix, col_count, row_count](datatools::clustering::index_t a,
+                    datatools::clustering::search_res_t<float> const& vec) -> float {
                     std::vector<float> tmp_vals(vec.size());
                     std::transform(vec.cbegin(), vec.cend(), tmp_vals.begin(),
                         [&sim_matrix, col_count, a](auto const& el) { return sim_matrix[el.first + a * col_count]; });
@@ -277,8 +277,8 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
         bool toggle_reps = _toggle_reps_slot.Param<core::param::BoolParam>()->Value();
 
         if (toggle_reps) {
-            std::unordered_map<stdplugin::datatools::clustering::index_t,
-                std::vector<stdplugin::datatools::clustering::index_t>>
+            std::unordered_map<datatools::clustering::index_t,
+                std::vector<datatools::clustering::index_t>>
                 cluster_map;
             cluster_map.reserve(*max_el);
 
@@ -286,10 +286,10 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 cluster_map[_cluster_res[pidx]].push_back(pidx);
             }
 
-            std::vector<stdplugin::datatools::clustering::index_t> cluster_reps;
+            std::vector<datatools::clustering::index_t> cluster_reps;
             cluster_reps.reserve(*max_el);
             for (auto const& el : cluster_map) {
-                stdplugin::datatools::clustering::index_t min_idx = 0;
+                datatools::clustering::index_t min_idx = 0;
                 float min_score = std::numeric_limits<float>::max();
                 for (auto const& idx : el.second) {
                     auto const current_idx = idx;
@@ -361,7 +361,7 @@ bool megamol::probe::ProbeClustering::get_extent_cb(core::Call& c) {
     if (cp == nullptr)
         return false;
 
-    auto ct = this->_in_table_slot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    auto ct = this->_in_table_slot.CallAs<datatools::table::TableDataCall>();
     if (ct == nullptr)
         return false;
     auto cprobes = this->_in_probes_slot.CallAs<CallProbes>();

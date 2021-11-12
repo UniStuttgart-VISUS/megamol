@@ -1,9 +1,9 @@
 #include "NormalFromDepth.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mmcore/CoreInstance.h"
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::NormalFromDepth::NormalFromDepth()
         : m_version(0)
@@ -28,7 +28,7 @@ megamol::compositing::NormalFromDepth::~NormalFromDepth() {
 }
 
 bool megamol::compositing::NormalFromDepth::create() {
-    vislib::graphics::gl::ShaderSource compute_shader_src;
+    vislib_gl::graphics::gl::ShaderSource compute_shader_src;
 
     GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("Compositing::normalFromDepth", compute_shader_src);
 
@@ -102,12 +102,9 @@ bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) 
         setupOutputTexture(input_tx2D, m_output_texture);
 
         // obtain camera information
-        core::view::Camera_2 cam = call_camera->getData();
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type view_tmp, proj_tmp;
-        cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-        glm::mat4 view_mx = view_tmp;
-        glm::mat4 proj_mx = proj_tmp;
+        core::view::Camera cam = call_camera->getData();
+        glm::mat4 view_mx = cam.getViewMatrix();
+        glm::mat4 proj_mx = cam.getProjectionMatrix();
 
         m_normal_from_depth_prgm->use();
 

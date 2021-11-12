@@ -1,7 +1,7 @@
 #include "ProbeInteraction.h"
 
+#include "compositing_gl/CompositingCalls.h"
 #include "ProbeGlCalls.h"
-#include "compositing/CompositingCalls.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
@@ -123,20 +123,17 @@ bool megamol::probe_gl::ProbeInteraction::create() { return true; }
 
 void megamol::probe_gl::ProbeInteraction::release() {}
 
-bool megamol::probe_gl::ProbeInteraction::GetExtents(core::view::CallRender3DGL& call) { return true; }
+bool megamol::probe_gl::ProbeInteraction::GetExtents(core_gl::view::CallRender3DGL& call) { return true; }
 
-bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3DGL& call) {
+bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& call) {
 
-    core::view::CallRender3DGL* cr = dynamic_cast<core::view::CallRender3DGL*>(&call);
+    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    m_view_mx_cpy = view_tmp;
-    m_proj_mx_cpy = proj_tmp;
+    core::view::Camera cam = cr->GetCamera();
+    m_view_mx_cpy = cam.getViewMatrix();
+    m_proj_mx_cpy = cam.getProjectionMatrix();
 
     auto call_probe_fbo = this->m_probe_fbo_slot.CallAs<compositing::CallFramebufferGL>();
     auto call_hull_fbo = this->m_hull_fbo_slot.CallAs<compositing::CallFramebufferGL>();

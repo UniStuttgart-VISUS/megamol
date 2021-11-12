@@ -7,8 +7,8 @@
 #include "ExtractSkeleton.h"
 #include <limits>
 #include "probe/CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include <CGAL/extract_mean_curvature_flow_skeleton.h>
 #include <CGAL/boost/graph/split_graph_into_polylines.h>

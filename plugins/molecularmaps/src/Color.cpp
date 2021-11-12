@@ -1053,6 +1053,11 @@ void Color::MakeRainbowColorTable(unsigned int num, vislib::Array<vislib::math::
 }
 
 
+void Color::ReadColorTableFromFile(
+    std::filesystem::path path, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable) {
+    ReadColorTableFromFile(path.c_str(), colorLookupTable);
+}
+
 /*
  * Read color table from file.
  */

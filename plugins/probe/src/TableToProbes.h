@@ -13,8 +13,8 @@
 #include "mesh/MeshCalls.h"
 #include "probe/ProbeCollection.h"
 #include "probe/MeshUtilities.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace probe {
@@ -68,7 +68,7 @@ private:
 
     const float* _table;
     std::vector<std::vector<float>> _accum_probes;
-    const stdplugin::datatools::table::TableDataCall::ColumnInfo* _col_info;
+    const datatools::table::TableDataCall::ColumnInfo* _col_info;
     uint32_t _num_cols;
     uint32_t _num_rows;
     std::shared_ptr<ProbeCollection> _probes;

@@ -5,15 +5,17 @@
  */
 #pragma once
 
+#include "nanoflann.hpp"
+#include <CGAL/Surface_mesh/Surface_mesh.h>
+#include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include <glm/glm.hpp>
+
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "nanoflann.hpp"
-#include <CGAL/Surface_mesh/Surface_mesh.h>
-#include <CGAL/Surface_mesh_default_triangulation_3.h>
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {

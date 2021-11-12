@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CallKeyframeKeeper.h"
+#include "cinematic/CallKeyframeKeeper.h"
 
 
 using namespace megamol;

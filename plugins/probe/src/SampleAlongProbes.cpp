@@ -7,8 +7,7 @@
 #include "SampleAlongProbes.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "glm/glm.hpp"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -51,7 +50,7 @@ SampleAlongPobes::SampleAlongPobes()
     this->_full_tree_rhs_slot.SetCompatibleCall<CallKDTreeDescription>();
     this->MakeSlotAvailable(&this->_full_tree_rhs_slot);
 
-    this->_volume_rhs_slot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+    this->_volume_rhs_slot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->_volume_rhs_slot);
 
     core::param::FlexEnumParam* paramEnum = new core::param::FlexEnumParam("undef");
@@ -120,7 +119,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
     // query adios data
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
-    auto cv = this->_volume_rhs_slot.CallAs<core::misc::VolumetricDataCall>();
+    auto cv = this->_volume_rhs_slot.CallAs<geocalls::VolumetricDataCall>();
     auto ct = this->_full_tree_rhs_slot.CallAs<CallKDTree>();
     auto cprobes = this->_probe_rhs_slot.CallAs<CallProbes>();
 
@@ -183,7 +182,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
     } else if (cv != nullptr) {
 
         // get volume data
-        if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_DATA)) return false;
 
         meta_data.m_frame_cnt = cv->FrameCount();
         _vol_metadata = cv->GetMetadata();
@@ -290,10 +289,10 @@ bool SampleAlongPobes::getData(core::Call& call) {
             auto type = _vol_metadata->ScalarType;
             auto type_length = _vol_metadata->ScalarLength;
 
-            if (type == core::misc::FLOATING_POINT) {
+            if (type == geocalls::FLOATING_POINT) {
                 auto data = reinterpret_cast<float*>(cv->GetData());
                 doVolumeTrilinSampling(data);
-            } else if (type == core::misc::UNSIGNED_INTEGER) {
+            } else if (type == geocalls::UNSIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<unsigned char*>(cv->GetData());
                     doVolumeTrilinSampling(data);
@@ -301,7 +300,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     auto data = reinterpret_cast<unsigned int*>(cv->GetData());
                     doVolumeTrilinSampling(data);  
                 }
-            } else if (type == core::misc::SIGNED_INTEGER) {
+            } else if (type == geocalls::SIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<char*>(cv->GetData());
                     doVolumeTrilinSampling(data);
@@ -320,10 +319,10 @@ bool SampleAlongPobes::getData(core::Call& call) {
             auto type = _vol_metadata->ScalarType;
             auto type_length = _vol_metadata->ScalarLength;
 
-            if (type == core::misc::FLOATING_POINT) {
+            if (type == geocalls::FLOATING_POINT) {
                 auto data = reinterpret_cast<float*>(cv->GetData());
                 doVolumeRadiusSampling(data);
-            } else if (type == core::misc::UNSIGNED_INTEGER) {
+            } else if (type == geocalls::UNSIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<unsigned char*>(cv->GetData());
                     doVolumeRadiusSampling(data);
@@ -331,7 +330,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     auto data = reinterpret_cast<unsigned int*>(cv->GetData());
                     doVolumeRadiusSampling(data);
                 }
-            } else if (type == core::misc::SIGNED_INTEGER) {
+            } else if (type == geocalls::SIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<char*>(cv->GetData());
                     doVolumeRadiusSampling(data);
@@ -372,7 +371,7 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
     if (cp == nullptr) return false;
 
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
-    auto cv = this->_volume_rhs_slot.CallAs<core::misc::VolumetricDataCall>();
+    auto cv = this->_volume_rhs_slot.CallAs<geocalls::VolumetricDataCall>();
     auto ct = this->_full_tree_rhs_slot.CallAs<CallKDTree>();
     auto cprobes = this->_probe_rhs_slot.CallAs<CallProbes>();
     if (cprobes == nullptr) return false;
@@ -398,8 +397,8 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
         }
     } else if (cv != nullptr) {
         cv->SetFrameID(meta_data.m_frame_ID);
-        if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-        if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
         meta_data.m_frame_cnt = cv->FrameCount();
     } else {
         return false;

@@ -7,7 +7,7 @@
  */
 
 #include "stdafx.h"
-#include "Diagram2DCall.h"
+#include "protein/Diagram2DCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/math/mathfunctions.h"

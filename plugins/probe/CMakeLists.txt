@@ -6,9 +6,10 @@
 megamol_plugin(probe
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    adios_plugin
+    mmadios
     mesh
-    mmstd_datatools
+    datatools
+    geometry_calls
   DEPENDS_EXTERNALS
     libigl
     asmjit
@@ -28,11 +29,11 @@ if (probe_PLUGIN_ENABLED)
   
   find_package(CGAL CONFIG REQUIRED)
   target_link_libraries(probe PUBLIC CGAL::CGAL)
-  if (BUILD_PLUGIN_OSPRAY_PLUGIN)
+  if (BUILD_MMOSPRAY_PLUGIN_PLUGIN)
     target_sources(probe PRIVATE ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
     target_compile_definitions(probe PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
     target_include_directories(probe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
-    target_link_libraries(probe PUBLIC OSPRay_plugin)
+    target_link_libraries(probe PUBLIC mmospray)
   endif ()
 
 endif ()

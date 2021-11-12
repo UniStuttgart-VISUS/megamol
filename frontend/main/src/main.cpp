@@ -11,6 +11,7 @@
 #include "GlobalValueStore.h"
 
 #include "CUDA_Service.hpp"
+#include "Command_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -20,6 +21,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "ImagePresentation_Service.hpp"
 #include "Remote_Service.hpp"
+#include "Profiling_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -93,7 +95,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
+    guiConfig.imgui_rbnd = megamol::frontend::GUI_Service::ImGuiRenderBackend::OPEN_GL;
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
@@ -117,6 +119,7 @@ int main(const int argc, const char** argv) {
     luaConfig.lua_api_ptr = &lua_api;
     luaConfig.host_address = config.lua_host_address;
     luaConfig.retry_socket_port = config.lua_host_port_retry;
+    luaConfig.show_version_notification = config.show_version_note;
     lua_service_wrapper.setPriority(0);
 
     megamol::frontend::ProjectLoader_Service projectloader_service;
@@ -125,7 +128,20 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
-    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
+    imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
+    imagepresentationConfig.local_viewport_tile = config.local_viewport_tile.has_value()
+        ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
+            config.local_viewport_tile.value().global_framebuffer_resolution,
+            config.local_viewport_tile.value().tile_start_pixel,
+            config.local_viewport_tile.value().tile_resolution
+        })
+        : std::nullopt;
+    imagepresentation_service.setPriority(3);
+  
+    megamol::frontend::Command_Service command_service;
+#ifdef PROFILING
+    megamol::frontend::Profiling_Service profiling_service;
+#endif
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -153,6 +169,10 @@ int main(const int argc, const char** argv) {
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
+    services.add(command_service, nullptr);
+#ifdef PROFILING
+    services.add(profiling_service, nullptr);
+#endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
@@ -175,6 +195,7 @@ int main(const int argc, const char** argv) {
 
     const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
+
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
@@ -221,6 +242,8 @@ int main(const int argc, const char** argv) {
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 
+        imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
+
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
         return true;
@@ -252,7 +275,7 @@ int main(const int argc, const char** argv) {
     }
 
     // load project files via lua
-    if (graph_resources_ok)
+    if (run_megamol && graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
             log_error("Project file \"" + file + "\" did not execute correctly");

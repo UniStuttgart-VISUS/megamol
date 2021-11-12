@@ -1,68 +1,36 @@
-/*
- * thermodyn.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
-#include "PhaseSeparator.h"
 #include "PhaseAnimator.h"
-#include "rendering/BoxRenderer.h"
+#include "PhaseSeparator.h"
 
 #include "thermodyn/BoxDataCall.h"
 
 namespace megamol::thermodyn {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class ThermodynPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(ThermodynPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    ThermodynPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("thermodyn", "The thermodyn plugin."){};
 
-              /* machine-readable plugin assembly name */
-              "thermodyn", // TODO: Change this!
+    ~ThermodynPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Describing thermodyn (TODO: Change this!)"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseSeparator>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseAnimator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
-        //
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MyModule2>();
-        //   ...
-        //
 
-        // register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::BoxDataCall>();
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::MyCall2>();
-        //   ...
-        //
     }
 };
 } // namespace megamol::thermodyn

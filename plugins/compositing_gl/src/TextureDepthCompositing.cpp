@@ -6,9 +6,9 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     : core::Module()
@@ -54,7 +54,7 @@ bool megamol::compositing::TextureDepthCompositing::create() {
 
     try {
         // create shader program
-        vislib::graphics::gl::ShaderSource compute_src;
+        vislib_gl::graphics::gl::ShaderSource compute_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
             return false;

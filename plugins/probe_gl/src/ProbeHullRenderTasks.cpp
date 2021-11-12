@@ -20,7 +20,7 @@
 
 bool megamol::probe_gl::ProbeHullRenderTasks::create() {
 
-    m_rendertask_collection.first = std::make_shared<mesh::GPURenderTaskCollection>();
+    m_rendertask_collection.first = std::make_shared<mesh_gl::GPURenderTaskCollection>();
 
     struct PerFrameData {
         int shading_mode;
@@ -31,7 +31,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::create() {
 
     m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
 
-    m_material_collection = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
     m_material_collection->addMaterial(this->instance(), "ProbeHull", "ProbeHull");
 
     m_material_collection->addMaterial(this->instance(), "ProbeTriangleHull", "ProbeTriangleHull");
@@ -67,13 +67,13 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
 
 bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller) {
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
         return false;
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -85,7 +85,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
 
     if (mc != nullptr) {
@@ -256,8 +256,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getMetaDataCallback(core::Call& ca
     if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
         return false;
 
-    mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    mesh::CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
