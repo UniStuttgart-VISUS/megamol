@@ -42,9 +42,6 @@ include(global_versioninfo)
 # MegaMol options
 include(megamol_options)
 
-# MegaMol macros
-include(check_mmdep)
-
 # Clang-format
 include(ClangFormat)
 
@@ -115,12 +112,3 @@ if (EXAMPLES)
     install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
   endif ()
 endif ()
-
-# Validate dependencies
-foreach(d ${DEP_LIST})
-  string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
-  list(GET SINGLE_LIST 0 plugin)
-  list(REMOVE_AT SINGLE_LIST 0)
-  check_mmdep(${plugin} "${SINGLE_LIST}")
-endforeach()
-unset(DEP_LIST CACHE)
