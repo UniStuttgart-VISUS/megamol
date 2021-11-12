@@ -1,6 +1,6 @@
 #message(WARNING "setting msvc compiler flags")
 
-set(COMMON_CXX_FLAGS "/DNOMINMAX /W3 /openmp /MP /GR /permissive- /Zc:twoPhase-")
+set(COMMON_CXX_FLAGS "/DNOMINMAX /W3 /openmp /MP /GR /permissive- /Zc:twoPhase- /utf-8")
 if (DISABLE_WARNINGS)
   set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} /w")
 endif()

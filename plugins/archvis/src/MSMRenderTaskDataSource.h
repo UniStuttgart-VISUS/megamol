@@ -50,7 +50,10 @@ protected:
 private:
     megamol::core::CallerSlot m_MSM_callerSlot;
 
-    uint64_t m_MSM_hash;
+    /** In-place material collection (initialized with msm btf) */
+    std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+
+    uint32_t m_version;
 };
 
 }

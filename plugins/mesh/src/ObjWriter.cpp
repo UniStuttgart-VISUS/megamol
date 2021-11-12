@@ -1,5 +1,5 @@
 #include "stdafx.h"
-
+#include <fstream>
 #include "ObjWriter.h"
 
 #include "mmcore/param/FilePathParam.h"
@@ -14,7 +14,8 @@ megamol::mesh::ObjWriter::ObjWriter()
     _rhs_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&_rhs_mesh_slot);
 
-    this->_filename_slot << new core::param::FilePathParam("");
+    this->_filename_slot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"obj"});
     this->MakeSlotAvailable(&this->_filename_slot);
 }
 
@@ -38,7 +39,7 @@ bool megamol::mesh::ObjWriter::run() {
 
     auto mac = rhs_mesh_call->getData();
 
-    std::string fname = std::string(_filename_slot.Param<core::param::FilePathParam>()->Value());
+    std::string fname = _filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
 
     auto meshes = mac->accessMeshes();
     auto num_meshes = meshes.size();

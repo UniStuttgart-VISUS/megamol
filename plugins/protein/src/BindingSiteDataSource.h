@@ -89,7 +89,7 @@ namespace protein {
          *
          * @param filename The PDB file name.
          */
-        void loadPDBFile( const vislib::TString &filename);
+        void loadPDBFile( const std::string &filename);
 
         /**
          * TODO

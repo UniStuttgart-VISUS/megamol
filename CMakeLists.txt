@@ -2,18 +2,22 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# Policies
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
 if (POLICY CMP0104)
   cmake_policy(SET CMP0104 NEW)
 endif()
 
-project(megamol)
+# Disable in source build
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Project
+project(megamol
+  VERSION 1.3.0)
 
 # Default to install to source directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -27,8 +31,9 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install pat
 # Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
+set(MEGAMOL_VISLIB_GL_DIR ${MEGAMOL_DIR}/vislib_gl)
 set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
-set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
+set(MEGAMOL_CORE_GL_DIR ${MEGAMOL_DIR}/core_gl)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 # Versions
@@ -54,13 +59,15 @@ add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_VISLIB_GL_DIR})
+endif()
 
 # Core
 add_subdirectory(${MEGAMOL_CORE_DIR})
-
-# Console
-set(CONSOLE_NAME mmconsole)
-add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_CORE_GL_DIR})
+endif()
 
 # Remoteconsole
 add_subdirectory(remoteconsole)
@@ -74,40 +81,8 @@ if(WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
-# Plugin register function
-# This function must be called by every plugin.
-# Within this function we need to define every binary which should include plugins.
-function(megamol_register_plugin TARGET)
-  if (WIN32)
-    if (BUILD_CONSOLE)
-      target_link_libraries(mmconsole PRIVATE ${TARGET})
-      target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
-    endif()
-    if (BUILD_FRONTEND)
-      target_link_libraries(megamol PRIVATE ${TARGET})
-      target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
-    endif()
-  else ()
-    if (BUILD_CONSOLE)
-      target_link_libraries(mmconsole PRIVATE
-        -Wl,--whole-archive
-        ${TARGET}
-        -Wl,--no-whole-archive)
-    endif()
-    if (BUILD_FRONTEND)
-      target_link_libraries(megamol PRIVATE
-        -Wl,--whole-archive
-        ${TARGET}
-        -Wl,--no-whole-archive)
-    endif()
-  endif ()
-endfunction(megamol_register_plugin)
-
 # Plugins
 add_subdirectory(plugins)
-if (BUILD_CONSOLE)
-  target_link_libraries(mmconsole PRIVATE plugins)
-endif()
 if (BUILD_FRONTEND)
   target_link_libraries(megamol PRIVATE plugins)
 endif()
@@ -135,7 +110,10 @@ if (EXAMPLES)
       ERROR_QUIET
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif ()
-  install(DIRECTORY "${EXAMPLES_DIR}" DESTINATION "${CMAKE_INSTALL_PREFIX}" PATTERN ".git" EXCLUDE)
+  option(EXAMPLES_INSTALL "Install examples" ON)
+  if (EXAMPLES_INSTALL)
+    install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
+  endif ()
 endif ()
 
 # Validate dependencies

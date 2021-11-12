@@ -24,7 +24,7 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
     in_mesh_slot_.SetCompatibleCall<mesh::CallMeshDescription>();
     MakeSlotAvailable(&in_mesh_slot_);
 
-    in_paths_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    in_paths_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&in_paths_slot_);
 }
 
@@ -84,7 +84,7 @@ bool megamol::optix_hpg::TransitionCalculator::init() {
 
 
 bool megamol::optix_hpg::TransitionCalculator::assertData(
-    mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles, unsigned int frameID) {
+    mesh::CallMesh& mesh, geocalls::MultiParticleDataCall& particles, unsigned int frameID) {
     // fetch data for current and subsequent timestep
     // create array of rays for the current particle configuration
     // upload mesh as geometry
@@ -358,7 +358,7 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
     auto in_mesh = in_mesh_slot_.CallAs<mesh::CallMesh>();
     if (in_mesh == nullptr)
         return false;
-    auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_paths = in_paths_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (in_paths == nullptr)
         return false;
 

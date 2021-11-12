@@ -25,7 +25,7 @@
 #include "mmcore/ViewInstanceRequest.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/AbstractAssemblyInstance.h"
+#include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
@@ -36,7 +36,9 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/LogEchoTarget.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#ifdef WITH_GL
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#endif
 #include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "vislib/Array.h"
@@ -74,18 +76,12 @@ namespace utility {
 /* forward declaration */
 class ServiceManager;
 
-namespace plugins {
-
-/* forward declaration */
-class PluginManager;
-
-} /* end namespace plugins */
 } /* end namespace utility */
 
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractAssemblyInstance {
+class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
@@ -111,7 +107,7 @@ public:
      *
      * @return The (machine-readable) name of the assembly
      */
-    virtual const std::string& GetAssemblyName(void) const;
+    virtual const std::string& GetObjectFactoryName() const;
 
     /**
      * Answer the call description manager of the assembly.
@@ -174,12 +170,14 @@ public:
      */
     inline const megamol::core::utility::Configuration& Configuration(void) const { return this->config; }
 
+#ifdef WITH_GL
     /**
      * Returns the ShaderSourceFactory object of this inatcne.
      *
      * @return The ShaderSourceFactory object of this inatcne.
      */
-    inline utility::ShaderSourceFactory& ShaderSourceFactory(void) { return this->shaderSourceFactory; }
+    inline core_gl::utility::ShaderSourceFactory& ShaderSourceFactory(void) { return this->shaderSourceFactory; }
+#endif
 
     /**
      * Searches for an view description object with the given name.
@@ -746,7 +744,7 @@ public:
      *
      * @return The plugin manager
      */
-    inline const utility::plugins::PluginManager& Plugins() const { return *plugins; }
+    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const { return plugins; }
 
     /**
      * Callback to delete service objects
@@ -1194,8 +1192,10 @@ private:
     /** the cores configuration */
     megamol::core::utility::Configuration config;
 
+#if WITH_GL
     /** The shader source factory */
-    utility::ShaderSourceFactory shaderSourceFactory;
+    core_gl::utility::ShaderSourceFactory shaderSourceFactory;
+#endif
 
     /** The paths to the shaders */
     std::vector<std::filesystem::path> shaderPaths;
@@ -1315,8 +1315,8 @@ private:
     /** Vector storing param updates per frame */
     param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
-    /** The manager of loaded plugins */
-    utility::plugins::PluginManager* plugins;
+    /** The loaded plugins */
+    std::vector<utility::plugins::AbstractPluginInstance::ptr_type> plugins;
 
     /** The manager of registered services */
     utility::ServiceManager* services;

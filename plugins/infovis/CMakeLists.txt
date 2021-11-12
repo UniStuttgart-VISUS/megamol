@@ -6,10 +6,9 @@
 megamol_plugin(infovis
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
-    mmstd_datatools
+    datatools
   DEPENDS_EXTERNALS
     Eigen
-    Delaunator
     nanoflann
     bhtsne)
 

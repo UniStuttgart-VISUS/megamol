@@ -105,7 +105,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 
 1. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
+    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
 2. First, download the source code from GitHub:
 
@@ -398,7 +398,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 Alternatively, you can also open an empty MegaMol rendering window and load the above example project script file via the menu `File / Load Project`.  
 
-All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
+All available options provided via the graphical user interface are described separately in the readme file of the [GUI Service](../frontend/services/gui).
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -553,7 +553,7 @@ Here you can see the example project script `..\examples\testspheres.lua`:
 Project files can easily be created using the built in *Configurator*.
 It can be opened via the menu `Windows / Configurator`.
 You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
-A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
+A detailed description of the configurator can be found in the readme file of the [GUI Service](../frontend/services/gui#configurator).
 
 <!-- TODO:
 Add more ... ?

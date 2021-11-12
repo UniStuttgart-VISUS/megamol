@@ -5,6 +5,9 @@ trigger:
 pr:
 - master
 
+variables:
+  enablePlugins: '-DBUILD_PLUGIN_MMADIOS=ON -DBUILD_PLUGIN_ASTRO=OFF -DBUILD_PLUGIN_IMAGE=OFF -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=OFF'
+
 jobs:
 - job: Windows
   strategy:
@@ -24,23 +27,23 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - task: PowerShell@2
-    displayName: 'Install Python'
-    inputs:
-      targetType: 'inline'
-      script: |
-        $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
-        $python_path = Join-Path (Get-Item .).FullName "python_tmp"
-        $tmp = New-TemporaryFile
-        $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
-        Invoke-WebRequest -OutFile $tmp $pythonUrl
-        Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
-        $tmp | Remove-Item
-        echo "##vso[task.prependpath]$python_path"
+  #- task: PowerShell@2
+  #  displayName: 'Install Python'
+  #  inputs:
+  #    targetType: 'inline'
+  #    script: |
+  #      $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
+  #      $python_path = Join-Path (Get-Item .).FullName "python_tmp"
+  #      $tmp = New-TemporaryFile
+  #      $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
+  #      Invoke-WebRequest -OutFile $tmp $pythonUrl
+  #      Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
+  #      $tmp | Remove-Item
+  #      echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64"'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(enablePlugins)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -49,11 +52,12 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      'GCC9 / Make / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Unix Makefiles'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Make / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Unix Makefiles'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9
@@ -83,7 +87,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration)'
+      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(enablePlugins)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -101,6 +105,10 @@ jobs:
     displayName: 'Run File Checks'
     inputs:
       filePath: '.ci/check_files.sh'
+  - task: Bash@3
+    displayName: 'Run Plugin Structure Checks'
+    inputs:
+      filePath: '.ci/check_plugins.sh'
 
 - job: ClangFormatCheck
   displayName: 'Run ClangFormat Check'

@@ -175,7 +175,7 @@ bool PDBWriter::Start(void) {
 #endif
 
     // Create output directories if necessary
-    if (!this->createDirectories(this->outDirSlot.Param<core::param::StringParam>()->Value())) {
+    if (!this->createDirectories(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())) {
         this->jobDone = true;
         return false;
     }
@@ -291,16 +291,16 @@ bool PDBWriter::writePDB(MolecularDataCall *mol) {
          ss.fill('0');
          std::string digits;
          ss << mol->FrameID();
-         filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()); // Set output folder
+         filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
          filename.append("/");
-         filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().PeekBuffer()).PeekBuffer()); // Set prefix
+         filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str()).PeekBuffer()); // Set prefix
          filename.append(".");
          filename.append((ss.str()).c_str());
          filename.append(".pdb");
      } else {  // Otherwise, use filename prefix and suffix
-         filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value().PeekBuffer())); // Set output folder
+         filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
          filename.append("/");
-         filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().PeekBuffer()).PeekBuffer()); // Set prefix
+         filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str()).PeekBuffer()); // Set prefix
          filename.append(".pdb");
      }
 
@@ -486,16 +486,16 @@ bool PDBWriter::writePQR(MolecularDataCall *mol) {
         ss.fill('0');
         std::string digits;
         ss << mol->FrameID();
-        filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()); // Set output folder
+        filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
         filename.append("/");
-        filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()); // Set prefix
+        filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str())); // Set prefix
         filename.append(".");
         filename.append((ss.str()).c_str());
         filename.append(".pqr");
     } else {  // Otherwise, use filename prefix and suffix
-        filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()); // Set output folder
+        filename.append(StringA(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
         filename.append("/");
-        filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value()).PeekBuffer()); // Set prefix
+        filename.append(StringA(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str())); // Set prefix
         filename.append(".pqr");
     }
 

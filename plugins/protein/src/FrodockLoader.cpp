@@ -144,7 +144,7 @@ bool FrodockLoader::getData( core::Call& call) {
     // try to load the input file
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     }
 
     // variables for parameter transfer
@@ -158,11 +158,11 @@ bool FrodockLoader::getData( core::Call& call) {
     vislib::StringA receptorFilename( frodockInput.receptor);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
-    if( !fileServerNameSlot.Param<param::StringParam>()->Value().IsEmpty() ) {
+    if( !fileServerNameSlot.Param<param::StringParam>()->Value().empty() ) {
         if( receptorFilename.StartsWith( '/') ) {
             receptorFilename.Replace( '/', '\\');
         }
-        receptorFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value());
+        receptorFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value().c_str());
         receptorFilename.Prepend( "\\\\");
     }
 #endif
@@ -175,7 +175,7 @@ bool FrodockLoader::getData( core::Call& call) {
         paramSlotName += "::filename";
         paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
         if( paramSlot ) {
-            paramSlot->Param<param::FilePathParam>()->SetValue( A2T( receptorFilename));
+            paramSlot->Param<param::FilePathParam>()->SetValue(receptorFilename.PeekBuffer());
         }
         // get and set stride param
         paramSlotName = receptor->PeekCalleeSlot()->Parent()->FullName();
@@ -198,11 +198,11 @@ bool FrodockLoader::getData( core::Call& call) {
     vislib::StringA ligandFilename( frodockInput.ligand);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
-    if( !fileServerNameSlot.Param<param::StringParam>()->Value().IsEmpty() ) {
+    if( !fileServerNameSlot.Param<param::StringParam>()->Value().empty() ) {
         if( ligandFilename.StartsWith( '/') ) {
             ligandFilename.Replace( '/', '\\');
         }
-        ligandFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value());
+        ligandFilename.Prepend( fileServerNameSlot.Param<param::StringParam>()->Value().c_str());
         ligandFilename.Prepend( "\\\\");
     }
 #endif
@@ -215,7 +215,7 @@ bool FrodockLoader::getData( core::Call& call) {
         paramSlotName += "::filename";
         paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
         if( paramSlot ) {
-            paramSlot->Param<param::FilePathParam>()->SetValue( A2T( ligandFilename));
+            paramSlot->Param<param::FilePathParam>()->SetValue(ligandFilename.PeekBuffer());
         }
         // get and set stride param
         paramSlotName = ligand->PeekCalleeSlot()->Parent()->FullName();
@@ -348,7 +348,7 @@ bool FrodockLoader::getExtent( core::Call& call) {
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     }
 
     // get pointer to ligand MolecularDataCall
@@ -501,7 +501,7 @@ void FrodockLoader::loadFile( const vislib::TString& filename) {
     try {
         // connect to frodock
         this->socket.Connect( vislib::net::IPEndPoint::CreateIPv4(
-            T2A( this->hostAddressSlot.Param<param::StringParam>()->Value()),
+            T2A( this->hostAddressSlot.Param<param::StringParam>()->Value().c_str()),
             this->portSlot.Param<param::IntParam>()->Value()));    
         // send input data
         this->socket.Send( &(frodockInput), sizeof(FrodockInput), vislib::net::Socket::TIMEOUT_INFINITE, 0, true);

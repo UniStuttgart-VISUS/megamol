@@ -21,6 +21,7 @@ namespace megamol {
 namespace core {
 namespace param {
 
+    /// See MegaMol development guide for utf8 related explanations ///
 
     /**
      * class for file path parameter objects
@@ -41,10 +42,7 @@ namespace param {
         };
 
         typedef uint32_t Flags_t;
-
         typedef std::vector<std::string> Extensions_t;
-
-        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -53,7 +51,9 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
+        FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
         FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -66,7 +66,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        void Definition(vislib::RawStorage& outDef) const override;
+        std::string Definition() const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -77,7 +77,7 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        bool ParseValue(const vislib::TString& v) override;
+        bool ParseValue(std::string const& v) override;
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag
@@ -87,22 +87,27 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
+        void SetValue(const std::filesystem::path& v, bool setDirty = true);
         void SetValue(const std::string& v, bool setDirty = true);
-        void SetValue(const vislib::TString& v, bool setDirty = true);
+        void SetValue(const char* v, bool setDirty = true);
 
         /**
          * Gets the value of the parameter utf8 encoded for loading of files.
          *
          * @return The value of the parameter
          */
-        vislib::TString Value() const;
+        std::filesystem::path Value() const {
+            return this->value;
+        }
 
         /**
          * Returns the value of the parameter as utf8 decoded string for storing in project file.
          *
          * @return The value of the parameter as string.
          */
-        vislib::TString ValueString() const override;
+        std::string ValueString() const override {
+            return this->value.generic_u8string();
+        }
 
         /**
          * Gets the file path parameter flags
@@ -120,15 +125,6 @@ namespace param {
          */
         inline const Extensions_t& GetExtensions() const {
             return this->extensions;
-        }
-
-        /**
-         * Register static notifications.
-         */
-        bool RegisterNotifications(const RegisterNotificationCallback_t& pc);
-        // Check if registration is required
-        inline bool RegisterNotifications() const {
-            return !this->registered_notifications;
         }
 
         /**
@@ -151,11 +147,6 @@ namespace param {
 
         /** The file or directory path */
         std::filesystem::path value;
-
-        /** Indicates whether notifications are already registered or not (should be done only once) */
-        bool registered_notifications;
-        /** Flags for opening specific notifications */
-        std::map<Flags_t, std::shared_ptr<bool>> open_notification;
     };
 
 

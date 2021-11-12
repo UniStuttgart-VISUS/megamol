@@ -7,6 +7,8 @@
 #ifndef MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
 #define MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
 
+#include <glm/glm.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"

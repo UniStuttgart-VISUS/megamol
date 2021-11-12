@@ -9,7 +9,7 @@
 //
 
 #include "stdafx.h"
-#include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 
 using namespace megamol;
 using namespace megamol::protein;

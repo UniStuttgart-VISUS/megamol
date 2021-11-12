@@ -1,21 +1,19 @@
-/*
- * CallAutoDescription.h
- * Copyright (C) 2008 - 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOLCORE_FACTORIES_CALLAUTODESCRIPTION_H_INCLUDED
 #define MEGAMOLCORE_FACTORIES_CALLAUTODESCRIPTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/factories/CallDescription.h"
+#include "CallDescription.h"
 
+#include <string>
+#include <vector>
 
-namespace megamol {
-namespace core {
-namespace factories {
+namespace megamol::core::factories {
 
     /**
      * Description class for the call T
@@ -23,46 +21,19 @@ namespace factories {
     template<class T>
     class CallAutoDescription : public CallDescription {
     public:
-
-        typedef T CallT;
-
         /** Ctor. */
-        CallAutoDescription(void) : CallDescription() {
-            // intentionally empty
-        }
+        CallAutoDescription() : CallDescription() {}
 
         /** Dtor. */
-        virtual ~CallAutoDescription(void) {
-            // intentionally empty
-        }
+        ~CallAutoDescription() override = default;
 
         /**
          * Answer the name of the objects of this description.
          *
          * @return The name of the objects of this description.
          */
-        virtual const char *ClassName(void) const {
+        const char* ClassName() const override {
             return T::ClassName();
-        }
-
-        /**
-         * Clones this object
-         *
-         * @return The new clone
-         */
-        virtual CallDescription *Clone(void) const {
-            return new CallAutoDescription<T>();
-        }
-
-        /**
-         * Creates a new call object.
-         *
-         * @return The newly created call object.
-         */
-        virtual Call * CreateCall(void) const {
-            T *thing = new T();
-            thing->SetClassName(this->ClassName());
-            return this->describeCall(thing);
         }
 
         /**
@@ -70,8 +41,24 @@ namespace factories {
          *
          * @return A human readable description of the module.
          */
-        virtual const char *Description(void) const {
+        const char* Description() const override {
             return T::Description();
+        }
+
+        /**
+         * Creates a new call object.
+         *
+         * @return The newly created call object.
+         */
+        Call* CreateCall() const override {
+            T* c = new T();
+            c->SetClassName(this->ClassName());
+            std::vector<std::string> callbacks(this->FunctionCount());
+            for (uint32_t x = 0; x < this->FunctionCount(); ++x) {
+                callbacks[x] = this->FunctionName(x);
+            }
+            c->SetCallbackNames(callbacks);
+            return this->describeCall(c);
         }
 
         /**
@@ -79,7 +66,7 @@ namespace factories {
          *
          * @return The number of functions used for this call.
          */
-        virtual unsigned int FunctionCount(void) const {
+        unsigned int FunctionCount() const override {
             return T::FunctionCount();
         }
 
@@ -90,7 +77,7 @@ namespace factories {
          *
          * @return The name of the requested function.
          */
-        virtual const char * FunctionName(unsigned int idx) const {
+        const char* FunctionName(unsigned int idx) const override {
             return T::FunctionName(idx);
         }
 
@@ -103,8 +90,8 @@ namespace factories {
          * @return 'true' if 'call' is described by this description,
          *         'false' otherwise.
          */
-        virtual bool IsDescribing(const Call * call) const {
-            return dynamic_cast<const T*>(call) != NULL;
+        bool IsDescribing(const Call* call) const override {
+            return dynamic_cast<const T*>(call) != nullptr;
         }
 
         /**
@@ -113,16 +100,13 @@ namespace factories {
          * @param tar The targeted object
          * @param src The source object
          */
-        virtual void AssignmentCrowbar(Call * tar, const Call * src) const {
+        void AssignmentCrowbar(Call* tar, const Call* src) const override {
             T* t = dynamic_cast<T*>(tar);
             const T* s = dynamic_cast<const T*>(src);
             *t = *s;
         }
-
     };
 
-} /* end namespace factories */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::factories
 
-#endif /* MEGAMOLCORE_CALLAUTODESCRIPTION_H_INCLUDED */
+#endif // MEGAMOLCORE_FACTORIES_CALLAUTODESCRIPTION_H_INCLUDED

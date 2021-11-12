@@ -8,19 +8,26 @@
 #include "stdafx.h"
 #include "MSMSGenus0Generator.h"
 #include <fstream>
-#include "Color.h"
+#include "protein/Color.h"
+
+
+
+
+
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/log/Log.h"
+
 
 
 using namespace megamol;
@@ -34,26 +41,26 @@ using namespace megamol::protein;
  * MSMSGenus0Generator::MSMSGenus0Generator
  */
 MSMSGenus0Generator::MSMSGenus0Generator(void)
-    : core::Module()
-    , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
-    , datahash(0)
-    , getDataSlot("getdata", "The slot publishing the loaded data")
-    , molDataSlot("moldata", "The slot requesting molecular data")
-    , bsDataSlot("getBindingSites", "The slot requesting binding site data")
-    , perAtomDataSlot("getPerAtomData", "The slot requesting per-atom data")
-    , filenameSlot("filename", "The path to the file to load (without file extension)")
-    , msmsDetailParam("MSMS_detail", "The detail level for the (optional) MSMS computation")
-    , msmsStartingRadiusParam("MSMS_startingRadius", "The probe radius for the (optional) MSMS computation")
-    , msmsMaxTryNumParam("MSMS_maxTryNum", "The maximum number of trys to get a proper genus 0 mesh")
-    , msmsStepSizeParam("MSMS_stepSize", "The size of the increment of the radius to reach a genus 0 mesh")
-    , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
-    , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-    , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-    , colorWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-    , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
-    , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
-    , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
-    , prevTime(-1) {
+        : core::Module()
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , datahash(0)
+        , getDataSlot("getdata", "The slot publishing the loaded data")
+        , molDataSlot("moldata", "The slot requesting molecular data")
+        , bsDataSlot("getBindingSites", "The slot requesting binding site data")
+        , perAtomDataSlot("getPerAtomData", "The slot requesting per-atom data")
+        , filenameSlot("filename", "The path to the file to load (without file extension)")
+        , msmsDetailParam("MSMS_detail", "The detail level for the (optional) MSMS computation")
+        , msmsStartingRadiusParam("MSMS_startingRadius", "The probe radius for the (optional) MSMS computation")
+        , msmsMaxTryNumParam("MSMS_maxTryNum", "The maximum number of trys to get a proper genus 0 mesh")
+        , msmsStepSizeParam("MSMS_stepSize", "The size of the increment of the radius to reach a genus 0 mesh")
+        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
+        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
+        , colorWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
+        , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
+        , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
+        , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
+        , prevTime(-1) {
     // the data out slot
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetData", &MSMSGenus0Generator::getDataCallback);
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetExtent", &MSMSGenus0Generator::getExtentCallback);
@@ -72,9 +79,10 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     this->MakeSlotAvailable(&this->filenameSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
+    std::string filename("colors.txt");
     Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    this->colorTableFileParam.SetParameter(
+        new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // MSMS detail parameter
@@ -95,8 +103,8 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // coloring modes
-    param::EnumParam* cm0 = new param::EnumParam(int(Color::CHAIN));
-    param::EnumParam* cm1 = new param::EnumParam(int(Color::ELEMENT));
+    param::EnumParam* cm0 = new param::EnumParam(int(Color::ColoringMode::CHAIN));
+    param::EnumParam* cm1 = new param::EnumParam(int(Color::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     PerAtomFloatCall* pa = new PerAtomFloatCall();
@@ -104,8 +112,8 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     Color::ColoringMode cMode;
     for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs, pa); ++cCnt) {
         cMode = Color::GetModeByIndex(mol, bs, pa, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -120,15 +128,15 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     this->MakeSlotAvailable(&this->colorWeightParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 }
 
@@ -136,7 +144,9 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
 /*
  * MSMSGenus0Generator::~MSMSGenus0Generator
  */
-MSMSGenus0Generator::~MSMSGenus0Generator(void) { this->Release(); }
+MSMSGenus0Generator::~MSMSGenus0Generator(void) {
+    this->Release();
+}
 
 
 /*
@@ -161,7 +171,8 @@ void MSMSGenus0Generator::release(void) {
  */
 bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     CallTriMeshData* ctmd = dynamic_cast<CallTriMeshData*>(&caller);
-    if (ctmd == NULL) return false;
+    if (ctmd == NULL)
+        return false;
 
     float probeRadius = this->msmsStartingRadiusParam.Param<param::FloatParam>()->Value();
     float stepSize = this->msmsStepSizeParam.Param<param::FloatParam>()->Value();
@@ -174,16 +185,18 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                probeRadius);
             this->isGenus0(0, &genus);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
         }
-        if (genus != 0) return false;
+        if (genus != 0)
+            return false;
     }
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() &&
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty() &&
         // this->prevTime != int(ctmd->FrameID())) {
         this->obj.Count() == ctmd->FrameCount() && this->obj[ctmd->FrameID()]->GetVertexCount() == 0) {
 
@@ -198,15 +211,15 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
             probeRadius += stepSize;
             step++;
         }
-        if (genus != 0) return false;
+        if (genus != 0)
+            return false;
     }
 
     PerAtomFloatCall* pa = this->perAtomDataSlot.CallAs<PerAtomFloatCall>();
     if (pa) {
         pa->SetFrameID(ctmd->FrameID());
         // try to call data
-        if ((*pa)(PerAtomFloatCall::CallForGetFloat)) {
-        }
+        if ((*pa)(PerAtomFloatCall::CallForGetFloat)) {}
     }
 
     // try to call molecular data and compute colors
@@ -237,14 +250,14 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 vislib::Array<float> atomColorTable2;
 
                 Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
@@ -274,7 +287,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     dist = sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
                                 pow(centroid[1] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1], 2) +
                                 pow(centroid[2] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 2], 2));
-                    if (dist > max_dist) max_dist = dist;
+                    if (dist > max_dist)
+                        max_dist = dist;
                 }
                 steps = max_dist / float(anz_cols);
 
@@ -359,8 +373,10 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 float weight1 = 1.0f - weight0;
 
                 // Clamp weights to zero
-                if (weight0 < 0.0) weight0 = 0.0;
-                if (weight1 < 0.0) weight1 = 0.0;
+                if (weight0 < 0.0)
+                    weight0 = 0.0;
+                if (weight1 < 0.0)
+                    weight1 = 0.0;
 
                 // Normalize weights
                 weight0 = weight0 / (weight0 + weight1);
@@ -379,7 +395,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
 
                     // create hightmap colours or read per atom colours
-                    if (currentColoringMode0 == Color::HEIGHTMAP_COL || currentColoringMode0 == Color::HEIGHTMAP_VAL) {
+                    if (currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_COL ||
+                        currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -391,7 +408,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode0 == Color::HEIGHTMAP_COL) {
+                        if (currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_COL) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(
@@ -416,7 +433,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                             static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 2] * 255);
                     }
 
-                    if (currentColoringMode1 == Color::HEIGHTMAP_COL || currentColoringMode1 == Color::HEIGHTMAP_VAL) {
+                    if (currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_COL ||
+                        currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -428,7 +446,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode1 == Color::HEIGHTMAP_COL) {
+                        if (currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_COL) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(
@@ -487,7 +505,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
  */
 bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
     CallTriMeshData* ctmd = dynamic_cast<CallTriMeshData*>(&caller);
-    if (ctmd == NULL) return false;
+    if (ctmd == NULL)
+        return false;
 
     unsigned int frameCnt = 1;
 
@@ -500,18 +519,20 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                probeRadius);
             this->isGenus0(0, &genus);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
         }
-        if (genus > 0) return false;
+        if (genus > 0)
+            return false;
     }
 
     ctmd->SetDataHash(this->datahash);
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
             // try to call for extent
@@ -621,7 +642,8 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
         size_t j = 0;
         for (unsigned int i = 3; i < vertFile.Count(); i++) {
             line = vertFile.Line(i);
-            if (line.IsEmpty()) continue;
+            if (line.IsEmpty())
+                continue;
             if (j >= this->vertexCount) {
                 Log::DefaultLog.WriteError(
                     "Too many vertices in MSMS file %s (line %i).", vertFilename.PeekBuffer(), i);
@@ -671,7 +693,8 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
         j = 0;
         for (unsigned int i = 3; i < faceFile.Count(); i++) {
             line = faceFile.Line(i);
-            if (line.IsEmpty()) continue;
+            if (line.IsEmpty())
+                continue;
             if (j >= this->faceCount) {
                 Log::DefaultLog.WriteError("Too many faces in MSMS file %s (line %i).", faceFilename.PeekBuffer(), i);
                 return false;

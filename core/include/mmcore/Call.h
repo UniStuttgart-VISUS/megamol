@@ -12,9 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+#include "CallCapabilities.h"
+#ifdef PROFILING
+#include "CallProfiling.h"
+#endif
 
 #include "mmcore/api/MegaMolCore.std.h"
-
 
 namespace megamol {
 namespace core {
@@ -96,8 +102,23 @@ namespace core {
             return this->className;
         }
 
-    private:
+        const CallCapabilities& GetCapabilities() const {
+            return caps;
+        }
 
+        void SetCallbackNames(std::vector<std::string> names);
+
+        const std::string& GetCallbackName(uint32_t idx) const;
+
+        uint32_t GetCallbackCount() const {
+            return static_cast<uint32_t>(callback_names.size());
+        }
+
+#ifdef PROFILING
+        const CallProfiling& GetProfiling() const { return profiling; }
+#endif
+
+    private:
         /** The callee connected by this call */
         CalleeSlot *callee;
 
@@ -109,6 +130,17 @@ namespace core {
         /** The function id mapping */
         unsigned int *funcMap;
 
+        std::vector<std::string> callback_names;
+
+        inline static std::string err_out_of_bounds = "index out of bounds";
+
+#ifdef PROFILING
+        friend class PerformanceQueryManager;
+
+        CallProfiling profiling;
+#endif // PROFILING
+    protected:
+        CallCapabilities caps;
     };
 
 

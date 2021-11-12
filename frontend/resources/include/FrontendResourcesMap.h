@@ -8,6 +8,7 @@
 #pragma once
 
 #include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <vector>
 #include <map>
@@ -32,8 +33,7 @@ struct FrontendResourcesMap {
                     + "\n\tbecause that would lead to ambiguous map entries for your resources "
                     + "\n\tstopping program execution ";
 
-                std::cout << msg << std::endl;
-                std::cerr << msg << std::endl;
+                megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
                 std::exit(1);
             } else {
                 this->resources.insert({hash, resource});
@@ -45,6 +45,16 @@ struct FrontendResourcesMap {
     template <typename ResourceType>
     ResourceType const& get() const {
         return resources.at(typeid(ResourceType).hash_code()).getResource<ResourceType>();
+    }
+
+    template <typename ResourceType>
+    optional<const ResourceType> getOptional() const {
+        auto key = typeid(ResourceType).hash_code();
+        if (resources.count(key) > 0) {
+            return resources.at(typeid(ResourceType).hash_code()).getOptionalResource<ResourceType>();
+        } else {
+            return std::nullopt;
+        }
     }
 
     private:

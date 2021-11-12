@@ -55,10 +55,10 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
 
-    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &AstroSchulz::getData);
-    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &AstroSchulz::getHash);
+    this->slotTableData.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(0), &AstroSchulz::getData);
+    this->slotTableData.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(1), &AstroSchulz::getHash);
     this->MakeSlotAvailable(&this->slotTableData);
 
     this->paramFullRange << new core::param::BoolParam(false);
@@ -231,7 +231,7 @@ void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, con
  * megamol::astro::AstroSchulz::getData
  */
 bool megamol::astro::AstroSchulz::getData(core::Call& call) {
-    using megamol::stdplugin::datatools::table::TableDataCall;
+    using megamol::datatools::table::TableDataCall;
     using megamol::core::utility::log::Log;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
@@ -288,7 +288,7 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
  */
 bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
     using namespace core::param;
-    using megamol::stdplugin::datatools::table::TableDataCall;
+    using megamol::datatools::table::TableDataCall;
     using megamol::core::utility::log::Log;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
@@ -814,7 +814,7 @@ void megamol::astro::AstroSchulz::getData(float* dst, const AstroDataCall& ast) 
  * megamol::astro::AstroSchulz::getHash
  */
 bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
-    using megamol::stdplugin::datatools::table::TableDataCall;
+    using megamol::datatools::table::TableDataCall;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     auto tab = dynamic_cast<TableDataCall*>(&call);
