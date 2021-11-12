@@ -53,12 +53,14 @@ namespace infovis_gl {
 
         void updateSize(int a, int w, int h);
 
-        void setupCamera(core::view::Camera& cam);
+        void setupCamera(core::view::Camera& cam, int width, int height, int a);
 
         void reconstruct(std::shared_ptr<glowl::FramebufferObject>& fbo, int a);
 
     private:
         core::param::ParamSlot amortLevelParam;
+        core::param::ParamSlot debugParam;
+        core::param::ParamSlot debugFloatParam;
 
         std::unique_ptr<glowl::GLSLProgram> shader_;
         std::shared_ptr<glowl::FramebufferObject> lowResFBO_;

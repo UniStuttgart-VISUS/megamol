@@ -4,16 +4,22 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::infovis_gl;
 using megamol::core::utility::log::Log;
 
 ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
-        : BaseAmortizedRenderer2D(), amortLevelParam("AmortLevel", "Level of Amortization") {
+        : BaseAmortizedRenderer2D(), amortLevelParam("AmortLevel", "Level of Amortization"), debugParam("Debug", "some"), debugFloatParam("debugInt", "some") {
 
     this->amortLevelParam << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&amortLevelParam);
+    this->debugParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&debugParam);
+    this->debugFloatParam << new core::param::FloatParam(0.0,0.0);
+    this->MakeSlotAvailable(&debugFloatParam);
 }
 
 ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
@@ -70,7 +76,7 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
     lowResFBO_->bind();
     glClear(GL_COLOR_BUFFER_BIT);
 
-    setupCamera(cam);
+    setupCamera(cam, w, h, a);
 
     nextRendererCall.SetFramebuffer(lowResFBO_);
     nextRendererCall.SetCamera(cam);
@@ -92,7 +98,7 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
         }
     }
 
-    lowResFBO_->resize(w / a, h / a);
+    lowResFBO_->resize(ceil(float(w) / float(a)), ceil(float(h) / float(a)));
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -100,10 +106,10 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
 }
 
-void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam) {
+void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
     auto const projViewMx = cam.getProjectionMatrix() * cam.getViewMatrix();
 
-    auto const intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
+    auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets_[frameIdx_].x,
         -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0);
 
@@ -112,6 +118,27 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam) {
 
     auto p = cam.get<core::view::Camera::Pose>();
     p.position = p.position + 0.5f * adj_offset;
+    
+
+    if (!debugParam.Param<core::param::BoolParam>()->Value()) {
+        float hAdj = ceil(float(height) / float(a)) / (float(height) / float(a));
+        float wAdj = ceil(float(width) / float(a)) / (float(width) / float(a));
+
+        float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
+        float wOffs = wAdj  * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
+        p.position =
+            p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
+
+        intrinsics.frustrum_height =
+            hAdj * intrinsics.frustrum_height.value();
+        intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
+        cam.setOrthographicProjection(intrinsics);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "%f",
+            hAdj);
+
+        
+    }
     cam.setPose(p);
 }
 
