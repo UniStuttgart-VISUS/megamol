@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>

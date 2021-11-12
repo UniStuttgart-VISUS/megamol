@@ -21,7 +21,8 @@ if(BUILD_CORE)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources  
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph

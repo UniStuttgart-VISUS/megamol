@@ -33,12 +33,11 @@ if(BUILD_CORE)
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${version_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   if (ENABLE_GL)
-  target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include" "${MEGAMOL_VISLIB_GL_DIR}/include" "${MEGAMOL_CORE_GL_DIR}/include")
-  else()
-  target_include_directories(${PROJECT_NAME}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
+    target_include_directories(${PROJECT_NAME} PUBLIC "${MEGAMOL_VISLIB_GL_DIR}/include" "${MEGAMOL_CORE_GL_DIR}/include")
   endif()
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq
