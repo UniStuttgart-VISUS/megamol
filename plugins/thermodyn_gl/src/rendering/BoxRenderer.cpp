@@ -4,7 +4,7 @@
 #include "mmcore/CoreInstance.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "vislib/math/Matrix.h"
@@ -32,10 +32,10 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() { this->Release();
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
-    core::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
+    core_gl::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
 
     try {
-        vislib::graphics::gl::ShaderSource vert, frag;
+        vislib_gl::graphics::gl::ShaderSource vert, frag;
 
         factory.MakeShaderSource("therm_box::vertex", vert);
         factory.MakeShaderSource("therm_box::fragment", frag);
@@ -43,12 +43,12 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
         boxShader_.Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count());
 
         boxShader_.Link();
-    } catch (vislib::graphics::gl::GLSLShader::CompileException& ce) {
+    } catch (vislib_gl::graphics::gl::GLSLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "BoxRenderer: Unable to compile therm_box shader: %s ... %s\n",
-            vislib::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+            vislib_gl::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
-    } catch (vislib::graphics::gl::OpenGLException& oe) {
+    } catch (vislib_gl::graphics::gl::OpenGLException& oe) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "BoxRenderer: Failed to create therm_box shader: %s\n", oe.GetMsgA());
 
@@ -72,7 +72,7 @@ void megamol::thermodyn_gl::rendering::BoxRenderer::release() {
 }
 
 
-bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core::view::CallRender3DGL& call) {
+bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     std::vector<thermodyn::BoxDataCall::box_entry_t> boxes;
 
     thermodyn::BoxDataCall* inBoxCall = nullptr;
@@ -149,7 +149,7 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core::view::
 }
 
 
-bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     thermodyn::BoxDataCall* inBoxCall = nullptr;
     geocalls::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<thermodyn::BoxDataCall>()) != nullptr) {

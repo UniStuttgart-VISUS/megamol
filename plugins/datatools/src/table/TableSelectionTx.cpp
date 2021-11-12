@@ -13,6 +13,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
 
 using namespace megamol::datatools;
 using namespace megamol::datatools::table;
@@ -36,18 +37,18 @@ TableSelectionTx::TableSelectionTx()
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
-    this->flagStorageReadInSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->flagStorageReadInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageReadInSlot);
 
-    this->flagStorageWriteInSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->flagStorageWriteInSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageWriteInSlot);
 
-    this->flagStorageReadOutSlot.SetCallback(core::FlagCallRead_GL::ClassName(), core::FlagCallRead_GL::FunctionName(core::FlagCallRead_GL::CallGetData), &TableSelectionTx::readDataCallback);
-    this->flagStorageReadOutSlot.SetCallback(core::FlagCallRead_GL::ClassName(), core::FlagCallRead_GL::FunctionName(core::FlagCallRead_GL::CallGetMetaData), &TableSelectionTx::readMetaDataCallback);
+    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(), core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetData), &TableSelectionTx::readDataCallback);
+    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(), core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetMetaData), &TableSelectionTx::readMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageReadOutSlot);
 
-    this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_GL::ClassName(), core::FlagCallWrite_GL::FunctionName(core::FlagCallWrite_GL::CallGetData), &TableSelectionTx::writeDataCallback);
-    this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_GL::ClassName(), core::FlagCallWrite_GL::FunctionName(core::FlagCallWrite_GL::CallGetMetaData), &TableSelectionTx::writeMetaDataCallback);
+    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(), core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetData), &TableSelectionTx::writeDataCallback);
+    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(), core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetMetaData), &TableSelectionTx::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageWriteOutSlot);
 
     this->updateSelectionParam << new core::param::BoolParam(true);
@@ -96,7 +97,7 @@ void TableSelectionTx::release() {
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
-    auto *flagsReadOutCall = dynamic_cast<core::FlagCallRead_GL*>(&call);
+    auto *flagsReadOutCall = dynamic_cast<core_gl::FlagCallRead_GL*>(&call);
     if (flagsReadOutCall == nullptr) {
         return false;
     }
@@ -109,9 +110,9 @@ bool TableSelectionTx::readDataCallback(core::Call& call) {
         return false;
     }
 
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
+    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
 
-    (*flagsReadInCall)(core::FlagCallRead_GL::CallGetData);
+    (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
     flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
 
     return true;
@@ -123,7 +124,7 @@ bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::writeDataCallback(core::Call& call) {
-    auto *flagsWriteOutCall = dynamic_cast<core::FlagCallWrite_GL*>(&call);
+    auto *flagsWriteOutCall = dynamic_cast<core_gl::FlagCallWrite_GL*>(&call);
     if (flagsWriteOutCall == nullptr) {
         return false;
     }
@@ -132,10 +133,10 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
         return false;
     }
 
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
+    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
     flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
-    (*flagsWriteInCall)(core::FlagCallWrite_GL::CallGetData);
+    (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
 
     // Send data
 
@@ -201,8 +202,8 @@ bool TableSelectionTx::writeMetaDataCallback(core::Call& call) {
 
 bool TableSelectionTx::validateCalls() {
     auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
+    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
     if (tableInCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a table!");
@@ -234,8 +235,8 @@ bool TableSelectionTx::validateSelectionUpdate() {
         return true;
     }
 
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_GL>();
-    (*flagsReadInCall)(core::FlagCallRead_GL::CallGetData);
+    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
     auto flagCollection = flagsReadInCall->getData();
     auto version = flagsReadInCall->version();
 
@@ -281,9 +282,9 @@ bool TableSelectionTx::validateSelectionUpdate() {
 
     flagCollection->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, flags_data, GL_DYNAMIC_DRAW);
 
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_GL>();
+    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
     flagsWriteInCall->setData(flagCollection, version + 1);
-    (*flagsWriteInCall)(core::FlagCallWrite_GL::CallGetData);
+    (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
 
     return true;
 }

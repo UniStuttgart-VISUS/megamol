@@ -11,8 +11,8 @@
 
 
 #include "RuntimeConfig.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
-#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "cinematic/Keyframe.h"
@@ -26,7 +26,7 @@ namespace cinematic_gl {
 	/**
 	* Timeline rendering.
 	*/
-	class TimeLineRenderer : public core::view::Renderer2DModuleGL {
+	class TimeLineRenderer : public core_gl::view::Renderer2DModuleGL {
 	public:
 
         std::vector<std::string> requested_lifetime_resources() {
@@ -91,7 +91,7 @@ namespace cinematic_gl {
         *
         * @return The return value of the function.
         */
-        virtual bool GetExtents(core::view::CallRender2DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
 
         /**
         * The render callback.
@@ -100,7 +100,7 @@ namespace cinematic_gl {
         *
         * @return The return value of the function.
         */
-        virtual bool Render(core::view::CallRender2DGL& call);
+        virtual bool Render(core_gl::view::CallRender2DGL& call);
 
         /** 
         * The mouse button pressed/released callback. 

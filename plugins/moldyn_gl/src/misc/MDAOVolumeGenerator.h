@@ -5,11 +5,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol {
@@ -31,7 +31,7 @@ namespace misc {
         void InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray);
         void EndInsertion();
 
-        void SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory *factory);
+        void SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory *factory);
 
         GLuint GetVolumeTextureHandle();
         unsigned int GetDataVersion();
@@ -42,9 +42,9 @@ namespace misc {
 
     private:
         GLuint fboHandle, volumeHandle;
-        vislib::graphics::gl::GLSLGeometryShader volumeShader;
-        vislib::graphics::gl::GLSLComputeShader mipmapShader;
-        megamol::core::utility::ShaderSourceFactory *factory;
+        vislib_gl::graphics::gl::GLSLGeometryShader volumeShader;
+        vislib_gl::graphics::gl::GLSLComputeShader mipmapShader;
+        megamol::core_gl::utility::ShaderSourceFactory *factory;
         unsigned int dataVersion;
         bool computeAvailable, clearAvailable;
 

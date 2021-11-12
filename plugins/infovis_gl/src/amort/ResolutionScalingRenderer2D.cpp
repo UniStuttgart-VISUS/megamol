@@ -53,8 +53,8 @@ void ResolutionScalingRenderer2D::releaseImpl() {
     // nothing to do
 }
 
-bool ResolutionScalingRenderer2D::renderImpl(core::view::CallRender2DGL& nextRendererCall,
-    std::shared_ptr<core::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
+bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
+    std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
 
     int a = amortLevelParam.Param<core::param::IntParam>()->Value();
     int w = fbo->getWidth();

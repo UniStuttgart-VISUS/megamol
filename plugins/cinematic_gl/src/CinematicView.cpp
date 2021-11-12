@@ -28,7 +28,7 @@ using namespace vislib;
 
 
 CinematicView::CinematicView(void)
-        : View3DGL()
+        : core_gl::view::View3DGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
         , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
         , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
@@ -123,7 +123,7 @@ CinematicView::~CinematicView(void) {
 ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     // Get update data from keyframe keeper -----------------------------------
-    auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
+    auto cr3d = this->_rhsRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
     auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
 
     // init camera

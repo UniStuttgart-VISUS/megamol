@@ -7,8 +7,11 @@
 
 #include "FrontendServiceCollection.hpp"
 
-#include <algorithm>
+#include "FrontendResourcesLookup.h"
+
+#include <numeric>
 #include <iostream>
+#include <algorithm>
 
 #include "mmcore/utility/log/Log.h"
 
@@ -79,40 +82,35 @@ namespace frontend {
                 m_serviceResources.push_back(r);
         }
 
+        megamol::frontend_resources::FrontendResourcesLookup m_resource_lookup{m_serviceResources};
+
+        bool overall_success = true;
+
         // for each servie, provide him with requested resources
-        std::vector<FrontendResource> resources;
         for_each_service {
-            resources.clear();
             auto request_names = service.get().getRequestedResourceNames();
+            auto [success, resources] = m_resource_lookup.get_requested_resources(request_names);
 
-            for (auto& name : request_names) {
-                auto modulePtr = findResource(name);
+            overall_success &= success;
 
-                if (modulePtr) {
-                    resources.push_back(*modulePtr);
-                } else {
-                    // if a requested resource can not be found we fail and should stop program execution
-                    log_error("could not find resource: \"" + name + "\" for service: " + service.get().serviceName());
-                    return false;
-                }
+            if (success) {
+                service.get().setRequestedResources(resources);
+            } else {
+                // if a requested resource can not be found we fail and should stop program execution
+                log_error("could not find all resources: for service: " + service.get().serviceName()
+                    + "\nRequests: " +
+                          std::accumulate(request_names.begin(), request_names.end(), std::string{},
+                              [](std::string const& lhs, std::string const& rhs) { return lhs + ", " + rhs; })
+                    + "\nFound Resources: " +
+                          std::accumulate(resources.begin(), resources.end(), std::string{},
+                              [](std::string const& lhs, megamol::frontend::FrontendResource const& rhs) { return lhs + ", " + rhs.getIdentifier(); })
+                );
             }
-
-            service.get().setRequestedResources(resources);
         }
 
-        return true;
+        return overall_success;
     }
 
-    FrontendResource* FrontendServiceCollection::findResource(std::string const& name) {
-        auto module_it = std::find_if(m_serviceResources.begin(), m_serviceResources.end(),
-            [&](FrontendResource const& resource) { return name == resource.getIdentifier(); });
-
-        if (module_it != m_serviceResources.end())
-            return &(*module_it);
-
-        return nullptr;
-    }
-    
     void FrontendServiceCollection::updateProvidedResources() {
         for_each_service {
             service.get().updateProvidedResources();

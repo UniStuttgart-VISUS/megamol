@@ -13,6 +13,10 @@
 #include "ImageWrapper.h"
 #include "ImagePresentationSink.h"
 
+#include "FrontendResourcesLookup.h"
+
+#include "Framebuffer_Events.h"
+
 #include <list>
 
 namespace megamol {
@@ -72,19 +76,15 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
-    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    using ImageWrapper = frontend_resources::ImageWrapper;
     using ImagePresentationSink = frontend_resources::ImagePresentationSink;
-
-    using EntryPointExecutionCallback =
-        std::function<bool(
-              void*
-            , std::vector<megamol::frontend::FrontendResource> const&
-            , ImageWrapper&
-            )>;
+    using EntryPointExecutionCallback = frontend_resources::EntryPointExecutionCallback;
+    using EntryPointRenderFunctions = frontend_resources::EntryPointRenderFunctions;
 
     struct RenderInputsUpdate {
         virtual ~RenderInputsUpdate(){};
         virtual void update() {};
+        virtual FrontendResource get_resource() { return {}; };
     };
 
 private:
@@ -92,6 +92,8 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    frontend_resources::FramebufferEvents m_global_framebuffer_events;
 
     // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
     // the ImagePresentation Service makes sure that the (lifetime and rendering) resources/dependencies requested by the module
@@ -111,20 +113,23 @@ private:
     };
     std::list<GraphEntryPoint> m_entry_points;
 
-    bool add_entry_point(std::string name, void* module_raw_ptr);
+    bool add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point);
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
 
     std::list<ImagePresentationSink> m_presentation_sinks;
+
+    void add_glfw_sink();
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
     std::tuple<
-        std::vector<FrontendResource>,
-        std::unique_ptr<RenderInputsUpdate>
+        bool, // success
+        std::vector<FrontendResource>, // resources
+        std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
     >
     map_resources(std::vector<std::string> const& requests);
-    const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
+    megamol::frontend_resources::FrontendResourcesLookup m_frontend_resources_lookup;
 
     // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
     UintPair m_window_framebuffer_size = {0, 0};
@@ -132,6 +137,8 @@ private:
     std::function<ViewportTile()> m_viewport_tile_handler;
 
     void fill_lua_callbacks();
+
+    std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
 };
 
 } // namespace frontend

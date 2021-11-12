@@ -16,7 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "kdtree.h"
 #include "mmcore/param/IntParam.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {

@@ -8,7 +8,6 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "OSPRayRenderer.h"
-#include "OSPRayToGL.h"
 
 #include "CallOSPRayTransformation.h"
 #include "OSPRayAOVSphereGeometry.h"
@@ -50,7 +49,6 @@ public:
         // register modules
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayToGL>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMeshGeometry>();

@@ -29,7 +29,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
@@ -237,7 +237,7 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
 
     void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs,

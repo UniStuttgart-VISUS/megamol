@@ -11,6 +11,7 @@ megamol_plugin(protein_gl
     trisoup
     protein_calls
     geometry_calls
+    compositing_gl
   DEPENDS_EXTERNALS
     glad
     nanoflann)

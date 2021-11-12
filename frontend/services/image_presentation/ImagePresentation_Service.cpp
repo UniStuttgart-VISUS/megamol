@@ -5,20 +5,21 @@
  * Alle Rechte vorbehalten.
  */
 
-// search/replace ImagePresentation_Service with your class name
-// you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
-#include "Framebuffer_Events.h"
 #include "GUIState.h"
 
-#include "ImageWrapper_to_GLTexture.h"
+#include "OpenGL_Context.h"
+#include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
 #include "LuaCallbacksCollection.h"
+#include "RenderInput.h"
 
-#include "mmcore/view/AbstractView_EventConsumption.h"
+#include <any>
+#include <utility>
+#include <filesystem>
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -59,26 +60,27 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
-    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, void* module_raw_ptr)   -> bool { return add_entry_point(name, module_raw_ptr); };
+    m_entry_points_registry_resource.add_entry_point =    [&](std::string name, EntryPointRenderFunctions const& entry_point)   -> bool { return add_entry_point(name, entry_point); };
     m_entry_points_registry_resource.remove_entry_point = [&](std::string name)                         -> bool { return remove_entry_point(name); };
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
 
-    m_presentation_sinks.push_back(
-        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
-
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
+        , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
+        , {"FramebufferEvents", m_global_framebuffer_events}
     };
 
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
-        , "WindowManipulation"
+        , "optional<WindowManipulation>"
         , "FramebufferEvents"
-        , "GUIState"
+        , "optional<GUIState>" // TODO: unused?
         , "RegisterLuaCallbacks"
+        , "optional<OpenGL_Context>"
+        , "ImageWrapperToPNG_ScreenshotTrigger"
     };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
@@ -144,14 +146,15 @@ const std::vector<std::string> ImagePresentation_Service::getRequestedResourceNa
 void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
 
-    m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+    m_frontend_resources_lookup = {m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>()};
 
     auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
 
+    add_glfw_sink();
+
     fill_lua_callbacks();
 }
-#define m_frontend_resources (*m_frontend_resources_ptr)
 
 void ImagePresentation_Service::updateProvidedResources() {
 }
@@ -183,6 +186,10 @@ void ImagePresentation_Service::RenderNextFrame() {
 }
 
 void ImagePresentation_Service::PresentRenderedImages() {
+    // before presenting to the sinks, we need to apply the latest global fbo size changes
+    // this way sinks can access the current fbo size as previous_state
+    m_global_framebuffer_events.clear();
+
     // pull result images into separate list
     static std::vector<ImageWrapper> wrapped_images;
     wrapped_images.clear();
@@ -198,34 +205,10 @@ void ImagePresentation_Service::PresentRenderedImages() {
     }
 }
 
-// clang-format off
-using FrontendResource = megamol::frontend::FrontendResource;
-using EntryPointExecutionCallback = megamol::frontend::ImagePresentation_Service::EntryPointExecutionCallback;
-
-using EntryPointInitFunctions =
-std::tuple<
-    // rendering execution function
-    EntryPointExecutionCallback,
-    // get requested resources function
-    std::function<std::vector<std::string>()>
->;
-// clang-format on
-static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
-    if (auto module_ptr = static_cast<megamol::core::Module*>(ptr); module_ptr != nullptr) {
-        if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
-            return EntryPointInitFunctions{
-                std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::get_view_runtime_resources_requests},
-            };
-        }
-    }
-
-    log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
-    throw std::exception();
-}
-
 namespace {
     struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
+        static constexpr const char* Name = "ViewRenderInputs";
+
         // individual inputs used by view for rendering of next frame
         megamol::frontend_resources::RenderInput render_input;
 
@@ -242,71 +225,119 @@ namespace {
             render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
             render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
         }
+
+        FrontendResource get_resource() override{
+            return {Name, render_input};
+        };
     };
-} // namespace
 #define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
 
-std::tuple<
-    std::vector<FrontendResource>,
-    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>
-> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+    // this is a somewhat improvised factory to abstract away instantiation of different RenderInputUpdate types
+    struct RenderInputsFactory {
+        std::tuple<std::string, std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>>
+            get(std::string const& request) {
+            auto renderinputs = std::make_unique<ImagePresentation_Service::RenderInputsUpdate>();
 
-    std::vector<FrontendResource> resources;
+            if (request == ViewRenderInputs::Name) {
+                renderinputs = std::make_unique<ViewRenderInputs>();
+                accessViewRenderInput(renderinputs).render_input_framebuffer_size_handler = fromservice<std::function<ImagePresentation_Service::UintPair()>>(0);
+                accessViewRenderInput(renderinputs).render_input_tile_handler = fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1);
+
+                return {ViewRenderInputs::Name, std::move(renderinputs)};
+            }
+        }
+
+        template <typename T>
+        T const& fromservice(size_t index) {
+            return *std::any_cast<T*>(service_data[index]);
+        }
+
+        std::vector<std::any> service_data; // holding ptrs to image presentation members/resources we need to pass to the stuff the factory produces
+    };
+} // namespace
+
+std::tuple<
+    bool, // success
+    std::vector<FrontendResource>, // resources
+    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
+>
+ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+    static RenderInputsFactory renderinputs_factory{
+        // the factory needs to pass certain data/handlers to the RenderInput structs/implementations
+        {
+              {&m_framebuffer_size_handler}
+            , {&m_viewport_tile_handler}
+        }};
 
     // this unique_data/reindering input handler thing is a bit convoluted but the idea is that we want to give the view (or any other type of entry point)
     // the ability to get updated with newest frame data, e.g. framebuffer size
     // but we also want to maintain the "empty" handler throughout the code path to avoid checking for a null ptr
     auto unique_data = std::make_unique<RenderInputsUpdate>();
 
-    for (auto& request: requests) {
-        auto find_it = std::find_if(m_frontend_resources.begin(), m_frontend_resources.end(),
-            [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
-        bool found_request = find_it != m_frontend_resources.end();
+    bool success = false;
+    std::vector<FrontendResource> resources;
 
-        // intercept view requests for individual rendering inputs
-        // which are not global resources but managed for each entry point individually
-        if (request == "ViewRenderInput") {
-            unique_data = std::make_unique<ViewRenderInputs>();
-            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_handler;
-            accessViewRenderInput(unique_data).render_input_tile_handler = m_viewport_tile_handler;
+    auto handle_resource_requests = [&](auto from, auto to) -> bool
+    {
+        if (from == to)
+            return true;
 
-            // wrap render input for view in locally handled resource
-            resources.push_back({request, accessViewRenderInput(unique_data).render_input});
-            continue;
+        std::vector<std::string> requests{from, to};
+        auto [lookup_success, lookup_resources] = m_frontend_resources_lookup.get_requested_resources(requests);
+        resources.insert(resources.end(), lookup_resources.begin(), lookup_resources.end());
+
+        return lookup_success;
+    };
+
+    // find resource request for input update of this entry point
+    // currently there is only one such request
+    // we then split up the requests into the ones before and after the request for the input update
+    // and look up those resource requests in the frontend resources
+    // the input update resource is not known in the frontend, so we need to fiddle a bit here
+    success = requests.empty();
+    for (auto request_it = requests.begin(); request_it != requests.end(); request_it++) {
+        if (auto [name, result_unique_ptr] = renderinputs_factory.get(*request_it); result_unique_ptr != nullptr) {
+            unique_data = std::move(result_unique_ptr);
+            success = true;
+
+            success &= handle_resource_requests(requests.begin(), request_it);
+
+            // put the resource for input update at position where it was requested
+            resources.emplace_back(unique_data->get_resource());
+
+            success &= handle_resource_requests(request_it+1, requests.end());
+
+            break;
         }
-
-        if (!found_request) {
-            log_error("could not find requested resource " + request);
-            return {};
-        }
-
-        resources.push_back(*find_it);
     }
 
-    return {resources, std::move(unique_data)};
+    if (!success) {
+        log_error("could not find a requested resource for an entry point");
+    }
+
+    return {success, resources, std::move(unique_data)};
 }
 
-bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point) {
+    auto [module_ptr, execute_etry, entry_resource_requests] = entry_point;
 
     auto resource_requests = entry_resource_requests();
-    auto [resources, unique_data] = map_resources(resource_requests);
 
-    if (resources.empty() && !resource_requests.empty()) {
+    auto [success, resources, unique_data] = map_resources(resource_requests);
+
+    if (!success) {
         log_error("could not assign resources requested by entry point " + name + ". Entry point not created.");
         return false;
     }
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
-        module_raw_ptr,
+        module_ptr,
         resources,
         std::move(unique_data), // render inputs and their update
         execute_etry,
         {name} // image
         });
-
-    auto& entry_point = m_entry_points.back();
 
     return true;
 }
@@ -338,9 +369,21 @@ bool ImagePresentation_Service::clear_entry_points() {
     return true;
 }
 
+void ImagePresentation_Service::add_glfw_sink() {
+    auto maybe_gl_context = m_requestedResourceReferences[5].getOptionalResource<megamol::frontend_resources::OpenGL_Context>();
+
+    if (maybe_gl_context == std::nullopt) {
+        log_warning("no GLFW OpenGL_Context resource available");
+        return;
+    }
+
+    m_presentation_sinks.push_back(
+        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+}
+
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
-    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
-    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static auto const& window_manipulation       = m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowManipulation>().value().get();
+    static auto const& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 
@@ -356,11 +399,6 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
         gl_image = image;
         glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
     }
-
-    // EXPERIMENTAL: until the GUI Service provides rendering of the GUI on its own
-    // render UI overlay
-    static auto& gui_state = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::GUIState>();
-    gui_state.provide_gui_render();
 
     window_manipulation.swap_buffers();
 }
@@ -401,7 +439,47 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             return VoidResult{};
         }});
 
+    auto handle_screenshot = [&](std::string const& entrypoint, std::string file) -> megamol::frontend_resources::LuaCallbacksCollection::VoidResult {
+        if (m_entry_points.empty())
+            return Error{"no views registered as entry points. nothing to write as screenshot into "};
+
+        auto find_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
+            [&](GraphEntryPoint const& elem) { return elem.moduleName == entrypoint; });
+
+        if (find_it == m_entry_points.end())
+            return Error{"error writing screenshot into file " + file + ". no such entry point: " + entrypoint};
+
+        auto& entry_result_image = find_it->execution_result_image;
+
+        auto& triggerscreenshot = m_requestedResourceReferences[6].getResource<std::function<bool(ImageWrapper const&, std::filesystem::path const&)>>();
+        bool trigger_ok = triggerscreenshot(entry_result_image, file);
+
+        if (!trigger_ok)
+            return Error{"error writing screenshot for entry point " + entrypoint + " into file " + file};
+
+        return VoidResult{};
+    };
+
+    m_entrypointToPNG_trigger = [handle_screenshot](std::string const& entrypoint, std::string const& file) -> bool {
+        auto result = handle_screenshot(entrypoint, file);
+
+        if (!result.exit_success) {
+            log_warning(result.exit_reason);
+            return false;
+        }
+
+        return true;
+    };
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmScreenshotEntryPoint",
+        "(string entrypoint, string filename)\n\tSave a screen shot of entry point view as 'filename'",
+        {[handle_screenshot](std::string entrypoint, std::string filename) -> VoidResult {
+            return handle_screenshot(entrypoint, filename);
+        }});
+
     auto& register_callbacks = m_requestedResourceReferences[4].getResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>();
+
     register_callbacks(callbacks);
 }
 

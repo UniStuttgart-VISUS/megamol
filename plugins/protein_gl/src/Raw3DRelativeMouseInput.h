@@ -1,7 +1,7 @@
 /*
  * Raw3DRelativeMouseInput.h
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2011 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -24,17 +24,17 @@
 #define _WIN32_IE 0x0500
 #endif /* !_WIN32_IE */
 
-#include <shlwapi.h>
 #include <Windows.h>
+#include <shlwapi.h>
 #undef min
 #undef max
 
 /**
-* This class creates a hidden message window and establishes a connection with a six
-* degrees-of-freedom raw input device (such as a 3dConnexion SpaceNavigator). In order
-* to use this class, an instance must be created, then the Create function called, and
-* finally the interrupt functions for the motion and button functions set.
-*/
+ * This class creates a hidden message window and establishes a connection with a six
+ * degrees-of-freedom raw input device (such as a 3dConnexion SpaceNavigator). In order
+ * to use this class, an instance must be created, then the Create function called, and
+ * finally the interrupt functions for the motion and button functions set.
+ */
 
 typedef vislib::Delegate<void, float, float, float, float, float, float> Raw3DMotionDelegate;
 typedef vislib::Delegate<void, unsigned long> Raw3DButtonDelegate;
@@ -43,53 +43,52 @@ typedef vislib::Delegate<void, unsigned long> Raw3DButtonDelegate;
 class Raw3DRelativeMouseInput {
 
 public:
-
     /**
-    * Create a new instance using the default instance handle returned by
-    * GetModuleHandle(NULL).
-    */
+     * Create a new instance using the default instance handle returned by
+     * GetModuleHandle(NULL).
+     */
     Raw3DRelativeMouseInput(void);
 
 
     /**
-    * Create a new instance using the specified instance handle.
-    *
-    * @param hInstance The instance handle.
-    */
+     * Create a new instance using the specified instance handle.
+     *
+     * @param hInstance The instance handle.
+     */
     Raw3DRelativeMouseInput(HINSTANCE hInstance);
 
 
     /**
-    * Dtor.
-    *
-    * The dtor destroys the hidden message window.
-    */
+     * Dtor.
+     *
+     * The dtor destroys the hidden message window.
+     */
     virtual ~Raw3DRelativeMouseInput(void);
 
 
     /**
-    * Creates a new message window.
-    * Sets up RawInput and directs it to the message window.
-    *
-    * @throws SystemException If the window could not be created
-    * or raw input could not be set up.
-    */
+     * Creates a new message window.
+     * Sets up RawInput and directs it to the message window.
+     *
+     * @throws SystemException If the window could not be created
+     * or raw input could not be set up.
+     */
     void Initialize(void);
 
     /**
-    * Sets the function that is called when new motion data is received.
-    * 
-    * @param Delegate of the function to be set as the call.
-    */
+     * Sets the function that is called when new motion data is received.
+     *
+     * @param Delegate of the function to be set as the call.
+     */
     void SetMotionFunction(Raw3DMotionDelegate& function) {
         this->pMotion = function;
     }
 
     /**
-    * Sets the function that is called when new button data is received.
-    *
-    * @param Delegate of the function to be set as the call.
-    */
+     * Sets the function that is called when new button data is received.
+     *
+     * @param Delegate of the function to be set as the call.
+     */
     void SetButtonFunction(Raw3DButtonDelegate& function) {
         this->pButton = function;
     }
@@ -142,66 +141,60 @@ public:
     }
 
 private:
-
     /** Data type given in first byte of raw input */
-    enum RAW_DATA_TYPE {
-        POSITION_DATA = 0x01,
-        ROTATION_DATA = 0x02,
-        BUTTON_DATA = 0x03
-    };
+    enum RAW_DATA_TYPE { POSITION_DATA = 0x01, ROTATION_DATA = 0x02, BUTTON_DATA = 0x03 };
 
     /**
-    * Message loop function.
-    *
-    * Processes Raw Input messages and clears buffer to prevent propogation delay.
-    */
-    static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam,
-        LPARAM lParam);
+     * Message loop function.
+     *
+     * Processes Raw Input messages and clears buffer to prevent propogation delay.
+     */
+    static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     /**
-    * Takes a raw input pointer and extracts the data.
-    * If it receives new motion data (even all zeroes) it returns true.
-    * If it receives new button data, it calls the button data routine but returns false.
-    * In all cases, it runs DefRawInputProc on any valid raw input pointer.
-    *
-    * @param pRawInput is the pointer to the raw input obtained from GetRawInputData
-    * or GetRawInputBuffer.
-    *
-    * @return True if and only if new motion data is received (rotation or translation,
-    * even all zeroes), false in all other cases (including new button data)
-    */
+     * Takes a raw input pointer and extracts the data.
+     * If it receives new motion data (even all zeroes) it returns true.
+     * If it receives new button data, it calls the button data routine but returns false.
+     * In all cases, it runs DefRawInputProc on any valid raw input pointer.
+     *
+     * @param pRawInput is the pointer to the raw input obtained from GetRawInputData
+     * or GetRawInputBuffer.
+     *
+     * @return True if and only if new motion data is received (rotation or translation,
+     * even all zeroes), false in all other cases (including new button data)
+     */
     bool ProcessRawData(PRAWINPUT pRawInput);
-    
+
     /**
-    * Checks that the data isn't entirely zeroes, and calls the assigned
-    * pMotion function (if valid) with the new data.
-    */
+     * Checks that the data isn't entirely zeroes, and calls the assigned
+     * pMotion function (if valid) with the new data.
+     */
     void runMotion(void);
 
     /**
-    * Sets the current translation and rotation vector data to zero.
-    */
+     * Sets the current translation and rotation vector data to zero.
+     */
     void clearData(void);
 
     /**
-    * In-ctor initialisations.
-    */
+     * In-ctor initialisations.
+     */
     bool init(HINSTANCE hInstance);
 
 
     /** The name of the window class used for the controlling window. */
-    static const wchar_t *WNDCLASSNAME;
+    static const wchar_t* WNDCLASSNAME;
 
 
     /**
-    * Register the window class for the hidden window. The window class
-    * has the name RAW3DRELATIVEMOUSEINPUTWNDCLASS. If this window class has already 
-    * been registered, the method does nothing.
-    *
-    * @return true, if the window class has been registered or has already
-    *         been registered before,
-    *         false otherwise.
-    */
+     * Register the window class for the hidden window. The window class
+     * has the name RAW3DRELATIVEMOUSEINPUTWNDCLASS. If this window class has already
+     * been registered, the method does nothing.
+     *
+     * @return true, if the window class has been registered or has already
+     *         been registered before,
+     *         false otherwise.
+     */
     bool registerWndClass(void);
 
 
@@ -210,8 +203,8 @@ private:
 
 
     /**
-    * The hidden window that processes raw input messages.
-    */
+     * The hidden window that processes raw input messages.
+     */
     HWND hWnd;
 
     /** Translation vector */
