@@ -26,7 +26,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "png.h"
-#include "mmcore/versioninfo.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
