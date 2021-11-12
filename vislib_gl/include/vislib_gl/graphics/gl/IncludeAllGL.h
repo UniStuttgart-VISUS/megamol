@@ -7,8 +7,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "glad/glad.h"
-
 #ifdef _WIN32
 #include <Windows.h>
 #undef min
@@ -31,12 +29,12 @@ inline void LoadAllGL() {
     //bool expected = false;
     //if (alreadyLoaded.compare_exchange_strong(expected, true)) {
     if (alreadyLoaded == true) {
-		gladLoadGL();
+        gladLoadGL();
 #ifdef _WIN32
-		gladLoadWGL(wglGetCurrentDC());
+        gladLoadWGL(wglGetCurrentDC());
 #else
         Display *display = XOpenDisplay(NULL);
-		gladLoadGLX(display, DefaultScreen(display));
+        gladLoadGLX(display, DefaultScreen(display));
         XCloseDisplay(display);
 #endif
     }

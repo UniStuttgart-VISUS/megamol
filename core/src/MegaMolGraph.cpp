@@ -396,7 +396,10 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
     auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
     {
         "ImagePresentationEntryPoints",
-        megamol::frontend_resources::CommandRegistry_Req_Name
+        megamol::frontend_resources::CommandRegistry_Req_Name,
+#ifdef PROFILING
+        megamol::frontend_resources::PerformanceManager_Req_Name
+#endif
     });
 
     if (!success)
@@ -409,15 +412,8 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
         graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
 
 #ifdef PROFILING
-    auto find_it3 = std::find_if(
-        provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == megamol::frontend_resources::PerformanceManager_Req_Name;
-        });
-    if (find_it3 == provided_resources.end()) {
-        return false;
-    }
-    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
-        find_it3->getResource<frontend_resources::PerformanceManager>());
+    m_perf_manager = & const_cast<frontend_resources::PerformanceManager&>(
+        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
 #endif PROFILING
 
     return true;
