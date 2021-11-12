@@ -264,6 +264,8 @@ private:
 
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
+    core::param::ParamSlot forceRedrawDebugParam;
+
     size_t dataHash;
     unsigned int dataTime;
 

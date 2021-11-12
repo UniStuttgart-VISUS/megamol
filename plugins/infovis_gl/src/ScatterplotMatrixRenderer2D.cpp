@@ -109,6 +109,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
         , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
         , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
+        , forceRedrawDebugParam("forceRedrawDebug", "Force redraw every frame (for benchmarking and debugging).")
         , mouse({0, 0, BrushState::NOP})
         , plotSSBO("Plots")
         , valueSSBO("Values")
@@ -254,6 +255,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
+
+    this->forceRedrawDebugParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->forceRedrawDebugParam);
 
     // Create list of data-sensitive parameters.
     dataParams.push_back(&this->valueSelectorParam);
@@ -510,7 +514,7 @@ bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, 
     auto mvp = proj * view;
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
     if (hasDirtyScreen() || hasDirtyData() || (!ignoreMVP && (screenLastMVP != mvp || this->readFlags->hasUpdate())) ||
-        this->transferFunction->IsDirty()) {
+        this->transferFunction->IsDirty() || this->forceRedrawDebugParam.Param<core::param::BoolParam>()->Value()) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
