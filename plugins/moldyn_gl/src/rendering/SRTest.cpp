@@ -46,7 +46,7 @@ void megamol::moldyn_gl::rendering::SRTest::release() {
 }
 
 
-bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRender3DGL& cr) {
+bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     // Camera
     core::view::Camera cam = cr.GetCamera();
     auto view = cam.getViewMatrix();
@@ -128,7 +128,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core::view::CallRend
 }
 
 
-bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core::view::CallRender3DGL& call) {
+bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == nullptr)
         return false;

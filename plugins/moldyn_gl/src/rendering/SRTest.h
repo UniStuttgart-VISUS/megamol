@@ -6,8 +6,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/ShaderFactory.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 namespace megamol::moldyn_gl::rendering {
 struct per_list_package {
@@ -101,7 +101,7 @@ private:
     per_list_package_t pl_data_;
 };
 
-class SRTest : public core::view::Renderer3DModuleGL {
+class SRTest : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -144,9 +144,9 @@ private:
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    bool Render(core::view::CallRender3DGL& call) override;
+    bool Render(core_gl::view::CallRender3DGL& call) override;
 
-    bool GetExtents(core::view::CallRender3DGL& call) override;
+    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
 
     void loadData(geocalls::MultiParticleDataCall& in_data);
 
