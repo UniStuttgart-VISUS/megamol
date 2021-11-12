@@ -174,7 +174,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
     this->MakeSlotAvailable(&filterStateSlot);
 
-    this->triangleModeSlot << new core::param::BoolParam(true);
+    this->triangleModeSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&triangleModeSlot);
 
     this->lineThicknessSlot << new core::param::FloatParam(1.5);
