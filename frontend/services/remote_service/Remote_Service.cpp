@@ -129,7 +129,7 @@ bool Remote_Service::init(const Config& config) {
     {
           "MegaMolGraph"
         , "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
-        , "GUIRegisterWindow"
+        , "optional<GUIRegisterWindow>"
     };
 
     m_do_remote_things = std::function{[&]() {}};
@@ -326,7 +326,14 @@ void Remote_Service::add_headnode_remote_command(HeadNodeRemoteControl::Command 
 }
 
 void Remote_Service::remote_control_window() {
-    auto &gui_window_request_resource = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    auto maybe_gui_window_request_resource = m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
+
+    if (!maybe_gui_window_request_resource.has_value()) {
+        return;
+    }
+
+    auto& gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+
     gui_window_request_resource.register_window("Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
         window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
 

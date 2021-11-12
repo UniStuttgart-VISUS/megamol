@@ -95,7 +95,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
+    guiConfig.imgui_rbnd = megamol::frontend::GUI_Service::ImGuiRenderBackend::OPEN_GL;
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
@@ -275,7 +275,7 @@ int main(const int argc, const char** argv) {
     }
 
     // load project files via lua
-    if (graph_resources_ok)
+    if (run_megamol && graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
             log_error("Project file \"" + file + "\" did not execute correctly");

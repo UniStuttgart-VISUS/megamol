@@ -38,6 +38,10 @@ struct FramebufferEvents {
         apply_state();
         size_events.clear();
     }
+
+    void append(FramebufferEvents const& other) {
+        size_events.insert(size_events.end(), other.size_events.begin(), other.size_events.end());
+    }
 };
 
 namespace input = frontend_resources;

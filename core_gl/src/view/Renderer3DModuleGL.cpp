@@ -15,8 +15,7 @@ using namespace megamol::core_gl::view;
 /*
  * Renderer3DModuleGL::Renderer3DModuleGL
  */
-Renderer3DModuleGL::Renderer3DModuleGL(void)
-    : RendererModule<CallRender3DGL, ModuleGL>() {
+Renderer3DModuleGL::Renderer3DModuleGL(void) : RendererModule<CallRender3DGL, ModuleGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -54,7 +53,21 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         auto mybb = call.AccessBoundingBoxes().BoundingBox();
         auto otherbb = chainedCall->AccessBoundingBoxes().BoundingBox();
         auto mycb = call.AccessBoundingBoxes().ClipBox();
-        mycb.Union(chainedCall->AccessBoundingBoxes().ClipBox());
+        auto othercb = chainedCall->AccessBoundingBoxes().ClipBox();
+
+        if (call.AccessBoundingBoxes().IsBoundingBoxValid() &&
+            chainedCall->AccessBoundingBoxes().IsBoundingBoxValid()) {
+            mybb.Union(otherbb);
+        } else if (chainedCall->AccessBoundingBoxes().IsBoundingBoxValid()) {
+            mybb = otherbb; // just override for the call
+        }                   // we ignore the other two cases as they both lead to usage of the already set mybb
+
+        if (call.AccessBoundingBoxes().IsClipBoxValid() && chainedCall->AccessBoundingBoxes().IsClipBoxValid()) {
+            mycb.Union(othercb);
+        } else if (chainedCall->AccessBoundingBoxes().IsClipBoxValid()) {
+            mycb = othercb; // just override for the call
+        }                   // we ignore the other two cases as they both lead to usage of the already set mycb
+
         call.AccessBoundingBoxes().SetBoundingBox(mybb);
         call.AccessBoundingBoxes().SetClipBox(mycb);
 
@@ -89,7 +102,7 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
     auto fbo = call.GetFramebuffer();
     fbo->bind();
     glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
-    
+
     // render our own stuff
     this->Render(call);
 
