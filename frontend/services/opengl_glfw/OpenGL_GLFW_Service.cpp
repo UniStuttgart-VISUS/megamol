@@ -577,13 +577,14 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"KeyboardEvents", m_keyboardEvents},
         {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
-        {"FramebufferEvents", m_framebufferEvents},
+        //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
         {"OpenGL_Context", m_opengl_context},
         {"WindowManipulation", m_windowManipulation}
     };
 
     m_requestedResourcesNames = {
-          "FrameStatistics"
+          "FrameStatistics",
+          "FramebufferEvents"
     };
 
     m_pimpl->last_time = std::chrono::system_clock::now();
@@ -756,10 +757,12 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     auto& should_close_events = this->m_windowEvents.should_close_events;
     if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
+
+    auto& global_framebuffer_events = const_cast<FramebufferEvents&>(m_requestedResourceReferences[1].getResource<FramebufferEvents>());
+    global_framebuffer_events.append(m_framebufferEvents);
 }
 
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-    // we dont depend on outside resources
 }
 
 void OpenGL_GLFW_Service::resetProvidedResources() {

@@ -8,9 +8,9 @@
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
-#include "Framebuffer_Events.h"
 #include "GUIState.h"
 
+#include "OpenGL_Context.h"
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ImagePresentation_Sinks.hpp"
 
@@ -65,13 +65,11 @@ bool ImagePresentation_Service::init(const Config& config) {
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
 
-    m_presentation_sinks.push_back(
-        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
-
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
         , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
+        , {"FramebufferEvents", m_global_framebuffer_events}
     };
 
     this->m_requestedResourcesNames =
@@ -79,7 +77,7 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "optional<WindowManipulation>"
         , "FramebufferEvents"
-        , "GUIState"
+        , "optional<GUIState>" // TODO: unused?
         , "RegisterLuaCallbacks"
         , "optional<OpenGL_Context>"
         , "ImageWrapperToPNG_ScreenshotTrigger"
@@ -153,9 +151,10 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
 
+    add_glfw_sink();
+
     fill_lua_callbacks();
 }
-#define m_frontend_resources (*m_frontend_resources_ptr)
 
 void ImagePresentation_Service::updateProvidedResources() {
 }
@@ -187,6 +186,10 @@ void ImagePresentation_Service::RenderNextFrame() {
 }
 
 void ImagePresentation_Service::PresentRenderedImages() {
+    // before presenting to the sinks, we need to apply the latest global fbo size changes
+    // this way sinks can access the current fbo size as previous_state
+    m_global_framebuffer_events.clear();
+
     // pull result images into separate list
     static std::vector<ImageWrapper> wrapped_images;
     wrapped_images.clear();
@@ -364,6 +367,18 @@ bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
 
     return true;
+}
+
+void ImagePresentation_Service::add_glfw_sink() {
+    auto maybe_gl_context = m_requestedResourceReferences[5].getOptionalResource<megamol::frontend_resources::OpenGL_Context>();
+
+    if (maybe_gl_context == std::nullopt) {
+        log_warning("no GLFW OpenGL_Context resource available");
+        return;
+    }
+
+    m_presentation_sinks.push_back(
+        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {

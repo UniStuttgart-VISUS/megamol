@@ -14,6 +14,7 @@
 #include "GUIManager.h"
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
+#include "OpenGL_Context.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -41,7 +42,6 @@ namespace frontend {
         this->m_framebuffer_size = glm::vec2(1.0f, 1.0f);
         this->m_window_size = glm::vec2(1.0f, 1.0f);
         this->m_megamol_graph = nullptr;
-        this->m_gui = nullptr;
         this->m_config = config;
 
         this->m_queuedProjectFiles.clear();
@@ -49,9 +49,9 @@ namespace frontend {
         this->m_providedResourceReferences.clear();
         this->m_requestedResourcesNames = {
             "MegaMolGraph",                               // 0 - sync graph
-            "WindowEvents",                               // 1 - time, size, clipboard
-            "KeyboardEvents",                             // 2 - key press
-            "MouseEvents",                                // 3 - mouse click
+            "optional<WindowEvents>",                     // 1 - time, size, clipboard
+            "optional<KeyboardEvents>",                   // 2 - key press
+            "optional<MouseEvents>",                      // 3 - mouse click
             "optional<OpenGL_Context>",                   // 4 - graphics api for imgui context
             "FramebufferEvents",                          // 5 - viewport size
             "GLFrontbufferToPNG_ScreenshotTrigger",       // 6 - trigger screenshot
@@ -59,70 +59,52 @@ namespace frontend {
             "ProjectLoader",                              // 8 - trigger loading of new running project
             "FrameStatistics",                            // 9 - current fps and ms value
             "RuntimeConfig",                              // 10 - resource paths
-            "WindowManipulation",                         // 11 - GLFW window pointer
+            "optional<WindowManipulation>",               // 11 - GLFW window pointer
             frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
             "ImagePresentationEntryPoints"                // 13 - Entry point
         };
 
-        // init gui
-        if (config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
-            if (this->m_gui == nullptr) {
-                this->m_gui = std::make_shared<megamol::gui::GUIManager>();
-                if (this->m_gui != nullptr) {
+        this->m_gui = std::make_shared<megamol::gui::GUIManager>();
 
-                    // Create context
-                    if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
+        // Set function pointer in state resource once
+        this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {
+            return this->resource_request_gui_state(as_lua);
+        };
+        this->m_providedStateResource.provide_gui_state = [&](const std::string& json_state) -> void {
+            return this->resource_provide_gui_state(json_state);
+        };
+        this->m_providedStateResource.request_gui_visibility = [&]() -> bool {
+            return this->resource_request_gui_visibility();
+        };
+        this->m_providedStateResource.provide_gui_visibility = [&](bool show) -> void {
+            return this->resource_provide_gui_visibility(show);
+        };
+        this->m_providedStateResource.request_gui_scale = [&]() -> float { return this->resource_request_gui_scale(); };
+        this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
+            return this->resource_provide_gui_scale(scale);
+        };
+        this->resource_provide_gui_visibility(m_config.gui_show);
+        this->resource_provide_gui_scale(m_config.gui_scale);
 
-                        // Set function pointer in state resource once
-                        this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {
-                            return this->resource_request_gui_state(as_lua);
-                        };
-                        this->m_providedStateResource.provide_gui_state = [&](const std::string& json_state) -> void {
-                            return this->resource_provide_gui_state(json_state);
-                        };
-                        this->m_providedStateResource.request_gui_visibility = [&]() -> bool {
-                            return this->resource_request_gui_visibility();
-                        };
-                        this->m_providedStateResource.provide_gui_visibility = [&](bool show) -> void {
-                            return this->resource_provide_gui_visibility(show);
-                        };
-                        this->m_providedStateResource.request_gui_scale = [&]() -> float {
-                            return this->resource_request_gui_scale();
-                        };
-                        this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
-                            return this->resource_provide_gui_scale(scale);
-                        };
-                        this->resource_provide_gui_visibility(config.gui_show);
-                        this->resource_provide_gui_scale(config.gui_scale);
+        this->m_providedRegisterWindowResource.register_window =
+            [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
+            this->resource_register_window(name, func);
+        };
+        this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, std::weak_ptr<bool> open,
+                                                                    std::function<void(void)> func) -> void {
+            this->resource_register_popup(name, open, func);
+        };
+        this->m_providedRegisterWindowResource.register_notification =
+            [&](const std::string& name, std::weak_ptr<bool> open, const std::string& message) -> void {
+            this->resource_register_notification(name, open, message);
+        };
 
-                        this->m_providedRegisterWindowResource.register_window =
-                            [&](const std::string& name,
-                                std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
-                            this->resource_register_window(name, func);
-                        };
-                        this->m_providedRegisterWindowResource.register_popup =
-                            [&](const std::string& name, std::weak_ptr<bool> open,
-                                std::function<void(void)> func) -> void {
-                            this->resource_register_popup(name, open, func);
-                        };
-                        this->m_providedRegisterWindowResource.register_notification =
-                            [&](const std::string& name, std::weak_ptr<bool> open, const std::string& message) -> void {
-                            this->resource_register_notification(name, open, message);
-                        };
+        this->m_gui->SetVisibility(m_config.gui_show);
+        this->m_gui->SetScale(m_config.gui_scale);
 
-                        this->m_gui->SetVisibility(config.gui_show);
-                        this->m_gui->SetScale(config.gui_scale);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully");
 
-                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                            "GUI_Service: initialized successfully.");
-                        return true;
-                    }
-                }
-            }
-        }
-
-
-        return false;
+        return true;
     }
 
 
@@ -144,81 +126,94 @@ namespace frontend {
         // Check for updates in requested resources --------------------------------
 
         /// WindowEvents = resource index 1
-        auto window_events =
-            &this->m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowEvents>();
-        this->m_time = window_events->time;
-        for (auto& size_event : window_events->size_events) {
-            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
-            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
+        auto maybe_window_events =
+            this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
+        if (maybe_window_events.has_value()) {
+            megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
+
+            this->m_time = window_events.time;
+            for (auto& size_event : window_events.size_events) {
+                this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
+                this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
+            }
+            this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func,
+                window_events._setClipboardString_Func, window_events._clipboard_user_data);
         }
-        this->m_gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func,
-            window_events->_clipboard_user_data);
 
         /// KeyboardEvents = resource index 2
-        auto keyboard_events =
-            &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
-        std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction,
-            megamol::frontend_resources::Modifiers>>
-            pass_key_events;
-        for (auto& key_event : keyboard_events->key_events) {
-            auto key = std::get<0>(key_event);
-            auto action = std::get<1>(key_event);
-            auto modifiers = std::get<2>(key_event);
-            if (!this->m_gui->OnKey(key, action, modifiers)) {
-                pass_key_events.emplace_back(key_event);
-            }
-        }
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        const_cast<megamol::frontend_resources::KeyboardEvents*>(keyboard_events)->key_events = pass_key_events;
+        auto maybe_keyboard_events =
+            this->m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
+        if (maybe_keyboard_events.has_value()) {
+            megamol::frontend_resources::KeyboardEvents const& keyboard_events = maybe_keyboard_events.value().get();
 
-        std::vector<unsigned int> pass_codepoint_events;
-        for (auto& codepoint_event : keyboard_events->codepoint_events) {
-            if (!this->m_gui->OnChar(codepoint_event)) {
-                pass_codepoint_events.emplace_back(codepoint_event);
+            std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction,
+                megamol::frontend_resources::Modifiers>>
+                pass_key_events;
+            for (auto& key_event : keyboard_events.key_events) {
+                auto key = std::get<0>(key_event);
+                auto action = std::get<1>(key_event);
+                auto modifiers = std::get<2>(key_event);
+                if (!this->m_gui->OnKey(key, action, modifiers)) {
+                    pass_key_events.emplace_back(key_event);
+                }
             }
+            /// WARNING: Changing a constant type will lead to an undefined behavior!
+            const_cast<megamol::frontend_resources::KeyboardEvents&>(keyboard_events).key_events = pass_key_events;
+
+            std::vector<unsigned int> pass_codepoint_events;
+            for (auto& codepoint_event : keyboard_events.codepoint_events) {
+                if (!this->m_gui->OnChar(codepoint_event)) {
+                    pass_codepoint_events.emplace_back(codepoint_event);
+                }
+            }
+            /// WARNING: Changing a constant type will lead to an undefined behavior!
+            const_cast<megamol::frontend_resources::KeyboardEvents&>(keyboard_events).codepoint_events =
+                pass_codepoint_events;
         }
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        const_cast<megamol::frontend_resources::KeyboardEvents*>(keyboard_events)->codepoint_events =
-            pass_codepoint_events;
 
         /// MouseEvents = resource index 3
-        auto mouse_events =
-            &this->m_requestedResourceReferences[3].getResource<megamol::frontend_resources::MouseEvents>();
-        std::vector<std::tuple<double, double>> pass_mouse_pos_events;
-        for (auto& position_event : mouse_events->position_events) {
-            auto x_pos = std::get<0>(position_event);
-            auto y_pos = std::get<1>(position_event);
-            if (!this->m_gui->OnMouseMove(x_pos, y_pos)) {
-                pass_mouse_pos_events.emplace_back(position_event);
-            }
-        }
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->position_events = pass_mouse_pos_events;
+        auto maybe_mouse_events =
+            this->m_requestedResourceReferences[3].getOptionalResource<megamol::frontend_resources::MouseEvents>();
+        if (maybe_mouse_events.has_value()) {
+            megamol::frontend_resources::MouseEvents const& mouse_events = maybe_mouse_events.value().get();
 
-        std::vector<std::tuple<double, double>> pass_mouse_scroll_events;
-        for (auto& scroll_event : mouse_events->scroll_events) {
-            auto x_scroll = std::get<0>(scroll_event);
-            auto y_scroll = std::get<1>(scroll_event);
-            if (!this->m_gui->OnMouseScroll(x_scroll, y_scroll)) {
-                pass_mouse_scroll_events.emplace_back(scroll_event);
+            std::vector<std::tuple<double, double>> pass_mouse_pos_events;
+            for (auto& position_event : mouse_events.position_events) {
+                auto x_pos = std::get<0>(position_event);
+                auto y_pos = std::get<1>(position_event);
+                if (!this->m_gui->OnMouseMove(x_pos, y_pos)) {
+                    pass_mouse_pos_events.emplace_back(position_event);
+                }
             }
-        }
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->scroll_events = pass_mouse_scroll_events;
+            /// WARNING: Changing a constant type will lead to an undefined behavior!
+            const_cast<megamol::frontend_resources::MouseEvents&>(mouse_events).position_events = pass_mouse_pos_events;
 
-        std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction,
-            megamol::frontend_resources::Modifiers>>
-            pass_mouse_btn_events;
-        for (auto& button_event : mouse_events->buttons_events) {
-            auto button = std::get<0>(button_event);
-            auto action = std::get<1>(button_event);
-            auto modifiers = std::get<2>(button_event);
-            if (!this->m_gui->OnMouseButton(button, action, modifiers)) {
-                pass_mouse_btn_events.emplace_back(button_event);
+            std::vector<std::tuple<double, double>> pass_mouse_scroll_events;
+            for (auto& scroll_event : mouse_events.scroll_events) {
+                auto x_scroll = std::get<0>(scroll_event);
+                auto y_scroll = std::get<1>(scroll_event);
+                if (!this->m_gui->OnMouseScroll(x_scroll, y_scroll)) {
+                    pass_mouse_scroll_events.emplace_back(scroll_event);
+                }
             }
+            /// WARNING: Changing a constant type will lead to an undefined behavior!
+            const_cast<megamol::frontend_resources::MouseEvents&>(mouse_events).scroll_events =
+                pass_mouse_scroll_events;
+
+            std::vector<std::tuple<megamol::frontend_resources::MouseButton,
+                megamol::frontend_resources::MouseButtonAction, megamol::frontend_resources::Modifiers>>
+                pass_mouse_btn_events;
+            for (auto& button_event : mouse_events.buttons_events) {
+                auto button = std::get<0>(button_event);
+                auto action = std::get<1>(button_event);
+                auto modifiers = std::get<2>(button_event);
+                if (!this->m_gui->OnMouseButton(button, action, modifiers)) {
+                    pass_mouse_btn_events.emplace_back(button_event);
+                }
+            }
+            /// WARNING: Changing a constant type will lead to an undefined behavior!
+            const_cast<megamol::frontend_resources::MouseEvents&>(mouse_events).buttons_events = pass_mouse_btn_events;
         }
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
         /// FramebufferEvents = resource index 5
         auto framebuffer_events =
@@ -255,9 +250,15 @@ namespace frontend {
             frame_statistics.rendered_frames_count);
 
         /// Get window manipulation resource = resource index 11
-        auto& window_manipulation =
-            this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
-        window_manipulation.set_mouse_cursor(this->m_gui->GetMouseCursor());
+        auto maybe_window_manipulation = this->m_requestedResourceReferences[11]
+                                             .getOptionalResource<megamol::frontend_resources::WindowManipulation>();
+        if (maybe_window_manipulation.has_value()) {
+            megamol::frontend_resources::WindowManipulation const& window_manipulation =
+                maybe_window_manipulation.value().get();
+
+            const_cast<megamol::frontend_resources::WindowManipulation&>(window_manipulation)
+                .set_mouse_cursor(this->m_gui->GetMouseCursor());
+        }
     }
 
 
@@ -308,6 +309,28 @@ namespace frontend {
         this->m_requestedResourceReferences = resources;
         if (this->m_gui == nullptr) {
             return;
+        }
+
+        auto maybe_opengl_context =
+            m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
+
+        if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
+            // GL context is active and we need to use it
+            frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
+
+            if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "GUI_Service: initialized OpenGL backend successfully");
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: error creating OpenGL backend");
+                this->setShutdown();
+            }
+        } else {
+            // no GL available
+            if (m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: no OpenGL_Context available");
+                this->setShutdown();
+            }
         }
 
         /// MegaMolGraph = resource index 0

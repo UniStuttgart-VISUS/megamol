@@ -19,7 +19,7 @@ static void log_error(std::string const& text) {
 
 bool megamol::frontend::Command_Service::init(void* configPtr) {
 
-    requestedResourceNames = {"KeyboardEvents"};
+    requestedResourceNames = {"optional<KeyboardEvents>"};
     providedResourceReferences = {{frontend_resources::CommandRegistry_Req_Name, commands}};
 
     log("initialized successfully");
@@ -33,9 +33,16 @@ void megamol::frontend::Command_Service::close() {
 }
 
 void megamol::frontend::Command_Service::digestChangedRequestedResources() {
-        auto keyboard_events =
-            &this->requestedResourceReferences[0].getResource<megamol::frontend_resources::KeyboardEvents>();
-        for (auto& key_event : keyboard_events->key_events) {
+        auto maybe_keyboard_events =
+            this->requestedResourceReferences[0].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
+
+        if (!maybe_keyboard_events.has_value()) {
+            return;
+        }
+
+        megamol::frontend_resources::KeyboardEvents const& keyboard_events = maybe_keyboard_events.value().get();
+
+        for (auto& key_event : keyboard_events.key_events) {
             auto key = std::get<0>(key_event);
             auto action = std::get<1>(key_event);
             auto modifiers = std::get<2>(key_event);

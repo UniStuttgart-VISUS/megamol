@@ -54,6 +54,8 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    static unsigned char default_alpha_value;
+
 private:
     megamol::frontend_resources::GLScreenshotSource m_frontbufferSource_resource;
     megamol::frontend_resources::ScreenshotImageDataToPNGWriter m_toFileWriter_resource;
