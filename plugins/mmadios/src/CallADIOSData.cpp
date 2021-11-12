@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/utility/log/Log.h"
 #include <algorithm>
 

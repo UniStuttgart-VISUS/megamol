@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "mmcore/utility/RenderUtils.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore/view/Camera.h"
 
 

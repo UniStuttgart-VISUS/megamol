@@ -11,9 +11,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/utility/ShaderFactory.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 #include "Renderer2D.h"
 
@@ -54,7 +54,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2DGL& call) final;
+    bool GetExtents(core_gl::view::CallRender2DGL& call) final;
 
     /**
      * The OpenGL Render callback.
@@ -62,7 +62,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2DGL& call) final;
+    bool Render(core_gl::view::CallRender2DGL& call) final;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) final;
@@ -91,7 +91,7 @@ protected:
 
     virtual void releaseImpl() = 0;
 
-    virtual bool handleCall(core::view::CallRender2DGL& call) = 0;
+    virtual bool handleCall(core_gl::view::CallRender2DGL& call) = 0;
 
     virtual void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) = 0;
 

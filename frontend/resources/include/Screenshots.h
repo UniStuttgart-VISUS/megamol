@@ -13,7 +13,7 @@
 namespace megamol {
 namespace frontend_resources {
 
-struct ImageData {
+struct ScreenshotImageData {
     struct Pixel {
         std::uint8_t r = 255;
         std::uint8_t g = 0;
@@ -50,7 +50,7 @@ struct ImageData {
 
 class IScreenshotSource {
 public:
-    virtual ImageData take_screenshot() const = 0;
+    virtual ScreenshotImageData const& take_screenshot() const = 0;
 
     ~IScreenshotSource() = default;
 };
@@ -58,12 +58,24 @@ public:
 class IImageDataWriter {
 public:
     bool write_screenshot(IScreenshotSource const& image_source, std::filesystem::path const& filename) const {
-        return this->write_image(std::move(image_source.take_screenshot()), filename);
+        return this->write_image(image_source.take_screenshot(), filename);
     }
 
-    virtual bool write_image(ImageData image, std::filesystem::path const& filename) const = 0;
+    virtual bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const = 0;
 
     ~IImageDataWriter() = default;
+};
+
+struct ImageWrapper;
+class ImageWrapperScreenshotSource : public IScreenshotSource {
+public:
+    ImageWrapperScreenshotSource() = default;
+    ImageWrapperScreenshotSource(ImageWrapper const& image);
+
+    ScreenshotImageData const& take_screenshot() const override;
+
+private:
+    ImageWrapper* m_image = nullptr;
 };
 
 class GLScreenshotSource : public IScreenshotSource {
@@ -72,15 +84,15 @@ public:
 
     void set_read_buffer(ReadBuffer buffer);
 
-    ImageData take_screenshot() const override;
+    ScreenshotImageData const& take_screenshot() const override;
 
 private:
     ReadBuffer m_read_buffer = FRONT;
 };
 
-class ImageDataToPNGWriter : public IImageDataWriter {
+class ScreenshotImageDataToPNGWriter : public IImageDataWriter {
 public:
-    bool write_image(ImageData image, std::filesystem::path const& filename) const override;
+    bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const override;
 };
 
 

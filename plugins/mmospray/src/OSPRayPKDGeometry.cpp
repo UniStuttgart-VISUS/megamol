@@ -18,7 +18,7 @@
 #include "ospray/ospray_cpp.h"
 #include "mmospray/CallOSPRayAPIObject.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 namespace megamol {
 namespace ospray {

@@ -27,11 +27,11 @@ namespace view {
 /**
  * Base class of rendering modules.
  */
-template <class C> class MEGAMOLCORE_API RendererModule : public Module, public megamol::frontend_resources::AbstractInputScope {
+template <class C, class M> class MEGAMOLCORE_API RendererModule : public M, public megamol::frontend_resources::AbstractInputScope {
 public:
     /** Ctor. */
     RendererModule()
-        : Module()
+        : M()
         , chainRenderSlot("chainRendering", "Connects the renderer to an additional renderer")
         , renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
 

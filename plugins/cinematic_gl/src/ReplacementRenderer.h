@@ -10,11 +10,11 @@
 #pragma once
 
 
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
-
+#include "mmcore_gl/ModuleGL.h"
 #include "cinematic/CinematicUtils.h"
 
 
@@ -24,7 +24,7 @@ namespace cinematic_gl {
     /*
      * Replacement rendering.
      */
-    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>
+    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>
     {
     public:
 
@@ -88,7 +88,7 @@ namespace cinematic_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -96,7 +96,7 @@ namespace cinematic_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     private:
 

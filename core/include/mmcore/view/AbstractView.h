@@ -124,6 +124,11 @@ public:
     virtual void SetCamera(Camera camera, bool isMutable = true);
 
     /**
+     * Return the current camera
+     */
+    virtual Camera GetCamera() const;
+
+    /**
     * ...
     */
     virtual void CalcCameraClippingPlanes(float border);

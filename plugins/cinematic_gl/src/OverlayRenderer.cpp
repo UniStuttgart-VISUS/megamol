@@ -29,7 +29,7 @@ using namespace megamol::cinematic_gl;
 
 
 OverlayRenderer::OverlayRenderer()
-        : view::RendererModule<view::CallRender3DGL>()
+        : view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
         , megamol::core::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
@@ -425,9 +425,9 @@ void OverlayRenderer::setParameterGUIVisibility() {
 }
 
 
-bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
+bool OverlayRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
@@ -438,13 +438,13 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 }
 
 
-bool OverlayRenderer::Render(view::CallRender3DGL& call) {
+bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // Framebuffer object
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bind();
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
         if (!(*cr3d_out)(view::AbstractCallRender::FnRender)) {

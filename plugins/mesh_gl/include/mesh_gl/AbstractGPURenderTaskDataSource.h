@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPURenderTaskCollection.h"
-#include "mesh/MeshCalls.h"
+#include "mesh_gl/MeshCalls_gl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/light/CallLight.h"

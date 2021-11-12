@@ -11,6 +11,7 @@
 #include "rendering/GlyphRenderer.h"
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
+#include "misc/ParticleInspector.h"
 #include "rendering/SRTest.h"
 
 namespace megamol::moldyn_gl {
@@ -32,6 +33,7 @@ namespace megamol::moldyn_gl {
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleInspector>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SRTest>();
         }
     };

@@ -23,7 +23,7 @@ ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
 bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
-            "infovis/amort/amort_quad.vert.glsl", "infovis/amort/amort_resolutionscaling.frag.glsl");
+            "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseAmortizedRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -53,8 +53,8 @@ void ResolutionScalingRenderer2D::releaseImpl() {
     // nothing to do
 }
 
-bool ResolutionScalingRenderer2D::renderImpl(core::view::CallRender2DGL& nextRendererCall,
-    std::shared_ptr<core::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
+bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
+    std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
 
     int a = amortLevelParam.Param<core::param::IntParam>()->Value();
     int w = fbo->getWidth();

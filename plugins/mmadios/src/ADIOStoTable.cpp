@@ -5,7 +5,7 @@
  */
 
 #include "ADIOStoTable.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 
 
 
@@ -68,6 +68,13 @@ bool ADIOStoTable::getData(core::Call& call) {
             return false;
         }
 
+        for (int i = 0; i < availVars.size(); ++i) {
+            _rows = std::max(_rows, cad->getData(availVars[i])->size());
+        }
+        availVars.erase(std::remove_if(availVars.begin(), availVars.end(),
+                            [&](const std::string& var) { return cad->getData(var)->size() != _rows; }),
+            availVars.end());
+
         _cols = availVars.size();
         _colinfo.resize(_cols);
         std::vector<std::vector<float>> raw_data(_cols);
@@ -75,7 +82,7 @@ bool ADIOStoTable::getData(core::Call& call) {
             _rows = std::max(_rows, cad->getData(availVars[i])->size());
             raw_data[i] = cad->getData(availVars[i])->GetAsFloat();
             float min = std::numeric_limits<float>::max();
-            float max = std::numeric_limits<float>::min();
+            float max = std::numeric_limits<float>::lowest();
             for (int j = 0; j < raw_data[i].size(); ++j) {
                 min = std::min(min, raw_data[i][j]);
                 max = std::max(max, raw_data[i][j]);

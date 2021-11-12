@@ -11,7 +11,6 @@
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
-#include "mmcore/mmd3d.h"
 #include "mmcore/ApiHandle.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/JobDescription.h"

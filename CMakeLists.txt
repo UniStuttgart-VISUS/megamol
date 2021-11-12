@@ -34,7 +34,6 @@ set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
 set(MEGAMOL_VISLIB_GL_DIR ${MEGAMOL_DIR}/vislib_gl)
 set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
 set(MEGAMOL_CORE_GL_DIR ${MEGAMOL_DIR}/core_gl)
-set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 # Versions
@@ -60,13 +59,15 @@ add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_VISLIB_GL_DIR})
+endif()
 
 # Core
 add_subdirectory(${MEGAMOL_CORE_DIR})
-
-# Console
-set(CONSOLE_NAME mmconsole)
-add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_CORE_GL_DIR})
+endif()
 
 # Remoteconsole
 add_subdirectory(remoteconsole)
@@ -82,9 +83,6 @@ endif()
 
 # Plugins
 add_subdirectory(plugins)
-if (BUILD_CONSOLE)
-  target_link_libraries(mmconsole PRIVATE plugins)
-endif()
 if (BUILD_FRONTEND)
   target_link_libraries(megamol PRIVATE plugins)
 endif()

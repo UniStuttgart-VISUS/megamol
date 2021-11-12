@@ -35,7 +35,7 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
         , selectionMode_(SelectionMode::PICK)
         , selectedComponent_(-1)
         , selectedBin_(-1) {
-    transferFunctionCallerSlot_.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    transferFunctionCallerSlot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     MakeSlotAvailable(&transferFunctionCallerSlot_);
 
     binsParam_ << new core::param::IntParam(static_cast<int>(numBins_), 1);
@@ -58,11 +58,11 @@ bool BaseHistogramRenderer2D::create() {
 
     try {
         drawHistogramProgram_ = core::utility::make_glowl_shader(
-            "histo_base_draw", shaderOptions, "infovis/histo/base_draw.vert.glsl", "infovis/histo/base_draw.frag.glsl");
+            "histo_base_draw", shaderOptions, "infovis_gl/histo/base_draw.vert.glsl", "infovis_gl/histo/base_draw.frag.glsl");
         drawAxesProgram_ = core::utility::make_glowl_shader(
-            "histo_base_axes", shaderOptions, "infovis/histo/base_axes.vert.glsl", "infovis/histo/base_axes.frag.glsl");
+            "histo_base_axes", shaderOptions, "infovis_gl/histo/base_axes.vert.glsl", "infovis_gl/histo/base_axes.frag.glsl");
         calcMaxBinProgram_ =
-            core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis/histo/base_max_bin.comp.glsl");
+            core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -87,7 +87,7 @@ void BaseHistogramRenderer2D::release() {
     releaseImpl();
 }
 
-bool BaseHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
+bool BaseHistogramRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -98,7 +98,7 @@ bool BaseHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
+bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     // store cam and view info for input transformation
     camera_ = call.GetCamera();
     viewRes_ = call.GetViewResolution();
@@ -107,7 +107,7 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
         return false;
     }
 
-    auto tfCall = transferFunctionCallerSlot_.CallAs<core::view::CallGetTransferFunction>();
+    auto tfCall = transferFunctionCallerSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (tfCall == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "BaseHistogramRenderer2D requires a transfer function!");
         return false;

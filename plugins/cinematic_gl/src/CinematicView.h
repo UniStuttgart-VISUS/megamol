@@ -11,9 +11,9 @@
 
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/View3DGL.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/CallRenderViewGL.h"
+#include "mmcore_gl/view/View3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRenderViewGL.h"
 
 #include "cinematic/Keyframe.h"
 #include "cinematic/CinematicUtils.h"
@@ -30,10 +30,10 @@ namespace cinematic_gl {
     /**
     * Cinemtic View.
     */
-    class CinematicView : public core::view::View3DGL {
+    class CinematicView : public core_gl::view::View3DGL {
     public:
 
-        typedef core::view::View3DGL Base;
+        typedef core_gl::view::View3DGL Base;
 
         std::vector<std::string> requested_lifetime_resources() override {
             auto lifetime_resources = Base::requested_lifetime_resources();

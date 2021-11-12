@@ -19,7 +19,8 @@ adiosDataSource::adiosDataSource()
     , getData("getdata", "Slot to request data from this data source.")
     , filenameSlot("filename", "The path to the ADIOS-based file to load.") {
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory));
+    this->filenameSlot.SetParameter(
+        new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory));
     this->filenameSlot.SetUpdateCallback(&adiosDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filenameSlot);
 

@@ -12,30 +12,39 @@
 #include <fstream>
 #include <iostream>
 #include <math.h>
-#include "protein/Color.h"
 #include "MoleculeSESRenderer.h"
+#include "glm/gtx/string_cast.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein/Color.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/sys/File.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein_gl;
+using namespace megamol::core_gl;
+using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::protein_gl;
 using namespace megamol::core::utility::log;
 
 /*
@@ -44,31 +53,53 @@ using namespace megamol::core::utility::log;
 MoleculeSESRenderer::MoleculeSESRenderer(void)
         : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
+        , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
-        , rendermodeParam("renderingMode", "Choose Render Mode: ")
-        , puxelsParam("puxels", "Enable Puxel Rendering: ")
-        , coloringModeParam0("protein::Color::coloringMode0", "The first coloring mode.")
-        , coloringModeParam1("protein::Color::coloringMode1", "The second coloring mode.")
-        , cmWeightParam("protein::Color::colorWeighting", "The weighting of the two coloring modes.")
+        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
+        , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
         , silhouettecolorParam("silhouetteColor", "Silhouette Color: ")
         , sigmaParam("SSAOsigma", "Sigma value for SSAO: ")
         , lambdaParam("SSAOlambda", "Lambda value for SSAO: ")
-        , minGradColorParam("protein::Color::minGradColor", "The color for the minimum value for gradient coloring")
-        , midGradColorParam("protein::Color::midGradColor", "The color for the middle value for gradient coloring")
-        , maxGradColorParam("protein::Color::maxGradColor", "The color for the maximum value for gradient coloring")
+        , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
         , debugParam("drawRS", "Draw the Reduced Surface: ")
         , drawSESParam("drawSES", "Draw the SES: ")
         , drawSASParam("drawSAS", "Draw the SAS: ")
         , fogstartParam("fogStart", "Fog Start: ")
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
-        , colorTableFileParam("protein::Color::colorTableFilename", "The filename of the color table.")
-        , offscreenRenderingParam("offscreenRendering", "Toggle offscreen rendering.")
+        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , probeRadiusSlot("probeRadius", "The probe radius for the surface computation")
-        , puxelSizeBuffer(512 << 20)
-        , computeSesPerMolecule(false) {
+        , computeSesPerMolecule(false)
+        , vertexArraySphere_(0)
+        , vertexArrayTorus_(0)
+        , vertexArrayTria_(0)
+        , sphereColorBuffer_(nullptr)
+        , sphereVertexBuffer_(nullptr)
+        , torusColorBuffer_(nullptr)
+        , torusVertexBuffer_(nullptr)
+        , torusParamsBuffer_(nullptr)
+        , torusQuaternionBuffer_(nullptr)
+        , torusSphereBuffer_(nullptr)
+        , torusCuttingPlaneBuffer_(nullptr)
+        , triaColorBuffer_(nullptr)
+        , triaVertexBuffer_(nullptr)
+        , triaAttrib1Buffer_(nullptr)
+        , triaAttrib2Buffer_(nullptr)
+        , triaAttrib3Buffer_(nullptr)
+        , triaAttribTexCoord1Buffer_(nullptr)
+        , triaAttribTexCoord2Buffer_(nullptr)
+        , triaAttribTexCoord3Buffer_(nullptr)
+        , pointLightBuffer_(nullptr)
+        , directionalLightBuffer_(nullptr) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
@@ -94,21 +125,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     // ppm->SetTypePair( TRANSPARENCY, "Transparency");
     this->postprocessingParam << ppm;
 
-    // ----- choose current render mode -----
-    this->currentRendermode = GPU_RAYCASTING;
-    // this->currentRendermode = POLYGONAL;
-    // this->currentRendermode = POLYGONAL_GPU;
-    // this->currentRendermode = GPU_RAYCASTING_INTERIOR_CLIPPING;
-    // this->currentRendermode = GPU_SIMPLIFIED;
-    param::EnumParam* rm = new param::EnumParam(int(this->currentRendermode));
-    rm->SetTypePair(GPU_RAYCASTING, "GPU Ray Casting");
-    this->rendermodeParam << rm;
-
-    // ----- use Puxels param -----
-    this->usePuxels = false;
-    param::BoolParam* puxbpm = new param::BoolParam(this->usePuxels);
-    this->puxelsParam << puxbpm;
-
     // ----- set the default color for the silhouette -----
     this->SetSilhouetteColor(1.0f, 1.0f, 1.0f);
     param::IntParam* sc = new param::IntParam(this->codedSilhouetteColor, 0, 255255255);
@@ -130,18 +146,18 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->fogstartParam << fs;
 
     // coloring modes
-    this->currentColoringMode0 = protein::Color::CHAIN;
-    this->currentColoringMode1 = protein::Color::ELEMENT;
+    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
+    this->currentColoringMode1 = Color::ColoringMode::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    protein::Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = protein::Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
+    Color::ColoringMode cMode;
+    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
+        cMode = Color::GetModeByIndex(mol, bs, cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -155,15 +171,15 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->MakeSlotAvailable(&this->cmWeightParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // ----- draw RS param -----
@@ -181,11 +197,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     param::BoolParam* saspm = new param::BoolParam(this->drawSAS);
     this->drawSASParam << saspm;
 
-    // ----- ofsfcreen rendering param -----
-    this->offscreenRendering = false;
-    param::BoolParam* orpm = new param::BoolParam(this->offscreenRendering);
-    this->offscreenRenderingParam << orpm;
-
     // ----- molecular indices list param -----
     this->molIdxList.Add("0");
     this->molIdxListParam.SetParameter(new param::StringParam("0"));
@@ -193,12 +204,13 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
+    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(
+        new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // fill rainbow color table
-    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
+    Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // set the FBOs and textures for post processing
     this->colorFBO = 0;
@@ -221,11 +233,7 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->preComputationDone = false;
 
     // export parameters
-    this->MakeSlotAvailable(&this->rendermodeParam);
     this->MakeSlotAvailable(&this->postprocessingParam);
-#ifdef WITH_PUXELS
-    this->MakeSlotAvailable(&this->puxelsParam);
-#endif
     this->MakeSlotAvailable(&this->silhouettecolorParam);
     this->MakeSlotAvailable(&this->sigmaParam);
     this->MakeSlotAvailable(&this->lambdaParam);
@@ -233,7 +241,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->MakeSlotAvailable(&this->debugParam);
     this->MakeSlotAvailable(&this->drawSESParam);
     this->MakeSlotAvailable(&this->drawSASParam);
-    this->MakeSlotAvailable(&this->offscreenRenderingParam);
 }
 
 
@@ -260,17 +267,11 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
     this->cylinderShader.Release();
     this->sphereShader.Release();
     this->sphereClipInteriorShader.Release();
-    this->sphericalTriangleShader.Release();
-    this->torusShader.Release();
     this->lightShader.Release();
     this->hfilterShader.Release();
     this->vfilterShader.Release();
     this->silhouetteShader.Release();
     this->transparencyShader.Release();
-
-    this->puxelClearShader.Release();
-    this->puxelOrderShader.Release();
-    this->puxelDrawShader.Release();
 
     this->Release();
 }
@@ -289,13 +290,7 @@ bool MoleculeSESRenderer::create(void) {
     if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float"))
         return false;
 
-#ifdef WITH_PUXELS
-    allowPuxels = ogl_IsVersionGEQ(4, 3);
-#else
-    allowPuxels = false;
-#endif
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
         return false;
 
     // glEnable( GL_NORMALIZE);
@@ -309,7 +304,7 @@ bool MoleculeSESRenderer::create(void) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource compSrc;
     ShaderSource vertSrc;
@@ -320,96 +315,31 @@ bool MoleculeSESRenderer::create(void) {
     if (!ci)
         return false;
 
-    if (allowPuxels) {
-        /////////////////////////////////
-        // load the puxel clear shader //
-        /////////////////////////////////
+    try {
+        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
 
-        if (!ci->ShaderSourceFactory().MakeShaderSource("puxels::clear", compSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load compute shader source for puxel clear shader", this->ClassName());
-            return false;
-        }
-        try {
-            if (!this->puxelClearShader.Compile(compSrc.Code(), compSrc.Count())) {
-                throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-            }
-        } catch (vislib::Exception e) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to create clear shader: %s\n", this->ClassName(), e.GetMsgA());
-            return false;
-        }
+        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
+            std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_sphere.frag.glsl"));
 
-        //////////////////////////
-        // puxel reorder shader //
-        //////////////////////////
-        if (!ci->ShaderSourceFactory().MakeShaderSource("puxels::order", compSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load compute shader source for puxel order shader", this->ClassName());
-            return false;
-        }
+        torusShader_ = core::utility::make_shared_glowl_shader("torus", shdr_options,
+            std::filesystem::path("protein_gl/moleculeses/mses_torus.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_torus.frag.glsl"));
 
-        compSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-
-        try {
-            if (!this->puxelOrderShader.Compile(compSrc.Code(), compSrc.Count())) {
-                throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-            }
-        } catch (vislib::Exception e) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to create order shader: %s\n", this->ClassName(), e.GetMsgA());
-            return false;
-        }
-
-        //////////////////////////////////
-        // puxel reduced surface shader //
-        //////////////////////////////////
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::puxelsReducedSurfaceRenderVertex", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for puxel render reduced surface shader", this->ClassName());
-            return false;
-        }
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::puxelsReducedSurfaceRenderFragment", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load fragment shader source for puxel render reduced surface shader", this->ClassName());
-            return false;
-        }
-        fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-        try {
-            if (!this->puxelRenderReducedSurfaceShader.Create(
-                    vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-                throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-            }
-        } catch (vislib::Exception e) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create puxel render reduced surface shader: %s\n",
-                this->ClassName(), e.GetMsgA());
-            return false;
-        }
-
-        ///////////////////////
-        // puxel draw shader //
-        ///////////////////////
-        if (!ci->ShaderSourceFactory().MakeShaderSource("puxels::pass_120", vertSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for puxel draw shader", this->ClassName());
-            return false;
-        }
-        if (!ci->ShaderSourceFactory().MakeShaderSource("puxels::blend", fragSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for puxel draw shader", this->ClassName());
-            return false;
-        }
-        fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-        try {
-            if (!this->puxelDrawShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-                throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-            }
-        } catch (vislib::Exception e) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to create puxel draw shader: %s\n", this->ClassName(), e.GetMsgA());
-            return false;
-        }
+        sphericalTriangleShader_ = core::utility::make_shared_glowl_shader("sphericaltriangle", shdr_options,
+            std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
+            std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
+
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
@@ -424,21 +354,6 @@ bool MoleculeSESRenderer::create(void) {
         return false;
     }
 
-    // when we want to use puxels, we have to replace the version snippet and insert puxel code
-    if (allowPuxels) {
-        /*
-        #ifdef PUXELS
-                puxels_store(gl_FragColor, gl_FragDepth);
-        #endif
-        */
-        fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
-        fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
-        fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-        fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-        fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-        fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
-    }
-
     try {
         if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
@@ -448,169 +363,6 @@ bool MoleculeSESRenderer::create(void) {
             Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
-    // Sphere shader for offscreen rendering
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphereFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create offscreen rendering sphere shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    ///////////////////////////////////////////////////
-    // load the shader source for the torus renderer //
-    ///////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName());
-        return false;
-    }
-    if (allowPuxels) {
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusFragmentPuxels", fragSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
-            return false;
-        }
-    } else {
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusFragment", fragSrc)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
-            return false;
-        }
-    }
-    // when we want to use puxels, we have to replace the version snippet and insert puxel code
-    if (allowPuxels) {
-        /*
-        #ifdef PUXELS
-                puxels_store(gl_FragColor, gl_FragDepth);
-        #endif
-        */
-        fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
-        fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
-        fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-        fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-        fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-        fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
-    }
-
-    try {
-        if (!this->torusShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create torus shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-    // Tirus shader for offscreen rendering
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->torusShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create offscreenrendering torus shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    ////////////////////////////////////////////////////////////////
-    // load the shader source for the spherical triangle renderer //
-    ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName());
-        return false;
-    }
-    if (allowPuxels) {
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleFragmentPuxels", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
-            return false;
-        }
-    } else {
-        if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleFragment", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
-            return false;
-        }
-    }
-    // when we want to use puxels, we have to replace the version snippet and insert puxel code
-    if (allowPuxels) {
-        /*
-        #ifdef PUXELS
-                puxels_store(gl_FragColor, gl_FragDepth);
-        #endif
-        */
-        fragSrc.Replace(0, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::version"));
-        fragSrc.Insert(1, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::puxeluniform"));
-        fragSrc.Insert(2, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::header"));
-        fragSrc.Insert(3, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::sespayload"));
-        fragSrc.Insert(4, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::data"));
-        fragSrc.Insert(5, ci->ShaderSourceFactory().MakeShaderSnippet("puxels::store"));
-    }
-
-    try {
-        if (!this->sphericalTriangleShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    // Spherical triangle shader for offscreenrendering
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphericalTriangleShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // load the shader source for the sphere renderer with clipped interior //
-    //////////////////////////////////////////////////////////////////////////
-    /*
-fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
-    // vertex shader
-    vertSrc.Append( this->shaderSnippetFactory().Create("commondefines",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    vertSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
-        "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
-    // fragment shader
-    fragSrc.Append( this->shaderSnippetFactory().Create("commondefines",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    fragSrc.Append( this->shaderSnippetFactory().Create("lightdirectional",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    fragSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
-        "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
-    // create the shader
-    this->sphereClipInteriorShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    //clear fragment source
-    fragSrc.Clear();
-    //clear vertex source
-    vertSrc.Clear();
-    */
 
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
@@ -705,26 +457,6 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     }
 
     //////////////////////////////////////////////////////
-    // load the shader files for transparency           //
-    //////////////////////////////////////////////////////
-    /*
-    // version 120
-    fragSrc.Append(vertSrc.Append(new ShaderSource::VersionSnippet(120)));
-    // vertex shader
-    vertSrc.Append( this->shaderSnippetFactory().Create("transparency",
-        "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
-    // fragment shader
-    fragSrc.Append( this->shaderSnippetFactory().Create("transparency",
-        "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
-    // create the shader
-    this->transparencyShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    //clear fragment source
-    fragSrc.Clear();
-    //clear vertex source
-    vertSrc.Clear();
-    */
-
-    //////////////////////////////////////////////////////
     // load the shader source for the cylinder renderer //
     //////////////////////////////////////////////////////
     if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
@@ -747,13 +479,127 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
         return false;
     }
 
+    // create the buffer objects
+    sphereVertexBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    sphereColorBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    torusVertexBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    torusColorBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    torusParamsBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    torusQuaternionBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    torusSphereBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    torusCuttingPlaneBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    triaVertexBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaColorBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttrib1Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttrib2Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttrib3Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttribTexCoord1Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttribTexCoord2Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    triaAttribTexCoord3Buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    pointLightBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    directionalLightBuffer_ =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    glGenVertexArrays(1, &vertexArraySphere_);
+    glBindVertexArray(vertexArraySphere_);
+
+    sphereVertexBuffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    sphereColorBuffer_->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
+    glGenVertexArrays(1, &vertexArrayTorus_);
+    glBindVertexArray(vertexArrayTorus_);
+
+    torusVertexBuffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    torusColorBuffer_->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    torusParamsBuffer_->bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    torusQuaternionBuffer_->bind();
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    torusSphereBuffer_->bind();
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    torusCuttingPlaneBuffer_->bind();
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    for (int i = 0; i < 6; ++i) {
+        glDisableVertexAttribArray(i);
+    }
+
+    glGenVertexArrays(1, &vertexArrayTria_);
+    glBindVertexArray(vertexArrayTria_);
+
+    triaVertexBuffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaColorBuffer_->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttrib1Buffer_->bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttrib2Buffer_->bind();
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttrib3Buffer_->bind();
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttribTexCoord1Buffer_->bind();
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttribTexCoord2Buffer_->bind();
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    triaAttribTexCoord3Buffer_->bind();
+    glEnableVertexAttribArray(7);
+    glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    for (int i = 0; i < 8; ++i) {
+        glDisableVertexAttribArray(i);
+    }
+
     return true;
 }
 
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -767,30 +613,75 @@ bool MoleculeSESRenderer::GetExtents(view::CallRender3DGL& call) {
     return true;
 }
 
+void MoleculeSESRenderer::UpdateLights(void) {
+    auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
+    bool lighting_available = false;
+    if (call_light != nullptr) {
+        if ((*call_light)(0)) {
+            lighting_available = true;
+        }
+    }
+
+    if (!lighting_available) {
+        pointLights_.clear();
+        directionalLights_.clear();
+    }
+
+    if (lighting_available && call_light->hasUpdate()) {
+        auto& lights = call_light->getData();
+        pointLights_.clear();
+        directionalLights_.clear();
+
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto directional_lights = lights.get<core::view::light::DistantLightType>();
+
+        for (auto& pl : point_lights) {
+            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+        }
+
+        for (auto& dl : directional_lights) {
+            if (dl.eye_direction) {
+                auto cam_dir = glm::normalize(this->camera.getPose().direction);
+                directionalLights_.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
+            } else {
+                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+            }
+        }
+    }
+    pointLightBuffer_->rebuffer(pointLights_);
+    directionalLightBuffer_->rebuffer(directionalLights_);
+}
 
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 
     // get camera information
     this->camera = call.GetCamera();
-    glm::mat4 view = this->camera.getViewMatrix();
-    glm::mat4 proj = this->camera.getProjectionMatrix();
+    view_ = this->camera.getViewMatrix();
+    proj_ = this->camera.getProjectionMatrix();
+    invview_ = glm::inverse(view_);
+    transview_ = glm::transpose(view_);
+    invproj_ = glm::inverse(proj_);
+    invtransview_ = glm::transpose(invview_);
+    mvp_ = proj_ * view_;
+    mvpinverse_ = glm::inverse(mvp_);
+    mvptranspose_ = glm::transpose(mvp_);
 
     std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(proj));
+    glLoadMatrixf(glm::value_ptr(proj_));
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(view));
+    glLoadMatrixf(glm::value_ptr(view_));
 
     float callTime = call.Time();
 
@@ -815,60 +706,56 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     // ==================== check parameters ====================
     this->UpdateParameters(mol, bs);
+    this->UpdateLights();
 
     // ==================== Precomputations ====================
+    this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
 
-    if (this->currentRendermode == GPU_RAYCASTING) {
-
-        this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
-
-        // init the reduced surfaces
-        if (this->reducedSurface.empty()) {
-            time_t t = clock();
-            // create the reduced surface
-            unsigned int chainIds;
-            if (!this->computeSesPerMolecule) {
-                this->reducedSurface.push_back(new protein::ReducedSurface(mol, this->probeRadius));
-                this->reducedSurface.back()->ComputeReducedSurface();
+    // init the reduced surfaces
+    if (this->reducedSurface.empty()) {
+        time_t t = clock();
+        // create the reduced surface
+        unsigned int chainIds;
+        if (!this->computeSesPerMolecule) {
+            this->reducedSurface.push_back(new ReducedSurface(mol, this->probeRadius));
+            this->reducedSurface.back()->ComputeReducedSurface();
+        } else {
+            // if no molecule indices are given, compute the SES for all molecules
+            if (this->molIdxList.IsEmpty()) {
+                for (chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds) {
+                    this->reducedSurface.push_back(new ReducedSurface(chainIds, mol, this->probeRadius));
+                    this->reducedSurface.back()->ComputeReducedSurface();
+                }
             } else {
-                // if no molecule indices are given, compute the SES for all molecules
-                if (this->molIdxList.IsEmpty()) {
-                    for (chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds) {
-                        this->reducedSurface.push_back(new protein::ReducedSurface(chainIds, mol, this->probeRadius));
-                        this->reducedSurface.back()->ComputeReducedSurface();
-                    }
-                } else {
-                    // else compute the SES for all selected molecules
-                    for (chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds) {
-                        this->reducedSurface.push_back(
-                            new protein::ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
-                        this->reducedSurface.back()->ComputeReducedSurface();
-                    }
+                // else compute the SES for all selected molecules
+                for (chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds) {
+                    this->reducedSurface.push_back(
+                        new ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
+                    this->reducedSurface.back()->ComputeReducedSurface();
                 }
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
         }
-        // update the data / the RS
-        for (cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS) {
-            if (this->reducedSurface[cntRS]->UpdateData(1.0f, 5.0f)) {
-                this->ComputeRaycastingArrays(cntRS);
-            }
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
+    }
+    // update the data / the RS
+    for (cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS) {
+        if (this->reducedSurface[cntRS]->UpdateData(1.0f, 5.0f)) {
+            this->ComputeRaycastingArrays(cntRS);
         }
     }
 
     if (!this->preComputationDone) {
         // compute the color table
-        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
         // compute the data needed for the current render mode
-        if (this->currentRendermode == GPU_RAYCASTING)
-            this->ComputeRaycastingArrays();
+        this->ComputeRaycastingArrays();
         // set the precomputation of the data as done
         this->preComputationDone = true;
     }
@@ -883,9 +770,6 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     if (this->postprocessing != NONE && virtualViewportChanged)
         this->CreateFBO();
-
-    if (this->allowPuxels && virtualViewportChanged)
-        puxelsCreateBuffers();
 
     // ==================== Scale & Translate ====================
 
@@ -914,10 +798,6 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
         }
     }
 
-    // clear puxels buffer
-    if (this->usePuxels)
-        this->puxelsClear();
-
     // start rendering to frame buffer object
     if (this->postprocessing != NONE) {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
@@ -925,15 +805,7 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // render the SES
-    if (this->currentRendermode == GPU_RAYCASTING) {
-        this->RenderSESGpuRaycasting(mol);
-    }
-
-    if (this->usePuxels) {
-        this->puxelRenderReducedSurface();
-        this->puxelsReorder();
-        this->puxelsDraw();
-    }
+    this->RenderSESGpuRaycasting(mol);
 
     //////////////////////////////////
     // apply postprocessing effects //
@@ -956,11 +828,11 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     mol->Unlock();
 
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
+    glPopMatrix();
     glLoadIdentity();
 
     glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+    glPopMatrix();
     glLoadIdentity();
 
     return true;
@@ -979,30 +851,19 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
             static_cast<PostprocessingMode>(this->postprocessingParam.Param<param::EnumParam>()->Value());
         this->postprocessingParam.ResetDirty();
     }
-    if (this->rendermodeParam.IsDirty()) {
-        this->currentRendermode = static_cast<RenderMode>(this->rendermodeParam.Param<param::EnumParam>()->Value());
-        this->rendermodeParam.ResetDirty();
-        this->preComputationDone = false;
-    }
-    if (this->puxelsParam.IsDirty()) {
-        this->usePuxels = this->puxelsParam.Param<param::BoolParam>()->Value();
-        this->puxelsParam.ResetDirty();
-        if (!this->allowPuxels)
-            this->puxelsParam.Param<param::BoolParam>()->SetValue(false, false);
-    }
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
-            static_cast<protein::Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
+            static_cast<Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
         this->currentColoringMode1 =
-            static_cast<protein::Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
+            static_cast<Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
 
-        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
 
         this->preComputationDone = false;
         this->coloringModeParam0.ResetDirty();
@@ -1038,19 +899,15 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
         this->drawSASParam.ResetDirty();
         this->preComputationDone = false;
     }
-    if (this->offscreenRenderingParam.IsDirty()) {
-        this->offscreenRendering = this->offscreenRenderingParam.Param<param::BoolParam>()->Value();
-        this->offscreenRenderingParam.ResetDirty();
-    }
     if (this->molIdxListParam.IsDirty()) {
-        vislib::StringA tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value().c_str());
-        this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr, ';', true);
+        std::string tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value());
+        this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr.c_str(), ';', true);
         this->molIdxListParam.ResetDirty();
     }
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        protein::Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
+        Color::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;
     }
@@ -1064,10 +921,6 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     if (recomputeColors) {
         this->preComputationDone = false;
     }
-
-#ifndef WITH_PUXELS
-    this->usePuxels = false;
-#endif
 }
 
 /*
@@ -1374,9 +1227,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         virtualViewportChanged = true;
     }
 
-    if (this->allowPuxels && virtualViewportChanged)
-        puxelsCreateBuffers();
-
     // set viewport
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
@@ -1414,92 +1264,41 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         GLuint attribInCuttingPlane;
 
         if (this->drawSES) {
+
+            torusVertexBuffer_->rebuffer(
+                torusVertexArray[cntRS].PeekElements(), torusVertexArray[cntRS].Count() * sizeof(float));
+            torusColorBuffer_->rebuffer(torusColors[cntRS].PeekElements(), torusColors[cntRS].Count() * sizeof(float));
+            torusParamsBuffer_->rebuffer(
+                torusInParamArray[cntRS].PeekElements(), torusInParamArray[cntRS].Count() * sizeof(float));
+            torusQuaternionBuffer_->rebuffer(
+                torusQuatCArray[cntRS].PeekElements(), torusQuatCArray[cntRS].Count() * sizeof(float));
+            torusSphereBuffer_->rebuffer(
+                torusInSphereArray[cntRS].PeekElements(), torusInSphereArray[cntRS].Count() * sizeof(float));
+            torusCuttingPlaneBuffer_->rebuffer(torusInCuttingPlaneArray[cntRS].PeekElements(),
+                torusInCuttingPlaneArray[cntRS].Count() * sizeof(float));
+
+            glBindVertexArray(vertexArrayTorus_);
             // enable torus shader
-            if (offscreenRendering) {
-                this->torusShaderOR.Enable();
-                // set shader variables
-                glUniform4fvARB(this->torusShaderOR.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->torusShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(this->torusShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->torusShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(this->torusShaderOR.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(
-                    this->torusShaderOR.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-                glUniform1fARB(this->torusShaderOR.ParameterLocation("alpha"), this->transparency);
-                // get attribute locations
-                attribInParams = glGetAttribLocationARB(this->torusShaderOR, "inParams");
-                attribQuatC = glGetAttribLocationARB(this->torusShaderOR, "quatC");
-                attribInSphere = glGetAttribLocationARB(this->torusShaderOR, "inSphere");
-                attribInColors = glGetAttribLocationARB(this->torusShaderOR, "inColors");
-                attribInCuttingPlane = glGetAttribLocationARB(this->torusShaderOR, "inCuttingPlane");
-            } else {
-                this->torusShader.Enable();
-                // set shader variables
+            torusShader_->use();
+            // set shader variables
+            torusShader_->setUniform("viewAttr", viewportStuff);
+            torusShader_->setUniform("camIn", camdir);
+            torusShader_->setUniform("camRight", right);
+            torusShader_->setUniform("camUp", up);
+            torusShader_->setUniform("zValues", fogStart, nearplane, farplane);
+            torusShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            torusShader_->setUniform("alpha", this->transparency);
+            torusShader_->setUniform("view", view_);
+            torusShader_->setUniform("proj", proj_);
+            torusShader_->setUniform("viewInverse", invview_);
+            torusShader_->setUniform("mvp", mvp_);
+            torusShader_->setUniform("mvpinverse", mvpinverse_);
+            torusShader_->setUniform("mvptransposed", mvptranspose_);
 
-                // puxels
-#ifdef WITH_PUXELS
-                glUniform1ui(this->torusShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-                glUniform1ui(this->torusShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-                glUniform1ui(this->torusShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-                glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
-
-                glUniform4fvARB(this->torusShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(this->torusShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(
-                    this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-                glUniform1fARB(this->torusShader.ParameterLocation("alpha"), this->transparency);
-                // get attribute locations
-                attribInParams = glGetAttribLocationARB(this->torusShader, "inParams");
-                attribQuatC = glGetAttribLocationARB(this->torusShader, "quatC");
-                attribInSphere = glGetAttribLocationARB(this->torusShader, "inSphere");
-                attribInColors = glGetAttribLocationARB(this->torusShader, "inColors");
-                attribInCuttingPlane = glGetAttribLocationARB(this->torusShader, "inCuttingPlane");
-            }
-
-            // set color to orange
-            glColor3f(1.0f, 0.75f, 0.0f);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            // enable vertex attribute arrays for the attribute locations
-            glEnableVertexAttribArrayARB(attribInParams);
-            glEnableVertexAttribArrayARB(attribQuatC);
-            glEnableVertexAttribArrayARB(attribInSphere);
-            glEnableVertexAttribArrayARB(attribInColors);
-            glEnableVertexAttribArrayARB(attribInCuttingPlane);
-            // set vertex and attribute pointers and draw them
-            glVertexAttribPointerARB(attribInParams, 3, GL_FLOAT, 0, 0, this->torusInParamArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribQuatC, 4, GL_FLOAT, 0, 0, this->torusQuatCArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribInSphere, 4, GL_FLOAT, 0, 0, this->torusInSphereArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribInColors, 4, GL_FLOAT, 0, 0, this->torusColors[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribInCuttingPlane, 3, GL_FLOAT, 0, 0, this->torusInCuttingPlaneArray[cntRS].PeekElements());
-            glVertexPointer(3, GL_FLOAT, 0, this->torusVertexArray[cntRS].PeekElements());
             glDrawArrays(GL_POINTS, 0, ((unsigned int) this->torusVertexArray[cntRS].Count()) / 3);
-            // disable vertex attribute arrays for the attribute locations
-            glDisableVertexAttribArrayARB(attribInParams);
-            glDisableVertexAttribArrayARB(attribQuatC);
-            glDisableVertexAttribArrayARB(attribInSphere);
-            glDisableVertexAttribArrayARB(attribInColors);
-            glDisableVertexAttribArrayARB(attribInCuttingPlane);
-            glDisableClientState(GL_VERTEX_ARRAY);
-            // enable torus shader
 
-            // puxels
-#ifdef WITH_PUXELS
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
-
-            if (offscreenRendering) {
-                this->torusShaderOR.Disable();
-            } else {
-                this->torusShader.Disable();
-            }
+            glUseProgram(0);
+            glBindVertexArray(0);
 
             /////////////////////////////////////////////////
             // ray cast the spherical triangles on the GPU //
@@ -1512,193 +1311,85 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             GLuint attribTexCoord3;
             GLuint attribColors;
 
+            triaVertexBuffer_->rebuffer(
+                sphericTriaVertexArray[cntRS].PeekElements(), sphericTriaVertexArray[cntRS].Count() * sizeof(float));
+            triaColorBuffer_->rebuffer(
+                sphericTriaColors[cntRS].PeekElements(), sphericTriaColors[cntRS].Count() * sizeof(float));
+            triaAttrib1Buffer_->rebuffer(
+                sphericTriaVec1[cntRS].PeekElements(), sphericTriaVec1[cntRS].Count() * sizeof(float));
+            triaAttrib2Buffer_->rebuffer(
+                sphericTriaVec2[cntRS].PeekElements(), sphericTriaVec2[cntRS].Count() * sizeof(float));
+            triaAttrib3Buffer_->rebuffer(
+                sphericTriaVec3[cntRS].PeekElements(), sphericTriaVec3[cntRS].Count() * sizeof(float));
+            triaAttribTexCoord1Buffer_->rebuffer(
+                sphericTriaTexCoord1[cntRS].PeekElements(), sphericTriaTexCoord1[cntRS].Count() * sizeof(float));
+            triaAttribTexCoord2Buffer_->rebuffer(
+                sphericTriaTexCoord2[cntRS].PeekElements(), sphericTriaTexCoord2[cntRS].Count() * sizeof(float));
+            triaAttribTexCoord3Buffer_->rebuffer(
+                sphericTriaTexCoord3[cntRS].PeekElements(), sphericTriaTexCoord3[cntRS].Count() * sizeof(float));
+
             // bind texture
             glBindTexture(GL_TEXTURE_2D, singularityTexture[cntRS]);
+            glBindVertexArray(vertexArrayTria_);
             // enable spherical triangle shader
-            if (offscreenRendering) {
-                this->sphericalTriangleShaderOR.Enable();
-                // set shader variables
-                glUniform4fvARB(
-                    this->sphericalTriangleShaderOR.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->sphericalTriangleShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(
-                    this->sphericalTriangleShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->sphericalTriangleShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(
-                    this->sphericalTriangleShaderOR.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(this->sphericalTriangleShaderOR.ParameterLocation("fogCol"), fogCol.GetX(),
-                    fogCol.GetY(), fogCol.GetZ());
-                glUniform2fARB(this->sphericalTriangleShaderOR.ParameterLocation("texOffset"),
-                    1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
-                glUniform1fARB(this->sphericalTriangleShaderOR.ParameterLocation("alpha"), this->transparency);
-                // get attribute locations
-                attribVec1 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribVec1");
-                attribVec2 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribVec2");
-                attribVec3 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribVec3");
-                attribTexCoord1 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribTexCoord1");
-                attribTexCoord2 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribTexCoord2");
-                attribTexCoord3 = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribTexCoord3");
-                attribColors = glGetAttribLocationARB(this->sphericalTriangleShaderOR, "attribColors");
-            } else {
-                this->sphericalTriangleShader.Enable();
-                // set shader variables
-#ifdef WITH_PUXELS
-                // puxels
-                glUniform1ui(
-                    this->sphericalTriangleShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-                glUniform1ui(
-                    this->sphericalTriangleShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-                glUniform1ui(this->sphericalTriangleShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-                glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
+            sphericalTriangleShader_->use();
 
-                glUniform4fvARB(
-                    this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(
-                    this->sphericalTriangleShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(),
-                    fogCol.GetZ());
-                glUniform2fARB(this->sphericalTriangleShader.ParameterLocation("texOffset"),
-                    1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
-                glUniform1fARB(this->sphericalTriangleShader.ParameterLocation("alpha"), this->transparency);
-                // get attribute locations
-                attribVec1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec1");
-                attribVec2 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec2");
-                attribVec3 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec3");
-                attribTexCoord1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord1");
-                attribTexCoord2 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord2");
-                attribTexCoord3 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord3");
-                attribColors = glGetAttribLocationARB(this->sphericalTriangleShader, "attribColors");
-            }
+            sphericalTriangleShader_->setUniform("viewAttr", viewportStuff);
+            sphericalTriangleShader_->setUniform("camIn", camdir);
+            sphericalTriangleShader_->setUniform("camRight", right);
+            sphericalTriangleShader_->setUniform("camUp", up);
+            sphericalTriangleShader_->setUniform("zValues", fogStart, nearplane, farplane);
+            sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            sphericalTriangleShader_->setUniform(
+                "texOffset", 1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
+            sphericalTriangleShader_->setUniform("alpha", this->transparency);
+            sphericalTriangleShader_->setUniform("view", view_);
+            sphericalTriangleShader_->setUniform("proj", proj_);
+            sphericalTriangleShader_->setUniform("viewInverse", invview_);
+            sphericalTriangleShader_->setUniform("mvp", mvp_);
+            sphericalTriangleShader_->setUniform("mvpinverse", mvpinverse_);
+            sphericalTriangleShader_->setUniform("mvptransposed", mvptranspose_);
 
-            // set color to turquoise
-            glColor3f(0.0f, 0.75f, 1.0f);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            // enable vertex attribute arrays for the attribute locations
-            glEnableVertexAttribArrayARB(attribVec1);
-            glEnableVertexAttribArrayARB(attribVec2);
-            glEnableVertexAttribArrayARB(attribVec3);
-            glEnableVertexAttribArrayARB(attribTexCoord1);
-            glEnableVertexAttribArrayARB(attribTexCoord2);
-            glEnableVertexAttribArrayARB(attribTexCoord3);
-            glEnableVertexAttribArrayARB(attribColors);
-            // set vertex and attribute pointers and draw them
-            glVertexAttribPointerARB(attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribVec3, 4, GL_FLOAT, 0, 0, this->sphericTriaVec3[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord1, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord1[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord2, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord2[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord3, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord3[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
-            glVertexPointer(4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
             glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphericTriaVertexArray[cntRS].Count()) / 4);
-            // disable vertex attribute arrays for the attribute locations
-            glDisableVertexAttribArrayARB(attribVec1);
-            glDisableVertexAttribArrayARB(attribVec2);
-            glDisableVertexAttribArrayARB(attribVec3);
-            glDisableVertexAttribArrayARB(attribTexCoord1);
-            glDisableVertexAttribArrayARB(attribTexCoord2);
-            glDisableVertexAttribArrayARB(attribTexCoord3);
-            glDisableVertexAttribArrayARB(attribColors);
-            glDisableClientState(GL_VERTEX_ARRAY);
-
-            // puxels
-#ifdef WITH_PUXELS
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
 
             // disable spherical triangle shader
-            if (offscreenRendering) {
-                this->sphericalTriangleShaderOR.Disable();
-            } else {
-                this->sphericalTriangleShader.Disable();
-            }
+            glUseProgram(0);
             // unbind texture
+            glBindVertexArray(0);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-        // enable sphere shader
-        if (this->currentRendermode == GPU_RAYCASTING) {
-            if (offscreenRendering) {
-                this->sphereShaderOR.Enable();
-                // set shader variables
-                glUniform4fvARB(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(this->sphereShaderOR.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(
-                    this->sphereShaderOR.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-                glUniform1fARB(this->sphereShaderOR.ParameterLocation("alpha"), this->transparency);
-            } else {
-                this->sphereShader.Enable();
-                // set shader variables
+        this->sphereVertexBuffer_->rebuffer(
+            this->sphereVertexArray[cntRS].PeekElements(), this->sphereVertexArray[cntRS].Count() * sizeof(float));
+        this->sphereColorBuffer_->rebuffer(
+            this->sphereColors[cntRS].PeekElements(), this->sphereColors[cntRS].Count() * sizeof(float));
+        glBindVertexArray(vertexArraySphere_);
 
-#ifdef WITH_PUXELS
-                // puxels
-                glUniform1ui(this->sphereShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-                glUniform1ui(this->sphereShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-                glUniform1ui(this->sphereShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-                glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
+        sphereShader_->use();
 
-                glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-                glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-                glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-                glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-                glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-                glUniform3fARB(
-                    this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-                glUniform1fARB(this->sphereShader.ParameterLocation("alpha"), this->transparency);
-            }
-        } else { // GPU_RAYCASTING_INTERIOR_CLIPPING
-            this->sphereClipInteriorShader.Enable();
-        }
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
-        // set vertex and color pointers and draw them
-        glColorPointer(3, GL_FLOAT, 0, this->sphereColors[cntRS].PeekElements());
-        glVertexPointer(4, GL_FLOAT, 0, this->sphereVertexArray[cntRS].PeekElements());
+        // set shader variables
+        sphereShader_->setUniform("viewAttr", viewportStuff);
+        sphereShader_->setUniform("camIn", camdir);
+        sphereShader_->setUniform("camRight", right);
+        sphereShader_->setUniform("camUp", up);
+        sphereShader_->setUniform("zValues", fogStart, nearplane, farplane);
+        sphereShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+        sphereShader_->setUniform("alpha", this->transparency);
+        sphereShader_->setUniform("view", view_);
+        sphereShader_->setUniform("proj", proj_);
+        sphereShader_->setUniform("viewInverse", invview_);
+        sphereShader_->setUniform("mvp", mvp_);
+        sphereShader_->setUniform("mvpinverse", mvpinverse_);
+        sphereShader_->setUniform("mvptransposed", mvptranspose_);
+
         glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphereVertexArray[cntRS].Count()) / 4);
-        // disable sphere shader
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
-
-#ifdef WITH_PUXELS
-        // puxels
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
 
         // disable sphere shader
-        if (this->currentRendermode == GPU_RAYCASTING) {
-            if (offscreenRendering) {
-                this->sphereShaderOR.Disable();
-            } else {
-                this->sphereShader.Disable();
-            }
-        } else { // GPU_RAYCASTING_INTERIOR_CLIPPING
-            this->sphereClipInteriorShader.Disable();
-        }
-#ifdef WITH_PUXELS
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, 0);
-#endif
+        glUseProgram(0);
+        glBindVertexArray(0);
     }
 
     // delete pointers
@@ -2722,19 +2413,11 @@ void MoleculeSESRenderer::deinitialise(void) {
     this->cylinderShader.Release();
     this->sphereShader.Release();
     this->sphereClipInteriorShader.Release();
-    this->sphericalTriangleShader.Release();
-    this->torusShader.Release();
     this->lightShader.Release();
     this->hfilterShader.Release();
     this->vfilterShader.Release();
     this->silhouetteShader.Release();
     this->transparencyShader.Release();
-
-#ifdef WITH_PUXELS
-    this->puxelClearShader.Release();
-    this->puxelOrderShader.Release();
-    this->puxelDrawShader.Release();
-#endif
 }
 
 
@@ -2748,176 +2431,4 @@ vislib::math::Vector<float, 3> MoleculeSESRenderer::GetProteinAtomColor(unsigned
             this->atomColorTable[idx * 3 + 0], this->atomColorTable[idx * 3 + 1], this->atomColorTable[idx * 3 + 0]);
     else
         return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
-}
-
-/**
- * (Re)initializes the buffers needed for Puxel rendering.
- */
-void MoleculeSESRenderer::puxelsCreateBuffers() {
-    if (puxelsAtomicBufferNextId)
-        glDeleteBuffers(1, &puxelsAtomicBufferNextId);
-    // atomic counter buffer
-    glGenBuffers(1, &puxelsAtomicBufferNextId);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, puxelsAtomicBufferNextId);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned int), NULL, GL_STREAM_COPY);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
-    if (puxelsAtomicBufferNextId)
-        glDeleteBuffers(1, &puxelsBufferHeader);
-    // puxels header
-    glGenBuffers(1, &puxelsBufferHeader);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, puxelsBufferHeader);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->width * this->height * sizeof(unsigned int), NULL, GL_STREAM_COPY);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-    if (puxelsAtomicBufferNextId)
-        glDeleteBuffers(1, &puxelsBufferData);
-    // puxels data
-    glGenBuffers(1, &puxelsBufferData);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, puxelsBufferData);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, puxelSizeBuffer, NULL, GL_STREAM_COPY);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-/**
- * Calls the puxelClearShader shader and resets all values of
- * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
- */
-void MoleculeSESRenderer::puxelsClear() {
-    puxelClearShader.Enable();
-    glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint) fbo->getWidth());
-    glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint) fbo->getHeight());
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-
-    puxelClearShader.Dispatch((unsigned int) fbo->getWidth() / 16, (unsigned int) fbo->getHeight() / 16, 1);
-
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    puxelClearShader.Disable();
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-
-    unsigned int null(0);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, puxelsAtomicBufferNextId);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned int), &null, GL_DYNAMIC_COPY);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-}
-
-/**
- * Calls the puxelOrderShader shader and orders each puxel tube
- * according to the depth of the fragments.
- */
-void MoleculeSESRenderer::puxelsReorder() {
-    puxelOrderShader.Enable();
-    glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint) fbo->getWidth());
-    glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint) fbo->getHeight());
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-
-    puxelOrderShader.Dispatch(this->width / 16, this->height / 16, 1);
-
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    puxelOrderShader.Disable();
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-}
-
-/**
- * Renders a reduced surface of the molecule for later discarding internal fragments.
- */
-void MoleculeSESRenderer::puxelRenderReducedSurface() {
-    return;
-    // temporary variables
-    unsigned int max1, max2;
-    max1 = max2 = 0;
-    vislib::math::Vector<float, 3> v1, v2, v3, n1;
-    v1.Set(0, 0, 0);
-    v2 = v3 = n1 = v1;
-
-    glEnable(GL_COLOR_MATERIAL);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-    glDisable(GL_CULL_FACE);
-    this->puxelRenderReducedSurfaceShader.Enable();
-    glUniform1ui(this->puxelRenderReducedSurfaceShader.ParameterLocation("width"), this->width);
-    glUniform1ui(this->puxelRenderReducedSurfaceShader.ParameterLocation("height"), this->height);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-    unsigned int i;
-    for (unsigned int cntRS = 0; cntRS < (unsigned int) this->reducedSurface.size(); ++cntRS) {
-        max2 = this->reducedSurface[cntRS]->GetRSFaceCount();
-        for (i = 0; i < max2; ++i) {
-            n1 = this->reducedSurface[cntRS]->GetRSFace(i)->GetFaceNormal();
-            v1 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetPosition();
-            v2 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetPosition();
-            v3 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetPosition();
-
-            glBegin(GL_TRIANGLES);
-            glNormal3fv(n1.PeekComponents());
-            glColor4f(1.0f, 0.8f, 0.0f, 0.2f);
-            glVertex3fv(v1.PeekComponents());
-            // glColor3f( 0.0f, 0.7f, 0.7f);
-            glVertex3fv(v2.PeekComponents());
-            // glColor3f( 0.7f, 0.0f, 0.7f);
-            glVertex3fv(v3.PeekComponents());
-            glEnd(); // GL_TRIANGLES
-        }
-    }
-    this->puxelRenderReducedSurfaceShader.Disable();
-    glDisable(GL_COLOR_MATERIAL);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, 0);
-}
-
-/**
- * Calls the puxelBlend shader and displays the contents of the puxel buffer
- * on the current Framebuffer or screen
- */
-void MoleculeSESRenderer::puxelsDraw() {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glEnable(GL_DEPTH_TEST);
-    puxelDrawShader.Enable();
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-
-    glUniform1ui(this->puxelDrawShader.ParameterLocation("width"), this->width);
-    glUniform1ui(this->puxelDrawShader.ParameterLocation("height"), this->height);
-
-    // fullscreenquad
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    puxelDrawShader.Disable();
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
 }

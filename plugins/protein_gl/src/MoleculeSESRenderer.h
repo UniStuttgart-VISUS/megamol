@@ -14,22 +14,24 @@
 #include <list>
 #include <set>
 #include <vector>
-#include "protein/Color.h"
-#include "protein/ReducedSurface.h"
+#include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "protein/Color.h"
+#include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -38,7 +40,7 @@ namespace protein_gl {
      * Molecular Surface Renderer class.
      * Computes and renders the solvent excluded (Connolly) surface.
      */
-    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /** postprocessing modi */
         enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
@@ -77,7 +79,7 @@ namespace protein_gl {
          */
         static bool IsAvailable(void) {
             // return true;
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
         /** ctor */
@@ -139,7 +141,7 @@ namespace protein_gl {
          *
          * @param m The probe position.
          */
-        //void RenderProbe(const vislib::math::Vector<float, 3> m);
+        // void RenderProbe(const vislib::math::Vector<float, 3> m);
         void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
 
         /**
@@ -249,7 +251,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Open GL Render call.
@@ -257,7 +259,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Deinitialises this renderer. This is only called if there was a
@@ -273,6 +275,8 @@ namespace protein_gl {
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
+        /** Light data caller slot */
+        megamol::core::CallerSlot getLightsSlot;
 
         /** camera information */
         // vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -286,8 +290,7 @@ namespace protein_gl {
         core::view::Camera MoleculeSESRenderercameraInfo;
 
         megamol::core::param::ParamSlot postprocessingParam;
-        megamol::core::param::ParamSlot rendermodeParam;
-        megamol::core::param::ParamSlot puxelsParam;
+
         /** parameter slot for coloring mode */
         megamol::core::param::ParamSlot coloringModeParam0;
         /** parameter slot for coloring mode */
@@ -310,16 +313,14 @@ namespace protein_gl {
         megamol::core::param::ParamSlot molIdxListParam;
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
-        /** Parameter to toggle offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
+
         megamol::core::param::ParamSlot probeRadiusSlot;
 
-        bool usePuxels;
-        bool allowPuxels;
+
         bool drawRS;
         bool drawSES;
         bool drawSAS;
-        bool offscreenRendering;
+
 
         /** the reduced surface(s) */
         std::vector<std::vector<protein::ReducedSurface*>> reducedSurfaceAllFrames;
@@ -327,76 +328,29 @@ namespace protein_gl {
         std::vector<protein::ReducedSurface*> reducedSurface;
 
         // shader for the cylinders (raycasting view)
-        vislib::graphics::gl::GLSLShader cylinderShader;
+        vislib_gl::graphics::gl::GLSLShader cylinderShader;
         // shader for the spheres (raycasting view)
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
+        vislib_gl::graphics::gl::GLSLShader sphereShader;
         // shader for the spheres with clipped interior (raycasting view)
-        vislib::graphics::gl::GLSLShader sphereClipInteriorShader;
-        // shader for the spherical triangles (raycasting view)
-        vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-        vislib::graphics::gl::GLSLShader sphericalTriangleShaderOR;
-        // shader for torus (raycasting view)
-        vislib::graphics::gl::GLSLShader torusShader;
-        vislib::graphics::gl::GLSLShader torusShaderOR;
+        vislib_gl::graphics::gl::GLSLShader sphereClipInteriorShader;
         // shader for per pixel lighting (polygonal view)
-        vislib::graphics::gl::GLSLShader lightShader;
+        vislib_gl::graphics::gl::GLSLShader lightShader;
         // shader for 1D gaussian filtering (postprocessing)
-        vislib::graphics::gl::GLSLShader hfilterShader;
-        vislib::graphics::gl::GLSLShader vfilterShader;
+        vislib_gl::graphics::gl::GLSLShader hfilterShader;
+        vislib_gl::graphics::gl::GLSLShader vfilterShader;
         // shader for silhouette drawing (postprocessing)
-        vislib::graphics::gl::GLSLShader silhouetteShader;
+        vislib_gl::graphics::gl::GLSLShader silhouetteShader;
         // shader for cheap transparency (postprocessing/blending)
-        vislib::graphics::gl::GLSLShader transparencyShader;
+        vislib_gl::graphics::gl::GLSLShader transparencyShader;
 
-        ////////////
-        // puxels //
-        ////////////
-        // shader for clearing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelClearShader;
-        // shader for reordering the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
-        // shader for drawing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
-        // shader for rendering the reduced surface into the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
-
-        // atomic counter for next
-        GLuint puxelsAtomicBufferNextId;
-        // buffer containing the puxels header
-        GLuint puxelsBufferHeader;
-        // buffer containing the puxels data
-        GLuint puxelsBufferData;
-        // size of the puxels data buffer in bytes
-        const int puxelSizeBuffer;
+        std::shared_ptr<glowl::GLSLProgram> torusShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
 
         /**
-         * (Re)initializes the buffers needed for Puxel rendering.
+         * updates and uploads all arrays according to the incoming light information
          */
-        void puxelsCreateBuffers();
-
-        /**
-         * Calls the puxelClearShader shader and resets all values of
-         * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
-         */
-        void puxelsClear();
-
-        /**
-         * Renders a reduced surface of the molecule for later discarding internal fragments.
-         */
-        void puxelRenderReducedSurface();
-
-        /**
-         * Calls the puxelOrderShader shader and orders each puxel tube
-         * according to the depth of the fragments.
-         */
-        void puxelsReorder();
-
-        /**
-         * Calls the puxelBlend shader and displays the contents of the puxel buffer
-         * on the current Framebuffer or screen
-         */
-        void puxelsDraw();
+        void UpdateLights();
 
         ////////////
 
@@ -415,8 +369,7 @@ namespace protein_gl {
         /** 'true' if the data for the current render mode is computed, 'false' otherwise */
         bool preComputationDone;
 
-        /** current render mode */
-        RenderMode currentRendermode;
+
         /** The current coloring mode */
         protein::Color::ColoringMode currentColoringMode0;
         protein::Color::ColoringMode currentColoringMode1;
@@ -497,9 +450,51 @@ namespace protein_gl {
         vislib::Array<vislib::StringA> molIdxList;
         // flag for SES computation (false = one SES per molecule)
         bool computeSesPerMolecule;
+        glm::mat4 view_;
+        glm::mat4 proj_;
+        glm::mat4 invview_;
+        glm::mat4 transview_;
+        glm::mat4 invproj_;
+        glm::mat4 invtransview_;
+        glm::mat4 mvp_;
+        glm::mat4 mvpinverse_;
+        glm::mat4 mvptranspose_;
+
+        std::unique_ptr<glowl::BufferObject> sphereVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> sphereColorBuffer_;
+
+        std::unique_ptr<glowl::BufferObject> torusVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusColorBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusParamsBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusQuaternionBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusSphereBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusCuttingPlaneBuffer_;
+
+        std::unique_ptr<glowl::BufferObject> triaVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> triaColorBuffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib1Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib2Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib3Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord1Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord2Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord3Buffer_;
+
+        std::unique_ptr<glowl::BufferObject> pointLightBuffer_;
+        std::unique_ptr<glowl::BufferObject> directionalLightBuffer_;
+
+        GLuint vertexArraySphere_;
+        GLuint vertexArrayTorus_;
+        GLuint vertexArrayTria_;
+
+        struct LightParams {
+            float x, y, z, intensity;
+        };
+
+        std::vector<LightParams> pointLights_;
+        std::vector<LightParams> directionalLights_;
     };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /* MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED */

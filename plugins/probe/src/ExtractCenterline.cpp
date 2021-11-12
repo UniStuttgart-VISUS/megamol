@@ -7,7 +7,7 @@
 #include "ExtractCenterline.h"
 #include <limits>
 #include "CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"

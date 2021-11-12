@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "AddParticleColors.h"
 
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 
 megamol::datatools::AddParticleColors::AddParticleColors(void)
         : AbstractParticleManipulator("outData", "indata"), _tf_slot("inTF", "") {
-    _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    _tf_slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     MakeSlotAvailable(&_tf_slot);
 }
 
@@ -40,7 +40,7 @@ glm::vec4 megamol::datatools::AddParticleColors::sample_tf(
 bool megamol::datatools::AddParticleColors::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
-    core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
+    core_gl::view::CallGetTransferFunctionGL* cgtf = _tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (cgtf == nullptr)
         return false;
     if (!(*cgtf)())
@@ -73,7 +73,8 @@ bool megamol::datatools::AddParticleColors::manipulateData(
             auto const iAcc = parts.GetParticleStore().GetCRAcc();
 
             for (std::size_t pidx = 0; pidx < p_count; ++pidx) {
-                auto const val = (iAcc->Get_f(pidx) - min_i) * fac_i * static_cast<float>(tf_size);
+                auto const col = iAcc->Get_f(pidx);
+                auto const val = (col - min_i) * fac_i * static_cast<float>(tf_size);
                 std::remove_const_t<decltype(val)> main = 0;
                 auto rest = std::modf(val, &main);
                 col_vec[pidx].rgba = sample_tf(tf, tf_size, static_cast<int>(main), rest);
@@ -89,7 +90,11 @@ bool megamol::datatools::AddParticleColors::manipulateData(
 
     auto const pl_count = outData.GetParticleListCount();
     for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
-        outData.AccessParticles(plidx).SetColourData(
+        auto& parts = outData.AccessParticles(plidx);
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)
+            continue;
+        parts.SetColourData(
             geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
     }
 

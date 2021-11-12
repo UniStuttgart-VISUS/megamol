@@ -54,11 +54,14 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    static unsigned char default_alpha_value;
+
 private:
     megamol::frontend_resources::GLScreenshotSource m_frontbufferSource_resource;
-    megamol::frontend_resources::ImageDataToPNGWriter m_toFileWriter_resource;
+    megamol::frontend_resources::ScreenshotImageDataToPNGWriter m_toFileWriter_resource;
 
     std::function<bool(std::filesystem::path const&)> m_frontbufferToPNG_trigger;
+    std::function<bool(megamol::frontend_resources::ImageWrapper const&, std::filesystem::path const&)> m_imagewrapperToPNG_trigger;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
