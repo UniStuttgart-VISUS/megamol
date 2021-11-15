@@ -84,6 +84,10 @@ endif()
 # Plugins
 add_subdirectory(plugins)
 if (BUILD_FRONTEND)
+  if (ENABLE_GL)
+    target_link_libraries(plugins INTERFACE core_gl)
+    target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
+  endif()
   target_link_libraries(megamol PRIVATE plugins)
 endif()
 

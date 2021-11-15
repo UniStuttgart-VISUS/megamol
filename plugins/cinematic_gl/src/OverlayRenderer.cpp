@@ -180,12 +180,6 @@ void OverlayRenderer::release() {
 
 bool OverlayRenderer::create() {
 
-    if (!this->InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     return this->onToggleMode(this->paramMode);
 }
 

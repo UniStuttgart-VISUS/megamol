@@ -31,6 +31,8 @@
 
 #include <glm/ext.hpp>
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
@@ -67,17 +69,19 @@ bool megamol::volume_gl::VolumeSliceRenderer::create(void) {
 		// create shader program
 		vislib_gl::graphics::gl::ShaderSource compute_shader_src;
 		vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
-		vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
+                vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::compute", compute_shader_src))
+                auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
+                    instance()->Configuration().ShaderDirectories());
+		if (!ssf->MakeShaderSource("VolumeSliceRenderer::compute", compute_shader_src))
 			return false;
 		if (!this->compute_shader.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
 			return false;
 		if (!this->compute_shader.Link()) return false;
 
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::vert", vertex_shader_src))
+		if (!ssf->MakeShaderSource("VolumeSliceRenderer::vert", vertex_shader_src))
 			return false;
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::frag", fragment_shader_src))
+		if (!ssf->MakeShaderSource("VolumeSliceRenderer::frag", fragment_shader_src))
 			return false;
 		if (!this->render_shader.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
 			fragment_shader_src.Code(), fragment_shader_src.Count()))
