@@ -13,7 +13,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
-
+#include <limits>
 
 namespace megamol {
 namespace datatools {
@@ -61,6 +61,12 @@ namespace datatools {
             geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
+
+        bool anythingDirty();
+
+        void resetAllDirty();
+
+        SIZE_T myHash = std::numeric_limits<SIZE_T>::max();
 
         /** Activates overriding the selected values for all particle lists */
         core::param::ParamSlot overrideAllListSlot;
