@@ -65,13 +65,22 @@ bool Call::operator()(unsigned int func) {
 #endif
 #ifdef PROFILING
         const auto startTime = std::chrono::high_resolution_clock::now();
+        const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
         bool gl_started = false;
         if (caps.OpenGLRequired()) {
-            gl_started = CallProfiling::qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
+            gl_started = CallProfiling::qm->Start(this, frameID, func);
         }
+
+        perf_man->start_timer(cpu_queries[func], frameID);
+        if (caps.OpenGLRequired())
+            perf_man->start_timer(gl_queries[func], frameID);
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
+        if (caps.OpenGLRequired())
+            perf_man->stop_timer(gl_queries[func]);
+        perf_man->stop_timer(cpu_queries[func]);
+
         if (gl_started) {
             CallProfiling::qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
         }
@@ -87,6 +96,13 @@ bool Call::operator()(unsigned int func) {
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
     //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
     return res;
+}
+
+std::string Call::GetDescriptiveText() const {
+    if (this->caller != nullptr && this->callee != nullptr) {
+        return caller->FullName().PeekBuffer() + std::string("->") + callee->FullName().PeekBuffer();
+    }
+    return "";
 }
 
 void Call::SetCallbackNames(std::vector<std::string> names) {

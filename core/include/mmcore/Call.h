@@ -18,6 +18,7 @@
 #include "CallCapabilities.h"
 #ifdef PROFILING
 #include "CallProfiling.h"
+#include "PerformanceManager.h"
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
@@ -106,6 +107,8 @@ namespace core {
             return caps;
         }
 
+        std::string GetDescriptiveText() const;
+
         void SetCallbackNames(std::vector<std::string> names);
 
         const std::string& GetCallbackName(uint32_t idx) const;
@@ -136,8 +139,12 @@ namespace core {
 
 #ifdef PROFILING
         friend class PerformanceQueryManager;
+        friend class MegaMolGraph;
 
         CallProfiling profiling;
+
+        frontend_resources::PerformanceManager* perf_man = nullptr;
+        frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // PROFILING
     protected:
         CallCapabilities caps;

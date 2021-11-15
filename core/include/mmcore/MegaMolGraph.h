@@ -22,6 +22,7 @@
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
 #include "CommandRegistry.h"
+#include "PerformanceManager.h"
 
 namespace megamol {
 namespace core {
@@ -138,6 +139,10 @@ private:
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
 
     megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
+
+#ifdef PROFILING
+    megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
+#endif
 
     MegaMolGraph_Convenience convenience_functions;
 };

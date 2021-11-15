@@ -396,7 +396,10 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
     auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
     {
         "ImagePresentationEntryPoints",
-        megamol::frontend_resources::CommandRegistry_Req_Name
+        megamol::frontend_resources::CommandRegistry_Req_Name,
+#ifdef PROFILING
+        megamol::frontend_resources::PerformanceManager_Req_Name
+#endif
     });
 
     if (!success)
@@ -407,6 +410,11 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
 
     m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
         graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
+
+#ifdef PROFILING
+    m_perf_manager = & const_cast<frontend_resources::PerformanceManager&>(
+        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
+#endif PROFILING
 
     return true;
 }
@@ -651,6 +659,14 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
+#ifdef PROFILING
+    auto the_call = call.get();
+    the_call->cpu_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        the_call->gl_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+    }
+    the_call->perf_man = m_perf_manager;
+#endif
 
     return true;
 }
