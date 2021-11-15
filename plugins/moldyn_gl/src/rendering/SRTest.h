@@ -152,6 +152,8 @@ private:
 
     core::CallerSlot data_in_slot_;
 
+    core::CallerSlot getLightsSlot;
+
     core::param::ParamSlot method_slot_;
 
     std::unordered_map<method_e, std::unique_ptr<rendering_task>> rendering_tasks_;

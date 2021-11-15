@@ -3,11 +3,17 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/view/light/CallLight.h"
+#include "mmcore/view/light/DistantLight.h"
 
 
-megamol::moldyn_gl::rendering::SRTest::SRTest() : data_in_slot_("inData", ""), method_slot_("method", "") {
+megamol::moldyn_gl::rendering::SRTest::SRTest()
+        : data_in_slot_("inData", ""), getLightsSlot("lights", "Lights are retrieved over this slot."), method_slot_("method", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
@@ -54,6 +60,49 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cr_fbo = cr.GetFramebuffer();
 
+    // Lights
+    glm::vec3 curlightDir = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
+            if (use_eyedir) {
+                curlightDir = cam_pose.direction;
+            } else {
+                auto lightDir = light.direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
+                }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
+            }
+            /// TODO Implement missing distant light parameters:
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
+        }
+    }
+
     // data
     auto in_call = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (in_call == nullptr)
@@ -84,7 +133,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         ubo_st.mvp_inv = glm::inverse(mvp);
         ubo_st.mvp_trans = glm::transpose(mvp);
         ubo_st.attr = glm::vec4(0.f, 0.f, cr_fbo->getWidth(), cr_fbo->getHeight());
-        ubo_st.light_dir = glm::vec3(0.f, 0.f, 1.f);
+        ubo_st.light_dir = curlightDir;
         ubo_st.near_ = cam.get<core::view::Camera::NearPlane>();
         ubo_st.far_ = cam.get<core::view::Camera::FarPlane>();
 
