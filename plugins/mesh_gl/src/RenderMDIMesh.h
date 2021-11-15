@@ -70,8 +70,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif // _WIN32
-        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
-               isExtAvailable("GL_ARB_shader_draw_parameters") && ogl_IsVersionGEQ(4, 3);
+        return true;
     }
 
     /** Ctor. */
