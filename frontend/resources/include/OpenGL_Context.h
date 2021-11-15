@@ -7,11 +7,20 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace megamol {
 namespace frontend_resources {
 
-struct OpenGL_Context {
-};
+    static std::string OpenGL_Context_Req_Name = "OpenGL_Context";
+
+    struct OpenGL_Context {
+        bool isVersionGEQ(int major, int minor) const;
+        bool isExtAvailable(std::string const& ext) const;
+        int version_;
+        std::vector<std::string> ext_;
+    };
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */

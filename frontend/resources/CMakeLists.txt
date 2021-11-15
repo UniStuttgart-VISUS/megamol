@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 #  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
 require_external(glm)
+require_external(glad)
 
 require_external(json)
 if (ENABLE_CUESDK)
@@ -37,7 +38,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   #$<INSTALL_INTERFACE:include/>
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC json glm)
+target_link_libraries(${PROJECT_NAME} PUBLIC json glm glad)
 if (ENABLE_CUESDK)
   target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
 endif()
