@@ -15,7 +15,6 @@
 
 
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib_gl/graphics/gl/ExtensionsDependent.h"
 #include "vislib_gl/graphics/gl/glverify.h"
 #include "vislib/types.h"
 
@@ -34,8 +33,7 @@ namespace gl {
      * classes methods where possible (e.g.: better use 'SetParameter' then 
      * 'glUniform').
      */
-    class GLSLShader : public AbstractOpenGLShader, 
-            public ExtensionsDependent<GLSLShader> {
+    class GLSLShader : public AbstractOpenGLShader {
 
     public:
 
