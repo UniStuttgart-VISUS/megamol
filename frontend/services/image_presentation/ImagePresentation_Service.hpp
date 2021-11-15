@@ -9,6 +9,7 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "EntryPoint.h"
 #include "ImagePresentationEntryPoints.h"
 #include "ImageWrapper.h"
 #include "ImagePresentationSink.h"
@@ -81,12 +82,6 @@ public:
     using EntryPointExecutionCallback = frontend_resources::EntryPointExecutionCallback;
     using EntryPointRenderFunctions = frontend_resources::EntryPointRenderFunctions;
 
-    struct RenderInputsUpdate {
-        virtual ~RenderInputsUpdate(){};
-        virtual void update() {};
-        virtual FrontendResource get_resource() { return {}; };
-    };
-
 private:
 
     std::vector<FrontendResource> m_providedResourceReferences;
@@ -95,23 +90,14 @@ private:
 
     frontend_resources::FramebufferEvents m_global_framebuffer_events;
 
-    // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
+    // for each View in the MegaMol graph we create a EntryPoint with corresponding callback for resource/input consumption
     // the ImagePresentation Service makes sure that the (lifetime and rendering) resources/dependencies requested by the module
     // are satisfied, which means that the execute() callback for the entry point is provided the requested
     // dependencies/resources for rendering
     megamol::frontend_resources::ImagePresentationEntryPoints m_entry_points_registry_resource; // resorce to add/remove entry points
 
-    struct GraphEntryPoint {
-        std::string moduleName;
-        void* modulePtr = nullptr;
-        std::vector<megamol::frontend::FrontendResource> entry_point_resources;
-        // pimpl to some implementation handling rendering input data
-        std::unique_ptr<RenderInputsUpdate> entry_point_data = std::make_unique<RenderInputsUpdate>();
-
-        EntryPointExecutionCallback execute;
-        ImageWrapper execution_result_image;
-    };
-    std::list<GraphEntryPoint> m_entry_points;
+    using EntryPoint = frontend_resources::EntryPoint;
+    std::list<EntryPoint> m_entry_points;
 
     bool add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point);
     bool remove_entry_point(std::string name);
@@ -126,7 +112,7 @@ private:
     std::tuple<
         bool, // success
         std::vector<FrontendResource>, // resources
-        std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
+        std::unique_ptr<frontend_resources::RenderInputsUpdate> // unique_data for entry point
     >
     map_resources(std::vector<std::string> const& requests);
     megamol::frontend_resources::FrontendResourcesLookup m_frontend_resources_lookup;
