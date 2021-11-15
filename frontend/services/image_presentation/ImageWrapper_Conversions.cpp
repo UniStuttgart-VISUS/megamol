@@ -130,6 +130,7 @@ gl_texture& gl_texture::operator=(gl_texture&& other) noexcept
 void gl_texture::from_image(ImageWrapper const& image)
 {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
+    this->size = image.size;
 
     switch (image.type) {
     case WrappedImageType::ByteArray:
@@ -151,6 +152,7 @@ gl_texture& gl_texture::operator=(ImageWrapper const& image)
 
 void gl_texture::assign(gl_texture const& other, bool take_ownership) {
     this->image_wrapper_ptr = other.image_wrapper_ptr;
+    this->size = other.size;
 
     if (take_ownership) {
         this->texture = other.texture;
@@ -172,6 +174,7 @@ void gl_texture::clear() {
     this->image_wrapper_ptr = nullptr;
     this->texture_reference = 0;
     this->texture           = 0;
+    this->size              = {0, 0};
 }
 
 
@@ -195,6 +198,7 @@ std::vector<byte> const& byte_texture::as_byte_vector()
 void byte_texture::from_image(ImageWrapper const& image)
 {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
+    this->size = image.size;
 
     switch (image.type) {
     case WrappedImageType::ByteArray:

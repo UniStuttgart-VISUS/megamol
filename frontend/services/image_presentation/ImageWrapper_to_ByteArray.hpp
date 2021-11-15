@@ -21,6 +21,8 @@ namespace frontend_resources {
         bool texture_owned = false;
         ImageWrapper* image_wrapper_ptr = nullptr;
 
+        ImageWrapper::ImageSize size;
+
         byte_texture(ImageWrapper const& image);
 
         byte_texture& operator=(ImageWrapper const& image);
