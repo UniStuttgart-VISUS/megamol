@@ -77,10 +77,11 @@ for directory in args.directories:
                     for line in lines:
                         if line.startswith(IMPORT_PREFIX):
                             dep = line.removeprefix(IMPORT_PREFIX).strip()
-                            deps.append(os.path.abspath(os.path.join(directory, subdir, dep)))
+                            #print(f"state: dir {directory} subdir {subdir} dep {dep}")
+                            deps.append(os.path.abspath(os.path.join(subdir, dep)))
                             #print(f"found test for {deps}: {entry}")
                     commandline = "megamol.exe --nogui " + ' '.join(deps) + ' ' + entry
-                    print(f"would exec: {commandline}")
+                    #print(f"would exec: {commandline}")
                     refname, stdoutname, stderrname = test_to_output(entry)
                     #print(f"would expect same result as {refname}, stdout {stdoutname}, stderr {stderrname}")
                     if os.path.isfile(RESULT_NAME):
@@ -93,10 +94,19 @@ for directory in args.directories:
                     tr = TestResult()
                     tr.testfile=entry
                     tr.passed=True
-                    compl = subprocess.run(commandline, capture_output=True, check=True)
+                    try:
+                        compl = subprocess.run(commandline, capture_output=True, check=True)
+                    except subprocess.CalledProcessError as exception:
+                        print(f"failed running command line '{commandline}'':")
+                        print(f"{exception}")
+                        print(f"{exception.stdout.decode('utf-8')}")
+                        exit(1)
                     if args.generate_reference:
                         try:
-                            os.rename(RESULT_NAME, refname)
+                            if args.force:
+                                os.replace(RESULT_NAME, refname)
+                            else:
+                                os.rename(RESULT_NAME, refname)
                             print('generated reference')
                         except OSError as exception:
                             print(f'could not move {RESULT_NAME} to {refname}: {exception}')
@@ -137,7 +147,7 @@ for directory in args.directories:
 
 if args.generate_reference:
     exit(0)
-    
+
 if len(testresults) > 0:
     print("\nSummary:")
     for tr in testresults:
