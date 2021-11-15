@@ -76,7 +76,6 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     using geocalls::MultiParticleDataCall;
 
-    // TODO BUG no proper dirty checking and no own hash. In practice this will blow up on several occasions!
     bool overrideAll = this->overrideAllListSlot.Param<core::param::BoolParam>()->Value();
     int listId = this->overrideListSlot.Param<core::param::IntParam>()->Value();
     bool overrideRadius = this->overrideRadiusSlot.Param<core::param::BoolParam>()->Value();
