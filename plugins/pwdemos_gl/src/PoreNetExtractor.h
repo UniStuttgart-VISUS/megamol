@@ -58,9 +58,7 @@ namespace demos_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && (vislib_gl::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
+            return true;
         }
 
         /**
