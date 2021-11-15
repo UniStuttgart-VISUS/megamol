@@ -94,7 +94,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
       INCLUDE_DIR "include")
-    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
   # json
   elseif(NAME STREQUAL "json")
@@ -335,21 +335,23 @@ function(require_external NAME)
       return()
     endif()
 
-    include(GNUInstallDirs)
+    add_external_headeronly_project(glad INTERFACE SOURCE_DIR "glad" INCLUDE_DIR "include")
 
-    if(WIN32)
-      set(GLAD_LIB "lib/glad.lib")
-    else()
-      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
-    endif()
+    # include(GNUInstallDirs)
 
-    add_external_project(glad STATIC
-      SOURCE_DIR glad
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
+    # if(WIN32)
+    #   set(GLAD_LIB "lib/glad.lib")
+    # else()
+    #   set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
+    # endif()
 
-    add_external_library(glad
-      PROJECT glad
-      LIBRARY ${GLAD_LIB})
+    # add_external_project(glad STATIC
+    #   SOURCE_DIR glad
+    #   BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
+
+    # add_external_library(glad
+    #   PROJECT glad
+    #   LIBRARY ${GLAD_LIB})
 
   # glfw
   elseif(NAME STREQUAL "glfw")
@@ -675,7 +677,7 @@ function(require_external NAME)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
-      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # obj-io
   elseif (NAME STREQUAL "obj-io")
