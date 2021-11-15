@@ -51,7 +51,7 @@ namespace demos_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return true;
         }
 
         /** Ctor. */
@@ -197,21 +197,21 @@ namespace demos_gl {
         /** The volume generation shader */
         vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
         
-		// VBO for all particles
-		GLuint particleVBO;
-		// number of particles
-		UINT64 particleCountVBO;
+        // VBO for all particles
+        GLuint particleVBO;
+        // number of particles
+        UINT64 particleCountVBO;
 
         // vertex array for atom spheres (molecule rendering)
         vislib::Array<float> vertSpheres;
         // vertex array for atom colours (molecule rendering)
         vislib::Array<unsigned char> vertColours;
 
-		vislib::Array<vislib::Array<float> > sphereSlices;
-		vislib::Array<unsigned int> sphereCountSlices;
+        vislib::Array<vislib::Array<float> > sphereSlices;
+        vislib::Array<unsigned int> sphereCountSlices;
 
-	    float clipDat[4];
-	    float clipCol[3];
+        float clipDat[4];
+        float clipCol[3];
     };
 
 } /* end namespace demos */

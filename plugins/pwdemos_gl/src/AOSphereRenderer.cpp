@@ -132,12 +132,10 @@ AOSphereRenderer::~AOSphereRenderer(void) {
  * AOSphereRenderer::create
  */
 bool AOSphereRenderer::create(void) {
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isExtAvailable("GL_ARB_multitexture") || !ogl_ctx.isExtAvailable("GL_EXT_framebuffer_object") || !ogl_ctx.isVersionGEQ(2,0)) {
+    if (!ogl_ctx.isExtAvailable("GL_ARB_multitexture") || !ogl_ctx.isExtAvailable("GL_EXT_framebuffer_object") ||
+        !ogl_ctx.isVersionGEQ(2, 0) ||
+        !ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
         return false;
     }
     const char* maFragNames[] = {
