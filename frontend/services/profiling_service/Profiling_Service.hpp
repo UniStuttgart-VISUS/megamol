@@ -10,7 +10,7 @@
 #include <fstream>
 
 #include "AbstractFrontendService.hpp"
-#include "mmcore/CallProfiling.h"
+#include "mmcore_gl/CallProfiling.h"
 #include "PerformanceManager.h"
 
 namespace megamol {

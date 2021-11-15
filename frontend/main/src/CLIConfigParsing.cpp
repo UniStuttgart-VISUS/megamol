@@ -488,7 +488,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
         , {versionnote_option,   "Show version warning when loading a project, use '=false' to disable",            cxxopts::value<bool>(),                     versionnote_handler}
-    #ifdef PROFILING
+#ifdef PROFILING
         , {profile_log_option,  "Enable performance counters and set output to file",                               cxxopts::value<std::string>(),              profile_log_handler}
 #endif
         , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}

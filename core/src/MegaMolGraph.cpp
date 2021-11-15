@@ -414,7 +414,7 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
 #ifdef PROFILING
     m_perf_manager = & const_cast<frontend_resources::PerformanceManager&>(
         graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
-#endif PROFILING
+#endif
 
     return true;
 }

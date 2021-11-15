@@ -6,7 +6,7 @@
 #include <string>
 
 #include "PerformanceQueryManager.h"
-#include "PerformanceHistory.h"
+#include "mmcore/PerformanceHistory.h"
 
 namespace megamol {
 namespace core {
