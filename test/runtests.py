@@ -1,3 +1,11 @@
+# example usage (from megamol install/bin):
+# build all neutral tests:
+# ..\..\..\..\test\runtests.py y:\ssd_cache\src\megamol\build\vs-ninja-22\examples --generate-neutral-test
+# generate all references
+# ..\..\..\..\test\runtests.py ..\..\tests --generate-reference
+# run tests
+# ..\..\..\..\test\runtests.py ..\..\tests
+
 import argparse
 import os
 import os.path
@@ -9,7 +17,7 @@ import subprocess
 parser = argparse.ArgumentParser(usage="%(prog)s <DIRECTORY>", description="execute test scripts in DIRECTORY")
 parser.add_argument('directories', nargs="*")
 parser.add_argument('--generate-reference', action='count', help='Generate reference pngs instead of testing against them')
-parser.add_argument('--generate-neutral-test', action='count', help='Generate a first basic test (.1) for all found projects. Supply the MegaMol base folder as argument.')
+parser.add_argument('--generate-neutral-test', action='count', help='Generate a first basic test (.1) for all found projects. Supply, e.g., the MegaMol build/examples folder as argument to generate a build/tests folder.')
 parser.add_argument('--force', action='count', help='force overwriting files')
 args = parser.parse_args()
 
@@ -63,7 +71,7 @@ if args.generate_neutral_test:
                         print(f"making neutral test {out}")
                         with open(out, "w") as outfile:
                             outfile.write(f"{IMPORT_PREFIX} {os.path.relpath(entry, os.path.dirname(out))}\n")
-                            outfile.write('mmRenderNextFrame()\nmmScreenshot("result.png")\nmmQuit()\n')
+                            outfile.write('mmRenderNextFrame()\nmmRenderNextFrame()\nmmScreenshot("result.png")\nmmQuit()\n')
     exit(0)
 
 for directory in args.directories:
