@@ -150,12 +150,6 @@ namespace rendering {
 
             bool retval = true;
 
-            // Minimum requirements for all render modes
-            if (!GLSLShader::AreExtensionsAvailable()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode is available. Shader extensions are not available.");
-                retval = false;
-            }
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
             
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));

@@ -265,6 +265,11 @@ bool SphereRenderer::create(void) {
             "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
         return false;
     }
+    if (!ogl_ctx.isExtAvailable(GLSLShader::RequiredExtensions())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SphereRenderer] No render mode is available. Shader extensions are not available.");
+        return false;
+    }
 
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
@@ -874,7 +879,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_ctx.isVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -924,7 +929,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
