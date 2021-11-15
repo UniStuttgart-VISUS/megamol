@@ -52,7 +52,7 @@ static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
 static bool screenshot_show_privacy_note = true;
 
-unsigned char megamol::frontend::Screenshot_Service::default_alpha_value = 0;
+unsigned char megamol::frontend::Screenshot_Service::default_alpha_value = 255;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
