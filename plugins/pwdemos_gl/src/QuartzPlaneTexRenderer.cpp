@@ -57,13 +57,9 @@ bool QuartzPlaneTexRenderer::create(void) {
     using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
-        return false;
-    }
-
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture")) {
+    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
+        !ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
         Log::DefaultLog.WriteError("GL2.0 not present");
         return false;
     }
