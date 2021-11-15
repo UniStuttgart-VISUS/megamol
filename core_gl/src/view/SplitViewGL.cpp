@@ -15,6 +15,8 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
 
+#include "OpenGL_Context.h"
+
 
 using namespace megamol;
 using namespace megamol::core_gl;
@@ -479,6 +481,10 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitViewGL::create() {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
+        return false;
+
     _fboFull = std::make_shared<glowl::FramebufferObject>(1, 1);
     _fbo1 = std::make_shared<glowl::FramebufferObject>(1, 1);
     _fbo2 = std::make_shared<glowl::FramebufferObject>(1, 1);

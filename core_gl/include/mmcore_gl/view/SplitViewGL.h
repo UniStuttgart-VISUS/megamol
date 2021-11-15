@@ -49,7 +49,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /**
      * Answer whether or not this module supports being used in a
