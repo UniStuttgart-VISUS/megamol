@@ -11,30 +11,20 @@ flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
 flat out vec3 oc_pos;
-flat out float dot_oc_pos;
+flat out float c;
 
 #include "srtest_ubo.glsl"
 
-layout(location = 0) in vec4 inPosition;
-layout(location = 1) in vec4 inColor;
+#ifdef __SRTEST_VAO__
+#include "srtest_vao.glsl"
+#elif defined(__SRTEST_SSBO__)
+#include "srtest_ssbo.glsl"
+#endif
 
 void main(void) {
-    if (useGlobalRad) {
-        rad = globalRad;
-    } else {
-        rad = inPosition.w;
-    }
-
-    if (useGlobalCol) {
-        pointColor = globalCol;
-    } else {
-        pointColor = inColor;
-    }
-
-    objPos = inPosition.xyz;
+    access_data(objPos, pointColor, rad);
 
     oc_pos = camPos - objPos;
-    dot_oc_pos = dot(oc_pos, oc_pos);
 
     vec2 mins, maxs;
 
@@ -42,6 +32,7 @@ void main(void) {
     float dd = dot(di, di);
 
     sqrRad = rad * rad;
+    c = dot(oc_pos, oc_pos) - sqrRad;
 
     float s = (sqrRad) / (dd);
 
@@ -69,10 +60,11 @@ void main(void) {
     mins = min(mins, v4.xy);
     maxs = max(maxs, v4.xy);
 
-    v1.xy = 0.5f * v1.xy * viewAttr.zw + 0.5f * viewAttr.zw;
-    v2.xy = 0.5f * v2.xy * viewAttr.zw + 0.5f * viewAttr.zw;
-    v3.xy = 0.5f * v3.xy * viewAttr.zw + 0.5f * viewAttr.zw;
-    v4.xy = 0.5f * v4.xy * viewAttr.zw + 0.5f * viewAttr.zw;
+    vec2 factor = 0.5f * viewAttr.zw;
+    v1.xy = factor * (v1.xy + 1.0f);
+    v2.xy = factor * (v2.xy + 1.0f);
+    v3.xy = factor * (v3.xy + 1.0f);
+    v4.xy = factor * (v4.xy + 1.0f);
 
     vec2 vw = (v1 - v2).xy;
     vec2 vh = (v3 - v4).xy;

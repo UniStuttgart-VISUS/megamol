@@ -8,7 +8,9 @@
 
 
 megamol::moldyn_gl::rendering::SRTest::SRTest()
-        : data_in_slot_("inData", ""), getLightsSlot("lights", "Lights are retrieved over this slot."), method_slot_("method", "") {
+        : data_in_slot_("inData", "")
+        , getLightsSlot("lights", "Lights are retrieved over this slot.")
+        , method_slot_("method", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
@@ -30,8 +32,12 @@ megamol::moldyn_gl::rendering::SRTest::~SRTest() {
 
 bool megamol::moldyn_gl::rendering::SRTest::create() {
     try {
-        auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_unique<vao_rt>(shdr_cp_options)));
+        auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_vao_options.addDefinition("__SRTEST_VAO__");
+        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_unique<vao_rt>(shdr_vao_options)));
+        auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -264,8 +270,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
 
 megamol::moldyn_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task("SRTestVAO", options, std::filesystem::path("srtest/vao.vert.glsl"),
-              std::filesystem::path("srtest/vao.frag.glsl")) {}
+        : rendering_task("SRTestVAO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+              std::filesystem::path("srtest/srtest.frag.glsl")) {}
 
 
 bool megamol::moldyn_gl::rendering::vao_rt::render(GLuint ubo) {
@@ -331,6 +337,74 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
         glVertexArrayAttribFormat(vaos_[i], 1, 4, GL_FLOAT, GL_FALSE, 0);
         glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[0], 0, 4 * sizeof(float));
         glVertexArrayAttribBinding(vaos_[i], 1, 1);
+    }
+
+    pl_data_ = package.pl_data;
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::ssbo_rt::ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task("SRTestSSBO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+              std::filesystem::path("srtest/srtest.frag.glsl")) {}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_rt::render(GLuint ubo) {
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto vbo = vbos_[i];
+        auto cbo = cbos_[i];
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
+        glDrawArrays(GL_POINTS, 0, num_prims);
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+    vbos_.resize(num_ssbos);
+    glCreateBuffers(vbos_.size(), vbos_.data());
+
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+    cbos_.resize(num_ssbos);
+    glCreateBuffers(cbos_.size(), cbos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferStorage(vbos_[i],
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), 0);
+
+        glNamedBufferStorage(cbos_[i],
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), 0);
     }
 
     pl_data_ = package.pl_data;

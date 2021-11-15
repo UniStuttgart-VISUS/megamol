@@ -5,7 +5,7 @@ flat in float rad;
 flat in float sqrRad;
 flat in vec4 pointColor;
 flat in vec3 oc_pos;
-flat in float dot_oc_pos;
+flat in float c;
 
 #include "srtest_ubo.glsl"
 
@@ -28,7 +28,6 @@ void main(void) {
     if (delta < 0.0f)
         discard;
 
-    float c = dot_oc_pos - sqrRad;
     float sign = b >= 0.0f ? 1.0f : -1.0f;
     float q = b + sign * sqrt(delta);
 
@@ -42,4 +41,5 @@ void main(void) {
     float depth = dot(MVPtransp[2], new_pos);
     float depthW = dot(MVPtransp[3], new_pos);
     gl_FragDepth = ((depth / depthW) + 1.0f) * 0.5f;
+    //gl_FragDepth = t;
 }

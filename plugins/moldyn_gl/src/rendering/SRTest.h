@@ -34,9 +34,9 @@ struct ubo_params {
     alignas(16) glm::mat4 mvp_trans;
     alignas(16) glm::vec4 attr;
     alignas(16) glm::vec3 dir, up, right, pos;
-    alignas(4)  float near_;
+    alignas(4) float near_;
     alignas(16) glm::vec3 light_dir;
-    alignas(4)  float far_;
+    alignas(4) float far_;
 };
 
 using ubo_params_t = ubo_params;
@@ -95,6 +95,23 @@ public:
 
 private:
     std::vector<GLuint> vaos_;
+    std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
+class ssbo_rt : public rendering_task {
+public:
+    ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;
     std::vector<uint64_t> num_prims_;
