@@ -69,8 +69,8 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Bind(void) {
 /*
  * vislib_gl::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
-        const UINT height, const void *pixels, const GLenum format, 
+GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const uint32_t width, 
+        const uint32_t height, const void *pixels, const GLenum format, 
         const GLenum type, const GLint internalFormat, const GLint border) {
     USES_GL_VERIFY;
 
@@ -95,14 +95,14 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const UINT width,
 /*
  * vislib_gl::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
-        const UINT height, const bool forcePowerOfTwo, const void *pixels,
+GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const uint32_t width, 
+        const uint32_t height, const bool forcePowerOfTwo, const void *pixels,
         const GLenum format, const GLenum type, const GLint internalFormat, 
         const GLint border) {
     USES_GL_VERIFY;
 
-    UINT w = vislib::math::NextPowerOfTwo(width);
-    UINT h = vislib::math::NextPowerOfTwo(height);
+    uint32_t w = vislib::math::NextPowerOfTwo(width);
+    uint32_t h = vislib::math::NextPowerOfTwo(height);
 
     if (!forcePowerOfTwo || ((w == width) && (h == height))) {
         return this->Create(width, height, pixels, format, type, 
@@ -122,8 +122,8 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const UINT width,
  * vislib_gl::graphics::gl::OpenGLTexture2D::Update
  */
 GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Update(const void *pixels, 
-        const UINT width, const UINT height, const GLenum format, 
-        const GLenum type, const UINT offsetX, const UINT offsetY, 
+        const uint32_t width, const uint32_t height, const GLenum format, 
+        const GLenum type, const uint32_t offsetX, const uint32_t offsetY, 
         const GLint level, const bool resetBind) {
     USES_GL_VERIFY;
     GLint oldTex;
