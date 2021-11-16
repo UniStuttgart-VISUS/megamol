@@ -27,7 +27,6 @@ if(BUILD_CORE)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
   set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
 
   # Target definition
@@ -60,16 +59,14 @@ if(BUILD_CORE)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
+  # Install resources
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
+
   # Source groups in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/mmcore" PREFIX "Public Header Files" FILES ${public_header_files})
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Header Files" FILES ${header_files})
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES ${source_files})
-  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Resources" PREFIX "Resource Files" FILES ${resource_files})
   source_group("Version" FILES ${version_files})
 
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
-  
 endif(BUILD_CORE)
