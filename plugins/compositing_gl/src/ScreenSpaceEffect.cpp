@@ -18,17 +18,17 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect() : core::Module()
-                                                             , m_version(0)
-                                                             , m_output_texture(nullptr)
-                                                             , m_output_texture_hash(0)
-                                                             , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
-                                                             , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
-                                                             , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
-                                                             , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-                                                             , m_input_tex_slot("InputTexture", "Connects an optional input texture")
-                                                             , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
-                                                             , m_depth_tex_slot("DepthTexture", "Connects the depth render target texture")
-                                                             , m_camera_slot("Camera", "Connects a (copy of) camera state") {
+    , m_version(0)
+    , m_output_texture(nullptr)
+    , m_output_texture_hash(0)
+    , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
+    , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
+    , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
+    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+    , m_input_tex_slot("InputTexture", "Connects an optional input texture")
+    , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
+    , m_depth_tex_slot("DepthTexture", "Connects the depth render target texture")
+    , m_camera_slot("Camera", "Connects a (copy of) camera state") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SSAO");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");

@@ -69,7 +69,7 @@ bool megamol::volume_gl::VolumeSliceRenderer::create(void) {
 		// create shader program
 		vislib_gl::graphics::gl::ShaderSource compute_shader_src;
 		vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
-                vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
+		vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
                 auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
                     instance()->Configuration().ShaderDirectories());
