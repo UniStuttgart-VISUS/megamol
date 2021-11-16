@@ -25,8 +25,7 @@ using megamol::core::utility::log::Log;
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitViewGL::SplitViewGL()
-        : AbstractView()
-        , _render1Slot("render1", "Connects to the view 1 (left or top)")
+        : _render1Slot("render1", "Connects to the view 1 (left or top)")
         , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
         , _splitOrientationSlot("split.orientation", "Splitter orientation")
         , _splitPositionSlot("split.pos", "Splitter position")
@@ -46,21 +45,25 @@ view::SplitViewGL::SplitViewGL()
         , _mouseY(0.0f)
         , _dragSplitter(false) {
 
-    this->_lhsRenderSlot.SetCallback(
-        view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &AbstractView::OnCharCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
+        &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
+        &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
