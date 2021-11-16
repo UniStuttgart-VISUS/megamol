@@ -21,14 +21,14 @@ namespace frontend_resources {
             started = true;
             start_frame = frame;
         } else {
-            throw std::exception(("timer: region " + _conf.name + "needs to be ended before being started").c_str());
+            throw std::runtime_error(("timer: region " + _conf.name + "needs to be ended before being started").c_str());
         }
         return new_frame;
     }
 
     void PerformanceManager::Itimer::end() {
         if (!started) {
-            throw std::exception(
+            throw std::runtime_error(
                 ("cpu_timer: region " + _conf.name + "needs to be started before being ended").c_str());
         }
         started = false;
@@ -36,13 +36,13 @@ namespace frontend_resources {
 
     bool PerformanceManager::cpu_timer::start(frame_type frame) {
         const auto ret = Itimer::start(frame);
-        last_start = std::chrono::high_resolution_clock::now();
+        last_start = time_point::clock::now();
         return ret;
     }
 
     void PerformanceManager::cpu_timer::end() {
         Itimer::end();
-        auto end = std::chrono::high_resolution_clock::now();
+        auto end = time_point::clock::now();
         regions.emplace_back(std::make_pair(last_start, end));
     }
 
@@ -83,7 +83,7 @@ namespace frontend_resources {
 
     std::pair<uint32_t, uint32_t> PerformanceManager::gl_timer::assert_query(uint32_t index) {
         if (index > query_ids.size()) {
-            throw std::exception(
+            throw std::runtime_error(
                 ("gl_timer: non-coherent query IDs for timer " + _conf.name + ", something is probably wrong.")
                     .c_str());
         }

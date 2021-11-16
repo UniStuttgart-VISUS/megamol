@@ -48,7 +48,7 @@ namespace frontend_resources {
         };
 
         struct timer_config : public basic_timer_config {
-            parent_type parent_type = parent_type::CALL;
+            PerformanceManager::parent_type parent_type = parent_type::CALL;
             void* parent_pointer = nullptr;
         };
 
