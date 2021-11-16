@@ -729,7 +729,7 @@ bool SphereRenderer::createResources() {
             // Init volume generator
             this->volGen = new misc::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
-            if (!this->volGen->Init()) {
+            if (!this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                     megamol::core::utility::log::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
@@ -2635,7 +2635,7 @@ void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, Mul
     if (this->volGen == nullptr) {
         this->volGen = new misc::MDAOVolumeGenerator();
         this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
-        this->volGen->Init();
+        this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
     }
 
     // Recreate the volume if neccessary
