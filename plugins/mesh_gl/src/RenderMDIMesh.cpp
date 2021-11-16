@@ -40,7 +40,7 @@ RenderMDIMesh::~RenderMDIMesh()
 bool RenderMDIMesh::create()
 {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
         !ogl_ctx.isExtAvailable("GL_ARB_shader_draw_parameters") || !ogl_ctx.isVersionGEQ(4, 3))
         return false;
 

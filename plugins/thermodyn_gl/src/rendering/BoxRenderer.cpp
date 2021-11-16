@@ -35,7 +35,7 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() { this->Release();
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
     core_gl::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();

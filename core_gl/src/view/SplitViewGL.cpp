@@ -482,7 +482,7 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 
 bool view::SplitViewGL::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
         return false;
 
     _fboFull = std::make_shared<glowl::FramebufferObject>(1, 1);

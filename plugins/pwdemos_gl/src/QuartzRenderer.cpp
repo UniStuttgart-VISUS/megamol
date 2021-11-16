@@ -436,7 +436,7 @@ bool QuartzRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
     ShaderSource vert, frag;
