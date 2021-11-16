@@ -18,6 +18,7 @@ namespace frontend_resources {
     struct OpenGL_Context {
         bool isVersionGEQ(int major, int minor) const;
         bool isExtAvailable(std::string const& ext) const;
+        bool areExtAvailable(std::string const& exts) const;
         int version_;
         std::vector<std::string> ext_;
     };
