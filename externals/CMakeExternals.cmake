@@ -335,7 +335,21 @@ function(require_external NAME)
       return()
     endif()
 
-    add_external_headeronly_project(glad INTERFACE SOURCE_DIR "glad" INCLUDE_DIR "include")
+    include(GNUInstallDirs)
+
+    if(WIN32)
+      set(GLAD_LIB "lib/glad.lib")
+    else()
+      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
+    endif()
+
+    add_external_project(glad STATIC
+      SOURCE_DIR glad
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
+
+    add_external_library(glad
+      PROJECT glad
+      LIBRARY ${GLAD_LIB})
 
   # glfw
   elseif(NAME STREQUAL "glfw")
