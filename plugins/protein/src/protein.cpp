@@ -12,7 +12,6 @@
 #include "VTIWriter.h"
 
 
-
 // data sources
 #include "AggregatedDensity.h"
 #include "BindingSiteDataSource.h"
@@ -30,6 +29,7 @@
 #include "SolPathDataSource.h"
 #include "SolventHydroBondGenerator.h"
 #include "TrajectorySmoothFilter.h"
+#include "UncertaintyDataLoader.h"
 #include "VMDDXLoader.h"
 #include "VTILoader.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
@@ -39,11 +39,11 @@
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
 #include "protein/ParticleDataCall.h"
+#include "protein/RMSF.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/SphereDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "protein/VolumeSliceCall.h"
-#include "protein/RMSF.h"
 
 #include "MoleculeBallifier.h"
 
@@ -129,6 +129,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
+
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::UncertaintyDataLoader>();
 
 
         // register calls
