@@ -4,12 +4,16 @@
 #include <iterator>
 #include <sstream>
 
-#include "glad/gl.h"
-
 
 bool megamol::frontend_resources::OpenGL_Context::isVersionGEQ(int major, int minor) const {
-    if (version_ < GLAD_MAKE_VERSION(major, minor)) {
+    if (major_ < major) {
         return false;
+    }
+    if (major_ > major) {
+        return true;
+    }
+    if (minor_ >= minor) {
+        return true;
     }
     return true;
 }

@@ -502,8 +502,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwMakeContextCurrent(window_ptr);
 
     //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
-    m_opengl_context.version_ = gladLoaderLoadGL();
-    if (m_opengl_context.version_ == 0) {
+    auto version = gladLoaderLoadGL();
+    m_opengl_context.major_ = GLAD_VERSION_MAJOR(version);
+    m_opengl_context.minor_ = GLAD_VERSION_MINOR(version);
+    if (version == 0) {
         log_error("Failed to load OpenGL functions via glad");
         return false;
     }
@@ -517,7 +519,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     gladLoaderLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
-    if (GLAD_VERSION_MAJOR(m_opengl_context.version_) < 3) {
+    if (m_opengl_context.major_ < 3) {
         auto ext = std::string((char const*)glGetString(GL_EXTENSIONS));
         std::istringstream iss(ext);
         std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(),

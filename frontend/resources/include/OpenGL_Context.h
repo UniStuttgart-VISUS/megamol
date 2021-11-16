@@ -19,7 +19,8 @@ namespace frontend_resources {
         bool isVersionGEQ(int major, int minor) const;
         bool isExtAvailable(std::string const& ext) const;
         bool areExtAvailable(std::string const& exts) const;
-        int version_;
+        int major_;
+        int minor_;
         std::vector<std::string> ext_;
     };
 
