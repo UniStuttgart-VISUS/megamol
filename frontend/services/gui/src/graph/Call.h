@@ -13,6 +13,7 @@
 #ifdef PROFILING
 #include "mmcore/PerformanceHistory.h"
 #endif
+#include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
 
 
@@ -71,6 +72,10 @@ namespace gui {
             return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
         }
 
+        void SetCapabilities(core::CallCapabilities caps) {
+            capabilities = caps;
+        }
+
 #ifdef PROFILING
 
         struct Profiling {
@@ -89,16 +94,25 @@ namespace gui {
             this->profiling = p;
         }
 
+        void SetProfilingParent(void* ptr) {
+            this->profiling_parent_pointer = ptr;
+        }
+        void* GetProfilingParent() {
+            return this->profiling_parent_pointer;
+        }
+
 #endif // PROFILING
 
     private:
         // VARIABLES --------------------------------------------------------------
 
         const ImGuiID uid;
+        // TODO Place StackCall (Properties?) here
         const std::string class_name;
         const std::string description;
         const std::string plugin_name;
         const std::vector<std::string> functions;
+        core::CallCapabilities capabilities;
 
         std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
@@ -110,6 +124,10 @@ namespace gui {
         HoverToolTip gui_tooltip;
 
 #ifdef PROFILING
+
+        std::vector<core::PerformanceHistory> cpu_perf_history;
+        std::vector<core::PerformanceHistory> gl_perf_history;
+        void* profiling_parent_pointer;
 
         std::vector<Profiling> profiling;
         bool show_profiling_data;

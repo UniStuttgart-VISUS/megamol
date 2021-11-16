@@ -159,6 +159,9 @@ namespace frontend_resources {
         void *lookup_parent_pointer(handle_type h);
 
         // hint: this is not for free, so don't call this all the time
+        parent_type lookup_parent_type(handle_type h);
+
+        // hint: this is not for free, so don't call this all the time
         std::string lookup_name(handle_type h);
 
         void subscribe_to_updates(update_callback cb);

@@ -755,6 +755,14 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
+#ifdef PROFILING
+    auto the_call = call_it->callPtr;
+    m_perf_manager->remove_timers(the_call->cpu_queries);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        m_perf_manager->remove_timers(the_call->gl_queries);
+    }
+#endif
+
     source->SetCleanupMark(true);
     source->DisconnectCalls();
     source->PerformCleanup();  // does nothing

@@ -155,11 +155,20 @@ namespace gui {
         void SetScreenPosition(ImVec2 pos) {
             this->gui_set_screen_position = pos;
         }
+#ifdef PROFILING
+        void SetProfilingParent(void* ptr) {
+            this->profiling_parent_pointer = ptr;
+        }
+        void* GetProfilingParent() {
+            return this->profiling_parent_pointer;
+        }
+#endif
 
     private:
         // VARIABLES --------------------------------------------------------------
 
         const ImGuiID uid;
+        // TODO place StockModule (Properties?) here instead
         const std::string class_name;
         const std::string description;
         const std::string plugin_name;
@@ -187,6 +196,14 @@ namespace gui {
 
         HoverToolTip gui_tooltip;
         PopUps gui_rename_popup;
+
+#ifdef PROFILING
+
+        std::vector<core::PerformanceHistory> cpu_perf_history;
+        std::vector<core::PerformanceHistory> gl_perf_history;
+        void* profiling_parent_pointer;
+
+#endif // PROFILING
 
         // FUNCTIONS --------------------------------------------------------------
 

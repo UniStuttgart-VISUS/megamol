@@ -166,6 +166,10 @@ namespace frontend_resources {
         return timers[h]->get_conf().parent_pointer;
     }
 
+    PerformanceManager::parent_type PerformanceManager::lookup_parent_type(handle_type h) {
+        return timers[h]->get_conf().parent_type;
+    }
+
     std::string PerformanceManager::lookup_name(handle_type h) {
         return timers[h]->get_conf().name;
     }
