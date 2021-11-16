@@ -15,8 +15,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
-#include <GL/glu.h>
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "glad/gl.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
