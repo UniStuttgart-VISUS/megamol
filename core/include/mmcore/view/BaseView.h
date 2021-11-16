@@ -159,16 +159,16 @@ namespace core {
             auto fbo = _fbo;
             _fbo = crv->GetFramebuffer();
 
-            auto cam_pose = ABSTRACTVIEW_TYPE::_camera.get<Camera::Pose>();
-            auto cam_type = ABSTRACTVIEW_TYPE::_camera.get<Camera::ProjectionType>();
+            auto cam_pose = this->_camera.template get<Camera::Pose>();
+            auto cam_type = this->_camera.template get<Camera::ProjectionType>();
             if (cam_type == Camera::ORTHOGRAPHIC) {
-                auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::OrthographicParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             } else if (cam_type == Camera::PERSPECTIVE) {
-                auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::PerspectiveParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             }
 
             this->Render(time, instanceTime);
@@ -176,16 +176,16 @@ namespace core {
             _fbo = fbo;
             // only re-apply aspect ratio from copy, because otherwise camera updates handled within Render(...) are
             // lost
-            cam_pose = ABSTRACTVIEW_TYPE::_camera.get<Camera::Pose>();
-            cam_type = ABSTRACTVIEW_TYPE::_camera.get<Camera::ProjectionType>();
+            cam_pose = this->_camera.template get<Camera::Pose>();
+            cam_type = this->_camera.template get<Camera::ProjectionType>();
             if (cam_type == Camera::ORTHOGRAPHIC) {
-                auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::OrthographicParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             } else if (cam_type == Camera::PERSPECTIVE) {
-                auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::PerspectiveParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             }
 
             return true;
@@ -208,17 +208,17 @@ namespace core {
         inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::Resize(
             unsigned int width, unsigned int height) {
 
-            if (ABSTRACTVIEW_TYPE::_cameraIsMutable) { // view seems to be in control of the camera
-                auto cam_pose = ABSTRACTVIEW_TYPE::_camera.get<Camera::Pose>();
-                if (ABSTRACTVIEW_TYPE::_camera.get<Camera::ProjectionType>() == Camera::ProjectionType::PERSPECTIVE) {
-                    auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::PerspectiveParameters>();
+            if (this->_cameraIsMutable) { // view seems to be in control of the camera
+                auto cam_pose = this->_camera.template get<Camera::Pose>();
+                if (this->_camera.template get<Camera::ProjectionType>() == Camera::ProjectionType::PERSPECTIVE) {
+                    auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                     cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
-                    ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
-                } else if (ABSTRACTVIEW_TYPE::_camera.get<Camera::ProjectionType>() ==
+                    this->_camera = Camera(cam_pose, cam_intrinsics);
+                } else if (this->_camera.template get<Camera::ProjectionType>() ==
                            Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto cam_intrinsics = ABSTRACTVIEW_TYPE::_camera.get<Camera::OrthographicParameters>();
+                    auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                     cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
-                    ABSTRACTVIEW_TYPE::_camera = Camera(cam_pose, cam_intrinsics);
+                    this->_camera = Camera(cam_pose, cam_intrinsics);
                 }
             }
         }
