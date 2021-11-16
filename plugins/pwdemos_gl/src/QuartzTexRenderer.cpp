@@ -20,6 +20,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cfloat>
 #include <glm/ext.hpp>
+#include "OpenGL_Context.h"
 
 
 namespace megamol {
@@ -43,7 +44,7 @@ showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping
     this->MakeSlotAvailable(&this->showClipAxesSlot);
     this->MakeSlotAvailable(&this->correctPBCSlot);
 
-	ssboLights = 0;
+    ssboLights = 0;
     vbo = 0;
 }
 
@@ -90,7 +91,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
     core::view::CallClipPlane *ccp = this->getClipPlaneData();
     this->assertTypeTexture(*tdc);
     
-	// camera setup
+    // camera setup
     core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
@@ -198,15 +199,15 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
     this->cryShader.SetParameter("numLights", numLights);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
     //::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverse"), 1, 
-	//	GL_FALSE, glm::value_ptr(MVinv));
+    //	GL_FALSE, glm::value_ptr(MVinv));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverseTranspose"), 1,
-		GL_FALSE, glm::value_ptr(glm::transpose(MVinv)));
+        GL_FALSE, glm::value_ptr(glm::transpose(MVinv)));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewProjectionMatrix"), 1, 
-		GL_FALSE, glm::value_ptr(MVP));
+        GL_FALSE, glm::value_ptr(MVP));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewProjectionMatrixInverse"), 1, 
-		GL_FALSE, glm::value_ptr(MVPinv));
+        GL_FALSE, glm::value_ptr(MVPinv));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewProjectionMatrixTranspose"), 1,
-		GL_FALSE, glm::value_ptr(MVPtransp));
+        GL_FALSE, glm::value_ptr(MVPtransp));
     if (ccp != NULL) {
         this->cryShader.SetParameter("clipcol",
             static_cast<float>(ccp->GetColour()[0]) / 255.0f,
@@ -319,7 +320,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     this->cryShader.SetParameter("outerRad",
                         tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
-					::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                    ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
                     ::glBufferData(GL_ARRAY_BUFFER, list.Count() * 8 * sizeof(float), list.Data(), GL_STATIC_DRAW);
                     ::glEnableVertexAttribArray(0);
                     ::glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -330,7 +331,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     //::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
                     ::glDrawArrays(GL_POINTS, 0, list.Count());
 
-					::glDisableVertexAttribArray(0);
+                    ::glDisableVertexAttribArray(0);
                     ::glDisableVertexAttribArray(1);
                     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
                     ::glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -436,11 +437,9 @@ bool QuartzTexRenderer::create(void) {
     using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
-        return false;
-    }
-    if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_ARB_multitexture")) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
+        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
         Log::DefaultLog.WriteError("GL2.0 not present");
         return false;
     }
@@ -468,7 +467,7 @@ bool QuartzTexRenderer::create(void) {
         return false;
     }
 
-	::glDeleteBuffers(1, &ssboLights);
+    ::glDeleteBuffers(1, &ssboLights);
     ::glGenBuffers(1, &ssboLights);
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLights);
     if (!::glIsBuffer(ssboLights)) {
@@ -500,7 +499,7 @@ bool QuartzTexRenderer::create(void) {
 void QuartzTexRenderer::release(void) {
     AbstractTexQuartzRenderer::releaseTypeTexture();
 
-	::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     ::glDeleteBuffers(1, &ssboLights);
 
     ::glBindBuffer(GL_ARRAY_BUFFER, 0);

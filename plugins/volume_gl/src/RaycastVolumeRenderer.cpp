@@ -7,6 +7,8 @@
 
 #include "RaycastVolumeRenderer.h"
 
+#include "OpenGL_Context.h"
+
 #include "mmcore/CoreInstance.h"
 #include "geometry_calls//VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -115,6 +117,10 @@ RaycastVolumeRenderer::~RaycastVolumeRenderer() {
 }
 
 bool RaycastVolumeRenderer::create() {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3))
+        return false;
+
     try {
         // create shader program
         auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());

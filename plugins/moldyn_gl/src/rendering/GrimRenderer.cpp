@@ -13,6 +13,8 @@
 
 #include <glm/ext.hpp>
 
+#include "OpenGL_Context.h"
+
 
 using namespace megamol::core;
 using namespace megamol::moldyn_gl::rendering;
@@ -107,6 +109,13 @@ GrimRenderer::~GrimRenderer(void) {
 bool GrimRenderer::create(void) {
 
     ASSERT(IsAvailable());
+
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isExtAvailable("GL_NV_occlusion_query") || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
+        !ogl_ctx.isExtAvailable("GL_ARB_vertex_buffer_object") ||
+        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
+        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
+        return false;
 
     vislib_gl::graphics::gl::ShaderSource vert, geom, frag;
 

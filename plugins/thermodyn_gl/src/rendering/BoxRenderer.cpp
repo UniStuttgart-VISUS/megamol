@@ -13,6 +13,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/transform.hpp"
 
+#include "OpenGL_Context.h"
+
 
 megamol::thermodyn_gl::rendering::BoxRenderer::BoxRenderer()
     : dataInSlot_("dataIn", "Input of boxes to render")
@@ -32,6 +34,10 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() { this->Release();
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
+
     core_gl::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
 
     try {

@@ -20,8 +20,6 @@
 #endif /* _WIN32 */
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-#include "vislib_gl/graphics/gl/ExtensionsDependent.h"
-
 
 namespace vislib_gl {
 namespace graphics {

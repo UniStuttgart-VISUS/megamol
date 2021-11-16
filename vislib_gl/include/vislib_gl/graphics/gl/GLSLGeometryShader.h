@@ -16,7 +16,6 @@
 
 
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/ExtensionsDependent.h"
 
 
 namespace vislib_gl {
@@ -43,30 +42,6 @@ namespace gl {
          * @return The extensions that are requiered for ARB shaders.
          */
         static const char * RequiredExtensions(void);
-
-        /**
-         * Initialise the extensions that are required for objects of the 
-         * dependent class. This method must be called before using any objects
-         * of the dependent classes.
-         *
-         * @return true, if all required extension could be loaded, 
-         *         false otherwise.
-         */
-        static bool InitialiseExtensions(void) {
-            return ExtensionsDependent<GLSLGeometryShader>
-                ::InitialiseExtensions();
-        }
-    
-        /**
-         * Answers whether the required extensions are available.
-         *
-         * @return True if all required extensions are available and 
-         *         initialisation should be successful, false otherwise.
-         */
-        static bool AreExtensionsAvailable(void) {
-            return ExtensionsDependent<GLSLGeometryShader>
-                ::AreExtensionsAvailable();
-        }
 
         /** Shader code snippet enabling the gpu4 shader extension */
         static const char *GPU4_EXTENSION_DIRECTIVE;
