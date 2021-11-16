@@ -25,6 +25,12 @@ namespace core_gl {
     public:
         // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
 
+        std::vector<std::string> requested_lifetime_resources() override {
+            std::vector<std::string> resources = Module::requested_lifetime_resources();
+            resources.emplace_back("OpenGL_Context"); // GL modules should request the GL context resource
+            return resources;
+        }
+
         /**
          * Answer the name of this module.
          *
@@ -49,7 +55,7 @@ namespace core_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return ogl_IsVersionGEQ(4, 3);
+            return true;
         }
 
         /** Ctor. */
