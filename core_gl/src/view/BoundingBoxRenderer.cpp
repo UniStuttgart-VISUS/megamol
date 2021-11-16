@@ -25,6 +25,8 @@
 #include <memory>
 #include <vector>
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 using namespace megamol::core_gl;
 using namespace megamol::core_gl::view;
 
@@ -81,10 +83,11 @@ BoundingBoxRenderer::~BoundingBoxRenderer(void) { this->Release(); }
 bool BoundingBoxRenderer::create(void) {
     // TODO the vislib shaders have to die a slow and painful death
     vislib_gl::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
+    if (!ssf->MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
     }
     try {
@@ -97,10 +100,10 @@ bool BoundingBoxRenderer::create(void) {
     }
 
     vislib_gl::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::vertex", vcVertSrc)) {
+    if (!ssf->MakeShaderSource("viewcube::vertex", vcVertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::fragment", vcFragSrc)) {
+    if (!ssf->MakeShaderSource("viewcube::fragment", vcFragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
     }
     try {

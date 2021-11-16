@@ -14,6 +14,7 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol {
@@ -66,11 +67,12 @@ bool QuartzPlaneTexRenderer::create(void) {
     }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {

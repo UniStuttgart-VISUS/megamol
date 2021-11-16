@@ -43,14 +43,11 @@ const UINT32 utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
     = utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS;
 
 
-/*
- * utility::ShaderSourceFactory::ShaderSourceFactory
- */
-utility::ShaderSourceFactory::ShaderSourceFactory(core::utility::Configuration& config)
-        : config(config), root(), fileIds() {
-    // intentionally empty
-}
+megamol::core_gl::utility::ShaderSourceFactory::ShaderSourceFactory(vislib::Array<vislib::StringW> shader_dirs_) 
+    : shader_dirs(shader_dirs_), root(), fileIds() {
+ // intentionally empty
 
+}
 
 /*
  * utility::ShaderSourceFactory::~ShaderSourceFactory
@@ -85,7 +82,7 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
     }
 
     vislib::StringW filename;
-    const vislib::Array<vislib::StringW>& searchPaths = this->config.ShaderDirectories();
+    const vislib::Array<vislib::StringW>& searchPaths = this->shader_dirs;
     for (SIZE_T i = 0; i < searchPaths.Count(); i++) {
         filename = vislib::sys::Path::Concatenate(searchPaths[i], vislib::StringW(name));
         filename.Append(L".btf");

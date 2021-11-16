@@ -9,6 +9,7 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureCombine::TextureCombine()
     : core::Module()
@@ -49,12 +50,14 @@ bool megamol::compositing::TextureCombine::create() {
         vislib_gl::graphics::gl::ShaderSource compute_add_src;
         vislib_gl::graphics::gl::ShaderSource compute_mult_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureAdd", compute_add_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::textureAdd", compute_add_src))
             return false;
         if (!m_add_prgm->Compile(compute_add_src.Code(), compute_add_src.Count())) return false;
         if (!m_add_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
+        if (!ssf->MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
             return false;
         if (!m_mult_prgm->Compile(compute_mult_src.Code(), compute_mult_src.Count())) return false;
         if (!m_mult_prgm->Link()) return false;
