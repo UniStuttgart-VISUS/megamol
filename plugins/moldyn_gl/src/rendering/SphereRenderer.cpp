@@ -477,7 +477,7 @@ bool SphereRenderer::createResources() {
     // Check for flag storage availability and get specific shader snippet
     vislib::SmartPtr<ShaderSource::Snippet> flags_shader_snippet;
     this->isFlagStorageAvailable(flags_shader_snippet);
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
         switch (this->renderMode) {
 
@@ -485,11 +485,11 @@ bool SphereRenderer::createResources() {
         case (RenderMode::SIMPLE_CLUSTERED): {
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -513,14 +513,14 @@ bool SphereRenderer::createResources() {
             vertShaderName = "sphere_geo::vertex";
             fragShaderName = "sphere_geo::fragment";
             geoShaderName = "sphere_geo::geometry";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+            if (!ssf->MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
                 return false;
             }
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -545,11 +545,11 @@ bool SphereRenderer::createResources() {
 
             vertShaderName = "sphere_ssbo::vertex";
             fragShaderName = "sphere_ssbo::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -563,11 +563,11 @@ bool SphereRenderer::createResources() {
 
             vertShaderName = "sphere_splat::vertex";
             fragShaderName = "sphere_splat::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -585,11 +585,11 @@ bool SphereRenderer::createResources() {
         case (RenderMode::BUFFER_ARRAY): {
             vertShaderName = "sphere_bufferarray::vertex";
             fragShaderName = "sphere_bufferarray::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -639,11 +639,11 @@ bool SphereRenderer::createResources() {
             // Create the sphere shader
             vertShaderName = "sphere_mdao::vertex";
             fragShaderName = "sphere_mdao::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -668,14 +668,14 @@ bool SphereRenderer::createResources() {
             vertShaderName = "sphere_mdao::geometry::vertex";
             geoShaderName = "sphere_mdao::geometry::geometry";
             fragShaderName = "sphere_mdao::geometry::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+            if (!ssf->MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
                 return false;
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -695,19 +695,19 @@ bool SphereRenderer::createResources() {
             // Create the deferred shader
             this->vertShader->Clear();
             this->fragShader->Clear();
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
+            if (!ssf->MakeShaderSource(
                 "sphere_mdao::deferred::vertex", *this->vertShader)) {
                 return false;
             }
             bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
             this->fragShader->Append(
-                instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
+                ssf->MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
             if (enableLighting) {
                 this->fragShader->Append(
-                    instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
+                    ssf->MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
             }
             else {
-                this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
+                this->fragShader->Append(ssf->MakeShaderSnippet(
                     "sphere_mdao::deferred::fragment::LightingStub"));
             }
             float apex = this->aoConeApexSlot.Param<param::FloatParam>()->Value();
@@ -717,7 +717,7 @@ bool SphereRenderer::createResources() {
             vislib_gl::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
                 new vislib_gl::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
             this->fragShader->Append(dirSnippet);
-            this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
+            this->fragShader->Append(ssf->MakeShaderSnippet(
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
             if (!this->lightingShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
@@ -728,7 +728,7 @@ bool SphereRenderer::createResources() {
 
             // Init volume generator
             this->volGen = new misc::MDAOVolumeGenerator();
-            this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
+            this->volGen->SetShaderSourceFactory(ssf.get());
             if (!this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                     megamol::core::utility::log::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -742,11 +742,11 @@ bool SphereRenderer::createResources() {
             this->outlineWidthSlot.Param<param::FloatParam>()->SetGUIVisible(true);
             vertShaderName = "sphere_outline::vertex";
             fragShaderName = "sphere_outline::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -2631,10 +2631,11 @@ void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, Mul
         }
     }
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Check if voxelization is even needed
     if (this->volGen == nullptr) {
         this->volGen = new misc::MDAOVolumeGenerator();
-        this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
+        this->volGen->SetShaderSourceFactory(ssf.get());
         this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
     }
 

@@ -22,7 +22,7 @@ if(BUILD_CORE)
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   # Target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(${PROJECT_NAME} OBJECT ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
@@ -52,7 +52,7 @@ if(BUILD_CORE)
   foreach(FILE_NAME ${public_header_files})
     get_filename_component(FILE_PATH ${FILE_NAME} PATH)
     string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
+    string(REGEX REPLACE "^include\\\\mmcore_gl" "Public Header Files" GROUP_NAME ${GROUP_NAME})
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
   source_group("Shaders" FILES ${shader_files})

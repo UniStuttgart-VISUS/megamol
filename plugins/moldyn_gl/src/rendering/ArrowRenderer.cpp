@@ -12,6 +12,8 @@
 
 #include <glm/ext.hpp>
 
+
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "OpenGL_Context.h"
@@ -66,11 +68,11 @@ bool ArrowRenderer::create(void) {
         return false;
 
     vislib_gl::graphics::gl::ShaderSource vert, frag;
-
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("arrow::vertex", vert)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("arrow::vertex", vert)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("arrow::fragment", frag)) {
+    if (!ssf->MakeShaderSource("arrow::fragment", frag)) {
         return false;
     }
 

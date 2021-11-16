@@ -119,13 +119,13 @@ bool GlyphRenderer::makeShader(
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
-
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(vertexName.c_str(), vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource(vertexName.c_str(), vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(fragmentName.c_str(), fragSrc)) {
+    if (!ssf->MakeShaderSource(fragmentName.c_str(), fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
         return false;

@@ -22,6 +22,8 @@
 #include <glm/ext.hpp>
 #include "OpenGL_Context.h"
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 
 namespace megamol {
 namespace demos_gl {
@@ -445,11 +447,12 @@ bool QuartzTexRenderer::create(void) {
     }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::tex::vertclipped", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::tex::vertclipped", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::tex::fragclipped", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::tex::fragclipped", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {

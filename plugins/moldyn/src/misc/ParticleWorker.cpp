@@ -19,6 +19,9 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 using namespace megamol::core;
 using namespace megamol::moldyn::misc;
 
@@ -71,8 +74,8 @@ bool ParticleWorker::create(void) {
         return false;
 
     ShaderSource compSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "::particleWorkerCompute::work_on_clusters", compSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("::particleWorkerCompute::work_on_clusters", compSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load compute shader source for work_on_clusters shader", this->ClassName());
         return false;
@@ -86,122 +89,7 @@ bool ParticleWorker::create(void) {
             Log::LEVEL_ERROR, "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
-    /*
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::grid", compSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for grid shader",
-    this->ClassName() ); return false;
-    }
-    try
-    {
-        if( !this->shaderComputeGrid.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create grid shader: %s\n", this->ClassName(),
-    e.GetMsgA() ); return false;
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::griddify", compSrc )
-    )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for griddify shader",
-    this->ClassName() ); return false;
-    }
-    try
-    {
-        if( !this->shaderComputeGriddify.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create griddify shader: %s\n", this->ClassName(),
-    e.GetMsgA() ); return false;
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::initParticlelist",
-    compSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for initParticlelist
-    shader", this->ClassName() ); return false;
-    }
-    try
-    {
-        if( !this->shaderComputeInitParticleList.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create initParticlelist shader: %s\n",
-    this->ClassName(), e.GetMsgA() ); return false;
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::makeParticleList",
-    compSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for makeParticleList
-    shader", this->ClassName() ); return false;
-    }
-    try
-    {
-        if( !this->shaderComputeMakeParticleList.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create makeParticleList shader: %s\n",
-    this->ClassName(), e.GetMsgA() ); return false;
-    }
-    /*
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-    "::particleWorkerCompute::compactToClusterList", compSrc ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for compactToClusterList
-    shader", this->ClassName() ); return false;
-    }
-    try
-    {
-        if( !this->shaderComputeCompactToClusterList.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create compactToClusterList shader: %s\n",
-    this->ClassName(), e.GetMsgA() ); return false;
-    }*
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::prefixSum", compSrc
-    ) )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for prefixSum shader",
-    this->ClassName() ); return false;
-    }
-    compSrc.Insert(1,
-    this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSnippet("::particleWorkerCompute::prefix_type_float")); try
-    {
-        if( !this->shaderComputePrefixSum.Compile(compSrc.Code(), compSrc.Count()))
-        {
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create prefixSum shader: %s\n", this->ClassName(),
-    e.GetMsgA() ); return false;
-    }
-    */
+
     return true;
 }
 

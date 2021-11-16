@@ -9,6 +9,7 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     : core::Module()
@@ -56,7 +57,9 @@ bool megamol::compositing::TextureDepthCompositing::create() {
         // create shader program
         vislib_gl::graphics::gl::ShaderSource compute_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
             return false;
         }
 
