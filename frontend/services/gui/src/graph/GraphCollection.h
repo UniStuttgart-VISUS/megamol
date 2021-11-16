@@ -126,6 +126,11 @@ namespace gui {
         bool save_graph_dialog(ImGuiID graph_uid, bool& open_dialog);
 
         bool change_running_graph(ImGuiID graph_uid);
+
+#ifdef PROFILING
+        std::unordered_map<void*, CallPtr_t> call_to_call;
+        std::unordered_map<void*, ModulePtr_t> module_to_module;
+#endif
     };
 
 

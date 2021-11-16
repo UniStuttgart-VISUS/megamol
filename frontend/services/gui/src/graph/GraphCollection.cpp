@@ -355,6 +355,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
             std::string caller_module_callslot_name;
             std::string callee_module_full_name;
             std::string callee_module_callslot_name;
+            core::Call::ptr_type core_call;
         };
         std::vector<CallData> call_data;
 
@@ -439,6 +440,10 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
+#ifdef PROFILING
+                new_module_ptr->SetProfilingParent(module_ptr);
+                module_to_module[module_ptr] = new_module_ptr;
+#endif
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to get created module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
@@ -501,6 +506,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
         std::map<std::string, ImGuiID> delete_module_map;
         for (auto& module_ptr : graph_ptr->Modules()) {
             delete_module_map[module_ptr->FullName()] = module_ptr->UID();
+#ifdef PROFILING
+            module_to_module.erase(module_ptr->GetProfilingParent());
+#endif
         }
         for (auto& module_map : delete_module_map) {
             if (!megamol_graph.FindModule(module_map.first)) {
@@ -598,6 +606,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
             cd.caller_module_callslot_name = call_caller_name;
             cd.callee_module_full_name = call_callee_parent_name;
             cd.callee_module_callslot_name = call_callee_name;
+            cd.core_call = call_ptr;
             call_data.emplace_back(cd);
         }
 
@@ -605,6 +614,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
         for (auto& call_info : gui_graph_call_info) {
             if (!megamol_graph.FindCall(call_info.from, call_info.to)) {
                 call_info.ptr.reset();
+#ifdef PROFILING
+                call_to_call.erase(call_info.ptr.lock()->GetProfilingParent());
+#endif
                 graph_ptr->DeleteCall(call_info.uid);
                 gui_graph_changed = true;
             }
@@ -632,8 +644,13 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                     }
                 }
             }
-            if (graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2)) {
+            if (auto gui_call = graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2)) {
                 gui_graph_changed = true;
+                gui_call->SetCapabilities(cd.core_call->GetCapabilities());
+#ifdef PROFILING
+                gui_call->SetProfilingParent(cd.core_call.get());
+                call_to_call[cd.core_call.get()] = gui_call;
+#endif
             }
         }
 

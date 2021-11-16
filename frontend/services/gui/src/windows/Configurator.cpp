@@ -423,8 +423,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             for (auto& callslot_map : module_ptr->CallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->Name() == compat_callslot_name) {
-                                        added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
-                                            selected_callslot_ptr, callslot_ptr);
+                                        added_call =
+                                            (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
+                                                 selected_callslot_ptr, callslot_ptr) != nullptr);
                                         if (added_call) {
                                             module_ptr->SetSelectedSlotPosition();
                                         }

@@ -2,7 +2,7 @@
 #include <cassert>
 #include <ctime>
 #include "mmcore/Call.h"
-#include "mmcore/PerformanceQueryManager.h"
+#include "mmcore_gl/PerformanceQueryManager.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/log/Log.h"
 

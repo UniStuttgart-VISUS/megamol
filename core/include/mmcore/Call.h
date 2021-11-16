@@ -17,7 +17,7 @@
 #include <vector>
 #include "CallCapabilities.h"
 #ifdef PROFILING
-#include "CallProfiling.h"
+#include "mmcore_gl/CallProfiling.h"
 #include "PerformanceManager.h"
 #endif
 

@@ -414,7 +414,7 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
 #ifdef PROFILING
     m_perf_manager = & const_cast<frontend_resources::PerformanceManager&>(
         graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
-#endif PROFILING
+#endif
 
     return true;
 }
@@ -754,6 +754,14 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
             std::string(call_it->callPtr->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
         return false;
     }
+
+#ifdef PROFILING
+    auto the_call = call_it->callPtr;
+    m_perf_manager->remove_timers(the_call->cpu_queries);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        m_perf_manager->remove_timers(the_call->gl_queries);
+    }
+#endif
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();

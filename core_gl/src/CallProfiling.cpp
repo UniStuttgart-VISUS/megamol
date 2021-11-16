@@ -1,4 +1,4 @@
-#include "mmcore/CallProfiling.h"
+#include "mmcore_gl/CallProfiling.h"
 #include "mmcore/Call.h"
 
 using namespace megamol;

@@ -48,7 +48,7 @@ namespace frontend_resources {
         };
 
         struct timer_config : public basic_timer_config {
-            parent_type parent_type = parent_type::CALL;
+            PerformanceManager::parent_type parent_type = parent_type::CALL;
             void* parent_pointer = nullptr;
         };
 
@@ -157,6 +157,9 @@ namespace frontend_resources {
 
         // hint: this is not for free, so don't call this all the time
         void *lookup_parent_pointer(handle_type h);
+
+        // hint: this is not for free, so don't call this all the time
+        parent_type lookup_parent_type(handle_type h);
 
         // hint: this is not for free, so don't call this all the time
         std::string lookup_name(handle_type h);

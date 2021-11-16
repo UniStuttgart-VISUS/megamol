@@ -15,6 +15,7 @@
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "PerformanceManager.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -61,7 +62,10 @@ namespace frontend {
             "RuntimeConfig",                              // 10 - resource paths
             "optional<WindowManipulation>",               // 11 - GLFW window pointer
             frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
-            "ImagePresentationEntryPoints"                // 13 - Entry point
+            "ImagePresentationEntryPoints",               // 13 - Entry point
+#ifdef PROFILING
+            frontend_resources::PerformanceManager_Req_Name // 14 - Performance Manager
+#endif
         };
 
         this->m_gui = std::make_shared<megamol::gui::GUIManager>();
@@ -366,6 +370,23 @@ namespace frontend {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
         }
+
+#ifdef PROFILING
+        // PerformanceManager
+        auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+            &this->m_requestedResourceReferences[14].getResource<megamol::frontend_resources::PerformanceManager>());
+        perf_manager->subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+            auto frame = fi.frame;
+            for (auto& e : fi.entries) {
+                if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
+                    // auto p = perf_manager.lookup_parent_pointer(e.handle);
+                    // auto t = perf_manager.lookup_parent_type(e.handle);
+                    // m_gui->AddPerformanceData(t, p, e.api, e.frame_index, e.timestamp);
+                    // todo: configurator holen, graphcollection holen, daten reinstopfen.
+                }
+            }
+        });
+#endif
     }
 
 

@@ -431,44 +431,44 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
 }
 
 
-bool megamol::gui::Graph::AddCall(
+CallPtr_t megamol::gui::Graph::AddCall(
     const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
 
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            return nullptr;
         }
         if (!callslot_1->IsConnectionValid((*callslot_2))) {
-            return false;
+            return nullptr;
         }
         auto compat_idx = CallSlot::GetCompatibleCallIndex(callslot_1, callslot_2);
         if (compat_idx == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            return nullptr;
         }
         Call::StockCall call_stock_data = stock_calls[compat_idx];
 
         auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID(), call_stock_data.class_name,
             call_stock_data.description, call_stock_data.plugin_name, call_stock_data.functions);
 
-        return this->AddCall(call_ptr, callslot_1, callslot_2);
+        return this->ConnectCall(call_ptr, callslot_1, callslot_2) ? call_ptr : nullptr;
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return nullptr;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return nullptr;
     }
 }
 
 
-bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
+bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
