@@ -24,6 +24,6 @@ bool megamol::frontend_resources::OpenGL_Context::areExtAvailable(std::string co
     std::istringstream iss(exts);
     bool avail = true;
     std::for_each(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(),
-        [&avail](auto const& ext) { avail &&= isExtAvailable(ext); });
+        [&avail, this](auto const& ext) { avail = avail && isExtAvailable(ext); });
     return avail;
 }
