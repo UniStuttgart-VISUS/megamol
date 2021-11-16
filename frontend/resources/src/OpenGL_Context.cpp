@@ -15,7 +15,7 @@ bool megamol::frontend_resources::OpenGL_Context::isVersionGEQ(int major, int mi
     if (minor_ >= minor) {
         return true;
     }
-    return true;
+    return false;
 }
 
 
