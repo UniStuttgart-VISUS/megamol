@@ -281,12 +281,13 @@ bool protein_gl::SolventVolumeRenderer::loadShader(
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(vert, vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource(vert, vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for shader '%s'",
             this->ClassName(), vert.PeekBuffer());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(frag, fragSrc)) {
+    if (!ssf->MakeShaderSource(frag, fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for shader '%s'",
             this->ClassName(), frag.PeekBuffer());
         return false;
@@ -403,7 +404,8 @@ bool protein_gl::SolventVolumeRenderer::create(void) {
         return false;
 
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1226,7 +1228,7 @@ void protein_gl::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall* 
     // parallelisierung geht hier nicht?! weil es von den dynamischen daten abhaengt an welchem index ein zylinder
     // sitzt?! (variable 'cnt' haengt von 'hydrogenConnections' ab ...)
     //#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir,
-    //position, angle)
+    // position, angle)
     for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
         int connection = hydrogenConnections[atomIdx];
         if (connection == -1)
