@@ -38,9 +38,6 @@ if(BUILD_CORE)
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
-  if (ENABLE_GL)
-    target_link_libraries(${PROJECT_NAME} PUBLIC vislib_gl core_gl)
-  endif()
 
   if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
