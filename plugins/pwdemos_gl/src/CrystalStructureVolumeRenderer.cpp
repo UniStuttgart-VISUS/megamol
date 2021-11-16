@@ -1318,7 +1318,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load sphere vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1327,7 +1327,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
         return false;
     }
     // Load sphere fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
             MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
 
@@ -1347,13 +1347,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
+    if(!ssf->MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
                 this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
+    if(!ssf->MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
@@ -1368,13 +1368,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
+    if(!ssf->MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
                 this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
+    if(!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
@@ -1389,15 +1389,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load alternative arrow shader (uses geometry shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -1405,12 +1405,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     this->arrowShader.Link();
 
     // Load cylinder vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
     // Load cylinder fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
         return false;
     }
@@ -1424,7 +1424,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load per pixel lighting shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1433,7 +1433,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
         return false;
     }
 
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1454,7 +1454,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
 
 
         // TODO
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1463,7 +1463,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
         return false;
     }
 
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
+    if(!ssf->
             MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,

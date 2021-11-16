@@ -8,6 +8,7 @@
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
         : core_gl::view::Renderer3DModuleGL()
@@ -39,8 +40,9 @@ bool megamol::compositing::DrawToScreen::create() {
     vislib::StringA vertShaderName = shader_base_name + "::vertex";
     vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-    this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+    ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
 
     try {
         m_drawToScreen_prgm = std::make_unique<GLSLShader>();

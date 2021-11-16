@@ -27,6 +27,8 @@
 #include <vector>
 #include <glm/ext.hpp>
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
@@ -150,14 +152,15 @@ bool AOSphereRenderer::create(void) {
     vislib::StringA shaderName("unknown");
     vislib_gl::graphics::gl::ShaderSource vert, frag;
 
-    try {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
 
+    try {
         for (int i = 0; i < 4; i++) {
             shaderName.Format("main axes %d", i);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("AOSphere::mainaxes::vertex", vert)) {
+            if (!ssf->MakeShaderSource("AOSphere::mainaxes::vertex", vert)) {
                 throw vislib::Exception("Unable to load vertex shader", __FILE__, __LINE__);
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(maFragNames[i], frag)) {
+            if (!ssf->MakeShaderSource(maFragNames[i], frag)) {
                 throw vislib::Exception("Unable to load fragment shader", __FILE__, __LINE__);
             }
 
@@ -166,10 +169,10 @@ bool AOSphereRenderer::create(void) {
             }
 
             shaderName.Format("normals %d", i);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("AOSphere::normals::vertex", vert)) {
+            if (!ssf->MakeShaderSource("AOSphere::normals::vertex", vert)) {
                 throw vislib::Exception("Unable to load vertex shader", __FILE__, __LINE__);
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(nFragNames[i], frag)) {
+            if (!ssf->MakeShaderSource(nFragNames[i], frag)) {
                 throw vislib::Exception("Unable to load fragment shader", __FILE__, __LINE__);
             }
 
@@ -196,13 +199,13 @@ bool AOSphereRenderer::create(void) {
     }
 
     // Load volume texture generation shader
-    if ( !instance()->ShaderSourceFactory().MakeShaderSource ( "AOSphere::volume::updateVolumeVertex", vert ) ) {
+    if ( !ssf->MakeShaderSource ( "AOSphere::volume::updateVolumeVertex", vert ) ) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg ( megamol::core::utility::log::Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for volume texture update shader",
             this->ClassName() );
         return false;
     }
-    if ( !instance()->ShaderSourceFactory().MakeShaderSource ( "AOSphere::volume::updateVolumeFragment", frag ) ) {
+    if ( !ssf->MakeShaderSource ( "AOSphere::volume::updateVolumeFragment", frag ) ) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg ( megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for volume texture update shader",
             this->ClassName() );

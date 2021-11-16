@@ -51,9 +51,9 @@ namespace utility {
         /**
          * Ctor.
          *
-         * @param config The configuration.
+         * @param shader_dirs_ The shader dirs of the config.
          */
-        ShaderSourceFactory(core::utility::Configuration& config);
+        ShaderSourceFactory(vislib::Array<vislib::StringW> shader_dirs_);
 
         /**
          * Dtor.
@@ -206,8 +206,8 @@ namespace utility {
         vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
         makeSnippet(BTFParser::BTFSnippet *s, UINT32 flags);
 
-        /** The configuration */
-        core::utility::Configuration& config;
+        /** The shader dirs */
+        vislib::Array<vislib::StringW> shader_dirs;
 
         /** The (empty-named) root namespace */
         BTFParser::BTFNamespace root;

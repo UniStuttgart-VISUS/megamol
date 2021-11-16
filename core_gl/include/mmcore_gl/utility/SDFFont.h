@@ -17,8 +17,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include <glm/glm.hpp>
 
