@@ -32,7 +32,8 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() { this->Release();
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
-    core_gl::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    core_gl::utility::ShaderSourceFactory& factory = *ssf;
 
     try {
         vislib_gl::graphics::gl::ShaderSource vert, frag;

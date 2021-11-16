@@ -13,6 +13,8 @@
 
 #include <glm/ext.hpp>
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 
 using namespace megamol::core;
 using namespace megamol::moldyn_gl::rendering;
@@ -109,13 +111,14 @@ bool GrimRenderer::create(void) {
     ASSERT(IsAvailable());
 
     vislib_gl::graphics::gl::ShaderSource vert, geom, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
 
     const char *shaderName = "sphere";
     try {
 
         shaderName = "sphereShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());
@@ -126,8 +129,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "vanillaSphereShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::vertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::simplesphere::vertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -135,8 +138,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "initDepthShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::vertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::fragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::init::vertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::init::fragment", frag)) { return false; }
         if (!this->initDepthShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -144,8 +147,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "initDepthMapShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initfrag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::depthmap::initfrag", frag)) { return false; }
         if (!this->initDepthMapShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -153,8 +156,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "depthMipShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::mipfrag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::depthmap::mipfrag", frag)) { return false; }
         if (!this->depthMipShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -162,8 +165,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "pointShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::vert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::frag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::vert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::frag", frag)) { return false; }
         if (!this->pointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -171,8 +174,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "initDepthPointShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->initDepthPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -180,8 +183,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "vertCntShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -189,8 +192,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "vertCntShade2r";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point2::lesssimplevert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point2::lesssimplevert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShade2r.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -199,8 +202,8 @@ bool GrimRenderer::create(void) {
 
 
         shaderName = "deferredSphereShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::otherSphereVertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::deferred::otherSphereVertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -208,8 +211,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "deferredVanillaSphereShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherevertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::deferred::spherevertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredVanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -217,8 +220,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "deferredPointShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::pointvertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::pointfragment", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth6::pointvertex", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth::deferred::pointfragment", frag)) { return false; }
         if (!this->deferredPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
@@ -226,8 +229,8 @@ bool GrimRenderer::create(void) {
         }
 
         shaderName = "deferredShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::vert", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::frag", frag)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth6::deferredShader::vert", vert)) { return false; }
+        if (!ssf->MakeShaderSource("mipdepth6::deferredShader::frag", frag)) { return false; }
         if (!this->deferredShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
