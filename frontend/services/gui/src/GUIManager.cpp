@@ -388,8 +388,8 @@ bool GUIManager::PostDraw() {
             if (this->fbo == nullptr)
                 break;
             this->fbo->bind();
-            //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            //glClearDepth(1.0f);
+            // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            // glClearDepth(1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, width, height);
             glEnable(GL_DEPTH_TEST);
