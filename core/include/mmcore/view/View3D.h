@@ -11,6 +11,7 @@
 #include "mmcore/view/BaseView.h"
 #include "mmcore/view/CameraControllers.h"
 #include "mmcore/view/CPUFramebuffer.h"
+#include "mmcore/view/AbstractView.h"
 
 namespace megamol {
 namespace core {
@@ -23,7 +24,7 @@ namespace view {
         // TODO reallocate buffer?
     };
 
-class MEGAMOLCORE_API View3D : public view::BaseView<CallRenderView, Camera3DController> {
+class MEGAMOLCORE_API View3D : public view::BaseView<CallRenderView, Camera3DController, AbstractView> {
 
 public:
     /**

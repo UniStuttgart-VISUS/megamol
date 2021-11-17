@@ -17,16 +17,16 @@
 #include <boost/stacktrace.hpp>
 #endif
 
-#include "glad/glad.h"
+#include "glad/gl.h"
 #ifdef _WIN32
 #    include <Windows.h>
 #    include <DbgHelp.h>
 #pragma comment(lib, "dbghelp.lib")
 #    undef min
 #    undef max
-#    include "glad/glad_wgl.h"
+#    include "glad/wgl.h"
 #else
-#    include "glad/glad_glx.h"
+#    include "glad/glx.h"
 #endif
 
 #include <GLFW/glfw3.h>
@@ -502,20 +502,37 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwMakeContextCurrent(window_ptr);
 
     //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
-    if(gladLoadGL() == 0) {
+    auto version = gladLoaderLoadGL();
+    m_opengl_context.major_ = GLAD_VERSION_MAJOR(version);
+    m_opengl_context.minor_ = GLAD_VERSION_MINOR(version);
+    if (version == 0) {
         log_error("Failed to load OpenGL functions via glad");
         return false;
     }
 #ifdef _WIN32
-    if (gladLoadWGL(wglGetCurrentDC()) == 0) {
+    if (gladLoaderLoadWGL(wglGetCurrentDC()) == 0) {
         log_error("Failed to load OpenGL WGL functions via glad");
         return false;
     }
 #else
     Display* display = XOpenDisplay(NULL);
-    gladLoadGLX(display, DefaultScreen(display));
+    gladLoaderLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
+    if (m_opengl_context.major_ < 3) {
+        auto ext = std::string((char const*)glGetString(GL_EXTENSIONS));
+        std::istringstream iss(ext);
+        std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(),
+            std::back_inserter(m_opengl_context.ext_));
+    } else {
+        GLint num_ext = 0;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &num_ext);
+
+        m_opengl_context.ext_.resize(num_ext);
+        for (GLint i = 0; i < num_ext; ++i) {
+            m_opengl_context.ext_[i] = std::string((char const*)glGetStringi(GL_EXTENSIONS, i));
+        }
+    }
 
     log(std::string("OpenGL Context Info")
         + "\n\tVersion:  " + reinterpret_cast<const char*>(glGetString(GL_VERSION))
@@ -577,13 +594,14 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"KeyboardEvents", m_keyboardEvents},
         {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
-        {"FramebufferEvents", m_framebufferEvents},
+        //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
         {"OpenGL_Context", m_opengl_context},
         {"WindowManipulation", m_windowManipulation}
     };
 
     m_requestedResourcesNames = {
-          "FrameStatistics"
+          "FrameStatistics",
+          "FramebufferEvents"
     };
 
     m_pimpl->last_time = std::chrono::system_clock::now();
@@ -756,10 +774,12 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     auto& should_close_events = this->m_windowEvents.should_close_events;
     if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
+
+    auto& global_framebuffer_events = const_cast<FramebufferEvents&>(m_requestedResourceReferences[1].getResource<FramebufferEvents>());
+    global_framebuffer_events.append(m_framebufferEvents);
 }
 
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-    // we dont depend on outside resources
 }
 
 void OpenGL_GLFW_Service::resetProvidedResources() {

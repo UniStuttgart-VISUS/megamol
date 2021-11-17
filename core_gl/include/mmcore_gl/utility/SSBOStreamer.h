@@ -19,6 +19,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include <omp.h>
 #include <functional>
+#include <string>
 
 namespace megamol {
 namespace core {
@@ -78,9 +79,9 @@ namespace utility {
         /// @param sync the abstract sync object to signal as done
         void SignalCompletion(unsigned int sync);
 
-		/// @param numItemsPerChunk the minimum number of items per chunk
-		/// @param up rounds up if true, otherwise rounds down.
-		/// @returns the alignment-friendly (rounded) number of items per chunk
+        /// @param numItemsPerChunk the minimum number of items per chunk
+        /// @param up rounds up if true, otherwise rounds down.
+        /// @returns the alignment-friendly (rounded) number of items per chunk
         GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
 
         GLuint GetHandle(void) const {

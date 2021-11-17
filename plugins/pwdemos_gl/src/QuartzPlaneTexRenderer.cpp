@@ -14,7 +14,9 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/math/Vector.h"
+#include "OpenGL_Context.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -56,21 +58,20 @@ bool QuartzPlaneTexRenderer::create(void) {
     using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
-        return false;
-    }
-    if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_ARB_multitexture")) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
+        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
         Log::DefaultLog.WriteError("GL2.0 not present");
         return false;
     }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {

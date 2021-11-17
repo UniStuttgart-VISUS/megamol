@@ -29,6 +29,7 @@ PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
         , viewport_dim{0, 0}
+        , prev_fbo(0)
         , cursor_on_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
         , active_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
         , available_interactions()
@@ -195,6 +196,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
         this->fbo->resize(this->viewport_dim.x, this->viewport_dim.y);
     }
 
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &this->prev_fbo);
+
     this->fbo->bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GLint in[1] = {0};
@@ -278,9 +281,9 @@ bool PickingBuffer::DisableInteraction() {
     }
 
     // Draw fbo color buffer as texture because blending is required
+    glBindFramebuffer(GL_FRAMEBUFFER, this->prev_fbo);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glEnable(GL_DEPTH_TEST);
 
     this->fbo_shader->use();

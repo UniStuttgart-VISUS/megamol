@@ -50,7 +50,7 @@ GLuint MDAOVolumeGenerator::GetVolumeTextureHandle()
 }
 
 
-bool MDAOVolumeGenerator::Init()
+bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx)
 {
     // Generate and initialize the volume texture
     glGenTextures(1, &this->volumeHandle);
@@ -73,8 +73,8 @@ bool MDAOVolumeGenerator::Init()
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
     // Check if we can use modern features
-    computeAvailable = (::isExtAvailable("GL_ARB_compute_shader") == GL_TRUE);
-    clearAvailable = (::isExtAvailable("GL_ARB_clear_texture") == GL_TRUE);
+    computeAvailable = ogl_ctx.isExtAvailable("GL_ARB_compute_shader");
+    clearAvailable = ogl_ctx.isExtAvailable("GL_ARB_clear_texture");
 
     std::stringstream outmsg;
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable << ", Clear Texture " << clearAvailable << std::endl;
@@ -101,10 +101,6 @@ bool MDAOVolumeGenerator::Init()
 
     // Initialize our shader
     vislib_gl::graphics::gl::ShaderSource vert, frag, geom;
-    if (!vislib_gl::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        std::cerr << "[MDAOVolumeGenerator] Failed to init OpenGL extensions: GLSLGeometryShader" << std::endl;
-        return false;
-    }
     try {
         // Try to make the vertex shader
         if (!this->factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "PCAProjection.h"
 
 #include "datatools/table/TableDataCall.h"

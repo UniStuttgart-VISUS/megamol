@@ -10,7 +10,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "AbstractRenderer.h"
 

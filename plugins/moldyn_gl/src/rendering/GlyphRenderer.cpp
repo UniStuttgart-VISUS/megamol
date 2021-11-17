@@ -27,6 +27,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "OpenGL_Context.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -87,8 +88,9 @@ GlyphRenderer::~GlyphRenderer(void) { this->Release(); }
 
 
 bool GlyphRenderer::create(void) {
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
 
     bool retVal = true;
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
@@ -117,13 +119,13 @@ bool GlyphRenderer::makeShader(
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
-
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(vertexName.c_str(), vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource(vertexName.c_str(), vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(fragmentName.c_str(), fragSrc)) {
+    if (!ssf->MakeShaderSource(fragmentName.c_str(), fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
         return false;

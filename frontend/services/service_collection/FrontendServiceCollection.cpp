@@ -84,12 +84,18 @@ namespace frontend {
 
         megamol::frontend_resources::FrontendResourcesLookup m_resource_lookup{m_serviceResources};
 
+        bool overall_success = true;
+
         // for each servie, provide him with requested resources
         for_each_service {
             auto request_names = service.get().getRequestedResourceNames();
             auto [success, resources] = m_resource_lookup.get_requested_resources(request_names);
 
-            if (!success) {
+            overall_success &= success;
+
+            if (success) {
+                service.get().setRequestedResources(resources);
+            } else {
                 // if a requested resource can not be found we fail and should stop program execution
                 log_error("could not find all resources: for service: " + service.get().serviceName()
                     + "\nRequests: " +
@@ -99,13 +105,10 @@ namespace frontend {
                           std::accumulate(resources.begin(), resources.end(), std::string{},
                               [](std::string const& lhs, megamol::frontend::FrontendResource const& rhs) { return lhs + ", " + rhs.getIdentifier(); })
                 );
-                return false;
             }
-
-            service.get().setRequestedResources(resources);
         }
 
-        return true;
+        return overall_success;
     }
 
     void FrontendServiceCollection::updateProvidedResources() {

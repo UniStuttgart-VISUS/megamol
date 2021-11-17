@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
@@ -28,7 +28,7 @@ namespace view {
 /**
  * Abstract base class of rendering views
  */
-class SplitViewGL : public core::view::AbstractView {
+class SplitViewGL : public core_gl::view::AbstractViewGL {
 public:
     /**
      * Answer the name of this module.
@@ -49,7 +49,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /**
      * Answer whether or not this module supports being used in a

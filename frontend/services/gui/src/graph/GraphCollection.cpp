@@ -1160,7 +1160,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                     }
                 }
 
-                projectstr = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\") \n" +
+                projectstr = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\")\n" +
                              confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
                              confParams.str() + "\n" + state_json;
 
