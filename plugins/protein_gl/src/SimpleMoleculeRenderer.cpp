@@ -214,9 +214,6 @@ void SimpleMoleculeRenderer::release(void) {}
  * protein::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0))
-
-        return false;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

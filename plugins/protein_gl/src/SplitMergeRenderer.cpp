@@ -92,10 +92,6 @@ SplitMergeRenderer::~SplitMergeRenderer(void) {
  */
 bool SplitMergeRenderer::create() {
 
-    if (isExtAvailable("GL_NV_path_rendering") != GL_TRUE) {
-        return false;
-    }
-
     this->numChars = 256; // 0x110000;
     this->fontBase = glGenPathsNV(numChars);
     // this->pathBase = glGenPathsNV(1000);

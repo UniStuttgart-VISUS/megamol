@@ -44,15 +44,6 @@ SolPathRenderer::~SolPathRenderer(void) {
  */
 bool SolPathRenderer::create(void) {
     using megamol::core::utility::log::Log;
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to initialise opengl extensions for ARB shaders and OGL 2.0");
-        return false;
-    }
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to initialise opengl extensions for glsl");
-        return false;
-    }
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
 

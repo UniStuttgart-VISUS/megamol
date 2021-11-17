@@ -230,10 +230,6 @@ void MoleculeCartoonRenderer::release(void) {}
 bool MoleculeCartoonRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

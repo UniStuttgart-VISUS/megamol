@@ -45,8 +45,6 @@ VolumeSliceRenderer::~VolumeSliceRenderer(void) {
  * VolumeSliceRenderer::create
  */
 bool VolumeSliceRenderer::create() {
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
 
     using namespace vislib_gl::graphics::gl;
 

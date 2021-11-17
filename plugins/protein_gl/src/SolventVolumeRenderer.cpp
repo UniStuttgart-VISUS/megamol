@@ -308,14 +308,6 @@ bool protein_gl::SolventVolumeRenderer::loadShader(
  * protein::SolventVolumeRenderer::create
  */
 bool protein_gl::SolventVolumeRenderer::create(void) {
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform"))
-        return false;
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
-        return false;
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions())
-        return false;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

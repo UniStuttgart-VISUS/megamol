@@ -330,11 +330,6 @@ UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer(void) {
  */
 bool UncertaintyCartoonRenderer::loadTubeShader(void) {
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib_gl::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
-        return false;
-
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     ssf->LoadBTF("uncertaintycartoontessellation", true);
 
@@ -401,11 +396,6 @@ bool UncertaintyCartoonRenderer::create(void) {
 #ifdef DEBUG_GL
     glDebugMessageCallback(MyFunkyDebugCallback, nullptr);
 #endif
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib_gl::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
-        return false;
 
     // load tube shader
     if (!this->loadTubeShader()) {

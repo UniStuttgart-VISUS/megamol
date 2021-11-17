@@ -78,17 +78,6 @@ bool VariantMatchRenderer::create(void) {
         return false;
     }
 
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
-        return false;
-    }
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
-    if (!isExtAvailable("GL_ARB_texture_non_power_of_two")) {
-        return false;
-    }
-
     // Try to load the ssao shader
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {

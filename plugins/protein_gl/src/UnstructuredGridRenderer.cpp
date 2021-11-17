@@ -67,12 +67,6 @@ void protein_gl::UnstructuredGridRenderer::release(void) {}
  * protein::UnstructuredGridRenderer::create
  */
 bool protein_gl::UnstructuredGridRenderer::create(void) {
-    if (isExtAvailable("GL_ARB_vertex_program") == 0) {
-        return false;
-    }
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

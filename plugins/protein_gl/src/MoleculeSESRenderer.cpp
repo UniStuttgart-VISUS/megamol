@@ -287,11 +287,6 @@ void MoleculeSESRenderer::release(void) {}
  * MoleculeSESRenderer::create
  */
 bool MoleculeSESRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float"))
-        return false;
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
 
     // glEnable( GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
