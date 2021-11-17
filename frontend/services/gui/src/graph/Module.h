@@ -12,9 +12,9 @@
 
 #include "CallSlot.h"
 #include "ParameterGroups.h"
+#include "mmcore/MultiPerformanceHistory.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-
 
 namespace megamol {
 namespace gui {
@@ -162,6 +162,8 @@ namespace gui {
         void* GetProfilingParent() {
             return this->profiling_parent_pointer;
         }
+        void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+            const frontend_resources::PerformanceManager::timer_entry& entry);
 #endif
 
     private:
@@ -198,11 +200,9 @@ namespace gui {
         PopUps gui_rename_popup;
 
 #ifdef PROFILING
-
-        std::vector<core::PerformanceHistory> cpu_perf_history;
-        std::vector<core::PerformanceHistory> gl_perf_history;
+        std::vector<core::MultiPerformanceHistory> cpu_perf_history;
+        std::vector<core::MultiPerformanceHistory> gl_perf_history;
         void* profiling_parent_pointer;
-
 #endif // PROFILING
 
         // FUNCTIONS --------------------------------------------------------------

@@ -17,7 +17,6 @@
 #include <vector>
 #include "CallCapabilities.h"
 #ifdef PROFILING
-#include "mmcore_gl/CallProfiling.h"
 #include "PerformanceManager.h"
 #endif
 
@@ -117,10 +116,6 @@ namespace core {
             return static_cast<uint32_t>(callback_names.size());
         }
 
-#ifdef PROFILING
-        const CallProfiling& GetProfiling() const { return profiling; }
-#endif
-
     private:
         /** The callee connected by this call */
         CalleeSlot *callee;
@@ -138,11 +133,7 @@ namespace core {
         inline static std::string err_out_of_bounds = "index out of bounds";
 
 #ifdef PROFILING
-        friend class PerformanceQueryManager;
         friend class MegaMolGraph;
-
-        CallProfiling profiling;
-
         frontend_resources::PerformanceManager* perf_man = nullptr;
         frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // PROFILING

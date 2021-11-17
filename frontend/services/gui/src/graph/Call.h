@@ -11,8 +11,10 @@
 
 
 #ifdef PROFILING
-#include "mmcore/PerformanceHistory.h"
+#include "PerformanceManager.h"
+#include "mmcore/MultiPerformanceHistory.h"
 #endif
+#include "mmcore/Call.h"
 #include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
 
@@ -78,28 +80,23 @@ namespace gui {
 
 #ifdef PROFILING
 
-        struct Profiling {
-            double lcput;
-            double acput;
-            uint32_t ncpus;
-            std::array<double, core::PerformanceHistory::buffer_length> hcpu;
-            double lgput;
-            double agput;
-            uint32_t ngpus;
-            std::array<double, core::PerformanceHistory::buffer_length> hgpu;
-            std::string name;
-        };
-
-        void SetProfilingValues(const std::vector<Profiling>& p) {
-            this->profiling = p;
-        }
-
-        void SetProfilingParent(void* ptr) {
+        void SetProfilingData(void* ptr, uint32_t num_callbacks) {
             this->profiling_parent_pointer = ptr;
+            cpu_perf_history.resize(num_callbacks);
+            gl_perf_history.resize(num_callbacks);
+            for (auto i = 0; i < num_callbacks; ++i) {
+                const auto& cb_name = (static_cast<core::Call*>(ptr))->GetCallbackName(i);
+                cpu_perf_history[i].set_name(cb_name);
+                gl_perf_history[i].set_name(cb_name);
+            }
         }
+
         void* GetProfilingParent() {
             return this->profiling_parent_pointer;
         }
+
+        void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+            const frontend_resources::PerformanceManager::timer_entry& entry);
 
 #endif // PROFILING
 
@@ -124,15 +121,12 @@ namespace gui {
         HoverToolTip gui_tooltip;
 
 #ifdef PROFILING
-
-        std::vector<core::PerformanceHistory> cpu_perf_history;
-        std::vector<core::PerformanceHistory> gl_perf_history;
+        std::vector<core::MultiPerformanceHistory> cpu_perf_history;
+        std::vector<core::MultiPerformanceHistory> gl_perf_history;
         void* profiling_parent_pointer;
 
-        std::vector<Profiling> profiling;
         bool show_profiling_data;
         void draw_profiling_data();
-
 #endif // PROFILING
     };
 

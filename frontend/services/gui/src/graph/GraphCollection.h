@@ -84,6 +84,11 @@ namespace gui {
             this->change_running_graph(graph_uid);
         }
 
+#ifdef PROFILING
+        void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi,
+            frontend_resources::PerformanceManager& perf_man);
+#endif
+
     private:
         // VARIABLES --------------------------------------------------------------
 

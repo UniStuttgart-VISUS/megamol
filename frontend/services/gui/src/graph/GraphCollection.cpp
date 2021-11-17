@@ -648,42 +648,13 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                 gui_graph_changed = true;
                 gui_call->SetCapabilities(cd.core_call->GetCapabilities());
 #ifdef PROFILING
-                gui_call->SetProfilingParent(cd.core_call.get());
+                gui_call->SetProfilingData(cd.core_call.get(), cd.core_call->GetCallbackCount());
+                // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
+                //    cd.core_call.get()->GetDescriptiveText().c_str());
                 call_to_call[cd.core_call.get()] = gui_call;
 #endif
             }
         }
-
-
-#ifdef PROFILING
-
-        // Sync profiling values from core calls to gui calls ...
-        for (auto& ccall : megamol_graph.ListCalls()) {
-            for (auto& gcall : gui_graph_call_info) {
-                if (gcall.class_name == ccall.request.className &&
-                    gui_utils::CaseInsensitiveStringCompare(gcall.from, ccall.request.from) &&
-                    gui_utils::CaseInsensitiveStringCompare(gcall.to, ccall.request.to)) {
-                    const auto& profiling = ccall.callPtr->GetProfiling();
-                    auto func_count = ccall.callPtr->GetCallbackCount();
-                    std::vector<gui::Call::Profiling> prof;
-                    prof.resize(func_count);
-                    for (uint32_t i = 0; i < func_count; i++) {
-                        prof[i].lcput = profiling.GetLastCPUTime(i);
-                        prof[i].acput = profiling.GetAverageCPUTime(i);
-                        prof[i].ncpus = profiling.GetNumCPUSamples(i);
-                        prof[i].hcpu = profiling.GetCPUHistory(i);
-                        prof[i].lgput = profiling.GetLastGPUTime(i);
-                        prof[i].agput = profiling.GetAverageGPUTime(i);
-                        prof[i].ngpus = profiling.GetNumGPUSamples(i);
-                        prof[i].hgpu = profiling.GetGPUHistory(i);
-                        prof[i].name = ccall.callPtr->GetCallbackName(i);
-                    }
-                    gcall.ptr.lock()->SetProfilingValues(prof);
-                }
-            }
-        }
-
-#endif // PROFILING
 
         if (gui_graph_changed) {
             graph_ptr->ClearSyncQueue();
@@ -1696,6 +1667,26 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
     }
 }
 
+#ifdef PROFILING
+void megamol::gui::GraphCollection::AppendPerformanceData(
+    const frontend_resources::PerformanceManager::frame_info& fi, frontend_resources::PerformanceManager& perf_man) {
+    auto frame = fi.frame;
+    for (auto& e : fi.entries) {
+        if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
+            auto p = perf_man.lookup_parent_pointer(e.handle);
+            auto t = perf_man.lookup_parent_type(e.handle);
+            if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
+                auto c = static_cast<megamol::core::Call*>(p);
+                // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
+                call_to_call[p]->AppendPerformanceData(frame, e);
+            } else {
+                // Module
+                module_to_module[p]->AppendPerformanceData(frame, e);
+            }
+        }
+    }
+}
+#endif
 
 bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& open_dialog) {
 

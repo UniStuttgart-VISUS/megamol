@@ -78,6 +78,7 @@ namespace frontend {
         glm::vec2 m_window_size;
         Config m_config;
         megamol::core::MegaMolGraph* m_megamol_graph;
+        megamol::frontend_resources::PerformanceManager* perf_manager = nullptr;
         std::shared_ptr<megamol::gui::GUIManager> m_gui = nullptr;
         std::vector<std::string> m_queuedProjectFiles;
 

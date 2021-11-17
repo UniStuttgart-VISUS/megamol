@@ -34,6 +34,7 @@ namespace frontend_resources {
         using timer_index = uint32_t;
         using handle_vector = std::vector<handle_type>;
         using frame_type = uint32_t;
+        using user_index_type = uint32_t;
         using time_point = std::chrono::steady_clock::time_point;
 
         enum class query_api { CPU, OPENGL }; // TODO: CUDA, OpenCL, Vulkan, whatnot
@@ -45,6 +46,7 @@ namespace frontend_resources {
         struct basic_timer_config {
             std::string name = "unnamed";
             query_api api = query_api::CPU;
+            user_index_type user_index = 0;
         };
 
         struct timer_config : public basic_timer_config {
@@ -58,6 +60,7 @@ namespace frontend_resources {
             query_api api = query_api::CPU;
             // local index inside one frame (if this region is touched multiple times per frame)
             uint32_t frame_index = 0;
+            user_index_type user_index = 0;
             time_point timestamp;
         };
 

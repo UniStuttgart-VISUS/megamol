@@ -27,11 +27,6 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  * Call::~Call
  */
 Call::~Call(void) {
-#ifdef PROFILING
-    if (caps.OpenGLRequired()) {
-        profiling.ShutdownProfiling();
-    }
-#endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -64,13 +59,7 @@ bool Call::operator()(unsigned int func) {
         }
 #endif
 #ifdef PROFILING
-        const auto startTime = std::chrono::high_resolution_clock::now();
         const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
-        bool gl_started = false;
-        if (caps.OpenGLRequired()) {
-            gl_started = CallProfiling::qm->Start(this, frameID, func);
-        }
-
         perf_man->start_timer(cpu_queries[func], frameID);
         if (caps.OpenGLRequired())
             perf_man->start_timer(gl_queries[func], frameID);
@@ -80,14 +69,6 @@ bool Call::operator()(unsigned int func) {
         if (caps.OpenGLRequired())
             perf_man->stop_timer(gl_queries[func]);
         perf_man->stop_timer(cpu_queries[func]);
-
-        if (gl_started) {
-            CallProfiling::qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
-        }
-        const auto endTime = std::chrono::high_resolution_clock::now();
-        const std::chrono::duration<double, std::milli> diffMillis = endTime - startTime;
-        profiling.cpu_history[func].push_value(diffMillis.count());
-
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (caps.OpenGLRequired()) glPopDebugGroup();
@@ -107,9 +88,6 @@ std::string Call::GetDescriptiveText() const {
 
 void Call::SetCallbackNames(std::vector<std::string> names) {
     callback_names = std::move(names);
-#ifdef PROFILING
-    profiling.SetParent(this);
-#endif
 }
 
 const std::string& Call::GetCallbackName(uint32_t idx) const {

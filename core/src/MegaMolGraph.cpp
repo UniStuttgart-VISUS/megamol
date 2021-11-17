@@ -661,6 +661,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     this->call_list_.emplace_front(CallInstance_t{call, request});
 #ifdef PROFILING
     auto the_call = call.get();
+    //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
     the_call->cpu_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
     if (the_call->GetCapabilities().OpenGLRequired()) {
         the_call->gl_queries = m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);

@@ -126,6 +126,7 @@ namespace frontend_resources {
         conf.api = api;
         for (auto i = 0; i < c->GetCallbackCount(); ++i) {
             conf.name = c->GetCallbackName(i);
+            conf.user_index = i;
             switch(api) {
             case query_api::CPU:
                 ret.push_back(add_timer(std::make_unique<cpu_timer>(conf)));
@@ -228,6 +229,7 @@ namespace frontend_resources {
             auto& tconf = timer->get_conf();
             timer_entry e;
             e.handle = timer->get_handle();
+            e.user_index = tconf.user_index;
 
             for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
                 e.frame_index = region;

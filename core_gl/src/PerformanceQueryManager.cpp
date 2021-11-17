@@ -95,7 +95,8 @@ void PerformanceQueryManager::Collect() {
         const auto the_call = qi.call_idx;
         qi.started = false;
         auto c = all_calls[the_call];
-        c->profiling.gpu_history[the_func].push_value(static_cast<double>(time) / 1000000.0);
+        // TODO HAZARD THIS NEEDS BACK IN IF RE-ACTIVATING!!
+        //c->profiling.gpu_history[the_func].push_value(static_cast<double>(time) / 1000000.0);
     }
     AdvanceGLProfiling(); // important! regardless of whether the last call was actually profiled! we need to advance
                           // through the graph though

@@ -584,6 +584,21 @@ void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
     }
 }
 
+void megamol::gui::Module::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+    const frontend_resources::PerformanceManager::timer_entry& entry) {
+    // TODO this does not work yet, the index is at the mercy of the user
+    // switch (entry.api) {
+    // case frontend_resources::PerformanceManager::query_api::CPU:
+    //    cpu_perf_history[entry.user_index].push_sample(
+    //        frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+    //    break;
+    // case frontend_resources::PerformanceManager::query_api::OPENGL:
+    //    gl_perf_history[entry.user_index].push_sample(
+    //        frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+    //    break;
+    //}
+}
+
 
 bool megamol::gui::Module::ParametersVisible() {
 

@@ -373,18 +373,10 @@ namespace frontend {
 
 #ifdef PROFILING
         // PerformanceManager
-        auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+        perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
             &this->m_requestedResourceReferences[14].getResource<megamol::frontend_resources::PerformanceManager>());
         perf_manager->subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
-            auto frame = fi.frame;
-            for (auto& e : fi.entries) {
-                if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
-                    // auto p = perf_manager.lookup_parent_pointer(e.handle);
-                    // auto t = perf_manager.lookup_parent_type(e.handle);
-                    // m_gui->AddPerformanceData(t, p, e.api, e.frame_index, e.timestamp);
-                    // todo: configurator holen, graphcollection holen, daten reinstopfen.
-                }
-            }
+            m_gui->AppendPerformanceData(fi, *perf_manager);
         });
 #endif
     }

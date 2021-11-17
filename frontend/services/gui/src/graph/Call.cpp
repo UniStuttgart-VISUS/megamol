@@ -36,7 +36,6 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , callee_slot_name()
         , gui_tooltip()
 #ifdef PROFILING
-        , profiling()
         , show_profiling_data(false)
 #endif // PROFILING
 {
@@ -408,6 +407,20 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 #ifdef PROFILING
 
+void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+    const frontend_resources::PerformanceManager::timer_entry& entry) {
+    switch (entry.api) {
+    case frontend_resources::PerformanceManager::query_api::CPU:
+        cpu_perf_history[entry.user_index].push_sample(
+            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        break;
+    case frontend_resources::PerformanceManager::query_api::OPENGL:
+        gl_perf_history[entry.user_index].push_sample(
+            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        break;
+    }
+}
+
 void megamol::gui::Call::draw_profiling_data() {
 
     ImGui::BeginChild("call_profiling_info",
@@ -418,44 +431,51 @@ void megamol::gui::Call::draw_profiling_data() {
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback Name]");
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
-    auto func_cnt = this->profiling.size();
+    auto func_cnt = this->cpu_perf_history.size();
     for (size_t i = 0; i < func_cnt; i++) {
-        auto& tab_label = this->profiling[i].name;
+        auto& tab_label = this->cpu_perf_history[i].get_name(); // this->profiling[i].name;
         if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
             if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
                     ImVec2(0.0f, 0.0f))) {
                 ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("LastCPUTime");
-                ImGui::TableNextColumn();
-                ImGui::Text("%.12f", this->profiling[i].lcput);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("AverageCPUTime");
-                ImGui::TableNextColumn();
-                ImGui::Text("%.12f", this->profiling[i].acput);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("LastCPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f",
+                // cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("AverageCPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f", this->profiling[i].acput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumCPUSamples");
                 ImGui::TableNextColumn();
-                ImGui::Text("%i", this->profiling[i].ncpus);
+                ImGui::Text("%i", cpu_perf_history[i].samples());
 
                 ImGui::EndTable();
             }
 
-            std::array<float, core::PerformanceHistory::buffer_length> xbuf;
+            std::array<float, core::MultiPerformanceHistory::buffer_length> xbuf;
             std::iota(xbuf.begin(), xbuf.end(), 0.0f);
-            std::array<float, core::PerformanceHistory::buffer_length> ybuf;
-            const auto ch = this->profiling[i].hcpu;
-            std::transform(ch.begin(), ch.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
-            auto Xhist_count = static_cast<int>(ybuf.size());
+            // std::array<float, core::MultiPerformanceHistory::buffer_length> ybuf;
+            // const auto ch = this->profiling[i].hcpu;
+            // std::transform(ch.begin(), ch.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d);
+            // }); auto Xhist_count = static_cast<int>(ybuf.size());
 
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotLine("###cpuplot", xbuf.data(), ybuf.data(), Xhist_count);
+                ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                    core::MultiPerformanceHistory::buffer_length);
                 ImPlot::EndPlot();
             }
 
@@ -463,32 +483,39 @@ void megamol::gui::Call::draw_profiling_data() {
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
                     ImVec2(0.0f, 0.0f))) {
                 ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("LastGPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f", this->profiling[i].lgput);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("AverageGPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f", this->profiling[i].agput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("LastGPUTime");
+                ImGui::TextUnformatted("NumGLSamples");
                 ImGui::TableNextColumn();
-                ImGui::Text("%.12f", this->profiling[i].lgput);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("AverageGPUTime");
-                ImGui::TableNextColumn();
-                ImGui::Text("%.12f", this->profiling[i].agput);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("NumGPUSamples");
-                ImGui::TableNextColumn();
-                ImGui::Text("%.12i", this->profiling[i].ngpus);
+                ImGui::Text("%.12i", gl_perf_history[i].samples());
 
                 ImGui::EndTable();
             }
 
-            const auto gh = this->profiling[i].hgpu;
-            std::transform(gh.begin(), gh.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
+            // const auto gh = this->profiling[i].hgpu;
+            // std::transform(gh.begin(), gh.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d);
+            // });
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotLine("###gpuplot", xbuf.data(), ybuf.data(), Xhist_count);
+                ImPlot::PlotShaded("###glminmax", xbuf.data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::PlotLine("###glplot", xbuf.data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                    core::MultiPerformanceHistory::buffer_length);
                 ImPlot::EndPlot();
             }
 
