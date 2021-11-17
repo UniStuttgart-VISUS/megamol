@@ -21,6 +21,7 @@ AllowShortLoopsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Attach
 BreakConstructorInitializers: BeforeComma
+CommentPragmas: '^.*'
 ConstructorInitializerAllOnOneLineOrOnePerLine: true # Replace with "PackConstructorInitializers: Never", when switching to clang-format 14.
 ConstructorInitializerIndentWidth: 8
 DerivePointerAlignment: false
