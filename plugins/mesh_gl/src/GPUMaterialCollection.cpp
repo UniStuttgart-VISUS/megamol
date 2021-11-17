@@ -9,6 +9,7 @@
 #include "mesh_gl/GPUMaterialCollection.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 
@@ -32,14 +33,16 @@ namespace mesh_gl {
         auto tessCtrlShaderName = shader_base_name + "::tessellation_control";
         auto tessEvalShaderName = shader_base_name + "::tessellation_evaluation";
 
-        mm_core_inst->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-        mm_core_inst->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+        auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
+            mm_core_inst->Configuration().ShaderDirectories());
+        ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+        ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
         auto geom_shdr_success =
-            mm_core_inst->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src);
+            ssf->MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src);
         auto tessCtrl_shdr_success =
-            mm_core_inst->ShaderSourceFactory().MakeShaderSource(tessCtrlShaderName.PeekBuffer(), tessCtrl_shader_src);
+            ssf->MakeShaderSource(tessCtrlShaderName.PeekBuffer(), tessCtrl_shader_src);
         auto tessEval_shdr_success =
-            mm_core_inst->ShaderSourceFactory().MakeShaderSource(tessEvalShaderName.PeekBuffer(), tessEval_shader_src);
+            ssf->MakeShaderSource(tessEvalShaderName.PeekBuffer(), tessEval_shader_src);
 
         std::string vertex_src(vert_shader_src.WholeCode(), (vert_shader_src.WholeCode()).Length());
         std::string tessellationControl_src(

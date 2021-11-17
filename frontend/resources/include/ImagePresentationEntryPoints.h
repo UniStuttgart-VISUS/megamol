@@ -7,20 +7,13 @@
 
 #pragma once
 
-#include "ImageWrapper.h"
+#include "EntryPoint.h"
 #include "FrontendResource.h"
 
 #include <functional>
 
 namespace megamol {
 namespace frontend_resources {
-
-using EntryPointExecutionCallback =
-    std::function<bool(
-          void*
-        , std::vector<megamol::frontend::FrontendResource> const&
-        , ImageWrapper&
-        )>;
 
 using EntryPointRenderFunctions =
     std::tuple<

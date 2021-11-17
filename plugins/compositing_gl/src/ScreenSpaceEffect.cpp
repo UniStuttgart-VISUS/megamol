@@ -15,6 +15,7 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect() : core::Module()
     , m_version(0)
@@ -70,16 +71,19 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         vislib_gl::graphics::gl::ShaderSource compute_ssao_blur_src;
         vislib_gl::graphics::gl::ShaderSource compute_fxaa_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", compute_ssao_src)) return false;
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::ssao", compute_ssao_src))
+            return false;
         if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
         if (!m_ssao_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
+        if (!ssf->MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
             return false;
         if (!m_ssao_blur_prgm->Compile(compute_ssao_blur_src.Code(), compute_ssao_blur_src.Count())) return false;
         if (!m_ssao_blur_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
+        if (!ssf->MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count())) return false;
         if (!m_fxaa_prgm->Link()) return false;
 

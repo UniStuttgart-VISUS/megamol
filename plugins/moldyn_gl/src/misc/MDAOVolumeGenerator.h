@@ -11,6 +11,8 @@
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
+#include "OpenGL_Context.h"
+
 
 namespace megamol {
 namespace moldyn_gl {
@@ -22,7 +24,7 @@ namespace misc {
         MDAOVolumeGenerator();
         ~MDAOVolumeGenerator();
 
-        bool Init();
+        bool Init(frontend_resources::OpenGL_Context const& ogl_ctx);
 
         void SetResolution(float resX, float resY, float resZ);
 

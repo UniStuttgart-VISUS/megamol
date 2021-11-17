@@ -42,7 +42,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif     // _WIN32
-        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** Ctor. */

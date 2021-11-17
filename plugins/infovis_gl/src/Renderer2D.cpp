@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Renderer2D.h"
 
 #include "mmcore/CoreInstance.h"

@@ -20,6 +20,9 @@
 #include "vislib/memutils.h"
 #include "mmcore/utility/log/Log.h"
 #include <glm/ext.hpp>
+#include "OpenGL_Context.h"
+
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -434,17 +437,17 @@ bool QuartzRenderer::create(void) {
     using vislib_gl::graphics::gl::ShaderSource;
     using megamol::core::utility::log::Log;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
-    }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::simple::errVert", vert)) {
+        if (!ssf->MakeShaderSource("quartz::simple::errVert", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::simple::frag", frag)) {
+        if (!ssf->MakeShaderSource("quartz::simple::frag", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->errShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -515,13 +518,13 @@ vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDat
     const float* v = c.GetMeshVertexData();
 
     ShaderSource vert, frag;
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
 
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::vertclipped", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::vertclipped", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::fragclipped", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::fragclipped", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
 

@@ -18,6 +18,8 @@ namespace frontend_resources {
         unsigned int texture_reference = 0;
         ImageWrapper* image_wrapper_ptr = nullptr;
 
+        ImageWrapper::ImageSize size;
+
         gl_texture(ImageWrapper const& image);
         ~gl_texture(); // frees texture if owned
         // rule of five

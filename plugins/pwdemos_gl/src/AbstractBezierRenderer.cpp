@@ -11,6 +11,8 @@
 #include "AbstractBezierRenderer.h"
 #include "mmcore/AbstractGetData3DCall.h"
 
+#include "OpenGL_Context.h"
+
 
 namespace megamol {
 namespace demos_gl {
@@ -38,7 +40,10 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
  * AbstractBezierRenderer::create
  */
 bool AbstractBezierRenderer::create(void) {
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
+
     return true;
 }
 

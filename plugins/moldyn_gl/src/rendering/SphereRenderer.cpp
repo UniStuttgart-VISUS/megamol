@@ -12,6 +12,8 @@
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 
+#include "OpenGL_Context.h"
+
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
@@ -245,6 +247,30 @@ bool SphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 bool SphereRenderer::create(void) {
 
     ASSERT(IsAvailable());
+
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
+        return false;
+    }
+    if (!ogl_ctx.isExtAvailable("GL_ARB_explicit_attrib_location")) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "[SphereRenderer] No render mode is available. Extension "
+                                                          "GL_ARB_explicit_attrib_location is not available.");
+        return false;
+    }
+    if (!ogl_ctx.isExtAvailable("GL_ARB_conservative_depth")) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
+        return false;
+    }
+    if (!ogl_ctx.areExtAvailable(GLSLShader::RequiredExtensions())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SphereRenderer] No render mode is available. Shader extensions are not available.");
+        return false;
+    }
+
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
 
@@ -451,7 +477,7 @@ bool SphereRenderer::createResources() {
     // Check for flag storage availability and get specific shader snippet
     vislib::SmartPtr<ShaderSource::Snippet> flags_shader_snippet;
     this->isFlagStorageAvailable(flags_shader_snippet);
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
         switch (this->renderMode) {
 
@@ -459,11 +485,11 @@ bool SphereRenderer::createResources() {
         case (RenderMode::SIMPLE_CLUSTERED): {
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -487,14 +513,14 @@ bool SphereRenderer::createResources() {
             vertShaderName = "sphere_geo::vertex";
             fragShaderName = "sphere_geo::fragment";
             geoShaderName = "sphere_geo::geometry";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+            if (!ssf->MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
                 return false;
             }
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -519,11 +545,11 @@ bool SphereRenderer::createResources() {
 
             vertShaderName = "sphere_ssbo::vertex";
             fragShaderName = "sphere_ssbo::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -537,11 +563,11 @@ bool SphereRenderer::createResources() {
 
             vertShaderName = "sphere_splat::vertex";
             fragShaderName = "sphere_splat::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -559,11 +585,11 @@ bool SphereRenderer::createResources() {
         case (RenderMode::BUFFER_ARRAY): {
             vertShaderName = "sphere_bufferarray::vertex";
             fragShaderName = "sphere_bufferarray::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -613,11 +639,11 @@ bool SphereRenderer::createResources() {
             // Create the sphere shader
             vertShaderName = "sphere_mdao::vertex";
             fragShaderName = "sphere_mdao::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -642,14 +668,14 @@ bool SphereRenderer::createResources() {
             vertShaderName = "sphere_mdao::geometry::vertex";
             geoShaderName = "sphere_mdao::geometry::geometry";
             fragShaderName = "sphere_mdao::geometry::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+            if (!ssf->MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
                 return false;
             }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -669,19 +695,19 @@ bool SphereRenderer::createResources() {
             // Create the deferred shader
             this->vertShader->Clear();
             this->fragShader->Clear();
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
+            if (!ssf->MakeShaderSource(
                 "sphere_mdao::deferred::vertex", *this->vertShader)) {
                 return false;
             }
             bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
             this->fragShader->Append(
-                instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
+                ssf->MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
             if (enableLighting) {
                 this->fragShader->Append(
-                    instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
+                    ssf->MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
             }
             else {
-                this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
+                this->fragShader->Append(ssf->MakeShaderSnippet(
                     "sphere_mdao::deferred::fragment::LightingStub"));
             }
             float apex = this->aoConeApexSlot.Param<param::FloatParam>()->Value();
@@ -691,7 +717,7 @@ bool SphereRenderer::createResources() {
             vislib_gl::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
                 new vislib_gl::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
             this->fragShader->Append(dirSnippet);
-            this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
+            this->fragShader->Append(ssf->MakeShaderSnippet(
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
             if (!this->lightingShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
@@ -702,8 +728,8 @@ bool SphereRenderer::createResources() {
 
             // Init volume generator
             this->volGen = new misc::MDAOVolumeGenerator();
-            this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
-            if (!this->volGen->Init()) {
+            this->volGen->SetShaderSourceFactory(ssf.get());
+            if (!this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                     megamol::core::utility::log::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
@@ -716,11 +742,11 @@ bool SphereRenderer::createResources() {
             this->outlineWidthSlot.Param<param::FloatParam>()->SetGUIVisible(true);
             vertShaderName = "sphere_outline::vertex";
             fragShaderName = "sphere_outline::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
             this->vertShader->Insert(1, flags_shader_snippet);
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+            if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
@@ -836,87 +862,88 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     std::string warnstr;
     std::string warnmode = "[SphereRenderer] Render Mode '" + SphereRenderer::getRenderModeString(rm) + "' is not available. ";
 
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case (RenderMode::SIMPLE):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::SIMPLE_CLUSTERED):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::GEOMETRY_SHADER):
-        if (ogl_IsVersionGEQ(3, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
-        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_gpu_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_bindable_uniform")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_bindable_uniform")) {
             warnstr += warnmode + "Extension GL_EXT_bindable_uniform is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_objects")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_objects")) {
             warnstr += warnmode + "Extension GL_ARB_shader_objects is required. \n";
         }
         break;
     case (RenderMode::SSBO_STREAM):
-        if (ogl_IsVersionGEQ(4, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader5")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader5")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader5 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     case (RenderMode::SPLAT):
-        if (ogl_IsVersionGEQ(4, 5) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 5) == 0) {
             warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_gpu_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
         break;
     case (RenderMode::BUFFER_ARRAY):
-        if (ogl_IsVersionGEQ(4, 5) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 5) == 0) {
             warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        if (ogl_IsVersionGEQ(4, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
-        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_compute_shader")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_compute_shader")) {
             warnstr += warnmode + "Extension GL_ARB_compute_shader is required. \n";
         }
         break;
     case (RenderMode::OUTLINE):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "Minimum OpenGL version is 1.4 \n";
         }
         break;
@@ -934,6 +961,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
 
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     if (out_flag_snippet != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -961,13 +989,13 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
         this->flags_available = false;
     }
 
-    if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+    if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
         warnstr += "[SphereRenderer] Flag Storage is not available. Extension "
             "GL_ARB_gpu_shader_fp64 is required. \n";
         this->flags_available = false;
     }
 
-    if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+    if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
         warnstr += "[SphereRenderer] Flag Storage is not available. Extension "
             "GL_ARB_shader_storage_buffer_object is required. \n";
         this->flags_available = false;
@@ -2603,11 +2631,12 @@ void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, Mul
         }
     }
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Check if voxelization is even needed
     if (this->volGen == nullptr) {
         this->volGen = new misc::MDAOVolumeGenerator();
-        this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
-        this->volGen->Init();
+        this->volGen->SetShaderSourceFactory(ssf.get());
+        this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
     }
 
     // Recreate the volume if neccessary

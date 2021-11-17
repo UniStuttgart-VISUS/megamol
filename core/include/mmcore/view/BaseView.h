@@ -16,8 +16,8 @@ namespace megamol {
 namespace core {
     namespace view {
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        class MEGAMOLCORE_API BaseView : public AbstractView {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        class MEGAMOLCORE_API BaseView : public ABSTRACTVIEW_TYPE {
         public:
             BaseView();
             ~BaseView() = default;
@@ -85,8 +85,8 @@ namespace core {
             CAM_CONTROLLER_TYPE _camera_controller;
         };
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::BaseView()
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::BaseView()
                 : _fbo(nullptr), _camera_controller(&this->_camera) {
 
             // none of the saved camera states are valid right now
@@ -100,14 +100,13 @@ namespace core {
             }
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline void
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::beforeRender(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::beforeRender(
             double time, double instanceTime) {
             AbstractView::beforeRender(time, instanceTime);
 
             // get camera values from params(?)
-            _camera_controller.applyParameterSlotsToCamera(_bboxs);
+            _camera_controller.applyParameterSlotsToCamera(ABSTRACTVIEW_TYPE::_bboxs);
 
             // handle 3D view specific camera implementation
             float dt = std::chrono::duration<float>(this->_lastFrameDuration).count();
@@ -117,14 +116,13 @@ namespace core {
             _camera_controller.setParameterSlotsFromCamera();
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline void
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::afterRender() {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::afterRender() {
             AbstractView::afterRender();
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::GetExtents(Call& call) {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::GetExtents(Call& call) {
             VIEWCALL_TYPE* crv = dynamic_cast<VIEWCALL_TYPE*>(&call);
             if (crv == nullptr) {
                 return false;
@@ -145,10 +143,8 @@ namespace core {
             return true;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnRenderView(
-            Call& call) {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnRenderView(Call& call) {
             VIEWCALL_TYPE* crv = dynamic_cast<VIEWCALL_TYPE*>(&call);
             if (crv == NULL) {
                 return false;
@@ -163,40 +159,40 @@ namespace core {
             auto fbo = _fbo;
             _fbo = crv->GetFramebuffer();
 
-            auto cam_pose = _camera.get<Camera::Pose>();
-            auto cam_type = _camera.get<Camera::ProjectionType>();
+            auto cam_pose = this->_camera.template get<Camera::Pose>();
+            auto cam_type = this->_camera.template get<Camera::ProjectionType>();
             if (cam_type == Camera::ORTHOGRAPHIC) {
-                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                _camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             } else if (cam_type == Camera::PERSPECTIVE) {
-                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                _camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             }
 
             this->Render(time, instanceTime);
 
             _fbo = fbo;
-            // only re-apply aspect ratio from copy, because otherwise camera updates handled within Render(...) are lost
-            cam_pose = _camera.get<Camera::Pose>();
-            cam_type = _camera.get<Camera::ProjectionType>();
+            // only re-apply aspect ratio from copy, because otherwise camera updates handled within Render(...) are
+            // lost
+            cam_pose = this->_camera.template get<Camera::Pose>();
+            cam_type = this->_camera.template get<Camera::ProjectionType>();
             if (cam_type == Camera::ORTHOGRAPHIC) {
-                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                _camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             } else if (cam_type == Camera::PERSPECTIVE) {
-                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-                _camera = Camera(cam_pose, cam_intrinsics);
+                this->_camera = Camera(cam_pose, cam_intrinsics);
             }
 
             return true;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline void
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::ResetView() {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::ResetView() {
             if (this->_cameraIsMutable) { // check if view is in control of the camera
                 AbstractCallRender* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
                 if ((cr != nullptr) && (_fbo != nullptr) && ((*cr)(AbstractCallRender::FnGetExtents))) {
@@ -208,26 +204,27 @@ namespace core {
             }
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::Resize(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::Resize(
             unsigned int width, unsigned int height) {
 
-            if (_cameraIsMutable) { // view seems to be in control of the camera
-                auto cam_pose = _camera.get<Camera::Pose>();
-                if (_camera.get<Camera::ProjectionType>() == Camera::ProjectionType::PERSPECTIVE) {
-                    auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+            if (this->_cameraIsMutable) { // view seems to be in control of the camera
+                auto cam_pose = this->_camera.template get<Camera::Pose>();
+                if (this->_camera.template get<Camera::ProjectionType>() == Camera::ProjectionType::PERSPECTIVE) {
+                    auto cam_intrinsics = this->_camera.template get<Camera::PerspectiveParameters>();
                     cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
-                    _camera = Camera(cam_pose, cam_intrinsics);
-                } else if (_camera.get<Camera::ProjectionType>() == Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                    this->_camera = Camera(cam_pose, cam_intrinsics);
+                } else if (this->_camera.template get<Camera::ProjectionType>() ==
+                           Camera::ProjectionType::ORTHOGRAPHIC) {
+                    auto cam_intrinsics = this->_camera.template get<Camera::OrthographicParameters>();
                     cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
-                    _camera = Camera(cam_pose, cam_intrinsics);
+                    this->_camera = Camera(cam_pose, cam_intrinsics);
                 }
             }
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnKey(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnKey(
             view::Key key, view::KeyAction action, view::Modifiers mods) {
             auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
             if (cr != nullptr) {
@@ -267,9 +264,8 @@ namespace core {
             return false;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnChar(
-            unsigned int codePoint) {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnChar(unsigned int codePoint) {
             auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
             if (cr == NULL)
                 return false;
@@ -288,9 +284,8 @@ namespace core {
             return true;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseButton(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnMouseButton(
             view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
             if (!this->_camera_controller.isOverriding() && !this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
@@ -312,15 +307,19 @@ namespace core {
                 int wndHeight;
                 auto projType = this->_camera.template get<Camera::ProjectionType>();
                 if (projType == Camera::ProjectionType::PERSPECTIVE) {
-                    auto tile_end = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+                    auto tile_end =
+                        this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+                    auto tile_start =
+                        this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
                     wndHeight = static_cast<int>(static_cast<float>(this->_fbo->getHeight()) / tile_size.y);
                 } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto tile_end = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+                    auto tile_end =
+                        this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+                    auto tile_start =
+                        this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
@@ -335,10 +334,8 @@ namespace core {
             return true;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseMove(
-            double x, double y) {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnMouseMove(double x, double y) {
             if (!this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
                 if (cr != nullptr) {
@@ -358,15 +355,19 @@ namespace core {
                 int wndHeight;
                 auto projType = this->_camera.template get<Camera::ProjectionType>();
                 if (projType == Camera::ProjectionType::PERSPECTIVE) {
-                    auto tile_end = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+                    auto tile_end =
+                        this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+                    auto tile_start =
+                        this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
                     wndHeight = static_cast<int>(static_cast<float>(this->_fbo->getHeight()) / tile_size.y);
                 } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto tile_end = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+                    auto tile_end =
+                        this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+                    auto tile_start =
+                        this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
@@ -381,9 +382,8 @@ namespace core {
             return true;
         }
 
-        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool
-        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseScroll(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnMouseScroll(
             double dx, double dy) {
             auto* cr = this->_rhsRenderSlot.template CallAs<view::AbstractCallRender>();
             if (cr != NULL) {

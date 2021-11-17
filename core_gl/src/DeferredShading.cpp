@@ -5,6 +5,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 namespace megamol::core_gl {
@@ -66,8 +67,11 @@ bool DeferredShading::Render(core_gl::view::CallRender3DGL& call) {
         auto vertShaderName = shader_base_name + "::vertex";
         auto fragShaderName = shader_base_name + "::fragment";
 
-        this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-        this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+
+        ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+        ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
 
         try {
             m_deferred_shading_prgm->Create(
