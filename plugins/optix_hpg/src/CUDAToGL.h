@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mmcore/view/ContextToGL.h"
-#include "glad/glad_wgl.h"
+#include "mmcore_gl/view/ContextToGL.h"
+#include "glad/wgl.h"
 #include "CallRender3DCUDA.h"
 
 #include "cuda.h"
@@ -91,13 +91,13 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgra
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 
-    core::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
+    core_gl::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
 
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 };
 
 using CUDAToGL =
-    core::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
+    core_gl::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
 
 } // namespace megamol::optix_hpg

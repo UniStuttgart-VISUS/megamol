@@ -12,6 +12,8 @@
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 
+#include "OpenGL_Context.h"
+
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
@@ -245,6 +247,30 @@ bool SphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 bool SphereRenderer::create(void) {
 
     ASSERT(IsAvailable());
+
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
+        return false;
+    }
+    if (!ogl_ctx.isExtAvailable("GL_ARB_explicit_attrib_location")) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "[SphereRenderer] No render mode is available. Extension "
+                                                          "GL_ARB_explicit_attrib_location is not available.");
+        return false;
+    }
+    if (!ogl_ctx.isExtAvailable("GL_ARB_conservative_depth")) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
+        return false;
+    }
+    if (!ogl_ctx.areExtAvailable(GLSLShader::RequiredExtensions())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SphereRenderer] No render mode is available. Shader extensions are not available.");
+        return false;
+    }
+
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
 
@@ -703,7 +729,7 @@ bool SphereRenderer::createResources() {
             // Init volume generator
             this->volGen = new misc::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(ssf.get());
-            if (!this->volGen->Init()) {
+            if (!this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                     megamol::core::utility::log::Log::LEVEL_ERROR, "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
@@ -836,87 +862,88 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     std::string warnstr;
     std::string warnmode = "[SphereRenderer] Render Mode '" + SphereRenderer::getRenderModeString(rm) + "' is not available. ";
 
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case (RenderMode::SIMPLE):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::SIMPLE_CLUSTERED):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case (RenderMode::GEOMETRY_SHADER):
-        if (ogl_IsVersionGEQ(3, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
-        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_gpu_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_bindable_uniform")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_bindable_uniform")) {
             warnstr += warnmode + "Extension GL_EXT_bindable_uniform is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_objects")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_objects")) {
             warnstr += warnmode + "Extension GL_ARB_shader_objects is required. \n";
         }
         break;
     case (RenderMode::SSBO_STREAM):
-        if (ogl_IsVersionGEQ(4, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader5")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader5")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader5 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     case (RenderMode::SPLAT):
-        if (ogl_IsVersionGEQ(4, 5) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 5) == 0) {
             warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             warnstr += warnmode + "Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
-        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_gpu_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_gpu_shader4 is required. \n";
         }
         break;
     case (RenderMode::BUFFER_ARRAY):
-        if (ogl_IsVersionGEQ(4, 5) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 5) == 0) {
             warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        if (ogl_IsVersionGEQ(4, 2) == 0) {
+        if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
         }
-        if (!vislib_gl::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
             warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
-        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+        if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
-        if (!isExtAvailable("GL_ARB_compute_shader")) {
+        if (!ogl_ctx.isExtAvailable("GL_ARB_compute_shader")) {
             warnstr += warnmode + "Extension GL_ARB_compute_shader is required. \n";
         }
         break;
     case (RenderMode::OUTLINE):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
+        if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "Minimum OpenGL version is 1.4 \n";
         }
         break;
@@ -934,6 +961,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
 
 bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     if (out_flag_snippet != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Pointer to flag snippet parameter is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -961,13 +989,13 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
         this->flags_available = false;
     }
 
-    if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+    if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
         warnstr += "[SphereRenderer] Flag Storage is not available. Extension "
             "GL_ARB_gpu_shader_fp64 is required. \n";
         this->flags_available = false;
     }
 
-    if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+    if (!ogl_ctx.isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
         warnstr += "[SphereRenderer] Flag Storage is not available. Extension "
             "GL_ARB_shader_storage_buffer_object is required. \n";
         this->flags_available = false;
@@ -2608,7 +2636,7 @@ void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, Mul
     if (this->volGen == nullptr) {
         this->volGen = new misc::MDAOVolumeGenerator();
         this->volGen->SetShaderSourceFactory(ssf.get());
-        this->volGen->Init();
+        this->volGen->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
     }
 
     // Recreate the volume if neccessary

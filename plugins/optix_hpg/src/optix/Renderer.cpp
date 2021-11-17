@@ -8,8 +8,6 @@
 
 #include "optix/CallGeometry.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-
 #include "optix/Utils.h"
 
 #include "optix_stubs.h"

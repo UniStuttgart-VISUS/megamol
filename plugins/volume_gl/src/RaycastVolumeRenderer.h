@@ -62,7 +62,7 @@ namespace megamol {
                 ASSERT(rc != NULL);
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
-                return ogl_IsVersionGEQ(4, 3);
+                return true;
             }
 
             RaycastVolumeRenderer();

@@ -20,6 +20,7 @@
 #include "vislib/memutils.h"
 #include "mmcore/utility/log/Log.h"
 #include <glm/ext.hpp>
+#include "OpenGL_Context.h"
 
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
@@ -436,10 +437,9 @@ bool QuartzRenderer::create(void) {
     using vislib_gl::graphics::gl::ShaderSource;
     using megamol::core::utility::log::Log;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
-    }
 
     ShaderSource vert, frag;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());

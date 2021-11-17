@@ -16,8 +16,8 @@
 
 #include <optional>
 
-#include "vislib_gl/graphics/gl/ExtensionsDependent.h"
 #include "vislib/types.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace vislib_gl {
@@ -28,7 +28,7 @@ namespace gl {
     /**
      * This class wraps an OpenGL framebuffer object.
      */
-    class FramebufferObject : public ExtensionsDependent<FramebufferObject> {
+    class FramebufferObject {
 
     public:
 

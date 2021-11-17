@@ -16,6 +16,8 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/math/Vector.h"
 
+#include "OpenGL_Context.h"
+
 
 namespace megamol {
 namespace demos_gl {
@@ -57,10 +59,9 @@ bool QuartzPlaneRenderer::create(void) {
     using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::ShaderSource;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
-    }
 
     ShaderSource vert, frag;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
