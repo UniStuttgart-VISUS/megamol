@@ -1,7 +1,7 @@
 /*
  * AbstractView.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -15,10 +15,10 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "vislib/assert.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;
@@ -51,7 +51,8 @@ view::AbstractView::AbstractView(void)
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
         , _resetViewSlot("view::resetView", "Triggers the reset of the view")
-        , _resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+        , _resetViewOnBBoxChangeSlot(
+              "resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
         , _showLookAt("showLookAt", "Flag showing the look at point")
         , _showViewCubeParam("view::showViewCube", "Shows view cube.")
         , _hooks()
@@ -62,12 +63,12 @@ view::AbstractView::AbstractView(void)
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
     this->_lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
-        &AbstractView::OnMouseButtonCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
-        &AbstractView::OnMouseMoveCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
-        &AbstractView::OnMouseScrollCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
@@ -139,11 +140,12 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL) return false;
-    if (param.IsNull()) return false;
+    if (ano == NULL)
+        return false;
+    if (param.IsNull())
+        return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;
     return ano->IsParamRelevant(searched, param);
@@ -234,8 +236,6 @@ void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
         } else {
             // print warning
         }
-        
-        
     }
 }
 
@@ -243,8 +243,7 @@ void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
  * view::AbstractView::OnRenderView
  */
 bool view::AbstractView::OnRenderView(Call& call) {
-    throw vislib::UnsupportedOperationException(
-        "AbstractView::OnRenderView", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("AbstractView::OnRenderView", __FILE__, __LINE__);
 }
 
 void megamol::core::view::AbstractView::beforeRender(double time, double instanceTime) {
@@ -263,7 +262,7 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
     }
 
     cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-    
+
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
             this->_bboxs = cr->AccessBoundingBoxes();
@@ -297,12 +296,13 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
     // TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
     auto currentTime = std::chrono::high_resolution_clock::now();
-    this->_lastFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->_lastFrameTime);
+    this->_lastFrameDuration =
+        std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->_lastFrameTime);
     this->_lastFrameTime = currentTime;
 
     cr->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::time_point_cast<std::chrono::milliseconds>(this->_lastFrameTime).time_since_epoch())
-                               .count());
+                             .count());
 
     CalcCameraClippingPlanes(0.1f);
 }
@@ -343,9 +343,7 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-    } catch (...) {
-        ASSERT("OnKeyCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnKeyCallback call cast failed\n"); }
     return false;
 }
 
@@ -355,9 +353,7 @@ bool view::AbstractView::OnCharCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
-    } catch (...) {
-        ASSERT("OnCharCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnCharCallback call cast failed\n"); }
     return false;
 }
 
@@ -367,9 +363,7 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-    } catch (...) {
-        ASSERT("OnMouseButtonCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseButtonCallback call cast failed\n"); }
     return false;
 }
 
@@ -379,9 +373,7 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-    } catch (...) {
-        ASSERT("OnMouseMoveCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseMoveCallback call cast failed\n"); }
     return false;
 }
 
@@ -391,9 +383,7 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-    } catch (...) {
-        ASSERT("OnMouseScrollCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseScrollCallback call cast failed\n"); }
     return false;
 }
 

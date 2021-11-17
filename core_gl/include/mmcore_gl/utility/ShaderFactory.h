@@ -14,8 +14,6 @@
 #include "msf/LineTranslator.h"
 #include "msf/ShaderFactoryOptionsOpenGL.h"
 
-#include "glad/glad.h"
-
 #include "glowl/GLSLProgram.hpp"
 
 namespace megamol::core::utility {

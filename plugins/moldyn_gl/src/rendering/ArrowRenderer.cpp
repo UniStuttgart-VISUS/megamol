@@ -16,6 +16,8 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "OpenGL_Context.h"
+
 using namespace megamol::core;
 using namespace megamol::geocalls;
 using namespace megamol::moldyn_gl::rendering;
@@ -61,10 +63,9 @@ ArrowRenderer::~ArrowRenderer(void) {
 
 
 bool ArrowRenderer::create(void) {
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
-    }
 
     vislib_gl::graphics::gl::ShaderSource vert, frag;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
