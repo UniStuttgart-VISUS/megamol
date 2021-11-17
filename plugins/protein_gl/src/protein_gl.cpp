@@ -17,6 +17,7 @@
 #include "SolPathRenderer.h"
 #include "SolventVolumeRenderer.h"
 #include "SombreroMeshRenderer.h"
+#include "UncertaintyCartoonRenderer.h"
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
 
@@ -66,6 +67,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UncertaintyCartoonRenderer>();
 
         // register calls
     }
