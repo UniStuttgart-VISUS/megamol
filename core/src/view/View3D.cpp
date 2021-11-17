@@ -16,7 +16,7 @@ using namespace megamol::core::view;
 /*
  * View3D::View3D
  */
-View3D::View3D(void) : view::BaseView<CallRenderView, Camera3DController>() {
+View3D::View3D(void) {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
 

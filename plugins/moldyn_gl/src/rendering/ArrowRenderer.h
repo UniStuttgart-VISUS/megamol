@@ -62,7 +62,7 @@ namespace rendering {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+            return true;
         }
 
         /** Ctor. */

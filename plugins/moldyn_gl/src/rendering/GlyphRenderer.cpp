@@ -27,6 +27,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "OpenGL_Context.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -87,8 +88,9 @@ GlyphRenderer::~GlyphRenderer(void) { this->Release(); }
 
 
 bool GlyphRenderer::create(void) {
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
 
     bool retVal = true;
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",

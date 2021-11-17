@@ -9,8 +9,8 @@
 #include "mmcore_gl/view/View3DGL.h"
 
 #include "GlobalValueStore.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
@@ -21,25 +21,29 @@ using namespace megamol::core_gl::view;
 /*
  * View3DGL::View3DGL
  */
-View3DGL::View3DGL() : core::view::BaseView<CallRenderViewGL, core::view::Camera3DController>() {
+View3DGL::View3DGL() {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
     // Override renderSlot behavior
-    this->_lhsRenderSlot.SetCallback(
-        view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &AbstractView::OnCharCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
+        &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
+        &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
@@ -126,7 +130,7 @@ void View3DGL::Resize(unsigned int width, unsigned int height) {
  */
 bool View3DGL::create() {
     // intialize fbo with dummy size until the actual size is set during first call to Resize
-    this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
+    this->_fbo = std::make_shared<glowl::FramebufferObject>(1, 1);
 
     const auto arcball_key = "arcball";
 

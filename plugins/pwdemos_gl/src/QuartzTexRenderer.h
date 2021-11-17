@@ -51,8 +51,7 @@ namespace demos_gl {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && (vislib_gl::graphics::gl::GLVersion() >= vislib::VersionNumber(2, 0));
+            return true;
         }
 
         /** Ctor */
@@ -103,7 +102,7 @@ namespace demos_gl {
         /** Shows/Hides the axes (x and y) of the clipping plane */
         core::param::ParamSlot showClipAxesSlot;
 
-		// SSBO for multiple lights
+        // SSBO for multiple lights
         GLuint ssboLights;
 
         // vbo
