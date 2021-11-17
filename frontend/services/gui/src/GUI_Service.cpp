@@ -375,9 +375,10 @@ namespace frontend {
         // PerformanceManager
         perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
             &this->m_requestedResourceReferences[14].getResource<megamol::frontend_resources::PerformanceManager>());
-        perf_manager->subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
-            m_gui->AppendPerformanceData(fi, *perf_manager);
-        });
+        // this needs to happen before the first (gui) module is spawned to help it look up the timers
+        m_gui->SetPerformanceManager(perf_manager);
+        perf_manager->subscribe_to_updates(
+            [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
 #endif
     }
 

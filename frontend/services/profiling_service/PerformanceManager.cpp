@@ -175,6 +175,20 @@ namespace frontend_resources {
         return timers[h]->get_conf().name;
     }
 
+    const PerformanceManager::timer_config PerformanceManager::loopup_config(handle_type h){
+        return timers[h]->get_conf();
+    }
+
+    PerformanceManager::handle_vector PerformanceManager::lookup_timers(void* parent) {
+        handle_vector vec;
+        for (auto& t : timers) {
+            if (t.second->get_conf().parent_pointer == parent) {
+                vec.push_back(t.second->get_handle());
+            }
+        }
+        return vec;
+    }
+
     void PerformanceManager::subscribe_to_updates(update_callback cb) {
         subscribers.push_back(cb);
     }

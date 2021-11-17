@@ -409,6 +409,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
+    // TODO: pause button to stop new samples from being stored?
     switch (entry.api) {
     case frontend_resources::PerformanceManager::query_api::CPU:
         cpu_perf_history[entry.user_index].push_sample(

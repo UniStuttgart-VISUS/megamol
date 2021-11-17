@@ -85,8 +85,10 @@ namespace gui {
         }
 
 #ifdef PROFILING
-        void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi,
-            frontend_resources::PerformanceManager& perf_man);
+        void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+            this->perf_manager = perf_manager;
+        }
+        void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
 #endif
 
     private:
@@ -135,6 +137,7 @@ namespace gui {
 #ifdef PROFILING
         std::unordered_map<void*, CallPtr_t> call_to_call;
         std::unordered_map<void*, ModulePtr_t> module_to_module;
+        frontend_resources::PerformanceManager* perf_manager = nullptr;
 #endif
     };
 

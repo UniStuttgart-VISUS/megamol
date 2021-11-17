@@ -156,12 +156,29 @@ namespace gui {
             this->gui_set_screen_position = pos;
         }
 #ifdef PROFILING
-        void SetProfilingParent(void* ptr) {
+        void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
             this->profiling_parent_pointer = ptr;
+
+            auto handles = perf_manager->lookup_timers(ptr);
+            for (auto& h : handles) {
+                auto& conf = perf_manager->loopup_config(h);
+                switch (conf.api) {
+                case frontend_resources::PerformanceManager::query_api::CPU:
+                    this->cpu_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
+                    this->cpu_perf_history[h].set_name(conf.name);
+                    break;
+                case frontend_resources::PerformanceManager::query_api::OPENGL:
+                    this->gl_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
+                    this->gl_perf_history[h].set_name(conf.name);
+                    break;
+                }
+            }
         }
+
         void* GetProfilingParent() {
             return this->profiling_parent_pointer;
         }
+
         void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
             const frontend_resources::PerformanceManager::timer_entry& entry);
 #endif
@@ -200,8 +217,10 @@ namespace gui {
         PopUps gui_rename_popup;
 
 #ifdef PROFILING
-        std::vector<core::MultiPerformanceHistory> cpu_perf_history;
-        std::vector<core::MultiPerformanceHistory> gl_perf_history;
+        std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
+            cpu_perf_history;
+        std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
+            gl_perf_history;
         void* profiling_parent_pointer;
 #endif // PROFILING
 

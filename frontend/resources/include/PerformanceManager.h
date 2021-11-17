@@ -167,6 +167,12 @@ namespace frontend_resources {
         // hint: this is not for free, so don't call this all the time
         std::string lookup_name(handle_type h);
 
+        // hint: this is not for free, so don't call this all the time
+        const timer_config loopup_config(handle_type h);
+
+        // hint: this is not for free, so don't call this all the time
+        handle_vector lookup_timers(void* parent);
+
         void subscribe_to_updates(update_callback cb);
 
         void start_timer(handle_type h, frame_type frame);

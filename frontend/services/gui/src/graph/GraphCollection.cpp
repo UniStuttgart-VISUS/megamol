@@ -441,7 +441,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
 #ifdef PROFILING
-                new_module_ptr->SetProfilingParent(module_ptr);
+                // TODO set some stuff here so I can find which regions are which!?
+                new_module_ptr->SetProfilingData(module_ptr, perf_manager);
                 module_to_module[module_ptr] = new_module_ptr;
 #endif
             } else {
@@ -1669,12 +1670,12 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
 #ifdef PROFILING
 void megamol::gui::GraphCollection::AppendPerformanceData(
-    const frontend_resources::PerformanceManager::frame_info& fi, frontend_resources::PerformanceManager& perf_man) {
+    const frontend_resources::PerformanceManager::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
         if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
-            auto p = perf_man.lookup_parent_pointer(e.handle);
-            auto t = perf_man.lookup_parent_type(e.handle);
+            auto p = perf_manager->lookup_parent_pointer(e.handle);
+            auto t = perf_manager->lookup_parent_type(e.handle);
             if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
                 auto c = static_cast<megamol::core::Call*>(p);
                 // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());

@@ -257,9 +257,11 @@ namespace gui {
             megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
 #ifdef PROFILING
-        void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi,
-            frontend_resources::PerformanceManager& perf_man) {
-            this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi, perf_man);
+        void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+            this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
+        }
+        void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
+            this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
         }
 #endif
 
