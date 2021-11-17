@@ -61,17 +61,23 @@ namespace utility {
                                 node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                             return false;
                         }
-                    }
-                    else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
+                    } else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
                         if (json_value[i].is_number()) {
                             out_value[i] = json_value[i];
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line "
-                                "%d]\n",
-                                node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                            return false;
+                        } else {
+                            bool nan_case = false;
+                            if (json_value[i].is_string()) {
+                                if (json_value[i] == "null") {
+                                    out_value[i] = std::numeric_limits<T>::quiet_NaN();
+                                    nan_case = true;
+                                }
+                            }
+                            if (!nan_case) {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line %d]\n",
+                                    node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                return false;
+                            }
                         }
                     }
                     else {
@@ -111,10 +117,20 @@ namespace utility {
                         json_value.get_to((*out_value));
                     }
                     else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line %d]\n",
-                            node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                        return false;
+                        bool nan_case = false;
+                        if (json_value.is_string()) {
+                            if (json_value == "null") {
+                                (*out_value) = std::numeric_limits<T>::quiet_NaN();
+                                nan_case = true;
+                            }
+                        }
+                        if (!nan_case) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line "
+                                "%d]\n",
+                                node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            return false;
+                        }
                     }
                 }
                 else {

@@ -23,7 +23,7 @@ megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
     int& inout_selected_orientation_id, int& out_hovered_face_id, int& out_hovered_orientation_id,
-    const glm::vec4& cube_orientation, ManipVector_t& pending_manipulations) {
+    const glm::vec4& cube_orientation, core_gl::utility::ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -369,11 +369,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             int picked_face_id = static_cast<int>((manip.obj_id >> BIT_OFFSET_FACE) & 0b11111);
             int picked_orientation_id = static_cast<int>((manip.obj_id >> BIT_OFFSET_ORIENTATION) & 0b11);
 
-            if (manip.type == InteractionType::SELECT) {
+            if (manip.type == core_gl::utility::InteractionType::SELECT) {
                 inout_selected_face_id = picked_face_id;
                 inout_selected_orientation_id = picked_orientation_id;
                 selected = true;
-            } else if (manip.type == InteractionType::HIGHLIGHT) {
+            } else if (manip.type == core_gl::utility::InteractionType::HIGHLIGHT) {
                 out_hovered_face_id = picked_face_id;
                 out_hovered_orientation_id = picked_orientation_id;
             }
@@ -385,10 +385,10 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     // Create view/model and projection matrices
     const auto rotation = glm::inverse(
         glm::mat4_cast(glm::quat(cube_orientation.w, cube_orientation.x, cube_orientation.y, cube_orientation.z)));
-    const float dist = 2.0f / std::tan(megamol::core::thecam::math::angle_deg2rad(30.0f) / 2.0f);
+    const float dist = 2.0f / std::tan(glm::radians(30.0f) / 2.0f);
     glm::mat4 model(1.0f);
     model[3][2] = -dist;
-    const auto proj = glm::perspective(megamol::core::thecam::math::angle_deg2rad(30.0f), 1.0f, 0.1f, 100.0f);
+    const auto proj = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, 100.0f);
 
     // Set state
     const auto culling = glIsEnabled(GL_CULL_FACE);
@@ -439,11 +439,13 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 }
 
 
-InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+core_gl::utility::InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
 
-    InteractVector_t interactions;
-    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    core_gl::utility::InteractVector_t interactions;
+    interactions.emplace_back(
+        core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction(
+        {core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -454,7 +456,7 @@ megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shade
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
-    int& out_hovered_arrow_id, ManipVector_t& pending_manipulations) {
+    int& out_hovered_arrow_id, core_gl::utility::ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -538,10 +540,10 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             orientation_change = 1;
         }
         if (orientation_change != 0) {
-            if (manip.type == InteractionType::SELECT) {
+            if (manip.type == core_gl::utility::InteractionType::SELECT) {
                 out_orientation_change = orientation_change;
                 selected = true;
-            } else if (manip.type == InteractionType::HIGHLIGHT) {
+            } else if (manip.type == core_gl::utility::InteractionType::HIGHLIGHT) {
                 out_hovered_arrow_id = orientation_change;
             }
         }
@@ -597,11 +599,13 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 }
 
 
-InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+core_gl::utility::InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
 
-    InteractVector_t interactions;
-    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    core_gl::utility::InteractVector_t interactions;
+    interactions.emplace_back(
+        core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction(
+        {core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -647,7 +651,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 
 
 bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+    megamol::gui::Parameter::WidgetScope in_scope, core_gl::utility::PickingBuffer* inout_picking_buffer,
+    ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         log::Log::DefaultLog.WriteError(
@@ -703,7 +708,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
+            ParameterGroups::DrawGroupedParameters(
+                this->name, params, in_search, in_scope, nullptr, in_override_header_state);
 
             return true;
 

@@ -44,12 +44,22 @@ public:
     ~FEMRenderTaskDataSource();
 
 protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
+
     virtual bool getDataCallback(core::Call& caller);
 
 private:
+    uint32_t m_version;
+
     megamol::core::CallerSlot m_fem_callerSlot;
 
-    uint64_t m_FEM_model_hash;
+    /** In-place material collection (initialized with gltf btf) */
+    std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
 };
 
 } // namespace archvis

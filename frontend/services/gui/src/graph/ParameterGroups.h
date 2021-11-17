@@ -26,16 +26,7 @@ namespace gui {
      */
     class ParameterGroups {
     public:
-        ParameterGroups();
-        ~ParameterGroups() = default;
-
-        bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search, bool in_extended,
-            bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
-            std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
-            megamol::core::utility::PickingBuffer* inout_picking_buffer);
-
-        bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
-        bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
+        // STATIC functions ---------------------------------------------------
 
         static void DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
             megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr);
@@ -44,6 +35,21 @@ namespace gui {
             AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
             megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
             ImGuiID in_override_header_state);
+
+        // --------------------------------------------------------------------
+
+        ParameterGroups();
+        ~ParameterGroups() = default;
+
+        bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search, bool in_extended,
+            bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
+            std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
+            megamol::core_gl::utility::PickingBuffer* inout_picking_buffer);
+
+        bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
+        bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
+
+        bool ParametersVisible(megamol::gui::ParamVector_t& in_params);
 
     private:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;

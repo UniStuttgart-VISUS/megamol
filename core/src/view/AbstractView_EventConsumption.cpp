@@ -10,7 +10,6 @@
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "Window_Events.h"
-#include "IOpenGL_Context.h"
 
 #include <chrono>
 
@@ -59,45 +58,62 @@ void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendR
     }
 }
 
-void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(FramebufferEvents)//{
-        for (auto& e: events.size_events)
-            view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
-    }
-}
-
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
-void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageWrapper& result_image) {
+void view_poke_rendering(AbstractView& view, megamol::frontend_resources::RenderInput const& render_input, megamol::frontend_resources::ImageWrapper& result_image) {
     static bool started_timer = false;
     if (!started_timer) {
         render_view_context_timer_start = std::chrono::high_resolution_clock::now();
         started_timer = true;
     }
 
-    const auto render = [&]() {
-        _mmcRenderViewContext dummyRenderViewContext = {}; // zero initialization. the struct is currently only used for time propagation.
+    const double instanceTime_sec = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
+        .count() / static_cast<double>(1000);
 
-        const double time = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
-            .count() / static_cast<double>(1000);
+    const double time_sec = view.DefaultTime(instanceTime_sec);
 
-            // this is missing!
-            // auto core = view->View()->GetCoreInstance();
-            // core->SetFrameID(frameID);
-            dummyRenderViewContext.InstanceTime = time;
-            dummyRenderViewContext.Time = view.DefaultTime(time);
+    // copy render inputs from frontend so we can update time
+    auto renderinput = render_input;
 
-        view.Render(dummyRenderViewContext);
-        result_image = view.GetRenderingResult();
-    };
-    
-    render();
+    renderinput.instanceTime_sec = instanceTime_sec;
+    renderinput.time_sec = time_sec;
+
+    view.Resize(renderinput.local_view_framebuffer_resolution.x, renderinput.local_view_framebuffer_resolution.y);
+
+    auto camera = view.GetCamera();
+
+    Camera::AspectRatio aspect = {renderinput.global_framebuffer_resolution.x / static_cast<float>(renderinput.global_framebuffer_resolution.y)};
+    Camera::ImagePlaneTile tile = {renderinput.local_tile_relative_begin, renderinput.local_tile_relative_end};
+
+    switch (camera.getProjectionType()) {
+        case Camera::ProjectionType::ORTHOGRAPHIC:{
+            auto intrinsics = camera.get<Camera::OrthographicParameters>();
+            intrinsics.aspect = aspect;
+            intrinsics.image_plane_tile = tile;
+            camera.setOrthographicProjection(intrinsics);
+            break;
+        }
+        case Camera::ProjectionType::PERSPECTIVE: {
+            auto intrinsics = camera.get<Camera::PerspectiveParameters>();
+            intrinsics.aspect = aspect;
+            intrinsics.image_plane_tile = tile;
+            camera.setPerspectiveProjection(intrinsics);
+            break;
+        }
+        case Camera::ProjectionType::UNKNOWN:
+        default:
+            break;
+    }
+
+    view.SetCamera(camera);
+
+    result_image = view.Render(renderinput.time_sec, renderinput.instanceTime_sec);
 }
 
-std::vector<std::string> get_gl_view_runtime_resources_requests() {
-    return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents"};
+std::vector<std::string> get_view_runtime_resources_requests() {
+    return {"ViewRenderInputs", "KeyboardEvents", "MouseEvents", "WindowEvents"};
 }
 
 bool view_rendering_execution(
@@ -115,55 +131,12 @@ bool view_rendering_execution(
     
     megamol::core::view::AbstractView& view = *view_ptr;
     
-    // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
-    megamol::core::view::view_consume_keyboard_events(view, resources[0]);
-    megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
-    megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
-    megamol::core::view::view_poke_rendering(view, result_image);
+    // resources are in order of initial requests from get_view_runtime_resources_requests()
+    megamol::core::view::view_consume_keyboard_events(view, resources[1]);
+    megamol::core::view::view_consume_mouse_events(view, resources[2]);
+    megamol::core::view::view_consume_window_events(view, resources[3]);
+    megamol::core::view::view_poke_rendering(view, resources[0].getResource<megamol::frontend_resources::RenderInput>(), result_image);
     
-    return true;
-}
-
-bool view_init_rendering_state(
-      void* module_ptr
-    , std::vector<megamol::frontend::FrontendResource> const& resources
-    , megamol::frontend_resources::ImageWrapper& result_image
-) {
-    megamol::core::view::AbstractView* view_ptr =
-        dynamic_cast<megamol::core::view::AbstractView*>(static_cast<megamol::core::Module*>(module_ptr));
-
-    if (!view_ptr) {
-        std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
-        return false;
-    }
-    
-    megamol::core::view::AbstractView& view = *view_ptr;
-
-    // fake resize events for view to consume
-    auto& framebuffer_events = const_cast<megamol::frontend_resources::FramebufferEvents&>(resources[3].getResource<megamol::frontend_resources::FramebufferEvents>());
-    auto& framebuffer_size = framebuffer_events.previous_state;
-    framebuffer_events.size_events.push_back(framebuffer_size);
-    
-    auto& window_events = const_cast<megamol::frontend_resources::WindowEvents&>(resources[2].getResource<megamol::frontend_resources::WindowEvents>());
-    auto& window_width = window_events.previous_state.width;
-    auto& window_height = window_events.previous_state.height;
-    if(window_width <= 1 || window_height <= 1) {
-        window_width = framebuffer_size.width;
-        window_height = framebuffer_size.height;
-    }
-    window_events.size_events.push_back({window_width, window_height});
-    
-    auto& mouse_events = const_cast<megamol::frontend_resources::MouseEvents&>(resources[1].getResource<megamol::frontend_resources::MouseEvents>());
-    mouse_events.position_events.push_back({
-        mouse_events.previous_state.x_cursor_position,
-        mouse_events.previous_state.y_cursor_position});
-
-    // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
-    megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
-    megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
-
     return true;
 }
 

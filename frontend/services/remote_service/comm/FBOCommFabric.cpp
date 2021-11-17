@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "FBOCommFabric.h"
 
 #ifdef WITH_MPI

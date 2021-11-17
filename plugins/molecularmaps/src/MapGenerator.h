@@ -688,12 +688,6 @@ namespace molecularmaps {
         /** min and max values of the buffer */
         std::pair<float, float> bufferMinMax;
 
-        /** the camera object */
-        core::view::Camera_2 cam;
-
-        /** the current camera snapshot */
-        cam_type::snapshot_type cam_snapshot;
-
         /** enables the shutdown of megamol when a screenshot is stored */
         core::param::ParamSlot close_after_screen_store_param;
 

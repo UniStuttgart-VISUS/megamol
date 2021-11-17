@@ -19,6 +19,14 @@ struct Framebuffer {
     int x = 0;
     int y = 0;
     UD data;
+
+    unsigned int getWidth() {
+        return width;
+    }
+
+    unsigned int getHeight() {
+        return height;
+    }
 };
 
 } // namespace megamol::core::view

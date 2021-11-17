@@ -7,33 +7,18 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/utility/xml/XmlParser.h"
-#include "mmcore/utility/xml/XmlReader.h"
+#include "mmcore/view/Camera.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib/assert.h"
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <ctime>
-
-#include "Keyframe.h"
-#include "CallKeyframeKeeper.h"
-#include "CinematicUtils.h"
+#include "cinematic/Keyframe.h"
+#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {
@@ -92,8 +77,8 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-        camera_state_type            cameraState;
-	std::vector<glm::vec3 >      interpolCamPos;
+        core::view::Camera  cameraState;
+	    std::vector<glm::vec3 >      interpolCamPos;
         std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
@@ -253,7 +238,9 @@ namespace cinematic {
         core::param::ParamSlot resetViewParam;
         core::param::ParamSlot editCurrentViewParam;
 		core::param::ParamSlot editCurrentUpParam;
-        core::param::ParamSlot editCurrentApertureParam;
+        core::param::ParamSlot editCurrentProjectionParam;
+        core::param::ParamSlot editCurrentFovyParam;
+        core::param::ParamSlot editCurrentFrustumHeightParam;
         core::param::ParamSlot fileNameParam;
         core::param::ParamSlot saveKeyframesParam;
         core::param::ParamSlot loadKeyframesParam;

@@ -6,7 +6,7 @@ pr:
 - master
 
 variables:
-  enablePlugins: '-DBUILD_PLUGIN_ADIOS_PLUGIN=ON -DBUILD_PLUGIN_ASTRO=ON -DBUILD_PLUGIN_IMAGEVIEWER2=ON -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=ON'
+  enablePlugins: '-DBUILD_PLUGIN_MMADIOS=ON -DBUILD_PLUGIN_ASTRO=OFF -DBUILD_PLUGIN_IMAGE=OFF -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=OFF'
 
 jobs:
 - job: Windows
@@ -27,19 +27,19 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - task: PowerShell@2
-    displayName: 'Install Python'
-    inputs:
-      targetType: 'inline'
-      script: |
-        $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
-        $python_path = Join-Path (Get-Item .).FullName "python_tmp"
-        $tmp = New-TemporaryFile
-        $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
-        Invoke-WebRequest -OutFile $tmp $pythonUrl
-        Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
-        $tmp | Remove-Item
-        echo "##vso[task.prependpath]$python_path"
+  #- task: PowerShell@2
+  #  displayName: 'Install Python'
+  #  inputs:
+  #    targetType: 'inline'
+  #    script: |
+  #      $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
+  #      $python_path = Join-Path (Get-Item .).FullName "python_tmp"
+  #      $tmp = New-TemporaryFile
+  #      $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
+  #      Invoke-WebRequest -OutFile $tmp $pythonUrl
+  #      Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
+  #      $tmp | Remove-Item
+  #      echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
@@ -105,6 +105,10 @@ jobs:
     displayName: 'Run File Checks'
     inputs:
       filePath: '.ci/check_files.sh'
+  - task: Bash@3
+    displayName: 'Run Plugin Structure Checks'
+    inputs:
+      filePath: '.ci/check_plugins.sh'
 
 - job: ClangFormatCheck
   displayName: 'Run ClangFormat Check'

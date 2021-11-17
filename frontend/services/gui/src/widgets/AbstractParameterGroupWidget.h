@@ -11,7 +11,7 @@
 
 
 #include "graph/Parameter.h"
-#include "mmcore/utility/Picking_gl.h"
+#include "mmcore_gl/utility/Picking_gl.h"
 
 
 namespace megamol {
@@ -30,7 +30,7 @@ namespace gui {
 
         virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
             megamol::gui::Parameter::WidgetScope in_scope,
-            megamol::core::utility::PickingBuffer* inout_picking_buffer) = 0;
+            megamol::core_gl::utility::PickingBuffer* inout_picking_buffer, ImGuiID in_override_header_state) = 0;
 
         bool IsActive() const {
             return this->active;

@@ -53,9 +53,9 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
-    megamol::core::CallerSlot m_fem_callerSlot;
+    uint32_t m_version;
 
-    uint64_t m_FEM_model_hash;
+    megamol::core::CallerSlot m_fem_callerSlot;
 };
 
 } // namespace archvis

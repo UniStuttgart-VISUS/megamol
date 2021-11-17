@@ -14,6 +14,8 @@
 
 #include "mmcore/param/ButtonParam.h"
 
+#include "mmcore/view/AbstractView_EventConsumption.h"
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -88,23 +90,6 @@ megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
     dummy_namespace->SetCoreInstance(core);
 }
 
-/**
- * A move of the graph should be OK, even without changing state of Modules in graph.
- */
-megamol::core::MegaMolGraph::MegaMolGraph(MegaMolGraph&& rhs) noexcept {}
-
-/**
- * Same is true for move-assignment.
- */
-megamol::core::MegaMolGraph& megamol::core::MegaMolGraph::operator=(MegaMolGraph&& rhs) noexcept { return *this; }
-
-/**
- * Construction from serialized string.
- */
-// megamol::core::MegaMolGraph::MegaMolGraph(std::string const& descr) {
-//}
-
-/** dtor */
 megamol::core::MegaMolGraph::~MegaMolGraph() {
     moduleProvider_ptr = nullptr;
     callProvider_ptr = nullptr;
@@ -350,9 +335,19 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module)
     auto& module_ref = *module_shared_ptr;
     auto* module_raw_ptr = &module_ref;
 
+    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_raw_ptr); view_ptr == nullptr) {
+        log_error("error adding graph entry point. module is not an entry point type (AbstractView): " + moduleName);
+        return false;
+    }
+
     // the image presentation will issue the rendering and provide the view with resources for rendering
     // probably we dont care or dont check wheter the same view is added as entry point multiple times
-    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
+    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName,
+        {
+            static_cast<void*>(module_raw_ptr),
+            std::function{megamol::core::view::view_rendering_execution},
+            std::function{megamol::core::view::get_view_runtime_resources_requests}
+        });
 
     if (!view_presentation_ok) {
         log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
@@ -396,28 +391,22 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
 }
 
 bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
-    this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+    this->provided_resources_lookup = {resources};
 
-    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
-        [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == "ImagePresentationEntryPoints";
-        });
+    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
+    {
+        "ImagePresentationEntryPoints",
+        megamol::frontend_resources::CommandRegistry_Req_Name
+    });
 
-    if (find_it == provided_resources.end()) {
+    if (!success)
         return false;
-    }
 
     m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
-        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+        graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
 
-    auto find_it2 = std::find_if(provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == megamol::frontend_resources::CommandRegistry_Req_Name;
-        });
-    if (find_it2 == provided_resources.end()) {
-        return false;
-    }
     m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
-        find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
+        graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
 
     return true;
 }
@@ -495,14 +484,15 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     auto module_lifetime_resource_request = module_ptr->requested_lifetime_resources();
 
-    auto module_lifetime_dependencies = get_requested_resources(module_lifetime_resource_request);
+    auto [success, module_lifetime_dependencies] = provided_resources_lookup.get_requested_resources(module_lifetime_resource_request);
 
-    if (module_lifetime_dependencies.size() != module_lifetime_resource_request.size()) {
+    if (!success) {
         std::string requested_deps = "";
         std::string found_deps = "";
         for (auto& req : module_lifetime_resource_request) requested_deps += " " + req;
         for (auto& dep : module_lifetime_dependencies) found_deps += " " + dep.getIdentifier();
-        log_error("error. could not create module, not all requested resources available: ");
+        log_error("error. could not create module "
+            + request.className + "(" + request.id + "), not all requested resources available: ");
         log_error("requested: " + requested_deps);
         log_error("found: " + found_deps);
 
@@ -593,16 +583,42 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
+        auto m = find_module_by_prefix(request.from);
+        std::string slot_names = "none.";
+        if (m != this->module_list_.end()) {
+            const auto slots = m->modulePtr->GetSlots<CallerSlot>();
+            if (!slots.empty()) {
+                slot_names = "";
+                for (auto x = 0; x < slots.size() - 1; ++x) {
+                    slot_names += slots[x]->Name();
+                }
+                slot_names += slots[slots.size() - 1]->Name();
+            }
+        }
         log_error("error. could not find from-slot: " + request.from +
-            " for call: " + std::string(call_description->ClassName()));
+            " for call: " + std::string(call_description->ClassName()) +
+            "; possible slots: " + slot_names);
         return false; // error when looking for from-slot
     }
     CallerSlot* caller = dynamic_cast<CallerSlot*>(from_slot.first);
 
     auto to_slot = getCallSlotOfModule(request.to);
     if (!to_slot.first) {
+        auto m = find_module_by_prefix(request.to);
+        std::string slot_names = "none.";
+        if (m != this->module_list_.end()) {
+            const auto slots = m->modulePtr->GetSlots<CalleeSlot>();
+            if (!slots.empty()) {
+                slot_names = "";
+                for (auto x = 0; x < slots.size() - 1; ++x) {
+                    slot_names += slots[x]->Name();
+                }
+                slot_names += slots[slots.size() - 1]->Name();
+            }
+        }
         log_error("error. could not find to-slot: " + request.to +
-            " for call: " + std::string(call_description->ClassName()));
+            " for call: " + std::string(call_description->ClassName()) +
+            "; possible slots: " + slot_names);
         return false; // error when looking for to-slot
     }
     CalleeSlot* callee = dynamic_cast<CalleeSlot*>(to_slot.first);
@@ -748,22 +764,5 @@ megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_b
 
 megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
-}
-
-std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
-    std::vector<megamol::frontend::FrontendResource> result;
-    result.reserve(resource_requests.size());
-
-    for (auto& request : resource_requests) {
-        auto dependency_it = std::find_if(this->provided_resources.begin(), this->provided_resources.end(), [&](megamol::frontend::FrontendResource& dependency){
-            return request == dependency.getIdentifier();
-        });
-
-        if (dependency_it != provided_resources.end())
-            result.push_back(*dependency_it);
-    }
-
-
-    return result;
 }
 

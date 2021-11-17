@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "PhaseAnimator.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
 
 #include "thermodyn/BoxDataCall.h"
@@ -17,13 +17,13 @@ megamol::thermodyn::PhaseAnimator::PhaseAnimator()
     , data_hash_(std::numeric_limits<size_t>::max())
     , out_data_hash_(0)
     , frame_id_(0) {
-    out_data_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &PhaseAnimator::getDataCallback);
-    out_data_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &PhaseAnimator::getExtentCallback);
+    out_data_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &PhaseAnimator::getDataCallback);
+    out_data_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &PhaseAnimator::getExtentCallback);
     MakeSlotAvailable(&out_data_slot_);
 
-    part_in_data_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    part_in_data_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&part_in_data_slot_);
 
     box_in_data_slot_.SetCompatibleCall<thermodyn::BoxDataCallDescription>();
@@ -50,10 +50,10 @@ void megamol::thermodyn::PhaseAnimator::release() {}
 
 
 bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
-    auto out_call = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto out_call = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (out_call == nullptr) return false;
 
-    auto part_in_call = part_in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto part_in_call = part_in_data_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (part_in_call == nullptr) return false;
 
     auto box_in_call = box_in_data_slot_.CallAs<BoxDataCall>();
@@ -144,9 +144,9 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
             }
 
             parts.SetVertexData(
-                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, ps.data(), 7 * sizeof(float));
+                geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, ps.data(), 7 * sizeof(float));
             parts.SetColourData(
-                core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, ps.data() + 3, 7 * sizeof(float));
+                geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, ps.data() + 3, 7 * sizeof(float));
         }
 
         data_hash_ = part_in_call->DataHash();
@@ -160,10 +160,10 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
 
 
 bool megamol::thermodyn::PhaseAnimator::getExtentCallback(core::Call& c) {
-    auto inCall = part_in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto inCall = part_in_data_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (inCall == nullptr) return false;
 
-    auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 
     if (!(*inCall)(1)) return false;

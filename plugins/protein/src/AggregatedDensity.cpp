@@ -12,7 +12,7 @@
 #include <cfloat>
 #include <cmath>
 #include <math.h>
-#include "mmcore/CallVolumeData.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include <omp.h>
 #include <iostream>
 #include <float.h>
@@ -29,13 +29,13 @@ megamol::protein::AggregatedDensity::AggregatedDensity(void) :
    molDataCallerSlot ("getMolecularData", "Connects the aggregation with molecule data storage")
 {
 
-    this->getDensitySlot.SetCallback("CallVolumeData", "getData", &AggregatedDensity::getDensityCallback);
-    this->getDensitySlot.SetCallback("CallVolumeData", "getExtent", &AggregatedDensity::getExtentCallback);
+    this->getDensitySlot.SetCallback("VolumetricDataCall", "getData", &AggregatedDensity::getDensityCallback);
+    this->getDensitySlot.SetCallback("VolumetricDataCall", "getExtent", &AggregatedDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->getDensitySlot);
 
     
-    this->getZvelocitySlot.SetCallback("CallVolumeData", "getData", &AggregatedDensity::getZvelocityCallback);
-    this->getZvelocitySlot.SetCallback("CallVolumeData", "getExtent", &AggregatedDensity::getExtentCallback);
+    this->getZvelocitySlot.SetCallback("VolumetricDataCall", "getData", &AggregatedDensity::getZvelocityCallback);
+    this->getZvelocitySlot.SetCallback("VolumetricDataCall", "getExtent", &AggregatedDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->getZvelocitySlot);
 
 	this->molDataCallerSlot.SetCompatibleCall<megamol::protein_calls::MolecularDataCallDescription>();
@@ -94,23 +94,22 @@ void megamol::protein::AggregatedDensity::release(void) {
  * megamol::protein::AggregatedDensity::getDataCallback
  */
 bool megamol::protein::AggregatedDensity::getDensityCallback(megamol::core::Call& caller) {
-    megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
+    geocalls::VolumetricDataCall* cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == NULL) return false;
     
 	if (!this->is_aggregated)
 		if (!this->aggregate())
 			return false;
 //#pragma omp parallel for
-
-    cvd->SetAttributeCount(1);
     cvd->SetDataHash(1);
     cvd->SetFrameID(0);
-    cvd->SetSize(xbins, ybins, zbins);
-    //cvd->SetSize(this->volRes, this->volRes, this->volRes);
-    cvd->SetUnlocker(NULL);
-    cvd->Attribute(0).SetName("d");
-    cvd->Attribute(0).SetType(megamol::core::CallVolumeData::TYPE_FLOAT);
-    cvd->Attribute(0).SetData(this->density);
+    auto metadata = std::make_shared<geocalls::VolumetricDataCall::Metadata>();
+    metadata->Resolution[0] = xbins;
+    metadata->Resolution[1] = ybins;
+    metadata->Resolution[2] = zbins;
+    metadata->ScalarType = geocalls::VolumetricDataCall::ScalarType::FLOATING_POINT;
+    cvd->SetMetadata(metadata.get());
+    cvd->SetData(this->density);
     
     return true;
 }
@@ -119,7 +118,7 @@ bool megamol::protein::AggregatedDensity::getDensityCallback(megamol::core::Call
  * megamol::protein::AggregatedDensity::getDataCallback
  */
 bool megamol::protein::AggregatedDensity::getZvelocityCallback(megamol::core::Call& caller) {
-    megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
+    geocalls::VolumetricDataCall* cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == NULL) return false;
     
 	if (!this->is_aggregated)
@@ -127,15 +126,15 @@ bool megamol::protein::AggregatedDensity::getZvelocityCallback(megamol::core::Ca
 			return false;
 //#pragma omp parallel for
 
-    cvd->SetAttributeCount(1);
     cvd->SetDataHash(1);
     cvd->SetFrameID(0);
-    cvd->SetSize(xbins, ybins, zbins);
-    //cvd->SetSize(this->volRes, this->volRes, this->volRes);
-    cvd->SetUnlocker(NULL);
-    cvd->Attribute(0).SetName("d");
-    cvd->Attribute(0).SetType(megamol::core::CallVolumeData::TYPE_FLOAT);
-    cvd->Attribute(0).SetData(this->velocity);
+    auto metadata = std::make_shared<geocalls::VolumetricDataCall::Metadata>();
+    metadata->Resolution[0] = xbins;
+    metadata->Resolution[1] = ybins;
+    metadata->Resolution[2] = zbins;
+    metadata->ScalarType = geocalls::VolumetricDataCall::ScalarType::FLOATING_POINT;
+    cvd->SetMetadata(metadata.get());
+    cvd->SetData(this->velocity);
     
     return true;
 }
@@ -144,7 +143,7 @@ bool megamol::protein::AggregatedDensity::getZvelocityCallback(megamol::core::Ca
  * megamol::protein::AggregatedDensity::getExtentCallback
  */
 bool megamol::protein::AggregatedDensity::getExtentCallback(megamol::core::Call& caller) {
-    megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
+    geocalls::VolumetricDataCall* cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == NULL) return false;
 
 	cvd->AccessBoundingBoxes().Clear();

@@ -11,9 +11,10 @@
 
 
 #include "CommandRegistry.h"
+#include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/Picking_gl.h"
+#include "mmcore_gl/utility/Picking_gl.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -45,7 +46,7 @@ namespace gui {
          *
          * @param core_instance     The currently available core instance.
          */
-        bool CreateContext(GUIImGuiAPI imgui_api);
+        bool CreateContext(ImGuiRenderBackend imgui_rbnd);
 
         /**
          * Setup and enable ImGui context for subsequent use.
@@ -163,6 +164,17 @@ namespace gui {
          */
         inline int GetMouseCursor() const {
             return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
+        }
+
+
+        inline void GetFBOData(
+            unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
+            if (this->fbo == nullptr)
+                return;
+            // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+            out_fbo_color_buffer_gl_handle = this->fbo->getColorAttachment(0)->getName();
+            out_fbo_width = this->fbo->getWidth();
+            out_fbo_height = this->fbo->getHeight();
         }
 
         ///////// SET ///////////
@@ -300,9 +312,13 @@ namespace gui {
         megamol::gui::HotkeyMap_t gui_hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
-        ImGuiContext* context;
+        ImGuiContext* imgui_context;
 
-        GUIImGuiAPI initialized_api;
+        /** The ImGui context created and used by this GUIManager */
+        ImPlotContext* implot_context;
+
+        /** The currently initialized ImGui API */
+        ImGuiRenderBackend imgui_initialized_rbnd;
 
         /** The current local state of the gui. */
         StateBuffer gui_state;
@@ -329,7 +345,10 @@ namespace gui {
         // Widgets
         FileBrowserWidget file_browser;
         HoverToolTip tooltip;
-        megamol::core::utility::PickingBuffer picking_buffer;
+        megamol::core_gl::utility::PickingBuffer picking_buffer;
+
+        // FBO
+        std::shared_ptr<glowl::FramebufferObject> fbo;
 
         // FUNCTIONS --------------------------------------------------------------
 

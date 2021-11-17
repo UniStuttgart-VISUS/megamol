@@ -5,15 +5,17 @@
 #include <random>
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect() : core::Module()
     , m_version(0)
@@ -65,26 +67,29 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         m_ssao_blur_prgm = std::make_unique<GLSLComputeShader>();
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_ssao_src;
-        vislib::graphics::gl::ShaderSource compute_ssao_blur_src;
-        vislib::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_blur_src;
+        vislib_gl::graphics::gl::ShaderSource compute_fxaa_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", compute_ssao_src)) return false;
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::ssao", compute_ssao_src))
+            return false;
         if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
         if (!m_ssao_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
+        if (!ssf->MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
             return false;
         if (!m_ssao_blur_prgm->Compile(compute_ssao_blur_src.Code(), compute_ssao_blur_src.Count())) return false;
         if (!m_ssao_blur_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
+        if (!ssf->MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count())) return false;
         if (!m_fxaa_prgm->Link()) return false;
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -185,12 +190,9 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
             setupOutputTexture(normal_tx2D, m_output_texture);
 
             // obtain camera information
-            core::view::Camera_2 cam = call_camera->getData();
-            cam_type::snapshot_type snapshot;
-            cam_type::matrix_type view_tmp, proj_tmp;
-            cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-            glm::mat4 view_mx = view_tmp;
-            glm::mat4 proj_mx = proj_tmp;
+            core::view::Camera cam = call_camera->getData();
+            glm::mat4 view_mx = cam.getViewMatrix();
+            glm::mat4 proj_mx = cam.getProjectionMatrix();
 
             m_ssao_prgm->Enable();
 

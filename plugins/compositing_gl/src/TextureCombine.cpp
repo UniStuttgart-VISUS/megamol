@@ -6,9 +6,10 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureCombine::TextureCombine()
     : core::Module()
@@ -46,22 +47,24 @@ bool megamol::compositing::TextureCombine::create() {
         m_add_prgm = std::make_unique<GLSLComputeShader>();
         m_mult_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_add_src;
-        vislib::graphics::gl::ShaderSource compute_mult_src;
+        vislib_gl::graphics::gl::ShaderSource compute_add_src;
+        vislib_gl::graphics::gl::ShaderSource compute_mult_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureAdd", compute_add_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::textureAdd", compute_add_src))
             return false;
         if (!m_add_prgm->Compile(compute_add_src.Code(), compute_add_src.Count())) return false;
         if (!m_add_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
+        if (!ssf->MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
             return false;
         if (!m_mult_prgm->Compile(compute_mult_src.Code(), compute_mult_src.Count())) return false;
         if (!m_mult_prgm->Link()) return false;
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {

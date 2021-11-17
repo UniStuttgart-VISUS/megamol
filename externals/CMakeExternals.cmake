@@ -37,7 +37,7 @@ function(require_external NAME)
     if (TARGET CUESDK)
       return()
     endif()
-    
+
     FetchContent_Declare(
       cuesdk_archive
       URL https://github.com/CorsairOfficial/cue-sdk/releases/download/v3.0.378/CUESDK_3.0.378.zip)
@@ -52,7 +52,7 @@ function(require_external NAME)
         IMPORTED_IMPLIB "${cuesdk_archive_SOURCE_DIR}/lib/x64/CUESDK.x64_2017.lib")
       install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
     endif()
-    
+
   # Delaunator
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
@@ -82,7 +82,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glm
       GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG "0.9.8")
+      GIT_TAG "0.9.9.8")
 
   # glowl
   elseif(NAME STREQUAL "glowl")
@@ -92,8 +92,9 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.4f"
+      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
       INCLUDE_DIR "include")
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
   # json
   elseif(NAME STREQUAL "json")
@@ -115,7 +116,6 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(libcxxopts
-      DEPENDS libzmq
       GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
       # we are waiting for v3 which brings allowing unrecognized options
       #GIT_TAG "v2.1.1"
@@ -323,9 +323,7 @@ function(require_external NAME)
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DFMT_TEST=OFF)
 
     add_external_library(fmt
       LIBRARY ${FMT_LIB}
@@ -342,7 +340,7 @@ function(require_external NAME)
     if(WIN32)
       set(GLAD_LIB "lib/glad.lib")
     else()
-      set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
     endif()
 
     add_external_project(glad STATIC
@@ -426,7 +424,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)    
+    external_get_property(glfw INSTALL_DIR)
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
@@ -478,6 +476,48 @@ function(require_external NAME)
 
     add_external_library(imguizmoquat
         LIBRARY ${IMGUIZMOQUAT_LIB})
+
+  # implot
+  elseif(NAME STREQUAL "implot")
+    if(TARGET implot)
+      return()
+    endif()
+
+    require_external(imgui)
+
+    if(WIN32)
+      set(IMPLOT_LIB "lib/implot.lib")
+    else()
+      set(IMPLOT_LIB "lib/libimplot.a")
+    endif()
+
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+
+    external_get_property(imgui INSTALL_DIR)
+
+    add_external_project(implot STATIC
+      GIT_REPOSITORY https://github.com/epezent/implot.git
+      GIT_TAG "v0.11"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMPLOT_LIB}"
+      DEPENDS imgui
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/externals/implot/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(implot
+        LIBRARY ${IMPLOT_LIB})
+
+    external_get_property(implot SOURCE_DIR)
+    target_include_directories(implot INTERFACE "${SOURCE_DIR}")
 
   # libpng
   elseif(NAME STREQUAL "libpng")
@@ -532,7 +572,7 @@ function(require_external NAME)
 
   # libzmq / libcppzmq
   elseif(NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
-    if(TARGET libzmq)
+    if(TARGET libzmq OR TARGET libcppzmq)
       return()
     endif()
 
@@ -624,7 +664,7 @@ function(require_external NAME)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "v0.4"
+        GIT_TAG "v0.5"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         DEPENDS glad)
@@ -635,7 +675,7 @@ function(require_external NAME)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
-      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # obj-io
   elseif (NAME STREQUAL "obj-io")
@@ -690,10 +730,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(quickhull
       LIBRARY ${QUICKHULL_LIB})
@@ -750,9 +787,7 @@ function(require_external NAME)
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
         -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR}
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -Dfmt_DIR=${BINARY_DIR})
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
@@ -777,10 +812,7 @@ function(require_external NAME)
     add_external_project(tinyobjloader STATIC
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
 
     add_external_library(tinyobjloader
       LIBRARY ${TINYOBJLOADER_LIB})
@@ -805,9 +837,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
       DEBUG_SUFFIX d
       CMAKE_ARGS
-        -DSHARED_LIB=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DSHARED_LIB=OFF)
 
     add_external_library(tinyply
       LIBRARY ${TNY_LIB}

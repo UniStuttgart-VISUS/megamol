@@ -10,6 +10,9 @@
 #pragma once
 
 
+#ifdef PROFILING
+#include "mmcore/PerformanceHistory.h"
+#endif
 #include "widgets/HoverToolTip.h"
 
 
@@ -68,6 +71,26 @@ namespace gui {
             return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
         }
 
+#ifdef PROFILING
+
+        struct Profiling {
+            double lcput;
+            double acput;
+            uint32_t ncpus;
+            std::array<double, core::PerformanceHistory::buffer_length> hcpu;
+            double lgput;
+            double agput;
+            uint32_t ngpus;
+            std::array<double, core::PerformanceHistory::buffer_length> hgpu;
+            std::string name;
+        };
+
+        void SetProfilingValues(const std::vector<Profiling>& p) {
+            this->profiling = p;
+        }
+
+#endif // PROFILING
+
     private:
         // VARIABLES --------------------------------------------------------------
 
@@ -85,6 +108,14 @@ namespace gui {
         std::string callee_slot_name;
 
         HoverToolTip gui_tooltip;
+
+#ifdef PROFILING
+
+        std::vector<Profiling> profiling;
+        bool show_profiling_data;
+        void draw_profiling_data();
+
+#endif // PROFILING
     };
 
 

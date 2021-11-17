@@ -12,6 +12,7 @@ if(BUILD_FRONTEND_SERVICES)
   require_external(glm)
   require_external(glad)
   require_external(imgui)
+  require_external(implot)  
   require_external(imguizmoquat)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -30,6 +31,7 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader/*.hpp"
     "image_presentation/*.hpp"
     "remote_service/*.hpp"
+    "profiling_service/*.hpp"
 #   "service_template/*.hpp"
     )
   file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
@@ -64,6 +66,7 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader"
     "image_presentation"
     "remote_service"
+    "profiling_service"
     "gui/src"
    # "service_template"
   )
@@ -94,7 +97,11 @@ if(BUILD_FRONTEND_SERVICES)
   # Linux Stacktrace
   # Use Boost stacktrace if installed (is fully optional).
   # sudo apt install libboost-stacktrace-dev
-  if (UNIX)
+  #
+  # Enable backtrace backend, addr2line is unusable slow and has no line numbers, unfortunately this only works for gcc out the box.
+  # Clang would require backtrace.h from an installed gcc version, see
+  # https://www.boost.org/doc/libs/1_77_0/doc/html/stacktrace/configuration_and_build.html#ftn.stacktrace.configuration_and_build.f3
+  if (UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     find_package(Boost 1.71.0
       COMPONENTS
         stacktrace_basic
@@ -107,11 +114,22 @@ if(BUILD_FRONTEND_SERVICES)
         ${Boost_STACKTRACE_BACKTRACE_LIBRARY}
         ${Boost_STACKTRACE_ADDR2LINE_LIBRARY}
         ${Boost_STACKTRACE_NOOP_LIBRARY})
-      target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOL_USE_BOOST_STACKTRACE)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE
+        MEGAMOL_USE_BOOST_STACKTRACE
+        BOOST_STACKTRACE_USE_BACKTRACE)
     endif ()
   endif ()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib core glad glm imgui imguizmoquat)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC
+    abstract_frontend_service
+    core
+    core_gl
+    glad
+    glm
+    imgui
+    implot
+    imguizmoquat
+  )
     
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

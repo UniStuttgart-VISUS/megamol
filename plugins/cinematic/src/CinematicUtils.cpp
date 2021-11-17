@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CinematicUtils.h"
+#include "cinematic/CinematicUtils.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -49,7 +49,9 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
-    if (!this->InitPrimitiveRendering(core_instance->ShaderSourceFactory())) {
+    auto ssf =
+        std::make_shared<core_gl::utility::ShaderSourceFactory>(core_instance->Configuration().ShaderDirectories());
+    if (!this->InitPrimitiveRendering(*ssf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -134,13 +136,14 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 }
 
 
-void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp) {
+void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp, float depth) {
 
     this->gui_update();
    
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - this->menu_height, 0.0f), 
-        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, depth), glm::vec3(0.0f, dim_vp.y - this->menu_height, depth), 
+        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, depth), glm::vec3(dim_vp.x, dim_vp.y, depth),
+        this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
     float vpWhalf = dim_vp.x / 2.0f;
@@ -225,7 +228,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     this->gui_table_row("LEFT Mouse Button", "Select keyframe.");
                     this->gui_table_row("MIDDLE Mouse Button", "Axes scaling in mouse direction.");
                     this->gui_table_row("RIGHT Mouse Button", "Drag & drop keyframe / pan axes.");
-                    /// XXX Calcualation is not correct yet ...
+                    /// TODO XXX Calcualation is not correct yet ...
                     //this->gui_table_row("SHIFT + v","Set same velocity between all keyframes (Experimental).");
                     ImGui::EndTable();
                 }
@@ -274,9 +277,14 @@ float CinematicUtils::GetTextLineWidth(const std::string& text_line) {
 }
 
 
-void CinematicUtils::SetTextRotation(float a, float x, float y, float z) {
+void CinematicUtils::SetTextRotation(float a, glm::vec3 vec) {
 
-    this->font.SetRotation(a, x, y, z);
+    this->font.SetRotation(a, vec);
+}
+
+void CinematicUtils::ResetTextRotation(void) {
+
+    this->font.ResetRotation();
 }
 
 
