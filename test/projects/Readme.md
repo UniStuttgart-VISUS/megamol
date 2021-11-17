@@ -1,1 +1,0 @@
-This is where test-exclusive projects should go. Also, the MMPLD test file generator deposits files here.
