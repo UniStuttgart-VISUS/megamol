@@ -38,6 +38,7 @@ private:
 
     GLint drawFBOid_;
     GLint readFBOid_;
+    GLint FBOid_;
 
     /** The framebuffer object */
     std::shared_ptr<glowl::FramebufferObject> fbo_;

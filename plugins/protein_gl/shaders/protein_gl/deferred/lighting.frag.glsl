@@ -57,6 +57,17 @@ void main(void) {
 
     vec4 retval = albedo;
 
+    gl_FragDepth = depth;
+
+    if(albedo.w < 0.001) {
+        discard;
+    }
+
+    if(no_lighting) {
+        gl_FragColor = albedo;
+        return;
+    }
+
     if(depth > 0.0f && depth < 1.0f) {
         vec3 world_pos = depthToWorldPos(depth, uv_coord, inv_view_mx, inv_proj_mx);
         vec3 reflected_light = vec3(0.0);
@@ -76,7 +87,7 @@ void main(void) {
             vec3 view_dir = normalize(camPos - world_pos);
             if(use_lambert){
                 reflected_light += lambert(normal, light_dir);
-            }else {
+            } else {
                 reflected_light += blinnPhong(normal, light_dir, view_dir, ambientColor, diffuseColor, specularColor, vec4(k_amb, k_diff, k_spec, k_exp)) * distant_light_params[i].intensity;
             }
         }
@@ -84,13 +95,4 @@ void main(void) {
     }
 
     gl_FragColor = vec4(retval.xyz, albedo.w);
-    gl_FragDepth = depth;
-
-    if(no_lighting) {
-        gl_FragColor = albedo;
-    }
-
-    if(albedo.w == 0.0) {
-        discard;
-    }
 }

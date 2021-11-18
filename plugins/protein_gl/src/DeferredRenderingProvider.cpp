@@ -35,7 +35,8 @@ DeferredRenderingProvider::DeferredRenderingProvider(void)
         , pointLightBuffer_(nullptr)
         , distantLightBuffer_(nullptr)
         , drawFBOid_(0)
-        , readFBOid_(0) {
+        , readFBOid_(0)
+        , FBOid_(0) {
 
     ambientColorParam.SetParameter(new core::param::ColorParam("#ffffff"));
     diffuseColorParam.SetParameter(new core::param::ColorParam("#ffffff"));
@@ -179,14 +180,26 @@ void DeferredRenderingProvider::draw(
 }
 
 void DeferredRenderingProvider::bindDeferredFramebufferToDraw(void) {
+    // request old fbo state and set new fbo
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFBOid_);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBOid_);
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &FBOid_);
     fbo_->bind();
-    glClearColor(0, 0, 0, 0);
+
+    // request present clear color
+    glm::vec4 cc;
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, glm::value_ptr(cc));
+
+    // clear everything
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // reset the clear color
+    glClearColor(cc.r, cc.g, cc.b, cc.a);
 }
 
 void DeferredRenderingProvider::resetToPreviousFramebuffer(void) {
+    glBindFramebuffer(GL_FRAMEBUFFER, FBOid_);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFBOid_);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFBOid_);
 }
