@@ -8,13 +8,18 @@ git_root=$(git rev-parse --show-toplevel)
 
 file_list=$(find . -type f)
 while read -r file; do
-  # === File tests ===
+  # ignore files ignored by git
+  if git check-ignore -q "$file"; then
+    continue
+  fi
 
   # only process file if mime type is text
   mime=$(file -b --mime-type "$file")
   if ! [[ $mime == "text/"* ]]; then
     continue
   fi
+
+  # === File tests ===
 
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
