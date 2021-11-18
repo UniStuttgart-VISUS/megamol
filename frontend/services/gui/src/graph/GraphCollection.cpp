@@ -504,18 +504,18 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
         }
 
         // REMOVE deleted modules from GUI graph ----------------------------------------
-        std::map<std::string, ImGuiID> delete_module_map;
+        std::vector<ImGuiID> deletion_queue;
         for (auto& module_ptr : graph_ptr->Modules()) {
-            delete_module_map[module_ptr->FullName()] = module_ptr->UID();
-#ifdef PROFILING
-            module_to_module.erase(module_ptr->GetProfilingParent());
-#endif
-        }
-        for (auto& module_map : delete_module_map) {
-            if (!megamol_graph.FindModule(module_map.first)) {
-                graph_ptr->DeleteModule(module_map.second);
+            if (!megamol_graph.FindModule(module_ptr->FullName())) {
+                deletion_queue.push_back(module_ptr->UID());
                 gui_graph_changed = true;
+#ifdef PROFILING
+                module_to_module.erase(module_ptr->GetProfilingParent());
+#endif
             }
+        }
+        for (auto& d : deletion_queue) {
+            graph_ptr->DeleteModule(d);
         }
 
         // Collect current call information of gui graph ----------------------
@@ -1677,7 +1677,7 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
             auto p = perf_manager->lookup_parent_pointer(e.handle);
             auto t = perf_manager->lookup_parent_type(e.handle);
             if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
-                auto c = static_cast<megamol::core::Call*>(p);
+                // auto c = static_cast<megamol::core::Call*>(p);
                 // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
                 call_to_call[p]->AppendPerformanceData(frame, e);
             } else {

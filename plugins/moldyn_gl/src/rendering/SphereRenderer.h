@@ -31,6 +31,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "PerformanceManager.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -206,6 +207,14 @@ namespace rendering {
          */
         virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
+#ifdef PROFILING
+        std::vector<std::string> requested_lifetime_resources() override {
+            std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
+            resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+            return resources;
+        }
+#endif
+
         /** Ctor. */
         SphereRenderer(void);
 
@@ -249,7 +258,7 @@ namespace rendering {
             BUFFER_ARRAY      = 4,
             SPLAT             = 5,
             AMBIENT_OCCLUSION = 6,
-			OUTLINE           = 7
+            OUTLINE           = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -326,6 +335,10 @@ namespace rendering {
         bool                                     triggerRebuildGBuffer;
 
         //TimeMeasure                            timer;
+#ifdef PROFILING
+        frontend_resources::PerformanceManager::handle_vector timers;
+        frontend_resources::PerformanceManager* perf_manager = nullptr;
+#endif
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
@@ -378,9 +391,9 @@ namespace rendering {
         megamol::core::param::ParamSlot aoConeLengthSlot;
         megamol::core::param::ParamSlot useHPTexturesSlot;
 
-		// Affects only Outline rendering: --------------------------
+        // Affects only Outline rendering: --------------------------
 
-		megamol::core::param::ParamSlot outlineWidthSlot;
+        megamol::core::param::ParamSlot outlineWidthSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -456,7 +469,7 @@ namespace rendering {
         bool renderSplat(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderBufferArray(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderAmbientOcclusion(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-		bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
