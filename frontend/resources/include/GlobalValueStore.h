@@ -9,6 +9,7 @@
 
 #include <map>
 #include <optional>
+#include <string>
 
 namespace megamol {
 namespace frontend_resources {
