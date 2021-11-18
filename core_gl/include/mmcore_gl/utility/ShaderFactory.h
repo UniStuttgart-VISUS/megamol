@@ -46,6 +46,8 @@ namespace {
         } catch (glowl::GLSLProgramException const& ex) {
             throw glowl::GLSLProgramException(
                 "Error building shader program \"" + label + "\":\n" + translator.translateErrorLog(ex.what()));
+        } catch (std::runtime_error const& ex) {
+            throw glowl::GLSLProgramException("Error parsing shader program \"" + label + "\":\n" + ex.what());
         }
     }
 } // namespace
