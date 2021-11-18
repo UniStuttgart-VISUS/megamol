@@ -42,9 +42,20 @@ public:
 
     perf_type average(metric_type metric) const;
 
-    //perf_type buffer_average(metric_type metric) const {
-    //    return window_avg;
-    //}
+    perf_type window_statistics(metric_type outer_metric, metric_type inner_metric) const {
+        switch (outer_metric) {
+        case metric_type::MIN:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].min();
+        case metric_type::MAX:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].max();
+        case metric_type::AVERAGE:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].avg();
+        case metric_type::MEDIAN:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].med();
+        case metric_type::COUNT:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].count();
+        }
+    }
 
     uint32_t samples() const {
         return num_samples;
@@ -126,7 +137,7 @@ private:
     std::string name;
     int next_index = 0;
     uint32_t num_samples = 0, num_frames = 0;
-    frame_type curr_frame = std::numeric_limits<frame_type>::max();
+    std::array<frame_statistics, 5> window_metrics;
 };
 
 }

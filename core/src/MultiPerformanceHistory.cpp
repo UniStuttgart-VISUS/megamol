@@ -13,28 +13,31 @@ void MultiPerformanceHistory::push_sample(frame_type frame, perf_type val) {
 
     auto& buf = time_buffer[next_index];
     if (frame != buf.frame()) {
+        // before we advance, use the frame for full-window statistics
+        // does that actually work?
+        window_metrics[static_cast<uint32_t>(metric_type::MIN)].push_value(buf.frame(), buf.min());
+        window_metrics[static_cast<uint32_t>(metric_type::MAX)].push_value(buf.frame(), buf.max());
+        window_metrics[static_cast<uint32_t>(metric_type::AVERAGE)].push_value(buf.frame(), buf.avg());
+        window_metrics[static_cast<uint32_t>(metric_type::MEDIAN)].push_value(buf.frame(), buf.med());
+        window_metrics[static_cast<uint32_t>(metric_type::COUNT)].push_value(buf.frame(), buf.count());
         next_index = next_wrap(next_index);
         buf = time_buffer[next_index];
-    }
-    buf.push_value(frame, val);
-    num_samples++;
-    if (frame != curr_frame) {
-        curr_frame = frame;
         num_frames++;
     }
-
     //// remove the window sum component that is going to be overwritten
     //// array starts zeroed so unused samples do not change the result here
-    //window_total -= time_buffer[next_index];
-    //window_total += val;
+    //window_averages_total -= buf.avg();
+    buf.push_value(frame, val);
+    //window_averages_total += buf.avg();
+    num_samples++;
+
+    // until we have at least a sample everywhere, the average is over num_samples only
+    //window_average = window_averages_total / std::min(buffer_length, num_samples);
 
     //time_buffer[next_index] = val;
     //const auto total = avg_time * num_samples + val;
     //num_samples++;
     //avg_time = total / static_cast<double>(num_samples);
-
-    //// until we have at least a sample everywhere, the average is over num_samples only
-    //window_avg = window_total / std::min(buffer_length, num_samples);
 
     //next_index = next_wrap(next_index);
 }
@@ -46,9 +49,6 @@ void MultiPerformanceHistory::reset() {
     }
     num_samples = 0;
     num_frames = 0;
-    //avg_time = 0;
-    //window_total = 0;
-    //window_avg = 0;
 }
 
 uint32_t MultiPerformanceHistory::samples(int index) {

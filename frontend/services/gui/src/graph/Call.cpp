@@ -446,11 +446,20 @@ void megamol::gui::Call::draw_profiling_data() {
                 // ImGui::TableNextColumn();
                 // ImGui::Text("%.12f",
                 // cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
-                // ImGui::TableNextRow();
-                // ImGui::TableNextColumn();
-                // ImGui::TextUnformatted("AverageCPUTime");
-                // ImGui::TableNextColumn();
-                // ImGui::Text("%.12f", this->profiling[i].acput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("AverageCPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text(
+                    "%.12f", cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
+                                 core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("MaxCPUSamplesPerFrame");
+                ImGui::TableNextColumn();
+                ImGui::Text("%i", static_cast<int>(cpu_perf_history[i].window_statistics(
+                                      core::MultiPerformanceHistory::metric_type::MAX,
+                                      core::MultiPerformanceHistory::metric_type::COUNT)));
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumCPUSamples");
