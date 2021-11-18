@@ -136,6 +136,14 @@ if(BUILD_FRONTEND_SERVICES)
     endif()
   endif()
 
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+  if(NOT ENABLE_GL)
+    message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
+  endif()
+    require_external(mwk-mint)
+    target_link_libraries(${PROJECT_NAME} PUBLIC interop Spout2)
+  endif()
+
   # Linux Stacktrace
   # Use Boost stacktrace if installed (is fully optional).
   # sudo apt install libboost-stacktrace-dev

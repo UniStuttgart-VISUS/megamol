@@ -28,6 +28,9 @@ public:
     struct Config {
         enum class Mode {
             Off,
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+            UnityKolabBW,
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
         };
 
         Mode mode = Mode::Off;
@@ -88,6 +91,27 @@ private:
 
         void virtual preGraphRender() {}
         void virtual postGraphRender() {}
+    };
+
+    struct KolabBW : public IVR_Device {
+        KolabBW();
+        ~KolabBW();
+
+        void receive_camera_data();
+        void send_image_data();
+
+        bool add_entry_point(std::string const& entry_point_name,
+            frontend_resources::EntryPointRenderFunctions const& entry_point_callbacks,
+            ImagePresentationEntryPoints& entry_points_registry) override;
+        bool remove_entry_point(
+            std::string const& entry_point_name, ImagePresentationEntryPoints& entry_points_registry) override;
+        void clear_entry_points();
+
+        void preGraphRender() override;
+        void postGraphRender() override;
+
+        struct PimplData;
+        std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     };
 
     std::unique_ptr<IVR_Device> m_vr_device_ptr;

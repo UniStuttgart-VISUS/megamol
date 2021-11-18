@@ -473,13 +473,24 @@ static void viewport_tile_handler(
 static void vr_service_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     auto string = parsed_options[option_name].as<std::string>();
-    // --vr=[off|unitykolab|powerwall]
+    // --vr=[off|unitykolab]
 
-    auto match = [](std::string const& string) -> RuntimeConfig::VRMode {
-        if (string == "off") {
-            return RuntimeConfig::VRMode::Off;
-        }
-        exit("vr service cli option needs to be one of the following: off (default), unitykolab, powerwall");
+    std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
+        {"off", RuntimeConfig::VRMode::Off},
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        {"unitykolab", RuntimeConfig::VRMode::UnityKolab},
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+
+    auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
+        auto find = std::find_if(options.begin(), options.end(), [&](auto const& opt) { return opt.first == string; });
+
+        if (find != options.end())
+            return find->second;
+
+        exit("vr service cli option needs to be one of the following: " +
+             std::accumulate(options.begin(), options.end(), std::string{},
+                 [](auto const& a, auto const& b) { return a + "  " + b.first; }));
     };
 
     config.vr_mode = match(string);
@@ -569,8 +580,8 @@ std::vector<OptionsListEntry> cli_options_list =
             "LWIDTHxLHEIGHT is the local framebuffer resolution, "
             "GWIDTHxGHEIGHT is the global framebuffer resolution",
             cxxopts::value<std::string>(), viewport_tile_handler},
-        {vr_service_option, "VR Service mode: --vr=[off|unitykolab|powerwall], off by default",
-            cxxopts::value<std::string>(), vr_service_handler},
+        {vr_service_option, "VR Service mode: --vr=[off|unitykolab], off by default", cxxopts::value<std::string>(),
+            vr_service_handler},
         {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
 
 static std::string loong(std::string const& option) {
