@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#include "PerformanceManager.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -118,8 +119,31 @@ private:
     per_list_package_t pl_data_;
 };
 
+class mesh_rt : public rendering_task {
+public:
+    mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~mesh_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
 class SRTest : public core_gl::view::Renderer3DModuleGL {
 public:
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -157,7 +181,7 @@ protected:
     void release() override;
 
 private:
-    enum class method_e : uint8_t { VAO, SSBO };
+    enum class method_e : uint8_t { VAO, SSBO, MESH };
 
     using method_ut = std::underlying_type_t<method_e>;
 
@@ -184,5 +208,9 @@ private:
     GLuint ubo_;
 
     core::view::Camera old_cam_;
+
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timing_handles_;
+#endif
 };
 } // namespace megamol::moldyn_gl::rendering

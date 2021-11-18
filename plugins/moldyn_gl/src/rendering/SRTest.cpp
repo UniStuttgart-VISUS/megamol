@@ -20,6 +20,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
+    ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 }
@@ -31,6 +32,16 @@ megamol::moldyn_gl::rendering::SRTest::~SRTest() {
 
 
 bool megamol::moldyn_gl::rendering::SRTest::create() {
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    upload_timer.name = "upload";
+    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer});
+#endif
     try {
         auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_vao_options.addDefinition("__SRTEST_VAO__");
@@ -38,6 +49,9 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
         rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
+        auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_options.addDefinition("__SRTEST_MESH__");
+        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -59,6 +73,11 @@ void megamol::moldyn_gl::rendering::SRTest::release() {
 
 
 bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallRender3DGL& cr) {
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+#endif
+
     // Camera
     core::view::Camera cam = cr.GetCamera();
     auto view = cam.getViewMatrix();
@@ -150,21 +169,33 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 
     cr_fbo->bind();
 
-    GLuint64 startTime, midTime, stopTime;
+    /*GLuint64 startTime, midTime, stopTime;
     GLuint queryID[3];
     glGenQueries(3, queryID);
 
-    glQueryCounter(queryID[0], GL_TIMESTAMP);
+    glQueryCounter(queryID[0], GL_TIMESTAMP);*/
+#ifdef PROFILING
+    pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
+#endif
 
     rt->upload(data_);
 
-    glQueryCounter(queryID[1], GL_TIMESTAMP);
+#ifdef PROFILING
+    pm.stop_timer(timing_handles_[0]);
+
+    // glQueryCounter(queryID[1], GL_TIMESTAMP);
+    pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
+#endif
 
     rt->render(ubo_);
 
-    glQueryCounter(queryID[2], GL_TIMESTAMP);
+#ifdef PROFILING
+    pm.stop_timer(timing_handles_[1]);
+#endif
 
-    GLint query_complete = false;
+    // glQueryCounter(queryID[2], GL_TIMESTAMP);
+
+    /*GLint query_complete = false;
     while (!query_complete) {
         glGetQueryObjectiv(queryID[2], GL_QUERY_RESULT_AVAILABLE, &query_complete);
     }
@@ -172,12 +203,12 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, &midTime);
     glGetQueryObjectui64v(queryID[2], GL_QUERY_RESULT, &stopTime);
 
-    glDeleteQueries(3, queryID);
+    glDeleteQueries(3, queryID);*/
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    core::utility::log::Log::DefaultLog.WriteInfo(
-        "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);
+    /*core::utility::log::Log::DefaultLog.WriteInfo(
+        "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);*/
 
     return true;
 }
@@ -385,6 +416,76 @@ bool megamol::moldyn_gl::rendering::ssbo_rt::render(GLuint ubo) {
 
 
 bool megamol::moldyn_gl::rendering::ssbo_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+    vbos_.resize(num_ssbos);
+    glCreateBuffers(vbos_.size(), vbos_.data());
+
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+    cbos_.resize(num_ssbos);
+    glCreateBuffers(cbos_.size(), cbos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferStorage(vbos_[i],
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), 0);
+
+        glNamedBufferStorage(cbos_[i],
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::mesh_rt::mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task("SRTestMesh", options, std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
+              std::filesystem::path("srtest/srtest_mesh.frag.glsl")) {}
+
+
+bool megamol::moldyn_gl::rendering::mesh_rt::render(GLuint ubo) {
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto vbo = vbos_[i];
+        auto cbo = cbos_[i];
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
+        glDrawMeshTasksNV(0, num_prims / 32 + 1);
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::mesh_rt::upload(data_package_t const& package) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(vbos_.size(), vbos_.data());
