@@ -6,7 +6,8 @@ EXIT_CODE=0
 changed_files=$(git diff --name-only origin/master...HEAD)
 git_root=$(git rev-parse --show-toplevel)
 
-find . -type f -print0 | while read -d $'\0' file; do
+file_list=$(find . -type f)
+while read -r file; do
   # only process file if mime type is text
   mime=$(file -b --mime-type "$file")
   if ! [[ $mime == "text/"* ]]; then
@@ -59,6 +60,6 @@ find . -type f -print0 | while read -d $'\0' file; do
     echo "ERROR: File contains tabs: $file"
     continue
   fi
-done
+done <<< "$file_list"
 
 exit $EXIT_CODE
