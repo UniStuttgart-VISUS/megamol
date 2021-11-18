@@ -16,6 +16,7 @@
 
 #include "LuaCallbacksCollection.h"
 #include "RenderInput.h"
+#include "ViewRenderInputs.h"
 
 #include <any>
 #include <filesystem>
@@ -202,45 +203,22 @@ void ImagePresentation_Service::PresentRenderedImages() {
 }
 
 namespace {
-struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
-    static constexpr const char* Name = "ViewRenderInputs";
-
-    // individual inputs used by view for rendering of next frame
-    megamol::frontend_resources::RenderInput render_input;
-
-    // sets (local) fbo resolution of render_input from various sources
-    std::function<ImagePresentation_Service::UintPair()> render_input_framebuffer_size_handler;
-    std::function<ImagePresentation_Service::ViewportTile()> render_input_tile_handler;
-
-    void update() override {
-        auto fbo_size = render_input_framebuffer_size_handler();
-        render_input.local_view_framebuffer_resolution = {fbo_size.first, fbo_size.second};
-
-        auto tile = render_input_tile_handler();
-        render_input.global_framebuffer_resolution = {tile.global_resolution.first, tile.global_resolution.second};
-        render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
-        render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
-    }
-
-    FrontendResource get_resource() override {
-        return {Name, render_input};
-    };
-};
-#define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
-
 // this is a somewhat improvised factory to abstract away instantiation of different RenderInputUpdate types
 struct RenderInputsFactory {
     std::tuple<std::string, std::unique_ptr<frontend_resources::RenderInputsUpdate>> get(std::string const& request) {
         auto renderinputs = std::make_unique<frontend_resources::RenderInputsUpdate>();
 
-        if (request == ViewRenderInputs::Name) {
-            renderinputs = std::make_unique<ViewRenderInputs>();
+        if (request == frontend_resources::ViewRenderInputs::Name) {
+            renderinputs = std::make_unique<frontend_resources::ViewRenderInputs>();
             accessViewRenderInput(renderinputs).render_input_framebuffer_size_handler =
                 fromservice<std::function<ImagePresentation_Service::UintPair()>>(0);
-            accessViewRenderInput(renderinputs).render_input_tile_handler =
-                fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1);
+            accessViewRenderInput(renderinputs).render_input_tile_handler = [&]() {
+                auto tile = fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1)();
+                return frontend_resources::ViewportTile{
+                    tile.global_resolution, tile.tile_start_normalized, tile.tile_end_normalized};
+            };
 
-            return {ViewRenderInputs::Name, std::move(renderinputs)};
+            return {frontend_resources::ViewRenderInputs::Name, std::move(renderinputs)};
         }
     }
 
