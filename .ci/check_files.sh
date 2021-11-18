@@ -21,7 +21,6 @@ while read -r file; do
   if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
     EXIT_CODE=1
     echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
-    continue
   fi
 
   # Check if file contains CRLF line endings
@@ -29,28 +28,24 @@ while read -r file; do
   if [[ $fileinfo == *"CRLF"* ]]; then
     EXIT_CODE=1
     echo "ERROR: File contains CRLF line endings: $file"
-    continue
   fi
 
   # Check if file starts with BOM
   if [[ $fileinfo == *"BOM"* ]]; then
     EXIT_CODE=1
     echo "ERROR: File starts with BOM: $file"
-    continue
   fi
 
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
     EXIT_CODE=1
     echo "ERROR: File does not end with new line: $file"
-    continue
   fi
 
   # Check if file contains tabs
   if grep -qP "\t" "$file"; then
     EXIT_CODE=1
     echo "ERROR: File contains tabs: $file"
-    continue
   fi
 
   # Get absolute file path and path relative to git root (for comparison with changed_files).
