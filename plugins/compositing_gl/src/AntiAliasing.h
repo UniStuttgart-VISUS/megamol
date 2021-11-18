@@ -160,6 +160,7 @@ private:
     std::unique_ptr<GLSLComputeShader> m_smaa_edge_detection_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
+    std::unique_ptr<GLSLComputeShader> m_smaa_temporal_resolving_prgm;
 
     /** Configurable settings for smaa */
     SMAAConstants m_smaa_constants;
@@ -168,15 +169,16 @@ private:
 
     /** Temporal smaa handles */
     core::view::Camera m_cam;
-    core::view::Camera m_prev_cam;
     glm::mat4 m_prev_view_proj_mx;
     glm::vec2 m_jitter[2] = { glm::vec2(0.25, -0.25), glm::vec2(-0.25, 0.25) };
     glm::vec4 m_subsampleIndices[2] =
     { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
     std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
+    std::shared_ptr<glowl::Texture2D> m_prev_input_tx2D;
     /** Texture to store velocity for each pixel used in SMAA S2x */
     std::shared_ptr<glowl::Texture2D> m_velocity_tex;
+    std::shared_ptr<glowl::Texture2D> m_temporal_tex;
 
     /** SMAA intermediate texture layout */
     glowl::TextureLayout m_smaa_layout;

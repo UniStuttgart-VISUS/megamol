@@ -5,6 +5,8 @@
  * All rights reserved.
  */
 
+// TOOD: consistent naming (e.g. tex or tx2D, camelCasing or underscore)
+
 #include "stdafx.h"
 #include "AntiAliasing.h"
 
@@ -57,7 +59,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
     this->MakeSlotAvailable(&this->m_mode);
 
-    this->m_smaa_mode << new megamol::core::param::EnumParam(0);
+    this->m_smaa_mode << new megamol::core::param::EnumParam(1);
     this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA 1x");
     this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "SMAA T2x");
     // S2x and 4x requires multisampling at the connected renderer
@@ -126,8 +128,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Result");
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Edges");
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Weights");
-    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "AreaTex");
-    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "SearchTex");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Velocity");
     this->MakeSlotAvailable(&this->m_smaa_view);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
@@ -155,6 +156,7 @@ bool megamol::compositing::AntiAliasing::create() {
         m_smaa_edge_detection_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_blending_weight_calculation_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_neighborhood_blending_prgm = std::make_unique<GLSLComputeShader>();
+        m_smaa_temporal_resolving_prgm = std::make_unique<GLSLComputeShader>();
         m_copy_prgm = std::make_unique<GLSLComputeShader>();
 
         vislib::graphics::gl::ShaderSource compute_fxaa_src;
@@ -162,6 +164,7 @@ bool megamol::compositing::AntiAliasing::create() {
         vislib::graphics::gl::ShaderSource compute_smaa_edge_detection_src;
         vislib::graphics::gl::ShaderSource compute_smaa_blending_weights_src;
         vislib::graphics::gl::ShaderSource compute_smaa_neighborhood_blending_src;
+        vislib::graphics::gl::ShaderSource compute_smaa_temporal_resolving_src;
         vislib::graphics::gl::ShaderSource compute_copy_src;
 
         // TODO: look into and use new shaderfactory (see e.g. simplstsphererenderer)
@@ -206,6 +209,13 @@ bool megamol::compositing::AntiAliasing::create() {
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Link())
             return false;
+
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::temporalResolvingCS", compute_smaa_temporal_resolving_src))
+            return false;
+        if (!m_smaa_temporal_resolving_prgm->Compile(compute_smaa_temporal_resolving_src.Code(), compute_smaa_temporal_resolving_src.Count()))
+            return false;
+        if (!m_smaa_temporal_resolving_prgm->Link())
+            return false;
         
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
@@ -239,7 +249,7 @@ bool megamol::compositing::AntiAliasing::create() {
 
     glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1, int_params, {});
-    glowl::TextureLayout velocity_layout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
+    glowl::TextureLayout velocity_layout(GL_RG16F, 1, 1, 1, GL_RG, GL_HALF_FLOAT, 1);
     glowl::TextureLayout depth_layout(GL_DEPTH_COMPONENT24_ARB, 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, 1);
 
 
@@ -437,7 +447,7 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
 }
 
 void megamol::compositing::AntiAliasing::copyTextureViaShader(
-    const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src) {
+    const std::shared_ptr<glowl::Texture2D>& src, const std::shared_ptr<glowl::Texture2D>& tgt) {
     m_copy_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -533,6 +543,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
         auto input_tx2D = rhs_call_input->getData();
         setupOutputTexture(input_tx2D, m_output_texture);
+        if(temporal) setupOutputTexture(input_tx2D, m_prev_input_tx2D);
 
         int mode = this->m_mode.Param<core::param::EnumParam>()->Value();
 
@@ -551,6 +562,11 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_smaa_layout.height = input_height;
                 m_edges_tex->reload(m_smaa_layout, nullptr);
                 m_blend_tex->reload(m_smaa_layout, nullptr);
+
+                glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
+                ly.width = input_width;
+                ly.height = input_height;
+                m_velocity_tex->reload(ly, nullptr);
             }
 
             // always clear them
@@ -575,11 +591,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 glm::mat4 curr_view_proj_mx = proj_mx * view_mx;
 
                 // calculate velocity tex for temporal smaa (SMAA T2x)
-                glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
-                ly.width = input_width;
-                ly.height = input_height;
-                m_velocity_tex->reload(ly, nullptr);
-
                 m_smaa_velocity_prgm->Enable();
 
                 glActiveTexture(GL_TEXTURE0);
@@ -606,13 +617,47 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, 0);
 
-                m_prev_cam = m_cam;
                 m_prev_view_proj_mx = curr_view_proj_mx;
-                copyTextureViaShader(m_prev_depth_tx2D, m_depth_tx2D);
+                copyTextureViaShader(m_depth_tx2D, m_prev_depth_tx2D);
+            }
+
+            // TODO: unite the shaders/programs for velocity calculation and temporal resolving above and below
+            // only used for temporal reprojection
+            if (temporal) {
+                m_smaa_temporal_resolving_prgm->Enable();
+
+                glActiveTexture(GL_TEXTURE0);
+                input_tx2D->bindTexture();
+                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("g_currColorTex"), 0);
+                glActiveTexture(GL_TEXTURE1);
+                m_prev_input_tx2D->bindTexture();
+                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("g_prevColorTex"), 1);
+                glActiveTexture(GL_TEXTURE2);
+                m_velocity_tex->bindTexture();
+                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("g_velocityTex"), 2);
+
+                glUniform1i(m_smaa_velocity_prgm->ParameterLocation("SMAA_REPROJECTION"), 1);
+
+                m_ssbo_constants->bind(0);
+
+                m_temporal_tex->bindImage(0, GL_WRITE_ONLY);
+
+                m_smaa_temporal_resolving_prgm->Dispatch(static_cast<int>(std::ceil(input_tx2D->getWidth() / 8.0f)),
+                    static_cast<int>(std::ceil(input_tx2D->getHeight() / 8.0f)), 1);
+
+                m_smaa_temporal_resolving_prgm->Disable();
+
+                glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+                copyTextureViaShader(input_tx2D, m_prev_input_tx2D);
             }
 
             // edge detection
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "g_colorTex"}};
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs =
+                {{temporal ? m_temporal_tex : input_tx2D, "g_colorTex"}};
             if (technique == 2) inputs.push_back({ m_depth_tx2D, "g_depthTex" });
             std::vector<std::pair<const char*, int>> uniforms = {{"technique", technique}};
 
@@ -631,7 +676,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             dispatchComputeShader(
                 m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, m_ssbo_constants);
 
-            // only used for temporal reprojection
+            
             /*glActiveTexture(GL_TEXTURE2);
             m_velocity_tex->bindTexture();
             glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_velocityTex"), 2);*/
@@ -645,7 +690,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         }
         // no aa
         else if (mode == 2) {
-            copyTextureViaShader(m_output_texture, input_tx2D);
+            copyTextureViaShader(input_tx2D, m_output_texture);
         }
     }
 
@@ -664,10 +709,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             lhs_tc->setData(m_blend_tex, m_version);
             break;
         case 3:
-            lhs_tc->setData(m_area_tex, m_version);
-            break;
-        case 4:
-            lhs_tc->setData(m_search_tex, m_version);
+            lhs_tc->setData(m_velocity_tex, m_version);
             break;
         default:
             lhs_tc->setData(m_output_texture, m_version);

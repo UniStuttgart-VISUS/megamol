@@ -14,7 +14,7 @@ uniform vec2 jitter;
 uniform sampler2D g_currDepthtex;
 uniform sampler2D g_prevDepthtex;
 
-layout(rg8, binding = 0) uniform writeonly image2D velocityTx2D;
+layout(rg16f, binding = 0) uniform writeonly image2D velocityTx2D;
 
 void main() {
     vec2 inPos = gl_GlobalInvocationID.xy;
@@ -52,7 +52,7 @@ void main() {
     currPos = currPos / currPos.w;
     prevPos = prevPos / prevPos.w;
 
-    // Note from original code https://github.com/iryoku/smaa:
+    // Note from original code https://github.com/iryoku/smaa :
     // Positions in projection space are in [-1, 1] range, while texture
     // coordinates are in [0, 1] range. So, we divide by 2 to get velocities in
     // the scale:

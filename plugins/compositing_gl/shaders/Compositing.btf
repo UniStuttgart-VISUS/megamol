@@ -48,6 +48,7 @@
         <snippet name="edgeDetection" type="file">comp/AntiAliasing/smaa_edge_detection_c.glsl</snippet>
         <snippet name="blendingWeights" type="file">comp/AntiAliasing/smaa_blending_weights_calculation_c.glsl</snippet>
         <snippet name="neighborhoodBlending" type="file">comp/AntiAliasing/smaa_neighborhood_blending_c.glsl</snippet>
+        <snippet name="temporalResolving" type="file">comp/AntiAliasing/smaa_temporal_resolving_c.glsl</snippet>
 
         <shader name="velocityCS">
             <snippet type="version">430</snippet>
@@ -70,6 +71,12 @@
             <snippet type="version">430</snippet>
             <snippet name="smaa::defines" />
             <snippet name="smaa::neighborhoodBlending" />
+        </shader>
+
+        <shader name="temporalResolvingCS">
+            <snippet type="version">430</snippet>
+            <snippet name="smaa::defines" />
+            <snippet name="smaa::temporalResolving" />
         </shader>
     </namespace> <!--smaa namesapce-->
 
