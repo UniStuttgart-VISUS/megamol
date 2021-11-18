@@ -55,13 +55,13 @@ while read -r file; do
 
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
-    EXIT_CODE=1
+    #EXIT_CODE=1 # TODO enable
     echo "ERROR: File does not end with new line: $file"
   fi
 
   # Check if file contains tabs
   if grep -qP "\t" "$file"; then
-    EXIT_CODE=1
+    #EXIT_CODE=1 # TODO enable
     echo "ERROR: File contains tabs: $file"
   fi
 
