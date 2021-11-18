@@ -111,7 +111,7 @@ jobs:
       filePath: '.ci/check_plugins.sh'
 
 - job: ClangFormatCheck
-  displayName: 'Run ClangFormat Check'
+  displayName: 'ClangFormat Check'
   pool:
     name: 'default'
     demands:
@@ -130,6 +130,7 @@ jobs:
 
 # Disabled for now, because clang format version is wrong
 #- job: ClangFormatCheckWindows
+#  displayName: 'ClangFormat Check (Windows)'
 #  pool:
 #    name: 'hardware'
 #    demands:
