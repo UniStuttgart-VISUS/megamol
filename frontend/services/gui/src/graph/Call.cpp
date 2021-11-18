@@ -412,12 +412,12 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
     // TODO: pause button to stop new samples from being stored?
     switch (entry.api) {
     case frontend_resources::PerformanceManager::query_api::CPU:
-        cpu_perf_history[entry.user_index].push_sample(
-            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
+            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     case frontend_resources::PerformanceManager::query_api::OPENGL:
-        gl_perf_history[entry.user_index].push_sample(
-            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        gl_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
+            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     }
 }

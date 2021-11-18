@@ -588,12 +588,12 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
     const frontend_resources::PerformanceManager::timer_entry& entry) {
     switch (entry.api) {
     case frontend_resources::PerformanceManager::query_api::CPU:
-        cpu_perf_history[entry.handle].push_sample(
-            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     case frontend_resources::PerformanceManager::query_api::OPENGL:
-        gl_perf_history[entry.handle].push_sample(
-            frame, std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+        gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     }
 }

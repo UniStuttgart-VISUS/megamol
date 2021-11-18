@@ -1,45 +1,33 @@
 #include "mmcore/MultiPerformanceHistory.h"
 
+#include <iostream>
+#include <cassert>
+
 using namespace megamol::core;
 
 MultiPerformanceHistory::MultiPerformanceHistory() {
     reset();
 }
 
-void MultiPerformanceHistory::push_sample(frame_type frame, perf_type val) {
+void MultiPerformanceHistory::push_sample(frame_type frame, frame_index_type idx, perf_type val) {
 
     // general question: window_total might be prone to drift, but the average of many values
     // every frame for many callbacks is much too expensive, isn't it?
 
-    auto& buf = time_buffer[next_index];
-    if (frame != buf.frame()) {
+    if (idx == 0) {
         // before we advance, use the frame for full-window statistics
-        // does that actually work?
-        window_metrics[static_cast<uint32_t>(metric_type::MIN)].push_value(buf.frame(), buf.min());
-        window_metrics[static_cast<uint32_t>(metric_type::MAX)].push_value(buf.frame(), buf.max());
-        window_metrics[static_cast<uint32_t>(metric_type::AVERAGE)].push_value(buf.frame(), buf.avg());
-        window_metrics[static_cast<uint32_t>(metric_type::MEDIAN)].push_value(buf.frame(), buf.med());
-        window_metrics[static_cast<uint32_t>(metric_type::COUNT)].push_value(buf.frame(), buf.count());
+        auto& buf = time_buffer[next_index];
+        window_metrics[static_cast<uint32_t>(metric_type::MIN)].push_value(buf.min());
+        window_metrics[static_cast<uint32_t>(metric_type::MAX)].push_value(buf.max());
+        window_metrics[static_cast<uint32_t>(metric_type::AVERAGE)].push_value(buf.avg());
+        window_metrics[static_cast<uint32_t>(metric_type::MEDIAN)].push_value(buf.med());
+        window_metrics[static_cast<uint32_t>(metric_type::COUNT)].push_value(buf.count());
         next_index = next_wrap(next_index);
-        buf = time_buffer[next_index];
+        //buf = time_buffer[next_index];
         num_frames++;
     }
-    //// remove the window sum component that is going to be overwritten
-    //// array starts zeroed so unused samples do not change the result here
-    //window_averages_total -= buf.avg();
-    buf.push_value(frame, val);
-    //window_averages_total += buf.avg();
+    time_buffer[next_index].push_value(frame, val);
     num_samples++;
-
-    // until we have at least a sample everywhere, the average is over num_samples only
-    //window_average = window_averages_total / std::min(buffer_length, num_samples);
-
-    //time_buffer[next_index] = val;
-    //const auto total = avg_time * num_samples + val;
-    //num_samples++;
-    //avg_time = total / static_cast<double>(num_samples);
-
-    //next_index = next_wrap(next_index);
 }
 
 void MultiPerformanceHistory::reset() {
