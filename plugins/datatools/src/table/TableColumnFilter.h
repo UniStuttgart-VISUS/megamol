@@ -8,10 +8,10 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -29,12 +29,12 @@ public:
     static std::string ModuleName;
 
     /** Return module class name */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return ModuleName.c_str();
     }
 
     /** Return module class description */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Filters columns from a table";
     }
 
@@ -48,17 +48,19 @@ public:
 
     /** Dtor */
     virtual ~TableColumnFilter(void);
+
 protected:
     /** Lazy initialization of the module */
     virtual bool create(void);
 
     /** Resource release */
     virtual void release(void);
+
 private:
     /** Data callback */
-    bool processData(core::Call &c);
+    bool processData(core::Call& c);
 
-    bool getExtent(core::Call &c);
+    bool getExtent(core::Call& c);
 
     /** Data output slot */
     core::CalleeSlot dataOutSlot;

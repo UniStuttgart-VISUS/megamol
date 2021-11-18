@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "GlButton.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 

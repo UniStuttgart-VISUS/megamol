@@ -1,8 +1,8 @@
 // ConClient.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
 #include "Console.h"
+#include "stdafx.h"
 
 #undef min
 #undef max
@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
 
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
     options.add_options()("open", "open host", cxxopts::value<std::string>())(
-        "source", "source file", cxxopts::value<std::string>())(
-        "exec", "execute script", cxxopts::value<std::string>())("keep-open", "keep open")(
-        "hammer", "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())(
-        "timeout", "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))(
-            "single", "send whole file or script in one go")("help", "print help");
+        "source", "source file", cxxopts::value<std::string>())("exec", "execute script",
+        cxxopts::value<std::string>())("keep-open", "keep open")("hammer",
+        "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())("timeout",
+        "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))("single",
+        "send whole file or script in one go")("help", "print help");
 
     try {
 
@@ -49,14 +49,21 @@ int main(int argc, char* argv[]) {
         // greeting text
         printGreeting();
 
-        if (parseRes.count("open")) host = parseRes["open"].as<std::string>();
-        if (parseRes.count("source")) file = parseRes["source"].as<std::string>();
-        if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
-        if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
-        if (parseRes.count("hammer")) hammerFactor = parseRes["hammer"].as<int>();
-        if (parseRes.count("timeout")) timeOutSeconds = parseRes["timeout"].as<int>();
-        if (parseRes.count("single")) singleSend = parseRes["single"].as<bool>();
-        
+        if (parseRes.count("open"))
+            host = parseRes["open"].as<std::string>();
+        if (parseRes.count("source"))
+            file = parseRes["source"].as<std::string>();
+        if (parseRes.count("exec"))
+            script = parseRes["exec"].as<std::string>();
+        if (parseRes.count("keep-open"))
+            keepOpen = parseRes["keep-open"].as<bool>();
+        if (parseRes.count("hammer"))
+            hammerFactor = parseRes["hammer"].as<int>();
+        if (parseRes.count("timeout"))
+            timeOutSeconds = parseRes["timeout"].as<int>();
+        if (parseRes.count("single"))
+            singleSend = parseRes["single"].as<bool>();
+
         if (!parseRes.count("exec") && !parseRes.count("source")) {
             hammerFactor = 1;
         }
@@ -102,9 +109,7 @@ int main(int argc, char* argv[]) {
                 cout << endl << "ERR Socket connection failed: " << zmqex.what() << endl << endl;
             } catch (std::exception& ex) {
                 cout << endl << "ERR Socket connection failed: " << ex.what() << endl << endl;
-            } catch (...) {
-                cout << endl << "ERR Socket connection failed: unknown exception" << endl << endl;
-            }
+            } catch (...) { cout << endl << "ERR Socket connection failed: unknown exception" << endl << endl; }
         }
 
 

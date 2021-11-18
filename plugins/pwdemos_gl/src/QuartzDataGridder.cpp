@@ -7,12 +7,12 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "QuartzDataGridder.h"
-#include <cmath>
-#include <climits>
-#include "QuartzParticleDataCall.h"
 #include "QuartzCrystalDataCall.h"
+#include "QuartzDataGridder.h"
+#include "QuartzParticleDataCall.h"
 #include "mmcore/param/IntParam.h"
+#include <climits>
+#include <cmath>
 //#include "mmcore/utility/log/Log.h"
 //#include "mmcore/utility/sys/MemmappedFile.h"
 //#include "vislib/memutils.h"
@@ -29,29 +29,33 @@ namespace demos_gl {
 /*
  * DataGridder::DataGridder
  */
-DataGridder::DataGridder(void) : core::Module(),
-dataOutSlot("dataout", "The slot providing the gridded data"),
-dataInSlot("datain", "The slot fetching the flat data"),
-crysInSlot("crysin", "The slot fetching the crystalite data"),
-gridSizeXSlot("gridsizex", "The number of grid cells in x direction"),
-gridSizeYSlot("gridsizey", "The number of grid cells in y direction"),
-gridSizeZSlot("gridsizez", "The number of grid cells in z direction"),
-partHash(0), crysHash(0), dataHash(0), cells(NULL),
-bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-cbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), pdata(), lists(NULL) {
+DataGridder::DataGridder(void)
+        : core::Module()
+        , dataOutSlot("dataout", "The slot providing the gridded data")
+        , dataInSlot("datain", "The slot fetching the flat data")
+        , crysInSlot("crysin", "The slot fetching the crystalite data")
+        , gridSizeXSlot("gridsizex", "The number of grid cells in x direction")
+        , gridSizeYSlot("gridsizey", "The number of grid cells in y direction")
+        , gridSizeZSlot("gridsizez", "The number of grid cells in z direction")
+        , partHash(0)
+        , crysHash(0)
+        , dataHash(0)
+        , cells(NULL)
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , cbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , pdata()
+        , lists(NULL) {
 
     this->dataOutSlot.SetCallback(ParticleGridDataCall::ClassName(),
-        ParticleGridDataCall::FunctionName(ParticleGridDataCall::CallForGetData),
-        &DataGridder::getData);
+        ParticleGridDataCall::FunctionName(ParticleGridDataCall::CallForGetData), &DataGridder::getData);
     this->dataOutSlot.SetCallback(ParticleGridDataCall::ClassName(),
-        ParticleGridDataCall::FunctionName(ParticleGridDataCall::CallForGetExtent),
-        &DataGridder::getExtent);
+        ParticleGridDataCall::FunctionName(ParticleGridDataCall::CallForGetExtent), &DataGridder::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
-    this->dataInSlot.SetCompatibleCall<core::factories::CallAutoDescription<ParticleDataCall> >();
+    this->dataInSlot.SetCompatibleCall<core::factories::CallAutoDescription<ParticleDataCall>>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->crysInSlot.SetCompatibleCall<core::factories::CallAutoDescription<CrystalDataCall> >();
+    this->crysInSlot.SetCompatibleCall<core::factories::CallAutoDescription<CrystalDataCall>>();
     this->MakeSlotAvailable(&this->crysInSlot);
 
     this->gridSizeXSlot << new core::param::IntParam(5, 1);
@@ -62,7 +66,6 @@ cbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), pdata(), lists(NULL) {
 
     this->gridSizeZSlot << new core::param::IntParam(5, 1);
     this->MakeSlotAvailable(&this->gridSizeZSlot);
-
 }
 
 
@@ -87,14 +90,16 @@ bool DataGridder::create(void) {
  * DataGridder::getData
  */
 bool DataGridder::getData(core::Call& c) {
-    ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall*>(&c);
-    if (pgdc == NULL) return false;
-    if (this->needClearData()) this->clearData();
-    if (this->needMakeData()) this->makeData();
+    ParticleGridDataCall* pgdc = dynamic_cast<ParticleGridDataCall*>(&c);
+    if (pgdc == NULL)
+        return false;
+    if (this->needClearData())
+        this->clearData();
+    if (this->needMakeData())
+        this->makeData();
     pgdc->Set(static_cast<unsigned int>(this->gridSizeXSlot.Param<core::param::IntParam>()->Value()),
         static_cast<unsigned int>(this->gridSizeYSlot.Param<core::param::IntParam>()->Value()),
-        static_cast<unsigned int>(this->gridSizeZSlot.Param<core::param::IntParam>()->Value()),
-        this->cells);
+        static_cast<unsigned int>(this->gridSizeZSlot.Param<core::param::IntParam>()->Value()), this->cells);
     pgdc->SetDataHash(this->dataHash);
     pgdc->SetUnlocker(NULL);
     return true;
@@ -105,10 +110,13 @@ bool DataGridder::getData(core::Call& c) {
  * DataGridder::getExtent
  */
 bool DataGridder::getExtent(core::Call& c) {
-    ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall*>(&c);
-    if (pgdc == NULL) return false;
-    if (this->needClearData()) this->clearData();
-    if (this->needMakeData()) this->makeData();
+    ParticleGridDataCall* pgdc = dynamic_cast<ParticleGridDataCall*>(&c);
+    if (pgdc == NULL)
+        return false;
+    if (this->needClearData())
+        this->clearData();
+    if (this->needMakeData())
+        this->makeData();
     pgdc->SetFrameCount(1);
     pgdc->AccessBoundingBoxes().Clear();
     pgdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -147,8 +155,8 @@ void DataGridder::clearData(void) {
  * DataGridder::makeData
  */
 void DataGridder::makeData(void) {
-    ParticleDataCall *di = this->dataInSlot.CallAs<ParticleDataCall>();
-    CrystalDataCall *ci = this->crysInSlot.CallAs<CrystalDataCall>();
+    ParticleDataCall* di = this->dataInSlot.CallAs<ParticleDataCall>();
+    CrystalDataCall* ci = this->crysInSlot.CallAs<CrystalDataCall>();
     ASSERT((di != NULL) && (ci != NULL));
 
     this->clearData();
@@ -160,12 +168,10 @@ void DataGridder::makeData(void) {
     ASSERT(this->lists == NULL);
     ASSERT(this->pdata.Count() == 0);
 
-    if (di->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
-        && di->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+    if (di->AccessBoundingBoxes().IsObjectSpaceBBoxValid() && di->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
         this->bbox = di->AccessBoundingBoxes().ObjectSpaceBBox();
         this->cbox = di->AccessBoundingBoxes().ObjectSpaceClipBox();
-    }
-    else {
+    } else {
         this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     }
@@ -198,32 +204,38 @@ void DataGridder::makeData(void) {
                 unsigned int i = x + sx * (y + sy * z);
                 float xlow = static_cast<float>(x) / static_cast<float>(sx);
                 float xhigh = static_cast<float>(x + 1) / static_cast<float>(sx);
-                this->cells[i].SetBBox(vislib::math::Cuboid<float>(
-                    this->bbox.Left() + xlow * this->bbox.Width(),
-                    this->bbox.Bottom() + ylow * this->bbox.Height(),
-                    this->bbox.Back() + zlow * this->bbox.Depth(),
-                    this->bbox.Left() + xhigh * this->bbox.Width(),
-                    this->bbox.Bottom() + yhigh * this->bbox.Height(),
+                this->cells[i].SetBBox(vislib::math::Cuboid<float>(this->bbox.Left() + xlow * this->bbox.Width(),
+                    this->bbox.Bottom() + ylow * this->bbox.Height(), this->bbox.Back() + zlow * this->bbox.Depth(),
+                    this->bbox.Left() + xhigh * this->bbox.Width(), this->bbox.Bottom() + yhigh * this->bbox.Height(),
                     this->bbox.Back() + zhigh * this->bbox.Depth()));
             }
         }
     }
 
-    unsigned int *pccnt = new unsigned int[sx * sy * sz]; // # particles / (group * cell)
-    unsigned int *pcidx = new unsigned int[sx * sy * sz]; // # particles / (group * cell)
-    vislib::Array<ParticleGridDataCall::List> *lists = new vislib::Array<ParticleGridDataCall::List>[sx * sy * sz];
+    unsigned int* pccnt = new unsigned int[sx * sy * sz]; // # particles / (group * cell)
+    unsigned int* pcidx = new unsigned int[sx * sy * sz]; // # particles / (group * cell)
+    vislib::Array<ParticleGridDataCall::List>* lists = new vislib::Array<ParticleGridDataCall::List>[sx * sy * sz];
 
     for (unsigned int g = 0; g < di->GetGroupCount(); g++) {
         ::memset(pccnt, 0, sizeof(unsigned int) * sx * sy * sz);
         unsigned int ti = di->GetCrystalType(g) % ci->GetCount();
-        const float *pd = di->GetParticleData(g);
+        const float* pd = di->GetParticleData(g);
         for (unsigned int p = 0; p < di->GetParticleCount(g); p++, pd += 8) {
             int ix = static_cast<int>(static_cast<float>(sx) * (pd[0] - this->bbox.Left()) / this->bbox.Width());
-            if (ix < 0) ix = 0; else if (ix >= static_cast<int>(sx)) ix = sx - 1;
+            if (ix < 0)
+                ix = 0;
+            else if (ix >= static_cast<int>(sx))
+                ix = sx - 1;
             int iy = static_cast<int>(static_cast<float>(sy) * (pd[1] - this->bbox.Bottom()) / this->bbox.Height());
-            if (iy < 0) iy = 0; else if (iy >= static_cast<int>(sy)) iy = sy - 1;
+            if (iy < 0)
+                iy = 0;
+            else if (iy >= static_cast<int>(sy))
+                iy = sy - 1;
             int iz = static_cast<int>(static_cast<float>(sz) * (pd[2] - this->bbox.Back()) / this->bbox.Depth());
-            if (iz < 0) iz = 0; else if (iz >= static_cast<int>(sz)) iz = sz - 1;
+            if (iz < 0)
+                iz = 0;
+            else if (iz >= static_cast<int>(sz))
+                iz = sz - 1;
             pccnt[ix + sx * (iy + sy * iz)]++;
         }
         for (unsigned int z = 0; z < sz; z++) {
@@ -245,11 +257,20 @@ void DataGridder::makeData(void) {
         pd = di->GetParticleData(g);
         for (unsigned int p = 0; p < di->GetParticleCount(g); p++, pd += 8) {
             int ix = static_cast<int>(static_cast<float>(sx) * (pd[0] - this->bbox.Left()) / this->bbox.Width());
-            if (ix < 0) ix = 0; else if (ix >= static_cast<int>(sx)) ix = sx - 1;
+            if (ix < 0)
+                ix = 0;
+            else if (ix >= static_cast<int>(sx))
+                ix = sx - 1;
             int iy = static_cast<int>(static_cast<float>(sy) * (pd[1] - this->bbox.Bottom()) / this->bbox.Height());
-            if (iy < 0) iy = 0; else if (iy >= static_cast<int>(sy)) iy = sy - 1;
+            if (iy < 0)
+                iy = 0;
+            else if (iy >= static_cast<int>(sy))
+                iy = sy - 1;
             int iz = static_cast<int>(static_cast<float>(sz) * (pd[2] - this->bbox.Back()) / this->bbox.Depth());
-            if (iz < 0) iz = 0; else if (iz >= static_cast<int>(sz)) iz = sz - 1;
+            if (iz < 0)
+                iz = 0;
+            else if (iz >= static_cast<int>(sz))
+                iz = sz - 1;
             unsigned int i = ix + sx * (iy + sy * iz);
             ASSERT(pcidx[i] != UINT_MAX);
             ::memcpy(this->pdata[pcidx[i]] + (pccnt[i] * 8), pd, sizeof(float) * 8);
@@ -268,8 +289,8 @@ void DataGridder::makeData(void) {
     for (unsigned int i = 0; i < sx * sy * sz; i++) {
         float cboxGrow = 0.0f;
         SIZE_T lcnt = lists[i].Count();
-        this->cells[i].Set(this->cells[i].BoundingBox(), this->cells[i].ClipBox(),
-            static_cast<unsigned int>(lcnt), this->lists + listscnt);
+        this->cells[i].Set(this->cells[i].BoundingBox(), this->cells[i].ClipBox(), static_cast<unsigned int>(lcnt),
+            this->lists + listscnt);
         for (SIZE_T j = 0; j < lcnt; j++) {
             this->lists[listscnt++] = lists[i][j];
         }
@@ -278,12 +299,14 @@ void DataGridder::makeData(void) {
             unsigned int pc = this->cells[i].Lists()[l].Count();
             ASSERT(t < ci->GetCount());
             float rp = 0.0f;
-            const float *pd = this->cells[i].Lists()[l].Data();
+            const float* pd = this->cells[i].Lists()[l].Data();
             for (unsigned int p = 0; p < pc; p++, pd += 8) {
-                if (rp < pd[3]) rp = pd[3];
+                if (rp < pd[3])
+                    rp = pd[3];
             }
             float rb = rp * ci->GetCrystals()[t].GetBoundingRadius();
-            if (rb > cboxGrow) cboxGrow = rb;
+            if (rb > cboxGrow)
+                cboxGrow = rb;
         }
         this->cells[i].SetCBoxRelative(cboxGrow);
     }
@@ -298,9 +321,8 @@ void DataGridder::makeData(void) {
  * DataGridder::needClearData
  */
 bool DataGridder::needClearData(void) {
-    return ((this->dataHash != 0)
-        && ((this->dataInSlot.CallAs<ParticleDataCall>() == NULL)
-            || (this->crysInSlot.CallAs<CrystalDataCall>() == NULL)));
+    return ((this->dataHash != 0) && ((this->dataInSlot.CallAs<ParticleDataCall>() == NULL) ||
+                                         (this->crysInSlot.CallAs<CrystalDataCall>() == NULL)));
 }
 
 
@@ -308,15 +330,18 @@ bool DataGridder::needClearData(void) {
  * DataGridder::needMakeData
  */
 bool DataGridder::needMakeData(void) {
-    ParticleDataCall *di = this->dataInSlot.CallAs<ParticleDataCall>();
-    CrystalDataCall *ci = this->crysInSlot.CallAs<CrystalDataCall>();
-    if ((di == NULL) || (ci == NULL)) return false;
-    if (!(*di)(ParticleDataCall::CallForGetExtent)) return false;
-    if (!(*ci)(CrystalDataCall::CallForGetExtent)) return false;
-    return (di->DataHash() == 0) || (ci->DataHash() == 0)
-        || (di->DataHash() != this->partHash) || (ci->DataHash() != this->crysHash)
-        || this->gridSizeXSlot.IsDirty() || this->gridSizeYSlot.IsDirty() || this->gridSizeZSlot.IsDirty();
+    ParticleDataCall* di = this->dataInSlot.CallAs<ParticleDataCall>();
+    CrystalDataCall* ci = this->crysInSlot.CallAs<CrystalDataCall>();
+    if ((di == NULL) || (ci == NULL))
+        return false;
+    if (!(*di)(ParticleDataCall::CallForGetExtent))
+        return false;
+    if (!(*ci)(CrystalDataCall::CallForGetExtent))
+        return false;
+    return (di->DataHash() == 0) || (ci->DataHash() == 0) || (di->DataHash() != this->partHash) ||
+           (ci->DataHash() != this->crysHash) || this->gridSizeXSlot.IsDirty() || this->gridSizeYSlot.IsDirty() ||
+           this->gridSizeZSlot.IsDirty();
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

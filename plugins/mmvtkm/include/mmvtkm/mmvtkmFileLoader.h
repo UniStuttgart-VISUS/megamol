@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
 #define MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
@@ -33,21 +33,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "vtkmFileLoader"; }
+    static const char* ClassName(void) {
+        return "vtkmFileLoader";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "File loader module for vtkm files."; }
+    static const char* Description(void) {
+        return "File loader module for vtkm files.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     mmvtkmFileLoader(void);
@@ -98,7 +104,7 @@ protected:
 private:
     uint32_t version_;
 
-	/** The file name  */
+    /** The file name  */
     core::param::ParamSlot filename_;
 
     /** The slot for requesting data */
@@ -111,7 +117,7 @@ private:
     /** The vtkm data file name */
     std::string vtkmDataFile_;
 
-	/** Used as flag if file has changed */
+    /** Used as flag if file has changed */
     bool fileChanged_;
 };
 

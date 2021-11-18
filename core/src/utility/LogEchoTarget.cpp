@@ -1,19 +1,18 @@
 /*
  * LogEchoTarget.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/LogEchoTarget.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::utility::LogEchoTarget::LogEchoTarget
  */
-megamol::core::utility::LogEchoTarget::LogEchoTarget(void) 
-        : megamol::core::utility::log::Log::Target(), target(NULL) {
+megamol::core::utility::LogEchoTarget::LogEchoTarget(void) : megamol::core::utility::log::Log::Target(), target(NULL) {
     // Intentionally empty
 }
 
@@ -22,7 +21,8 @@ megamol::core::utility::LogEchoTarget::LogEchoTarget(void)
  * megamol::core::utility::LogEchoTarget::LogEchoTarget
  */
 megamol::core::utility::LogEchoTarget::LogEchoTarget(mmcLogEchoFunction target)
-        : megamol::core::utility::log::Log::Target(), target(target) {
+        : megamol::core::utility::log::Log::Target()
+        , target(target) {
     // Intentionally empty
 }
 
@@ -38,8 +38,7 @@ megamol::core::utility::LogEchoTarget::~LogEchoTarget(void) {
 /*
  * megamol::core::utility::LogEchoTarget::SetTarget
  */
-void megamol::core::utility::LogEchoTarget::SetTarget(
-        mmcLogEchoFunction target) {
+void megamol::core::utility::LogEchoTarget::SetTarget(mmcLogEchoFunction target) {
     this->target = target;
 }
 
@@ -48,7 +47,7 @@ void megamol::core::utility::LogEchoTarget::SetTarget(
  * megamol::core::utility::LogEchoTarget::Msg
  */
 void megamol::core::utility::LogEchoTarget::Msg(UINT level, megamol::core::utility::log::Log::TimeStamp time,
-        megamol::core::utility::log::Log::SourceID sid, const char *msg) {
+    megamol::core::utility::log::Log::SourceID sid, const char* msg) {
     if (this->target && level <= this->Level()) {
         this->target(level, msg);
     }

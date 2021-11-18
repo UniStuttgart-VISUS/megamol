@@ -1,21 +1,19 @@
 /*
  * ShaderSourceFactory.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/utility/BTFParser.h"
-#include "mmcore/utility/xml/XmlReader.h"
-#include "vislib/StringTokeniser.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/xml/XmlReader.h"
+#include "mmcore_gl/utility/BTFParser.h"
+#include "stdafx.h"
+#include "vislib/StringTokeniser.h"
 #include "vislib/sys/Path.h"
 
 using namespace megamol::core_gl;
-
-
 
 
 /*
@@ -39,14 +37,14 @@ const UINT32 utility::ShaderSourceFactory::FLAGS_HLSL_LINE_PRAGMAS = 0x00000003u
 /*
  * utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
  */
-const UINT32 utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
-    = utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS;
+const UINT32 utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS = utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS;
 
 
-megamol::core_gl::utility::ShaderSourceFactory::ShaderSourceFactory(vislib::Array<vislib::StringW> shader_dirs_) 
-    : shader_dirs(shader_dirs_), root(), fileIds() {
- // intentionally empty
-
+megamol::core_gl::utility::ShaderSourceFactory::ShaderSourceFactory(vislib::Array<vislib::StringW> shader_dirs_)
+        : shader_dirs(shader_dirs_)
+        , root()
+        , fileIds() {
+    // intentionally empty
 }
 
 /*
@@ -60,12 +58,11 @@ utility::ShaderSourceFactory::~ShaderSourceFactory(void) {
 /*
  * utility::ShaderSourceFactory::LoadBTF
  */
-bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool forceReload) {
+bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA& name, bool forceReload) {
     using megamol::core::utility::log::Log;
     if (name.Find("::") != vislib::StringA::INVALID_POS) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "BTF root namespace \"%s\" is illegal: contains \"::\"",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "BTF root namespace \"%s\" is illegal: contains \"::\"", name.PeekBuffer());
         return false;
     }
     if (forceReload) {
@@ -87,17 +84,14 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
         filename = vislib::sys::Path::Concatenate(searchPaths[i], vislib::StringW(name));
         filename.Append(L".btf");
         if (vislib::sys::File::Exists(filename)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 50,
-                "Loading %s ...\n", vislib::StringA(filename).PeekBuffer());
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 50, "Loading %s ...\n", vislib::StringA(filename).PeekBuffer());
             break;
         } else {
             filename.Clear();
         }
     }
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": not found\n",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load btf \"%s\": not found\n", name.PeekBuffer());
         return false;
     }
 
@@ -109,24 +103,19 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
         ::FindClose(hFind);
         osfilename.Truncate(osfilename.Length() - 4);
         if (!osfilename.Equals(name)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Unable to load btf \"%s\": wrong file name case\n",
-                name.PeekBuffer());
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Unable to load btf \"%s\": wrong file name case\n", name.PeekBuffer());
             return false;
         }
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": file not found(2)\n",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load btf \"%s\": file not found(2)\n", name.PeekBuffer());
         return false;
     }
 #endif /* _WIN32 && (DEBUG || _DEBUG) */
 
     core::utility::xml::XmlReader reader;
     if (!reader.OpenFile(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": cannot open file\n",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load btf \"%s\": cannot open file\n", name.PeekBuffer());
         return false;
     }
 
@@ -140,29 +129,24 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
 
         vislib::SingleLinkedList<vislib::StringA>::Iterator mi = parser.Messages();
         while (mi.HasNext()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Parser: %s",
-                mi.Next().PeekBuffer());
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Parser: %s", mi.Next().PeekBuffer());
         }
 
         this->root.Children().RemoveAll(fileroot);
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load btf \"%s\": failed to parse\n",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load btf \"%s\": failed to parse\n", name.PeekBuffer());
         return false;
     }
 
     vislib::SingleLinkedList<vislib::StringA>::Iterator mi = parser.Messages();
     while (mi.HasNext()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Parser: %s",
-            mi.Next().PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Parser: %s", mi.Next().PeekBuffer());
     }
     reader.CloseFile();
 
     if (this->fileIds.Find(name) == NULL) {
         this->fileIds.Append(name);
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "BTF \"%s\" indexed as %d\n",
-            name.PeekBuffer(), this->fileIds.Count());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_INFO, "BTF \"%s\" indexed as %d\n", name.PeekBuffer(), this->fileIds.Count());
     }
 
     return true;
@@ -172,11 +156,11 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool fo
 /*
  * utility::ShaderSourceFactory::MakeShaderSnippet
  */
-vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
-utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
-        UINT32 flags) {
+vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet> utility::ShaderSourceFactory::MakeShaderSnippet(
+    const vislib::StringA& name, UINT32 flags) {
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
-    if (el.IsNull()) return NULL;
+    if (el.IsNull())
+        return NULL;
     return this->makeSnippet(el.DynamicCast<BTFParser::BTFSnippet>(), flags);
 }
 
@@ -184,16 +168,14 @@ utility::ShaderSourceFactory::MakeShaderSnippet(const vislib::StringA& name,
 /*
  * utility::ShaderSourceFactory::MakeShaderSource
  */
-bool utility::ShaderSourceFactory::MakeShaderSource(const vislib::StringA& name,
-        vislib_gl::graphics::gl::ShaderSource& outShaderSrc,
-        UINT32 flags) {
+bool utility::ShaderSourceFactory::MakeShaderSource(
+    const vislib::StringA& name, vislib_gl::graphics::gl::ShaderSource& outShaderSrc, UINT32 flags) {
     using megamol::core::utility::log::Log;
     vislib::SmartPtr<BTFParser::BTFElement> el = this->getBTFElement(name);
-    BTFParser::BTFShader *s = el.DynamicCast<BTFParser::BTFShader>();
+    BTFParser::BTFShader* s = el.DynamicCast<BTFParser::BTFShader>();
     outShaderSrc.Clear();
     if (s == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to find requested shader \"%s\"\n", name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to find requested shader \"%s\"\n", name.PeekBuffer());
         return false;
     }
     return this->makeShaderSource(s, outShaderSrc, flags);
@@ -223,24 +205,26 @@ int utility::ShaderSourceFactory::fileNo(const vislib::StringA& name) {
 /*
  * utility::ShaderSourceFactory::getBTFElement
  */
-vislib::SmartPtr<utility::BTFParser::BTFElement>
-utility::ShaderSourceFactory::getBTFElement(const vislib::StringA& name) {
+vislib::SmartPtr<utility::BTFParser::BTFElement> utility::ShaderSourceFactory::getBTFElement(
+    const vislib::StringA& name) {
     using megamol::core::utility::log::Log;
     vislib::Array<vislib::StringA> namepath = vislib::StringTokeniserA::Split(name, "::");
     if ((namepath.Count() > 0) && namepath[0].IsEmpty()) {
         namepath.RemoveFirst(); // allow operator global namespace
     }
     if (namepath.Count() < 2) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to load shader snippet \"%s\": incomplete name path\n",
-            name.PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to load shader snippet \"%s\": incomplete name path\n", name.PeekBuffer());
         return NULL;
     }
-    if (!this->LoadBTF(namepath[0])) return NULL;
+    if (!this->LoadBTF(namepath[0]))
+        return NULL;
     vislib::SmartPtr<BTFParser::BTFElement> e = this->root.FindChild(namepath[0]);
     for (SIZE_T i = 1; i < namepath.Count(); i++) {
-        if (e.IsNull()) return NULL;
-        if (e.DynamicCast<BTFParser::BTFNamespace>() == NULL) return NULL;
+        if (e.IsNull())
+            return NULL;
+        if (e.DynamicCast<BTFParser::BTFNamespace>() == NULL)
+            return NULL;
         e = e.DynamicCast<BTFParser::BTFNamespace>()->FindChild(namepath[i]);
     }
     return e;
@@ -251,27 +235,24 @@ utility::ShaderSourceFactory::getBTFElement(const vislib::StringA& name) {
  * utility::ShaderSourceFactory::makeShaderSource
  */
 bool utility::ShaderSourceFactory::makeShaderSource(
-        utility::BTFParser::BTFShader *s,
-        vislib_gl::graphics::gl::ShaderSource& o, UINT32 flags) {
+    utility::BTFParser::BTFShader* s, vislib_gl::graphics::gl::ShaderSource& o, UINT32 flags) {
     ASSERT(s != NULL);
 
     unsigned int idx = 0;
-    vislib::SingleLinkedList<vislib::SmartPtr<BTFParser::BTFElement>
-        >::Iterator i = s->Children().GetIterator();
+    vislib::SingleLinkedList<vislib::SmartPtr<BTFParser::BTFElement>>::Iterator i = s->Children().GetIterator();
     while (i.HasNext()) {
         vislib::SmartPtr<BTFParser::BTFElement> e = i.Next();
         if (e.IsNull()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                "Ignoring empty shader element.");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_WARN, "Ignoring empty shader element.");
             idx++;
             continue;
         }
 
-        BTFParser::BTFSnippet *c = e.DynamicCast<BTFParser::BTFSnippet>();
+        BTFParser::BTFSnippet* c = e.DynamicCast<BTFParser::BTFSnippet>();
         if (c != NULL) {
             vislib::SingleLinkedList<vislib::StringA> keys = s->NameIDs().FindKeys(idx);
-            vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
-                snip = this->makeSnippet(c, flags);
+            vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet> snip = this->makeSnippet(c, flags);
             if (snip.IsNull()) {
                 return false;
             }
@@ -280,21 +261,19 @@ bool utility::ShaderSourceFactory::makeShaderSource(
             } else {
                 if (keys.Count() > 1) {
                     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                        "Multiple shader snippet names encountered. Choosing \"%s\"",
-                        keys.First().PeekBuffer());
+                        "Multiple shader snippet names encountered. Choosing \"%s\"", keys.First().PeekBuffer());
                 }
                 o.Append(keys.First(), snip);
             }
         } else {
-            BTFParser::BTFShader *sh = e.DynamicCast<BTFParser::BTFShader>();
+            BTFParser::BTFShader* sh = e.DynamicCast<BTFParser::BTFShader>();
             if (sh != NULL) {
                 if (!this->makeShaderSource(sh, o, flags)) {
                     return false;
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                    "Ignoring unknown shader element \"%s\".",
-                    e->Name().PeekBuffer());
+                    "Ignoring unknown shader element \"%s\".", e->Name().PeekBuffer());
             }
         }
 
@@ -307,23 +286,24 @@ bool utility::ShaderSourceFactory::makeShaderSource(
 /*
  * utility::ShaderSourceFactory::makeSnippet
  */
-vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet>
-utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UINT32 flags) {
-    if (s == NULL) return NULL;
+vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource::Snippet> utility::ShaderSourceFactory::makeSnippet(
+    utility::BTFParser::BTFSnippet* s, UINT32 flags) {
+    if (s == NULL)
+        return NULL;
 
     if (s->Type() == BTFParser::BTFSnippet::VERSION_SNIPPET) {
         try {
             return new vislib_gl::graphics::gl::ShaderSource::VersionSnippet(
                 vislib::CharTraitsA::ParseInt(s->Content()));
-        } catch(...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to create version shader code snippet.\n");
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to create version shader code snippet.\n");
         }
     }
 
     if (s->Type() == BTFParser::BTFSnippet::EMPTY_SNIPPET) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-            "Empty shader code snippet encountered.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "Empty shader code snippet encountered.\n");
     }
 
     vislib::StringA content;
@@ -333,14 +313,11 @@ utility::ShaderSourceFactory::makeSnippet(utility::BTFParser::BTFSnippet *s, UIN
 
     } else if ((flags & 0x00000003u) == FLAGS_GLSL_LINE_PRAGMAS) {
         // glsl line pragmas
-        content.Format("\n#line %d %d\n%s", int(s->Line() - 1),
-            this->fileNo(s->File()), s->Content().PeekBuffer());
+        content.Format("\n#line %d %d\n%s", int(s->Line() - 1), this->fileNo(s->File()), s->Content().PeekBuffer());
 
     } else if ((flags & 0x00000003u) == FLAGS_HLSL_LINE_PRAGMAS) {
         // hlsl line pragmas
-        content.Format("\n#line %d \"%s\"\n%s", int(s->Line() - 1),
-            s->File().PeekBuffer(), s->Content().PeekBuffer());
-
+        content.Format("\n#line %d \"%s\"\n%s", int(s->Line() - 1), s->File().PeekBuffer(), s->Content().PeekBuffer());
     }
 
     return new vislib_gl::graphics::gl::ShaderSource::StringSnippet(content);

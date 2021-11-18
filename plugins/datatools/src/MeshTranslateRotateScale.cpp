@@ -4,12 +4,12 @@
  * Copyright (C) 2018 MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MeshTranslateRotateScale.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "stdafx.h"
 #include "vislib/math/Matrix4.h"
 
 using namespace megamol;
@@ -19,11 +19,12 @@ using namespace megamol;
  * datatools::MeshTranslateRotateScale::MeshTranslateRotateScale
  */
 datatools::MeshTranslateRotateScale::MeshTranslateRotateScale(void)
-    : AbstractMeshManipulator("outData", "indata")
-    , translateSlot("translation", "Translates the particles in x, y, z direction")
-    , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
-    , scaleSlot("scale", "Scales the particle data")
-    , finalData(NULL), mesh(NULL) {
+        : AbstractMeshManipulator("outData", "indata")
+        , translateSlot("translation", "Translates the particles in x, y, z direction")
+        , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
+        , scaleSlot("scale", "Scales the particle data")
+        , finalData(NULL)
+        , mesh(NULL) {
     this->translateSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0, 0, 0)));
     this->MakeSlotAvailable(&this->translateSlot);
 
@@ -166,12 +167,9 @@ bool datatools::MeshTranslateRotateScale::manipulateData(
             }
         }
 
-        if (m.HasNormalPointer()) {
-        }
-        if (m.HasTextureCoordinatePointer()) {
-        }
-        if (m.HasVertexAttribPointer()) {
-        }
+        if (m.HasNormalPointer()) {}
+        if (m.HasTextureCoordinatePointer()) {}
+        if (m.HasVertexAttribPointer()) {}
 
 
         finalData[i] = new float[vcnt * 3];

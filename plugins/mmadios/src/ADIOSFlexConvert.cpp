@@ -5,27 +5,27 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ADIOSFlexConvert.h"
-#include <numeric>
-#include "mmadios/CallADIOSData.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <numeric>
 
 namespace megamol {
 namespace adios {
 
 ADIOSFlexConvert::ADIOSFlexConvert()
-    : core::Module()
-    , mpSlot("mpSlot", "Slot to send multi particle data.")
-    , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
-    , flexPosSlot("xyz", "")
-    , flexColSlot("i", "")
-    , flexBoxSlot("box", "")
-    , flexXSlot("x","")
-    , flexYSlot("y","")
-    , flexZSlot("z","") {
+        : core::Module()
+        , mpSlot("mpSlot", "Slot to send multi particle data.")
+        , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
+        , flexPosSlot("xyz", "")
+        , flexColSlot("i", "")
+        , flexBoxSlot("box", "")
+        , flexXSlot("x", "")
+        , flexYSlot("y", "")
+        , flexZSlot("z", "") {
 
     this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &ADIOSFlexConvert::getDataCallback);
@@ -61,18 +61,24 @@ ADIOSFlexConvert::ADIOSFlexConvert()
     this->MakeSlotAvailable(&this->flexZSlot);
 }
 
-ADIOSFlexConvert::~ADIOSFlexConvert() { this->Release(); }
+ADIOSFlexConvert::~ADIOSFlexConvert() {
+    this->Release();
+}
 
-bool ADIOSFlexConvert::create() { return true; }
+bool ADIOSFlexConvert::create() {
+    return true;
+}
 
 void ADIOSFlexConvert::release() {}
 
 bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     if (!(*cad)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
@@ -143,7 +149,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 return false;
             }
         }
-  
+
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
             return false;
@@ -165,7 +171,9 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             Z = cad->getData(z_str)->GetAsFloat();
             p_count = X.size();
             stride += 3 * sizeof(float);
-        } else { return false; }
+        } else {
+            return false;
+        }
 
         std::vector<float> col;
         if (col_str != "undef") {
@@ -178,9 +186,8 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         vislib::math::Cuboid<float> cubo;
         if (box_str != "undef") {
             auto box = cad->getData(box_str)->GetAsFloat();
-            cubo = vislib::math::Cuboid<float>(box[0], 
-                box[1], std::min(box[5], box[2]),
-                box[3], box[4], std::max(box[5], box[2]));
+            cubo = vislib::math::Cuboid<float>(
+                box[0], box[1], std::min(box[5], box[2]), box[3], box[4], std::max(box[5], box[2]));
         }
 
         mpdc->SetParticleListCount(1);
@@ -248,11 +255,9 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride);
         //mpdc->AccessParticles(0).SetColourData(
         //    colType, mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
-        mpdc->AccessParticles(0).SetColourData(
-            colType, &mix[3], stride);
+        mpdc->AccessParticles(0).SetColourData(colType, &mix[3], stride);
 
-        mpdc->AccessParticles(0)
-            .SetColourMapIndexValues(imin, imax);
+        mpdc->AccessParticles(0).SetColourMapIndexValues(imin, imax);
 
         mpdc->AccessParticles(0).SetIDData(idType,
             mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
@@ -271,12 +276,15 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 bool ADIOSFlexConvert::getExtentCallback(core::Call& call) {
 
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
-    if (!this->getDataCallback(call)) return false;
+    if (!this->getDataCallback(call))
+        return false;
 
     return true;
 }

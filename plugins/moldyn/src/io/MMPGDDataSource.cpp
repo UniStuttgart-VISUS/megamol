@@ -5,16 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MMPGDDataSource.h"
-#include "mmcore/param/FilePathParam.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "moldyn/ParticleGridDataCall.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol::moldyn::io;
 using namespace megamol::moldyn;
@@ -34,7 +34,10 @@ using namespace megamol::moldyn;
  * MMPGDDataSource::Frame::Frame
  */
 MMPGDDataSource::Frame::Frame(view::AnimDataModule& owner)
-        : view::AnimDataModule::Frame(owner), dat(), types(NULL), cells(NULL) {
+        : view::AnimDataModule::Frame(owner)
+        , dat()
+        , types(NULL)
+        , cells(NULL) {
     // intentionally empty
 }
 
@@ -52,7 +55,7 @@ MMPGDDataSource::Frame::~Frame() {
 /*
  * MMPGDDataSource::Frame::LoadFrame
  */
-bool MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
+bool MMPGDDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int idx, UINT64 size) {
     this->frame = idx;
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
@@ -72,11 +75,11 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
         return;
     }
 
-    UINT32 *headerdat = this->dat.As<UINT32>();
-    UINT32 &typeCnt = headerdat[0];
-    UINT32 &cellX = headerdat[1];
-    UINT32 &cellY = headerdat[2];
-    UINT32 &cellZ = headerdat[3];
+    UINT32* headerdat = this->dat.As<UINT32>();
+    UINT32& typeCnt = headerdat[0];
+    UINT32& cellX = headerdat[1];
+    UINT32& cellY = headerdat[2];
+    UINT32& cellZ = headerdat[3];
 
     SIZE_T pos = 4 * 4;
     if ((this->types == NULL) || (this->cells == NULL)) {
@@ -85,43 +88,69 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
             this->types = new ParticleGridDataCall::ParticleType[typeCnt];
         }
         for (UINT32 i = 0; i < typeCnt; i++) {
-            UINT8 vt = *this->dat.AsAt<UINT8>(pos); pos++;
-            UINT8 ct = *this->dat.AsAt<UINT8>(pos); pos++;
+            UINT8 vt = *this->dat.AsAt<UINT8>(pos);
+            pos++;
+            UINT8 ct = *this->dat.AsAt<UINT8>(pos);
+            pos++;
 
-            switch(vt) {
-                case 0: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
-                case 1: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ); break;
-                case 2: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR); break;
-                case 3: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ); break;
-                default: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
+            switch (vt) {
+            case 0:
+                this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE);
+                break;
+            case 1:
+                this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                break;
+            case 2:
+                this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR);
+                break;
+            case 3:
+                this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
+                break;
+            default:
+                this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE);
+                break;
             }
             if (vt == 0) {
                 ct = 0;
             }
-            switch(ct) {
-                case 0: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE); break;
-                case 1: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB); break;
-                case 2: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA); break;
-                case 3: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I); break;
-                case 4: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB); break;
-                case 5: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA); break;
-                default: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE); break;
+            switch (ct) {
+            case 0:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE);
+                break;
+            case 1:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB);
+                break;
+            case 2:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA);
+                break;
+            case 3:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I);
+                break;
+            case 4:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB);
+                break;
+            case 5:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA);
+                break;
+            default:
+                this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE);
+                break;
             }
 
             if ((vt == 1) || (vt == 3)) {
-                this->types[i].SetGlobalRadius(*this->dat.AsAt<float>(pos)); pos += 4;
+                this->types[i].SetGlobalRadius(*this->dat.AsAt<float>(pos));
+                pos += 4;
             } else {
                 this->types[i].SetGlobalRadius(0.05f);
             }
             if (ct == 0) {
-                this->types[i].SetGlobalColour(this->dat.AsAt<unsigned char>(pos)); pos += 4;
+                this->types[i].SetGlobalColour(this->dat.AsAt<unsigned char>(pos));
+                pos += 4;
             } else {
                 this->types[i].SetGlobalColour(192, 192, 192);
             }
             if (ct == 3) {
-                this->types[i].SetColourMapIndexValues(
-                    this->dat.AsAt<float>(pos)[0],
-                    this->dat.AsAt<float>(pos)[1]);
+                this->types[i].SetColourMapIndexValues(this->dat.AsAt<float>(pos)[0], this->dat.AsAt<float>(pos)[1]);
                 pos += 8;
             } else {
                 this->types[i].SetColourMapIndexValues(0.0f, 1.0f);
@@ -134,31 +163,55 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
         this->cells = new ParticleGridDataCall::GridCell[cellX * cellY * cellZ];
         for (UINT32 i = 0; i < cellX * cellY * cellZ; i++) {
             ParticleGridDataCall::GridCell& cell = this->cells[i];
-            const float *bbox = this->dat.AsAt<float>(pos);
+            const float* bbox = this->dat.AsAt<float>(pos);
             pos += 6 * 4;
             cell.AllocateParticleLists(typeCnt);
             cell.SetBoundingBox(vislib::math::Cuboid<float>(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]));
             for (UINT32 t = 0; t < typeCnt; t++) {
-				ParticleGridDataCall::ParticleType& type = this->types[t];
-				ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
+                ParticleGridDataCall::ParticleType& type = this->types[t];
+                ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
 
                 unsigned int vs = 0, cs = 0;
-                switch(type.GetVertexDataType()) {
-                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vs = 0; break;
-                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vs = 12; break;
-                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vs = 16; break;
-                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vs = 6; break;
-                    default: vs = 0; break;
+                switch (type.GetVertexDataType()) {
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    vs = 0;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    vs = 12;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    vs = 16;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                    vs = 6;
+                    break;
+                default:
+                    vs = 0;
+                    break;
                 }
                 if (vs != 0) {
-                    switch(type.GetColourDataType()) {
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: cs = 0; break;
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: cs = 3; break;
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: cs = 4; break;
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: cs = 4; break;
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: cs = 12; break;
-                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: cs = 16; break;
-                        default: cs = 0; break;
+                    switch (type.GetColourDataType()) {
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
+                        cs = 0;
+                        break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                        cs = 3;
+                        break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                        cs = 4;
+                        break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                        cs = 4;
+                        break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                        cs = 12;
+                        break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                        cs = 16;
+                        break;
+                    default:
+                        cs = 0;
+                        break;
                     }
                 } else {
                     cs = 0;
@@ -176,7 +229,6 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
         }
     }
     call.SetGridDataRef(cellX, cellY, cellZ, this->cells);
-
 }
 
 /*****************************************************************************/
@@ -185,11 +237,14 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 /*
  * MMPGDDataSource::MMPGDDataSource
  */
-MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
-        filename("filename", "The path to the MMPGD file to load."),
-        getData("getdata", "Slot to request data from this data source."),
-        file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
+MMPGDDataSource::MMPGDDataSource(void)
+        : view::AnimDataModule()
+        , filename("filename", "The path to the MMPGD file to load.")
+        , getData("getdata", "Slot to request data from this data source.")
+        , file(NULL)
+        , frameIdx(NULL)
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f) {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMPGDDataSource::filenameChanged);
@@ -216,7 +271,7 @@ MMPGDDataSource::~MMPGDDataSource(void) {
  * MMPGDDataSource::constructFrame
  */
 view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<MMPGDDataSource*>(this));
+    Frame* f = new Frame(*const_cast<MMPGDDataSource*>(this));
     return f;
 }
 
@@ -232,11 +287,11 @@ bool MMPGDDataSource::create(void) {
 /*
  * MMPGDDataSource::loadFrame
  */
-void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
-        unsigned int idx) {
+void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) {
     using megamol::core::utility::log::Log;
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == NULL)
+        return;
     if (this->file == NULL) {
         f->Clear();
         return;
@@ -256,14 +311,13 @@ void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
 void MMPGDDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
     }
     ARY_SAFE_DELETE(this->frameIdx);
 }
-
 
 
 /*
@@ -283,9 +337,9 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(),
-            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".", 
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -295,15 +349,17 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-        SAFE_DELETE(this->file); \
-        this->setFrameCount(1); \
-        this->initFrameCache(1); \
-        this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f); \
-        this->clipbox = this->bbox; \
-        return true;
-#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-        _ERROR_OUT("Unable to read MMPGD file header"); \
+#define _ERROR_OUT(MSG)                                    \
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG);       \
+    SAFE_DELETE(this->file);                               \
+    this->setFrameCount(1);                                \
+    this->initFrameCache(1);                               \
+    this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f); \
+    this->clipbox = this->bbox;                            \
+    return true;
+#define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                        \
+    if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
+        _ERROR_OUT("Unable to read MMPGD file header");             \
     }
 
     char magicid[6];
@@ -347,8 +403,7 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
-        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-            CACHE_SIZE_MIN, cacheSize);
+        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
@@ -371,13 +426,15 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
  * MMPGDDataSource::getDataCallback
  */
 bool MMPGDDataSource::getDataCallback(Call& caller) {
-	ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    ParticleGridDataCall* c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
-    Frame *f = NULL;
+    Frame* f = NULL;
     if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        if (f == NULL) return false;
+        f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID()));
+        if (f == NULL)
+            return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         c2->SetDataHash(0);
@@ -392,7 +449,7 @@ bool MMPGDDataSource::getDataCallback(Call& caller) {
  * MMPGDDataSource::getExtentCallback
  */
 bool MMPGDDataSource::getExtentCallback(Call& caller) {
-	ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
+    ParticleGridDataCall* c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(this->FrameCount());

@@ -8,12 +8,11 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "VariantMatchRenderer.h"
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
+#include "stdafx.h"
 
-#include <algorithm>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -21,6 +20,7 @@
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::protein_gl;

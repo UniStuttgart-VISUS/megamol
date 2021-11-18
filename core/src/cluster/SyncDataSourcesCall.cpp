@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "stdafx.h"
 
 
 namespace megamol {
@@ -14,11 +14,9 @@ namespace core {
 namespace cluster {
 
 
-SyncDataSourcesCall::SyncDataSourcesCall(): fnameDirty(false) {
-}
+SyncDataSourcesCall::SyncDataSourcesCall() : fnameDirty(false) {}
 
-SyncDataSourcesCall::~SyncDataSourcesCall() {
-}
+SyncDataSourcesCall::~SyncDataSourcesCall() {}
 } // namespace cluster
 } // namespace core
 } // namespace megamol

@@ -17,130 +17,128 @@
 namespace vislib {
 
 
+/**
+ * Class of constant container iterators. Use the non-const iterator class
+ * as template parameter I. This iterator class must have an assignment
+ * operator, a default ctor, a copy ctor.
+ */
+template<class I>
+class ConstIterator {
+public:
     /**
-     * Class of constant container iterators. Use the non-const iterator class
-     * as template parameter I. This iterator class must have an assignment
-     * operator, a default ctor, a copy ctor.
+     * Default ctor.
      */
-    template<class I> class ConstIterator {
-    public:
+    ConstIterator(void);
 
-        /**
-         * Default ctor.
-         */
-        ConstIterator(void);
-
-        /**
-         * Ctor from non-const iterator.
-         *
-         * @param iter The non-const iterator.
-         */
-        ConstIterator(const I& iter);
-
-        /**
-         * Copy ctor.
-         *
-         * @param src The object to clone from.
-         */
-        ConstIterator(const ConstIterator<I>& src);
-
-        /** Dtor. */
-        virtual ~ConstIterator(void);
-
-        /**
-         * Answer whether there is a next element to iterator to.
-         *
-         * @return true if there is a next element, false otherwise.
-         */
-        virtual bool HasNext(void) const;
-
-        /**
-         * Iterates to the next element and returns this element.
-         *
-         * @return The next element, which becomes the current element after
-         *         calling this methode.
-         */
-        virtual const typename I::Type& Next(void) const;
-
-        /**
-         * Assignmnet operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return reference to this.
-         */
-        virtual ConstIterator<I>& operator=(const ConstIterator<I>& rhs);
-
-    private:
-
-        /** the non-const iterator */
-        mutable I iter;
-
-    };
-
-
-    /*
-     * ConstIterator<I>::ConstIterator
+    /**
+     * Ctor from non-const iterator.
+     *
+     * @param iter The non-const iterator.
      */
-    template<class I>
-    ConstIterator<I>::ConstIterator(void) : iter() {
-        // intentionally empty
-    }
+    ConstIterator(const I& iter);
 
-
-    /*
-     * ConstIterator<I>::ConstIterator
+    /**
+     * Copy ctor.
+     *
+     * @param src The object to clone from.
      */
-    template<class I>
-    ConstIterator<I>::ConstIterator(const I& iter) : iter(iter) {
-        // intentionally empty
-    }
+    ConstIterator(const ConstIterator<I>& src);
 
+    /** Dtor. */
+    virtual ~ConstIterator(void);
 
-    /*
-     * ConstIterator<I>::ConstIterator
+    /**
+     * Answer whether there is a next element to iterator to.
+     *
+     * @return true if there is a next element, false otherwise.
      */
-    template<class I>
-    ConstIterator<I>::ConstIterator(const ConstIterator<I>& src)
-            : iter(src.iter) {
-        // intentionally empty
-    }
+    virtual bool HasNext(void) const;
 
-
-    /*
-     * ConstIterator<I>::~ConstIterator
+    /**
+     * Iterates to the next element and returns this element.
+     *
+     * @return The next element, which becomes the current element after
+     *         calling this methode.
      */
-    template<class I> ConstIterator<I>::~ConstIterator(void) {
-        // intentionally empty
-    }
+    virtual const typename I::Type& Next(void) const;
 
-
-    /*
-     * ConstIterator<I>::HasNext
+    /**
+     * Assignmnet operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return reference to this.
      */
-    template<class I> bool ConstIterator<I>::HasNext(void) const {
-        return this->iter.HasNext();
-    }
+    virtual ConstIterator<I>& operator=(const ConstIterator<I>& rhs);
+
+private:
+    /** the non-const iterator */
+    mutable I iter;
+};
 
 
-    /*
-     * ConstIterator<I>::Next
-     */
-    template<class I>
-    const typename I::Type& ConstIterator<I>::Next(void) const {
-        return const_cast<I&>(this->iter).Next();
-    }
+/*
+ * ConstIterator<I>::ConstIterator
+ */
+template<class I>
+ConstIterator<I>::ConstIterator(void) : iter() {
+    // intentionally empty
+}
 
 
-    /*
-     * ConstIterator<I>::operator=
-     */
-    template<class I>
-    ConstIterator<I>& ConstIterator<I>::operator=(
-            const ConstIterator<I>& rhs) {
-        this->iter = rhs.iter;
-        return *this;
-    }
+/*
+ * ConstIterator<I>::ConstIterator
+ */
+template<class I>
+ConstIterator<I>::ConstIterator(const I& iter) : iter(iter) {
+    // intentionally empty
+}
+
+
+/*
+ * ConstIterator<I>::ConstIterator
+ */
+template<class I>
+ConstIterator<I>::ConstIterator(const ConstIterator<I>& src) : iter(src.iter) {
+    // intentionally empty
+}
+
+
+/*
+ * ConstIterator<I>::~ConstIterator
+ */
+template<class I>
+ConstIterator<I>::~ConstIterator(void) {
+    // intentionally empty
+}
+
+
+/*
+ * ConstIterator<I>::HasNext
+ */
+template<class I>
+bool ConstIterator<I>::HasNext(void) const {
+    return this->iter.HasNext();
+}
+
+
+/*
+ * ConstIterator<I>::Next
+ */
+template<class I>
+const typename I::Type& ConstIterator<I>::Next(void) const {
+    return const_cast<I&>(this->iter).Next();
+}
+
+
+/*
+ * ConstIterator<I>::operator=
+ */
+template<class I>
+ConstIterator<I>& ConstIterator<I>::operator=(const ConstIterator<I>& rhs) {
+    this->iter = rhs.iter;
+    return *this;
+}
 
 
 } /* end namespace vislib */

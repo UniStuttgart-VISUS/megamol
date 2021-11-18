@@ -1,7 +1,7 @@
 #pragma once
 
-#include <condition_variable>
 #include <chrono>
+#include <condition_variable>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -11,7 +11,8 @@ namespace core {
 namespace utility {
 namespace sys {
 
-template <typename T> class FutureReset {
+template<typename T>
+class FutureReset {
 public:
     FutureReset() : promise_{std::make_unique<std::promise<T>>()}, future_{promise_->get_future()} {}
 
@@ -32,9 +33,13 @@ public:
     //    return *this;
     //}
 
-    FutureReset* GetPtr() { return this; }
+    FutureReset* GetPtr() {
+        return this;
+    }
 
-    FutureReset const* GetPtr() const { return this; }
+    FutureReset const* GetPtr() const {
+        return this;
+    }
 
     void SetPromise(T const& value) {
         std::unique_lock<std::mutex> exchange_guard(exchange_lock_);
@@ -53,7 +58,7 @@ public:
         return ret;
     }
 
-    template <typename REP, typename PERIOD>
+    template<typename REP, typename PERIOD>
     std::future_status WaitFor(std::chrono::duration<REP, PERIOD> const& timeout_duration) const {
         return future_.wait_for(timeout_duration);
     }

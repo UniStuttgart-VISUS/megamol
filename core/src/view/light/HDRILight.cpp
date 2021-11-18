@@ -4,12 +4,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/HDRILight.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -20,11 +20,7 @@ void megamol::core::view::light::HDRILight::addLight(LightCollection& light_coll
 /*
  * megamol::core::view::light::HDRILight::HDRILight
  */
-HDRILight::HDRILight(void)
-    : AbstractLight()
-    , up("up", "")
-    , direction("Direction", "")
-    , evnfile("EvironmentFile", "") {
+HDRILight::HDRILight(void) : AbstractLight(), up("up", ""), direction("Direction", ""), evnfile("EvironmentFile", "") {
 
     // HDRI light
     lightsource = std::make_shared<HDRILightType>();
@@ -40,7 +36,9 @@ HDRILight::HDRILight(void)
 /*
  * megamol::core::view::light::HDRILight::~HDRILight
  */
-HDRILight::~HDRILight(void) { this->Release(); }
+HDRILight::~HDRILight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::HDRILight::readParams
@@ -62,8 +60,7 @@ void HDRILight::readParams() {
  * megamol::core::view::light::HDRILight::InterfaceIsDirty
  */
 bool HDRILight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->up.IsDirty() || this->direction.IsDirty() ||
-        this->evnfile.IsDirty()) {
+    if (this->AbstractIsDirty() || this->up.IsDirty() || this->direction.IsDirty() || this->evnfile.IsDirty()) {
         this->up.ResetDirty();
         this->direction.ResetDirty();
         this->evnfile.ResetDirty();

@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "ParticleInspector.h"
+#include "stdafx.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -12,9 +12,9 @@ using namespace megamol;
  * megamol::moldyn_gl::misc::ParticleInspector::ParticleInspector
  */
 ParticleInspector::ParticleInspector(void)
-    : Module()
-    , slotParticlesOut("particlesout", "Provides the particles.")
-    , slotParticlesIn("particlesin", "Ingests the particles.") {
+        : Module()
+        , slotParticlesOut("particlesout", "Provides the particles.")
+        , slotParticlesIn("particlesin", "Ingests the particles.") {
 
     /* Register parameters. */
 
@@ -34,7 +34,9 @@ ParticleInspector::ParticleInspector(void)
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::~ParticleInspector
  */
-ParticleInspector::~ParticleInspector(void) { this->Release(); }
+ParticleInspector::~ParticleInspector(void) {
+    this->Release();
+}
 
 
 /*
@@ -98,19 +100,20 @@ bool ParticleInspector::getParticleExtents(core::Call& call) {
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::release
  */
-void ParticleInspector::release(void) {
-    
-}
+void ParticleInspector::release(void) {}
 
 
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::drawTable
  */
 void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
-    bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
-    if (!valid_imgui_scope) return;
+    bool valid_imgui_scope =
+        ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+    if (!valid_imgui_scope)
+        return;
 
-    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame) return;
+    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame)
+        return;
     lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
 
     std::string table_name = "##table";
@@ -135,18 +138,20 @@ void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
                 ImGui::Text("global radius: %f", list.GetGlobalRadius());
                 ImGui::Text("vertex format: %s",
                     geocalls::SimpleSphericalParticles::VertexDataTypeNames[list.GetVertexDataType()].c_str());
-                const auto v_comp = geocalls::SimpleSphericalParticles::VertexDataTypeComponents[list.GetVertexDataType()];
+                const auto v_comp =
+                    geocalls::SimpleSphericalParticles::VertexDataTypeComponents[list.GetVertexDataType()];
                 num_columns += v_comp;
                 ImGui::Text("color format: %s",
                     geocalls::SimpleSphericalParticles::ColourDataTypeNames[list.GetColourDataType()].c_str());
-                const auto c_comp = geocalls::SimpleSphericalParticles::ColorDataTypeComponents[list.GetColourDataType()];
+                const auto c_comp =
+                    geocalls::SimpleSphericalParticles::ColorDataTypeComponents[list.GetColourDataType()];
                 num_columns += c_comp;
                 ImGui::Text("direction format: %s",
                     geocalls::SimpleSphericalParticles::DirDataTypeNames[list.GetDirDataType()].c_str());
                 const auto d_comp = geocalls::SimpleSphericalParticles::DirDataTypeComponents[list.GetDirDataType()];
                 num_columns += d_comp;
-                ImGui::Text("ID format: %s",
-                    geocalls::SimpleSphericalParticles::IDDataTypeNames[list.GetIDDataType()].c_str());
+                ImGui::Text(
+                    "ID format: %s", geocalls::SimpleSphericalParticles::IDDataTypeNames[list.GetIDDataType()].c_str());
                 const auto id_comp = geocalls::SimpleSphericalParticles::IDDataTypeComponents[list.GetIDDataType()];
                 num_columns += id_comp;
 
@@ -183,7 +188,8 @@ void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
                     ImGui::TableHeadersRow();
                     ImGuiListClipper clipper;
                     const auto& storage = list.GetParticleStore();
-                    const int modified_count = static_cast<int>(std::min<UINT64>(list.GetCount(), std::numeric_limits<int>::max()));
+                    const int modified_count =
+                        static_cast<int>(std::min<UINT64>(list.GetCount(), std::numeric_limits<int>::max()));
                     clipper.Begin(modified_count);
                     while (clipper.Step()) {
                         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {

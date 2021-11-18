@@ -12,112 +12,109 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/LinesDataCall.h"
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/FastFile.h"
 
 namespace megamol {
 namespace trisoup {
 
+/**
+ * Wavefront .obj file writer that discards the color information.
+ * The .obj file writer currently only supports LinesDataCalls.
+ */
+class WavefrontObjWriter : public core::AbstractDataWriter {
+public:
     /**
-     * Wavefront .obj file writer that discards the color information.
-     * The .obj file writer currently only supports LinesDataCalls.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class WavefrontObjWriter : public core::AbstractDataWriter {
-    public:
+    static const char* ClassName(void) {
+        return "WavefrontObjWriter";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "WavefrontObjWriter";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Wavefront .obj file writer";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Wavefront .obj file writer";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /** Ctor. */
+    WavefrontObjWriter(void);
 
-        /** Ctor. */
-        WavefrontObjWriter(void);
+    /** Dtor. */
+    virtual ~WavefrontObjWriter(void);
 
-        /** Dtor. */
-        virtual ~WavefrontObjWriter(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * The main function
+     *
+     * @return True on success
+     */
+    virtual bool run(void);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Function querying the writers capabilities
+     *
+     * @param call The call to receive the capabilities
+     *
+     * @return True on success
+     */
+    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
 
-        /**
-         * The main function
-         *
-         * @return True on success
-         */
-        virtual bool run(void);
+private:
+    /**
+     * Function writing the content of a LinesDataCall to disk.
+     *
+     * @param ldc Pointer to the LinesDataCall
+     */
+    bool writeLines(megamol::geocalls::LinesDataCall* ldc);
 
-        /**
-         * Function querying the writers capabilities
-         *
-         * @param call The call to receive the capabilities
-         *
-         * @return True on success
-         */
-        virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    /** The file name of the file to be written */
+    core::param::ParamSlot filenameSlot;
 
-    private:
+    /** The frame ID of the frame to be written */
+    core::param::ParamSlot frameIDSlot;
 
-        /**
-         * Function writing the content of a LinesDataCall to disk.
-         *
-         * @param ldc Pointer to the LinesDataCall
-         */
-        bool writeLines(megamol::geocalls::LinesDataCall* ldc);
-
-        /** The file name of the file to be written */
-        core::param::ParamSlot filenameSlot;
-
-        /** The frame ID of the frame to be written */
-        core::param::ParamSlot frameIDSlot;
-
-        /** The slot asking for data. */
-        core::CallerSlot dataSlot;
-    };
+    /** The slot asking for data. */
+    core::CallerSlot dataSlot;
+};
 
 } /* end namespace trisoup */
 } /* end namespace megamol */

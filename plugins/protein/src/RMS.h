@@ -39,7 +39,7 @@
  *  ________________________________________________________________________
  *
  *  code modified for usage in megamol 0.3 (date: 2009/03/03)
- * 
+ *
  */
 
 #ifndef RMSD_H_INCLUDED
@@ -53,35 +53,37 @@ namespace megamol {
 namespace protein {
 
 #ifndef RMS_ROTATE_JACOBI3
-#define ROTATE_JACOBI3(ARR,MAJ1,MIN1,MAJ2,MIN2) { \
-            g = ARR[MAJ1 + MIN1]; \
-            h = ARR[MAJ2 + MIN2]; \
-            ARR[MAJ1 + MIN1] = g - s*(h+g*tau); \
-            ARR[MAJ2 + MIN2] = h + s*(g-h*tau); }
+#define ROTATE_JACOBI3(ARR, MAJ1, MIN1, MAJ2, MIN2) \
+    {                                               \
+        g = ARR[MAJ1 + MIN1];                       \
+        h = ARR[MAJ2 + MIN2];                       \
+        ARR[MAJ1 + MIN1] = g - s * (h + g * tau);   \
+        ARR[MAJ2 + MIN2] = h + s * (g - h * tau);   \
+    }
 #endif /* ROTATE_JACOBI3 */
 
 /**
  * Normalize a 3D vector
- * 
+ *
  * @param a Vector which is normalized
  */
 void Normalize(double a[3]);
 
 /**
  * ?
- * 
+ *
  * @param mat        ...
  * @param Emat       ...
  * @param Evec       ...
  * @param Eigenvalue ...
- * 
+ *
  * @return ...
  */
-int DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenvalue);
+int DiagEsort(double* mat, double* Emat, double* Evec[], double* Eigenvalue);
 
 /**
  * Get jacobian of 3x3 matrix
- * 
+ *
  * @param a    ...
  * @param d    ...
  * @param v    ...
@@ -90,40 +92,40 @@ int DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenvalue);
 
  * @return ...
  */
-int Jacobi3(double *a, double *d, double *v, int *nrot);
+int Jacobi3(double* a, double* d, double* v, int* nrot);
 
 /**
-* Fit (superimpose) position vectors (if necessary) with Kabsch algorithm
-* (http://journals.iucr.org/a/issues/1976/05/00/a12999/a12999.pdf)
-* and calculate RMS value for two given position vectors like in
-* http://en.wikipedia.org/wiki/Root_mean_square_deviation_(bioinformatics.
-* 
-* Changes to original code in ptraj of AmberTools(10.0):
-* - changed meaning of 'mode' and 'fit' (more intuitivly)
-* - input data are now only two vectors containing x, y, and z values
-* - rotation and translation vectors are only needed if mode == 1 or mode == 2
-*
-* if fit == 0, dispersion is calculated, no fit will be done.
-* if fit == 1 and mode == 0, rms deviation is calculated but no structure will move.
-* if fit == 1 and mode == 1, rms deviation is calculated, Vec moves back, but toFitVec's centroid moved to (0,0,0),
-*                         as original functionality. Alignment will be done in the calling function.
-* if fit == 1 and mode == 2, rms deviation is calculated and toFitVec will align to Vec. 
-*
-* @param n           Number of Positions (xyz) of each Vector.
-* @param fit         True if position vectors should be fit.
-* @param mode        See above ...
-* @param mass        n weights for positions.
-* @param mask        Vector with n element which describes if a position should be considered ('1') or not ('0').
-* @param translation Matrix which stores the translation.
-* @param rotation    Matrix which stores the rotation.
-* @param Vec         Reference input Vector.
-* @param toFitVec    Vector which is fit against Vec.
-* 
-* @return Return the calculated RMS value
-*/
+ * Fit (superimpose) position vectors (if necessary) with Kabsch algorithm
+ * (http://journals.iucr.org/a/issues/1976/05/00/a12999/a12999.pdf)
+ * and calculate RMS value for two given position vectors like in
+ * http://en.wikipedia.org/wiki/Root_mean_square_deviation_(bioinformatics.
+ *
+ * Changes to original code in ptraj of AmberTools(10.0):
+ * - changed meaning of 'mode' and 'fit' (more intuitivly)
+ * - input data are now only two vectors containing x, y, and z values
+ * - rotation and translation vectors are only needed if mode == 1 or mode == 2
+ *
+ * if fit == 0, dispersion is calculated, no fit will be done.
+ * if fit == 1 and mode == 0, rms deviation is calculated but no structure will move.
+ * if fit == 1 and mode == 1, rms deviation is calculated, Vec moves back, but toFitVec's centroid moved to (0,0,0),
+ *                         as original functionality. Alignment will be done in the calling function.
+ * if fit == 1 and mode == 2, rms deviation is calculated and toFitVec will align to Vec.
+ *
+ * @param n           Number of Positions (xyz) of each Vector.
+ * @param fit         True if position vectors should be fit.
+ * @param mode        See above ...
+ * @param mass        n weights for positions.
+ * @param mask        Vector with n element which describes if a position should be considered ('1') or not ('0').
+ * @param translation Matrix which stores the translation.
+ * @param rotation    Matrix which stores the rotation.
+ * @param Vec         Reference input Vector.
+ * @param toFitVec    Vector which is fit against Vec.
+ *
+ * @return Return the calculated RMS value
+ */
 
-float CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *mass, int *mask, 
-                   float *toFitVec, float *Vec, float rotation[3][3], float translation[3]);
+float CalculateRMS(unsigned int n, bool fit, unsigned int mode, float* mass, int* mask, float* toFitVec, float* Vec,
+    float rotation[3][3], float translation[3]);
 
 
 } /* end namespace protein */

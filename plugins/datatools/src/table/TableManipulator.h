@@ -31,13 +31,19 @@ public:
     static std::string defaultScript;
 
     /** Return module class name */
-    static const char* ClassName(void) { return ModuleName.c_str(); }
+    static const char* ClassName(void) {
+        return ModuleName.c_str();
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "manipulate table (copy) via a LUA script"; }
+    static const char* Description(void) {
+        return "manipulate table (copy) via a LUA script";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     TableManipulator(void);
@@ -68,7 +74,7 @@ protected:
     int setOutputColumnName(lua_State* L);
 
     /** (idx) get min, max of column idx */
-    int getInputColumnRange(lua_State *L);
+    int getInputColumnRange(lua_State* L);
 
     /** (idx, min, max) set min, max of column idx in output data */
     int setOutputColumnRange(lua_State* L);
@@ -82,7 +88,7 @@ protected:
     /** (row, col, value) sets value in that cell */
     int setCellValue(lua_State* L);
 
-    
+
 private:
     /** Data callback */
     bool processData(core::Call& c);
@@ -127,7 +133,7 @@ private:
 }; /* end class TableManipulator */
 
 } /* end namespace table */
-} // namespace table
 } // namespace datatools
+} // namespace megamol
 
 #endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED */

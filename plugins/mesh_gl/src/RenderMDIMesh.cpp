@@ -1,9 +1,9 @@
 /*
-* RenderMDIMesh.cpp
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
-* All rights reserved.
-*/
+ * RenderMDIMesh.cpp
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ */
 
 #include <array>
 #include <random>
@@ -21,10 +21,10 @@ using namespace megamol;
 using namespace megamol::mesh_gl;
 
 RenderMDIMesh::RenderMDIMesh()
-    : core_gl::view::Renderer3DModuleGL()
-    , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
-    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module")
-{
+        : core_gl::view::Renderer3DModuleGL()
+        , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
+        , m_framebuffer_slot("framebuffer",
+              "Connects the renderer to an (optional) framebuffer render target from the calling module") {
     this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
     this->MakeSlotAvailable(&this->m_render_task_callerSlot);
 
@@ -32,13 +32,11 @@ RenderMDIMesh::RenderMDIMesh()
     this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
-RenderMDIMesh::~RenderMDIMesh()
-{
+RenderMDIMesh::~RenderMDIMesh() {
     this->Release();
 }
 
-bool RenderMDIMesh::create()
-{
+bool RenderMDIMesh::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
         !ogl_ctx.isExtAvailable("GL_ARB_shader_draw_parameters") || !ogl_ctx.isVersionGEQ(4, 3))
@@ -131,8 +129,7 @@ bool RenderMDIMesh::create()
     return true;
 }
 
-void RenderMDIMesh::release()
-{
+void RenderMDIMesh::release() {
     m_per_frame_data.reset();
 }
 
@@ -165,19 +162,20 @@ bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
 bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
     megamol::core_gl::view::CallRender3DGL* cr = &call; //dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     // obtain camera information
     core::view::Camera cam = call.GetCamera();
     glm::mat4 view_mx = cam.getViewMatrix();
     glm::mat4 proj_mx = cam.getProjectionMatrix();
-    
+
     CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 
     if (task_call == NULL)
         return false;
 
-    if ((!(*task_call)(0)) )
+    if ((!(*task_call)(0)))
         return false;
 
     //megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
@@ -192,8 +190,7 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
         }
 
         // loop through "registered" render batches
-        for (auto const& render_task : rt_collection->getRenderTasks())
-        {
+        for (auto const& render_task : rt_collection->getRenderTasks()) {
             // Set GL states (otherwise bounding box or view cube rendering state is used)
             render_task->set_states();
 
@@ -213,11 +210,8 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
                 //TODO add generic patch vertex count to render tasks....
             }
 
-            glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(),
-                render_task->mesh->getIndexType(),
-                (GLvoid*)0,
-                render_task->draw_cnt,
-                0);
+            glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
+                (GLvoid*)0, render_task->draw_cnt, 0);
 
             //CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
             //command_buffer.cnt = 3;

@@ -1,6 +1,6 @@
-#include "stdafx.h"
 #include "mmcore/utility/LuaHostService.h"
 #include "mmcore/CoreInstance.h"
+#include "stdafx.h"
 #include "vislib/math/mathfunctions.h"
 
 //#define LRH_ANNOYING_DETAILS
@@ -13,11 +13,16 @@ unsigned int megamol::core::utility::LuaHostService::ID = 0;
 
 
 megamol::core::utility::LuaHostService::LuaHostService(core::CoreInstance& core)
-    : AbstractService(core), serverThread(), serverRunning(false), address("tcp://*:33333") {
+        : AbstractService(core)
+        , serverThread()
+        , serverRunning(false)
+        , address("tcp://*:33333") {
     // Intentionally empty
 }
 
-megamol::core::utility::LuaHostService::~LuaHostService() { assert(!this->IsEnabled()); }
+megamol::core::utility::LuaHostService::~LuaHostService() {
+    assert(!this->IsEnabled());
+}
 
 bool megamol::core::utility::LuaHostService::Initalize(bool& autoEnable) {
     using megamol::core::utility::log::Log;
@@ -117,15 +122,18 @@ void megamol::core::utility::LuaHostService::SetAddress(const std::string& ad) {
 bool megamol::core::utility::LuaHostService::enableImpl() {
     assert(serverRunning == false);
     serverThread = std::thread([&]() { this->serve(); });
-    while (!serverRunning) std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    while (!serverRunning)
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     return true;
 }
 
 bool megamol::core::utility::LuaHostService::disableImpl() {
     serverRunning = false;
-    if (serverThread.joinable()) serverThread.join();
+    if (serverThread.joinable())
+        serverThread.join();
     for (auto& x : this->pairThreads) {
-        if (x.joinable()) x.join();
+        if (x.joinable())
+            x.join();
     }
     return true;
 }
@@ -149,7 +157,8 @@ void megamol::core::utility::LuaHostService::serve() {
                 // no messages available ATM
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
-            if (!serverRunning) break;
+            if (!serverRunning)
+                break;
 
             std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
             std::string reply = makeAnswer(request_str);
@@ -159,14 +168,11 @@ void megamol::core::utility::LuaHostService::serve() {
     } catch (std::exception& error) {
         Log::DefaultLog.WriteError("Error on LRH Server: %s", error.what());
 
-    } catch (...) {
-        Log::DefaultLog.WriteError("Error on LRH Server: unknown exception");
-    }
+    } catch (...) { Log::DefaultLog.WriteError("Error on LRH Server: unknown exception"); }
 
     try {
         socket.close();
-    } catch (...) {
-    }
+    } catch (...) {}
     Log::DefaultLog.WriteInfo("LRH Server socket closed");
 }
 
@@ -187,12 +193,14 @@ void core::utility::LuaHostService::servePair() {
     try {
         while (serverRunning) {
             zmq::message_t request;
-            if (!socket.connected()) break;
+            if (!socket.connected())
+                break;
             while (serverRunning && !socket.recv(&request, ZMQ_DONTWAIT)) {
                 // no messages available ATM
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
-            if (!serverRunning) break;
+            if (!serverRunning)
+                break;
 
             std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
             std::string reply = makePairAnswer(request_str);
@@ -209,20 +217,18 @@ void core::utility::LuaHostService::servePair() {
     } catch (std::exception& error) {
         Log::DefaultLog.WriteError("Error on LRH Pair Server: %s", error.what());
 
-    } catch (...) {
-        Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception");
-    }
+    } catch (...) { Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception"); }
 
     try {
         socket.close();
-    } catch (...) {
-    }
+    } catch (...) {}
     Log::DefaultLog.WriteInfo("LRH Server socket closed");
 }
 
 std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string& req) {
 
-    if (req.empty()) return std::string("Null Command.");
+    if (req.empty())
+        return std::string("Null Command.");
 
     int port;
     this->lastPairPort.store(0);
@@ -239,7 +245,8 @@ std::string megamol::core::utility::LuaHostService::makeAnswer(const std::string
 }
 
 std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::string& req) const {
-    if (req.empty()) return std::string("Null Command.");
+    if (req.empty())
+        return std::string("Null Command.");
 
     std::string result;
 #ifdef LRH_ANNOYING_DETAILS

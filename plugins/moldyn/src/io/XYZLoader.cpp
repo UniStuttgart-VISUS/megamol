@@ -4,18 +4,18 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "XYZLoader.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/param/FilePathParam.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
+#include "vislib/StringTokeniser.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/TextFileReader.h"
-#include "vislib/StringTokeniser.h"
-#include "mmcore/CoreInstance.h"
-#include <map>
 #include <deque>
+#include <map>
 
 using namespace megamol;
 using namespace megamol::moldyn;
@@ -25,25 +25,33 @@ float io::XYZLoader::FileFormatAutoDetect(const unsigned char* data, SIZE_T data
     // idea: try to find a newline char in data and be happy if you only encounter numbers before
     for (SIZE_T i = 0; i < dataSize; ++i) {
         char c = static_cast<char>(data[i]);
-        if (c == '\n') return 0.3f; // could be
-        if (c == ' ') continue;
-        if (c == '\t') continue;
-        if (c == '\r') continue;
-        if (c >= '0' && c <= '9') continue;
+        if (c == '\n')
+            return 0.3f; // could be
+        if (c == ' ')
+            continue;
+        if (c == '\t')
+            continue;
+        if (c == '\r')
+            continue;
+        if (c >= '0' && c <= '9')
+            continue;
         break;
     }
     return 0.0f;
 }
 
-io::XYZLoader::XYZLoader() : core::Module(),
-        getDataSlot("getdata", "Access to the data"),
-        filenameSlot("filename", "Path to the XYZ file to load"),
-        hasCountLineSlot("hasCountLine", "If true, tries to load the number of atoms from the first line"),
-        hasCommentLineSlot("hasCommentLine", "If true, skips the second line"),
-        hasElementSymbolSlot("hasElementSymbol", "If true, expects an element symbol at each atom line"),
-        groupByElementSlot("groupByElements", "If true, groups atoms of each element in one list (may destroy order)"),
-        radiusSlot("radius", "The radius to be assumed for all atoms"),
-        hash(0), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), poss() {
+io::XYZLoader::XYZLoader()
+        : core::Module()
+        , getDataSlot("getdata", "Access to the data")
+        , filenameSlot("filename", "Path to the XYZ file to load")
+        , hasCountLineSlot("hasCountLine", "If true, tries to load the number of atoms from the first line")
+        , hasCommentLineSlot("hasCommentLine", "If true, skips the second line")
+        , hasElementSymbolSlot("hasElementSymbol", "If true, expects an element symbol at each atom line")
+        , groupByElementSlot("groupByElements", "If true, groups atoms of each element in one list (may destroy order)")
+        , radiusSlot("radius", "The radius to be assumed for all atoms")
+        , hash(0)
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , poss() {
 
     getDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetData", &XYZLoader::getDataCallback);
     getDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &XYZLoader::getExtentCallback);
@@ -66,7 +74,6 @@ io::XYZLoader::XYZLoader() : core::Module(),
 
     radiusSlot.SetParameter(new core::param::FloatParam(0.5));
     MakeSlotAvailable(&radiusSlot);
-
 }
 
 io::XYZLoader::~XYZLoader() {
@@ -83,8 +90,9 @@ void io::XYZLoader::release(void) {
 }
 
 bool io::XYZLoader::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == nullptr) return false;
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == nullptr)
+        return false;
     assertData();
 
     mpdc->SetDataHash(hash);
@@ -115,8 +123,9 @@ bool io::XYZLoader::getDataCallback(core::Call& caller) {
 }
 
 bool io::XYZLoader::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == nullptr) return false;
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == nullptr)
+        return false;
     assertData();
 
     mpdc->SetDataHash(hash);
@@ -138,11 +147,9 @@ void io::XYZLoader::clear(void) {
 }
 
 void io::XYZLoader::assertData(void) {
-    if (!filenameSlot.IsDirty()
-        && !hasCountLineSlot.IsDirty()
-        && !hasCommentLineSlot.IsDirty()
-        && !hasElementSymbolSlot.IsDirty()
-        && !groupByElementSlot.IsDirty()) return;
+    if (!filenameSlot.IsDirty() && !hasCountLineSlot.IsDirty() && !hasCommentLineSlot.IsDirty() &&
+        !hasElementSymbolSlot.IsDirty() && !groupByElementSlot.IsDirty())
+        return;
     filenameSlot.ResetDirty();
     hasCountLineSlot.ResetDirty();
     hasCommentLineSlot.ResetDirty();
@@ -170,7 +177,8 @@ void io::XYZLoader::assertData(void) {
         try {
             partCnt = static_cast<size_t>(vislib::CharTraitsA::ParseUInt64(l.PeekBuffer()));
         } catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to parse atom count from first line in \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "Unable to parse atom count from first line in \"%s\"",
                 filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         }
     }
@@ -183,8 +191,9 @@ void io::XYZLoader::assertData(void) {
     bool hasEl = hasElementSymbolSlot.Param<core::param::BoolParam>()->Value();
     bool grpEl = groupByElementSlot.Param<core::param::BoolParam>()->Value();
     bool warning = true;
-    if (!grpEl) poss.resize(1);
-    std::map<std::string, std::deque<float> > grpDat;
+    if (!grpEl)
+        poss.resize(1);
+    std::map<std::string, std::deque<float>> grpDat;
 
     while (reader.ReadLine(l)) {
         lineNum++;
@@ -192,17 +201,19 @@ void io::XYZLoader::assertData(void) {
         vislib::Array<vislib::StringA> parts(vislib::StringTokeniserA::Split(l, ' ', true));
         if (parts.Count() != (hasEl ? 4 : 3)) {
             if (warning) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
-                    filenameSlot.Param<core::param::FilePathParam>()->Value());
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "Problem parsing \"%s\":", filenameSlot.Param<core::param::FilePathParam>()->Value());
                 warning = false;
             }
         }
         if (parts.Count() < (hasEl ? 4 : 3)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Line %u has too few tokens; line will be ignored", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Line %u has too few tokens; line will be ignored", lineNum);
             continue;
         }
         if (parts.Count() > (hasEl ? 4 : 3)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Line %u has too many tokens; trailing tokens will be ignored", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "Line %u has too many tokens; trailing tokens will be ignored", lineNum);
         }
         std::string el = (hasEl && grpEl) ? parts[0].PeekBuffer() : "";
         int o = hasEl ? 1 : 0;
@@ -218,7 +229,8 @@ void io::XYZLoader::assertData(void) {
                     filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
                 warning = false;
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse coordinates at line %u: (%f, %f, %f); line will be ignored", lineNum, x, y, z);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Failed to parse coordinates at line %u: (%f, %f, %f); line will be ignored", lineNum, x, y, z);
             continue;
         }
 
@@ -234,27 +246,31 @@ void io::XYZLoader::assertData(void) {
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
         auto i = grpDat.begin()->second.begin();
-        float x = *i; ++i;
-        float y = *i; ++i;
+        float x = *i;
+        ++i;
+        float y = *i;
+        ++i;
         float z = *i;
         bbox.Set(x, y, z, x, y, z);
     }
 
     for (const auto& g : grpDat) {
         poss.push_back(std::vector<float>());
-        auto &p = poss.back();
+        auto& p = poss.back();
         p.clear();
         p.reserve(g.second.size());
         auto end = g.second.end();
         for (auto i = g.second.begin(); i != end;) {
-            float x = *i; ++i;
-            float y = *i; ++i;
-            float z = *i; ++i;
+            float x = *i;
+            ++i;
+            float y = *i;
+            ++i;
+            float z = *i;
+            ++i;
             bbox.GrowToPoint(x, y, z);
             p.push_back(x);
             p.push_back(y);
             p.push_back(z);
         }
     }
-
 }

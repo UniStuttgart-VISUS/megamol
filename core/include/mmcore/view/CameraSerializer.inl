@@ -8,7 +8,7 @@
 /*
  * megamol::core::view::CameraSerializer::serialize
  */
-template <size_t N>
+template<size_t N>
 std::string megamol::core::view::CameraSerializer::serialize(
     std::array<Camera, N> const& camVec, const std::array<bool, N>& validityFlags) const {
 
@@ -26,7 +26,7 @@ std::string megamol::core::view::CameraSerializer::serialize(
     return out.dump();
 }
 
-template <size_t N>
+template<size_t N>
 std::string megamol::core::view::CameraSerializer::serialize(
     std::array<std::pair<Camera, bool>, N> const& camVec) const {
 
@@ -46,7 +46,7 @@ std::string megamol::core::view::CameraSerializer::serialize(
 /*
  * megamol::core::view::CameraSerializer::deserialize
  */
-template <size_t N>
+template<size_t N>
 bool megamol::core::view::CameraSerializer::deserialize(
     std::array<Camera, N>& outCameras, std::array<bool, N>& outValidity, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
@@ -55,7 +55,8 @@ bool megamol::core::view::CameraSerializer::deserialize(
         return false;
     }
     if (obj.size() > N) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "The number of objects in the text is smaller than the array size");
         return false;
     }
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
@@ -75,7 +76,7 @@ bool megamol::core::view::CameraSerializer::deserialize(
 /*
  * megamol::core::view::CameraSerializer::deserialize
  */
-template <size_t N>
+template<size_t N>
 bool megamol::core::view::CameraSerializer::deserialize(
     std::array<std::pair<Camera, bool>, N>& outCameras, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
@@ -84,7 +85,8 @@ bool megamol::core::view::CameraSerializer::deserialize(
         return false;
     }
     if (obj.size() > N) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("The number of objects in the text is smaller than the array size");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "The number of objects in the text is smaller than the array size");
         return false;
     }
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {

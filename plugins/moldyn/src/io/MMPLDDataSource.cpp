@@ -5,17 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MMPLDDataSource.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 
 namespace megamol::moldyn::io {
 
@@ -33,8 +33,7 @@ namespace megamol::moldyn::io {
 /*
  * MMPLDDataSource::Frame::Frame
  */
-MMPLDDataSource::Frame::Frame(AnimDataModule& owner)
-        : AnimDataModule::Frame(owner), dat() {
+MMPLDDataSource::Frame::Frame(AnimDataModule& owner) : AnimDataModule::Frame(owner), dat() {
     // intentionally empty
 }
 
@@ -50,7 +49,7 @@ MMPLDDataSource::Frame::~Frame() {
 /*
  * MMPLDDataSource::Frame::LoadFrame
  */
-bool MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version) {
+bool MMPLDDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int idx, UINT64 size, unsigned int version) {
     this->frame = idx;
     this->fileVersion = version;
     this->dat.EnforceSize(static_cast<SIZE_T>(size));
@@ -61,7 +60,8 @@ bool MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx
 /*
  * MMPLDDataSource::Frame::SetData
  */
-void MMPLDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, vislib::math::Cuboid<float> const& bbox, bool overrideBBox) {
+void MMPLDDataSource::Frame::SetData(
+    geocalls::MultiParticleDataCall& call, vislib::math::Cuboid<float> const& bbox, bool overrideBBox) {
     if (this->dat.IsEmpty()) {
         call.SetParticleListCount(0);
         return;
@@ -79,34 +79,81 @@ void MMPLDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, visl
     p += sizeof(UINT32);
     call.SetParticleListCount(plc);
     for (UINT32 i = 0; i < plc; i++) {
-        geocalls::MultiParticleDataCall::Particles &pts = call.AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles& pts = call.AccessParticles(i);
 
-        UINT8 vrtType = *this->dat.AsAt<UINT8>(p); p += 1;
-        UINT8 colType = *this->dat.AsAt<UINT8>(p); p += 1;
+        UINT8 vrtType = *this->dat.AsAt<UINT8>(p);
+        p += 1;
+        UINT8 colType = *this->dat.AsAt<UINT8>(p);
+        p += 1;
         geocalls::MultiParticleDataCall::Particles::VertexDataType vrtDatType;
         geocalls::MultiParticleDataCall::Particles::ColourDataType colDatType;
         SIZE_T vrtSize = 0;
         SIZE_T colSize = 0;
 
         switch (vrtType) {
-            case 0: vrtSize = 0; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE; break;
-            case 1: vrtSize = 12; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ; break;
-            case 2: vrtSize = 16; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR; break;
-            case 3: vrtSize = 6; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ; break;
-            case 4: vrtSize = 24; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ; break;
-            default: vrtSize = 0; vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE; break;
+        case 0:
+            vrtSize = 0;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE;
+            break;
+        case 1:
+            vrtSize = 12;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ;
+            break;
+        case 2:
+            vrtSize = 16;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR;
+            break;
+        case 3:
+            vrtSize = 6;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ;
+            break;
+        case 4:
+            vrtSize = 24;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ;
+            break;
+        default:
+            vrtSize = 0;
+            vrtDatType = geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE;
+            break;
         }
         if (vrtType != 0) {
             switch (colType) {
-                case 0: colSize = 0; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_NONE; break;
-                case 1: colSize = 3; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB; break;
-                case 2: colSize = 4; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA; break;
-                case 3: colSize = 4; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I; break;
-                case 4: colSize = 12; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB; break;
-                case 5: colSize = 16; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA; break;
-                case 6: colSize = 8; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA; break;
-                case 7: colSize = 8; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I; break;
-                default: colSize = 0; colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_NONE; break;
+            case 0:
+                colSize = 0;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_NONE;
+                break;
+            case 1:
+                colSize = 3;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB;
+                break;
+            case 2:
+                colSize = 4;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA;
+                break;
+            case 3:
+                colSize = 4;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I;
+                break;
+            case 4:
+                colSize = 12;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB;
+                break;
+            case 5:
+                colSize = 16;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA;
+                break;
+            case 6:
+                colSize = 8;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA;
+                break;
+            case 7:
+                colSize = 8;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I;
+                break;
+            default:
+                colSize = 0;
+                colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_NONE;
+                break;
             }
         } else {
             colDatType = geocalls::MultiParticleDataCall::Particles::COLDATA_NONE;
@@ -115,29 +162,28 @@ void MMPLDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, visl
         unsigned int stride = static_cast<unsigned int>(vrtSize + colSize);
 
         if ((vrtType == 1) || (vrtType == 3) || (vrtType == 4)) {
-            pts.SetGlobalRadius(*this->dat.AsAt<float>(p)); p += 4;
+            pts.SetGlobalRadius(*this->dat.AsAt<float>(p));
+            p += 4;
         } else {
             pts.SetGlobalRadius(0.05f);
         }
 
         if (colType == 0) {
-            pts.SetGlobalColour(*this->dat.AsAt<UINT8>(p),
-                *this->dat.AsAt<UINT8>(p + 1),
-                *this->dat.AsAt<UINT8>(p + 2));
+            pts.SetGlobalColour(
+                *this->dat.AsAt<UINT8>(p), *this->dat.AsAt<UINT8>(p + 1), *this->dat.AsAt<UINT8>(p + 2));
             p += 4;
         } else {
             pts.SetGlobalColour(192, 192, 192);
             if (colType == 3 || colType == 7) {
-                pts.SetColourMapIndexValues(
-                    *this->dat.AsAt<float>(p),
-                    *this->dat.AsAt<float>(p + 4));
+                pts.SetColourMapIndexValues(*this->dat.AsAt<float>(p), *this->dat.AsAt<float>(p + 4));
                 p += 8;
             } else {
                 pts.SetColourMapIndexValues(0.0f, 1.0f);
             }
         }
 
-        pts.SetCount(*this->dat.AsAt<UINT64>(p)); p += 8;
+        pts.SetCount(*this->dat.AsAt<UINT64>(p));
+        p += 8;
 
         if (this->fileVersion >= 103) {
             auto const box = this->dat.AsAt<float>(p);
@@ -157,15 +203,18 @@ void MMPLDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, visl
 
         if (this->fileVersion == 101) {
             // TODO: who deletes this?
-            geocalls::SimpleSphericalParticles::ClusterInfos *ci = new geocalls::SimpleSphericalParticles::ClusterInfos();
-            ci->numClusters = *this->dat.AsAt<unsigned int>(p); p += sizeof(unsigned int);
-            ci->sizeofPlainData = *this->dat.AsAt<size_t>(p); p += sizeof(size_t);
+            geocalls::SimpleSphericalParticles::ClusterInfos* ci =
+                new geocalls::SimpleSphericalParticles::ClusterInfos();
+            ci->numClusters = *this->dat.AsAt<unsigned int>(p);
+            p += sizeof(unsigned int);
+            ci->sizeofPlainData = *this->dat.AsAt<size_t>(p);
+            p += sizeof(size_t);
             ci->plainData = (unsigned int*)malloc(ci->sizeofPlainData);
-            memcpy(ci->plainData, this->dat.At(p), ci->sizeofPlainData); p += ci->sizeofPlainData;
+            memcpy(ci->plainData, this->dat.At(p), ci->sizeofPlainData);
+            p += ci->sizeofPlainData;
             pts.SetClusterInfos(ci);
         }
     }
-
 }
 
 /*****************************************************************************/
@@ -174,14 +223,18 @@ void MMPLDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, visl
 /*
  * MMPLDDataSource::MMPLDDataSource
  */
-MMPLDDataSource::MMPLDDataSource(void) :AnimDataModule(),
-        filename("filename", "The path to the MMPLD file to load."),
-        limitMemorySlot("limitMemory", "Limits the memory cache size"),
-        limitMemorySizeSlot("limitMemorySize", "Specifies the size limit (in MegaBytes) of the memory cache"),
-        overrideBBoxSlot("overrideLocalBBox", "Override local bbox"),
-        getData("getdata", "Slot to request data from this data source."),
-        file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-        clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0) {
+MMPLDDataSource::MMPLDDataSource(void)
+        : AnimDataModule()
+        , filename("filename", "The path to the MMPLD file to load.")
+        , limitMemorySlot("limitMemory", "Limits the memory cache size")
+        , limitMemorySizeSlot("limitMemorySize", "Specifies the size limit (in MegaBytes) of the memory cache")
+        , overrideBBoxSlot("overrideLocalBBox", "Override local bbox")
+        , getData("getdata", "Slot to request data from this data source.")
+        , file(NULL)
+        , frameIdx(NULL)
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , data_hash(0) {
 
     this->filename.SetParameter(
         new core::param::FilePathParam("", core::param::FilePathParam::Flag_File_RestrictExtension, {"mmpld"}));
@@ -194,7 +247,7 @@ MMPLDDataSource::MMPLDDataSource(void) :AnimDataModule(),
 #else
         true
 #endif
-        );
+    );
     this->MakeSlotAvailable(&this->limitMemorySlot);
 
     this->limitMemorySizeSlot << new core::param::IntParam(2 * 1024, 1);
@@ -226,7 +279,7 @@ MMPLDDataSource::~MMPLDDataSource(void) {
  * MMPLDDataSource::constructFrame
  */
 core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<MMPLDDataSource*>(this));
+    Frame* f = new Frame(*const_cast<MMPLDDataSource*>(this));
     return f;
 }
 
@@ -242,11 +295,11 @@ bool MMPLDDataSource::create(void) {
 /*
  * MMPLDDataSource::loadFrame
  */
-void MMPLDDataSource::loadFrame(AnimDataModule::Frame *frame,
-        unsigned int idx) {
+void MMPLDDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int idx) {
     using megamol::core::utility::log::Log;
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == NULL)
+        return;
     if (this->file == NULL) {
         f->Clear();
         return;
@@ -269,14 +322,13 @@ void MMPLDDataSource::loadFrame(AnimDataModule::Frame *frame,
 void MMPLDDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
     }
     ARY_SAFE_DELETE(this->frameIdx);
 }
-
 
 
 /*
@@ -297,9 +349,9 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
-            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", 
+    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -309,15 +361,17 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-        SAFE_DELETE(this->file); \
-        this->setFrameCount(1); \
-        this->initFrameCache(1); \
-        this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f); \
-        this->clipbox = this->bbox; \
-        return true;
-#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-        _ERROR_OUT("Unable to read MMPLD file header"); \
+#define _ERROR_OUT(MSG)                                    \
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG);       \
+    SAFE_DELETE(this->file);                               \
+    this->setFrameCount(1);                                \
+    this->initFrameCache(1);                               \
+    this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f); \
+    this->clipbox = this->bbox;                            \
+    return true;
+#define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                        \
+    if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
+        _ERROR_OUT("Unable to read MMPLD file header");             \
     }
 
     char magicid[6];
@@ -356,9 +410,8 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
     if (this->limitMemorySlot.Param<core::param::BoolParam>()->Value()) {
-        mem = vislib::math::Min(mem, 
-            (UINT64)(this->limitMemorySizeSlot.Param<core::param::IntParam>()->Value())
-            * (UINT64)(1024u * 1024u));
+        mem = vislib::math::Min(
+            mem, (UINT64)(this->limitMemorySizeSlot.Param<core::param::IntParam>()->Value()) * (UINT64)(1024u * 1024u));
     }
     unsigned int cacheSize = static_cast<unsigned int>(mem / size);
 
@@ -367,8 +420,7 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
-        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-            CACHE_SIZE_MIN, cacheSize);
+        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
@@ -391,13 +443,15 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * MMPLDDataSource::getDataCallback
  */
 bool MMPLDDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
-    Frame *f = NULL;
+    Frame* f = NULL;
     if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID(), c2->IsFrameForced()));
-        if (f == NULL) return false;
+        f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID(), c2->IsFrameForced()));
+        if (f == NULL)
+            return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         c2->SetDataHash(this->data_hash);
@@ -413,7 +467,7 @@ bool MMPLDDataSource::getDataCallback(core::Call& caller) {
  * MMPLDDataSource::getExtentCallback
  */
 bool MMPLDDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(this->FrameCount());
@@ -426,4 +480,4 @@ bool MMPLDDataSource::getExtentCallback(core::Call& caller) {
 
     return false;
 }
-}
+} // namespace megamol::moldyn::io

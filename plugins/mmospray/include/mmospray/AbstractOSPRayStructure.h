@@ -5,13 +5,13 @@
  */
 #pragma once
 
-#include "mmospray/CallOSPRayStructure.h"
 #include "CallOSPRayTransformation.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/UniFlagCalls.h"
+#include "mmospray/CallOSPRayStructure.h"
 
 
 namespace megamol {
@@ -25,10 +25,18 @@ protected:
     /** Ctor. */
     AbstractOSPRayStructure();
 
-    virtual bool create() { return true; }
-    virtual void release() { this->Release(); }
-    virtual bool readData(megamol::core::Call& call) { return true; }
-    virtual bool getExtends(megamol::core::Call& call) { return true; }
+    virtual bool create() {
+        return true;
+    }
+    virtual void release() {
+        this->Release();
+    }
+    virtual bool readData(megamol::core::Call& call) {
+        return true;
+    }
+    virtual bool getExtends(megamol::core::Call& call) {
+        return true;
+    }
     bool getExtendsCallback(megamol::core::Call& call);
     bool getStructureCallback(core::Call& call);
     void processMaterial();

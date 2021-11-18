@@ -1,138 +1,130 @@
 /*
  * ReplacementRenderer.h
-*
-* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*/
+ *
+ * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
 
 #ifndef MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 #pragma once
 
 
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore/view/RendererModule.h"
-#include "mmcore/param/ParamSlot.h"
-#include "vislib/math/Cuboid.h"
-#include "mmcore_gl/ModuleGL.h"
 #include "cinematic/CinematicUtils.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/ModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
 namespace cinematic_gl {
 
-    /*
-     * Replacement rendering.
+/*
+ * Replacement rendering.
+ */
+class ReplacementRenderer
+        : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>
-    {
-    public:
+    static const char* ClassName(void) {
+        return "ReplacementRenderer";
+    }
 
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Offers replacement rendering.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void)
-        {
-            return "ReplacementRenderer";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void)
-        {
-            return "Offers replacement rendering.";
-        }
+    /** Ctor. */
+    ReplacementRenderer(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void)
-        {
-            return true;
-        }
+    /** Dtor. */
+    virtual ~ReplacementRenderer(void);
 
-        /** Ctor. */
-        ReplacementRenderer(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /** Dtor. */
-        virtual ~ReplacementRenderer(void);
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-    protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * The Open GL Render callback.
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'release'.
-         */
-        virtual void release(void);
+private:
+    /**********************************************************************
+     * variables
+     **********************************************************************/
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
-
-        /**
-         * The Open GL Render callback.
-         *
-         * @param call The calling call.
-         * @return The return value of the function.
-         */
-        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
-
-    private:
-
-        /**********************************************************************
-         * variables
-         **********************************************************************/
-        
-        enum KeyAssignment {
-            KEY_ASSIGN_NONE,
-            KEY_ASSIGN_1,
-            KEY_ASSIGN_2,
-            KEY_ASSIGN_3,
-            KEY_ASSIGN_4,
-            KEY_ASSIGN_5,
-            KEY_ASSIGN_6,
-            KEY_ASSIGN_7,
-            KEY_ASSIGN_8,
-            KEY_ASSIGN_9,
-            KEY_ASSIGN_0
-        };
-
-        bool draw_replacement;
-        cinematic::CinematicUtils utils;
-        vislib::math::Cuboid<float> bbox;
-
-        /**********************************************************************
-        * parameters
-        **********************************************************************/
-
-        core::param::ParamSlot replacementRenderingParam;
-        core::param::ParamSlot toggleReplacementParam;
-        core::param::ParamSlot alphaParam;
-
+    enum KeyAssignment {
+        KEY_ASSIGN_NONE,
+        KEY_ASSIGN_1,
+        KEY_ASSIGN_2,
+        KEY_ASSIGN_3,
+        KEY_ASSIGN_4,
+        KEY_ASSIGN_5,
+        KEY_ASSIGN_6,
+        KEY_ASSIGN_7,
+        KEY_ASSIGN_8,
+        KEY_ASSIGN_9,
+        KEY_ASSIGN_0
     };
 
-} /* end namespace cinematic */
+    bool draw_replacement;
+    cinematic::CinematicUtils utils;
+    vislib::math::Cuboid<float> bbox;
+
+    /**********************************************************************
+     * parameters
+     **********************************************************************/
+
+    core::param::ParamSlot replacementRenderingParam;
+    core::param::ParamSlot toggleReplacementParam;
+    core::param::ParamSlot alphaParam;
+};
+
+} // namespace cinematic_gl
 } /* end namespace megamol */
 
 #endif // MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED

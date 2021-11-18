@@ -5,10 +5,10 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "AbstractTriMeshDataSource.h"
-#include "vislib/assert.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/assert.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -17,17 +17,25 @@ using namespace megamol::trisoup;
 /*
  * AbstractTriMeshDataSource::AbstractTriMeshDataSource
  */
-AbstractTriMeshDataSource::AbstractTriMeshDataSource(void) : core::Module(),
-        objs(), mats(), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
-        getDataSlot("getdata", "The slot publishing the loaded data"),
-        getLinesDataSlot("getLinesData", "The slot publishing loaded lines data") {
+AbstractTriMeshDataSource::AbstractTriMeshDataSource(void)
+        : core::Module()
+        , objs()
+        , mats()
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , datahash(0)
+        , getDataSlot("getdata", "The slot publishing the loaded data")
+        , getLinesDataSlot("getLinesData", "The slot publishing loaded lines data") {
 
-    this->getDataSlot.SetCallback(megamol::geocalls::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(megamol::geocalls::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback(
+        megamol::geocalls::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(
+        megamol::geocalls::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getLinesDataSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
-    this->getLinesDataSlot.SetCallback(megamol::geocalls::LinesDataCall::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
+    this->getLinesDataSlot.SetCallback(
+        megamol::geocalls::LinesDataCall::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
+    this->getLinesDataSlot.SetCallback(
+        megamol::geocalls::LinesDataCall::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getLinesDataSlot);
 }
 
@@ -64,9 +72,10 @@ void AbstractTriMeshDataSource::release(void) {
  * AbstractTriMeshDataSource::getDataCallback
  */
 bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
-    megamol::geocalls::CallTriMeshData *ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData *>(&caller);
-    megamol::geocalls::LinesDataCall *ldc = dynamic_cast<megamol::geocalls::LinesDataCall *>(&caller);
-    if (ctmd == NULL && ldc == NULL) return false;
+    megamol::geocalls::CallTriMeshData* ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
+    megamol::geocalls::LinesDataCall* ldc = dynamic_cast<megamol::geocalls::LinesDataCall*>(&caller);
+    if (ctmd == NULL && ldc == NULL)
+        return false;
     this->assertData();
 
     if (ctmd != NULL) {
@@ -87,17 +96,20 @@ bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
  * AbstractTriMeshDataSource::getExtentCallback
  */
 bool AbstractTriMeshDataSource::getExtentCallback(core::Call& caller) {
-    megamol::geocalls::CallTriMeshData *ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData *>(&caller);
-    megamol::geocalls::LinesDataCall *ldc = dynamic_cast<megamol::geocalls::LinesDataCall *>(&caller);
-    if (ctmd == NULL && ldc == NULL) return false;
+    megamol::geocalls::CallTriMeshData* ctmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
+    megamol::geocalls::LinesDataCall* ldc = dynamic_cast<megamol::geocalls::LinesDataCall*>(&caller);
+    if (ctmd == NULL && ldc == NULL)
+        return false;
     this->assertData();
 
     if (ctmd != NULL) {
         ctmd->SetDataHash(this->datahash);
-        ctmd->SetExtent(1, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(), this->bbox.Top(), this->bbox.Front());
+        ctmd->SetExtent(1, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
+            this->bbox.Top(), this->bbox.Front());
     } else if (ldc != NULL) {
         ldc->SetDataHash(this->datahash);
-        ldc->SetExtent(1, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(), this->bbox.Top(), this->bbox.Front());
+        ldc->SetExtent(1, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
+            this->bbox.Top(), this->bbox.Front());
     }
 
     return true;

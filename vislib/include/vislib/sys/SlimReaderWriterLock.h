@@ -1,7 +1,7 @@
 /*
  * SlimReaderWriterLock.h
  *
- * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -29,87 +29,84 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * Implements a reader-writer lock which allows for multiple concurrent
+ * readers to lock the object or a single exclusive writer
+ *
+ * This lock is NOT reentrant !
+ * Re-entering the lock may result in a dead-lock but behaviour is
+ * undefined. It is not guaranteed to throw an exception!
+ *
+ * You must call the corresponding Unlock methods.
+ * Calling non-matching Unlock after a Lock (e. g. 'UnlockShared' after
+ * 'LockExclusive' results in undefined behaviour).
+ *
+ * Enumlation implementation by Glenn Slayden (glenn@glennslayden.com)
+ * http://www.glennslayden.com/code/win32/reader-writer-lock
+ */
+class SlimReaderWriterLock : public AbstractReaderWriterLock {
+
+public:
+    /** Ctor. */
+    SlimReaderWriterLock(void);
+
+    /** Dtor. */
+    virtual ~SlimReaderWriterLock(void);
+
     /**
-     * Implements a reader-writer lock which allows for multiple concurrent
-     * readers to lock the object or a single exclusive writer
-     *
-     * This lock is NOT reentrant !
-     * Re-entering the lock may result in a dead-lock but behaviour is
-     * undefined. It is not guaranteed to throw an exception!
-     *
-     * You must call the corresponding Unlock methods.
-     * Calling non-matching Unlock after a Lock (e. g. 'UnlockShared' after
-     * 'LockExclusive' results in undefined behaviour).
-     *
-     * Enumlation implementation by Glenn Slayden (glenn@glennslayden.com)
-     * http://www.glennslayden.com/code/win32/reader-writer-lock
+     * Aquires an exclusive lock
      */
-    class SlimReaderWriterLock : public AbstractReaderWriterLock {
+    virtual void LockExclusive(void);
 
-    public:
+    /**
+     * Aquires a shared lock
+     */
+    virtual void LockShared(void);
 
-        /** Ctor. */
-        SlimReaderWriterLock(void);
+    /**
+     * Release an exclusive lock
+     */
+    virtual void UnlockExclusive(void);
 
-        /** Dtor. */
-        virtual ~SlimReaderWriterLock(void);
+    /**
+     * Release a shared lock
+     */
+    virtual void UnlockShared(void);
 
-        /**
-         * Aquires an exclusive lock
-         */
-        virtual void LockExclusive(void);
+private:
+    /** Forbidden copy ctor. */
+    SlimReaderWriterLock(const SlimReaderWriterLock& src);
 
-        /**
-         * Aquires a shared lock
-         */
-        virtual void LockShared(void);
+    /** Forbidden assignment operator */
+    SlimReaderWriterLock& operator=(const SlimReaderWriterLock& rhs);
 
-        /**
-         * Release an exclusive lock
-         */
-        virtual void UnlockExclusive(void);
+    //#ifdef _WIN32
+    //#if 0
+    //        // use 'InitializeSRWLock' supported since Vista
+    //#else
+    // emulate with CriticalSection, Event, and Counter
 
-        /**
-         * Release a shared lock
-         */
-        virtual void UnlockShared(void);
+    /** The lock used for exclusive locking */
+    vislib::sys::CriticalSection exclusiveLock;
 
-    private:
+    /** The lock for the counter of shared locks */
+    vislib::sys::CriticalSection sharedCntLock;
 
-        /** Forbidden copy ctor. */
-        SlimReaderWriterLock(const SlimReaderWriterLock& src);
+    /** The counter of shared locks */
+    unsigned long sharedCnt;
 
-        /** Forbidden assignment operator */
-        SlimReaderWriterLock& operator=(const SlimReaderWriterLock& rhs);
+    /**
+     * Event to make the exclusive lock wait until all shared locks have
+     * returned
+     */
+    vislib::sys::Event exclusiveWait;
 
-//#ifdef _WIN32
-//#if 0
-//        // use 'InitializeSRWLock' supported since Vista
-//#else
-        // emulate with CriticalSection, Event, and Counter
+    //#endif
+    //#else /* _WIN32 */
+    //        // use 'pthread_rwlock_t'
+    //#endif /* _WIN32 */
+};
 
-        /** The lock used for exclusive locking */
-        vislib::sys::CriticalSection exclusiveLock;
-
-        /** The lock for the counter of shared locks */
-        vislib::sys::CriticalSection sharedCntLock;
-
-        /** The counter of shared locks */
-        unsigned long sharedCnt;
-
-        /**
-         * Event to make the exclusive lock wait until all shared locks have
-         * returned
-         */
-        vislib::sys::Event exclusiveWait;
-
-//#endif
-//#else /* _WIN32 */
-//        // use 'pthread_rwlock_t'
-//#endif /* _WIN32 */
-
-    };
-    
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -117,4 +114,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SLIMREADERWRITERLOCK_H_INCLUDED */
-

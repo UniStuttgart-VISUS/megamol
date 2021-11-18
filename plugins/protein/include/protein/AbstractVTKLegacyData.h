@@ -26,19 +26,28 @@ namespace protein {
 class AbstractVTKLegacyData {
 
 public:
-
     /** Enum describing the ways the data can be stored */
-    enum DataEncoding {ASCII = 0, BINARY};
+    enum DataEncoding { ASCII = 0, BINARY };
 
     /** Enum describing the possible data types */
-    enum DataType {BIT=0, UNSIGNED_CHAR, CHAR, UNSIGNED_SHORT, SHORT,
-        UNSIGNED_INT, INT, UNSIGNED_LONG, LONG, FLOAT, DOUBLE};
+    enum DataType {
+        BIT = 0,
+        UNSIGNED_CHAR,
+        CHAR,
+        UNSIGNED_SHORT,
+        SHORT,
+        UNSIGNED_INT,
+        INT,
+        UNSIGNED_LONG,
+        LONG,
+        FLOAT,
+        DOUBLE
+    };
 
     /** Enum describing the different geometry/topology the data can represent */
-    enum DataGeometry {STRUCTURED_POINTS = 0, STRUCTURED_GRID, UNSTRUCTURED_GRID,
-        POLYDATA, RECTILINEAR_GRID, FIELD};
+    enum DataGeometry { STRUCTURED_POINTS = 0, STRUCTURED_GRID, UNSTRUCTURED_GRID, POLYDATA, RECTILINEAR_GRID, FIELD };
 
-    enum DataAssociation {POINT_DATA=0, CELL_DATA};
+    enum DataAssociation { POINT_DATA = 0, CELL_DATA };
 
     /*
      * Nested class describing a data attribute array for either point data or
@@ -47,16 +56,13 @@ public:
     class AttributeArray {
 
     public:
-
         /** CTor */
-        AttributeArray() : data(NULL), nElements(0), nComponents(0),
-            allocated(0) {
-        }
+        AttributeArray() : data(NULL), nElements(0), nComponents(0), allocated(0) {}
 
         /** Dtor */
         ~AttributeArray() {
             if (this->data) {
-                delete[]this->data;
+                delete[] this->data;
             }
         }
 
@@ -66,14 +72,10 @@ public:
          * @param other The data object to be compared.
          * @return 'True' if both objects are the same
          */
-        bool operator==(const AttributeArray &other) const {
-            return ((this->data == other.data)||
-                    (this->nElements == other.nElements)||
-                     (this->nComponents == other.nComponents)||
-                     (this->type == other.type)||
-                     (this->name == other.name)||
-                     (this->allocated == other.allocated));
-
+        bool operator==(const AttributeArray& other) const {
+            return ((this->data == other.data) || (this->nElements == other.nElements) ||
+                    (this->nComponents == other.nComponents) || (this->type == other.type) ||
+                    (this->name == other.name) || (this->allocated == other.allocated));
         }
 
         /**
@@ -81,7 +83,7 @@ public:
          *
          * @return The pointer to the data, might be NULL
          */
-        const char *PeekData() const {
+        const char* PeekData() const {
             return this->data;
         }
 
@@ -99,24 +101,47 @@ public:
          *
          * @param
          */
-        void SetData(const char *data, size_t nElements, size_t nComponents,
-                DataType type, vislib::StringA name) {
+        void SetData(const char* data, size_t nElements, size_t nComponents, DataType type, vislib::StringA name) {
 
             // Compute the necessary amount of memory
             size_t nBitsPerElement;
             switch (type) {
-                case BIT :            nBitsPerElement = 1; break;
-                case UNSIGNED_CHAR :  nBitsPerElement = 8; break;
-                case CHAR :           nBitsPerElement = 8; break;
-                case UNSIGNED_SHORT : nBitsPerElement = 16; break;
-                case SHORT :          nBitsPerElement = 16; break;
-                case UNSIGNED_INT :   nBitsPerElement = 32; break;
-                case INT :            nBitsPerElement = 32; break;
-                case UNSIGNED_LONG :  nBitsPerElement = 64; break;
-                case LONG :           nBitsPerElement = 64; break;
-                case FLOAT :          nBitsPerElement = 32; break;
-                case DOUBLE :         nBitsPerElement = 64; break;
-                default :             nBitsPerElement = 8; break;
+            case BIT:
+                nBitsPerElement = 1;
+                break;
+            case UNSIGNED_CHAR:
+                nBitsPerElement = 8;
+                break;
+            case CHAR:
+                nBitsPerElement = 8;
+                break;
+            case UNSIGNED_SHORT:
+                nBitsPerElement = 16;
+                break;
+            case SHORT:
+                nBitsPerElement = 16;
+                break;
+            case UNSIGNED_INT:
+                nBitsPerElement = 32;
+                break;
+            case INT:
+                nBitsPerElement = 32;
+                break;
+            case UNSIGNED_LONG:
+                nBitsPerElement = 64;
+                break;
+            case LONG:
+                nBitsPerElement = 64;
+                break;
+            case FLOAT:
+                nBitsPerElement = 32;
+                break;
+            case DOUBLE:
+                nBitsPerElement = 64;
+                break;
+            default:
+                nBitsPerElement = 8;
+                break;
             }
             size_t memSize = (size_t)ceil(nElements * nComponents * nBitsPerElement / 8);
 
@@ -150,11 +175,9 @@ public:
         }
 
     protected:
-
     private:
-
         /// The data storage pointer
-        char *data;
+        char* data;
 
         /// The number of elements present in the data (with each element having
         /// 'nComponent' components)
@@ -181,18 +204,29 @@ public:
 
     /** TODO */
     static DataType GetDataTypeByString(vislib::StringA dataTypeStr) {
-        if (dataTypeStr == "bit") return BIT;
-        if (dataTypeStr == "unsigned_char") return UNSIGNED_CHAR;
-        if (dataTypeStr == "char") return CHAR;
-        if (dataTypeStr == "unsigned_short") return UNSIGNED_SHORT;
-        if (dataTypeStr == "short") return SHORT;
-        if (dataTypeStr == "unsigned_int") return UNSIGNED_INT;
-        if (dataTypeStr == "int") return INT;
-        if (dataTypeStr == "unsigned_long") return UNSIGNED_LONG;
-        if (dataTypeStr == "long") return LONG;
-        if (dataTypeStr == "float") return FLOAT;
-        if (dataTypeStr == "double") return DOUBLE;
-		return BIT; // TODO dirty hack to remove warnings, might change behaviour
+        if (dataTypeStr == "bit")
+            return BIT;
+        if (dataTypeStr == "unsigned_char")
+            return UNSIGNED_CHAR;
+        if (dataTypeStr == "char")
+            return CHAR;
+        if (dataTypeStr == "unsigned_short")
+            return UNSIGNED_SHORT;
+        if (dataTypeStr == "short")
+            return SHORT;
+        if (dataTypeStr == "unsigned_int")
+            return UNSIGNED_INT;
+        if (dataTypeStr == "int")
+            return INT;
+        if (dataTypeStr == "unsigned_long")
+            return UNSIGNED_LONG;
+        if (dataTypeStr == "long")
+            return LONG;
+        if (dataTypeStr == "float")
+            return FLOAT;
+        if (dataTypeStr == "double")
+            return DOUBLE;
+        return BIT; // TODO dirty hack to remove warnings, might change behaviour
     }
 
     /**
@@ -223,15 +257,12 @@ public:
     }
 
 protected:
-
 private:
-
     /// The way the data is stored
     DataEncoding dataEncoding;
 
     /// The geometry type the data is representing
     DataGeometry dataGeometry;
-
 };
 
 } // namespace protein

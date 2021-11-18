@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "moldyn/BrickStatsCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::moldyn;
@@ -7,15 +7,12 @@ using namespace megamol::moldyn;
 /*
  *	IntSelectionCall:IntSelectionCall
  */
-BrickStatsCall::BrickStatsCall(void) : bricks() {
-}
+BrickStatsCall::BrickStatsCall(void) : bricks() {}
 
 /*
  *	IntSelectionCall::~IntSelectionCall
  */
-BrickStatsCall::~BrickStatsCall(void) {
-    
-}
+BrickStatsCall::~BrickStatsCall(void) {}
 
 
 const SIZE_T BrickStatsCall::GetTypeSize() {

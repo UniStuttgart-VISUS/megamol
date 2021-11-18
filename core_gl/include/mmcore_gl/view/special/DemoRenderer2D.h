@@ -1,7 +1,7 @@
 /*
  * DemoRenderer2D.h
  *
- * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/ModuleAutoDescription.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "mmcore/view/MouseFlags.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 
 namespace megamol {
@@ -22,119 +22,115 @@ namespace view {
 namespace special {
 
 
+/**
+ * A simple 2d renderer which just creates a circle
+ */
+class DemoRenderer2D : public core_gl::view::Renderer2DModuleGL {
+public:
     /**
-     * A simple 2d renderer which just creates a circle
+     * The class name for the factory
+     *
+     * @return The class name
      */
-    class DemoRenderer2D : public core_gl::view::Renderer2DModuleGL {
-    public:
+    static const char* ClassName(void) {
+        return "DemoRenderer2D";
+    }
 
-        /**
-         * The class name for the factory
-         *
-         * @return The class name
-         */
-        static const char *ClassName(void) {
-            return "DemoRenderer2D";
-        }
+    /**
+     * A human-readable description string for the module
+     *
+     * @return The description string
+     */
+    static const char* Description(void) {
+        return "Demo 2D-Renderer";
+    }
 
-        /**
-         * A human-readable description string for the module
-         *
-         * @return The description string
-         */
-        static const char *Description(void) {
-            return "Demo 2D-Renderer";
-        }
+    /**
+     * Test if the module can be instanziated
+     *
+     * @return 'true'
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Test if the module can be instanziated
-         *
-         * @return 'true'
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * ctor
+     */
+    DemoRenderer2D();
 
-        /**
-         * ctor
-         */
-        DemoRenderer2D();
+    /**
+     * dtor
+     */
+    virtual ~DemoRenderer2D();
 
-        /**
-         * dtor
-         */
-        virtual ~DemoRenderer2D();
+protected:
+    /**
+     * Initializes the module directly after instanziation
+     *
+     * @return 'true' on success
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Sets the extents (animation and bounding box) into the call object
+     *
+     * @param call The incoming call
+     *
+     * @return 'true' on success
+     */
+    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
 
-        /**
-         * Initializes the module directly after instanziation
-         *
-         * @return 'true' on success
-         */
-        virtual bool create(void);
+    /**
+     * Renders the scene
+     *
+     * @param call The incoming call
+     *
+     * @return 'true' on success
+     */
+    virtual bool Render(core_gl::view::CallRender2DGL& call);
 
-        /**
-         * Sets the extents (animation and bounding box) into the call object
-         *
-         * @param call The incoming call
-         *
-         * @return 'true' on success
-         */
-        virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    /**
+     * Releases all resources of the module
+     */
+    virtual void release(void);
 
-        /**
-         * Renders the scene
-         *
-         * @param call The incoming call
-         *
-         * @return 'true' on success
-         */
-        virtual bool Render(core_gl::view::CallRender2DGL& call);
+    /**
+     * Callback for mouse events (move, press, and release)
+     *
+     * @param x The x coordinate of the mouse in world space
+     * @param y The y coordinate of the mouse in world space
+     * @param flags The mouse flags
+     */
+    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
-        /**
-         * Releases all resources of the module
-         */
-        virtual void release(void);
+private:
+    /** The mouse coordinate */
+    float mx, my;
 
-        /**
-         * Callback for mouse events (move, press, and release)
-         *
-         * @param x The x coordinate of the mouse in world space
-         * @param y The y coordinate of the mouse in world space
-         * @param flags The mouse flags
-         */
-        virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    /** The coordinates to draw the test line from */
+    float fromx, fromy;
 
-    private:
+    /** The coordinates to draw the test line to */
+    float tox, toy;
 
-        /** The mouse coordinate */
-        float mx, my;
-
-        /** The coordinates to draw the test line from */
-        float fromx, fromy;
-
-        /** The coordinates to draw the test line to */
-        float tox, toy;
-
-        /** Flag if the test line is being spanned */
-        bool drag;
-
-    };
+    /** Flag if the test line is being spanned */
+    bool drag;
+};
 
 
 } /* end namespace special */
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED */

@@ -24,7 +24,9 @@ using namespace megamol::protein_gl;
  * SolPathRenderer::SolPathRenderer
  */
 SolPathRenderer::SolPathRenderer(void)
-        : core_gl::view::Renderer3DModuleGL(), getdataslot("getdata", "Fetches data"), pathlineShader() {
+        : core_gl::view::Renderer3DModuleGL()
+        , getdataslot("getdata", "Fetches data")
+        , pathlineShader() {
 
     this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall>>();
     this->MakeSlotAvailable(&this->getdataslot);

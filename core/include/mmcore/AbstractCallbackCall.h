@@ -12,45 +12,43 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Call transporting a callback for writing data.
+ *
+ * @author Alexander Straub
+ */
+template<typename FunctionT>
+class AbstractCallbackCall : public Call {
+
+public:
     /**
-    * Call transporting a callback for writing data.
-    *
-    * @author Alexander Straub
-    */
-    template <typename FunctionT>
-    class AbstractCallbackCall : public Call {
+     * Set the callback
+     *
+     * @param Callback New callback
+     */
+    void SetCallback(FunctionT callback) {
+        this->callback = callback;
+    }
 
-    public:
-        /**
-        * Set the callback
-        *
-        * @param Callback New callback
-        */
-        void SetCallback(FunctionT callback)
-        {
-            this->callback = callback;
-        }
+    /**
+     * Get the stored callback
+     *
+     * @return Callback
+     */
+    FunctionT GetCallback() const {
+        return this->callback;
+    }
 
-        /**
-        * Get the stored callback
-        *
-        * @return Callback
-        */
-        FunctionT GetCallback() const
-        {
-            return this->callback;
-        }
+protected:
+    /**
+     * Constructor
+     */
+    AbstractCallbackCall() {}
 
-    protected:
-        /**
-        * Constructor
-        */
-        AbstractCallbackCall() {}
+private:
+    /** Store callback */
+    FunctionT callback;
+};
 
-    private:
-        /** Store callback */
-        FunctionT callback;
-    };
-
-}
-}
+} // namespace core
+} // namespace megamol

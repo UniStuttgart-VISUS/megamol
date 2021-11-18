@@ -11,125 +11,122 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "geometry_calls/MultiParticleDataCall.h"
-#include <cstdint>
 #include "vislib/RawStorage.h"
+#include <cstdint>
 
 
 namespace megamol {
 namespace datatools {
 
 
+/**
+ * Particle data generator
+ */
+class ParticleBoxGeneratorDataSource : public core::Module {
+public:
     /**
-     * Particle data generator
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-	class ParticleBoxGeneratorDataSource : public core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "ParticleBoxGeneratorDataSource";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "ParticleBoxGeneratorDataSource";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Simple particle data generator filling a box";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Simple particle data generator filling a box";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    ParticleBoxGeneratorDataSource(void);
 
-        /** Ctor. */
-		ParticleBoxGeneratorDataSource(void);
+    /** Dtor. */
+    virtual ~ParticleBoxGeneratorDataSource(void);
 
-        /** Dtor. */
-		virtual ~ParticleBoxGeneratorDataSource(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    typedef geocalls::SimpleSphericalParticles Particles;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    bool reseed(core::param::ParamSlot& p);
 
-    private:
-		typedef geocalls::SimpleSphericalParticles Particles;
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-		bool reseed(core::param::ParamSlot& p);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
+    void clear(void);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+    /**
+     * Ensures that the data file is loaded into memory, if possible
+     */
+    void assertData(void);
 
-		void clear(void);
+    core::CalleeSlot dataSlot;
 
-        /**
-         * Ensures that the data file is loaded into memory, if possible
-         */
-        void assertData(void);
+    core::param::ParamSlot randomSeedSlot;
+    core::param::ParamSlot randomReseedSlot;
+    core::param::ParamSlot particleCountSlot;
+    core::param::ParamSlot radiusPerParticleSlot;
+    core::param::ParamSlot colorDataSlot;
+    core::param::ParamSlot interleavePosAndColorSlot;
+    core::param::ParamSlot radiusScaleSlot;
+    core::param::ParamSlot positionNoiseSlot;
 
-		core::CalleeSlot dataSlot;
+    size_t dataHash;
 
-		core::param::ParamSlot randomSeedSlot;
-		core::param::ParamSlot randomReseedSlot;
-        core::param::ParamSlot particleCountSlot;
-		core::param::ParamSlot radiusPerParticleSlot;
-		core::param::ParamSlot colorDataSlot;
-		core::param::ParamSlot interleavePosAndColorSlot;
-		core::param::ParamSlot radiusScaleSlot;
-		core::param::ParamSlot positionNoiseSlot;
-
-		size_t dataHash;
-
-		uint64_t cnt;
-		vislib::RawStorage data;
-		float rad;
-		Particles::VertexDataType vdt;
-		void *vdp;
-		unsigned int vds;
-		Particles::ColourDataType cdt;
-		void *cdp;
-		unsigned int cds;
-
-    };
+    uint64_t cnt;
+    vislib::RawStorage data;
+    float rad;
+    Particles::VertexDataType vdt;
+    void* vdp;
+    unsigned int vds;
+    Particles::ColourDataType cdt;
+    void* cdp;
+    unsigned int cds;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

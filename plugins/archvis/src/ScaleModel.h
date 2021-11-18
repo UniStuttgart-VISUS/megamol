@@ -29,9 +29,7 @@ public:
 
     ScaleModel() {}
 
-    ScaleModel(
-        std::vector<Vec3> node_positions,
-        std::vector<std::tuple<int, int, int, int, int>> elements,
+    ScaleModel(std::vector<Vec3> node_positions, std::vector<std::tuple<int, int, int, int, int>> elements,
         std::vector<int> input_elements);
 
     void setModelTransform(Mat4x4 transform);
@@ -89,13 +87,20 @@ private:
         virtual void setForce(float force) = 0;
     };
 
-    template <typename N, typename F> struct ElementModel : ElementConcept {
+    template<typename N, typename F>
+    struct ElementModel : ElementConcept {
         ElementModel(ElementType type, N node_indices, F forces)
-            : m_type(type), m_node_indices(node_indices), m_forces(forces) {}
+                : m_type(type)
+                , m_node_indices(node_indices)
+                , m_forces(forces) {}
 
-        ElementConcept* clone() const { return new ElementModel(m_type, m_node_indices, m_forces); }
+        ElementConcept* clone() const {
+            return new ElementModel(m_type, m_node_indices, m_forces);
+        }
 
-        ElementType getType() const { return m_type; }
+        ElementType getType() const {
+            return m_type;
+        }
 
         Mat4x4 computeTransform(
             std::vector<Vec3> const& node_positions, std::vector<Vec3> const& node_displacements) const {
@@ -106,9 +111,13 @@ private:
             return computeElementCenter(m_node_indices, node_positions, node_displacements);
         }
 
-        float getForce() const { return m_forces; }
+        float getForce() const {
+            return m_forces;
+        }
 
-        void setForce(float force) { m_forces = force; }
+        void setForce(float force) {
+            m_forces = force;
+        }
 
         ElementType m_type;
         N m_node_indices;
@@ -117,21 +126,25 @@ private:
 
     class Element {
     public:
-        template <typename N, typename F>
+        template<typename N, typename F>
         Element(ElementType type, N node_indices, F forces)
-            : m_element(new ElementModel<N, F>(type, node_indices, forces)) {}
+                : m_element(new ElementModel<N, F>(type, node_indices, forces)) {}
 
         Element() : m_element(nullptr){};
 
         ~Element() {
-            if (m_element != nullptr) delete m_element;
+            if (m_element != nullptr)
+                delete m_element;
         }
 
         Element(Element const& other) : m_element(nullptr) {
-            if (other.m_element != nullptr) m_element = other.m_element->clone();
+            if (other.m_element != nullptr)
+                m_element = other.m_element->clone();
         }
 
-        Element(Element&& other) : Element() { std::swap(m_element, other.m_element); }
+        Element(Element&& other) : Element() {
+            std::swap(m_element, other.m_element);
+        }
 
         Element& operator=(Element const& rhs) {
             delete m_element;
@@ -145,7 +158,9 @@ private:
 
         Element& operator=(Element&& other) = delete;
 
-        ElementType getType() { return m_element->getType(); }
+        ElementType getType() {
+            return m_element->getType();
+        }
 
         Mat4x4 computeTransform(std::vector<Vec3> const& node_positions, std::vector<Vec3> const& node_displacements) {
             return m_element->computeTransform(node_positions, node_displacements);
@@ -155,9 +170,13 @@ private:
             return m_element->computeCenter(node_positions, node_displacements);
         }
 
-        float getForce() { return m_element->getForce(); }
+        float getForce() {
+            return m_element->getForce();
+        }
 
-        void setForce(float force) { m_element->setForce(force); }
+        void setForce(float force) {
+            m_element->setForce(force);
+        }
 
     private:
         ElementConcept* m_element;
@@ -171,7 +190,7 @@ private:
     std::vector<int> m_input_elements;
 
     //TODO create "global" collections of time dependent data and history of dynamically updated values
-    std::vector<Vec3>  m_node_displacements;
+    std::vector<Vec3> m_node_displacements;
     std::vector<float> m_element_forces;
 };
 

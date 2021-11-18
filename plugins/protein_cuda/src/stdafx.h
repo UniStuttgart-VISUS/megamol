@@ -1,7 +1,7 @@
 /*
  * stdafx.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -30,16 +30,16 @@
 #include <pthread.h>
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
 //#define MMXML_CHAR char
 
 #endif /* _WIN32 */
 
-#include <stdlib.h>
-#include "vislib/types.h"
 #include "vislib/String.h"
+#include "vislib/types.h"
+#include <stdlib.h>
 
 //typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 

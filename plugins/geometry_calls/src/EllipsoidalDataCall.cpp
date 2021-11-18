@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
+#include "stdafx.h"
 
 namespace megamol::geocalls {
 
@@ -16,8 +16,11 @@ namespace megamol::geocalls {
  * EllipsoidalParticles
  */
 EllipsoidalParticles::EllipsoidalParticles(void)
-        : SimpleSphericalParticles(), quatPtr(NULL), quatStride(0),
-        radPtr(NULL), radStride(0) {
+        : SimpleSphericalParticles()
+        , quatPtr(NULL)
+        , quatStride(0)
+        , radPtr(NULL)
+        , radStride(0) {
     // intentionally empty
 }
 
@@ -25,8 +28,7 @@ EllipsoidalParticles::EllipsoidalParticles(void)
 /*
  * EllipsoidalParticles
  */
-EllipsoidalParticles::EllipsoidalParticles(
-    const EllipsoidalParticles& src) {
+EllipsoidalParticles::EllipsoidalParticles(const EllipsoidalParticles& src) {
     *this = src;
 }
 
@@ -36,15 +38,14 @@ EllipsoidalParticles::EllipsoidalParticles(
  */
 EllipsoidalParticles::~EllipsoidalParticles(void) {
     this->quatPtr = NULL; // DO NOT DELETE
-    this->radPtr = NULL; // DO NOT DELETE
+    this->radPtr = NULL;  // DO NOT DELETE
 }
 
 
 /*
  * operator=
  */
-EllipsoidalParticles& EllipsoidalParticles::operator=(
-const EllipsoidalParticles& rhs) {
+EllipsoidalParticles& EllipsoidalParticles::operator=(const EllipsoidalParticles& rhs) {
     SimpleSphericalParticles::operator=(rhs);
     this->quatPtr = rhs.quatPtr;
     this->quatStride = rhs.quatStride;
@@ -57,14 +58,9 @@ const EllipsoidalParticles& rhs) {
 /*
  * operator==
  */
-bool EllipsoidalParticles::operator==(
-    const EllipsoidalParticles& rhs) const {
-    return SimpleSphericalParticles::operator==(rhs)
-        && (this->quatPtr == rhs.quatPtr)
-        && (this->quatStride == rhs.quatStride)
-        && (this->radPtr == rhs.radPtr)
-        && (this->radStride == rhs.radStride)
-        ;
+bool EllipsoidalParticles::operator==(const EllipsoidalParticles& rhs) const {
+    return SimpleSphericalParticles::operator==(rhs) && (this->quatPtr == rhs.quatPtr) &&
+           (this->quatStride == rhs.quatStride) && (this->radPtr == rhs.radPtr) && (this->radStride == rhs.radStride);
 }
 
 /****************************************************************************/
@@ -75,8 +71,7 @@ const unsigned int EllipsoidalParticleDataCall::CallForGetExtents = 1;
 /*
  * EllipsoidalParticleDataCall
  */
-EllipsoidalParticleDataCall::EllipsoidalParticleDataCall(void)
-        : AbstractParticleDataCall<EllipsoidalParticles>() {
+EllipsoidalParticleDataCall::EllipsoidalParticleDataCall(void) : AbstractParticleDataCall<EllipsoidalParticles>() {
     // Intentionally empty
 }
 
@@ -92,10 +87,9 @@ EllipsoidalParticleDataCall::~EllipsoidalParticleDataCall(void) {
 /*
  * operator=
  */
-EllipsoidalParticleDataCall& EllipsoidalParticleDataCall::operator=(
-        const EllipsoidalParticleDataCall& rhs) {
-    AbstractParticleDataCall<EllipsoidalParticles>::operator =(rhs);
+EllipsoidalParticleDataCall& EllipsoidalParticleDataCall::operator=(const EllipsoidalParticleDataCall& rhs) {
+    AbstractParticleDataCall<EllipsoidalParticles>::operator=(rhs);
     return *this;
 }
 
-}
+} // namespace megamol::geocalls

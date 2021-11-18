@@ -8,10 +8,10 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNSCALER_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNSCALER_H_INCLUDED
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -34,7 +34,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char *ClassName(void) {
+    static inline const char* ClassName(void) {
         return ModuleName.c_str();
     }
 
@@ -43,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char *Description(void) {
+    static inline const char* Description(void) {
         return "Scales specified table columns";
     }
 
@@ -61,6 +61,7 @@ public:
 
     /** dtor */
     virtual ~TableColumnScaler(void);
+
 protected:
     /**
      * Implementation of 'Create'.
@@ -73,10 +74,11 @@ protected:
      * Implementation of 'Release'.
      */
     virtual void release(void);
-private:
-    bool processData(core::Call &c);
 
-    bool getExtent(core::Call &c);
+private:
+    bool processData(core::Call& c);
+
+    bool getExtent(core::Call& c);
 
     core::CalleeSlot dataOutSlot;
 

@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "PoreMeshProcessor.h"
+#include "stdafx.h"
 //#include "vislib/Array.h"
 #include "mmcore/utility/log/Log.h"
 //#include "vislib/math/Point.h"
@@ -21,8 +21,7 @@ namespace demos_gl {
 /*
  * PoreMeshProcessor::PoreMeshProcessor
  */
-PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(),
-inputBuffers(NULL), debugoutschlupp(NULL) {
+PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(), inputBuffers(NULL), debugoutschlupp(NULL) {
     // TODO: Implement
 }
 
@@ -38,7 +37,7 @@ PoreMeshProcessor::~PoreMeshProcessor(void) {
 /*
  * PoreMeshProcessor::Run
  */
-DWORD PoreMeshProcessor::Run(void *userData) {
+DWORD PoreMeshProcessor::Run(void* userData) {
     using megamol::core::utility::log::Log;
     ASSERT(this->inputBuffers != NULL);
     //ASSERT(this->outputBuffers != NULL);
@@ -49,7 +48,7 @@ DWORD PoreMeshProcessor::Run(void *userData) {
 
     while (true) {
         vislib::sys::Thread::Sleep(1);
-        LoopBuffer *inbuffer = this->inputBuffers->GetFilledBuffer(true);
+        LoopBuffer* inbuffer = this->inputBuffers->GetFilledBuffer(true);
         if (inbuffer == NULL) {
             if (this->inputBuffers->IsEndOfData()) {
                 // TODO: Fixme
@@ -64,7 +63,7 @@ DWORD PoreMeshProcessor::Run(void *userData) {
         //}
         //outbuffer->Clear();
 
-        this->workOnBuffer(*inbuffer/*, *outbuffer*/);
+        this->workOnBuffer(*inbuffer /*, *outbuffer*/);
 
         this->inputBuffers->BufferConsumed(inbuffer);
         //this->outputBuffers->BufferFilled(outbuffer);
@@ -79,7 +78,8 @@ DWORD PoreMeshProcessor::Run(void *userData) {
  * PoreMeshProcessor::Terminate
  */
 bool PoreMeshProcessor::Terminate(void) {
-    if (this->inputBuffers != NULL) this->inputBuffers->AbortClose();
+    if (this->inputBuffers != NULL)
+        this->inputBuffers->AbortClose();
     //if (this->outputBuffers != NULL) this->outputBuffers->AbortClose();
     return true;
 }
@@ -88,11 +88,11 @@ bool PoreMeshProcessor::Terminate(void) {
 /*
  * PoreMeshProcessor::workOnBuffer
  */
-void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer/*, LoopBuffer& outBuffer*/) {
+void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer /*, LoopBuffer& outBuffer*/) {
 
     // TODO: Implement something more useful
 
-    SliceLoops *sd = new SliceLoops();
+    SliceLoops* sd = new SliceLoops();
     sd->cnt = 0;
     sd->data = NULL;
     sd->next = NULL;
@@ -107,8 +107,8 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer/*, LoopBuffer& outBuffer
         for (SIZE_T j = 0; j < len; j++) {
             vislib::math::ShallowPoint<float, 3> v1(sd->data + (sd->cnt * 3));
             vislib::math::ShallowPoint<float, 3> v2(sd->data + ((sd->cnt + 1) * 3));
-            const vislib::math::Point<int, 2> &p1(buffer.Loops()[i].Vertex(j));
-            const vislib::math::Point<int, 2> &p2(buffer.Loops()[i].Vertex((j + 1) % len));
+            const vislib::math::Point<int, 2>& p1(buffer.Loops()[i].Vertex(j));
+            const vislib::math::Point<int, 2>& p2(buffer.Loops()[i].Vertex((j + 1) % len));
             sd->cnt += 2;
 
             v1 = this->origin;
@@ -123,8 +123,9 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer/*, LoopBuffer& outBuffer
         }
     }
 
-    SliceLoops *l = this->debugoutschlupp;
-    while (l->next != NULL) l = l->next;
+    SliceLoops* l = this->debugoutschlupp;
+    while (l->next != NULL)
+        l = l->next;
     l->next = sd;
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Slice %u added to loop-debug-data\n", this->sliceNum);
@@ -132,5 +133,5 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer/*, LoopBuffer& outBuffer
     this->sliceNum++;
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

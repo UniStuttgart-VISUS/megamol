@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ADIOStoMultiParticle.h"
-#include "mmadios/CallADIOSData.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include <numeric>
 
 
@@ -17,9 +17,9 @@ namespace megamol {
 namespace adios {
 
 ADIOStoMultiParticle::ADIOStoMultiParticle(void)
-    : core::Module()
-    , mpSlot("mpSlot", "Slot to send multi particle data.")
-    , adiosSlot("adiosSlot", "Slot to request ADIOS IO") {
+        : core::Module()
+        , mpSlot("mpSlot", "Slot to send multi particle data.")
+        , adiosSlot("adiosSlot", "Slot to request ADIOS IO") {
 
     this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &ADIOStoMultiParticle::getDataCallback);
@@ -31,18 +31,24 @@ ADIOStoMultiParticle::ADIOStoMultiParticle(void)
     this->MakeSlotAvailable(&this->adiosSlot);
 }
 
-ADIOStoMultiParticle::~ADIOStoMultiParticle(void) { this->Release(); }
+ADIOStoMultiParticle::~ADIOStoMultiParticle(void) {
+    this->Release();
+}
 
-bool ADIOStoMultiParticle::create(void) { return true; }
+bool ADIOStoMultiParticle::create(void) {
+    return true;
+}
 
 void ADIOStoMultiParticle::release(void) {}
 
 bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     if (!(*cad)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetHeader");
@@ -335,8 +341,9 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 geocalls::SimpleSphericalParticles::ColorDataSize[colType],
             stride);
         if (cad->isInVars("list_box")) {
-            vislib::math::Cuboid<float> lbox(list_box[6 * k + 0], list_box[6 * k + 1], std::min(list_box[6 * k + 2], list_box[6 * k + 5]),
-                list_box[6 * k + 3], list_box[6 * k + 4], std::max(list_box[6 * k + 2],list_box[6 * k + 5]));
+            vislib::math::Cuboid<float> lbox(list_box[6 * k + 0], list_box[6 * k + 1],
+                std::min(list_box[6 * k + 2], list_box[6 * k + 5]), list_box[6 * k + 3], list_box[6 * k + 4],
+                std::max(list_box[6 * k + 2], list_box[6 * k + 5]));
             mpdc->AccessParticles(k).SetBBox(lbox);
         }
     }
@@ -351,12 +358,15 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 bool ADIOStoMultiParticle::getExtentCallback(core::Call& call) {
 
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
-    if (!this->getDataCallback(call)) return false;
+    if (!this->getDataCallback(call))
+        return false;
 
     return true;
 }

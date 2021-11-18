@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "LoopBuffer.h"
+#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -18,11 +18,13 @@ namespace demos_gl {
 /*
  * LoopBuffer::Loop::Loop
  */
-LoopBuffer::Loop::Loop(void) : area(0), bbox(0, 0, 0, 0),
-edgeVals(static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_CAPACITY), static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_INCREMENT)),
-enclosingLoop(NULL),
-vertices(static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_CAPACITY), static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_INCREMENT)),
-whiteArxels(0) {
+LoopBuffer::Loop::Loop(void)
+        : area(0)
+        , bbox(0, 0, 0, 0)
+        , edgeVals(static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_CAPACITY), static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_INCREMENT))
+        , enclosingLoop(NULL)
+        , vertices(static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_CAPACITY), static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_INCREMENT))
+        , whiteArxels(0) {
     // intentionally empty
 }
 
@@ -30,9 +32,12 @@ whiteArxels(0) {
 /*
  * LoopBuffer::Loop::Loop
  */
-LoopBuffer::Loop::Loop(const LoopBuffer::Loop& src) : area(src.area),
-bbox(src.bbox), edgeVals(src.edgeVals), enclosingLoop(src.enclosingLoop),
-vertices(src.vertices) {
+LoopBuffer::Loop::Loop(const LoopBuffer::Loop& src)
+        : area(src.area)
+        , bbox(src.bbox)
+        , edgeVals(src.edgeVals)
+        , enclosingLoop(src.enclosingLoop)
+        , vertices(src.vertices) {
     // intentionally empty
 }
 
@@ -51,9 +56,9 @@ LoopBuffer::Loop::~Loop(void) {
 void LoopBuffer::Loop::AddVertex(const vislib::math::Point<int, 2>& vertex, const ArxelBuffer::ArxelType& edge) {
     if (this->vertices.IsEmpty()) {
         this->bbox.Set(vertex.X(), vertex.Y(), vertex.X(), vertex.Y());
-    }
-    else {
-        if (this->vertices.Last() == vertex) return; // do not add edges of length zero
+    } else {
+        if (this->vertices.Last() == vertex)
+            return; // do not add edges of length zero
         this->bbox.GrowToPoint(vertex);
     }
     this->vertices.Add(vertex);
@@ -80,20 +85,21 @@ bool LoopBuffer::Loop::Contains(const vislib::math::Point<int, 2>& point) const 
     int lix = point.X();
     int liy = point.Y();
 
-    if (!this->bbox.Contains(point)) return false;
+    if (!this->bbox.Contains(point))
+        return false;
 
     for (SIZE_T k = 0; k < this->Length(); k++) {
-        const vislib::math::Point<int, 2> &p = this->vertices[k];
-        const vislib::math::Point<int, 2> &pn = this->vertices[(k + 1) % this->vertices.Count()];
+        const vislib::math::Point<int, 2>& p = this->vertices[k];
+        const vislib::math::Point<int, 2>& pn = this->vertices[(k + 1) % this->vertices.Count()];
         int yMin = vislib::math::Min(p.Y(), pn.Y());
         int yMax = vislib::math::Max(p.Y(), pn.Y()); // no part of edge
 
-        if ((yMin > liy) || (yMax <= liy)) continue;
+        if ((yMin > liy) || (yMax <= liy))
+            continue;
 
-        int x = static_cast<int>(static_cast<float>(p.X())
-            + static_cast<float>(pn.X() - p.X())
-            * static_cast<float>(liy - p.Y())
-            / static_cast<float>(pn.Y() - p.Y()));
+        int x = static_cast<int>(static_cast<float>(p.X()) + static_cast<float>(pn.X() - p.X()) *
+                                                                 static_cast<float>(liy - p.Y()) /
+                                                                 static_cast<float>(pn.Y() - p.Y()));
 
         if (x < lix) {
             leftEdgeCnt++;
@@ -108,11 +114,8 @@ bool LoopBuffer::Loop::Contains(const vislib::math::Point<int, 2>& point) const 
  * LoopBuffer::Loop::operator==
  */
 bool LoopBuffer::Loop::operator==(const LoopBuffer::Loop& rhs) const {
-    return (this->area == rhs.area)
-        && (this->bbox == rhs.bbox)
-        && (this->edgeVals == rhs.edgeVals)
-        && (this->enclosingLoop == rhs.enclosingLoop)
-        && (this->vertices == rhs.vertices);
+    return (this->area == rhs.area) && (this->bbox == rhs.bbox) && (this->edgeVals == rhs.edgeVals) &&
+           (this->enclosingLoop == rhs.enclosingLoop) && (this->vertices == rhs.vertices);
 }
 
 
@@ -183,8 +186,7 @@ void LoopBuffer::NewLoopComplete(void) {
     if (emptyLoop) {
         this->loops.RemoveLast();
     }
-
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

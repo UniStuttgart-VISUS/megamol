@@ -1,31 +1,31 @@
 /*
  * Configuration.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
+#include "stdafx.h"
 
 #include "mmcore/api/MegaMolCore.h"
 
-#include <cstdlib>
-#include <new>
+#include "mmcore/utility/log/Console.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/NoSuchElementException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/UnsupportedOperationException.h"
 #include "vislib/Trace.h"
+#include "vislib/UTF8Encoder.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/sys/DirectoryIterator.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/log/Console.h"
-#include "vislib/UTF8Encoder.h"
-#include "vislib/NoSuchElementException.h"
-#include "vislib/sys/DirectoryIterator.h"
 #include "vislib/sys/sysfunctions.h"
+#include <cstdlib>
+#include <new>
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -39,8 +39,7 @@
 /*
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(void)
-        : name() {
+megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(void) : name() {
     // Intentionally empty
 }
 
@@ -49,7 +48,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(void)
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
 megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
-        const megamol::core::utility::Configuration::ConfigValueName& src) 
+    const megamol::core::utility::Configuration::ConfigValueName& src)
         : name(src.name) {
     // Intentionally empty
 }
@@ -58,8 +57,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
-        const char* name) : name(name) {
+megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(const char* name) : name(name) {
     // Intentionally empty
 }
 
@@ -67,8 +65,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
-        const wchar_t* name) : name(name) {
+megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(const wchar_t* name) : name(name) {
     // Intentionally empty
 }
 
@@ -76,8 +73,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
-        const vislib::StringA& name) : name(name) {
+megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(const vislib::StringA& name) : name(name) {
     // Intentionally empty
 }
 
@@ -85,8 +81,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
-        const vislib::StringW& name) : name(name) {
+megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(const vislib::StringW& name) : name(name) {
     // Intentionally empty
 }
 
@@ -94,8 +89,7 @@ megamol::core::utility::Configuration::ConfigValueName::ConfigValueName(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::~ConfigValueName
  */
-megamol::core::utility::Configuration::ConfigValueName::~ConfigValueName(
-        void) {
+megamol::core::utility::Configuration::ConfigValueName::~ConfigValueName(void) {
     // Intentionally empty
 }
 
@@ -105,7 +99,7 @@ megamol::core::utility::Configuration::ConfigValueName::~ConfigValueName(
  */
 megamol::core::utility::Configuration::ConfigValueName&
 megamol::core::utility::Configuration::ConfigValueName::operator=(
-        const megamol::core::utility::Configuration::ConfigValueName& src) {
+    const megamol::core::utility::Configuration::ConfigValueName& src) {
     this->name = src.name;
     return *this;
 }
@@ -115,8 +109,7 @@ megamol::core::utility::Configuration::ConfigValueName::operator=(
  * megamol::core::utility::Configuration::ConfigValueName::operator=
  */
 megamol::core::utility::Configuration::ConfigValueName&
-megamol::core::utility::Configuration::ConfigValueName::operator=(
-        const char* name) {
+megamol::core::utility::Configuration::ConfigValueName::operator=(const char* name) {
     this->name = name;
     return *this;
 }
@@ -126,19 +119,7 @@ megamol::core::utility::Configuration::ConfigValueName::operator=(
  * megamol::core::utility::Configuration::ConfigValueName::operator=
  */
 megamol::core::utility::Configuration::ConfigValueName&
-megamol::core::utility::Configuration::ConfigValueName::operator=(
-        const wchar_t* name) {
-    this->name = name;
-    return *this;
-}
-
-
-/*
- * megamol::core::utility::Configuration::ConfigValueName::operator=
- */
-megamol::core::utility::Configuration::ConfigValueName& 
-megamol::core::utility::Configuration::ConfigValueName::operator=(
-        const vislib::StringA& name) {
+megamol::core::utility::Configuration::ConfigValueName::operator=(const wchar_t* name) {
     this->name = name;
     return *this;
 }
@@ -148,8 +129,17 @@ megamol::core::utility::Configuration::ConfigValueName::operator=(
  * megamol::core::utility::Configuration::ConfigValueName::operator=
  */
 megamol::core::utility::Configuration::ConfigValueName&
-megamol::core::utility::Configuration::ConfigValueName::operator=(
-        const vislib::StringW& name) {
+megamol::core::utility::Configuration::ConfigValueName::operator=(const vislib::StringA& name) {
+    this->name = name;
+    return *this;
+}
+
+
+/*
+ * megamol::core::utility::Configuration::ConfigValueName::operator=
+ */
+megamol::core::utility::Configuration::ConfigValueName&
+megamol::core::utility::Configuration::ConfigValueName::operator=(const vislib::StringW& name) {
     this->name = name;
     return *this;
 }
@@ -159,8 +149,7 @@ megamol::core::utility::Configuration::ConfigValueName::operator=(
  * megamol::core::utility::Configuration::ConfigValueName::operator==
  */
 bool megamol::core::utility::Configuration::ConfigValueName::operator==(
-        const megamol::core::utility::Configuration::ConfigValueName& src)
-        const {
+    const megamol::core::utility::Configuration::ConfigValueName& src) const {
     return this->name.Equals(src.name, false);
 }
 
@@ -168,8 +157,7 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::operator==
  */
-bool megamol::core::utility::Configuration::ConfigValueName::operator==(
-        const char* name) const {
+bool megamol::core::utility::Configuration::ConfigValueName::operator==(const char* name) const {
     return this->name.Equals(vislib::StringW(name), false);
 }
 
@@ -177,8 +165,7 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::operator==
  */
-bool megamol::core::utility::Configuration::ConfigValueName::operator==(
-        const wchar_t* name) const {
+bool megamol::core::utility::Configuration::ConfigValueName::operator==(const wchar_t* name) const {
     return this->name.Equals(name, false);
 }
 
@@ -186,8 +173,7 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::operator==
  */
-bool megamol::core::utility::Configuration::ConfigValueName::operator==(
-        const vislib::StringA& name) const {
+bool megamol::core::utility::Configuration::ConfigValueName::operator==(const vislib::StringA& name) const {
     return this->name.Equals(vislib::StringW(name), false);
 }
 
@@ -195,8 +181,7 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(
 /*
  * megamol::core::utility::Configuration::ConfigValueName::operator==
  */
-bool megamol::core::utility::Configuration::ConfigValueName::operator==(
-        const vislib::StringW& name) const {
+bool megamol::core::utility::Configuration::ConfigValueName::operator==(const vislib::StringW& name) const {
     return this->name.Equals(name, false);
 }
 
@@ -209,7 +194,9 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(
  * megamol::core::utility::Configuration::InstanceRequest::InstanceRequest
  */
 megamol::core::utility::Configuration::InstanceRequest::InstanceRequest(void)
-        : ParamValueSetRequest(), id(), descname() {
+        : ParamValueSetRequest()
+        , id()
+        , descname() {
     // intentionally empty
 }
 
@@ -218,8 +205,10 @@ megamol::core::utility::Configuration::InstanceRequest::InstanceRequest(void)
  * megamol::core::utility::Configuration::InstanceRequest::InstanceRequest
  */
 megamol::core::utility::Configuration::InstanceRequest::InstanceRequest(
-        const megamol::core::utility::Configuration::InstanceRequest& src)
-        : ParamValueSetRequest(), id(), descname() {
+    const megamol::core::utility::Configuration::InstanceRequest& src)
+        : ParamValueSetRequest()
+        , id()
+        , descname() {
     *this = src;
 }
 
@@ -237,9 +226,10 @@ megamol::core::utility::Configuration::InstanceRequest::~InstanceRequest(void) {
  */
 megamol::core::utility::Configuration::InstanceRequest&
 megamol::core::utility::Configuration::InstanceRequest::operator=(
-        const megamol::core::utility::Configuration::InstanceRequest& rhs) {
-    if (&rhs == this) return *this;
-    ParamValueSetRequest::operator =(rhs);
+    const megamol::core::utility::Configuration::InstanceRequest& rhs) {
+    if (&rhs == this)
+        return *this;
+    ParamValueSetRequest::operator=(rhs);
     this->id = rhs.id;
     this->descname = rhs.descname;
     return *this;
@@ -250,11 +240,8 @@ megamol::core::utility::Configuration::InstanceRequest::operator=(
  * megamol::core::utility::Configuration::InstanceRequest::operator==
  */
 bool megamol::core::utility::Configuration::InstanceRequest::operator==(
-        const megamol::core::utility::Configuration::InstanceRequest& rhs)
-        const {
-    return ParamValueSetRequest::operator==(rhs)
-        && (this->id == rhs.id)
-        && (this->descname == rhs.descname);
+    const megamol::core::utility::Configuration::InstanceRequest& rhs) const {
+    return ParamValueSetRequest::operator==(rhs) && (this->id == rhs.id) && (this->descname == rhs.descname);
 }
 
 /*****************************************************************************/
@@ -281,10 +268,15 @@ bool megamol::core::utility::Configuration::logFilenameLocked = false;
 /*
  * megamol::core::utility::Configuration::Configuration(void)
  */
-megamol::core::utility::Configuration::Configuration(void) 
-        : cfgFileName(), criticalParserError(false), appDir(),
-        shaderDirs(), resourceDirs(), configValues(), instanceRequests(),
-        pluginLoadInfos() {
+megamol::core::utility::Configuration::Configuration(void)
+        : cfgFileName()
+        , criticalParserError(false)
+        , appDir()
+        , shaderDirs()
+        , resourceDirs()
+        , configValues()
+        , instanceRequests()
+        , pluginLoadInfos() {
     this->setDefaultValues();
 }
 
@@ -292,21 +284,17 @@ megamol::core::utility::Configuration::Configuration(void)
 /*
  * megamol::core::utility::Configuration::Configuration(void)
  */
-megamol::core::utility::Configuration::Configuration(
-        const Configuration& rhs) {
-    throw ::vislib::UnsupportedOperationException("Configuration",
-        __FILE__, __LINE__);
+megamol::core::utility::Configuration::Configuration(const Configuration& rhs) {
+    throw ::vislib::UnsupportedOperationException("Configuration", __FILE__, __LINE__);
 }
 
 
 /*
  * megamol::core::utility::Configuration::operator=
  */
-megamol::core::utility::Configuration&
-megamol::core::utility::Configuration::operator=(const Configuration& rhs) {
+megamol::core::utility::Configuration& megamol::core::utility::Configuration::operator=(const Configuration& rhs) {
     if (this != &rhs) {
-        throw ::vislib::UnsupportedOperationException(
-            "Configuration assignment", __FILE__, __LINE__);
+        throw ::vislib::UnsupportedOperationException("Configuration assignment", __FILE__, __LINE__);
     }
     return *this;
 }
@@ -315,8 +303,7 @@ megamol::core::utility::Configuration::operator=(const Configuration& rhs) {
 /*
  * megamol::core::utility::Configuration::~Configuration(void)
  */
-megamol::core::utility::Configuration::~Configuration(void) {
-}
+megamol::core::utility::Configuration::~Configuration(void) {}
 
 
 /*
@@ -328,11 +315,11 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
 
     // Search 1: Environment Variable 'MEGAMOLCONFIG'
 #ifdef _WIN32
-#pragma warning(disable: 4996)  
+#pragma warning(disable : 4996)
 #endif /* _WIN32 */
-    char *envVal = ::getenv("MEGAMOLCONFIG");
+    char* envVal = ::getenv("MEGAMOLCONFIG");
 #ifdef _WIN32
-#pragma warning(default: 4996)  
+#pragma warning(default : 4996)
 #endif /* _WIN32 */
 
     if (envVal != NULL) {
@@ -343,18 +330,17 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
                 this->loadConfigFromFile(searchName);
                 return;
             } else if (vislib::sys::File::IsDirectory(searchName)) {
-                if (this->searchConfigFile(searchName)) return;
+                if (this->searchConfigFile(searchName))
+                    return;
             } else {
                 // log error
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Configuration specified by MEGAMOLCONFIG seams to be no "
                     "File or Directory.");
             }
         } else {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, 
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Configuration specified by MEGAMOLCONFIG does not exist.");
         }
     }
@@ -379,7 +365,7 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
     pid.Format("/proc/%d/exe", getpid());
     vislib::StringA path;
     const SIZE_T bufSize = 0xFFFF;
-    char *buf = path.AllocateBuffer(bufSize);
+    char* buf = path.AllocateBuffer(bufSize);
     ssize_t size = readlink(pid.PeekBuffer(), buf, bufSize - 1);
     if (size >= 0) {
         buf[size] = 0;
@@ -393,7 +379,8 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
         if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
             dir += vislib::sys::Path::SEPARATOR_W;
         }
-        if (this->searchConfigFile(dir)) return;
+        if (this->searchConfigFile(dir))
+            return;
     }
 
     // Search 3: User Home
@@ -401,11 +388,13 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
     if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) {
         dir += vislib::sys::Path::SEPARATOR_W;
     }
-    if (this->searchConfigFile(dir)) return;
+    if (this->searchConfigFile(dir))
+        return;
 
     // Search 4: User Home Subdirectory '.megamol'
     dir += L".megamol";
-    if (this->searchConfigFile(dir)) return;
+    if (this->searchConfigFile(dir))
+        return;
 
     // Search 5: Current Directory
     if (this->searchConfigFile(vislib::sys::Path::GetCurrentDirectoryW())) {
@@ -414,23 +403,20 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
 
     // no configuration file was found
     // log warning
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, 
-        "No configuration file was found. Using default values.");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_WARN, "No configuration file was found. Using default values.");
     this->setDefaultValues();
-
 }
 
 
 /*
  * megamol::core::utility::Configuration::LoadConfig
  */
-void megamol::core::utility::Configuration::LoadConfig(
-        const vislib::StringW& searchName) {
+void megamol::core::utility::Configuration::LoadConfig(const vislib::StringW& searchName) {
     this->criticalParserError = false;
     this->cfgFileLocations.Clear();
 
-    vislib::StringW sName = searchName.IsEmpty() 
-        ? vislib::StringW() : vislib::sys::Path::Resolve(searchName);
+    vislib::StringW sName = searchName.IsEmpty() ? vislib::StringW() : vislib::sys::Path::Resolve(searchName);
 
     if (!sName.IsEmpty()) {
         if (vislib::sys::File::Exists(sName)) {
@@ -438,19 +424,17 @@ void megamol::core::utility::Configuration::LoadConfig(
                 this->loadConfigFromFile(sName);
                 return;
             } else if (vislib::sys::File::IsDirectory(sName)) {
-                if (this->searchConfigFile(sName)) return;
+                if (this->searchConfigFile(sName))
+                    return;
             } else {
                 // log error
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR,
-                    "Configuration %s seems to be no File or Directory.",
-                    W2A(sName));
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    "Configuration %s seems to be no File or Directory.", W2A(sName));
             }
         } else {
             // log error
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Configuration %s does not exist.", W2A(sName));
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Configuration %s does not exist.", W2A(sName));
         }
     }
 
@@ -462,27 +446,24 @@ void megamol::core::utility::Configuration::LoadConfig(
 /*
  * megamol::core::utility::Configuration::searchConfigFile
  */
-bool megamol::core::utility::Configuration::searchConfigFile(
-        const vislib::StringW& path) {
+bool megamol::core::utility::Configuration::searchConfigFile(const vislib::StringW& path) {
     if (!vislib::sys::File::IsDirectory(path)) {
         return false; // omitt not existing directories
     }
 
-    static const wchar_t *filenames[] = {L"megamolconfig.lua", L"megamolconfig.xml", 
-        L"megamol.cfg", L".megamolconfig.xml", L".megamol.cfg"};
-    static const unsigned int filenameCount 
-        = sizeof(filenames) / sizeof(char*);
+    static const wchar_t* filenames[] = {
+        L"megamolconfig.lua", L"megamolconfig.xml", L"megamol.cfg", L".megamolconfig.xml", L".megamol.cfg"};
+    static const unsigned int filenameCount = sizeof(filenames) / sizeof(char*);
     vislib::StringW filename;
     vislib::StringW dir = vislib::sys::Path::Resolve(path);
-    if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W)) dir 
-        += vislib::sys::Path::SEPARATOR_W;
+    if (!dir.EndsWith(vislib::sys::Path::SEPARATOR_W))
+        dir += vislib::sys::Path::SEPARATOR_W;
 
     for (unsigned int i = 0; i < filenameCount; i++) {
         filename = dir;
         filename += filenames[i];
 
-        if (vislib::sys::File::Exists(filename) 
-                && vislib::sys::File::IsFile(filename)) {
+        if (vislib::sys::File::Exists(filename) && vislib::sys::File::IsFile(filename)) {
             this->loadConfigFromFile(filename);
             return true;
         }
@@ -495,20 +476,17 @@ bool megamol::core::utility::Configuration::searchConfigFile(
 /*
  * megamol::core::utility::Configuration::loadConfigFromFile
  */
-void megamol::core::utility::Configuration::loadConfigFromFile(
-        const vislib::StringW& filename) {
+void megamol::core::utility::Configuration::loadConfigFromFile(const vislib::StringW& filename) {
     vislib::StringW redirect;
     vislib::StringW file = vislib::sys::Path::Resolve(filename);
 
-    // check 
-    vislib::SingleLinkedList<vislib::StringW>::Iterator it 
-        = this->cfgFileLocations.GetIterator();
+    // check
+    vislib::SingleLinkedList<vislib::StringW>::Iterator it = this->cfgFileLocations.GetIterator();
     while (it.HasNext()) {
         vislib::StringW& i = it.Next();
         if (file.Equals(i, false)) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, 
-                "Cyclic configuration redirection detected. Aborting.");
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Cyclic configuration redirection detected. Aborting.");
             this->criticalParserError = true;
             return;
         }
@@ -525,56 +503,49 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
         if (ok) {
             //megamol::core::utility::log::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", res.c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", res.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Lua execution is NOT OK and returned '%s'", res.c_str());
         }
         // realize configuration values
         this->cfgFileName = filename;
 
         if (vislib::sys::Path::IsRelative(this->appDir)) {
             this->appDir = vislib::sys::Path::Resolve(this->appDir);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 50,
-                "Directory \"application\" resolved to \"%s\"",
-                W2A(this->appDir));
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                "Directory \"application\" resolved to \"%s\"", W2A(this->appDir));
         } else {
             this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 150,
                 "Directory \"application\" is \"%s\"", W2A(this->appDir));
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Configuration sucessfully loaded from \"%s\"",
-            W2A(this->cfgFileName));
+            "Configuration sucessfully loaded from \"%s\"", W2A(this->cfgFileName));
 
     } else {
         // XML-based config file
         // TODO: deprecate
         try {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 10,
-                "Parsing configuration file \"%s\"", W2A(filename));
+                megamol::core::utility::log::Log::LEVEL_INFO + 10, "Parsing configuration file \"%s\"", W2A(filename));
 
             megamol::core::utility::xml::XmlReader reader;
             reader.OpenFile(filename);
             megamol::core::utility::xml::ConfigurationParser parser(*this);
 
             if (!parser.Parse(reader)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to parse config file \"%s\"\n", W2A(filename));
                 this->criticalParserError = true;
             }
 
             if (parser.MessagesPresent()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                    "Parser Messages:");
-                vislib::SingleLinkedList<vislib::StringA>::Iterator msgs
-                    = parser.Messages();
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_WARN, "Parser Messages:");
+                vislib::SingleLinkedList<vislib::StringA>::Iterator msgs = parser.Messages();
                 while (msgs.HasNext()) {
                     megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_WARN, "    %s",
-                        msgs.Next().PeekBuffer());
+                        megamol::core::utility::log::Log::LEVEL_WARN, "    %s", msgs.Next().PeekBuffer());
                 }
             }
 
@@ -587,30 +558,24 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
 
             if (vislib::sys::Path::IsRelative(this->appDir)) {
                 this->appDir = vislib::sys::Path::Resolve(this->appDir);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_INFO + 50,
-                    "Directory \"application\" resolved to \"%s\"",
-                    W2A(this->appDir));
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                    "Directory \"application\" resolved to \"%s\"", W2A(this->appDir));
             } else {
                 this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_INFO + 150,
-                    "Directory \"application\" is \"%s\"", W2A(this->appDir));
+                    megamol::core::utility::log::Log::LEVEL_INFO + 150, "Directory \"application\" is \"%s\"",
+                    W2A(this->appDir));
             }
 
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Configuration sucessfully loaded from \"%s\"",
-                W2A(this->cfgFileName));
+                "Configuration sucessfully loaded from \"%s\"", W2A(this->cfgFileName));
 
-        } catch (megamol::core::utility::xml::ConfigurationParser
-            ::RedirectedConfigurationException rde) {
-        // log info
-            redirect = vislib::sys::Path::Resolve(
-                rde.GetRedirectedConfiguration(),
-                vislib::sys::Path::GetDirectoryName(file));
+        } catch (megamol::core::utility::xml::ConfigurationParser ::RedirectedConfigurationException rde) {
+            // log info
+            redirect =
+                vislib::sys::Path::Resolve(rde.GetRedirectedConfiguration(), vislib::sys::Path::GetDirectoryName(file));
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 10,
-                "Configuration redirected to \"%s\"", W2A(redirect));
+                megamol::core::utility::log::Log::LEVEL_INFO + 10, "Configuration redirected to \"%s\"", W2A(redirect));
 
         } catch (std::bad_alloc ba) {
             // log error
@@ -624,8 +589,8 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
             this->criticalParserError = true;
         } catch (...) {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Generic Error while parsing xml configuration file");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Generic Error while parsing xml configuration file");
             this->criticalParserError = true;
         }
 
@@ -646,8 +611,7 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
                     }
                 } else {
                     // log error
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Redirected Configuration seams to be no File or "
                         "Directory.");
                     this->criticalParserError = true;
@@ -655,8 +619,7 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
             } else {
                 // log error
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR,
-                    "Redirected Configuration not found.");
+                    megamol::core::utility::log::Log::LEVEL_ERROR, "Redirected Configuration not found.");
                 this->criticalParserError = true;
             }
         }
@@ -669,43 +632,53 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
  */
 void megamol::core::utility::Configuration::setDefaultValues(void) {
     cfgFileName.Clear();
-    this->appDir = vislib::sys::Path::Resolve(
-        vislib::sys::Path::GetCurrentDirectoryW());
+    this->appDir = vislib::sys::Path::Resolve(vislib::sys::Path::GetCurrentDirectoryW());
     this->shaderDirs.Add(this->appDir);
     this->resourceDirs.Add(this->appDir);
     this->configValues.Clear();
 
     // set default value for new configuration values here
-
 }
 
 
 /*
  * megamol::core::utility::Configuration::GetValue
  */
-const void * megamol::core::utility::Configuration::GetValue(
-        mmcConfigID id, const char *name, mmcValueType *outType) const {
+const void* megamol::core::utility::Configuration::GetValue(
+    mmcConfigID id, const char* name, mmcValueType* outType) const {
     switch (id) {
-        case MMC_CFGID_APPLICATION_DIR:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->appDir.PeekBuffer();
-        case MMC_CFGID_CONFIG_FILE:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->cfgFileName.PeekBuffer();
-        case MMC_CFGID_VARIABLE:
-            if (this->IsConfigValueSet(name)) {
-                const vislib::StringW& rv = this->ConfigValue(name);
-                if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-                return rv.PeekBuffer();
+    case MMC_CFGID_APPLICATION_DIR:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_WSTR;
+        }
+        return this->appDir.PeekBuffer();
+    case MMC_CFGID_CONFIG_FILE:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_WSTR;
+        }
+        return this->cfgFileName.PeekBuffer();
+    case MMC_CFGID_VARIABLE:
+        if (this->IsConfigValueSet(name)) {
+            const vislib::StringW& rv = this->ConfigValue(name);
+            if (outType != NULL) {
+                *outType = MMC_TYPE_WSTR;
             }
-            if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
-            return NULL;
-        default:
-            if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
-            return NULL;
+            return rv.PeekBuffer();
+        }
+        if (outType != NULL) {
+            *outType = MMC_TYPE_VOIDP;
+        }
+        return NULL;
+    default:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_VOIDP;
+        }
+        return NULL;
     }
 
-    if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
+    if (outType != NULL) {
+        *outType = MMC_TYPE_VOIDP;
+    }
     return NULL;
 }
 
@@ -713,29 +686,41 @@ const void * megamol::core::utility::Configuration::GetValue(
 /*
  * megamol::core::utility::Configuration::GetValue
  */
-const void * megamol::core::utility::Configuration::GetValue(
-        mmcConfigID id, const wchar_t *name, mmcValueType *outType) const {
+const void* megamol::core::utility::Configuration::GetValue(
+    mmcConfigID id, const wchar_t* name, mmcValueType* outType) const {
     switch (id) {
-        case MMC_CFGID_APPLICATION_DIR:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->appDir.PeekBuffer();
-        case MMC_CFGID_CONFIG_FILE:
-            if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-            return this->cfgFileName.PeekBuffer();
-        case MMC_CFGID_VARIABLE:
-            if (this->IsConfigValueSet(name)) {
-                const vislib::StringW& rv = this->ConfigValue(name);
-                if (outType != NULL) { *outType = MMC_TYPE_WSTR; }
-                return rv.PeekBuffer();
+    case MMC_CFGID_APPLICATION_DIR:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_WSTR;
+        }
+        return this->appDir.PeekBuffer();
+    case MMC_CFGID_CONFIG_FILE:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_WSTR;
+        }
+        return this->cfgFileName.PeekBuffer();
+    case MMC_CFGID_VARIABLE:
+        if (this->IsConfigValueSet(name)) {
+            const vislib::StringW& rv = this->ConfigValue(name);
+            if (outType != NULL) {
+                *outType = MMC_TYPE_WSTR;
             }
-            if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
-            return NULL;
-        default:
-            if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
-            return NULL;
+            return rv.PeekBuffer();
+        }
+        if (outType != NULL) {
+            *outType = MMC_TYPE_VOIDP;
+        }
+        return NULL;
+    default:
+        if (outType != NULL) {
+            *outType = MMC_TYPE_VOIDP;
+        }
+        return NULL;
     }
 
-    if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
+    if (outType != NULL) {
+        *outType = MMC_TYPE_VOIDP;
+    }
     return NULL;
 }
 
@@ -743,9 +728,8 @@ const void * megamol::core::utility::Configuration::GetValue(
 /*
  * megamol::core::utility::Configuration::setConfigValue
  */
-void megamol::core::utility::Configuration::setConfigValue(
-        const wchar_t *name, const wchar_t *value) {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50, 
+void megamol::core::utility::Configuration::setConfigValue(const wchar_t* name, const wchar_t* value) {
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
         "Configuration value \"%s\" set to \"%s\".\n", W2A(name), W2A(value));
     this->configValues[name] = value;
 }
@@ -754,10 +738,8 @@ void megamol::core::utility::Configuration::setConfigValue(
 /*
  * megamol::core::utility::Configuration::IsConfigValueSet
  */
-bool megamol::core::utility::Configuration::IsConfigValueSet(
-        const char* name) const {
-    const vislib::StringW *value = this->configValues.FindValue(
-        ConfigValueName(name));
+bool megamol::core::utility::Configuration::IsConfigValueSet(const char* name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     return (value != NULL);
 }
 
@@ -765,10 +747,8 @@ bool megamol::core::utility::Configuration::IsConfigValueSet(
 /*
  * megamol::core::utility::Configuration::IsConfigValueSet
  */
-bool megamol::core::utility::Configuration::IsConfigValueSet(
-        const vislib::StringA& name) const {
-    const vislib::StringW *value = this->configValues.FindValue(
-        ConfigValueName(name));
+bool megamol::core::utility::Configuration::IsConfigValueSet(const vislib::StringA& name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     return (value != NULL);
 }
 
@@ -776,10 +756,8 @@ bool megamol::core::utility::Configuration::IsConfigValueSet(
 /*
  * megamol::core::utility::Configuration::IsConfigValueSet
  */
-bool megamol::core::utility::Configuration::IsConfigValueSet(
-        const wchar_t* name) const {
-    const vislib::StringW *value = this->configValues.FindValue(
-        ConfigValueName(name));
+bool megamol::core::utility::Configuration::IsConfigValueSet(const wchar_t* name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     return (value != NULL);
 }
 
@@ -787,10 +765,8 @@ bool megamol::core::utility::Configuration::IsConfigValueSet(
 /*
  * megamol::core::utility::Configuration::IsConfigValueSet
  */
-bool megamol::core::utility::Configuration::IsConfigValueSet(
-        const vislib::StringW& name) const {
-    const vislib::StringW *value = this->configValues.FindValue(
-        ConfigValueName(name));
+bool megamol::core::utility::Configuration::IsConfigValueSet(const vislib::StringW& name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     return (value != NULL);
 }
 
@@ -798,13 +774,10 @@ bool megamol::core::utility::Configuration::IsConfigValueSet(
 /*
  * megamol::core::utility::Configuration::ConfigValue
  */
-const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
-        const char* name) const {
-    const vislib::StringW* value = this->configValues.FindValue(
-        ConfigValueName(name));
+const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(const char* name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     if (value == NULL) {
-        throw vislib::NoSuchElementException("Configuration value not found",
-            __FILE__, __LINE__);
+        throw vislib::NoSuchElementException("Configuration value not found", __FILE__, __LINE__);
     }
     return *value;
 }
@@ -813,13 +786,10 @@ const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
 /*
  * megamol::core::utility::Configuration::ConfigValue
  */
-const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
-        const vislib::StringA& name) const {
-    const vislib::StringW* value = this->configValues.FindValue(
-        ConfigValueName(name));
+const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(const vislib::StringA& name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     if (value == NULL) {
-        throw vislib::NoSuchElementException("Configuration value not found", 
-            __FILE__, __LINE__);
+        throw vislib::NoSuchElementException("Configuration value not found", __FILE__, __LINE__);
     }
     return *value;
 }
@@ -828,13 +798,10 @@ const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
 /*
  * megamol::core::utility::Configuration::ConfigValue
  */
-const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
-        const wchar_t* name) const {
-    const vislib::StringW* value = this->configValues.FindValue(
-        ConfigValueName(name));
+const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(const wchar_t* name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     if (value == NULL) {
-        throw vislib::NoSuchElementException("Configuration value not found",
-            __FILE__, __LINE__);
+        throw vislib::NoSuchElementException("Configuration value not found", __FILE__, __LINE__);
     }
     return *value;
 }
@@ -843,13 +810,10 @@ const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
 /*
  * megamol::core::utility::Configuration::ConfigValue
  */
-const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
-        const vislib::StringW& name) const {
-    const vislib::StringW* value = this->configValues.FindValue(
-        ConfigValueName(name));
+const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(const vislib::StringW& name) const {
+    const vislib::StringW* value = this->configValues.FindValue(ConfigValueName(name));
     if (value == NULL) {
-        throw vislib::NoSuchElementException("Configuration value not found",
-            __FILE__, __LINE__);
+        throw vislib::NoSuchElementException("Configuration value not found", __FILE__, __LINE__);
     }
     return *value;
 }
@@ -859,19 +823,20 @@ const vislib::StringW& megamol::core::utility::Configuration::ConfigValue(
  * megamol::core::utility::Configuration::ListPluginsToLoad
  * TODO: old plugin system, remove?
  */
-void megamol::core::utility::Configuration::ListPluginsToLoad(
-        vislib::SingleLinkedList<vislib::TString> &plugins) {
+void megamol::core::utility::Configuration::ListPluginsToLoad(vislib::SingleLinkedList<vislib::TString>& plugins) {
     plugins.Clear();
 
     vislib::SingleLinkedList<PluginLoadInfo>::Iterator i = this->pluginLoadInfos.GetIterator();
     while (i.HasNext()) {
-        PluginLoadInfo &pli = i.Next();
+        PluginLoadInfo& pli = i.Next();
         vislib::TString dir = vislib::sys::Path::Resolve(pli.directory, vislib::TString(this->appDir));
         vislib::sys::TDirectoryIterator diri(dir);
         while (diri.HasNext()) {
             vislib::sys::TDirectoryEntry& e = diri.Next();
-            if (e.Type == vislib::sys::TDirectoryEntry::DIRECTORY) continue;
-            if (!vislib::sys::FilenameGlobMatch<TCHAR>(e.Path, pli.name)) continue;
+            if (e.Type == vislib::sys::TDirectoryEntry::DIRECTORY)
+                continue;
+            if (!vislib::sys::FilenameGlobMatch<TCHAR>(e.Path, pli.name))
+                continue;
             vislib::TString name = vislib::sys::Path::Resolve(e.Path, dir);
 
             if (pli.inc) {
@@ -883,14 +848,13 @@ void megamol::core::utility::Configuration::ListPluginsToLoad(
             }
         }
     }
-
 }
 
 
 /*
  * megamol::core::utility::Configuration::AddResourceDirectory
  */
-void megamol::core::utility::Configuration::AddResourceDirectory(const char *dir) {
+void megamol::core::utility::Configuration::AddResourceDirectory(const char* dir) {
     this->resourceDirs.Add(vislib::StringW(dir));
 }
 
@@ -898,7 +862,7 @@ void megamol::core::utility::Configuration::AddResourceDirectory(const char *dir
 /*
  * megamol::core::utility::Configuration::AddResourceDirectory
  */
-void megamol::core::utility::Configuration::AddResourceDirectory(const wchar_t *dir) {
+void megamol::core::utility::Configuration::AddResourceDirectory(const wchar_t* dir) {
     this->resourceDirs.Add(vislib::StringW(dir));
 }
 
@@ -906,7 +870,7 @@ void megamol::core::utility::Configuration::AddResourceDirectory(const wchar_t *
 /*
  * megamol::core::utility::Configuration::AddShaderDirectory
  */
-void megamol::core::utility::Configuration::AddShaderDirectory(const char *dir) {
+void megamol::core::utility::Configuration::AddShaderDirectory(const char* dir) {
     this->shaderDirs.Add(vislib::StringW(dir));
 }
 
@@ -914,6 +878,6 @@ void megamol::core::utility::Configuration::AddShaderDirectory(const char *dir) 
 /*
  * megamol::core::utility::Configuration::AddShaderDirectory
  */
-void megamol::core::utility::Configuration::AddShaderDirectory(const wchar_t *dir) {
+void megamol::core::utility::Configuration::AddShaderDirectory(const wchar_t* dir) {
     this->shaderDirs.Add(vislib::StringW(dir));
 }

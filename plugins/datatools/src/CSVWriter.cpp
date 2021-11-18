@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "CSVWriter.h"
+#include "stdafx.h"
 
 #include <filesystem>
 #include <fstream>
@@ -20,10 +20,14 @@ megamol::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", ""), _filen
 }
 
 
-megamol::datatools::CSVWriter::~CSVWriter() { this->Release(); }
+megamol::datatools::CSVWriter::~CSVWriter() {
+    this->Release();
+}
 
 
-bool megamol::datatools::CSVWriter::create() { return true; }
+bool megamol::datatools::CSVWriter::create() {
+    return true;
+}
 
 
 void megamol::datatools::CSVWriter::release() {}

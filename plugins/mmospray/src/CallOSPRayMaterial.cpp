@@ -1,12 +1,12 @@
 /*
-* CallOSPRayMaterial.cpp
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
-* Alle Rechte vorbehalten.
-*/
+ * CallOSPRayMaterial.cpp
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmospray/CallOSPRayMaterial.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
@@ -15,22 +15,22 @@ using namespace megamol::ospray;
 // ###### CallOSPRayMaterial ######
 // ################################
 /*
-* megamol::ospray::CallOSPRayLight::CallOSPRayLight
-*/
+ * megamol::ospray::CallOSPRayLight::CallOSPRayLight
+ */
 CallOSPRayMaterial::CallOSPRayMaterial(void) : isDirty(false) {
     // intentionally empty
 }
 
 /*
-* megamol::ospray::CallOSPRayLight::~CallOSPRayLight
-*/
+ * megamol::ospray::CallOSPRayLight::~CallOSPRayLight
+ */
 CallOSPRayMaterial::~CallOSPRayMaterial(void) {
     //
 }
 
 /*
-* megamol::ospray::CallOSPRayLight::operator=
-*/
+ * megamol::ospray::CallOSPRayLight::operator=
+ */
 CallOSPRayMaterial& CallOSPRayMaterial::operator=(const CallOSPRayMaterial& rhs) {
     return *this;
 }

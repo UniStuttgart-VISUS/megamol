@@ -5,36 +5,31 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/net/Socket.h"
 #include "mmcore/utility/net/SimpleMessageDispatchListener.h"
+#include "vislib/net/Socket.h"
 
 #include "mmcore/utility/net/AbstractSimpleMessage.h"
-#include "vislib/Exception.h"
 #include "mmcore/utility/net/SimpleMessageDispatcher.h"
+#include "vislib/Exception.h"
 
 
 /*
  * vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener
  */
-vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener(
-        void) {
-}
+vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener(void) {}
 
 
 /*
  * vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener
  */
-vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
-        void) {
-}
+vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(void) {}
 
 
-/* 
+/*
  * vislib::net::SimpleMessageDispatchListener::OnCommunicationError
  */
 bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
-        SimpleMessageDispatcher& src, 
-        const vislib::Exception& exception) throw() {
+    SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
     return true;
 }
 
@@ -42,17 +37,13 @@ bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
 /*
  * vislib::net::SimpleMessageDispatchListener::OnDispatcherExited
  */
-void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(
-        SimpleMessageDispatcher& src) throw() {
-}
+void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(SimpleMessageDispatcher& src) throw() {}
 
 
 /*
  * vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted
  */
-void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
-        SimpleMessageDispatcher& src) throw() {
-}
+void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(SimpleMessageDispatcher& src) throw() {}
 
 
 ///*
@@ -68,9 +59,9 @@ void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
 // * vislib::net::SimpleMessageDispatchListener::OnMessageHeaderReceived
 // */
 //void vislib::net::SimpleMessageDispatchListener::OnMessageHeaderReceived(
-//        void *& outDst, 
-//        SimpleMessageSize& outDstSize, 
-//        SimpleMessageSize& outOffset, 
+//        void *& outDst,
+//        SimpleMessageSize& outDstSize,
+//        SimpleMessageSize& outOffset,
 //        const AbstractSimpleMessageHeader& header) throw() {
 ////    outDst = NULL;
 //    outDstSize = 0;

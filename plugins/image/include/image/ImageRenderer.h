@@ -8,10 +8,9 @@
 #ifndef MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
 #define MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <memory>
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
@@ -19,17 +18,18 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/Rectangle.h"
+#include <memory>
 
 #ifdef WITH_MPI
-#    include "mpi.h"
+#include "mpi.h"
 #endif /* WITH_MPI */
 
 /*
  * Copyright (C) 2010 by Sebastian Grottel.
  */
 #include "mmcore/CallerSlot.h"
-#include "vislib/RawStorage.h"
 #include "mmcore/utility/graphics/AbstractBitmapCodec.h"
+#include "vislib/RawStorage.h"
 
 using namespace megamol::core;
 
@@ -46,21 +46,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ImageRenderer"; }
+    static const char* ClassName(void) {
+        return "ImageRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "A litte less simple Image Renderer"; }
+    static const char* Description(void) {
+        return "A litte less simple Image Renderer";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ImageRenderer(void);

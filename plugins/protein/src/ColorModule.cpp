@@ -9,8 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <iostream>
-#include <vector>
 #include "ColorModule.h"
 #include "RMS.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,6 +19,8 @@
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
+#include <iostream>
+#include <vector>
 
 
 using namespace megamol;
@@ -582,7 +582,6 @@ void ColorModule::MakeColorTable(const megamol::protein_calls::MolecularDataCall
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
-
     }
 }
 
@@ -1023,7 +1022,7 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID &&
                 mol2->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol2->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }
@@ -1060,7 +1059,7 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
 
             if (mol1->Residues()[cntRes]->Identifier() ==
                 megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }
@@ -1089,7 +1088,7 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
         megamol::protein_calls::MolecularDataCall::AminoAcid* aminoacid1;
 
         if (mol1->Residues()[cntRes]->Identifier() == megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-            aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
+            aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
         } else { // TODO check if this is correct
             continue;
         }
@@ -1120,13 +1119,12 @@ void ColorModule::MakeComparisonColorTable(megamol::protein_calls::MolecularData
     int rmsValue;
 
     if (cAlphas1.size() >= cAlphas2.size()) {
-        rmsValue = (int) CalculateRMS(
-            (unsigned int) cAlphas1.size(), true, 2, &mass[0], &mask[0], &pos2[0], &pos1[0], rotation, translation);
+        rmsValue = (int)CalculateRMS(
+            (unsigned int)cAlphas1.size(), true, 2, &mass[0], &mask[0], &pos2[0], &pos1[0], rotation, translation);
     } else {
-        rmsValue = (int) CalculateRMS(
-            (unsigned int) cAlphas2.size(), true, 2, &mass[0], &mask[0], &pos2[0], &pos1[0], rotation, translation);
+        rmsValue = (int)CalculateRMS(
+            (unsigned int)cAlphas2.size(), true, 2, &mass[0], &mask[0], &pos2[0], &pos1[0], rotation, translation);
     }
-
 
 
     // compute distances

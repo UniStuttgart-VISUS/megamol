@@ -5,22 +5,22 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MultiParticletoADIOS.h"
-#include <algorithm>
-#include "mmadios/CallADIOSData.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <algorithm>
 
 namespace megamol {
 namespace adios {
 
 MultiParticletoADIOS::MultiParticletoADIOS(void)
-    : core::Module()
-    , mpSlot("mpSlot", "Slot to request multi particle data.")
-    , adiosSlot("adiosSlot", "Slot to send ADIOS IO")
-    , orderSlot("order", "Sets xyz parameter order") {
+        : core::Module()
+        , mpSlot("mpSlot", "Slot to request multi particle data.")
+        , adiosSlot("adiosSlot", "Slot to send ADIOS IO")
+        , orderSlot("order", "Sets xyz parameter order") {
 
     this->adiosSlot.SetCallback(
         CallADIOSData::ClassName(), CallADIOSData::FunctionName(0), &MultiParticletoADIOS::getDataCallback);
@@ -39,25 +39,33 @@ MultiParticletoADIOS::MultiParticletoADIOS(void)
     this->MakeSlotAvailable(&this->mpSlot);
 }
 
-MultiParticletoADIOS::~MultiParticletoADIOS(void) { this->Release(); }
+MultiParticletoADIOS::~MultiParticletoADIOS(void) {
+    this->Release();
+}
 
-bool MultiParticletoADIOS::create(void) { return true; }
+bool MultiParticletoADIOS::create(void) {
+    return true;
+}
 
 void MultiParticletoADIOS::release(void) {}
 
 bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     geocalls::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
-    if (!(*mpdc)(1)) return false;
+    if (!(*mpdc)(1))
+        return false;
 
     // set frame to load from view
     mpdc->SetFrameID(cad->getFrameIDtoLoad());
 
-    if (!(*mpdc)(0)) return false;
+    if (!(*mpdc)(0))
+        return false;
 
     auto availVars = cad->getAvailableVars();
 
@@ -96,12 +104,11 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxz = std::max(maxz, tmp_z.back());
                 }
                 tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
-
             }
             dataMap["x"] = std::move(xCont);
             dataMap["y"] = std::move(yCont);
             dataMap["z"] = std::move(zCont);
-            lboxCont->shape = {mpdc->GetParticleListCount(),6};
+            lboxCont->shape = {mpdc->GetParticleListCount(), 6};
             dataMap["list_box"] = std::move(lboxCont);
         } else {
             auto mixCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -403,7 +410,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         dataMap["global_g"] = std::move(gCont);
         dataMap["global_b"] = std::move(bCont);
         dataMap["global_a"] = std::move(aCont);
-    } else if (cad->isInVars("list_r")) { 
+    } else if (cad->isInVars("list_r")) {
         auto rCont = std::make_shared<FloatContainer>(FloatContainer());
         auto gCont = std::make_shared<FloatContainer>(FloatContainer());
         auto bCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -421,10 +428,10 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             const unsigned char* rgba = parts.GetGlobalColour();
-            tmp_r.push_back(static_cast<float>(rgba[0])/255.0f);
-            tmp_g.push_back(static_cast<float>(rgba[1])/255.0f);
-            tmp_b.push_back(static_cast<float>(rgba[2])/255.0f);
-            tmp_a.push_back(static_cast<float>(rgba[3])/255.0f);
+            tmp_r.push_back(static_cast<float>(rgba[0]) / 255.0f);
+            tmp_g.push_back(static_cast<float>(rgba[1]) / 255.0f);
+            tmp_b.push_back(static_cast<float>(rgba[2]) / 255.0f);
+            tmp_a.push_back(static_cast<float>(rgba[3]) / 255.0f);
         }
         dataMap["list_r"] = std::move(rCont);
         dataMap["list_g"] = std::move(gCont);
@@ -571,13 +578,17 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
 bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
 
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     geocalls::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
-    if (!(*mpdc)(1)) return false;
-    if (!(*mpdc)(0)) return false;
+    if (!(*mpdc)(1))
+        return false;
+    if (!(*mpdc)(0))
+        return false;
 
     geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(0);
 

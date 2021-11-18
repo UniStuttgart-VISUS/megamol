@@ -4,8 +4,8 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ArxelBuffer.h"
+#include "stdafx.h"
 #include "vislib/memutils.h"
 
 #include <climits>
@@ -20,7 +20,8 @@ namespace demos_gl {
 void ArxelBuffer::Initialize(ArxelBuffer& buffer, int& state, const InitValues& ctxt) {
     buffer.width = ctxt.width;
     buffer.height = ctxt.height;
-    if (buffer.data != NULL) delete[] buffer.data;
+    if (buffer.data != NULL)
+        delete[] buffer.data;
     buffer.data = ((buffer.width == 0) || (buffer.height == 0)) ? NULL : new ArxelType[buffer.width * buffer.height];
     state = 0;
 }
@@ -29,8 +30,7 @@ void ArxelBuffer::Initialize(ArxelBuffer& buffer, int& state, const InitValues& 
 /*
  * ArxelBuffer::ArxelBuffer
  */
-ArxelBuffer::ArxelBuffer(void) : width(0), height(0), data(NULL), borderXVal(2), borderYVal(3) {
-}
+ArxelBuffer::ArxelBuffer(void) : width(0), height(0), data(NULL), borderXVal(2), borderYVal(3) {}
 
 
 /*
@@ -51,11 +51,11 @@ struct tableEdge {
     float x;
     float invSlope;
 
-    bool operator ==(const tableEdge &rhs) const {
+    bool operator==(const tableEdge& rhs) const {
         return this->end == rhs.end && this->x == rhs.x && this->invSlope == rhs.invSlope;
     }
 
-    static int AETComparator(const tableEdge &one, const tableEdge &other) {
+    static int AETComparator(const tableEdge& one, const tableEdge& other) {
         return vislib::math::Compare(one.x, other.x);
     }
 };
@@ -64,8 +64,7 @@ struct tableEdge {
 /*
  * ArxelBuffer::Fill
  */
-UINT64 ArxelBuffer::Fill(const vislib::Array <vislib::math::Point<int, 2> > &polygon,
-    const ArxelType &val, bool dryRun) {
+UINT64 ArxelBuffer::Fill(const vislib::Array<vislib::math::Point<int, 2>>& polygon, const ArxelType& val, bool dryRun) {
     vislib::math::Point<int, 2> p1;
     vislib::math::Point<int, 2> p2;
     vislib::math::Point<int, 2> p;
@@ -100,12 +99,12 @@ UINT64 ArxelBuffer::Fill(const vislib::Array <vislib::math::Point<int, 2> > &pol
     //    //        if (Get(p.X() - 1, p.Y() - 1) != 0) {
     //    //            sign = -1;
     //    //        }
-    //    //        break;                
+    //    //        break;
     //    //    }
     //    //}
     //}
 
-    vislib::Array<vislib::Array<tableEdge> > edgeTable;
+    vislib::Array<vislib::Array<tableEdge>> edgeTable;
     for (y = bottom; y <= top; y++) {
         vislib::Array<tableEdge> edgeLine;
         edgeLine.SetCapacityIncrement(4);
@@ -115,8 +114,7 @@ UINT64 ArxelBuffer::Fill(const vislib::Array <vislib::math::Point<int, 2> > &pol
             if (p2.Y() < p.Y()) {
                 p1 = p2;
                 p2 = p;
-            }
-            else {
+            } else {
                 p1 = p;
             }
             // all go up; also, horizontal edges are useless
@@ -150,8 +148,7 @@ UINT64 ArxelBuffer::Fill(const vislib::Array <vislib::math::Point<int, 2> > &pol
             // this is stupid, but I'm lazy
             //pixelCount += this->Line(static_cast<int>(activeEdges[x].x), y + bottom,
             //    static_cast<int>(activeEdges[x + 1].x), y + bottom, val, dryRun);
-            pixelCount += static_cast<int>(activeEdges[x + 1].x)
-                - static_cast<int>(activeEdges[x].x) + 1;
+            pixelCount += static_cast<int>(activeEdges[x + 1].x) - static_cast<int>(activeEdges[x].x) + 1;
             if (!dryRun) {
                 for (int i = static_cast<int>(activeEdges[x].x); i <= activeEdges[x + 1].x; i++) {
                     Set(i, y + bottom, val);
@@ -165,8 +162,8 @@ UINT64 ArxelBuffer::Fill(const vislib::Array <vislib::math::Point<int, 2> > &pol
         }
     }
 
-    return pixelCount/* * sign*/;
+    return pixelCount /* * sign*/;
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

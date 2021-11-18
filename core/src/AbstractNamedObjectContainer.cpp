@@ -4,14 +4,14 @@
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include <cstring>
-#include "vislib/assert.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/String.h"
-#include <algorithm>
 #include "mmcore/Module.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/assert.h"
+#include <algorithm>
+#include <cstring>
 
 using namespace megamol::core;
 
@@ -30,8 +30,10 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
             name.Prepend("::");
             ano = ano->Parent();
         }
-        msg.Format("Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg.PeekBuffer());
+        msg.Format(
+            "Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, msg.PeekBuffer());
         this->children.clear();
     }
     // The child list should already be empty at this time
@@ -41,8 +43,7 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
 /*
  * AbstractNamedObjectContainer::AbstractNamedObjectContainer
  */
-AbstractNamedObjectContainer::AbstractNamedObjectContainer(void)
-        : AbstractNamedObject(), children() {
+AbstractNamedObjectContainer::AbstractNamedObjectContainer(void) : AbstractNamedObject(), children() {
     // intentionally empty
 }
 
@@ -51,10 +52,11 @@ AbstractNamedObjectContainer::AbstractNamedObjectContainer(void)
  * AbstractNamedObjectContainer::addChild
  */
 void AbstractNamedObjectContainer::addChild(AbstractNamedObject::ptr_type child) {
-    if (!child) return;
+    if (!child)
+        return;
     ASSERT(!child->Parent());
     this->children.push_back(child);
-    Module* mod = dynamic_cast<Module *>(this);
+    Module* mod = dynamic_cast<Module*>(this);
     if (mod) {
         // for modules, calling "shared_from_this" is illegal if they have not been created!
         if (mod->created) {
@@ -70,7 +72,8 @@ void AbstractNamedObjectContainer::addChild(AbstractNamedObject::ptr_type child)
  * AbstractNamedObjectContainer::removeChild
  */
 void AbstractNamedObjectContainer::removeChild(AbstractNamedObject::ptr_type child) {
-    if (!child) return;
+    if (!child)
+        return;
     //ASSERT(child->Parent().get() == this);
     this->children.remove(child);
     child->setParent(AbstractNamedObject::ptr_type(nullptr));
@@ -80,15 +83,10 @@ void AbstractNamedObjectContainer::removeChild(AbstractNamedObject::ptr_type chi
 /*
  * AbstractNamedObjectContainer::findChild
  */
-AbstractNamedObject::ptr_type AbstractNamedObjectContainer::findChild(
-        const vislib::StringA& name) {
+AbstractNamedObject::ptr_type AbstractNamedObjectContainer::findChild(const vislib::StringA& name) {
     child_list_type::iterator end = this->children.end();
     child_list_type::iterator found = std::find_if(
-        this->children.begin(), 
-        end,
-        [&](AbstractNamedObject::ptr_type c) {
-            return c->Name().Equals(name);
-        });
+        this->children.begin(), end, [&](AbstractNamedObject::ptr_type c) { return c->Name().Equals(name); });
     return (found != end) ? *found : AbstractNamedObject::ptr_type(nullptr);
 }
 
@@ -96,10 +94,10 @@ AbstractNamedObject::ptr_type AbstractNamedObjectContainer::findChild(
 /*
  * AbstractNamedObjectContainer::FindNamedObject
  */
-AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(const char *name, bool forceRooted) {
+AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(const char* name, bool forceRooted) {
     AbstractNamedObject::ptr_type f;
     ptr_type c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->shared_from_this());
-    const char *next = nullptr;
+    const char* next = nullptr;
     vislib::StringA n;
 
     // skip global namespace operator if presentd
@@ -111,7 +109,8 @@ AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(cons
     // if forced to search from the root, search from the root, otherwise we search from this object (see init of c)
     if (forceRooted) {
         c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->RootModule());
-        if (!c) return nullptr;
+        if (!c)
+            return nullptr;
     }
 
     // while we still have a name to search:
@@ -119,7 +118,8 @@ AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(cons
         // search for a direct child
         if (c) {
             f = c->findChild(name);
-            if (f) break;
+            if (f)
+                break;
         }
 
         // search for a child with the next name segment
@@ -153,7 +153,8 @@ AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(cons
  */
 void AbstractNamedObjectContainer::SetAllCleanupMarks(void) {
     AbstractNamedObject::SetAllCleanupMarks();
-    for (AbstractNamedObject::ptr_type i : this->children) i->SetAllCleanupMarks();
+    for (AbstractNamedObject::ptr_type i : this->children)
+        i->SetAllCleanupMarks();
 }
 
 
@@ -204,9 +205,8 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
 /*
  * AbstractNamedObjectContainer::IsParamRelevant
  */
-bool AbstractNamedObjectContainer::IsParamRelevant(
-        vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool AbstractNamedObjectContainer::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+    const vislib::SmartPtr<param::AbstractParam>& param) const {
     // ensure each container is only asked ones
     // We need this, because this call might propagate through the graph and not only through the tree
     if (searched.Contains(this)) {

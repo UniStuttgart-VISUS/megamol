@@ -1,12 +1,12 @@
 /*
  * AbstractOverrideView.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/AbstractOverrideViewGL.h"
+#include "stdafx.h"
 
 using namespace megamol::core_gl;
 using namespace megamol::frontend_resources;
@@ -31,7 +31,6 @@ view::AbstractOverrideViewGL::AbstractOverrideViewGL(void)
 view::AbstractOverrideViewGL::~AbstractOverrideViewGL(void) {
 
     // TODO: Implement
-
 }
 
 
@@ -39,14 +38,19 @@ view::AbstractOverrideViewGL::~AbstractOverrideViewGL(void) {
  * view::AbstractOverrideView::DefaultTime
  */
 float view::AbstractOverrideViewGL::DefaultTime(double instTime) const {
-    view::CallRenderViewGL *call = const_cast<view::AbstractOverrideViewGL*>(this)->renderViewSlot.CallAs<view::CallRenderViewGL>();
-    if (call == NULL) return 0.0f;
-    const core::CalleeSlot *s = call->PeekCalleeSlot();
-    if (s == NULL) return 0.0f;
-    const Module *m = static_cast<const Module*>(s->Owner());
-    if (m == NULL) return 0.0f;
-    const AbstractView *v = dynamic_cast<const AbstractView *>(m);
-    if (v == NULL) return 0.0f;
+    view::CallRenderViewGL* call =
+        const_cast<view::AbstractOverrideViewGL*>(this)->renderViewSlot.CallAs<view::CallRenderViewGL>();
+    if (call == NULL)
+        return 0.0f;
+    const core::CalleeSlot* s = call->PeekCalleeSlot();
+    if (s == NULL)
+        return 0.0f;
+    const Module* m = static_cast<const Module*>(s->Owner());
+    if (m == NULL)
+        return 0.0f;
+    const AbstractView* v = dynamic_cast<const AbstractView*>(m);
+    if (v == NULL)
+        return 0.0f;
     return v->DefaultTime(instTime);
 }
 
@@ -72,7 +76,7 @@ void view::AbstractOverrideViewGL::DeserialiseCamera(vislib::Serialiser& seriali
  */
 void view::AbstractOverrideViewGL::ResetView(void) {
     // resets camera, not override values
-    view::CallRenderViewGL *crv = this->getCallRenderView();
+    view::CallRenderViewGL* crv = this->getCallRenderView();
     if (crv != NULL) {
         (*crv)(view::CallRenderViewGL::CALL_RESETVIEW);
     }
@@ -84,9 +88,11 @@ void view::AbstractOverrideViewGL::ResetView(void) {
  */
 void view::AbstractOverrideViewGL::Resize(unsigned int width, unsigned int height) {
     this->viewportWidth = width;
-    if (this->viewportWidth < 1) this->viewportWidth = 1;
+    if (this->viewportWidth < 1)
+        this->viewportWidth = 1;
     this->viewportHeight = height;
-    if (this->viewportHeight < 1) this->viewportHeight = 1;
+    if (this->viewportHeight < 1)
+        this->viewportHeight = 1;
 }
 
 
@@ -129,7 +135,8 @@ void view::AbstractOverrideViewGL::Resize(unsigned int width, unsigned int heigh
 
 bool view::AbstractOverrideViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->getCallRenderView();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     core::view::InputEvent evt;
     evt.tag = core::view::InputEvent::Tag::Key;
@@ -137,7 +144,8 @@ bool view::AbstractOverrideViewGL::OnKey(Key key, KeyAction action, Modifiers mo
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnKey)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnKey))
+        return false;
 
     return true;
 }
@@ -145,13 +153,15 @@ bool view::AbstractOverrideViewGL::OnKey(Key key, KeyAction action, Modifiers mo
 
 bool view::AbstractOverrideViewGL::OnChar(unsigned int codePoint) {
     auto* cr = this->getCallRenderView();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     core::view::InputEvent evt;
     evt.tag = core::view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnChar)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnChar))
+        return false;
 
     return true;
 }
@@ -159,7 +169,8 @@ bool view::AbstractOverrideViewGL::OnChar(unsigned int codePoint) {
 
 bool view::AbstractOverrideViewGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
     auto* cr = this->getCallRenderView();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     core::view::InputEvent evt;
     evt.tag = core::view::InputEvent::Tag::MouseButton;
@@ -167,7 +178,8 @@ bool view::AbstractOverrideViewGL::OnMouseButton(MouseButton button, MouseButton
     evt.mouseButtonData.action = action;
     evt.mouseButtonData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseButton)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseButton))
+        return false;
 
     return true;
 }
@@ -175,14 +187,16 @@ bool view::AbstractOverrideViewGL::OnMouseButton(MouseButton button, MouseButton
 
 bool view::AbstractOverrideViewGL::OnMouseMove(double x, double y) {
     auto* cr = this->getCallRenderView();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     core::view::InputEvent evt;
     evt.tag = core::view::InputEvent::Tag::MouseMove;
     evt.mouseMoveData.x = x;
     evt.mouseMoveData.y = y;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseMove)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseMove))
+        return false;
 
     return true;
 }
@@ -190,14 +204,16 @@ bool view::AbstractOverrideViewGL::OnMouseMove(double x, double y) {
 
 bool view::AbstractOverrideViewGL::OnMouseScroll(double dx, double dy) {
     auto* cr = this->getCallRenderView();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     core::view::InputEvent evt;
     evt.tag = core::view::InputEvent::Tag::MouseScroll;
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseScroll)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseScroll))
+        return false;
 
     return true;
 }
@@ -214,9 +230,10 @@ void view::AbstractOverrideViewGL::disconnectOutgoingRenderCall(void) {
 /*
  * view::AbstractOverrideView::getConnectedView
  */
-megamol::core::view::AbstractView *view::AbstractOverrideViewGL::getConnectedView(void) const {
+megamol::core::view::AbstractView* view::AbstractOverrideViewGL::getConnectedView(void) const {
     core::Call* c = const_cast<core::CallerSlot*>(&this->renderViewSlot)->CallAs<core::Call>();
-    if ((c == NULL) || (c->PeekCalleeSlot() == NULL)) return NULL;
+    if ((c == NULL) || (c->PeekCalleeSlot() == NULL))
+        return NULL;
     return const_cast<core::view::AbstractView*>(
         dynamic_cast<const core::view::AbstractView*>(c->PeekCalleeSlot()->Parent().get()));
 }
@@ -225,7 +242,7 @@ megamol::core::view::AbstractView *view::AbstractOverrideViewGL::getConnectedVie
 /*
  * view::AbstractOverrideView::packMouseCoordinates
  */
-void view::AbstractOverrideViewGL::packMouseCoordinates(float &x, float &y) {
+void view::AbstractOverrideViewGL::packMouseCoordinates(float& x, float& y) {
     // intentionally empty
     // do something smart in the derived classes
 }

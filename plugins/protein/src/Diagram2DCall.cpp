@@ -6,12 +6,12 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "protein/Diagram2DCall.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -24,8 +24,7 @@ const unsigned int protein::Diagram2DCall::CallForGetData = 0;
 /*
  * Diagram2DCall::Diagram2DCall
  */
-Diagram2DCall::Diagram2DCall(void) : Call(),
-        clearDiagram( false), markerFlag( false) {
+Diagram2DCall::Diagram2DCall(void) : Call(), clearDiagram(false), markerFlag(false) {
     // intentionally empty
 }
 
@@ -33,6 +32,4 @@ Diagram2DCall::Diagram2DCall(void) : Call(),
 /*
  * Diagram2DCall::~Diagram2DCall
  */
-Diagram2DCall::~Diagram2DCall(void) {
-
-}
+Diagram2DCall::~Diagram2DCall(void) {}

@@ -7,10 +7,10 @@
 
 #pragma once
 #include <functional>
-#include <unordered_map>
-#include <string>
-#include <vector>
 #include <regex>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "KeyboardMouseInput.h"
 #include <json.hpp>
@@ -20,7 +20,7 @@
 #endif
 
 namespace megamol::core::param {
-    class AbstractParam;
+class AbstractParam;
 }
 
 namespace megamol {
@@ -29,7 +29,7 @@ namespace frontend_resources {
 static std::string CommandRegistry_Req_Name = "CommandRegistry";
 
 struct Command {
-    using EffectFunction = std::function<void(const Command *)>;
+    using EffectFunction = std::function<void(const Command*)>;
     std::string name;
     KeyCode key;
     std::string parent;
@@ -51,7 +51,7 @@ struct Command {
 };
 
 // note: effect must be recovered on the fly.
-inline void to_json(nlohmann::json& j, const Command& c)  {
+inline void to_json(nlohmann::json& j, const Command& c) {
     j = nlohmann::json{{{"name", c.name}, {"key", static_cast<int>(c.key.key)}, {"mods", c.key.mods.toInt()},
         {"parent_type", static_cast<int>(c.parent_type)}, {"parent", c.parent}}};
 }
@@ -94,7 +94,6 @@ public:
     }
 
 private:
-
     bool is_new(const std::string& name) const {
         return command_index.find(name) == command_index.end();
     }

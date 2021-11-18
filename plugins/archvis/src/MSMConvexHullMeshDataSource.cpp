@@ -6,15 +6,16 @@
 
 #include "ArchVisCalls.h"
 
-megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource() 
-: m_MSM_callerSlot("getMSM", "Connects the "), m_version(0) {
+megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource()
+        : m_MSM_callerSlot("getMSM", "Connects the ")
+        , m_version(0) {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
 megamol::archvis::MSMConvexHullDataSource::~MSMConvexHullDataSource() {}
 
-bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& caller) { 
+bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& caller) {
     mesh::CallGPUMeshData* lhs_mesh_call = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     mesh::CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<mesh::CallGPUMeshData>();
 
@@ -37,8 +38,10 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
 
 
     CallScaleModel* msm_call = this->m_MSM_callerSlot.CallAs<CallScaleModel>();
-    if (msm_call == NULL) return false;
-    if (!(*msm_call)(0)) return false;
+    if (msm_call == NULL)
+        return false;
+    if (!(*msm_call)(0))
+        return false;
 
     if (msm_call->hasUpdate()) {
         ++m_version;
@@ -69,4 +72,6 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
     return true;
 }
 
-bool megamol::archvis::MSMConvexHullDataSource::getMetaDataCallback(core::Call& caller) { return false; }
+bool megamol::archvis::MSMConvexHullDataSource::getMetaDataCallback(core::Call& caller) {
+    return false;
+}

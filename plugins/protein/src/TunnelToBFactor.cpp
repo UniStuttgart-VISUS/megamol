@@ -3,12 +3,12 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TunnelToBFactor.h"
+#include "stdafx.h"
 
-#include <climits>
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
+#include <climits>
 
 
 using namespace megamol;
@@ -20,10 +20,10 @@ using namespace megamol::protein_calls;
  * TunnelToBFactor::TunnelToBFactor
  */
 TunnelToBFactor::TunnelToBFactor(void)
-    : Module()
-    , dataOutSlot("dataOut", "Output slot for the output molecular data")
-    , molInSlot("moleculeIn", "Input slot for the molecular data")
-    , tunnelInSlot("tunnelIn", "Input slot for the tunnel data") {
+        : Module()
+        , dataOutSlot("dataOut", "Output slot for the output molecular data")
+        , molInSlot("moleculeIn", "Input slot for the molecular data")
+        , tunnelInSlot("tunnelIn", "Input slot for the tunnel data") {
 
     // caller slots
     this->molInSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -45,12 +45,16 @@ TunnelToBFactor::TunnelToBFactor(void)
 /*
  * TunnelToBFactor::~TunnelToBFactor
  */
-TunnelToBFactor::~TunnelToBFactor(void) { this->Release(); }
+TunnelToBFactor::~TunnelToBFactor(void) {
+    this->Release();
+}
 
 /*
  * TunnelToBFactor::create
  */
-bool TunnelToBFactor::create(void) { return true; }
+bool TunnelToBFactor::create(void) {
+    return true;
+}
 
 /*
  * TunnelToBFactor::release
@@ -62,17 +66,22 @@ void TunnelToBFactor::release(void) {}
  */
 bool TunnelToBFactor::getData(Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     MolecularDataCall* mdc = this->molInSlot.CallAs<MolecularDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
     TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (trdc == nullptr) return false;
+    if (trdc == nullptr)
+        return false;
 
     mdc->SetCalltime(outCall->Calltime());
-    if (!(*mdc)(0)) return false;
+    if (!(*mdc)(0))
+        return false;
 
-    if (!(*trdc)(0)) return false;
+    if (!(*trdc)(0))
+        return false;
 
     outCall->operator=(*mdc);
 
@@ -86,18 +95,23 @@ bool TunnelToBFactor::getData(Call& call) {
  */
 bool TunnelToBFactor::getExtent(Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     MolecularDataCall* mdc = this->molInSlot.CallAs<MolecularDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (trdc == nullptr) return false;
+    if (trdc == nullptr)
+        return false;
 
     mdc->SetCalltime(outCall->Calltime());
-    if (!(*mdc)(1)) return false;
+    if (!(*mdc)(1))
+        return false;
 
-    if (!(*trdc)(1)) return false;
+    if (!(*trdc)(1))
+        return false;
 
     outCall->operator=(*mdc); // deep copy
 
@@ -116,8 +130,10 @@ void TunnelToBFactor::applyBFactor(
     std::vector<int> revMap;
     int mymin = INT_MAX, mymax = INT_MIN;
     for (int i = 0; i < static_cast<int>(numFactors); i++) {
-        if (inCall->AtomFormerIndices()[i] > mymax) mymax = inCall->AtomFormerIndices()[i];
-        if (inCall->AtomFormerIndices()[i] < mymin) mymin = inCall->AtomFormerIndices()[i];
+        if (inCall->AtomFormerIndices()[i] > mymax)
+            mymax = inCall->AtomFormerIndices()[i];
+        if (inCall->AtomFormerIndices()[i] < mymin)
+            mymin = inCall->AtomFormerIndices()[i];
     }
 
     revMap.resize(mymax + 1);

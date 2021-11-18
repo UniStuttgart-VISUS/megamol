@@ -14,7 +14,7 @@ namespace megamol {
 namespace frontend_resources {
 
 struct GlobalValueStore {
-    std::map<std::string/*Key*/, std::string/*Value*/> key_values = {};    // mmSetGlobalValue + mmGetGlobalValue
+    std::map<std::string /*Key*/, std::string /*Value*/> key_values = {}; // mmSetGlobalValue + mmGetGlobalValue
 
     // add or update a key-value pair
     void insert(std::string const& key, std::string const& value) {
@@ -26,8 +26,7 @@ struct GlobalValueStore {
         auto value_it = key_values.find(key);
         if (value_it != key_values.end()) {
             return std::optional{value_it->second};
-        }
-        else {
+        } else {
             return std::nullopt;
         }
     }
@@ -35,7 +34,7 @@ struct GlobalValueStore {
     std::string as_string() const {
         auto summarize_globals = [&]() -> std::string {
             std::string result;
-            for (auto& kv: key_values) {
+            for (auto& kv : key_values) {
                 result += "\n\t\t" + kv.first + " : " + kv.second;
             }
             return result;

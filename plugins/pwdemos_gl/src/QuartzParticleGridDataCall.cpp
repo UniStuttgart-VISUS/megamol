@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "QuartzParticleGridDataCall.h"
+#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -40,5 +40,5 @@ ParticleGridDataCall::~ParticleGridDataCall(void) {
     this->cells = NULL; // DO NOT DELETE
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

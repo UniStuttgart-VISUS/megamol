@@ -8,8 +8,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/param/ParamSlot.h"
 #include "datatools/table/TableDataCall.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallClipPlane.h"
 #include <map>
 
@@ -17,138 +17,135 @@ namespace megamol {
 namespace datatools {
 namespace table {
 
+/**
+ * This module converts from a generic table to the MultiParticleDataCall.
+ */
+class TableObserverPlane : public megamol::core::Module {
+
+public:
     /**
-     * This module converts from a generic table to the MultiParticleDataCall.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class TableObserverPlane : public megamol::core::Module {
+    static inline const char* ClassName(void) {
+        return "TableObserverPlane";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "A plane that observes relevant items in local (xy) coordinates over dicrete time steps and stacks them "
+               "along the z axis.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void)  {
-            return "TableObserverPlane";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "A plane that observes relevant items in local (xy) coordinates over dicrete time steps and stacks them along the z axis.";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    TableObserverPlane(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~TableObserverPlane(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        TableObserverPlane(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~TableObserverPlane(void);
+    bool getObservedData(core::Call& call);
 
-    protected:
+    bool getHash(core::Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        bool getObservedData(core::Call& call);
+private:
+    bool assertData(table::TableDataCall* ft, megamol::core::view::CallClipPlane* cp, table::TableDataCall& out);
 
-        bool getHash(core::Call& call);
+    bool anythingDirty();
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    void resetAllDirty();
 
-    private:
+    std::string cleanUpColumnHeader(const std::string& header) const;
+    std::string cleanUpColumnHeader(const vislib::TString& header) const;
 
-        bool assertData(table::TableDataCall *ft, megamol::core::view::CallClipPlane *cp, table::TableDataCall& out);
+    int getColumnIndex(const vislib::TString& colName);
+    bool pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName);
 
-		bool anythingDirty();
+    /** Minimum coordinates of the bounding box. */
+    float bboxMin[3];
 
-		void resetAllDirty();
+    /** Maximum coordinates of the bounding box. */
+    float bboxMax[3];
 
-		std::string cleanUpColumnHeader(const std::string& header) const;
-		std::string cleanUpColumnHeader(const vislib::TString& header) const;
+    float iMin, iMax;
 
-        int getColumnIndex(const vislib::TString& colName);
-		bool pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName);
+    /** The slot for retrieving the stacked observed planes. */
+    core::CalleeSlot slotCallObservedTable;
 
-        /** Minimum coordinates of the bounding box. */
-        float bboxMin[3];
+    /** The data callee slot. */
+    core::CallerSlot slotCallInputTable;
 
-        /** Maximum coordinates of the bounding box. */
-        float bboxMax[3];
+    /** The clip plane slot defining the observation plane. */
+    core::CallerSlot slotCallClipPlane;
 
-		float iMin, iMax;
-        
-        /** The slot for retrieving the stacked observed planes. */
-        core::CalleeSlot slotCallObservedTable;
+    /** The name of the float column holding the x-coordinate. */
+    core::param::ParamSlot slotColumnX;
 
-        /** The data callee slot. */
-        core::CallerSlot slotCallInputTable;
+    /** The name of the float column holding the y-coordinate. */
+    core::param::ParamSlot slotColumnY;
 
-        /** The clip plane slot defining the observation plane. */
-        core::CallerSlot slotCallClipPlane;
+    /** The name of the float column holding the z-coordinate. */
+    core::param::ParamSlot slotColumnZ;
 
-		/** The name of the float column holding the x-coordinate. */
-        core::param::ParamSlot slotColumnX;
+    /** The name of the float column holding the particle radius. */
+    core::param::ParamSlot slotColumnRadius;
 
-        /** The name of the float column holding the y-coordinate. */
-        core::param::ParamSlot slotColumnY;
+    /**
+     * The constant radius of spheres if the data set does not provide
+     * one.
+     */
+    core::param::ParamSlot slotGlobalRadius;
 
-        /** The name of the float column holding the z-coordinate. */
-        core::param::ParamSlot slotColumnZ;
+    core::param::ParamSlot slotStartTime;
+    core::param::ParamSlot slotEndTime;
 
-        /** The name of the float column holding the particle radius. */
-        core::param::ParamSlot slotColumnRadius;
+    // makes no sense without float time in FTC
+    //core::param::ParamSlot slotTimeIncrement;
+    core::param::ParamSlot slotSliceOffset;
 
-        /**
-        * The constant radius of spheres if the data set does not provide
-        * one.
-        */
-        core::param::ParamSlot slotGlobalRadius;
+    /** The color mode: explicit rgb, intensity or constant */
+    core::param::ParamSlot slotRadiusMode;
 
-        core::param::ParamSlot slotStartTime;
-        core::param::ParamSlot slotEndTime;
-        
-        // makes no sense without float time in FTC
-        //core::param::ParamSlot slotTimeIncrement;
-        core::param::ParamSlot slotSliceOffset;
+    /** how particles are chosen for the result planes */
+    core::param::ParamSlot slotObservationStrategy;
 
-        /** The color mode: explicit rgb, intensity or constant */
-        core::param::ParamSlot slotRadiusMode;
-
-        /** how particles are chosen for the result planes */
-        core::param::ParamSlot slotObservationStrategy;
-
-		std::vector<float> everything;
-		SIZE_T inputHash;
-		SIZE_T myHash;
-		std::map<std::string, size_t> columnIndex;
-		size_t stride;
-        int frameID;
-
-    };
+    std::vector<float> everything;
+    SIZE_T inputHash;
+    SIZE_T myHash;
+    std::map<std::string, size_t> columnIndex;
+    size_t stride;
+    int frameID;
+};
 
 } /* end namespace table */
 } /* end namespace datatools */
