@@ -61,18 +61,28 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
+    using ev = frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent;
+
     m_entry_points_registry_resource.add_entry_point = [&](std::string const& name,
                                                            EntryPointRenderFunctions const& entry_point) -> bool {
-        return add_entry_point(name, entry_point);
+        return add_entry_point(name, entry_point) && tell_subscribers(ev::Add, {name, entry_point});
     };
     m_entry_points_registry_resource.remove_entry_point = [&](std::string const& name) -> bool {
-        return remove_entry_point(name);
+        return remove_entry_point(name) && tell_subscribers(ev::Remove, {name});
     };
     m_entry_points_registry_resource.rename_entry_point = [&](std::string const& oldName,
                                                               std::string const& newName) -> bool {
-        return rename_entry_point(oldName, newName);
+        return rename_entry_point(oldName, newName) && tell_subscribers(ev::Rename, {oldName, newName});
     };
-    m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
+    m_entry_points_registry_resource.clear_entry_points = [&]() {
+        clear_entry_points();
+        tell_subscribers(ev::Clear, {});
+    };
+    m_entry_points_registry_resource.subscribe_to_entry_point_changes =
+        [&](frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber) {
+            subscribe_to_entry_point_changes(subscriber);
+        };
+    m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
     this->m_providedResourceReferences = {{"ImagePresentationEntryPoints", m_entry_points_registry_resource}
         // used by MegaMolGraph to set entry points
@@ -349,6 +359,32 @@ void ImagePresentation_Service::add_glfw_sink() {
 
     m_presentation_sinks.push_back(
         {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+}
+
+void ImagePresentation_Service::subscribe_to_entry_point_changes(
+    frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber) {
+    m_entry_point_subscribers.push_back(subscriber);
+}
+
+bool ImagePresentation_Service::tell_subscribers(
+    frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event,
+    std::vector<std::any> const& args) {
+
+    for (auto& subscriber : m_entry_point_subscribers)
+        subscriber(event, args);
+
+    return true;
+}
+
+frontend_resources::optional<ImagePresentation_Service::EntryPoint> ImagePresentation_Service::get_entry_point(
+    std::string const& name) {
+    auto find =
+        std::find_if(m_entry_points.begin(), m_entry_points.end(), [&](auto& ep) { return ep.moduleName == name; });
+
+    if (find == m_entry_points.end())
+        return std::nullopt;
+
+    return std::optional{std::reference_wrapper<ImagePresentation_Service::EntryPoint>{*find}};
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
