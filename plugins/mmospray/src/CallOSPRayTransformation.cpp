@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "OSPRay_plugin/CallOSPRayTransformation.h"
+#include "CallOSPRayTransformation.h"
 #include "vislib/IllegalParamException.h"
 
 namespace megamol {

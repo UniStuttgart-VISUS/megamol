@@ -170,7 +170,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
             a.resize(numColors);
             auto const texture = cgtf->GetTextureData();
 
-            for (unsigned int i = 0; i < texSize; ++i) {
+            for (unsigned int i = 0; i < numColors; ++i) {
                 rgb[i * 3 + 0] = texture[i * 4 + 0];
                 rgb[i * 3 + 1] = texture[i * 4 + 1];
                 rgb[i * 3 + 2] = texture[i * 4 + 2];

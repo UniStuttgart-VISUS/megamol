@@ -8,7 +8,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/Module.h"
-#include "OSPRay_plugin/CallOSPRayTransformation.h"
+#include "CallOSPRayTransformation.h"
 
 
 namespace megamol {
