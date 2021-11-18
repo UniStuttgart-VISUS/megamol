@@ -29,12 +29,17 @@ int main(int argc, char* argv[]) {
     bool singleSend = false;
 
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
-    options.add_options()("open", "open host", cxxopts::value<std::string>())(
-        "source", "source file", cxxopts::value<std::string>())("exec", "execute script",
-        cxxopts::value<std::string>())("keep-open", "keep open")("hammer",
-        "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())("timeout",
-        "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))("single",
-        "send whole file or script in one go")("help", "print help");
+    // clang-format off
+    options.add_options()
+        ("open", "open host", cxxopts::value<std::string>())
+        ("source", "source file", cxxopts::value<std::string>())
+        ("exec", "execute script", cxxopts::value<std::string>())
+        ("keep-open", "keep open")
+        ("hammer", "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())
+        ("timeout", "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))
+        ("single", "send whole file or script in one go")
+        ("help", "print help");
+    // clang-format on
 
     try {
 
