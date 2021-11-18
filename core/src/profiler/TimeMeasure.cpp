@@ -5,38 +5,39 @@
  * All rights reserved.
  */
 
-#include "TimeMeasure.h"
+#include "mmcore/profiler/TimeMeasure.h"
 
 using namespace megamol::core;
 
 void profiler::Timer::startTimer() {
-    this->start = std::chrono::steady_clock::now();
+    m_start = std::chrono::steady_clock::now();
 }
 
 void profiler::Timer::endTimer() {
-    this->end = std::chrono::steady_clock::now();
+    m_end = std::chrono::steady_clock::now();
 }
 
 double profiler::Timer::getDuration(TimeUnit unit) {
-    auto dur = (this->end - this->start);
+    auto dur = (m_end - m_start);
 
     switch (unit) {
         case TimeUnit::SECONDS:
-            this->duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+        m_duration = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(m_end - m_start).count() / 1e9f;
             break;
         case TimeUnit::MILLISECONDS:
-            this->duration = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+            m_duration = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(m_end - m_start).count() / 1e6f;
             break;
         case TimeUnit::MICROSECONDS:
-            this->duration = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+            m_duration = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(m_end - m_start).count() / 1e3f;
             break;
         case TimeUnit::NANOSECONDS:
-            this->duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+            m_duration = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(m_end - m_start).count();
             break;
         default:
-            this->duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+            m_duration = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(m_end - m_start).count();
             break;
     }
 
-    return 1.0;
+
+    return m_duration;
 }

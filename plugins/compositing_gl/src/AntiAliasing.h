@@ -139,14 +139,18 @@ private:
         const std::vector<std::pair<const char*, int>>& uniforms,
         const std::shared_ptr<glowl::BufferObject>& ssbo = nullptr);
 
+    void copyTextureViaShader(
+        const std::shared_ptr<glowl::Texture2D>& tgt,
+        const std::shared_ptr<glowl::Texture2D>& src);
+
 
     std::vector<unsigned char> m_area;
     std::vector<unsigned char> m_search;
 
     uint32_t m_version;
 
-    // test program
-    std::unique_ptr<GLSLComputeShader> m_pass_through_prgm;
+    /** Shader program to copy a texture to another */
+    std::unique_ptr<GLSLComputeShader> m_copy_prgm;
 
     /** Shader program for fxaa */
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;

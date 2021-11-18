@@ -321,6 +321,7 @@ bool megamol::compositing::SSAO::create() {
 
             vislib::graphics::gl::ShaderSource csNaiveSSAO;
             vislib::graphics::gl::ShaderSource csNaiveSSAOBlur;
+
             Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepths");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::SSAO::CSPrepareDepths", csPrepareDepths))

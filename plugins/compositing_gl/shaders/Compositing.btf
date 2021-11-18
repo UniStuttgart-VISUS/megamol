@@ -2,9 +2,9 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="Compositing">
     <include file="common"/>
 
-    <shader name="passthrough">
+    <shader name="copy">
         <snippet type="version">430></snippet>
-        <snippet name="Main" type="file">comp/pass_through_c.glsl</snippet>
+        <snippet name="Main" type="file">comp/copy_c.glsl</snippet>
     </shader>
 
     <shader name="textureAdd">
