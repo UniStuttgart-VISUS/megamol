@@ -5,18 +5,18 @@ layout(std430, binding = 3) buffer SphereColor {
     vec4 inColor[];
 };
 
-void access_data(out vec3 objPos, out vec4 objColor, out float rad) {
-    objPos = inPosition[gl_VertexID].xyz;
+void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
+    objPos = inPosition[idx].xyz;
 
     if (useGlobalRad) {
         rad = globalRad;
     } else {
-        rad = inPosition[gl_VertexID].w;
+        rad = inPosition[idx].w;
     }
 
     if (useGlobalCol) {
         objColor = globalCol;
     } else {
-        objColor = inColor[gl_VertexID];
+        objColor = inColor[idx];
     }
 }
