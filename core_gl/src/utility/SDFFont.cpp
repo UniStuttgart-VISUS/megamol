@@ -866,7 +866,9 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    if (!this->loadFontShader(core_instance_ptr->ShaderSourceFactory())) {
+    auto ssf =
+        std::make_shared<core_gl::utility::ShaderSourceFactory>(core_instance_ptr->Configuration().ShaderDirectories());
+    if (!this->loadFontShader(*ssf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font shaders. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

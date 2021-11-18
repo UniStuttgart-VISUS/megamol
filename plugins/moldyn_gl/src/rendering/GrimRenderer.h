@@ -79,11 +79,7 @@ namespace rendering {
             * @return 'true' if the module is available, 'false' otherwise.
             */
         static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib_gl::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && (isExtAvailable("GL_NV_occlusion_query") != GL_FALSE)
-                && (isExtAvailable("GL_ARB_multitexture") != GL_FALSE)
-                && (isExtAvailable("GL_ARB_vertex_buffer_object") != GL_FALSE);
+            return true;
         }
 
         /** Ctor. */

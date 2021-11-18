@@ -49,7 +49,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable(); }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     GlyphRenderer(void);

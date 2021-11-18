@@ -1,152 +1,144 @@
 /*
  * ParticleWorker.h
  *
- * Copyright (C) 2013 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2013 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
 #pragma once
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore_gl/ModuleGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include <GL/glu.h>
+#include "glad/gl.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol {
 namespace moldyn {
-namespace misc {
-
-    /**
-     * Module to filter calls with multiple particle lists by list index
-     */
-    // TODO this module looks quite broken and will probably not work at all for particles having a direction
-	class ParticleWorker : public core::Module {
-    public:
-
-		class VAOUnlocker : public core::AbstractGetDataCall::Unlocker
-		{
-		public:
-			VAOUnlocker() { };
-			virtual ~VAOUnlocker() { };
-			void Unlock()
-			{
-				glBindVertexArray(0);
-				glBindBufferARB (GL_SHADER_STORAGE_BUFFER, 0);
-			};
-		};
+    namespace misc {
 
         /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
+         * Module to filter calls with multiple particle lists by list index
          */
-        static const char *ClassName(void) {
-            return "ParticleWorker";
-        }
+        // TODO this module looks quite broken and will probably not work at all for particles having a direction
+        class ParticleWorker : public core_gl::ModuleGL {
+        public:
+            class VAOUnlocker : public core::AbstractGetDataCall::Unlocker {
+            public:
+                VAOUnlocker(){};
+                virtual ~VAOUnlocker(){};
+                void Unlock() {
+                    glBindVertexArray(0);
+                    glBindBufferARB(GL_SHADER_STORAGE_BUFFER, 0);
+                };
+            };
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Modify incoming particles";
-        }
+            /**
+             * Answer the name of this module.
+             *
+             * @return The name of this module.
+             */
+            static const char* ClassName(void) {
+                return "ParticleWorker";
+            }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && ogl_IsVersionGEQ(4, 3);
-        }
+            /**
+             * Answer a human readable description of this module.
+             *
+             * @return A human readable description of this module.
+             */
+            static const char* Description(void) {
+                return "Modify incoming particles";
+            }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+            /**
+             * Answers whether this module is available on the current system.
+             *
+             * @return 'true' if the module is available, 'false' otherwise.
+             */
+            static bool IsAvailable(void) {
+                return true;
+            }
 
-        /** Ctor. */
-        ParticleWorker(void);
+            /**
+             * Disallow usage in quickstarts
+             *
+             * @return false
+             */
+            static bool SupportQuickstart(void) {
+                return false;
+            }
 
-        /** Dtor. */
-        virtual ~ParticleWorker(void);
+            /** Ctor. */
+            ParticleWorker(void);
 
-    protected:
+            /** Dtor. */
+            virtual ~ParticleWorker(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+        protected:
+            /**
+             * Implementation of 'Create'.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            virtual bool create(void);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+            /**
+             * Implementation of 'Release'.
+             */
+            virtual void release(void);
 
-    private:
+        private:
+            /**
+             * Callback publishing the gridded data
+             *
+             * @param call The call requesting the gridded data
+             *
+             * @return 'true' on success, 'false' on failure
+             */
+            bool getDataCallback(core::Call& call);
 
-        /**
-         * Callback publishing the gridded data
-         *
-         * @param call The call requesting the gridded data
-         *
-         * @return 'true' on success, 'false' on failure
-         */
-        bool getDataCallback(core::Call& call);
+            /**
+             * Callback publishing the extend of the data
+             *
+             * @param call The call requesting the extend of the data
+             *
+             * @return 'true' on success, 'false' on failure
+             */
+            bool getExtentCallback(core::Call& call);
 
-        /**
-         * Callback publishing the extend of the data
-         *
-         * @param call The call requesting the extend of the data
-         *
-         * @return 'true' on success, 'false' on failure
-         */
-        bool getExtentCallback(core::Call& call);
+            core::CallerSlot inParticlesDataSlot;
 
-        core::CallerSlot inParticlesDataSlot;
+            core::CalleeSlot outParticlesDataSlot;
 
-        core::CalleeSlot outParticlesDataSlot;
+            vislib::Array<GLuint> glVAO;
+            vislib::Array<GLuint> glVB;
+            vislib::Array<GLuint> glCB;
 
-		vislib::Array<GLuint> glVAO;
-		vislib::Array<GLuint> glVB;
-		vislib::Array<GLuint> glCB;
-		
-		GLuint glClusterInfos;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
+            GLuint glClusterInfos;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
 
-		/*
-		GLuint glParticleList;
-		GLuint glPrefixIn;
-		GLuint glPrefixOut;
-		
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeInitParticleList;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeMakeParticleList;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeCompactToClusterList;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGrid;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGriddify;
-		vislib_gl::graphics::gl::GLSLComputeShader shaderComputePrefixSum;
-		*/
-    };
+            /*
+            GLuint glParticleList;
+            GLuint glPrefixIn;
+            GLuint glPrefixOut;
 
-} /* end namespace misc */
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputeInitParticleList;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputeMakeParticleList;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputeCompactToClusterList;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGrid;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputeGriddify;
+            vislib_gl::graphics::gl::GLSLComputeShader shaderComputePrefixSum;
+            */
+        };
+
+    } /* end namespace misc */
 } /* end namespace moldyn */
 } /* end namespace megamol */
-

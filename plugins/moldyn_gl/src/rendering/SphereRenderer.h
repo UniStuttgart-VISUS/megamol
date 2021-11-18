@@ -150,18 +150,8 @@ namespace rendering {
 
             bool retval = true;
 
-            // Minimum requirements for all render modes
-            if (!GLSLShader::AreExtensionsAvailable()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode is available. Shader extensions are not available.");
-                retval = false;
-            }
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
-            if (ogl_IsVersionGEQ(1, 4) == 0) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
-                retval = false;
-            }
+            
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
             std::size_t found = glslVerStr.find(".");
             int major = -1;
@@ -180,16 +170,6 @@ namespace rendering {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. OpenGL Shading Language version 1.3 or greater is required.");
                 retval = false; 
-            }
-            if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                    "[SphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
-                retval = false;
-            }
-            if (!isExtAvailable("GL_ARB_conservative_depth")) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                    "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
-                retval = false;
             }
 
             return retval;
@@ -249,7 +229,7 @@ namespace rendering {
             BUFFER_ARRAY      = 4,
             SPLAT             = 5,
             AMBIENT_OCCLUSION = 6,
-			OUTLINE           = 7
+            OUTLINE           = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -378,9 +358,9 @@ namespace rendering {
         megamol::core::param::ParamSlot aoConeLengthSlot;
         megamol::core::param::ParamSlot useHPTexturesSlot;
 
-		// Affects only Outline rendering: --------------------------
+        // Affects only Outline rendering: --------------------------
 
-		megamol::core::param::ParamSlot outlineWidthSlot;
+        megamol::core::param::ParamSlot outlineWidthSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -417,7 +397,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
+        bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
          * Check if specified render mode or all render mode are available.
@@ -456,7 +436,7 @@ namespace rendering {
         bool renderSplat(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderBufferArray(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderAmbientOcclusion(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-		bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+        bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.

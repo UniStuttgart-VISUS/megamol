@@ -15,7 +15,6 @@
 
 
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib_gl/graphics/gl/ExtensionsDependent.h"
 
 
 namespace vislib_gl {
@@ -26,7 +25,7 @@ namespace gl {
     /**
      * TODO: comment class
      */
-    class ARBShader : public AbstractOpenGLShader, public ExtensionsDependent<ARBShader> {
+    class ARBShader : public AbstractOpenGLShader {
 
     public:
 

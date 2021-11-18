@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "vislib/forceinline.h"
 
@@ -25,7 +25,7 @@ namespace view {
     /**
      * Abstract base class of override rendering views
      */
-    class MEGAMOLCORE_API AbstractOverrideViewGL : public core::view::AbstractView {
+    class MEGAMOLCORE_API AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
     public:
 
         /** Ctor. */

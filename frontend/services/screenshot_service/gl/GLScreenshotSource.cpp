@@ -8,7 +8,7 @@
 #include "Screenshot_Service.hpp"
 
 // to grab GL front buffer
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
     m_read_buffer = buffer;

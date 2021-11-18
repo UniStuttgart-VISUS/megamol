@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "DepthFunction.h"
 
 #include "mmcore/param/EnumParam.h"

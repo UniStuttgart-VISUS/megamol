@@ -18,6 +18,8 @@
 
 #include <glm/ext.hpp>
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
 megamol::compositing::LocalLighting::LocalLighting() 
     : core::Module()
     , m_version(0)
@@ -103,12 +105,14 @@ bool megamol::compositing::LocalLighting::create() {
         vislib_gl::graphics::gl::ShaderSource compute_lambert_src;
         vislib_gl::graphics::gl::ShaderSource compute_phong_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::lambert", compute_lambert_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::lambert", compute_lambert_src))
             return false;
         if (!m_lambert_prgm->Compile(compute_lambert_src.Code(), compute_lambert_src.Count())) return false;
         if (!m_lambert_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::phong", compute_phong_src))
+        if (!ssf->MakeShaderSource("Compositing::phong", compute_phong_src))
             return false;
         if (!m_phong_prgm->Compile(compute_phong_src.Code(), compute_phong_src.Count())) return false;
         if (!m_phong_prgm->Link()) return false;

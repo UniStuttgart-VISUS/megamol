@@ -7,10 +7,6 @@
 if(BUILD_CORE)
   project(core_gl)
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
-
   # Add externals.
   require_external(glowl)
   require_external(megamol-shader-factory)
@@ -19,13 +15,14 @@ if(BUILD_CORE)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
 
   # Target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  add_library(${PROJECT_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources  
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
@@ -35,30 +32,14 @@ if(BUILD_CORE)
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
 
+  # Install shaders
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
+
   # Source groups in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
-  foreach(FILE_NAME ${source_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Source Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${public_header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  source_group("Shaders" FILES ${shader_files})
-
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/mmcore_gl" PREFIX "Public Header Files" FILES ${public_header_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Header Files" FILES ${header_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES ${source_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/shaders" PREFIX "Shader Files" FILES ${shader_files})
 
 endif(BUILD_CORE)

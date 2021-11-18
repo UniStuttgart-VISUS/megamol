@@ -131,7 +131,7 @@ private:
 
     megamol::frontend_resources::FrontendResourcesLookup provided_resources_lookup;
 
-    // for each View in the MegaMol graph we create a GraphEntryPoint
+    // for each View in the MegaMol graph we create a EntryPoint
     // that entry point is used by the Image Presentation Service to
     // poke the rendering, collect the resulting View renderings and present them to the user appropriately
     std::list<Module::ptr_type> graph_entry_points;
