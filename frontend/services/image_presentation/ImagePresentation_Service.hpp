@@ -101,9 +101,9 @@ private:
     using EntryPoint = frontend_resources::EntryPoint;
     std::list<EntryPoint> m_entry_points;
 
-    bool add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point);
-    bool remove_entry_point(std::string name);
-    bool rename_entry_point(std::string oldName, std::string newName);
+    bool add_entry_point(std::string const& name, EntryPointRenderFunctions const& entry_point);
+    bool remove_entry_point(std::string const& name);
+    bool rename_entry_point(std::string const& oldName, std::string const& newName);
     bool clear_entry_points();
 
     std::list<ImagePresentationSink> m_presentation_sinks;

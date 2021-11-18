@@ -60,14 +60,15 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
-    m_entry_points_registry_resource.add_entry_point = [&](std::string name,
+    m_entry_points_registry_resource.add_entry_point = [&](std::string const& name,
                                                            EntryPointRenderFunctions const& entry_point) -> bool {
         return add_entry_point(name, entry_point);
     };
-    m_entry_points_registry_resource.remove_entry_point = [&](std::string name) -> bool {
+    m_entry_points_registry_resource.remove_entry_point = [&](std::string const& name) -> bool {
         return remove_entry_point(name);
     };
-    m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool {
+    m_entry_points_registry_resource.rename_entry_point = [&](std::string const& oldName,
+                                                              std::string const& newName) -> bool {
         return rename_entry_point(oldName, newName);
     };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
@@ -311,7 +312,7 @@ std::
     return {success, resources, std::move(unique_data)};
 }
 
-bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point) {
+bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPointRenderFunctions const& entry_point) {
     auto [module_ptr, execute_etry, entry_resource_requests] = entry_point;
 
     auto resource_requests = entry_resource_requests();
@@ -332,14 +333,14 @@ bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRend
     return true;
 }
 
-bool ImagePresentation_Service::remove_entry_point(std::string name) {
+bool ImagePresentation_Service::remove_entry_point(std::string const& name) {
 
     m_entry_points.remove_if([&](auto& entry) { return entry.moduleName == name; });
 
     return true;
 }
 
-bool ImagePresentation_Service::rename_entry_point(std::string oldName, std::string newName) {
+bool ImagePresentation_Service::rename_entry_point(std::string const& oldName, std::string const& newName) {
 
     auto entry_it = std::find_if(
         m_entry_points.begin(), m_entry_points.end(), [&](auto& entry) { return entry.moduleName == oldName; });

@@ -24,9 +24,9 @@ using EntryPointRenderFunctions = std::tuple<
     std::function<std::vector<std::string>()>>;
 
 struct ImagePresentationEntryPoints {
-    std::function<bool(std::string, EntryPointRenderFunctions const&)> add_entry_point;
-    std::function<bool(std::string)> remove_entry_point;
-    std::function<bool(std::string, std::string)> rename_entry_point;
+    std::function<bool(std::string const&, EntryPointRenderFunctions const&)> add_entry_point;
+    std::function<bool(std::string const&)> remove_entry_point;
+    std::function<bool(std::string const&, std::string const&)> rename_entry_point;
     std::function<void()> clear_entry_points;
 };
 
