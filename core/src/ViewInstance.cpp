@@ -6,9 +6,9 @@
  */
 #include "stdafx.h"
 
-#include "mmcore/ViewInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
+#include "mmcore/ViewInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/AutoLock.h"
 
