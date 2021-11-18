@@ -114,31 +114,31 @@ public:
 //     */
 //    const vtkm::cont::DataSet* GetDataSet() const { return this->data_; }
 //
-//	/**
+//    /**
 //     * Sets the value if data has been changed within the vtkm data source
-//	 *
-//	 * @param true, if data has changed, false otherwise
+//     *
+//     * @param true, if data has changed, false otherwise
 //     */
 //    void UpdateDataChanges(bool update) { this->dataChanges_ = update; }
 //
-//	/**
+//    /**
 //     * Returns if the data within the vtkm data source has changed or not
 //     */
 //    bool HasUpdate() const { return this->dataChanges_; }
 //
-//	/**
-//	* Sets lower and upper bounds of the current dataset
-//	*/
-//	void SetBounds(const vtkm::Bounds& bounds) {
-//		this->minMaxBounds_ = bounds;
-//	}
+//    /**
+//    * Sets lower and upper bounds of the current dataset
+//    */
+//    void SetBounds(const vtkm::Bounds& bounds) {
+//        this->minMaxBounds_ = bounds;
+//    }
 //
-//	/**
-//	* Returns lower and upper bounds of the current dataset
-//	*/
-//	const vtkm::Bounds GetBounds() const {
-//		return this->minMaxBounds_;
-//	}
+//    /**
+//    * Returns lower and upper bounds of the current dataset
+//    */
+//    const vtkm::Bounds GetBounds() const {
+//        return this->minMaxBounds_;
+//    }
 //
 //    /**
 //    * Sets lower and upper bounds of the current dataset
@@ -159,14 +159,14 @@ public:
 //    /** Vtkm dataset storage */
 //    const vtkm::cont::DataSet* data_;
 //
-//	/** Min and max bounds of the dataset */
-//	vtkm::Bounds minMaxBounds_;
+//    /** Min and max bounds of the dataset */
+//    vtkm::Bounds minMaxBounds_;
 //
 //    /** Fieldnames available in the current dataset */
 //    std::vector<std::string> fieldNames_;
 //
-//	/** True, if data was changed, false otherwise */
-//	bool dataChanges_;
+//    /** True, if data was changed, false otherwise */
+//    bool dataChanges_;
 //};
 
 

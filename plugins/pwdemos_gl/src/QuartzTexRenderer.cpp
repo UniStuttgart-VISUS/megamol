@@ -201,7 +201,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
     this->cryShader.SetParameter("numLights", numLights);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
     //::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverse"), 1,
-    //	GL_FALSE, glm::value_ptr(MVinv));
+    //  GL_FALSE, glm::value_ptr(MVinv));
     ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverseTranspose"), 1, GL_FALSE,
         glm::value_ptr(glm::transpose(MVinv)));
     ::glUniformMatrix4fv(

@@ -10,5 +10,5 @@ void main()
 {
     //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
     gl_Position =  proj_mx * view_mx * vec4(v_position, 1.0);
-	color = v_color;
+    color = v_color;
 }

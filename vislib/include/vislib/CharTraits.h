@@ -528,7 +528,7 @@ protected:
 
 
         //if (strlen(li = nl_langinfo(CODESET)) < 1) {
-        //	return false;
+        //    return false;
         //}
 
         if ((hIconv = ::iconv_open(ICONV_CODE_WCHAR, ICONV_CODE_CHAR)) != INVALID_ICONV_T) {
@@ -884,7 +884,7 @@ protected:
         //char *li = NULL;
 
         //if (strlen(li = nl_langinfo(CODESET)) < 1) {
-        //	return false;
+        //    return false;
         //}
 
         if ((hIconv = ::iconv_open(ICONV_CODE_CHAR, ICONV_CODE_WCHAR)) != INVALID_ICONV_T) {

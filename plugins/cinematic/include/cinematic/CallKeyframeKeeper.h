@@ -226,7 +226,7 @@ private:
     unsigned int fps;
 
     // In Data (set by calling modules) -----------------------------------
-    ///Keyframe				                       selectedKeyframe;
+    ///Keyframe                                       selectedKeyframe;
     unsigned int interpolSteps;
     float dropAnimTime;
     float dropSimTime;

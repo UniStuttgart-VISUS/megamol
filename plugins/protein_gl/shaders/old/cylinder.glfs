@@ -104,15 +104,15 @@ void main(void) {
     // chose color for lighting
     vec3 color = gl_Color.rgb;
 
-	// set fragment color (kroneml)
-	if( cylPt1.x > 0.0 )
-	{
-		color = gl_SecondaryColor.rgb;
-	}
-	else
-	{
-		color = gl_Color.rgb;
-	}
+    // set fragment color (kroneml)
+    if( cylPt1.x > 0.0 )
+    {
+        color = gl_SecondaryColor.rgb;
+    }
+    else
+    {
+        color = gl_Color.rgb;
+    }
 
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);

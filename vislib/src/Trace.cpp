@@ -206,10 +206,10 @@ void vislib::Trace::operator()(const UINT level, const char* fmt, ...) throw() {
 // * vislib::Trace::operator ()
 // */
 //void vislib::Trace::operator ()(const char *fmt, ...) {
-//	va_list list;
-//	va_start(list, fmt);
-//	this->trace(0, fmt, list);
-//	va_end(list);
+//    va_list list;
+//    va_start(list, fmt);
+//    this->trace(0, fmt, list);
+//    va_end(list);
 //}
 
 

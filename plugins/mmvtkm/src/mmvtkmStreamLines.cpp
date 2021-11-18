@@ -1027,7 +1027,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
 
     if (data.size() < 2 || color.size() == 0 || idcs.size() == 0) {
         //core::utility::log::Log::DefaultLog.WriteError("In %s at line %d.\nLineData, color, " \
-		"or index vector is empty.", __FILE__, __LINE__);
+        "or index vector is empty.", __FILE__, __LINE__);
         return false;
     }
 

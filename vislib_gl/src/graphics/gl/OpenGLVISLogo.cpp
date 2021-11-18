@@ -9336,7 +9336,7 @@ static unsigned int VisLogoCountFaces() {
     printf("Normals : %u %u %u %u\n", sizeof(normals), sizeof(VLVec3), sizeof(normals) / sizeof(VLVec3), sizeof(normals) % sizeof(VLVec3));
     */
 
-    //	return 20;
+    // return 20;
 
     assert(sizeof(faces) % sizeof(VLQuad) == 0);
     return (sizeof(faces) / sizeof(VLQuad)) - 1;
@@ -9421,7 +9421,7 @@ static void VisLogoDoStuff() {
     if (isCalced)
         return;
     isCalced = true;
-    //	printf("VisLogo ... Do Mega Super Giga Stuff!!!!111\n");
+    // printf("VisLogo ... Do Mega Super Giga Stuff!!!!111\n");
     calcVertexAttribs();
 }
 
@@ -9437,15 +9437,15 @@ static void VisLogoTwistLogo() {
         return;
     isTwisted = true;
 
-    //	printf("Twisting Logo\n");
+    // printf("Twisting Logo\n");
 
-    //	allAngle = 360.0;
+    // allAngle = 360.0;
 
     assert(vC % 20 == 0);
     for (unsigned int i = 20; i < vC; i += 20) {
         a = allAngle * double(i) / double(2 * vC);
 
-        //		printf("HalfAngle : %f\n", a);
+        // printf("HalfAngle : %f\n", a);
 
         // mid point
         mp.v.x = mp.v.y = mp.v.z = 0.0;

@@ -44,11 +44,11 @@ bool RenderMDIMesh::create() {
 
     // generate debug render batch that doesn't rely on data call
     /*
-    CallmeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
-    CallmeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
-    CallmeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-    CallmeshRenderBatches::RenderBatchesData::MeshShaderParams		obj_shader_params;
-    CallmeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
+    CallmeshRenderBatches::RenderBatchesData::ShaderPrgmData        shader_prgm_data;
+    CallmeshRenderBatches::RenderBatchesData::MeshData              mesh_data;
+    CallmeshRenderBatches::RenderBatchesData::DrawCommandData       draw_command_data;
+    CallmeshRenderBatches::RenderBatchesData::MeshShaderParams      obj_shader_params;
+    CallmeshRenderBatches::RenderBatchesData::MaterialShaderParams  mtl_shader_params;
 
     shader_prgm_data.raw_string = "meshDebug";
     shader_prgm_data.char_cnt = 12;
@@ -228,8 +228,8 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
             //command_buffer.base_instance = 0;
             //
             //glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
-            //	render_batch.mesh->getIndicesType(),
-            //	&command_buffer);
+            //  render_batch.mesh->getIndicesType(),
+            //  &command_buffer);
 
             //GLenum err = glGetError();
             //std::cout << "Error: " << err << std::endl;

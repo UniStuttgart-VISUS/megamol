@@ -193,7 +193,7 @@ public:
      * @param data The user specified pointer to be passed to the callback
      *             function.
      * @param getBuiltinToo true to also retreive the builtin view descriptions
-     *					    else false
+     *                      else false
      */
     void EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo = false);
 

@@ -1842,7 +1842,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-                /*	if(create)
+                /*  if(create)
                     {
                         param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                         *slotNew << new param::StringParam("");
@@ -1862,7 +1862,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     Module::ptr_type mod = Module::dynamic_pointer_cast(mn->FindChild(modName));
     if (!mod) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
                 *slot << new param::StringParam("");
@@ -1882,7 +1882,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName).get());
     if (slot == NULL) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                 *slotNew << new param::StringParam("");

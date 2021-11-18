@@ -33,7 +33,7 @@ public:
      * Ctor.
      *
      * @param bufLength The length of the buffer storing the measurements.
-     *					Must not be zero.
+     *                  Must not be zero.
      */
     FpsCounter(unsigned int bufLength = 100);
 
@@ -58,7 +58,7 @@ public:
      * the first rendering command (e.g. glClear) of one frame is called.
      *
      * @throws IllegalStateException if FrameEnd was not called since the
-     *								 last time FrameBegin was called.
+     *                               last time FrameBegin was called.
      */
     void FrameBegin(void);
 
@@ -67,7 +67,7 @@ public:
      * last rendering command (e.g. *SwapBuffers) of one frame is called.
      *
      * @throws IllegalStateException if no FrameBegin was called since the
-     *								 last time FrameEnd was called or since
+     *                               last time FrameEnd was called or since
      *                               this object was created.
      */
     void FrameEnd(void);

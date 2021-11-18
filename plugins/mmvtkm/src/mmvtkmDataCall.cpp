@@ -17,7 +17,7 @@
 // * moldyn::mmvtkmDataCall::mmvtkmDataCall
 // */
 //mmvtkmDataCall::mmvtkmDataCall(void) : AbstractGetData3DCall(),
-//	data_(nullptr)
+//    data_(nullptr)
 //{
 //    // Intentionally empty
 //}

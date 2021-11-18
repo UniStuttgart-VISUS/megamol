@@ -16,12 +16,12 @@ const unsigned int FlagCall::CallMapFlags = 0;
 const unsigned int FlagCall::CallUnmapFlags = 1;
 
 /*
- *	IntSelectionCall:IntSelectionCall
+ * IntSelectionCall:IntSelectionCall
  */
 FlagCall::FlagCall(void) : flags() {}
 
 /*
- *	IntSelectionCall::~IntSelectionCall
+ * IntSelectionCall::~IntSelectionCall
  */
 FlagCall::~FlagCall(void) {
     flags = nullptr;

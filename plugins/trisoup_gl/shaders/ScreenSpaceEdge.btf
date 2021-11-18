@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="ScreenSpaceEdge">
-	<shader name="vertex">
+    <shader name="vertex">
     <snippet type="version">410</snippet>
     <snippet type="string">
-		<![CDATA[
+        <![CDATA[
 //#version 110
 in vec4 in_vertex;
 
@@ -12,13 +12,13 @@ void main() {
 }
 
 ]]>
-		</snippet>
-	</shader>
-	
-	<shader name="fragment">
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
     <snippet type="version">410</snippet>
-		<snippet type="string">
-		<![CDATA[
+        <snippet type="string">
+        <![CDATA[
 //uniform float inWidth;
 //uniform float inHeight;
 
@@ -64,6 +64,6 @@ void main() {
 }
 
 ]]>
-		</snippet>
-	</shader>
+        </snippet>
+    </shader>
 </btf>

@@ -877,7 +877,7 @@ void main(void) {
     else {
         // chose color for lighting
         color = gl_Color.rgb;
-		if( lambda < 0.0 ) discard;
+        if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -1020,7 +1020,7 @@ void main(void) {
     else {
         // chose color for lighting
         color = gl_Color.rgb;
-		if( lambda < 0.0 ) discard;
+        if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -1157,7 +1157,7 @@ void main(void) {
     else {
         // chose color for lighting
         colOut = color.rgb;
-		if( lambda < 0.0 ) discard;
+        if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -1270,7 +1270,7 @@ void main(void) {
     else {
         // chose color for lighting
         colOut = color.rgb;
-		if( lambda < 0.0 ) discard;
+        if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -2475,7 +2475,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
-	if( lambdas.x < 0.0 ) discard;
+    if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
@@ -2648,7 +2648,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
-	if( lambdas.x < 0.0 ) discard;
+    if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
@@ -2831,7 +2831,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
-	if( lambdas.x < 0.0 ) discard;
+    if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
@@ -3223,7 +3223,7 @@ varying vec3 normal,lightDir,halfVector;
 
 
 void main() {
-	float tsl = clamp(float(twoSidedLight), 0.0, 1.0);
+    float tsl = clamp(float(twoSidedLight), 0.0, 1.0);
     vec3 n,halfV;
     float NdotL,NdotHV;
     
@@ -3236,18 +3236,18 @@ void main() {
     // compute the dot product between normal and lightDir
     NdotL = dot(n,lightDir);
     if (NdotL > 0.0) {
-		// front side
+        // front side
         color += diffuse * NdotL;
         halfV = normalize(halfVector);
         NdotHV = max(dot(n,halfV),4.88e-04);
         color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
     } else {
-		// back side
+        // back side
         color += diffuse * (-NdotL) * tsl;
         //halfV = normalize(halfVector);
         //NdotHV = max(dot(-n,halfV),4.88e-04);
         //color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess) * tsl;
-	}
+    }
 
     gl_FragColor = color;
 }
@@ -3268,7 +3268,7 @@ varying vec4 col;
 
 
 void main() {
-	float tsl = clamp(float(twoSidedLight), 0.0, 1.0);
+    float tsl = clamp(float(twoSidedLight), 0.0, 1.0);
     vec3 n,halfV;
     float NdotL,NdotHV;
     
@@ -3283,20 +3283,20 @@ void main() {
     // compute the dot product between normal and lightDir
     NdotL = dot(n,lightDir);
     if (NdotL > 0.0) {
-		// front side
+        // front side
         color += diffuse * NdotL;
         halfV = normalize(halfVector);
 
         NdotHV = max(dot(n,halfV),4.88e-04);
         color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
     } else {
-		// back side
+        // back side
         color += diffuse * (-NdotL) * tsl;
 
         //halfV = normalize(halfVector);
         //NdotHV = max(dot(-n,halfV),4.88e-04);
         //color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess) * tsl;
-	}
+    }
 
 
     //gl_FragColor = color;
@@ -7024,7 +7024,7 @@ void main(void) {
     // compute the dot product between normal and lightDir
     NdotL = dot(n,lightDir);
     if (NdotL > 0.0) {
-		// front side
+        // front side
         colorOut += diffuse * NdotL;
         NdotHV = max(dot(n,halfVector),4.88e-04);
         colorOut += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
@@ -7757,7 +7757,7 @@ gl_Position = ftransform();
 -->
             </snippet>
         </shader>
-	
+    
       <shader name="fragment">
         <snippet type="string">
           <!--
@@ -7791,7 +7791,7 @@ void main()
 -->
         </snippet>
       </shader>
-	  
+      
         <shader name="fragmentOR">
             <snippet type="string">
 <!--
@@ -7800,8 +7800,8 @@ varying vec4 color;
 varying vec3 normal;
 
 void main() {
-	gl_FragData[0] = color;
-	gl_FragData[1].rgb = normalize( normal);
+    gl_FragData[0] = color;
+    gl_FragData[1].rgb = normalize( normal);
   
     float n = zValues.x;
     float f = zValues.y;
@@ -11109,7 +11109,7 @@ void main() {
         //float col = float((abs(val-isoval)/isoDistribution) < isoThresh);
         float col = float(abs(val-isoval)/isoDistribution - float(int(abs(val-isoval)/isoDistribution)) < isoThresh);
         gl_FragColor = vec4(MSH2RGB(colMsh.x, colMsh.y, colMsh.z)*col, col);
-		if( abs(col) < 0.001 ) discard;
+        if( abs(col) < 0.001 ) discard;
     } else { // Invalid color mode
         gl_FragColor = vec4(0.5, 1.0, 0.0, 1.0);
     }    

@@ -77,11 +77,11 @@ public:
     // * @throws std::bad_alloc If the new memory could not be allocated.
     // */
     //static inline T *Reallocate(T *ptr, const SIZE_T cntOld,
-    //		const SIZE_T cntNew) {
-    //	T *retval = new T[cnt];
-    //	::memcpy(retval, ptr, (cntOld < cntNew) ? cntOld : cntNew);
-    //	delete[] ptr;
-    //	return retval;
+    //         const SIZE_T cntNew) {
+    //    T *retval = new T[cnt];
+    //    ::memcpy(retval, ptr, (cntOld < cntNew) ? cntOld : cntNew);
+    //    delete[] ptr;
+    //    return retval;
     //}
 
 private:

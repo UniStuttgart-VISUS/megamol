@@ -189,7 +189,7 @@ float ForceDirected<TI, TO, D>::SingleStep(void) {
                     }
                     //currForce += -normdiff * inData[i].Weight(inData[j]) *(diff.Length() - twi);
                     //currForce += k * ((inData[i].Weight(inData[j]) * inData[i].Weight(inData[j]))
-                    //		/ (diff.Length() * diff.Length())) * normdiff;
+                    //             / (diff.Length() * diff.Length())) * normdiff;
                 }
             }
         }

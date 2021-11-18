@@ -254,7 +254,7 @@ public:
      * Answer whether the string contains 'c'. The search begins with the
      * 'beginningAt'th character.
      *
-     * @param c		      The character to be searched.
+     * @param c           The character to be searched.
      * @param beginningAt The index of the first character to be tested.
      *
      * @return true if 'c' is found at 'beginningAt' or after that.
@@ -292,7 +292,7 @@ public:
     /**
      * Count the occurences of 'c' at or after 'beginningAt'.
      *
-     * @param c		      The character to be counted.
+     * @param c           The character to be counted.
      * @param beginningAt The index of the first character to be tested.
      *
      * @return The number of occurrences of 'c' in the substring starting
@@ -406,7 +406,7 @@ public:
      * search begins with the 'beginningAt'th character. If the character
      * was not found, INVALID_POS is returned.
      *
-     * @param c		      The character to be searched.
+     * @param c           The character to be searched.
      * @param beginningAt The index of the first character to be tested.
      *
      * @return The first occurrence of 'c' after or at 'beginningAt' in the

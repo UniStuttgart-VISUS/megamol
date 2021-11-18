@@ -404,9 +404,9 @@ void ArchVisMSMDataSource::spawnAndUpdateTextLabels() {
 
     //for (auto& particle : m_text_particles)
     //{
-    //	particle.age += elapsed_update_time;
-    //	particle.position.SetY(particle.position.GetY() + elapsed_update_time * 0.00005);
-    //	particle.position.SetX(particle.position.GetX() + (std::signbit(particle.position.GetX()) ? -1.0f : 1.0f) * elapsed_update_time * 0.000025);
+    //    particle.age += elapsed_update_time;
+    //    particle.position.SetY(particle.position.GetY() + elapsed_update_time * 0.00005);
+    //    particle.position.SetX(particle.position.GetX() + (std::signbit(particle.position.GetX()) ? -1.0f : 1.0f) * elapsed_update_time * 0.000025);
     //}
 
     //m_text_particles.erase(std::remove_if(m_text_particles.begin(), m_text_particles.end(), [](const TextLabelParticle& p) { return p.age > 2000; }), m_text_particles.end());

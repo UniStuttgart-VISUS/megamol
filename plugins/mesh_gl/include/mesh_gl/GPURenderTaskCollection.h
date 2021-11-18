@@ -60,11 +60,11 @@ public:
         size_t per_draw_data_byteSize;
     };
 
-    // void reserveRenderTask(
-    //	std::shared_ptr<GLSLShader> const& shader_prgm,
-    //	std::shared_ptr<Mesh> const&       mesh,
-    //	size_t                             draw_cnt,
-    //	size_t                             per_draw_data_byte_size
+    //void reserveRenderTask(
+    //    std::shared_ptr<GLSLShader> const& shader_prgm,
+    //    std::shared_ptr<Mesh> const&       mesh,
+    //    size_t                             draw_cnt,
+    //    size_t                             per_draw_data_byte_size
     //);
 
     template<typename PerDrawDataType>

@@ -24,8 +24,8 @@ void main(void) {
 
     //  Temporary tone mapping
     out_colour = out_colour/(vec3(1.0)+out_colour);
-    //	Temporary gamma correction
-	out_colour = pow( out_colour, vec3(1.0/2.2) );
+    //  Temporary gamma correction
+    out_colour = pow( out_colour, vec3(1.0/2.2) );
 
     frag_colour = vec4(out_colour,1.0);
 }

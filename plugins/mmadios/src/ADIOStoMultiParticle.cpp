@@ -188,7 +188,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 // float minIntensity = intensity[std::distance(std::begin(intensity), minIt)];
                 // float maxIntensity = intensity[std::distance(std::begin(intensity), maxIt)];
                 // for (auto i = 0; i < intensity.size(); i++) {
-                //	intensity[i] = (intensity[i] - minIntensity)/(maxIntensity - minIntensity);
+                //     intensity[i] = (intensity[i] - minIntensity)/(maxIntensity - minIntensity);
                 //}
             }
             // ID

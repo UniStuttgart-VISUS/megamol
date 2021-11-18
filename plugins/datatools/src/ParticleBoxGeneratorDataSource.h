@@ -135,45 +135,45 @@ private:
 
 #if 0
 
-	///// l2 norm
-	//template<class T_engine>
-	//void makeRandomNormal(float& outx, float& outy, float& outz, std::normal_distribution<float>& dist, T_engine& eng) {
-	//    float len = 0.0f;
-	//    while (len < 0.001f) {
-	//        outx = dist(eng);
-	//        outy = dist(eng);
-	//        outz = dist(eng);
-	//        len = std::sqrt(outx * outx + outy * outy + outz * outz);
-	//    }
-	//    outx /= len;
-	//    outy /= len;
-	//    outz /= len;
-	//}
+    ///// l2 norm
+    //template<class T_engine>
+    //void makeRandomNormal(float& outx, float& outy, float& outz, std::normal_distribution<float>& dist, T_engine& eng) {
+    //    float len = 0.0f;
+    //    while (len < 0.001f) {
+    //        outx = dist(eng);
+    //        outy = dist(eng);
+    //        outz = dist(eng);
+    //        len = std::sqrt(outx * outx + outy * outy + outz * outz);
+    //    }
+    //    outx /= len;
+    //    outy /= len;
+    //    outz /= len;
+    //}
 
-	///// l-inf norm
-	//template<class T_engine>
-	//void makeRandomNormal_2(float& outx, float& outy, float& outz, std::normal_distribution<float>& dist, T_engine& eng) {
-	//    float len = 0.0f;
-	//    while (len < 0.001f) {
-	//        outx = dist(eng);
-	//        outy = dist(eng);
-	//        outz = dist(eng);
-	//        len = std::max(std::max(std::abs(outx), std::abs(outy)), std::abs(outz));
-	//    }
-	//    outx /= len;
-	//    outy /= len;
-	//    outz /= len;
-	//}
+    ///// l-inf norm
+    //template<class T_engine>
+    //void makeRandomNormal_2(float& outx, float& outy, float& outz, std::normal_distribution<float>& dist, T_engine& eng) {
+    //    float len = 0.0f;
+    //    while (len < 0.001f) {
+    //        outx = dist(eng);
+    //        outy = dist(eng);
+    //        outz = dist(eng);
+    //        len = std::max(std::max(std::abs(outx), std::abs(outy)), std::abs(outz));
+    //    }
+    //    outx /= len;
+    //    outy /= len;
+    //    outz /= len;
+    //}
 
-	template<class T_engine, class T_dist>
-	void addNoise(float& x, float& y, float& z, float scale,
-		T_dist& dist, T_engine& eng) {
-		//float dx, dy, dz;
-		//makeRandomNormal_2(dx, dy, dz, dist, eng);
-		x += (dist(eng) * 2.0f - 1.0f) * scale;
-		y += (dist(eng) * 2.0f - 1.0f) * scale;
-		z += (dist(eng) * 2.0f - 1.0f) * scale;
-	}
+    template<class T_engine, class T_dist>
+    void addNoise(float& x, float& y, float& z, float scale,
+        T_dist& dist, T_engine& eng) {
+        //float dx, dy, dz;
+        //makeRandomNormal_2(dx, dy, dz, dist, eng);
+        x += (dist(eng) * 2.0f - 1.0f) * scale;
+        y += (dist(eng) * 2.0f - 1.0f) * scale;
+        z += (dist(eng) * 2.0f - 1.0f) * scale;
+    }
 
 };
 #endif
