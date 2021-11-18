@@ -4,11 +4,12 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
+#include "stdafx.h"
+
 #include "mmcore/JobInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;

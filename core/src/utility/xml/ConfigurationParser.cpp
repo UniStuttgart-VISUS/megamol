@@ -4,9 +4,9 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
+#include "stdafx.h"
 
 #include "mmcore/utility/xml/ConfigurationParser.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"

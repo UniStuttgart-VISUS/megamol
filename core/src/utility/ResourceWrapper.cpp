@@ -4,9 +4,9 @@
  * Copyright (C) 2012 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
+#include "stdafx.h"
 
 #include "mmcore/utility/ResourceWrapper.h"
-#include "stdafx.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Path.h"
 

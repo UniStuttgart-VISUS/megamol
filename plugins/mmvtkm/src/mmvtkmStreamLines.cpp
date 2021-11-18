@@ -4,8 +4,9 @@
  * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "mmvtkm/mmvtkmStreamLines.h"
 #include "mmvtkm/mmvtkmDataCall.h"
+
+#include "mmvtkm/mmvtkmStreamLines.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
