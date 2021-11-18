@@ -6,8 +6,13 @@ EXIT_CODE=0
 changed_files=$(git diff --name-only origin/master...HEAD)
 git_root=$(git rev-parse --show-toplevel)
 
-file_list=$(find . -type f)
+file_list=$(find . -type f | sort)
 while read -r file; do
+  #ignore .git dir
+  if [[ $file == "./.git/"* ]]; then
+    continue
+  fi
+
   # ignore files ignored by git
   if git check-ignore -q "$file"; then
     continue
@@ -17,6 +22,13 @@ while read -r file; do
   mime=$(file -b --mime-type "$file")
   if ! [[ $mime == "text/"* ]]; then
     continue
+  fi
+
+  # ignore 3rd dirs in plugins
+  if [[ $file == "./plugins/"* ]]; then
+    if [[ $file == *"/3rd/"* ]]; then
+      continue
+    fi
   fi
 
   # === File tests ===
