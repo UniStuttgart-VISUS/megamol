@@ -23,7 +23,6 @@ void MultiPerformanceHistory::push_sample(frame_type frame, frame_index_type idx
         window_metrics[static_cast<uint32_t>(metric_type::MEDIAN)].push_value(buf.med());
         window_metrics[static_cast<uint32_t>(metric_type::COUNT)].push_value(buf.count());
         next_index = next_wrap(next_index);
-        //buf = time_buffer[next_index];
         num_frames++;
     }
     time_buffer[next_index].push_value(frame, val);

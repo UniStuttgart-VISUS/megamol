@@ -471,10 +471,12 @@ void megamol::gui::Call::draw_profiling_data() {
 
             std::array<float, core::MultiPerformanceHistory::buffer_length> xbuf;
             std::iota(xbuf.begin(), xbuf.end(), 0.0f);
-            // std::array<float, core::MultiPerformanceHistory::buffer_length> ybuf;
-            // const auto ch = this->profiling[i].hcpu;
-            // std::transform(ch.begin(), ch.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d);
-            // }); auto Xhist_count = static_cast<int>(ybuf.size());
+
+            // auto hurz = cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX);
+            // for (auto& h : hurz) {
+            //    std::cout << h << " ";
+            //}
+            // std::cout << std::endl;
 
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
@@ -511,10 +513,6 @@ void megamol::gui::Call::draw_profiling_data() {
 
                 ImGui::EndTable();
             }
-
-            // const auto gh = this->profiling[i].hgpu;
-            // std::transform(gh.begin(), gh.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d);
-            // });
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
