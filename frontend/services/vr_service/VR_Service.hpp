@@ -9,6 +9,10 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "ImagePresentationEntryPoints.h"
+
+#include <memory>
+
 namespace megamol {
 namespace frontend {
 
@@ -59,10 +63,38 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    static std::string vr_service_marker;
+
 private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    using ImagePresentationEntryPoints = megamol::frontend_resources::ImagePresentationEntryPoints;
+
+    ImagePresentationEntryPoints m_entry_points_registry;
+
+    // puts VR render inputs into entry point
+    // whether left/right eye is rendered is done by the update handler
+    struct IVR_Device {
+        virtual ~IVR_Device() = default;
+
+        bool virtual add_entry_point(std::string const& entry_point_name,
+            frontend_resources::EntryPointRenderFunctions const& entry_point_callbacks,
+            ImagePresentationEntryPoints& entry_points_registry) = 0;
+        bool virtual remove_entry_point(
+            std::string const& entry_point_name, ImagePresentationEntryPoints& entry_points_registry) = 0;
+        void virtual clear_entry_points() = 0;
+
+        void virtual preGraphRender() {}
+        void virtual postGraphRender() {}
+    };
+
+    std::unique_ptr<IVR_Device> m_vr_device_ptr;
+#define vr_device(do)        \
+    if (m_vr_device_ptr) {   \
+        m_vr_device_ptr->do; \
+    }
 };
 
 } // namespace frontend
