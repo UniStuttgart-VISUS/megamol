@@ -8,6 +8,8 @@ git_root=$(git rev-parse --show-toplevel)
 
 file_list=$(find . -type f)
 while read -r file; do
+  # === File tests ===
+
   # only process file if mime type is text
   mime=$(file -b --mime-type "$file")
   if ! [[ $mime == "text/"* ]]; then
@@ -37,16 +39,6 @@ while read -r file; do
     continue
   fi
 
-  # Get absolute file path and path relative to git root (for comparison with changed_files).
-  # Assume we are always anywhere within the git work dir and just remove git_root based on string pattern.
-  file_abs="$(cd "$(dirname "$file")"; pwd -P)/$(basename "$file")"
-  file_git="${file_abs##"$git_root/"}"
-
-  # If the current file is not changed within this git branch skip the following tests
-  if [[ $changed_files != *"$file_git"* ]]; then
-    continue
-  fi
-
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
     EXIT_CODE=1
@@ -60,6 +52,19 @@ while read -r file; do
     echo "ERROR: File contains tabs: $file"
     continue
   fi
+
+  # Get absolute file path and path relative to git root (for comparison with changed_files).
+  # Assume we are always anywhere within the git work dir and just remove git_root based on string pattern.
+  file_abs="$(cd "$(dirname "$file")"; pwd -P)/$(basename "$file")"
+  file_git="${file_abs##"$git_root/"}"
+
+  # If the current file is not changed within this git branch skip the following tests
+  if [[ $changed_files != *"$file_git"* ]]; then
+    continue
+  fi
+
+  # === File tests (only on changed files) ===
+
 done <<< "$file_list"
 
 exit $EXIT_CODE
