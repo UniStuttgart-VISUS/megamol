@@ -11,7 +11,7 @@ Language: Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
 AlignEscapedNewlines: Left
-AllowAllArgumentsOnNextLine: false
+AllowAllArgumentsOnNextLine: true # 'false' has different behavior between clang-format 11 and 12, therefore use 'true'.
 AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
@@ -28,7 +28,7 @@ DerivePointerAlignment: false
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: None
 PointerAlignment: Left
-SpaceAfterCStyleCast: true
+SpaceAfterCStyleCast: false # want true, but has issues with clang-format-12
 SpaceAfterTemplateKeyword: false
 Standard: c++17
 ...
