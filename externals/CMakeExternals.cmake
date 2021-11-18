@@ -91,8 +91,8 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(glowl
-      GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
+      GIT_REPOSITORY https://github.com/gralkapk/glowl.git
+      GIT_TAG "851283da9e0040fa0aa5360b1eb605d828768021"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
@@ -664,7 +664,7 @@ function(require_external NAME)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "v0.5"
+        GIT_TAG "7bc72ab1c4e930b948b96912d35e0df80555aae2"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         DEPENDS glad)
