@@ -9,7 +9,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "vislib/math/Matrix4.h"
 
 using namespace megamol;

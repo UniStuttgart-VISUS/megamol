@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -49,7 +49,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->getDataSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
     
     this->showBoundingBox << new core::param::StringParam("");
@@ -74,7 +74,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<geocalls::VolumetricDataCall>();
-    auto const cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
@@ -162,8 +162,8 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     std::vector<float> a;
 
     if ((*cgtf)(0)) {
-        if (cgtf->OpenGLTextureFormat() ==
-            core_gl::view::CallGetTransferFunctionGL::TextureFormat::TEXTURE_FORMAT_RGBA) {
+        if (cgtf->TFTextureFormat() ==
+            core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
             auto const numColors = cgtf->TextureSize();
             rgb.resize(3 * numColors);
             a.resize(numColors);
