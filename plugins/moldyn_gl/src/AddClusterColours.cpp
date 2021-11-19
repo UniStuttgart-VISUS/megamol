@@ -14,7 +14,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 
-namespace megamol::datatools {
+namespace megamol::moldyn_gl {
 
 /****************************************************************************/
 
