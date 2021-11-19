@@ -22,6 +22,7 @@ void MultiPerformanceHistory::push_sample(frame_type frame, frame_index_type idx
         window_metrics[static_cast<uint32_t>(metric_type::AVERAGE)].push_value(buf.avg());
         window_metrics[static_cast<uint32_t>(metric_type::MEDIAN)].push_value(buf.med());
         window_metrics[static_cast<uint32_t>(metric_type::COUNT)].push_value(buf.count());
+        window_metrics[static_cast<uint32_t>(metric_type::SUM)].push_value(buf.sum());
         next_index = next_wrap(next_index);
         num_frames++;
     }
@@ -59,6 +60,9 @@ MultiPerformanceHistory::perf_type MultiPerformanceHistory::at(int index, metric
     case metric_type::COUNT:
         return time_buffer[offset(next_index, index)].count();
         break;
+    case metric_type::SUM:
+        return time_buffer[offset(next_index, index)].sum();
+        break;
     }
 }
 
@@ -85,6 +89,9 @@ std::array<MultiPerformanceHistory::perf_type, MultiPerformanceHistory::buffer_l
             break;
         case metric_type::COUNT:
             return static_cast<MultiPerformanceHistory::perf_type>(fs.count());
+            break;
+        case metric_type::SUM:
+            return fs.sum();
             break;
         }
     };

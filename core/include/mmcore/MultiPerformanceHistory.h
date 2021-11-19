@@ -17,12 +17,13 @@ namespace core {
  */
 class MultiPerformanceHistory {
 public:
-    static const uint32_t buffer_length = 100;
+    static constexpr uint32_t buffer_length = 100;
     using frame_type = uint32_t;
     using frame_index_type = uint32_t;
     using perf_type = float;
 
-    enum class metric_type { MIN = 0, MAX = 1, AVERAGE = 2, MEDIAN = 3, COUNT = 4 };
+    enum class metric_type { MIN = 0, MAX = 1, AVERAGE = 2, MEDIAN = 3, COUNT = 4, SUM = 5 };
+    static constexpr uint32_t metric_count = 6;
 
     MultiPerformanceHistory();
 
@@ -56,6 +57,8 @@ public:
             return window_metrics[static_cast<uint32_t>(inner_metric)].med();
         case metric_type::COUNT:
             return window_metrics[static_cast<uint32_t>(inner_metric)].count();
+        case metric_type::SUM:
+            return window_metrics[static_cast<uint32_t>(inner_metric)].sum();
         }
     }
 
@@ -92,7 +95,7 @@ private:
                 minimum = t;
             if (t > maximum)
                 maximum = t;
-            const auto total = average * (values.size() - 1) + t;
+            total = average * (values.size() - 1) + t;
             average = total / static_cast<perf_type>(values.size());
         }
         perf_type min() const {
@@ -106,6 +109,9 @@ private:
         }
         uint32_t count() const {
             return values.size();
+        }
+        perf_type sum() const {
+            return total;
         }
         perf_type med() const {
             if (curr_frame != median_computed) {
@@ -121,7 +127,7 @@ private:
         }
         void reset() {
             values.clear();
-            average = median = 0;
+            average = median = total = 0;
             minimum = std::numeric_limits<perf_type>::max();
             maximum = std::numeric_limits<perf_type>::lowest();
         }
@@ -129,7 +135,7 @@ private:
     private:
         std::vector<perf_type> values;
         perf_type minimum = std::numeric_limits<perf_type>::max(), maximum = std::numeric_limits<perf_type>::lowest();
-        perf_type average = 0;
+        perf_type average = 0, total = 0;
         mutable perf_type median = 0;
         frame_type curr_frame = std::numeric_limits<frame_type>::max();
         mutable frame_type median_computed = std::numeric_limits<frame_type>::max();
@@ -158,13 +164,17 @@ private:
         uint32_t count() const {
             return values.size();
         }
+        perf_type sum() {
+            compute_moments();
+            return total;
+        }
         perf_type med() {
             compute_moments();
             return median;
         }
         void reset(bool clear_values = true) {
             if (clear_values) values.clear();
-            average = median = 0;
+            average = median = total = 0;
             minimum = std::numeric_limits<perf_type>::max();
             maximum = std::numeric_limits<perf_type>::lowest();
         }
@@ -177,7 +187,6 @@ private:
                     std::vector<perf_type> copy(values.begin(), values.end());
                     std::sort(copy.begin(), copy.end());
                     median = copy[copy.size() / 2];
-                    perf_type total = 0;
                     for (auto& v : copy) {
                         total += v;
                         if (v < minimum)
@@ -196,7 +205,7 @@ private:
 
         std::list<perf_type> values;
         perf_type minimum = std::numeric_limits<perf_type>::max(), maximum = std::numeric_limits<perf_type>::lowest();
-        perf_type average = 0;
+        perf_type average = 0, total = 0;
         mutable perf_type median = 0;
         mutable bool moments_ok = false;
         uint32_t window_size = buffer_length;
@@ -206,7 +215,7 @@ private:
     std::string name;
     int next_index = 0;
     uint32_t num_samples = 0, num_frames = 0;
-    std::array<windowed_frame_statistics, 5> window_metrics;
+    std::array<windowed_frame_statistics, metric_count> window_metrics;
 };
 
 }
