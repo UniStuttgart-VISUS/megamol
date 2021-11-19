@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
+#define GLOWL_OPENGL_INCLUDE_GLAD2
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 

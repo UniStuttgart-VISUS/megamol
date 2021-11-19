@@ -7,6 +7,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "probe/ProbeCollection.h"
 
@@ -51,16 +52,20 @@ bool FilterByProbe::create() {
         vislib_gl::graphics::gl::ShaderSource filterAll_src;
         vislib_gl::graphics::gl::ShaderSource filterNone_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("FilterByProbe::setFlags", setFlags_src)) return false;
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+
+        if (!ssf->MakeShaderSource("FilterByProbe::setFlags", setFlags_src))
+            return false;
         if (!m_setFlags_prgm->Compile(setFlags_src.Code(), setFlags_src.Count())) return false;
         if (!m_setFlags_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("FilterByProbe::filterAll", filterAll_src))
+        if (!ssf->MakeShaderSource("FilterByProbe::filterAll", filterAll_src))
             return false;
         if (!m_filterAll_prgm->Compile(filterAll_src.Code(), filterAll_src.Count())) return false;
         if (!m_filterAll_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("FilterByProbe::filterNone", filterNone_src))
+        if (!ssf->MakeShaderSource("FilterByProbe::filterNone", filterNone_src))
             return false;
         if (!m_filterNone_prgm->Compile(filterNone_src.Code(), filterNone_src.Count())) return false;
         if (!m_filterNone_prgm->Link()) return false;

@@ -3,6 +3,7 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::NormalFromDepth::NormalFromDepth()
@@ -30,7 +31,9 @@ megamol::compositing::NormalFromDepth::~NormalFromDepth() {
 bool megamol::compositing::NormalFromDepth::create() {
     vislib_gl::graphics::gl::ShaderSource compute_shader_src;
 
-    GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("Compositing::normalFromDepth", compute_shader_src);
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+
+    ssf->MakeShaderSource("Compositing::normalFromDepth", compute_shader_src);
 
     std::string vertex_src(compute_shader_src.WholeCode(), (compute_shader_src.WholeCode()).Length());
 

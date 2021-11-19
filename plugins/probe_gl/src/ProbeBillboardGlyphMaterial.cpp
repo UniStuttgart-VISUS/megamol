@@ -2,6 +2,7 @@
 
 #include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()
         : m_version(0), m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
@@ -22,10 +23,13 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         vislib::StringA vertShaderName = shader_base_name + "::vertex";
         vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-        if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src)) {
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+
+        if (!ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src)) {
             throw;
         }
-        if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src)) {
+        if (!ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src)) {
             throw;
         }
 
