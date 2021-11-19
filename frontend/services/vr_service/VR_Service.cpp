@@ -201,6 +201,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     interop::BoundingBoxCorners bboxCorners;
     bool has_camera_view = false;
     bool has_camera_proj = false;
+    bool has_bbox = false;
     bool ep_handles_installed = false;
 
     std::string ep_name;
@@ -274,11 +275,24 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     pimpl.left_texturesender.sendTexture(left.gl_handle, left.width, left.height);
     pimpl.right_texturesender.sendTexture(right.gl_handle, right.width, right.height);
 
-    // TODO: get Bbox from view entry point
-    auto bboxCorners =
-        interop::BoundingBoxCorners{interop::vec4{0.0f, 0.0f, 0.0f, 1.0f}, interop::vec4{2.0f, 2.0f, 2.0f, 1.0f}};
+    if (!pimpl.has_bbox) {
+        auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
 
-    pimpl.bboxSender.sendData<interop::BoundingBoxCorners>("BoundingBoxCorners", bboxCorners);
+        if (!maybe_bbox.IsBoundingBoxValid())
+            return;
+
+        auto bbox = maybe_bbox.BoundingBox();
+
+        pimpl.bboxCorners.min = interop::vec4{
+            bbox.GetLeftBottomBack().GetX(), bbox.GetLeftBottomBack().GetY(), bbox.GetLeftBottomBack().GetZ(), 0.0f};
+
+        pimpl.bboxCorners.max = interop::vec4{
+            bbox.GetRightTopFront().GetX(), bbox.GetRightTopFront().GetY(), bbox.GetRightTopFront().GetZ(), 0.0f};
+
+        //pimpl.has_bbox = true;
+    }
+
+    pimpl.bboxSender.sendData<interop::BoundingBoxCorners>("BoundingBoxCorners", pimpl.bboxCorners);
 }
 
 bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& entry_point_name,
