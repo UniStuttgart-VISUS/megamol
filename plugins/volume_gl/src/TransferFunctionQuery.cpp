@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "TransferFunctionQuery.h"
+#include "volume_gl/TransferFunctionQuery.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/assert.h"
