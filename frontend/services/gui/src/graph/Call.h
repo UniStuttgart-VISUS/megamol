@@ -17,6 +17,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget_gl.h"
 
 
 namespace megamol {
@@ -119,6 +120,8 @@ namespace gui {
         std::string callee_slot_name;
 
         HoverToolTip gui_tooltip;
+        ImageWidget gui_profiling_button;
+        bool gui_profiling_btn_hovered;
 
 #ifdef PROFILING
         std::vector<core::MultiPerformanceHistory> cpu_perf_history;

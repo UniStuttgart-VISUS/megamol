@@ -12,6 +12,12 @@
 #include "InterfaceSlot.h"
 
 
+#define PROFILING_PLOT_HEIGHT (7.0f)
+#define PROFILING_CHILD_WIDTH (15.0f)
+#define PROFILING_CHILD_HEIGHT (9.0f + 2.0f * PROFILING_PLOT_HEIGHT)
+#include "implot.h"
+
+
 using namespace megamol;
 using namespace megamol::gui;
 
@@ -39,7 +45,16 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_set_selected_slot_position(false)
         , gui_hidden(false)
         , gui_tooltip()
-        , gui_rename_popup() {
+        , gui_rename_popup()
+        , gui_profiling_button()
+        , gui_other_item_hovered(false)
+#ifdef PROFILING
+        , cpu_perf_history()
+        , gl_perf_history()
+        , profiling_parent_pointer(nullptr)
+        , show_profiling_data(false)
+#endif // PROFILING
+{
 
     this->callslots.emplace(megamol::gui::CallSlotType::CALLER, CallSlotPtrVector_t());
     this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, CallSlotPtrVector_t());
@@ -304,8 +319,11 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Hover Tooltip
-                if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
+                if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label &&
+                    !this->gui_other_item_hovered) {
+                    ImGui::PushFont(state.canvas.gui_font_ptr);
                     this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                    ImGui::PopFont();
                 } else {
                     this->gui_tooltip.Reset();
                 }
@@ -394,11 +412,17 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 float text_width;
                 ImVec2 text_pos_left_upper;
                 const float line_height = ImGui::GetTextLineHeightWithSpacing();
-                bool other_item_hovered = false;
                 bool graph_entry_button = this->is_view;
                 bool parameter_button = (!this->parameters.empty());
-                bool any_option_button = (graph_entry_button || parameter_button);
+                bool profiling_button = false;
+#ifdef PROFILING
+                profiling_button = true;
+#endif
+                unsigned int button_count = (graph_entry_button) ? (1) : (0);
+                button_count += (parameter_button) ? (1) : (0);
+                button_count += (profiling_button) ? (1) : (0);
 
+                this->gui_other_item_hovered = false;
                 if (state.interact.module_show_label) {
 
                     auto header_color = (this->gui_selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
@@ -414,18 +438,21 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 
                     text_width = ImGui::CalcTextSize(this->name.c_str()).x;
                     text_pos_left_upper = module_center - ImVec2((text_width / 2.0f),
-                                                              ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
+                                                              ((button_count > 0) ? (line_height * 0.6f) : (0.0f)));
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
-                if (any_option_button) {
+                if (button_count > 0) {
                     float item_y_offset = (line_height / 2.0f);
                     float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
                     if (!state.interact.module_show_label) {
                         item_y_offset = -(line_height / 2.0f);
                     }
-                    if (graph_entry_button && parameter_button) {
+                    if (button_count == 2) {
                         item_x_offset = ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
+                    } else if (button_count == 3) {
+                        item_x_offset = (0.5 * ImGui::GetFrameHeight()) + ImGui::GetFrameHeight() +
+                                        (style.ItemSpacing.x * state.canvas.zooming);
                     }
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
 
@@ -446,7 +473,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             } else {
                                 tooltip_label = "No Graph Entry";
                             }
-                            other_item_hovered = other_item_hovered || this->gui_tooltip.ToolTip(tooltip_label);
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip(tooltip_label);
+                            ImGui::PopFont();
                         }
                         ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
@@ -473,34 +502,37 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::SetItemAllowOverlap();
                         if (hovered) {
-                            other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
+                            ImGui::PopFont();
                         }
+                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
-
-
 #ifdef PROFILING
                     // Profiling Button
-                    /* TODO
-                    // ImGui::PushFont(state.canvas.gui_font_ptr);
-                    text_pos_left_upper = call_rect_min + style.ItemSpacing;
-                    ImGui::SetCursorScreenPos(text_pos_left_upper);
-                    if (ImGui::ArrowButton(
-                            "###profiling", ((this->show_profiling_data) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                        this->show_profiling_data = !this->show_profiling_data;
+                    if (profiling_button) {
+                        // Lazy loading of performance button texture
+                        if (!this->gui_profiling_button.IsLoaded()) {
+                            this->gui_profiling_button.LoadTextureFromFile(GUI_PROFILING_BUTTON);
+                        }
+                        auto button_size = ImGui::GetFrameHeight();
+                        if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
+                            this->show_profiling_data = !this->show_profiling_data;
+                        }
+                        if (hovered) {
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Performance Monitor");
+                            ImGui::PopFont();
+                        }
+                        if (this->show_profiling_data) {
+                            ImGui::SameLine();
+                            ImVec2 profiling_child_pos = ImGui::GetCursorScreenPos();
+                            profiling_child_pos.y += ImGui::GetFrameHeightWithSpacing();
+                            profiling_child_pos.x -= ImGui::GetFrameHeightWithSpacing();
+                            ImGui::SetCursorScreenPos(profiling_child_pos);
+                            this->draw_profiling_data();
+                        }
                     }
-                    this->gui_tooltip.ToolTip("Profiling");
-                    if (this->show_profiling_data) {
-                        text_pos_left_upper.y += ImGui::GetFrameHeight();
-                        ImGui::SetCursorScreenPos(text_pos_left_upper);
-                        this->draw_profiling_data();
-                    }
-                    text_pos_left_upper.x += ImGui::GetFrameHeightWithSpacing();
-                    text_pos_left_upper.y += (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
-                    if (this->show_profiling_data) {
-                        text_pos_left_upper.y -= ImGui::GetFrameHeight();
-                    }
-                    // ImGui::PopFont();
-                    */
 #endif
                 }
 
@@ -545,6 +577,17 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     // WIDTH
+    bool graph_entry_button = this->is_view;
+    bool parameter_button = (!this->parameters.empty());
+    bool profiling_button = false;
+#ifdef PROFILING
+    profiling_button = true;
+#endif
+    float button_count = (graph_entry_button) ? (1.0f) : (0.0f);
+    button_count += (parameter_button) ? (1.0f) : (0.0f);
+    button_count += (profiling_button) ? (1.0f) : (0.0f);
+    float button_width = button_count * (ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x);
+
     float class_width = 0.0f;
     float max_label_length = 0.0f;
     if (state.interact.module_show_label) {
@@ -552,8 +595,7 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         float name_length = ImGui::CalcTextSize(this->name.c_str()).x;
         max_label_length = name_length;
     }
-    float button_width =
-        ((this->is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
+
     max_label_length = std::max(max_label_length, button_width);
     max_label_length /= state.canvas.zooming;
     float max_slot_name_length = 0.0f;
@@ -617,11 +659,11 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
     const frontend_resources::PerformanceManager::timer_entry& entry) {
     switch (entry.api) {
     case frontend_resources::PerformanceManager::query_api::CPU:
-        cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+        this->cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
             std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     case frontend_resources::PerformanceManager::query_api::OPENGL:
-        gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+        this->gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
             std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
         break;
     }
@@ -630,12 +672,12 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
 
 void megamol::gui::Module::draw_profiling_data() {
 
-    /* TODO
-    ImGui::BeginChild("call_profiling_info",
+    ImGui::BeginChild("module_profiling_info",
         ImVec2((ImGui ::GetFrameHeight() * PROFILING_CHILD_WIDTH), (ImGui::GetFrameHeight() * PROFILING_CHILD_HEIGHT)),
         false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
 
     ImGui::TextUnformatted("Profiling");
+    /* TODO
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback Name]");
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
@@ -653,26 +695,26 @@ void megamol::gui::Module::draw_profiling_data() {
                 // ImGui::TableNextColumn();
                 // ImGui::Text("%.12f",
                 //
-    cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
+    this->cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("AverageCPUTime");
                 ImGui::TableNextColumn();
-                ImGui::Text(
-                    "%.12f", cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
-                                 core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ImGui::Text("%.12f",
+                    this->cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
+                        core::MultiPerformanceHistory::metric_type::AVERAGE));
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("MaxCPUSamplesPerFrame");
                 ImGui::TableNextColumn();
-                ImGui::Text("%i", static_cast<int>(cpu_perf_history[i].window_statistics(
+                ImGui::Text("%i", static_cast<int>(this->cpu_perf_history[i].window_statistics(
                                       core::MultiPerformanceHistory::metric_type::MAX,
                                       core::MultiPerformanceHistory::metric_type::COUNT)));
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumCPUSamples");
                 ImGui::TableNextColumn();
-                ImGui::Text("%i", cpu_perf_history[i].samples());
+                ImGui::Text("%i", this->cpu_perf_history[i].samples());
 
                 ImGui::EndTable();
             }
@@ -680,22 +722,37 @@ void megamol::gui::Module::draw_profiling_data() {
             std::array<float, core::MultiPerformanceHistory::buffer_length> xbuf;
             std::iota(xbuf.begin(), xbuf.end(), 0.0f);
 
-            // auto hurz = cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX);
-            // for (auto& h : hurz) {
-            //    std::cout << h << " ";
-            //}
-            // std::cout << std::endl;
-
+            const std::array<std::string, 2> entries = {"Min/Max+Avg", "Sum"};
+            static int display_idx = 0;
+            ImPlotAxisFlags y_flags = 0;
+            if (ImGui::BeginCombo("Display", entries[display_idx].c_str())) {
+                for (auto i = 0; i < entries.size(); ++i) {
+                    bool isSelected = (i == display_idx);
+                    if (ImGui::Selectable(entries[i].c_str(), isSelected)) {
+                        display_idx = i;
+                        y_flags = ImPlotAxisFlags_AutoFit;
+                    }
+                }
+                ImGui::EndCombo();
+            }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
-                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
-                    core::MultiPerformanceHistory::buffer_length);
-                ImPlot::PlotLine("###cpuplot", xbuf.data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
-                    core::MultiPerformanceHistory::buffer_length);
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
+                if (display_idx == 0) {
+                    ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
+                        this->cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                        this->cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                    ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                        this->cpu_perf_history[i]
+                            .copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE)
+                            .data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                } else {
+                    ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                        this->cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::SUM).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                }
                 ImPlot::EndPlot();
             }
 
@@ -717,7 +774,7 @@ void megamol::gui::Module::draw_profiling_data() {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumGLSamples");
                 ImGui::TableNextColumn();
-                ImGui::Text("%.12i", gl_perf_history[i].samples());
+                ImGui::Text("%.12i", this->gl_perf_history[i].samples());
 
                 ImGui::EndTable();
             }
@@ -725,13 +782,21 @@ void megamol::gui::Module::draw_profiling_data() {
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotShaded("###glminmax", xbuf.data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
-                    core::MultiPerformanceHistory::buffer_length);
-                ImPlot::PlotLine("###glplot", xbuf.data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
-                    core::MultiPerformanceHistory::buffer_length);
+                if (display_idx == 0) {
+                    ImPlot::PlotShaded("###glminmax", xbuf.data(),
+                        this->gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                        this->gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                    ImPlot::PlotLine("###glplot", xbuf.data(),
+                        this->gl_perf_history[i]
+                            .copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE)
+                            .data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                } else {
+                    ImPlot::PlotLine("###glplot", xbuf.data(),
+                        this->gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::SUM).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                }
                 ImPlot::EndPlot();
             }
 
@@ -739,9 +804,9 @@ void megamol::gui::Module::draw_profiling_data() {
         }
     }
     ImGui::EndTabBar();
+    */
 
     ImGui::EndChild();
-    */
 }
 
 #endif // PROFILING

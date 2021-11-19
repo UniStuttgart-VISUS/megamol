@@ -87,9 +87,6 @@ namespace frontend {
         this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
             return this->resource_provide_gui_scale(scale);
         };
-        this->resource_provide_gui_visibility(m_config.gui_show);
-        this->resource_provide_gui_scale(m_config.gui_scale);
-
         this->m_providedRegisterWindowResource.register_window =
             [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
             this->resource_register_window(name, func);
@@ -103,8 +100,9 @@ namespace frontend {
             this->resource_register_notification(name, open, message);
         };
 
-        this->m_gui->SetVisibility(m_config.gui_show);
-        this->m_gui->SetScale(m_config.gui_scale);
+        // NB: Config values are applied before project file values and therefore overwritten by project settings
+        this->resource_provide_gui_visibility(m_config.gui_show);
+        this->resource_provide_gui_scale(m_config.gui_scale);
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully");
 

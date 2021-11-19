@@ -212,9 +212,11 @@ namespace gui {
         ImVec2 gui_set_screen_position;
         bool gui_set_selected_slot_position;
         bool gui_hidden;
+        bool gui_other_item_hovered;
 
         HoverToolTip gui_tooltip;
         PopUps gui_rename_popup;
+        ImageWidget gui_profiling_button;
 
 #ifdef PROFILING
         std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
