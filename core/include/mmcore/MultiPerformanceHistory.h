@@ -95,7 +95,7 @@ private:
                 minimum = t;
             if (t > maximum)
                 maximum = t;
-            total = average * (values.size() - 1) + t;
+            total += t;
             average = total / static_cast<perf_type>(values.size());
         }
         perf_type min() const {

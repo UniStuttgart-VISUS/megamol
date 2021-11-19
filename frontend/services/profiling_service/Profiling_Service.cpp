@@ -63,7 +63,6 @@ namespace frontend {
     }
 
     void Profiling_Service::resetProvidedResources() {
-        core::CallProfiling::CollectGPUPerformance();
         _perf_man.endFrame();
     }
 } // namespace frontend
