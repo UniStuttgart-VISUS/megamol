@@ -11,13 +11,13 @@
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 
-using namespace megamol;
+using namespace megamol::volume_gl;
 
 
 /*
- * datatools::TransferFunctionQuery::TransferFunctionQuery
+ * TransferFunctionQuery::TransferFunctionQuery
  */
-datatools::TransferFunctionQuery::TransferFunctionQuery(void)
+TransferFunctionQuery::TransferFunctionQuery(void)
         : getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         texDat(), texDatSize(0) {
     this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
@@ -25,18 +25,18 @@ datatools::TransferFunctionQuery::TransferFunctionQuery(void)
 
 
 /*
- * datatools::TransferFunctionQuery::~TransferFunctionQuery
+ * TransferFunctionQuery::~TransferFunctionQuery
  */
-datatools::TransferFunctionQuery::~TransferFunctionQuery(void) {
+TransferFunctionQuery::~TransferFunctionQuery(void) {
     this->texDat.EnforceSize(0);
     this->texDatSize = 0;
 }
 
 
 /*
- * datatools::TransferFunctionQuery::Query
+ * TransferFunctionQuery::Query
  */
-void datatools::TransferFunctionQuery::Query(float *col, float val) {
+void TransferFunctionQuery::Query(float *col, float val) {
     const size_t col_size = 4 * sizeof(float);
 
     if (this->texDatSize < 2) {

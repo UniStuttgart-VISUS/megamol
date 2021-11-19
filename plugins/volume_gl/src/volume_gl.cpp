@@ -7,6 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "TransferFunctionQuery.h"
 #include "RaycastVolumeRenderer.h"
 #include "VolumeSliceRenderer.h"
 
@@ -25,6 +26,7 @@ public:
     void registerClasses() override {
 
         // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::TransferFunctionQuery>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::RaycastVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::VolumeSliceRenderer>();
 
