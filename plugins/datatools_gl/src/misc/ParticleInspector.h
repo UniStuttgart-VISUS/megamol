@@ -7,7 +7,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
-namespace moldyn_gl {
+namespace datatools_gl {
 namespace misc {
 
     /**

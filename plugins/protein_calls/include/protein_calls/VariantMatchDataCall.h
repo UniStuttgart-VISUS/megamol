@@ -17,7 +17,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/macro_utils.h"
 
 namespace megamol {

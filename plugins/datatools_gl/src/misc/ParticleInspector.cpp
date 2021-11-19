@@ -1,11 +1,10 @@
-#include "stdafx.h"
 #include "ParticleInspector.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "mmcore/CoreInstance.h"
 
-using namespace megamol::moldyn_gl::misc;
+using namespace megamol::datatools_gl::misc;
 using namespace megamol;
 
 /*

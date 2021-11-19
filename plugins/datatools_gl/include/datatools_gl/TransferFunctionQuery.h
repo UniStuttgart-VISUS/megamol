@@ -16,7 +16,7 @@
 
 
 namespace megamol {
-namespace volume_gl {
+namespace datatools_gl {
 
 
     /**

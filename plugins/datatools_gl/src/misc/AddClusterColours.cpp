@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "AddClusterColours.h"
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -14,7 +13,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 
-namespace megamol::moldyn_gl {
+namespace megamol::datatools_gl::misc {
 
 /****************************************************************************/
 

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "TableSelectionTx.h"
 
 #include <unordered_set>
@@ -15,8 +15,8 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 
-using namespace megamol::datatools;
-using namespace megamol::datatools::table;
+using namespace megamol::datatools_gl;
+using namespace megamol::datatools_gl::table;
 using namespace megamol;
 
 TableSelectionTx::TableSelectionTx()
@@ -34,7 +34,7 @@ TableSelectionTx::TableSelectionTx()
     , receiverThreadQuit_(false)
     , receivedSelectionUpdate_(false)
 {
-    this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
+    this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
     this->flagStorageReadInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
@@ -140,7 +140,7 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 
     // Send data
 
-    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
 
     tableInCall->SetFrameID(0);
     (*tableInCall)(1);
@@ -201,7 +201,7 @@ bool TableSelectionTx::writeMetaDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::validateCalls() {
-    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
     auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
     auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
@@ -240,7 +240,7 @@ bool TableSelectionTx::validateSelectionUpdate() {
     auto flagCollection = flagsReadInCall->getData();
     auto version = flagsReadInCall->version();
 
-    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
     tableInCall->SetFrameID(0);
     (*tableInCall)(1);
     (*tableInCall)(0);

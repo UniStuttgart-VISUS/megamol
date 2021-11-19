@@ -20,7 +20,7 @@
 #include "datatools/table/TableDataCall.h"
 
 namespace megamol {
-namespace datatools {
+namespace datatools_gl {
 namespace table {
 
 /*
@@ -36,7 +36,7 @@ public:
 
     /** Module is always available */
     static bool IsAvailable() { return true; }
-
+#ifdef WITH_GL // TODO: FIX WITH NEW UNIFLAGSTORAGE
     /** Ctor */
     TableSelectionTx();
 
@@ -89,6 +89,7 @@ private:
     std::vector<uint64_t> receivedSelection_;
     bool receivedSelectionUpdate_;
     std::mutex receivedSelectionMutex_;
+#endif
 };
 
 } /* end namespace table */

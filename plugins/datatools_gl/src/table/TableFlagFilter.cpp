@@ -5,15 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableFlagFilter.h"
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 
-using namespace megamol::datatools;
-using namespace megamol::datatools::table;
+using namespace megamol::datatools_gl;
+using namespace megamol::datatools_gl::table;
 using namespace megamol;
 
 TableFlagFilter::TableFlagFilter()
@@ -28,17 +27,17 @@ TableFlagFilter::TableFlagFilter()
     , dataHash(0)
     , rowCount(0) {
 
-    this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
+    this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
     this->flagStorageInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
-    this->tableOutSlot.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(0),
+    this->tableOutSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(0),
         &TableFlagFilter::getData);
-    this->tableOutSlot.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(1),
+    this->tableOutSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(1),
         &TableFlagFilter::getHash);
     this->MakeSlotAvailable(&this->tableOutSlot);
 
@@ -65,7 +64,7 @@ bool TableFlagFilter::getData(core::Call &call) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
+    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
     tableOutCall->Set(this->tableInColCount, this->rowCount, this->colInfos.data(), this->data.data());
@@ -78,7 +77,7 @@ bool TableFlagFilter::getHash(core::Call &call) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
+    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
 
@@ -86,8 +85,8 @@ bool TableFlagFilter::getHash(core::Call &call) {
 }
 
 bool TableFlagFilter::handleCall(core::Call &call) {
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
-    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
+    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
     auto *flagsInCall = this->flagStorageInSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     if (tableOutCall == nullptr) {

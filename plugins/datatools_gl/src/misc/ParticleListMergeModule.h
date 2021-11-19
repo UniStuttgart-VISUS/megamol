@@ -14,11 +14,12 @@
 #include "mmcore/Module.h"
 #include "datatools/AbstractParticleManipulator.h"
 #include "vislib/math/Cuboid.h"
-#include "volume_gl/TransferFunctionQuery.h"
+#include "datatools_gl/TransferFunctionQuery.h"
+#include "datatools_gl/TransferFunctionQuery.h"
 
 
-namespace megamol {
-namespace moldyn_gl {
+namespace megamol::datatools_gl::misc {
+
 
 
     /**
@@ -94,7 +95,7 @@ namespace moldyn_gl {
         void setData(geocalls::MultiParticleDataCall& inDat);
 
         /** The transfer function query */
-        volume_gl::TransferFunctionQuery tfq;
+        TransferFunctionQuery tfq;
 
         /** The hash id of the data stored */
         size_t dataHash;
@@ -109,8 +110,6 @@ namespace moldyn_gl {
         vislib::RawStorage data;
 
     };
-
-} /* end namespace datatools */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED */

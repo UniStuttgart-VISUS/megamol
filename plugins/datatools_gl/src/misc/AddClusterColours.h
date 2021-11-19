@@ -16,7 +16,7 @@
 #include "vislib/RawStorage.h"
 
 
-namespace megamol::moldyn_gl {
+namespace megamol::datatools_gl::misc {
 
     /**
      * Renderer for gridded imposters

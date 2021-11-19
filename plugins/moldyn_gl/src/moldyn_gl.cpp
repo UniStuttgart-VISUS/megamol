@@ -11,11 +11,6 @@
 #include "rendering/GlyphRenderer.h"
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
-#include "misc/ParticleInspector.h"
-#include "misc/ParticleWorker.h"
-#include "AddClusterColours.h"
-#include "ParticleDensityOpacityModule.h"
-#include "ParticleListMergeModule.h"
 
 
 namespace megamol::moldyn_gl {
@@ -33,15 +28,10 @@ namespace megamol::moldyn_gl {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::ParticleListMergeModule>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::ParticleDensityOpacityModule>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::AddClusterColours>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GrimRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleInspector>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleWorker>();
         }
     };
 } // namespace megamol::moldyn

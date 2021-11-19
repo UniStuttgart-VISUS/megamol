@@ -12,20 +12,19 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
-#include "volume_gl/TransferFunctionQuery.h"
+#include "datatools_gl/TransferFunctionQuery.h"
 
 
 namespace megamol {
-namespace core {
 namespace moldyn {
     class MultiParticleDataCall;
 }
 }
 
-namespace moldyn_gl {
+namespace megamol::datatools_gl::misc {
 
 
-    class ParticleDensityOpacityModule : public core::Module {
+    class ParticleDensityOpacityModule : public megamol::core::Module {
     public:
         static const char *ClassName(void) {
             return "ParticleDensityOpacityModule";
@@ -100,11 +99,10 @@ namespace moldyn_gl {
         size_t lastHash;
         vislib::RawStorage colData;
         core::param::ParamSlot densitAlgorithmSlot;
-        volume_gl::TransferFunctionQuery tfQuery;
+        TransferFunctionQuery tfQuery;
         core::param::ParamSlot densityAutoComputeCountRangeSlot;
     };
 
-}
 }
 
 #endif /* AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED */

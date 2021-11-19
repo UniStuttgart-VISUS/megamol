@@ -5,7 +5,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
@@ -125,7 +125,7 @@ TableToLines::TableToLines(void) : Module(),
     this->MakeSlotAvailable(&this->slotColumnZ);
 
     /* Register calls. */
-    this->slotTF.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->slotTF.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->slotTF);
 
     this->slotDeployData.SetCallback(
@@ -365,7 +365,7 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
     std::vector<float> processedColor;
     processedColor.reserve(allColor.size() * 3);
     if (!(this->slotColorMode.Param<core::param::EnumParam>()->Value() == 2)) { // I or RGB
-        core_gl::view::CallGetTransferFunctionGL *cgtf = this->slotTF.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+        core::view::CallGetTransferFunction *cgtf = this->slotTF.CallAs<core::view::CallGetTransferFunction>();
         if (cgtf != NULL && ((*cgtf)())) {
             float const* tf_tex = cgtf->GetTextureData();
             tex_size = cgtf->TextureSize();

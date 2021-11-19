@@ -3,11 +3,10 @@
 # All rights reserved.
 #
 
-megamol_plugin(moldyn_gl
-  BUILD_DEFAULT ON 
+megamol_plugin(datatools_gl
+  BUILD_DEFAULT ON
   DEPENDS_GL
-  DEPENDS_PLUGINS 
-    moldyn
-    datatools
+  DEPENDS_PLUGINS
     geometry_calls
+    datatools
     imgui)

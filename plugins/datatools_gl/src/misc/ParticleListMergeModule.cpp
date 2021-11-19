@@ -5,11 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ParticleListMergeModule.h"
 #include <algorithm>
 
-using namespace megamol::moldyn_gl;
+using namespace megamol::datatools_gl::misc;
 
 
 /*

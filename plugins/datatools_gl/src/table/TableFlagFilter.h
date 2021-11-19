@@ -16,7 +16,7 @@
 #include "datatools/table/TableDataCall.h"
 
 namespace megamol {
-namespace datatools {
+namespace datatools_gl {
 namespace table {
 
 /*
@@ -70,7 +70,7 @@ private:
     // filtered table
     size_t dataHash;
     size_t rowCount;
-    std::vector<TableDataCall::ColumnInfo> colInfos;
+    std::vector<datatools::table::TableDataCall::ColumnInfo> colInfos;
     std::vector<float> data;
 };
 

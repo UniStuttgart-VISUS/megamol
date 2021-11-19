@@ -4,14 +4,13 @@
  * Copyright (C) 2014 by CGV TU Dresden
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
-#include "volume_gl/TransferFunctionQuery.h"
+#include "datatools_gl/TransferFunctionQuery.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 
-using namespace megamol::volume_gl;
+using namespace megamol::datatools_gl;
 
 
 /*

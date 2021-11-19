@@ -79,12 +79,10 @@
 #include "table/MMFTDataWriter.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
-#include "table/TableFlagFilter.h"
 #include "table/TableJoin.h"
 #include "table/TableManipulator.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
-#include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
 #include "table/TableSplit.h"
 #include "table/TableToLines.h"
@@ -159,8 +157,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSampler>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableFlagFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSort>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVelocities>();

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "misc/ParticleWorker.h"
 #include <cfloat>
 #include <climits>
@@ -23,7 +22,7 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol::core;
-using namespace megamol::moldyn_gl::misc;
+using namespace megamol::datatools_gl::misc;
 
 
 /*
