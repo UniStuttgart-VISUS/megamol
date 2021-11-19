@@ -405,6 +405,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
     }
 }
 
+
 #ifdef PROFILING
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
@@ -421,6 +422,7 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
         break;
     }
 }
+
 
 void megamol::gui::Call::draw_profiling_data() {
 

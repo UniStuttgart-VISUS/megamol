@@ -13,7 +13,7 @@ namespace core {
  */
 class PerformanceHistory {
 public:
-    static const uint32_t buffer_length = 100;
+    static constexpr uint32_t buffer_length = 100;
 
     PerformanceHistory();
 

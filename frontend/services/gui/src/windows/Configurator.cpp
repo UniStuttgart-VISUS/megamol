@@ -171,7 +171,7 @@ void megamol::gui::Configurator::PopUps() {
     if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load, {"lua"},
             megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
 
-        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection.LoadOrAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -566,7 +566,7 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
                     std::string json_graph_id = graph_item.key();
                     if (json_graph_id != GUI_JSON_TAG_PROJECT) {
                         // Otherwise load additonal graph from given file name
-                        this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                        this->GetGraphCollection().LoadOrAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
                     }
                 }
             }

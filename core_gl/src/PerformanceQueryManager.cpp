@@ -1,4 +1,5 @@
 #ifdef PROFILING
+
 #include <cassert>
 #include <ctime>
 #include "mmcore/Call.h"

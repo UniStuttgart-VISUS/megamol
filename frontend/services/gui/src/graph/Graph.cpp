@@ -318,6 +318,17 @@ megamol::gui::ModulePtr_t megamol::gui::Graph::GetModule(ImGuiID module_uid) {
 }
 
 
+ModulePtr_t megamol::gui::Graph::GetModule(const std::string& module_fullname) {
+
+    for (auto& module_ptr : this->modules) {
+        if (module_ptr->FullName() == module_fullname) {
+            return module_ptr;
+        }
+    }
+    return nullptr;
+}
+
+
 bool megamol::gui::Graph::ModuleExists(const std::string& module_fullname) {
 
     return (std::find_if(this->modules.begin(), this->modules.end(), [&](megamol::gui::ModulePtr_t& module_ptr) {
@@ -569,6 +580,21 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
             "[GUI] Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+}
+
+
+CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_name, std::string const& callee_name) {
+
+    for (auto& call_ptr : this->calls) {
+        auto caller = call_ptr->CallSlotPtr(CallSlotType::CALLER);
+        auto callee = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
+        if ((caller != nullptr) && (callee != nullptr)) {
+            if ((caller->Name() == caller_name) && (callee->Name() == callee_name)) {
+                return call_ptr;
+            }
+        }
+    }
+    return nullptr;
 }
 
 

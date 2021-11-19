@@ -476,6 +476,32 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                         }
                     }
+
+
+#ifdef PROFILING
+                    // Profiling Button
+                    /* TODO
+                    // ImGui::PushFont(state.canvas.gui_font_ptr);
+                    text_pos_left_upper = call_rect_min + style.ItemSpacing;
+                    ImGui::SetCursorScreenPos(text_pos_left_upper);
+                    if (ImGui::ArrowButton(
+                            "###profiling", ((this->show_profiling_data) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                        this->show_profiling_data = !this->show_profiling_data;
+                    }
+                    this->gui_tooltip.ToolTip("Profiling");
+                    if (this->show_profiling_data) {
+                        text_pos_left_upper.y += ImGui::GetFrameHeight();
+                        ImGui::SetCursorScreenPos(text_pos_left_upper);
+                        this->draw_profiling_data();
+                    }
+                    text_pos_left_upper.x += ImGui::GetFrameHeightWithSpacing();
+                    text_pos_left_upper.y += (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
+                    if (this->show_profiling_data) {
+                        text_pos_left_upper.y -= ImGui::GetFrameHeight();
+                    }
+                    // ImGui::PopFont();
+                    */
+#endif
                 }
 
                 // Draw Outline
@@ -584,6 +610,9 @@ void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
     }
 }
 
+
+#ifdef PROFILING
+
 void megamol::gui::Module::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
     switch (entry.api) {
@@ -597,6 +626,125 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
         break;
     }
 }
+
+
+void megamol::gui::Module::draw_profiling_data() {
+
+    /* TODO
+    ImGui::BeginChild("call_profiling_info",
+        ImVec2((ImGui ::GetFrameHeight() * PROFILING_CHILD_WIDTH), (ImGui::GetFrameHeight() * PROFILING_CHILD_HEIGHT)),
+        false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
+
+    ImGui::TextUnformatted("Profiling");
+    ImGui::SameLine();
+    ImGui::TextDisabled("[Callback Name]");
+    ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
+    auto func_cnt = this->cpu_perf_history.size();
+    for (size_t i = 0; i < func_cnt; i++) {
+        auto& tab_label = this->cpu_perf_history[i].get_name(); // this->profiling[i].name;
+        if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+            if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
+                    ImVec2(0.0f, 0.0f))) {
+                ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("LastCPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f",
+                //
+    cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("AverageCPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text(
+                    "%.12f", cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
+                                 core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("MaxCPUSamplesPerFrame");
+                ImGui::TableNextColumn();
+                ImGui::Text("%i", static_cast<int>(cpu_perf_history[i].window_statistics(
+                                      core::MultiPerformanceHistory::metric_type::MAX,
+                                      core::MultiPerformanceHistory::metric_type::COUNT)));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("NumCPUSamples");
+                ImGui::TableNextColumn();
+                ImGui::Text("%i", cpu_perf_history[i].samples());
+
+                ImGui::EndTable();
+            }
+
+            std::array<float, core::MultiPerformanceHistory::buffer_length> xbuf;
+            std::iota(xbuf.begin(), xbuf.end(), 0.0f);
+
+            // auto hurz = cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX);
+            // for (auto& h : hurz) {
+            //    std::cout << h << " ";
+            //}
+            // std::cout << std::endl;
+
+            if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
+                ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::EndPlot();
+            }
+
+            if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
+                    ImVec2(0.0f, 0.0f))) {
+                ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("LastGPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f", this->profiling[i].lgput);
+                // ImGui::TableNextRow();
+                // ImGui::TableNextColumn();
+                // ImGui::TextUnformatted("AverageGPUTime");
+                // ImGui::TableNextColumn();
+                // ImGui::Text("%.12f", this->profiling[i].agput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("NumGLSamples");
+                ImGui::TableNextColumn();
+                ImGui::Text("%.12i", gl_perf_history[i].samples());
+
+                ImGui::EndTable();
+            }
+
+            if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
+                ImPlot::PlotShaded("###glminmax", xbuf.data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::PlotLine("###glplot", xbuf.data(),
+                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                    core::MultiPerformanceHistory::buffer_length);
+                ImPlot::EndPlot();
+            }
+
+            ImGui::EndTabItem();
+        }
+    }
+    ImGui::EndTabBar();
+
+    ImGui::EndChild();
+    */
+}
+
+#endif // PROFILING
 
 
 bool megamol::gui::Module::ParametersVisible() {

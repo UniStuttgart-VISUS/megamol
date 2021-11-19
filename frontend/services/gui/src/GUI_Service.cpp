@@ -275,7 +275,7 @@ namespace frontend {
             // Synchronise changes between core graph and gui graph
             if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
                 // Requires enabled OpenGL context, e.g. for textures used in parameters
-                this->m_gui->SynchronizeRunningGraph((*this->m_megamol_graph), (*this->m_config.core_instance));
+                this->m_gui->GraphSynchronization((*this->m_megamol_graph), (*this->m_config.core_instance));
             }
             this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
         }

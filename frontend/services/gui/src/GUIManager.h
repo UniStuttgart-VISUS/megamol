@@ -247,7 +247,7 @@ namespace gui {
          * @param megamol_graph          The megamol graph.
          * @param core_instance          The core_instance.
          */
-        bool SynchronizeRunningGraph(
+        bool GraphSynchronization(
             megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
         /**

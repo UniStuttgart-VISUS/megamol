@@ -66,11 +66,13 @@ namespace gui {
             return this->modules;
         }
         ModulePtr_t GetModule(ImGuiID module_uid);
+        ModulePtr_t GetModule(const std::string& module_fullname);
         bool ModuleExists(const std::string& module_fullname);
 
         bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
         CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
         bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
+        CallPtr_t GetCall(std::string const& caller_name, std::string const& callee_name);
 
         bool DeleteCall(ImGuiID call_uid);
         inline const CallPtrVector_t& Calls() {

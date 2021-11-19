@@ -222,6 +222,9 @@ namespace gui {
         std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
             gl_perf_history;
         void* profiling_parent_pointer;
+
+        bool show_profiling_data;
+        void draw_profiling_data();
 #endif // PROFILING
 
         // FUNCTIONS --------------------------------------------------------------
