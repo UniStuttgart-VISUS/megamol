@@ -8,7 +8,7 @@
 #include "ImagePresentation_Sinks.hpp"
 #include <glowl/GLSLProgram.hpp>
 
-#include "glad/glad.h"
+#include "glad/gl.h"
 //#include <iostream>
 #include "mmcore/utility/log/Log.h"
 

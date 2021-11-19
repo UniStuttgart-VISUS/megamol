@@ -2,7 +2,7 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Policies
 cmake_policy(SET CMP0054 NEW)
@@ -41,9 +41,6 @@ include(global_versioninfo)
 
 # MegaMol options
 include(megamol_options)
-
-# MegaMol macros
-include(check_mmdep)
 
 # Clang-format
 include(ClangFormat)
@@ -84,6 +81,10 @@ endif()
 # Plugins
 add_subdirectory(plugins)
 if (BUILD_FRONTEND)
+  if (ENABLE_GL)
+    target_link_libraries(plugins INTERFACE core_gl)
+    target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
+  endif()
   target_link_libraries(megamol PRIVATE plugins)
 endif()
 
@@ -115,12 +116,3 @@ if (EXAMPLES)
     install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
   endif ()
 endif ()
-
-# Validate dependencies
-foreach(d ${DEP_LIST})
-  string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
-  list(GET SINGLE_LIST 0 plugin)
-  list(REMOVE_AT SINGLE_LIST 0)
-  check_mmdep(${plugin} "${SINGLE_LIST}")
-endforeach()
-unset(DEP_LIST CACHE)

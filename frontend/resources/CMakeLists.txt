@@ -8,10 +8,6 @@
 project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-#  # Check option dependencies: First list item is always the current build option,
-#  # afterwards list the dependencies.
-#  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
-
 require_external(glm)
 
 require_external(json)

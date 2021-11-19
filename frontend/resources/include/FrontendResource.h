@@ -67,7 +67,7 @@ public:
     }
 
     template<typename T>
-    optional<const T> getOptionalResource() const {
+    frontend_resources::optional<const T> getOptionalResource() const {
         if (!optional) {
             std::cout << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";
             std::cerr << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";

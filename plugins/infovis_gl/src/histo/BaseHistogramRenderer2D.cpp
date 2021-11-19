@@ -238,8 +238,6 @@ bool BaseHistogramRenderer2D::OnMouseButton(
         return false;
     }
 
-    std::cout << "mouse: " << mouseX_ << " " << mouseY_ << std::endl;
-
     needSelectionUpdate_ = true;
     selectedComponent_ = -1;
     selectedBin_ = -1;

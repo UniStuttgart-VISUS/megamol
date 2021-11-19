@@ -206,7 +206,7 @@ void ImagePresentation_Service::PresentRenderedImages() {
 }
 
 namespace {
-    struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
+    struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
         static constexpr const char* Name = "ViewRenderInputs";
 
         // individual inputs used by view for rendering of next frame
@@ -234,9 +234,9 @@ namespace {
 
     // this is a somewhat improvised factory to abstract away instantiation of different RenderInputUpdate types
     struct RenderInputsFactory {
-        std::tuple<std::string, std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>>
+        std::tuple<std::string, std::unique_ptr<frontend_resources::RenderInputsUpdate>>
             get(std::string const& request) {
-            auto renderinputs = std::make_unique<ImagePresentation_Service::RenderInputsUpdate>();
+            auto renderinputs = std::make_unique<frontend_resources::RenderInputsUpdate>();
 
             if (request == ViewRenderInputs::Name) {
                 renderinputs = std::make_unique<ViewRenderInputs>();
@@ -259,7 +259,7 @@ namespace {
 std::tuple<
     bool, // success
     std::vector<FrontendResource>, // resources
-    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate> // unique_data for entry point
+    std::unique_ptr<frontend_resources::RenderInputsUpdate> // unique_data for entry point
 >
 ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
     static RenderInputsFactory renderinputs_factory{
@@ -272,7 +272,7 @@ ImagePresentation_Service::map_resources(std::vector<std::string> const& request
     // this unique_data/reindering input handler thing is a bit convoluted but the idea is that we want to give the view (or any other type of entry point)
     // the ability to get updated with newest frame data, e.g. framebuffer size
     // but we also want to maintain the "empty" handler throughout the code path to avoid checking for a null ptr
-    auto unique_data = std::make_unique<RenderInputsUpdate>();
+    auto unique_data = std::make_unique<frontend_resources::RenderInputsUpdate>();
 
     bool success = false;
     std::vector<FrontendResource> resources;
@@ -330,14 +330,11 @@ bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRend
         return false;
     }
 
-    m_entry_points.push_back(GraphEntryPoint{
-        name,
-        module_ptr,
-        resources,
+    m_entry_points.emplace_back(EntryPoint{
+        name, module_ptr, resources,
         std::move(unique_data), // render inputs and their update
-        execute_etry,
-        {name} // image
-        });
+        execute_etry, {name}    // image
+    });
 
     return true;
 }
@@ -423,7 +420,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             }
 
             auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
-            [&](GraphEntryPoint& entry) {
+            [&](EntryPoint& entry) {
                 return entry.moduleName == view;
             });
 
@@ -444,7 +441,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             return Error{"no views registered as entry points. nothing to write as screenshot into "};
 
         auto find_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
-            [&](GraphEntryPoint const& elem) { return elem.moduleName == entrypoint; });
+            [&](EntryPoint const& elem) { return elem.moduleName == entrypoint; });
 
         if (find_it == m_entry_points.end())
             return Error{"error writing screenshot into file " + file + ". no such entry point: " + entrypoint};

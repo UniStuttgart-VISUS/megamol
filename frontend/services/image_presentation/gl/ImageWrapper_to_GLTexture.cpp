@@ -7,7 +7,7 @@
 
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ImageWrapper_to_ByteArray.hpp"
-#include "glad/glad.h"
+#include "glad/gl.h"
 
 using namespace megamol::frontend_resources;
 
@@ -82,6 +82,7 @@ gl_texture::~gl_texture() {
 
 void gl_texture::from_image(ImageWrapper const& image) {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
+    this->size = image.size;
 
     switch (image.type) {
     case WrappedImageType::ByteArray:
@@ -96,6 +97,7 @@ void gl_texture::from_image(ImageWrapper const& image) {
 
 void gl_texture::assign(gl_texture const& other, bool take_ownership) {
     this->image_wrapper_ptr = other.image_wrapper_ptr;
+    this->size = other.size;
 
     if (take_ownership) {
         this->texture = other.texture;

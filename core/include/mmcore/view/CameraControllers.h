@@ -11,6 +11,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/cam_typedefs.h"
 #include "mmcore/view/Camera.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "glm/gtx/rotate_vector.hpp" // glm::rotate(quaternion, vector)
 #include "glm/gtx/quaternion.hpp" // glm::rotate(quat, vector)

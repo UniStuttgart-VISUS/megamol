@@ -38,6 +38,7 @@ std::vector<byte> const& byte_texture::as_byte_vector()
 void byte_texture::from_image(ImageWrapper const& image)
 {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
+    this->size = image.size;
 
     switch (image.type) {
     case WrappedImageType::ByteArray:

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TSNEProjection.h"
 
 #include "datatools/table/TableDataCall.h"

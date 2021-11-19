@@ -4,6 +4,8 @@
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 
+#include "OpenGL_Context.h"
+
 using namespace megamol;
 using namespace megamol::core_gl;
 
@@ -33,6 +35,10 @@ UniFlagStorageGL::~UniFlagStorageGL(void) {
 
 
 bool UniFlagStorageGL::create(void) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3))
+        return false;
+
     this->theData = std::make_shared<FlagCollection_GL>();
     const int num = 10;
     std::vector<uint32_t> temp_data(num, core::FlagStorage::ENABLED);

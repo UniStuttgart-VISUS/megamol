@@ -18,6 +18,8 @@ namespace frontend_resources {
         unsigned int texture_reference = 0;
         ImageWrapper* image_wrapper_ptr = nullptr;
 
+        ImageWrapper::ImageSize size;
+
         gl_texture(ImageWrapper const& image);
         // rule of five
         gl_texture(gl_texture const& other);
@@ -45,6 +47,7 @@ namespace frontend_resources {
             this->image_wrapper_ptr = nullptr;
             this->texture_reference = 0;
             this->texture = 0;
+            this->size = {0, 0};
         }
 
     };
