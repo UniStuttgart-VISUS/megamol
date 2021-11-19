@@ -6,15 +6,15 @@
 */
 
 #include "stdafx.h"
-#include "cinematic/CinematicUtils.h"
+#include "cinematic_gl/CinematicUtils.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 
 
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 
-CinematicUtils::CinematicUtils(void) : core::utility::RenderUtils()
+CinematicUtils::CinematicUtils(void) : core_gl::utility::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
     , init_once(false)
     , menu_font_size(20.0f)
@@ -294,14 +294,14 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 }
 
 
-void megamol::cinematic::CinematicUtils::gui_update(void) {
+void CinematicUtils::gui_update(void) {
 
     this->menu_font_size = ImGui::GetFontSize() * 1.5f;
     this->menu_height = this->menu_font_size; // +ImGui::GetFrameHeightWithSpacing();
 }
 
 
-void megamol::cinematic::CinematicUtils::gui_table_row(const char* left, const char* right) {
+void CinematicUtils::gui_table_row(const char* left, const char* right) {
 
     ImGui::TableNextRow();
     ImGui::TableNextColumn();

@@ -13,13 +13,13 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/Camera.h"
-#include "Keyframe.h"
+#include "cinematic/Keyframe.h"
 #include "CinematicUtils.h"
 #include <glm/glm.hpp>
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 
 
     /*
@@ -37,7 +37,7 @@ namespace cinematic {
 
         void UpdateExtents(vislib::math::Cuboid<float>& inout_bbox);
 
-        bool UpdateRendering(const std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
+        bool UpdateRendering(const std::shared_ptr<std::vector<cinematic::Keyframe>> keyframes, cinematic::Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
              core::view::Camera const& camera, glm::vec2 viewport_dim, glm::mat4 mvp);
 
         bool PushRendering(CinematicUtils &utils);
@@ -48,7 +48,7 @@ namespace cinematic {
 
         bool ProcessHitManipulator(float mouse_x, float mouse_y);
 
-        inline Keyframe GetManipulatedSelectedKeyframe(void) const  {
+        inline cinematic::Keyframe GetManipulatedSelectedKeyframe(void) const  {
             return this->state.selected_keyframe;
         }
 
@@ -110,7 +110,7 @@ namespace cinematic {
         };
 
         struct CurrentState {
-            Keyframe selected_keyframe;
+            cinematic::Keyframe selected_keyframe;
             glm::vec2 viewport;
             glm::mat4 mvp;
             glm::vec3 first_ctrl_point;

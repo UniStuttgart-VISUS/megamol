@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore_gl/ModuleGL.h"
-#include "cinematic/CinematicUtils.h"
+#include "cinematic_gl/CinematicUtils.h"
 
 
 namespace megamol {
@@ -119,7 +119,7 @@ namespace cinematic_gl {
         };
 
         bool draw_replacement;
-        cinematic::CinematicUtils utils;
+        CinematicUtils utils;
         vislib::math::Cuboid<float> bbox;
 
         /**********************************************************************

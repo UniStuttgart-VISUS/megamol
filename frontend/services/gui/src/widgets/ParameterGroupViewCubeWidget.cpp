@@ -350,7 +350,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!core_gl::utility::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }
@@ -525,7 +525,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!core_gl::utility::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }

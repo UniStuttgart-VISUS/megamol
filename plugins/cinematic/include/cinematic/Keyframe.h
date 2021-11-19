@@ -11,8 +11,8 @@
 
 
 #include <glm/glm.hpp>
-#include "CinematicUtils.h"
 #include "mmcore/utility/JSONHelper.h"
+#include "mmcore/view/Camera.h"
 
 
 namespace megamol {

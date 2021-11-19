@@ -15,8 +15,8 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 
-#include "cinematic/KeyframeManipulators.h"
-#include "cinematic/CinematicUtils.h"
+#include "cinematic_gl/KeyframeManipulators.h"
+#include "cinematic_gl/CinematicUtils.h"
 
 
 namespace megamol {
@@ -120,8 +120,8 @@ namespace cinematic_gl {
         * variables
         **********************************************************************/
 
-        cinematic::KeyframeManipulators    manipulators;
-        cinematic::CinematicUtils          utils;
+        KeyframeManipulators               manipulators;
+        CinematicUtils                     utils;
         float                              mouseX;
         float                              mouseY;
         GLuint                             texture;

@@ -17,7 +17,7 @@
 
 #include "cinematic/Keyframe.h"
 #include "cinematic/CallKeyframeKeeper.h"
-#include "cinematic/CinematicUtils.h"
+#include "cinematic_gl/CinematicUtils.h"
 
 
 namespace megamol {
@@ -144,7 +144,7 @@ namespace cinematic_gl {
         };
 
         std::array<AxisData, Axis::COUNT> axes;
-        cinematic::CinematicUtils         utils;
+        CinematicUtils                    utils;
         GLuint                            texture_id;
         ActiveParam                       yAxisParam;
         cinematic::Keyframe               dragDropKeyframe;

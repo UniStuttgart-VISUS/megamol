@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "cinematic/KeyframeManipulators.h"
+#include "cinematic_gl/KeyframeManipulators.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/math/Cuboid.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -14,7 +14,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 
 KeyframeManipulators::KeyframeManipulators(void)
@@ -46,7 +46,7 @@ KeyframeManipulators::KeyframeManipulators(void)
     vmg = nullptr;
 
     // Init state
-    this->state.selected_keyframe = Keyframe();
+    this->state.selected_keyframe = cinematic::Keyframe();
     this->state.viewport = glm::vec2(0.0f, 0.0f);
     this->state.mvp = glm::mat4();
     this->state.first_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -131,17 +131,17 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     glm::vec3 pos; 
     for (auto& m : this->manipulators) {
         pos = this->getActualManipulatorPosition(m);
-        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(core_gl::utility::glm_to_vislib_point(pos));
     }
     for (auto& s : this->selectors) {
         pos = s.vector;
         pos = pos + glm::normalize(pos) * (this->state.point_radius * 2.0f);
-        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(core_gl::utility::glm_to_vislib_point(pos));
     }
 }
 
 
-bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
+bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<cinematic::Keyframe>> keyframes, cinematic::Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
     core::view::Camera const& cam, glm::vec2 viewport_dim, glm::mat4 mvp) {
 
     // Update parameters
@@ -502,7 +502,7 @@ glm::vec3 KeyframeManipulators::getActualManipulatorPosition(Manipulator& manipu
 
     if (this->toggleOusideBbox && (this->state.line_length > 0.0f) && (glm::length(manipulator.vector) > 0.0f) && (!this->state.bbox.IsEmpty())) {
         float offset = 0.0f;
-        while (this->state.bbox.Contains(utility::glm_to_vislib_point(manipulator_position))) {
+        while (this->state.bbox.Contains(core_gl::utility::glm_to_vislib_point(manipulator_position))) {
             offset += this->state.line_length / 4.0f;
             manipulator_position += manipulator.vector * offset;
         }

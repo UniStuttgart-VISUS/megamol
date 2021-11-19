@@ -34,7 +34,7 @@ namespace gui {
 
         bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
             GLint tex_max_filter = GL_LINEAR) {
-            return megamol::core::utility::RenderUtils::LoadTextureFromData(
+            return megamol::core_gl::utility::RenderUtils::LoadTextureFromData(
                 this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
         }
 

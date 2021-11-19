@@ -27,7 +27,7 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // #### Utility vector conversion functions ############################ //
 

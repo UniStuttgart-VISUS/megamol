@@ -251,7 +251,7 @@ bool PickingBuffer::DisableInteraction() {
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!megamol::core::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
+        if (!megamol::core_gl::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
             return false;
     }
 

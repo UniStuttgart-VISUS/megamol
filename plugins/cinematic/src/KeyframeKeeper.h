@@ -18,11 +18,17 @@
 #include "vislib/math/Cuboid.h"
 
 #include "cinematic/Keyframe.h"
-#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {
 namespace cinematic {
+    static inline vislib::math::Vector<float, 3> glm_to_vislib_vector(glm::vec3 v) {
+        return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
+    }
+
+    static inline glm::vec3 vislib_vector_to_glm(vislib::math::Vector<float, 3> v) {
+        return glm::vec3(v.X(), v.Y(), v.Z());
+    }
 
 
 	/**

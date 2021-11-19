@@ -29,7 +29,7 @@ namespace cinematic_gl {
      * Renders various kinds of overlays
      */
     class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>,
-                            megamol::core::utility::RenderUtils {
+                            megamol::core_gl::utility::RenderUtils {
     public:
         virtual std::vector<std::string> requested_lifetime_resources() {
             return {"IOpenGL_Context", "MegaMolGraph"};

@@ -105,7 +105,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& ca
         cbox.Union(bbox); 
 
         // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-        ccc->SetBboxCenter(vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+        ccc->SetBboxCenter(core_gl::utility::vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
         if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
         // Propagate changes made in GetExtents() from outgoing CallRender3DGL (cr3d_out) to incoming  CallRender3DGL (cr3d_in) => Bboxes and times.
@@ -199,7 +199,7 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
     }
-    auto color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SPLINE);
+    auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
     auto keyframeCount = interpolKeyframes->size();
     if (keyframeCount > 1) {
         for (int i = 0; i < (keyframeCount - 1); i++) {

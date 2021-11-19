@@ -857,7 +857,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     auto texture_filename = static_cast<std::wstring>(
         ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
             .PeekBuffer());
-    if (!megamol::core::utility::RenderUtils::LoadTextureFromFile(
+    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
             this->texture, megamol::core::utility::WChar2Utf8String(texture_filename))) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font texture: \"%s\". [%s, %s, line %d]\n", textureFile.c_str(), __FILE__,

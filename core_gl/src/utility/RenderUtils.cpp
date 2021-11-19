@@ -7,7 +7,7 @@
 
 #include "mmcore_gl/utility/RenderUtils.h"
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // STATIC functions -------------------------------------------------------
 
