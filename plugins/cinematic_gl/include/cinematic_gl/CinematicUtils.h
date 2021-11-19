@@ -24,7 +24,7 @@ namespace cinematic {
 /*
  * Cinematic utility functionality (colors, text, menu, ...).
  */
-class CinematicUtils : public core::utility::RenderUtils {
+class CinematicUtils : public core_gl::utility::RenderUtils {
 
 public:
     CinematicUtils(void);
