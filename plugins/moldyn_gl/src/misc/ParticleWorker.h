@@ -21,7 +21,7 @@
 
 
 namespace megamol {
-namespace moldyn {
+namespace moldyn_gl {
     namespace misc {
 
         /**

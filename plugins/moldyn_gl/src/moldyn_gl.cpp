@@ -12,6 +12,7 @@
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
 #include "misc/ParticleInspector.h"
+#include "misc/ParticleWorker.h"
 
 namespace megamol::moldyn_gl {
     class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -33,6 +34,7 @@ namespace megamol::moldyn_gl {
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleInspector>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleWorker>();
         }
     };
 } // namespace megamol::moldyn

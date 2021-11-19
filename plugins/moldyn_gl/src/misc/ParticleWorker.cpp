@@ -23,7 +23,7 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol::core;
-using namespace megamol::moldyn::misc;
+using namespace megamol::moldyn_gl::misc;
 
 
 /*
