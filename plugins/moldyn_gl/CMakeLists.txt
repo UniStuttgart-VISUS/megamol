@@ -8,6 +8,7 @@ megamol_plugin(moldyn_gl
   DEPENDS_GL
   DEPENDS_PLUGINS 
     moldyn
+    datatools
     volume_gl
     geometry_calls
     imgui)

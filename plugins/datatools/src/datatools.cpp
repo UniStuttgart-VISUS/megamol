@@ -43,12 +43,10 @@
 #include "ParticleColorSignThreshold.h"
 #include "ParticleColorSignedDistance.h"
 #include "ParticleDataSequenceConcatenate.h"
-#include "ParticleDensityOpacityModule.h"
 #include "ParticleIColFilter.h"
 #include "ParticleIColGradientField.h"
 #include "ParticleIdentitySort.h"
 #include "ParticleInstantiator.h"
-#include "ParticleListMergeModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleNeighborhoodGraph.h"
@@ -113,15 +111,12 @@ public:
 
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataSetTimeRewriteModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListMergeModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequenceStepper>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SphereDataUnifier>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThinner>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleGlobals>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleRelaxationModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListSelector>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::ParticleDensityOpacityModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ForceCubicCBoxModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DumpIColorHistogramModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequence>();

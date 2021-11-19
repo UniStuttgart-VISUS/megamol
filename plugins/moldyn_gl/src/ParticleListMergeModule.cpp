@@ -9,31 +9,31 @@
 #include "ParticleListMergeModule.h"
 #include <algorithm>
 
-using namespace megamol;
+using namespace megamol::moldyn_gl;
 
 
 /*
- * datatools::ParticleListMergeModule::ParticleListMergeModule
+ * ParticleListMergeModule::ParticleListMergeModule
  */
-datatools::ParticleListMergeModule::ParticleListMergeModule(void)
-        : AbstractParticleManipulator("outData", "inData"), tfq(),
+ParticleListMergeModule::ParticleListMergeModule(void)
+        : datatools::AbstractParticleManipulator("outData", "inData"), tfq(),
         dataHash(0), frameId(0), parts(), data() {
     this->MakeSlotAvailable(this->tfq.GetSlot());
 }
 
 
 /*
- * datatools::ParticleListMergeModule::~ParticleListMergeModule
+ * ParticleListMergeModule::~ParticleListMergeModule
  */
-datatools::ParticleListMergeModule::~ParticleListMergeModule(void) {
+ParticleListMergeModule::~ParticleListMergeModule(void) {
     this->Release(); // implicitly calls 'release'
 }
 
 
 /*
- * datatools::ParticleListMergeModule::manipulateData
+ * ParticleListMergeModule::manipulateData
  */
-bool datatools::ParticleListMergeModule::manipulateData(
+bool ParticleListMergeModule::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     if ((this->frameId != inData.FrameID()) || (this->dataHash != inData.DataHash()) || (inData.DataHash() == 0)) {
@@ -54,9 +54,9 @@ bool datatools::ParticleListMergeModule::manipulateData(
 
 
 /*
- * datatools::ParticleListMergeModule::setData
+ * ParticleListMergeModule::setData
  */
-void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall& inDat) {
+void ParticleListMergeModule::setData(geocalls::MultiParticleDataCall& inDat) {
     using geocalls::SimpleSphericalParticles;
 
     // analyze lists

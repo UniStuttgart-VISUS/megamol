@@ -14,17 +14,17 @@
 #include "mmcore/Module.h"
 #include "datatools/AbstractParticleManipulator.h"
 #include "vislib/math/Cuboid.h"
-#include "TransferFunctionQuery.h"
+#include "volume_gl/TransferFunctionQuery.h"
 
 
 namespace megamol {
-namespace datatools {
+namespace moldyn_gl {
 
 
     /**
      * In-Between management module to change time codes of a data set
      */
-    class ParticleListMergeModule : public AbstractParticleManipulator {
+    class ParticleListMergeModule : public datatools::AbstractParticleManipulator {
     public:
 
         /**
@@ -94,7 +94,7 @@ namespace datatools {
         void setData(geocalls::MultiParticleDataCall& inDat);
 
         /** The transfer function query */
-        TransferFunctionQuery tfq;
+        volume_gl::TransferFunctionQuery tfq;
 
         /** The hash id of the data stored */
         size_t dataHash;
