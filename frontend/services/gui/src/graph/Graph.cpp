@@ -583,13 +583,21 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
 }
 
 
-CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_name, std::string const& callee_name) {
+CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::string const& callee_fullname) {
 
     for (auto& call_ptr : this->calls) {
-        auto caller = call_ptr->CallSlotPtr(CallSlotType::CALLER);
-        auto callee = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
-        if ((caller != nullptr) && (callee != nullptr)) {
-            if ((caller->Name() == caller_name) && (callee->Name() == callee_name)) {
+        std::string tmp_caller_fullname;
+        std::string tmp_callee_fullname;
+        auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
+        auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
+        if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            if (caller_ptr->GetParentModule() != nullptr) {
+                tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+            }
+            if (callee_ptr->GetParentModule() != nullptr) {
+                tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+            }
+            if ((tmp_caller_fullname == caller_fullname) && (tmp_callee_fullname == callee_fullname)) {
                 return call_ptr;
             }
         }

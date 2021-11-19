@@ -334,8 +334,14 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
 #ifdef PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 auto gui_module_ptr = graph_ptr->GetModule(data.name_id);
-                gui_module_ptr->SetProfilingData(core_module_ptr.get(), perf_manager);
-                module_to_module[core_module_ptr.get()] = gui_module_ptr;
+                if (gui_module_ptr != nullptr) {
+                    gui_module_ptr->SetProfilingData(core_module_ptr.get(), perf_manager);
+                    module_to_module[core_module_ptr.get()] = gui_module_ptr;
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Failed to get gui module pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                        __LINE__);
+                }
 #endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
@@ -343,29 +349,34 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                 graph_sync_success &= rename_success;
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
 #ifdef PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 module_to_module.erase(core_module_ptr.get());
 #endif
+                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
             } break;
             case (Graph::QueueAction::ADD_CALL): {
                 graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
 #ifdef PROFILING
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 auto gui_call_ptr = graph_ptr->GetCall(data.caller, data.callee);
-                gui_call_ptr->SetProfilingData(core_call_ptr.get(), core_call_ptr->GetCallbackCount());
-                // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
-                //    cd.core_call.get()->GetDescriptiveText().c_str());
-                call_to_call[core_call_ptr.get()] = gui_call_ptr;
+                if (gui_call_ptr != nullptr) {
+                    gui_call_ptr->SetProfilingData(core_call_ptr.get(), core_call_ptr->GetCallbackCount());
+                    // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
+                    //    cd.core_call.get()->GetDescriptiveText().c_str());
+                    call_to_call[core_call_ptr.get()] = gui_call_ptr;
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Failed to get gui call pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                }
 #endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
 #ifdef PROFILING
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 call_to_call.erase(core_call_ptr.get());
 #endif
+                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 megamol_graph.SetGraphEntryPoint(data.name_id);
@@ -667,18 +678,18 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
         }
 
         // REMOVE deleted modules from GUI graph ----------------------------------------
-        std::map<std::string, ImGuiID> delete_module_map;
+        std::vector<ImGuiID> deletion_queue;
         for (auto& module_ptr : graph_ptr->Modules()) {
-            delete_module_map[module_ptr->FullName()] = module_ptr->UID();
-#ifdef PROFILING
-            module_to_module.erase(module_ptr->GetProfilingParent());
-#endif
-        }
-        for (auto& module_map : delete_module_map) {
-            if (!megamol_graph.FindModule(module_map.first)) {
-                graph_ptr->DeleteModule(module_map.second);
+            if (!megamol_graph.FindModule(module_ptr->FullName())) {
+                deletion_queue.push_back(module_ptr->UID());
                 gui_graph_changed = true;
+#ifdef PROFILING
+                module_to_module.erase(module_ptr->GetProfilingParent());
+#endif
             }
+        }
+        for (auto& d : deletion_queue) {
+            graph_ptr->DeleteModule(d);
         }
 
         // Collect current call information of gui graph ----------------------
@@ -1843,10 +1854,14 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
             if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
                 auto c = static_cast<megamol::core::Call*>(p);
                 // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-                call_to_call[p]->AppendPerformanceData(frame, e);
+                if (call_to_call[p].lock() != nullptr) {
+                    call_to_call[p].lock()->AppendPerformanceData(frame, e);
+                }
             } else {
                 // Module
-                module_to_module[p]->AppendPerformanceData(frame, e);
+                if (module_to_module[p].lock() != nullptr) {
+                    module_to_module[p].lock()->AppendPerformanceData(frame, e);
+                }
             }
         }
     }

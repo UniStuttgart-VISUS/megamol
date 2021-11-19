@@ -136,8 +136,8 @@ namespace gui {
         bool change_running_graph(ImGuiID graph_uid);
 
 #ifdef PROFILING
-        std::unordered_map<void*, CallPtr_t> call_to_call;
-        std::unordered_map<void*, ModulePtr_t> module_to_module;
+        std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
+        std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
         frontend_resources::PerformanceManager* perf_manager = nullptr;
 #endif
     };
