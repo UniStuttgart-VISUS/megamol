@@ -82,9 +82,13 @@ class GLScreenshotSource : public IScreenshotSource {
 public:
     enum ReadBuffer { FRONT, BACK, COLOR_ATT0, COLOR_ATT1, COLOR_ATT2, COLOR_ATT3};
 
+#ifdef WITH_GL
     void set_read_buffer(ReadBuffer buffer);
-
     ScreenshotImageData const& take_screenshot() const override;
+#else
+    void set_read_buffer(ReadBuffer buffer) {}
+    ScreenshotImageData const& take_screenshot() const override {}
+#endif
 
 private:
     ReadBuffer m_read_buffer = FRONT;

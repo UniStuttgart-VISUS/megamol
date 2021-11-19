@@ -43,11 +43,18 @@ struct RuntimeConfig {
 
     // detailed and service-specific configurations
     // every CLI option can be set via the config file using mmSetConfigValue
-    // e.g. "--window 100x200" => mmSetConfigValue("window", "100x200")
-    //      "--fullscreen"     => mmSetConfigValue("fullscreen", "on")
+    // e.g. "--window 100x200" => mmSetCliOption("window", "100x200")
+    //      "--fullscreen"     => mmSetCliOption("fullscreen", "on")
     bool interactive = false;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
+    // Different default values for a present openGL
+    // In the WITH_GL not defined case, the user cannot overwrite the default
+#ifdef WITH_GL
+    bool no_opengl = false;
+#else
+    bool no_opengl = true;
+#endif
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>

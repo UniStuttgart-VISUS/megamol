@@ -129,6 +129,15 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
     imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
+    if (config.no_opengl) {
+        if (!config.local_framebuffer_resolution.has_value()) {
+            if (!config.window_size.has_value()) {
+                log_error("Window and framebuffer size is not set. Abort.");
+                return 1;
+            }
+            imagepresentationConfig.local_framebuffer_resolution = config.window_size;
+        }
+    }
     imagepresentationConfig.local_viewport_tile = config.local_viewport_tile.has_value()
         ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
             config.local_viewport_tile.value().global_framebuffer_resolution,
@@ -162,8 +171,10 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
-    services.add(gl_service, &openglConfig);
-    services.add(gui_service, &guiConfig);
+    if (!config.no_opengl) {
+        services.add(gl_service, &openglConfig);
+        services.add(gui_service, &guiConfig);
+    }
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);

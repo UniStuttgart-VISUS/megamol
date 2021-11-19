@@ -8,13 +8,23 @@
 #pragma once
 
 #include "ImageWrapper.h"
-
 #include <vector>
+
+using byte = unsigned char;
+
+namespace {
+unsigned int to_uint(void* ptr) {
+    return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
+}
+
+std::vector<byte>* to_vector(void* ptr) {
+    return static_cast<std::vector<byte>*>(ptr); //TODO
+}
+} // namespace
 
 namespace megamol {
 namespace frontend_resources {
 
-    using byte = unsigned char;
     struct byte_texture {
         std::vector<byte> texture;
         std::vector<byte>* texture_ptr = nullptr;

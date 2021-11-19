@@ -24,7 +24,7 @@ using namespace megamol::frontend_resources;
 // note that when using this macro there is no visible opening bracket { for the if statements because it is hidden inside the macro
 #define GET_RESOURCE(TYPENAME) \
     { \
-        TYPENAME const& events = resource.getResource<TYPENAME>();
+        TYPENAME const& events = resource.getOptionalResource<TYPENAME>().value().get();
 
 
 void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
@@ -113,7 +113,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
 }
 
 std::vector<std::string> get_view_runtime_resources_requests() {
-    return {"ViewRenderInputs", "KeyboardEvents", "MouseEvents", "WindowEvents"};
+    return {"ViewRenderInputs", "optional<KeyboardEvents>", "optional<MouseEvents>", "optional<WindowEvents>"};
 }
 
 bool view_rendering_execution(
@@ -132,9 +132,11 @@ bool view_rendering_execution(
     megamol::core::view::AbstractView& view = *view_ptr;
     
     // resources are in order of initial requests from get_view_runtime_resources_requests()
-    megamol::core::view::view_consume_keyboard_events(view, resources[1]);
-    megamol::core::view::view_consume_mouse_events(view, resources[2]);
-    megamol::core::view::view_consume_window_events(view, resources[3]);
+    if (resources[1].getOptionalResource<KeyboardEvents>().has_value()) {
+        megamol::core::view::view_consume_keyboard_events(view, resources[1]);
+        megamol::core::view::view_consume_mouse_events(view, resources[2]);
+        megamol::core::view::view_consume_window_events(view, resources[3]);
+    }
     megamol::core::view::view_poke_rendering(view, resources[0].getResource<megamol::frontend_resources::RenderInput>(), result_image);
     
     return true;

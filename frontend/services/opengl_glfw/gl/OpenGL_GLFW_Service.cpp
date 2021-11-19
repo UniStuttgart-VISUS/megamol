@@ -365,13 +365,16 @@ struct OpenGL_GLFW_Service::PimplData {
     std::array<GLFWcursor*, 9> mouse_cursors;
 };
 
-OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
-}
-
 bool OpenGL_GLFW_Service::init(void* configPtr) {
     if (configPtr == nullptr) return false;
 
     return init(*static_cast<Config*>(configPtr));
+}
+
+void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
+    m_requestedResourceReferences = resources;
+    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(
+        resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 bool OpenGL_GLFW_Service::init(const Config& config) {
@@ -763,42 +766,6 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
 }
 
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-}
-
-void OpenGL_GLFW_Service::resetProvidedResources() {
-    m_keyboardEvents.clear();
-    m_mouseEvents.clear();
-    m_windowEvents.clear();
-    m_framebufferEvents.clear();
-}
-
-void OpenGL_GLFW_Service::preGraphRender() {
-    // if (window_ptr == nullptr) return;
-
-    // e.g. start frame timer
-
-    // rendering via MegaMol View is called after this function finishes
-    // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
-    // which leads to view.Render()
-}
-
-void OpenGL_GLFW_Service::postGraphRender() {
-
-    do_every_second();
-}
-
-std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
-    return m_renderResourceReferences;
-}
-
-const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    return m_requestedResourcesNames;
-}
-
-void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
-    m_requestedResourceReferences = resources;
-
-    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {

@@ -97,6 +97,7 @@ static std::string project_files_option = "project-files";
 static std::string host_option          = "host";
 static std::string opengl_context_option= "opengl";
 static std::string khrdebug_option      = "khrdebug";
+static std::string disable_opengl_option= "nogl";
 static std::string vsync_option         = "vsync";
 static std::string window_option        = "w,window";
 static std::string fullscreen_option    = "f,fullscreen";
@@ -369,7 +370,13 @@ static void vsync_handler(std::string const& option_name, cxxopts::ParseResult c
 {
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
-
+static void no_opengl_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    // User cannot overwrite default value when there is no openGL present
+#ifdef WITH_GL
+    config.no_opengl = parsed_options[option_name].as<bool>();
+#endif
+};
 static void fullscreen_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
@@ -454,6 +461,7 @@ static void viewport_tile_handler(std::string const& option_name, cxxopts::Parse
 
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
+// clang-format off
 std::vector<OptionsListEntry> cli_options_list =
     {     // config name         option description                                                                 type                                        handler
           {config_option,        "Path to Lua configuration file(s)",                                               cxxopts::value<std::vector<std::string>>(), config_handler}
@@ -471,6 +479,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {opengl_context_option,"OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",    cxxopts::value<std::string>(),              opengl_context_handler}
         , {khrdebug_option,      "Enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
         , {vsync_option,         "Enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
+        , {disable_opengl_option,"Disable OpenGL. Always TRUE if not build with OpenGL",                            cxxopts::value<bool>(),                     no_opengl_handler }
         , {window_option,        "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }
         , {fullscreen_option,    "Open maximized window",                                                           cxxopts::value<bool>(),                     fullscreen_handler   }
         , {nodecoration_option,  "Open window without decorations",                                                 cxxopts::value<bool>(),                     nodecoration_handler }
@@ -500,6 +509,7 @@ std::vector<OptionsListEntry> cli_options_list =
                                  "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
+// clang-format on
 
 static std::string loong(std::string const& option) {
     auto f = option.find(',');

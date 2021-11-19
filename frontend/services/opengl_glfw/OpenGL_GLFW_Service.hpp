@@ -52,31 +52,38 @@ public:
     std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
 
     OpenGL_GLFW_Service() = default;
-    ~OpenGL_GLFW_Service() override;
+    ~OpenGL_GLFW_Service() override {}
     // TODO: delete copy/move/assign?
 
+    void resetProvidedResources() override {
+        m_keyboardEvents.clear();
+        m_mouseEvents.clear();
+        m_windowEvents.clear();
+        m_framebufferEvents.clear();
+    }
+
+    void preGraphRender() override {}  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void postGraphRender() override {
+        this->do_every_second();
+    } // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+
+    // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
+    std::vector<FrontendResource>& getProvidedResources() override {
+        return m_renderResourceReferences;
+    }
+    const std::vector<std::string> getRequestedResourceNames() const override {
+        return m_requestedResourcesNames;
+        }
+
+#ifdef WITH_GL
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
-    
+
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
-    void resetProvidedResources() override;
-
-    void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
-
-    // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    std::vector<FrontendResource>& getProvidedResources() override;
-    const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<FrontendResource> resources) override;
-
-    // from AbstractFrontendService:
-    // int setPriority(const int p) // priority initially 0
-    // int getPriority() const;
-    // bool shouldShutdown() const; // shutdown initially false
-    // void setShutdown(const bool s = true);
 
     // GLFW event callbacks need to be public for technical reasons.
     // keyboard events
@@ -106,6 +113,45 @@ private:
 
     void create_glfw_mouse_cursors();
     void update_glfw_mouse_cursors(const int cursor_id);
+#else
+        // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
+        bool init(const Config& config) {return 1;}
+        bool init(void* configPtr) override {return 1;}
+        void close() override {}
+
+        void updateProvidedResources() override {}
+        void digestChangedRequestedResources() override {}
+        void setRequestedResources(std::vector<FrontendResource> resources) override {}
+
+        // GLFW event callbacks need to be public for technical reasons.
+        // keyboard events
+        void glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {}
+        void glfw_onChar_func(const unsigned int codepoint) {}
+
+        // mouse events
+        void glfw_onMouseButton_func(const int button, const int action, const int mods) {}
+        void glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {}
+        void glfw_onMouseCursorEnter_func(const bool entered) {}
+        void glfw_onMouseScroll_func(const double xoffset, const double yoffset) {}
+
+        // window events
+        void glfw_onWindowSize_func(const int width, const int height) {}
+        void glfw_onWindowFocus_func(const bool focused) {}
+        void glfw_onWindowShouldClose_func(const bool shouldclose) {}
+        void glfw_onWindowIconified_func(const bool iconified) {}
+        void glfw_onWindowContentScale_func(const float xscale, const float yscale) {}
+        void glfw_onPathDrop_func(const int path_count, const char* paths[]) {}
+
+        // framebuffer events
+        void glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {}
+
+    private:
+        void register_glfw_callbacks() {}
+        void do_every_second() {}
+
+        void create_glfw_mouse_cursors() {}
+        void update_glfw_mouse_cursors(const int cursor_id) {}
+#endif
 
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;

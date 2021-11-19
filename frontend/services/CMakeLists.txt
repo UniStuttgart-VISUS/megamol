@@ -10,7 +10,6 @@ if(BUILD_FRONTEND_SERVICES)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     
   require_external(glm)
-  require_external(glad)
   require_external(imgui)
   require_external(implot)  
   require_external(imguizmoquat)
@@ -49,10 +48,35 @@ if(BUILD_FRONTEND_SERVICES)
     "remote_service/*.cpp"
     # "service_template/*.cpp"
   )
+
+  # Remove files in gl subdirectories from source list if GL ist not enabled
+  if (NOT ENABLE_GL)
+    foreach(src_file ${source_files})
+      string(FIND "${src_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${src_file}")
+        list(REMOVE_ITEM source_files ${src_file})
+      endif()
+    endforeach()
+    foreach(header_file ${header_files})
+      string(FIND "${header_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${header_file}")
+        list(REMOVE_ITEM header_files ${header_file})
+      endif()
+    endforeach()
+  endif()
+
+
   file(GLOB_RECURSE gui_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.cpp")
 
   # Add target
-  add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
+  if (ENABLE_GL)
+    add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
+    set(GUI_INCLUDE "gui/src")
+  else ()
+    add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
+  endif()
   set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC
     "include"
@@ -67,7 +91,7 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation"
     "remote_service"
     "profiling_service"
-    "gui/src"
+    ${GUI_INCLUDE}
    # "service_template"
   )
 
@@ -120,8 +144,14 @@ if(BUILD_FRONTEND_SERVICES)
     endif ()
   endif ()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core core_gl glad glm imgui implot imguizmoquat)
-    
+  if (ENABLE_GL)
+    require_external(glad)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core_gl glad glm imgui implot imguizmoquat)
+  else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
+  endif()
+
+
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gui/resources/ DESTINATION "share/resources")
