@@ -7,7 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "TransferFunctionQuery.h"
+#include "volume_gl/TransferFunctionQuery.h"
 #include "RaycastVolumeRenderer.h"
 #include "VolumeSliceRenderer.h"
 

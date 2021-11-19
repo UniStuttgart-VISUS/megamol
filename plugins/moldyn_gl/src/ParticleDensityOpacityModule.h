@@ -12,7 +12,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
-#include "TransferFunctionQuery.h"
+#include "volume_gl/TransferFunctionQuery.h"
 
 
 namespace megamol {
@@ -22,7 +22,7 @@ namespace moldyn {
 }
 }
 
-namespace datatools {
+namespace moldyn_gl {
 
 
     class ParticleDensityOpacityModule : public core::Module {
@@ -100,7 +100,7 @@ namespace datatools {
         size_t lastHash;
         vislib::RawStorage colData;
         core::param::ParamSlot densitAlgorithmSlot;
-        TransferFunctionQuery tfQuery;
+        volume_gl::TransferFunctionQuery tfQuery;
         core::param::ParamSlot densityAutoComputeCountRangeSlot;
     };
 
