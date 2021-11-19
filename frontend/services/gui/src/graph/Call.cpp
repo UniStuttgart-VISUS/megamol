@@ -472,22 +472,35 @@ void megamol::gui::Call::draw_profiling_data() {
             std::array<float, core::MultiPerformanceHistory::buffer_length> xbuf;
             std::iota(xbuf.begin(), xbuf.end(), 0.0f);
 
-            // auto hurz = cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX);
-            // for (auto& h : hurz) {
-            //    std::cout << h << " ";
-            //}
-            // std::cout << std::endl;
-
+            const std::array<std::string, 2> entries = {"Min/Max+Avg", "Sum"};
+            static int display_idx = 0;
+            ImPlotAxisFlags y_flags = 0;
+            if (ImGui::BeginCombo("Display", entries[display_idx].c_str())) {
+                for (auto i = 0; i < entries.size(); ++i) {
+                    bool isSelected = (i == display_idx);
+                    if (ImGui::Selectable(entries[i].c_str(), isSelected)) {
+                        display_idx = i;
+                        y_flags = ImPlotAxisFlags_AutoFit;
+                    }
+                }
+                ImGui::EndCombo();
+            }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
-                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
-                    core::MultiPerformanceHistory::buffer_length);
-                ImPlot::PlotLine("###cpuplot", xbuf.data(),
-                    cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
-                    core::MultiPerformanceHistory::buffer_length);
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
+                if (display_idx == 0) {
+                    ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
+                        cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                        cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                    ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                        cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                } else {
+                    ImPlot::PlotLine("###cpuplot", xbuf.data(),
+                        cpu_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::SUM).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                }
                 ImPlot::EndPlot();
             }
 
@@ -517,13 +530,19 @@ void megamol::gui::Call::draw_profiling_data() {
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
                     ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
-                ImPlot::PlotShaded("###glminmax", xbuf.data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
-                    core::MultiPerformanceHistory::buffer_length);
-                ImPlot::PlotLine("###glplot", xbuf.data(),
-                    gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
-                    core::MultiPerformanceHistory::buffer_length);
+                if (display_idx == 0) {
+                    ImPlot::PlotShaded("###glminmax", xbuf.data(),
+                        gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MIN).data(),
+                        gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::MAX).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                    ImPlot::PlotLine("###glplot", xbuf.data(),
+                        gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::AVERAGE).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                } else {
+                    ImPlot::PlotLine("###glplot", xbuf.data(),
+                        gl_perf_history[i].copyHistory(core::MultiPerformanceHistory::metric_type::SUM).data(),
+                        core::MultiPerformanceHistory::buffer_length);
+                }
                 ImPlot::EndPlot();
             }
 
