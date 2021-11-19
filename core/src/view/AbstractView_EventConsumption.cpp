@@ -107,7 +107,17 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
         break;
     }
 
-    view.SetCamera(camera);
+    bool camera_state_mutable_by_view = true;
+
+    if (renderinput.camera_matrices_override.has_value()) {
+        auto& matrices = renderinput.camera_matrices_override.value();
+
+        camera = Camera{matrices.view, matrices.projection};
+
+        camera_state_mutable_by_view = false;
+    }
+
+    view.SetCamera(camera, camera_state_mutable_by_view);
 
     result_image = view.Render(renderinput.time_sec, renderinput.instanceTime_sec);
 }
