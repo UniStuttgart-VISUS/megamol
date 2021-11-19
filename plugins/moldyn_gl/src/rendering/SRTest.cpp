@@ -21,6 +21,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
+    ep->SetTypePair(static_cast<method_ut>(method_e::MESH_ALTN), "MESH_ALTN");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 }
@@ -52,6 +53,9 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
+        auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
+        rendering_tasks_.insert(std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -486,6 +490,76 @@ bool megamol::moldyn_gl::rendering::mesh_rt::render(GLuint ubo) {
 
 
 bool megamol::moldyn_gl::rendering::mesh_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+    vbos_.resize(num_ssbos);
+    glCreateBuffers(vbos_.size(), vbos_.data());
+
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+    cbos_.resize(num_ssbos);
+    glCreateBuffers(cbos_.size(), cbos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferStorage(vbos_[i],
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), 0);
+
+        glNamedBufferStorage(cbos_[i],
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task("SRTestMeshAltn", options, std::filesystem::path("srtest/srtest_mesh_altn.mesh.glsl"),
+              std::filesystem::path("srtest/srtest_mesh_altn.frag.glsl")) {}
+
+
+bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto vbo = vbos_[i];
+        auto cbo = cbos_[i];
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
+        glDrawMeshTasksNV(0, num_prims / 16 + 1);
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::mesh_altn_rt::upload(data_package_t const& package) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(vbos_.size(), vbos_.data());
