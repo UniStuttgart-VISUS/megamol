@@ -13,6 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
+#include "glowl/GLSLProgram.hpp"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -169,6 +170,8 @@ namespace protein_gl {
          */
         bool loadTubeShader(void);
 
+        bool loadSphereShader(void);
+
         /**
          * Enumeration of secondary structure colorings
          */
@@ -248,29 +251,29 @@ namespace protein_gl {
         int currentTessLevel;
         uncVisualisations currentUncVis;
         coloringModes currentColoringMode;
-        vislib::math::Vector<float, 4> currentLightPos;
+        glm::vec4 currentLightPos;
         float currentScaling; // UNUSED ...
         float currentBackboneWidth;
-        vislib::math::Vector<float, 4> currentMaterial;
-        vislib::math::Vector<float, 4> currentUncertainMaterial;
-        vislib::math::Vector<float, 2> currentUncDist;
+        glm::vec4 currentMaterial;
+        glm::vec4 currentUncertainMaterial;
+        glm::vec2 currentUncDist;
         int currentDitherMode;
         UncertaintyDataCall::assMethod currentMethodData;
         outlineOptions currentOutlineMode;
         float currentOutlineScaling;
-        vislib::math::Vector<float, 3> currentOutlineColor;
+        glm::vec3 currentOutlineColor;
 
         GLuint vertArray;
         std::vector<GLsync> fences; // (?)
         GLuint theSingleBuffer;
         unsigned int currBuf;
-        GLuint colIdxAttribLoc; // (?)
         GLsizeiptr bufSize;
         int numBuffers;
         void* theSingleMappedMem;
         GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
 
+#if 0
         /** shader for the tubes */
         vislib_gl::graphics::gl::GLSLTesselationShader tubeShader;
         /** shader for the spheres (raycasting view) */
@@ -286,6 +289,10 @@ namespace protein_gl {
         vislib::SmartPtr<ShaderSource> tubeTessEval;
         vislib::SmartPtr<ShaderSource> tubeGeom;
         vislib::SmartPtr<ShaderSource> tubeFrag;
+#endif
+
+        std::shared_ptr<glowl::GLSLProgram> tubeShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
 
         // the number of different structure types
         unsigned int structCount;

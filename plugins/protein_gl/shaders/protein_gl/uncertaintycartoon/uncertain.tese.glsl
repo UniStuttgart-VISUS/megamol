@@ -41,12 +41,6 @@
 #define OUTLINE_LINE           1
 #define OUTLINE_FULL_UNCERTAIN 2
 #define OUTLINE_FULL_CERTAIN   3
-        
-////////////////
-// EXTENSIONS //
-////////////////  
-#extension GL_ARB_shader_storage_buffer_object : require
-#extension GL_EXT_gpu_shader4                  : require
     
 ////////////
 // LAYOUT //

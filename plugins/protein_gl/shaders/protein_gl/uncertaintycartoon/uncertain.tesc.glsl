@@ -8,11 +8,6 @@
 /////////////
 #define STRUCT_COUNT 9   // must be equal to 'UncertaintyDataCall::secStructure::NOE'
 
-////////////////
-// EXTENSIONS //
-////////////////  
-#extension GL_ARB_shader_storage_buffer_object : require
-#extension GL_EXT_gpu_shader4                  : require
 ////////////
 // LAYOUT //
 ////////////  
