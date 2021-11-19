@@ -1854,12 +1854,12 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
             if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
                 auto c = static_cast<megamol::core::Call*>(p);
                 // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-                if (call_to_call[p].lock() != nullptr) {
+                if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
                     call_to_call[p].lock()->AppendPerformanceData(frame, e);
                 }
             } else {
                 // Module
-                if (module_to_module[p].lock() != nullptr) {
+                if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
                     module_to_module[p].lock()->AppendPerformanceData(frame, e);
                 }
             }
