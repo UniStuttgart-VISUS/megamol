@@ -103,9 +103,7 @@ bool megamol::compositing::TextureDepthCompositing::getOutputImageCallback(core:
 
     if (!computeDepthCompositing()) return false;
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture,m_version);
-    }
+    lhs_tc->setData(m_output_texture,m_version);
 
     return true;
 }
@@ -116,9 +114,7 @@ bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::
 
     if (!computeDepthCompositing()) return false;
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_depth_texture, m_version);
-    }
+    lhs_tc->setData(m_output_depth_texture, m_version);
 
     return true;
 }
