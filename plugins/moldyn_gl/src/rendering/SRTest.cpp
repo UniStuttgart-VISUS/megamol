@@ -55,7 +55,8 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
         auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
-        rendering_tasks_.insert(std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -140,13 +141,19 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     if (!(*in_call)(0))
         return false;
 
+    bool new_data = false;
     if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID()) {
         loadData(*in_call);
         in_data_hash_ = in_call->DataHash();
         frame_id_ = in_call->FrameID();
+        new_data = true;
     }
 
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
+    if (method_slot_.IsDirty()) {
+        new_data = true;
+        method_slot_.ResetDirty();
+    }
 
     auto& rt = rendering_tasks_[method];
 
@@ -179,15 +186,21 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glGenQueries(3, queryID);
 
     glQueryCounter(queryID[0], GL_TIMESTAMP);*/
+    if (new_data) {
 #ifdef PROFILING
-    pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
+        pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
-    rt->upload(data_);
+        rt->upload(data_);
 
 #ifdef PROFILING
-    pm.stop_timer(timing_handles_[0]);
+        pm.stop_timer(timing_handles_[0]);
+#endif
 
+        new_data = false;
+    }
+
+#ifdef PROFILING
     // glQueryCounter(queryID[1], GL_TIMESTAMP);
     pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
 #endif
@@ -546,7 +559,7 @@ bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
-        glDrawMeshTasksNV(0, num_prims / 31 + 1);
+        glDrawMeshTasksNV(0, num_prims / 32 + 1);
     }
     glBindVertexArray(0);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

@@ -3,7 +3,7 @@
 #extension GL_NV_mesh_shader : enable
 
 #define ROOT_2 1.414213562f
-#define WARP 31
+#define WARP 32
 #define NUM_V 4
 #define NUM_P 2
 
@@ -74,25 +74,27 @@ void main() {
         }
 
         for (int i = 0; i < NUM_V; ++i) {
-            pp[l_idx * NUM_V + i].sqrRad = sqrRad;
+            pp[l_idx * NUM_V + i].pointColor = pointColor;
+            pp[l_idx * NUM_V + i].objPos = objPos;
+
             pp[l_idx * NUM_V + i].ray = vd[i];
             pp[l_idx * NUM_V + i].tf = dot(oc_pos, vd[i]);
-            pp[l_idx * NUM_V + i].tt = -oc_pos + pp[l_idx * NUM_V + i].tf * vd[i];
+            pp[l_idx * NUM_V + i].tt = pp[l_idx * NUM_V + i].tf * vd[i] - oc_pos;
 
-            pp[l_idx * NUM_V + i].objPos = objPos;
             pp[l_idx * NUM_V + i].rad = rad;
-            pp[l_idx * NUM_V + i].pointColor = pointColor;
+            pp[l_idx * NUM_V + i].sqrRad = sqrRad;
+
 
             gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy, projPos.z, 1.0f);
         }
 
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 0;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 1] = l_idx * NUM_V + 1;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 2] = l_idx * NUM_V + 2;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 1;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 1] = l_idx * NUM_V + 2;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 2] = l_idx * NUM_V + 0;
 
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 3] = l_idx * NUM_V + 2;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 4] = l_idx * NUM_V + 3;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 5] = l_idx * NUM_V + 0;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 3] = l_idx * NUM_V + 0;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 4] = l_idx * NUM_V + 2;
+        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 5] = l_idx * NUM_V + 3;
     }
     gl_PrimitiveCountNV = min(num_points - gl_WorkGroupID.x * gl_WorkGroupSize.x, gl_WorkGroupSize.x) * NUM_P;
 }
