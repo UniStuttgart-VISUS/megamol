@@ -16,16 +16,16 @@ layout(depth_greater) out float gl_FragDepth;
 
 #include "srtest_intersection.glsl"
 
+#include "srtest_depth.glsl"
+
 void main(void) {
     vec4 new_pos;
     vec3 normal;
     vec3 ray;
-    intersection(objPos, sqrRad, oc_pos, c, rad, new_pos, normal, ray);
+    float t;
+    intersection(objPos, sqrRad, oc_pos, c, rad, new_pos, normal, ray, t);
 
     outColor = vec4(LocalLighting(ray, normal, lightDir, pointColor.rgb), pointColor.a);
 
-    float depth = dot(MVPtransp[2], new_pos);
-    float depthW = dot(MVPtransp[3], new_pos);
-    gl_FragDepth = ((depth / depthW) + 1.0f) * 0.5f;
-    //gl_FragDepth = t;
+    gl_FragDepth = depth(t);
 }

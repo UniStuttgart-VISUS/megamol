@@ -160,11 +160,12 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         auto mvp = proj * view;
         ubo_st.mvp = mvp;
         ubo_st.mvp_inv = glm::inverse(mvp);
-        ubo_st.mvp_trans = glm::transpose(mvp);
         ubo_st.attr = glm::vec4(0.f, 0.f, cr_fbo->getWidth(), cr_fbo->getHeight());
         ubo_st.light_dir = curlightDir;
         ubo_st.near_ = cam.get<core::view::Camera::NearPlane>();
         ubo_st.far_ = cam.get<core::view::Camera::FarPlane>();
+        ubo_st.p2_z = proj[2].z;
+        ubo_st.p3_z = proj[3].z;
 
         glNamedBufferSubData(ubo_, 0, sizeof(ubo_params_t), &ubo_st);
 
@@ -545,7 +546,7 @@ bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
-        glDrawMeshTasksNV(0, num_prims / 16 + 1);
+        glDrawMeshTasksNV(0, num_prims / 31 + 1);
     }
     glBindVertexArray(0);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

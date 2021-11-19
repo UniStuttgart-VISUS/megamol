@@ -32,12 +32,13 @@ using data_package_t = data_package;
 struct ubo_params {
     alignas(16) glm::mat4 mvp;
     alignas(16) glm::mat4 mvp_inv;
-    alignas(16) glm::mat4 mvp_trans;
     alignas(16) glm::vec4 attr;
     alignas(16) glm::vec3 dir, up, right, pos;
-    alignas(4) float near_;
     alignas(16) glm::vec3 light_dir;
+    alignas(4) float near_;
     alignas(4) float far_;
+    alignas(4) float p2_z;
+    alignas(4) float p3_z;
 };
 
 using ubo_params_t = ubo_params;
