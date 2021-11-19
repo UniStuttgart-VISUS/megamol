@@ -130,36 +130,34 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
         , uncertaintyDataSlot(
               "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage.")
         , resSelectionCallerSlot("getResSelection", "Connects the cartoon rendering with residue selection storage.")
-        ,
-
-        scalingParam("01 Scaling", "Scaling factor for particle radii.")
-        , sphereParam("02 Spheres", "Render atoms as spheres.")
-        , backboneParam("03 Backbone", "Render backbone as tubes.")
-        , backboneWidthParam("04 Backbone width", "The width of the backbone.")
-        , tessLevelParam("05 Tesselation level", "The tesselation level.")
-        , lineDebugParam("06 Wireframe", "Render in wireframe mode.")
-        , onlyTubesParam("07 Only tubes", "Render only tubes.")
-        , methodDataParam("08 Method data", "Choose data of secondary structure assignment method.")
-        , uncVisParam("09 Uncertainty visualisation", "The uncertainty visualisation.")
-        , uncDistorGainParam("10 Distortion: GAIN ", "amplification of function")
-        , uncDistorRepParam("11 Distortion: REPEAT", "repetition of function")
-        , ditherParam("12 Dithering", "enable and add additional dithering passes, dithering is disabled for 0.")
-        , outlineParam("13 Outlining", "The oulining visualisations.")
-        , outlineScalingParam("14 Outline scaling", "The scaling of the ouline.")
-        , outlineColorParam("15 Outline color", "The color of the outline.")
-        , uncertainMaterialParam("16 Uncertain material", "material properties for uncertain structure assignment: "
-                                                          "Ambient, diffuse, specular components + exponent")
-        , materialParam("17 Material", "Ambient, diffuse, specular components + exponent.")
-        , colorModeParam("18 Color mode", "Coloring mode for secondary structure.")
-        , colorInterpolationParam("19 Color interpolation", "Should the colors be interpolated?")
-        , lightPosParam("20 Light position", "The light position.")
-        , buttonParam("21 Reload shaders", "Reload the shaders.")
-        , colorTableFileParam("22 Color Table Filename", "The filename of the color table.")
-        , bFactorAsUncertaintyParam("23 BFactor Uncertainty",
+        , scalingParam("Scaling", "Scaling factor for particle radii.")
+        , sphereParam("Spheres", "Render atoms as spheres.")
+        , backboneParam("Backbone", "Render backbone as tubes.")
+        , backboneWidthParam("Backbone width", "The width of the backbone.")
+        , tessLevelParam("Tesselation level", "The tesselation level.")
+        , lineDebugParam("Wireframe", "Render in wireframe mode.")
+        , onlyTubesParam("Only tubes", "Render only tubes.")
+        , methodDataParam("Method data", "Choose data of secondary structure assignment method.")
+        , uncVisParam("Uncertainty visualisation", "The uncertainty visualisation.")
+        , uncDistorGainParam("Distortion: GAIN ", "amplification of function")
+        , uncDistorRepParam("Distortion: REPEAT", "repetition of function")
+        , ditherParam("Dithering", "enable and add additional dithering passes, dithering is disabled for 0.")
+        , outlineParam("Outlining", "The oulining visualisations.")
+        , outlineScalingParam("Outline scaling", "The scaling of the ouline.")
+        , outlineColorParam("Outline color", "The color of the outline.")
+        , uncertainMaterialParam("Uncertain material", "material properties for uncertain structure assignment: "
+                                                       "Ambient, diffuse, specular components + exponent")
+        , materialParam("Material", "Ambient, diffuse, specular components + exponent.")
+        , colorModeParam("Color mode", "Coloring mode for secondary structure.")
+        , colorInterpolationParam("Color interpolation", "Should the colors be interpolated?")
+        , lightPosParam("Light position", "The light position.")
+        , buttonParam("Reload shaders", "Reload the shaders.")
+        , colorTableFileParam("Color Table Filename", "The filename of the color table.")
+        , bFactorAsUncertaintyParam("BFactor Uncertainty",
               "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data.")
-        , showRMSFParam("24 Show RMSF", "Use the computed RMSF and visualize it as uncertainty.")
-        , maxRMSFParam("25 Max. RMSF value", "The maximum RMSF value used for normalization.")
-        , useAlphaBlendingParam("26 Alpha Blending instead of Dithering",
+        , showRMSFParam("Show RMSF", "Use the computed RMSF and visualize it as uncertainty.")
+        , maxRMSFParam("Max. RMSF value", "The maximum RMSF value used for normalization.")
+        , useAlphaBlendingParam("Alpha Blending instead of Dithering",
               "Switch from dithering to simple alpha blending of uncertain structure.")
         , fences()
         , currBuf(0)
@@ -170,9 +168,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
         , molAtomCount(0)
         , tubeShader_(nullptr)
         , sphereShader_(nullptr)
-        ,
         // this variant should not need the fence
-        singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
+        , singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
         , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
         , firstframe(true) {
 
@@ -1269,6 +1266,8 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     mol->Unlock();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // reset stuff
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 #ifdef DEBUG_GL
     glDisable(GL_DEBUG_OUTPUT);
