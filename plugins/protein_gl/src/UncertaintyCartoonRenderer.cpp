@@ -133,7 +133,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
               "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage.")
         , getLightSlot("lightSlot", "Connects the tessellated uncertainty rendering with lights")
         , scalingParam("Scaling", "Scaling factor for particle radii.")
-        , sphereParam("Spheres", "Render atoms as spheres.")
         , backboneParam("Backbone", "Render backbone as tubes.")
         , backboneWidthParam("Backbone width", "The width of the backbone.")
         , tessLevelParam("Tesselation level", "The tesselation level.")
@@ -168,7 +167,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
         , aminoAcidCount(0)
         , molAtomCount(0)
         , tubeShader_(nullptr)
-        , sphereShader_(nullptr)
         , pointLightBuffer_(nullptr)
         , distantLightBuffer_(nullptr)
         // this variant should not need the fence
@@ -212,9 +210,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
 
     this->onlyTubesParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->onlyTubesParam);
-
-    this->sphereParam << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->sphereParam);
 
     this->backboneParam << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->backboneParam);
@@ -359,29 +354,6 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
     return true;
 }
 
-bool UncertaintyCartoonRenderer::loadSphereShader(void) {
-
-    try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-
-        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
-            std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
-            std::filesystem::path("protein_gl/simplemolecule/sm_sphere.frag.glsl"));
-
-    } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[UncertaintyCartoonRenderer] %s", ex.what());
-    } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception.");
-    }
-
-    return true;
-}
-
 /*
  * UncertaintyCartoonRenderer::create
  */
@@ -395,10 +367,6 @@ bool UncertaintyCartoonRenderer::create(void) {
 
     // load tube shader
     if (!this->loadTubeShader()) {
-        return false;
-    }
-
-    if (!this->loadSphereShader()) {
         return false;
     }
 
@@ -1161,121 +1129,6 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
             glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
         }
-    }
-
-    // copy data to: positionCA and positionO for backbone line rendering or sphere rendering
-    if (this->sphereParam.Param<param::BoolParam>()->Value()) {
-
-        firstResIdx = 0;
-        lastResIdx = 0;
-        firstAtomIdx = 0;
-        lastAtomIdx = 0;
-        atomTypeIdx = 0;
-
-        if (this->positionsCa.Count() != mol->MoleculeCount()) {
-            this->positionsCa.SetCount(mol->MoleculeCount());
-            this->positionsO.SetCount(mol->MoleculeCount());
-        }
-
-        for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
-            this->positionsCa[molIdx].Clear();
-            this->positionsCa[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
-            this->positionsO[molIdx].Clear();
-            this->positionsO[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
-
-            // bool first;
-            firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
-            lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
-            for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) {
-                firstAtomIdx = mol->Residues()[resIdx]->FirstAtomIndex();
-                lastAtomIdx = firstAtomIdx + mol->Residues()[resIdx]->AtomCount();
-                for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) {
-                    unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
-                    if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")) {
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsCa[molIdx].Add(1.0f);
-                        // write first and last Ca position three times
-                        if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))) {
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                            this->positionsCa[molIdx].Add(1.0f);
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                            this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                            this->positionsCa[molIdx].Add(1.0f);
-                        }
-                    }
-                    if (mol->AtomTypes()[atomTypeIdx].Name().Equals("O")) {
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsO[molIdx].Add(1.0f);
-                        // write first and last Ca position three times
-                        if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))) {
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                            this->positionsO[molIdx].Add(1.0f);
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                            this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                            this->positionsO[molIdx].Add(1.0f);
-                        }
-                    }
-                }
-            }
-        }
-        // DEBUG
-        // std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() <<
-        // std::endl;
-
-        // draw spheres
-        glEnable(GL_BLEND);
-        glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
-        // enable sphere shader
-        sphereShader_->use();
-        // set shader variables
-        sphereShader_->setUniform("viewAttr", viewportStuff);
-        sphereShader_->setUniform("camIn", call.GetCamera().getPose().direction);
-        sphereShader_->setUniform("camRight", call.GetCamera().getPose().right);
-        sphereShader_->setUniform("camUp", call.GetCamera().getPose().up);
-        // set vertex and color pointers and draw them
-        glBegin(GL_POINTS);
-        // Ca atoms
-        for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
-            for (unsigned int j = 0; j < this->positionsCa[i].Count() / 4; j++) {
-                glColor4f(0.75f, 0.5f, 0.1f, 1.0f);
-                glVertex4f(this->positionsCa[i][4 * j], this->positionsCa[i][4 * j + 1],
-                    this->positionsCa[i][4 * j + 2], 0.3f);
-            }
-        }
-        // O atoms
-        for (unsigned int i = 0; i < this->positionsO.Count(); i++) {
-            for (unsigned int j = 0; j < this->positionsO[i].Count() / 4; j++) {
-                glColor4f(0.75f, 0.1f, 0.1f, 1.0f);
-                glVertex4f(
-                    this->positionsO[i][4 * j], this->positionsO[i][4 * j + 1], this->positionsO[i][4 * j + 2], 0.3f);
-            }
-        }
-        // all atoms
-        for (unsigned int i = 0; i < mol->AtomCount(); i++) {
-            unsigned int atomTypeIdx = mol->AtomTypeIndices()[i];
-            if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")) {
-                glColor4f(0.5f, 0.75f, 0.1f, 0.5f);
-                glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1],
-                    mol->AtomPositions()[3 * i + 2], 1.0f);
-            } else {
-                glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
-                glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1],
-                    mol->AtomPositions()[3 * i + 2], 0.5f);
-            }
-        }
-        glEnd();
-        // disable sphere shader
-        glUseProgram(0);
     }
 
     mol->Unlock();

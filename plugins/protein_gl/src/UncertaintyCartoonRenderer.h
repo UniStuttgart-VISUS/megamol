@@ -35,7 +35,7 @@ namespace protein_gl {
     using namespace vislib_gl::graphics::gl;
 
     /**
-     * Renderer for simple sphere glyphs
+     * Renderer for uncertain cartoon renderings
      */
     class UncertaintyCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
@@ -175,8 +175,6 @@ namespace protein_gl {
          */
         bool loadTubeShader(void);
 
-        bool loadSphereShader(void);
-
         /**
          * Enumeration of secondary structure colorings
          */
@@ -226,7 +224,6 @@ namespace protein_gl {
 
         // paramter
         core::param::ParamSlot scalingParam;
-        core::param::ParamSlot sphereParam;
         core::param::ParamSlot backboneParam;
         core::param::ParamSlot backboneWidthParam;
         core::param::ParamSlot materialParam;
@@ -279,7 +276,6 @@ namespace protein_gl {
         GLuint singleBufferMappingBits;
 
         std::shared_ptr<glowl::GLSLProgram> tubeShader_;
-        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
 
         // the number of different structure types
         unsigned int structCount;

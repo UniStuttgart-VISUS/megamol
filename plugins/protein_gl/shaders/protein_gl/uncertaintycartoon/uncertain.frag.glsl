@@ -1,27 +1,8 @@
 #version 430
 
-#define CLIP
-#define DEPTH
-#define SMALL_SPRITE_LIGHTING
-//#define CALC_CAM_SYS
-
-//#define RETICLE
-//#define DISCARD_COLOR_MARKER
-#ifdef DEBUG
-#undef CLIP
-#define RETICLE
-#define AXISHINTS
-#endif // DEBUG
-
-//#define BULLSHIT
-
-#ifndef FLACH
-#define FLACH
-#endif
-
-//////////////
-// FRAGMENT //
-//////////////
+#include "protein_gl/deferred/blinn_phong.glsl"
+#include "protein_gl/deferred/lambert.glsl"
+#include "protein_gl/deferred/gbuffer_output.glsl"
 
 /////////////
 // DEFINES //
@@ -46,9 +27,10 @@ in vec3 uncValues;  // Uncertainty and DITHERING values ([0]uncertainty, [1]dith
 //////////
 // OUT //
 /////////
-#include "protein_gl/deferred/blinn_phong.glsl"
-#include "protein_gl/deferred/lambert.glsl"
-#include "protein_gl/deferred/gbuffer_output.glsl"
+
+/////////////////////
+// INPUT variables //
+/////////////////////
 
 struct LightParams
 {
@@ -58,9 +40,6 @@ struct LightParams
 layout(std430, binding = 4) readonly buffer PointLightParamsBuffer { LightParams point_light_params[]; };
 layout(std430, binding = 5) readonly buffer DistantLightParamsBuffer { LightParams distant_light_params[]; };
 
-/////////////////////
-// INPUT variables //
-/////////////////////
 uniform vec4 viewAttr;
 
 uniform mat4 MVP;
