@@ -11,14 +11,17 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
+#include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "DeferredRenderingProvider.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/UncertaintyDataCall.h"
@@ -149,6 +152,8 @@ namespace protein_gl {
          */
         void WaitSignal(GLsync& syncObj);
 
+        void RefreshLights(core::view::light::CallLight* lightCall, glm::vec3 camDir);
+
         /** Strucutre to hold C-alpha data */
         struct CAlpha {
             float pos[4];      // position of the C-alpha atom
@@ -216,8 +221,8 @@ namespace protein_gl {
         core::CallerSlot getPdbDataSlot;
         /** The call for uncertainty data */
         core::CallerSlot uncertaintyDataSlot;
-        /** residue selection caller slot */
-        core::CallerSlot resSelectionCallerSlot;
+        /** The call for lighting data */
+        core::CallerSlot getLightSlot;
 
         // paramter
         core::param::ParamSlot scalingParam;
@@ -273,24 +278,6 @@ namespace protein_gl {
         GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
 
-#if 0
-        /** shader for the tubes */
-        vislib_gl::graphics::gl::GLSLTesselationShader tubeShader;
-        /** shader for the spheres (raycasting view) */
-        vislib_gl::graphics::gl::GLSLShader sphereShader;
-
-        vislib::SmartPtr<ShaderSource> vert;
-        vislib::SmartPtr<ShaderSource> tessCont;
-        vislib::SmartPtr<ShaderSource> tessEval;
-        vislib::SmartPtr<ShaderSource> geom;
-        vislib::SmartPtr<ShaderSource> frag;
-        vislib::SmartPtr<ShaderSource> tubeVert;
-        vislib::SmartPtr<ShaderSource> tubeTessCont;
-        vislib::SmartPtr<ShaderSource> tubeTessEval;
-        vislib::SmartPtr<ShaderSource> tubeGeom;
-        vislib::SmartPtr<ShaderSource> tubeFrag;
-#endif
-
         std::shared_ptr<glowl::GLSLProgram> tubeShader_;
         std::shared_ptr<glowl::GLSLProgram> sphereShader_;
 
@@ -335,9 +322,11 @@ namespace protein_gl {
         vislib::Array<vislib::Array<float>> positionsCa;
         vislib::Array<vislib::Array<float>> positionsO;
 
-        // selection
-        vislib::Array<bool> selection;                         // unused so far ...
-        protein_calls::ResidueSelectionCall* resSelectionCall; // unused so far ...
+        std::shared_ptr<glowl::BufferObject> pointLightBuffer_;
+        std::shared_ptr<glowl::BufferObject> distantLightBuffer_;
+
+        std::vector<DeferredRenderingProvider::LightParams> pointLights_;
+        std::vector<DeferredRenderingProvider::LightParams> distantLights_;
 
         bool firstframe;
     };

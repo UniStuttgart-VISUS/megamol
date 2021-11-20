@@ -21,6 +21,7 @@ in vec3 uncVal[];              // Uncertainty and DITHERING values - from tess e
 /////////  
 out vec4 mycol;
 out vec3 normal;
+out vec3 basenormal;
 out vec3 uncValues;          // Uncertainty and DITHERING values  - pass to frag shader
 
 /////////////////////
@@ -38,6 +39,7 @@ void main() {
         mycol        = color[i];
         vec4 normal4 = MVinvtrans * vec4(n[i], 0);
         normal       = normalize(normal4.xyz);
+        basenormal   = normalize(n[i]);
         uncValues    = uncVal[i];
        
         EmitVertex();

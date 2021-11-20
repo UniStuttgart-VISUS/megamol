@@ -26,12 +26,12 @@ public:
     void resetToPreviousFramebuffer(void);
     std::vector<core::param::ParamSlot*> getUsedParamSlots(void);
 
-private:
-    void refreshLights(core::view::light::CallLight* lightCall, const glm::vec3 camDir);
-
     struct LightParams {
         float x, y, z, intensity;
     };
+
+private:
+    void refreshLights(core::view::light::CallLight* lightCall, const glm::vec3 camDir);
 
     std::vector<LightParams> pointLights_;
     std::vector<LightParams> distantLights_;

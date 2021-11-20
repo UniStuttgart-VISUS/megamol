@@ -23,6 +23,8 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
@@ -129,7 +131,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
         , getPdbDataSlot("getPdbData", "Connects to the pdb data source.")
         , uncertaintyDataSlot(
               "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage.")
-        , resSelectionCallerSlot("getResSelection", "Connects the cartoon rendering with residue selection storage.")
+        , getLightSlot("lightSlot", "Connects the tessellated uncertainty rendering with lights")
         , scalingParam("Scaling", "Scaling factor for particle radii.")
         , sphereParam("Spheres", "Render atoms as spheres.")
         , backboneParam("Backbone", "Render backbone as tubes.")
@@ -164,10 +166,11 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
         , bufSize(32 * 1024 * 1024)
         , numBuffers(3)
         , aminoAcidCount(0)
-        , resSelectionCall(nullptr)
         , molAtomCount(0)
         , tubeShader_(nullptr)
         , sphereShader_(nullptr)
+        , pointLightBuffer_(nullptr)
+        , distantLightBuffer_(nullptr)
         // this variant should not need the fence
         , singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
         , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
@@ -178,15 +181,17 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
 
     // uncertainty data caller slot
     this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
+    this->uncertaintyDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->uncertaintyDataSlot);
 
     // pdb data caller slot
     this->getPdbDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->getPdbDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getPdbDataSlot);
 
-    // residue selection caller slot
-    this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
-    this->MakeSlotAvailable(&this->resSelectionCallerSlot);
+    this->getLightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&this->getLightSlot);
 
     this->currentTessLevel = 16;
     this->currentUncVis = uncVisualisations::UNC_VIS_SIN_U;
@@ -409,6 +414,9 @@ bool UncertaintyCartoonRenderer::create(void) {
     //    access);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
+
+    pointLightBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    distantLightBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     return true;
 }
@@ -687,6 +695,9 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->GetUncertaintyData(ud, mol); // use return value ...?
     }
 
+    // update lights
+    auto lc = this->getLightSlot.CallAs<core::view::light::CallLight>();
+    this->RefreshLights(lc, call.GetCamera().getPose().direction);
 
     // get method data choice
     if (this->methodDataParam.IsDirty()) {
@@ -994,11 +1005,14 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->GetBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
         // this->currBuf = 0;
         tubeShader_->use();
+        pointLightBuffer_->bind(4);
+        distantLightBuffer_->bind(5);
 
         glColor4f(1.0f / this->mainChain.size(), 0.75f, 0.25f, 1.0f);
 
         tubeShader_->setUniform("viewAttr", viewportStuff);
         tubeShader_->setUniform("scaling", this->currentScaling);
+        tubeShader_->setUniform("camPos", call.GetCamera().getPose().position);
         tubeShader_->setUniform("camIn", call.GetCamera().getPose().direction);
         tubeShader_->setUniform("camUp", call.GetCamera().getPose().up);
         tubeShader_->setUniform("camRight", call.GetCamera().getPose().right);
@@ -1021,7 +1035,6 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         tubeShader_->setUniform("uncVisMode", static_cast<int>(this->currentUncVis));
         tubeShader_->setUniform("uncDistor", this->currentUncDist);
         tubeShader_->setUniform("ProjInv", invproj);
-        tubeShader_->setUniform("lightPos", this->currentLightPos);
         tubeShader_->setUniform("ambientColor", 1.0f, 1.0f, 1.0f, 1.0f);
         tubeShader_->setUniform("diffuseColor", 1.0f, 1.0f, 1.0f, 1.0f);
         tubeShader_->setUniform("specularColor", 1.0f, 1.0f, 1.0f, 1.0f);
@@ -1029,6 +1042,8 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         tubeShader_->setUniform("phongUncertain", this->currentUncertainMaterial);
         tubeShader_->setUniform("outlineScale", this->currentOutlineScaling);
         tubeShader_->setUniform("outlineColor", this->currentOutlineColor);
+        tubeShader_->setUniform("point_light_cnt", static_cast<GLint>(pointLights_.size()));
+        tubeShader_->setUniform("distant_light_cnt", static_cast<GLint>(distantLights_.size()));
 
         // Switch from dithering to alpha blending
         if (this->useAlphaBlendingParam.Param<megamol::core::param::BoolParam>()->Value()) {
@@ -1319,5 +1334,46 @@ void UncertaintyCartoonRenderer::WaitSignal(GLsync& syncObj) {
                 return;
             }
         }
+    }
+}
+
+void UncertaintyCartoonRenderer::RefreshLights(core::view::light::CallLight* lightCall, glm::vec3 camDir) {
+
+    if (lightCall == nullptr || !(*lightCall)(core::view::light::CallLight::CallGetData)) {
+        pointLights_.clear();
+        distantLights_.clear();
+        core::utility::log::Log::DefaultLog.WriteWarn(
+            "[UncertaintyCartoonRenderer]: There are no proper lights connected no shading is happening");
+    } else {
+        if (lightCall->hasUpdate()) {
+            auto& lights = lightCall->getData();
+
+            pointLights_.clear();
+            distantLights_.clear();
+
+            auto point_lights = lights.get<core::view::light::PointLightType>();
+            auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+            for (const auto& pl : point_lights) {
+                pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+            }
+
+            for (const auto& dl : distant_lights) {
+                if (dl.eye_direction) {
+                    auto cd = glm::normalize(camDir); // paranoia
+                    distantLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
+                } else {
+                    distantLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+                }
+            }
+        }
+    }
+
+    pointLightBuffer_->rebuffer(pointLights_);
+    distantLightBuffer_->rebuffer(distantLights_);
+
+    if (pointLights_.empty() && distantLights_.empty()) {
+        core::utility::log::Log::DefaultLog.WriteWarn("[DeferredRenderingProvider]: There are no directional or "
+                                                      "positional lights connected. Lighting not available.");
     }
 }
