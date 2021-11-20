@@ -357,6 +357,20 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
         };
     };
 
+    auto make_view_projection_parameters = [&](interop::CameraView const& iview, interop::CameraProjection const& iproj)
+        -> std::function<std::optional<frontend_resources::RenderInput::CameraViewProjectionParameters>()> {
+        return [&]() {
+            return std::make_optional(frontend_resources::RenderInput::CameraViewProjectionParameters{
+                {// Pose
+                    glm::vec3(toGlm(iview.eyePos)),
+                    glm::normalize(glm::vec3(toGlm(iview.lookAtPos)) - glm::vec3(toGlm(iview.eyePos))),
+                    glm::vec3(toGlm(iview.camUpDir))},
+                {// Projection
+                    frontend_resources::RenderInput::CameraViewProjectionParameters::ProjectionType::PERSPECTIVE,
+                    iproj.fieldOfViewY_rad, iproj.aspect, iproj.nearClipPlane, iproj.farClipPlane}});
+        };
+    };
+
     auto fbo_size_handler = [&]() {
         return frontend_resources::UintPair{pimpl.cameraProjection.pixelHeight, pimpl.cameraProjection.pixelWidth};
     };
@@ -371,8 +385,8 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
 
     // it is ok to reference the pimpl data because view rendering and pimpl data updates DONT happen at the same time (see VR Service pre/postGraphRender)
 
-    auto replace_ep_handlers = [&, fbo_size_handler, tile_handler](
-                                   frontend_resources::EntryPoint& ep, auto make_matrices) {
+    auto replace_ep_handlers = [&, fbo_size_handler, tile_handler](frontend_resources::EntryPoint& ep,
+                                   auto make_matrices, auto make_view_projection_parameters) {
         // setting correct FBO size is important
         accessViewRenderInput(ep.entry_point_data).render_input_framebuffer_size_handler = fbo_size_handler;
 
@@ -380,7 +394,12 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
         accessViewRenderInput(ep.entry_point_data).render_input_tile_handler = tile_handler;
 
         // enforce our view/projection matrices
-        accessViewRenderInput(ep.entry_point_data).render_input_camera_handler = make_matrices;
+        // accessViewRenderInput(ep.entry_point_data).render_input_camera_handler = make_matrices;
+
+        // enforcing view/projection matrices may actually lead to problems
+        // so for now we pass the actual camera parametrization to the view
+        accessViewRenderInput(ep.entry_point_data).render_input_camera_parameters_handler =
+            make_view_projection_parameters;
 
         pimpl.ep_handles_installed = true;
     };
@@ -392,9 +411,10 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
         // when they look up render inputs for the next frame
         // the actual render input lookup/update (calling the render input callbacks)
         // happens in ImagePresentation.RenderNextFrame() right before view rendering
-        replace_ep_handlers(*pimpl.left_ep, make_matrices(pimpl.stereoCameraView.leftEyeView, pimpl.cameraProjection));
-        replace_ep_handlers(
-            *pimpl.right_ep, make_matrices(pimpl.stereoCameraView.rightEyeView, pimpl.cameraProjection));
+        replace_ep_handlers(*pimpl.left_ep, make_matrices(pimpl.stereoCameraView.leftEyeView, pimpl.cameraProjection),
+            make_view_projection_parameters(pimpl.stereoCameraView.leftEyeView, pimpl.cameraProjection));
+        replace_ep_handlers(*pimpl.right_ep, make_matrices(pimpl.stereoCameraView.rightEyeView, pimpl.cameraProjection),
+            make_view_projection_parameters(pimpl.stereoCameraView.rightEyeView, pimpl.cameraProjection));
     });
 
     log("added entry point " + entry_point_name + " for Unity-KolabBW Stereo Rendering.");
