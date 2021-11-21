@@ -213,6 +213,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
 
     interop::TextureSender left_texturesender;
     interop::TextureSender right_texturesender;
+    interop::TexturePackageSender singlestereo_texturesender;
 
     interop::DataReceiver stereoCameraViewReceiver_relative;
     interop::DataReceiver cameraProjectionReceiver;
@@ -261,6 +262,8 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
     std::string default_name = "/UnityInterop/DefaultName";
     pimpl.left_texturesender.init(default_name + "Left");
     pimpl.right_texturesender.init(default_name + "Right");
+    pimpl.singlestereo_texturesender.init(default_name + "SingleStereo", 400, 600);
+
 
     pimpl.stereoCameraViewReceiver_relative.start("tcp://localhost:12345", "StereoCameraViewRelative");
     pimpl.cameraProjectionReceiver.start("tcp://localhost:12345", "CameraProjection");
@@ -290,6 +293,8 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
 
     pimpl.left_texturesender.sendTexture(left.as_gl_handle(), left.size.width, left.size.height);
     pimpl.right_texturesender.sendTexture(right.as_gl_handle(), right.size.width, right.size.height);
+
+    pimpl.singlestereo_texturesender.sendTexturePackage(left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
 
     if (!pimpl.has_bbox) {
         auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
