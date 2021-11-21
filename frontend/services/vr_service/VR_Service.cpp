@@ -208,6 +208,9 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     frontend_resources::EntryPoint* left_ep = nullptr;
     frontend_resources::EntryPoint* right_ep = nullptr;
 
+    frontend_resources::gl_texture left_ep_result{{}};
+    frontend_resources::gl_texture right_ep_result{{}};
+
     interop::TextureSender left_texturesender;
     interop::TextureSender right_texturesender;
 
@@ -216,6 +219,28 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     interop::DataSender bboxSender;
 
     std::function<void()> update_entry_point_inputs;
+
+    void rig_ep_execution() {
+        // when this gets called the entry points are not null
+
+        auto rig_ep = [&](auto& original_execute, auto& result_gl_copy) {
+            auto old_execute = original_execute;
+
+            auto new_execute = std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, megamol::frontend_resources::ImageWrapper&)>{
+                [&,old_execute](void* module_ptr, auto& resources, auto& result_image) -> bool {
+                        bool success = old_execute(module_ptr, resources, result_image);
+
+                        frontend_resources::gl_texture tmp_tex{result_image}; // no copy
+                        result_gl_copy = tmp_tex; // copy GL texture
+
+                        return success;
+            }};
+            original_execute = new_execute;
+        };
+
+        rig_ep(left_ep->execute, left_ep_result);
+        rig_ep(right_ep->execute, right_ep_result);
+    }
 };
 #define pimpl (*m_pimpl)
 
@@ -260,20 +285,11 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     if (!pimpl.left_ep || !pimpl.right_ep)
         return;
 
-    static frontend_resources::gl_texture gl_tex{{}};
+    auto& left = pimpl.left_ep_result;
+    auto& right = pimpl.right_ep_result;
 
-    auto to_image = [&](auto const& wrapper) {
-        gl_tex = wrapper;
-
-        return PimplData::Image{gl_tex.as_gl_handle(), static_cast<unsigned int>(gl_tex.size.width),
-            static_cast<unsigned int>(gl_tex.size.height)};
-    };
-
-    const auto left = to_image(pimpl.left_ep->execution_result_image);
-    const auto right = to_image(pimpl.right_ep->execution_result_image);
-
-    pimpl.left_texturesender.sendTexture(left.gl_handle, left.width, left.height);
-    pimpl.right_texturesender.sendTexture(right.gl_handle, right.width, right.height);
+    pimpl.left_texturesender.sendTexture(left.as_gl_handle(), left.size.width, left.size.height);
+    pimpl.right_texturesender.sendTexture(right.as_gl_handle(), right.size.width, right.size.height);
 
     if (!pimpl.has_bbox) {
         auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
@@ -340,6 +356,8 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
 
     pimpl.left_ep = &ep_left.value().get();
     pimpl.right_ep = &ep_right.value().get();
+
+    pimpl.rig_ep_execution();
 
     // outputs a function that returns camera matrices built from current pimpl camera data
     auto make_matrices = [&](interop::CameraView const& iview, interop::CameraProjection const& iproj)
