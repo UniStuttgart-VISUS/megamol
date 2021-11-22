@@ -216,8 +216,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
         auto start_time = std::chrono::system_clock::now();
 #ifdef GUI_VERBOSE
         auto module_load_time = std::chrono::system_clock::now();
-#endif // GUI_VERBOSE
-       // MODULES ----------------------------------------------------------------
+#endif  // GUI_VERBOSE
+        // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
@@ -1635,7 +1635,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             // Catch call drop event and create new call(s) ...
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    auto* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
+                    auto* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
                     auto drag_slot_uid = (*dragged_slot_uid_ptr);
                     auto drop_slot_uid = graph_ptr->GetDropSlot();
                     graph_ptr->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);

@@ -3,9 +3,9 @@
 #ifdef _WIN32
 
 #define _WIN32_DCOM
-#include <iostream>
-#include <comdef.h>
 #include <Wbemidl.h>
+#include <comdef.h>
+#include <iostream>
 
 #pragma comment(lib, "wbemuuid.lib")
 
@@ -20,8 +20,8 @@ public:
     std::string get_value(const std::string& wmi_class, const std::string& attribute);
 
 private:
-    IWbemLocator *locator = nullptr;
-    IWbemServices *service = nullptr;
+    IWbemLocator* locator = nullptr;
+    IWbemServices* service = nullptr;
 };
 } // namespace megamol::core::utility::platform
 

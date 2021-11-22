@@ -12,10 +12,10 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <windows.h>
-#include <tlhelp32.h>
-#include <tchar.h>
 #include "mmcore/utility/platform/WMIUtil.h"
+#include <tchar.h>
+#include <tlhelp32.h>
+#include <windows.h>
 #define the_popen _popen
 #define the_pclose _pclose
 #else
@@ -48,11 +48,10 @@ std::string get_file_version(const char* path) {
                         // Doesn't matter if you are on 32 bit or 64 bit,
                         // DWORD is always 32 bits, so first two revision numbers
                         // come from dwFileVersionMS, last two come from dwFileVersionLS
-                        ret +=
-                            std::to_string((verInfo->dwFileVersionMS >> 16) & 0xffff)
-                            + "." + std::to_string((verInfo->dwFileVersionMS >> 0) & 0xffff)
-                            + "." + std::to_string((verInfo->dwFileVersionLS >> 16) & 0xffff)
-                            + "." + std::to_string((verInfo->dwFileVersionLS >> 0) & 0xffff);
+                        ret += std::to_string((verInfo->dwFileVersionMS >> 16) & 0xffff) + "." +
+                               std::to_string((verInfo->dwFileVersionMS >> 0) & 0xffff) + "." +
+                               std::to_string((verInfo->dwFileVersionLS >> 16) & 0xffff) + "." +
+                               std::to_string((verInfo->dwFileVersionLS >> 0) & 0xffff);
                     }
                 }
             }
@@ -114,7 +113,7 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 
 #endif
 
-}
+} // namespace
 
 void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
 #ifdef _WIN32
@@ -127,7 +126,8 @@ void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
     s << R"("OS Name":")" << wmi.get_value("Win32_OperatingSystem", "Name") << "\"," << std::endl;
     s << R"("OS Version":")" << wmi.get_value("Win32_OperatingSystem", "Version") << "\"," << std::endl;
     s << R"("OS Architecture":")" << wmi.get_value("Win32_OperatingSystem", "OSArchitecture") << "\"," << std::endl;
-    s << R"("Available Memory":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\"" << std::endl;
+    s << R"("Available Memory":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\""
+      << std::endl;
     s << "}";
     m_hardware_info = s.str();
 #else
@@ -192,7 +192,8 @@ std::string megamol::core::utility::platform::RuntimeInfo::execute(const std::st
 
     auto pipe = the_popen(cmd.c_str(), "r");
 
-    if (!pipe) throw std::runtime_error("popen() failed!");
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
 
     while (!feof(pipe)) {
         if (fgets(buffer.data(), buffer.size(), pipe) != nullptr)

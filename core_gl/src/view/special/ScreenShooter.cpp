@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/special/ScreenShooter.h"
+#include "stdafx.h"
 
 #include <climits>
 #include <limits>
@@ -24,19 +24,19 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/DateTime.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "png.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
-#include "mmcore/utility/DateTime.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace core_gl {
@@ -60,7 +60,8 @@ static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
  * @param msg The error message
  */
 static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
 }
 
 /**
@@ -138,7 +139,8 @@ static DWORD myPngStoreData(void* d) {
     BYTE* buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
 
     if (buffer == NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
         return -1;
     }
 
@@ -181,7 +183,7 @@ static DWORD myPngStoreData(void* d) {
 
 } /* end namespace special */
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 using namespace megamol::core_gl;
@@ -200,27 +202,29 @@ bool view::special::ScreenShooter::IsAvailable(void) {
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : core::job::AbstractJob(), Module(),
-        viewNameSlot("view", "The name of the view instance or view to be used"),
-        imgWidthSlot("imgWidth", "The width in pixels of the resulting image"),
-        imgHeightSlot("imgHeight", "The height in pixels of the resulting image"),
-        tileWidthSlot("tileWidth", "The width of a rendering tile in pixels"),
-        tileHeightSlot("tileHeight", "The height of a rendering tile in pixels"),
-        imageFilenameSlot("filename", "The file name to store the resulting image under"),
-        backgroundSlot("background", "The background to be used"),
-        triggerButtonSlot("trigger", "The trigger button"),
-        closeAfterShotSlot("closeAfter", "If set the application will close after an image had been created"),
-        animFromSlot("anim::from", "The first time"),
-        animToSlot("anim::to", "The last time"),
-        animStepSlot("anim::step", "The time step"),
-        animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
-        makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
-        animTimeParamNameSlot("anim::paramname", "Name of the time parameter. Default if blank: 'anim::time'"),
-        disableCompressionSlot("disableCompressionSlot", "set compression level to 0"),
-        running(false),
-        animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
-        outputCounter(0),
-        currentFbo(nullptr) {
+view::special::ScreenShooter::ScreenShooter(const bool reducedParameters)
+        : core::job::AbstractJob()
+        , Module()
+        , viewNameSlot("view", "The name of the view instance or view to be used")
+        , imgWidthSlot("imgWidth", "The width in pixels of the resulting image")
+        , imgHeightSlot("imgHeight", "The height in pixels of the resulting image")
+        , tileWidthSlot("tileWidth", "The width of a rendering tile in pixels")
+        , tileHeightSlot("tileHeight", "The height of a rendering tile in pixels")
+        , imageFilenameSlot("filename", "The file name to store the resulting image under")
+        , backgroundSlot("background", "The background to be used")
+        , triggerButtonSlot("trigger", "The trigger button")
+        , closeAfterShotSlot("closeAfter", "If set the application will close after an image had been created")
+        , animFromSlot("anim::from", "The first time")
+        , animToSlot("anim::to", "The last time")
+        , animStepSlot("anim::step", "The time step")
+        , animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames")
+        , makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots")
+        , animTimeParamNameSlot("anim::paramname", "Name of the time parameter. Default if blank: 'anim::time'")
+        , disableCompressionSlot("disableCompressionSlot", "set compression level to 0")
+        , running(false)
+        , animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest())
+        , outputCounter(0)
+        , currentFbo(nullptr) {
 
     this->viewNameSlot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -235,8 +239,10 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : core
     this->tileHeightSlot << new core::param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new core::param::FilePathParam("Unnamed.png", core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, { "png" });
-    if (!reducedParameters) this->MakeSlotAvailable(&this->imageFilenameSlot);
+    this->imageFilenameSlot << new core::param::FilePathParam(
+        "Unnamed.png", core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"png"});
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     core::param::EnumParam* bkgnd = new core::param::EnumParam(0);
     bkgnd->SetTypePair(0, "Scene Background");
@@ -249,32 +255,41 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : core
 
     this->triggerButtonSlot << new core::param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->triggerButtonSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->triggerButtonSlot);
 
     this->closeAfterShotSlot << new core::param::BoolParam(false);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->closeAfterShotSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->closeAfterShotSlot);
 
     this->disableCompressionSlot << new core::param::BoolParam(false);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->disableCompressionSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->disableCompressionSlot);
 
     this->animFromSlot << new core::param::IntParam(0, 0);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->animFromSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->animFromSlot);
 
     this->animToSlot << new core::param::IntParam(0, 0);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->animToSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->animToSlot);
 
     this->animStepSlot << new core::param::FloatParam(1.0f, 0.01f);
     // this->animStepSlot << new core::param::IntParam(1, 1);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->animStepSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->animStepSlot);
 
     this->animAddTime2FrameSlot << new core::param::BoolParam(false);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->animAddTime2FrameSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->animAddTime2FrameSlot);
 
     this->makeAnimSlot << new core::param::BoolParam(false);
-    if (!reducedParameters) this->MakeSlotAvailable(&this->makeAnimSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->makeAnimSlot);
 
     this->animTimeParamNameSlot << new core::param::StringParam("");
-    if (!reducedParameters) this->MakeSlotAvailable(&this->animTimeParamNameSlot);
+    if (!reducedParameters)
+        this->MakeSlotAvailable(&this->animTimeParamNameSlot);
 
     /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
     this->tileWidthSlot.Parameter()->SetGUIVisible(false);
@@ -286,13 +301,17 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : core
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::~ScreenShooter() { this->Release(); }
+view::special::ScreenShooter::~ScreenShooter() {
+    this->Release();
+}
 
 
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::IsRunning(void) const { return this->running; }
+bool view::special::ScreenShooter::IsRunning(void) const {
+    return this->running;
+}
 
 
 /*
@@ -317,7 +336,7 @@ bool view::special::ScreenShooter::Terminate(void) {
  * view::special::ScreenShooter::release
  */
 bool view::special::ScreenShooter::create(void) {
-    currentFbo = std::make_shared<glowl::FramebufferObject>(1,1);
+    currentFbo = std::make_shared<glowl::FramebufferObject>(1, 1);
     return true;
 }
 
@@ -341,9 +360,12 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
     view->UnregisterHook(this); // avoid recursive calling
 
     data.imgWidth = static_cast<UINT>(vislib::math::Max(0, this->imgWidthSlot.Param<core::param::IntParam>()->Value()));
-    data.imgHeight = static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<core::param::IntParam>()->Value()));
-    data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<core::param::IntParam>()->Value()));
-    data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<core::param::IntParam>()->Value()));
+    data.imgHeight =
+        static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<core::param::IntParam>()->Value()));
+    data.tileWidth =
+        static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<core::param::IntParam>()->Value()));
+    data.tileHeight =
+        static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<core::param::IntParam>()->Value()));
 
     /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
     data.tileWidth = data.imgWidth;
@@ -370,8 +392,8 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
                 if (this->animAddTime2FrameSlot.Param<core::param::BoolParam>()->Value()) {
                     int intPart = static_cast<int>(floor(this->animLastFrameTime));
-                    float fractPart = this->animLastFrameTime - (float) intPart;
-                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int) (fractPart * 1000.0f));
+                    float fractPart = this->animLastFrameTime - (float)intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart * 1000.0f));
                 } else {
                     ext.Format(_T(".%.5u.png"), this->outputCounter);
                 }
@@ -469,7 +491,8 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
             try {
-                currentFbo = std::make_shared<glowl::FramebufferObject>(data.imgWidth, data.imgHeight, glowl::FramebufferObject::DEPTH24);
+                currentFbo = std::make_shared<glowl::FramebufferObject>(
+                    data.imgWidth, data.imgHeight, glowl::FramebufferObject::DEPTH24);
                 currentFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
 
                 // TODO: check completness and throw if not?
@@ -502,7 +525,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
             default: /* don't set bkgnd */
                 break;
             }
-            
+
             crv.SetFramebuffer(currentFbo);
             crv.SetTime(frameTime);
             //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
@@ -858,7 +881,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
         if (data.pngInfoPtr != NULL) {
             png_destroy_write_struct(&data.pngPtr, &data.pngInfoPtr);
         } else {
-            png_destroy_write_struct(&data.pngPtr, (png_infopp) NULL);
+            png_destroy_write_struct(&data.pngPtr, (png_infopp)NULL);
         }
     }
     try {
@@ -981,7 +1004,8 @@ bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& 
                     timeSlot->Param<core::param::FloatParam>()->SetValue(startTime);
                     this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {
-                    Log::DefaultLog.WriteError("Unable to find animation time parameter in given view. Unable to make animation screen shots.");
+                    Log::DefaultLog.WriteError("Unable to find animation time parameter in given view. Unable to make "
+                                               "animation screen shots.");
                     this->makeAnimSlot.Param<core::param::BoolParam>()->SetValue(false);
                 }
                 // this is not a good idea because the animation module interferes with the "anim::time" parameter in

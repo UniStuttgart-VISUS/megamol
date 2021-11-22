@@ -25,7 +25,7 @@ namespace fs = std::experimental::filesystem;
 #define the_pclose pclose
 #endif
 
-void append(std::stringstream& out_stream, std::istream *infile, const std::string& prefix, const std::string& suffix) {
+void append(std::stringstream& out_stream, std::istream* infile, const std::string& prefix, const std::string& suffix) {
     std::string line;
     out_stream << prefix << std::endl;
     while (std::getline(*infile, line)) {
@@ -40,7 +40,8 @@ std::string exec(fs::path cmd) {
 
     auto pipe = the_popen(cmd.string().c_str(), "r"); // get rid of shared_ptr
 
-    if (!pipe) throw std::runtime_error("popen() failed!");
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
 
     while (!feof(pipe)) {
         if (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
@@ -60,7 +61,8 @@ int main(int argc, char* argv[]) {
     using namespace std::string_literals;
 
     if (argc != 5) {
-        std::cerr << "state" << std::endl << "Usage: ./state <buildtime.cpp> <Git executable> <CMake Cache file> <License file>" << std::endl;
+        std::cerr << "state" << std::endl
+                  << "Usage: ./state <buildtime.cpp> <Git executable> <CMake Cache file> <License file>" << std::endl;
         return 1;
     }
 
