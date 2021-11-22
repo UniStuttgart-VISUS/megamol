@@ -29,6 +29,9 @@ while read -r file; do
     if [[ $file == *"/3rd/"* ]]; then
       continue
     fi
+    if [[ $file == *"/protein/msms/"* ]]; then
+      continue
+    fi
   fi
 
   # === File tests ===
@@ -55,13 +58,13 @@ while read -r file; do
 
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
-    #EXIT_CODE=1 # TODO enable
+    EXIT_CODE=1
     echo "ERROR: File does not end with new line: $file"
   fi
 
   # Check if file contains tabs
   if grep -qP "\t" "$file"; then
-    #EXIT_CODE=1 # TODO enable
+    EXIT_CODE=1
     echo "ERROR: File contains tabs: $file"
   fi
 
