@@ -137,6 +137,23 @@ private:
     per_list_package_t pl_data_;
 };
 
+class ssbo_vert_rt : public rendering_task {
+public:
+    ssbo_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_vert_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
 class mesh_rt : public rendering_task {
 public:
     mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options);
@@ -250,7 +267,7 @@ protected:
     void release() override;
 
 private:
-    enum class method_e : uint8_t { VAO, SSBO, SSBO_GEO, MESH, MESH_ALTN, MESH_GEO, MESH_GEO_ALTN };
+    enum class method_e : uint8_t { VAO, SSBO, SSBO_GEO, SSBO_VERT, MESH, MESH_ALTN, MESH_GEO, MESH_GEO_ALTN };
 
     using method_ut = std::underlying_type_t<method_e>;
 
