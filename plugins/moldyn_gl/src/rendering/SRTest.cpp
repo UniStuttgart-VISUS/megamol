@@ -20,6 +20,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_ALTN), "MESH_ALTN");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO), "MESH_GEO");
@@ -52,6 +53,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
         auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
         rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(shdr_ssbo_options)));
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
@@ -717,6 +719,73 @@ bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
 
 
 bool megamol::moldyn_gl::rendering::mesh_altn_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+    vbos_.resize(num_ssbos);
+    glCreateBuffers(vbos_.size(), vbos_.data());
+
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+    cbos_.resize(num_ssbos);
+    glCreateBuffers(cbos_.size(), cbos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferStorage(vbos_[i],
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), 0);
+
+        glNamedBufferStorage(cbos_[i],
+            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
+            package.colors[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::ssbo_geo_rt::ssbo_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task("SRTestSSBOGeo", options, std::filesystem::path("srtest/srtest_geo.vert.glsl"),
+              std::filesystem::path("srtest/srtest_geo.geom.glsl"),
+              std::filesystem::path("srtest/srtest_geo.frag.glsl")) {}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_geo_rt::render(GLuint ubo) {
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto vbo = vbos_[i];
+        auto cbo = cbos_[i];
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
+        glDrawArrays(GL_POINTS, 0, num_prims);
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_geo_rt::upload(data_package_t const& package) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(vbos_.size(), vbos_.data());
