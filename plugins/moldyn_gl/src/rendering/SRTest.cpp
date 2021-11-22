@@ -538,7 +538,6 @@ megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(msf::ShaderFactoryOpti
 
 
 bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
-    glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
     program->use();
@@ -561,13 +560,11 @@ bool megamol::moldyn_gl::rendering::mesh_altn_rt::render(GLuint ubo) {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
         glDrawMeshTasksNV(0, num_prims / 32 + 1);
     }
-    glBindVertexArray(0);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_PROGRAM_POINT_SIZE);
 
     return true;
 }
