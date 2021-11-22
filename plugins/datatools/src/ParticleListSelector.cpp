@@ -4,9 +4,9 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleListSelector.h"
 #include "mmcore/param/IntParam.h"
+#include "stdafx.h"
 
 using namespace megamol;
 
@@ -15,8 +15,8 @@ using namespace megamol;
  * datatools::ParticleListSelector::ParticleListSelector
  */
 datatools::ParticleListSelector::ParticleListSelector(void)
-        : AbstractParticleManipulator("outData", "indata"),
-        listIndexSlot("listIndex", "The thinning factor. Only each n-th particle will be kept.") {
+        : AbstractParticleManipulator("outData", "indata")
+        , listIndexSlot("listIndex", "The thinning factor. Only each n-th particle will be kept.") {
     this->listIndexSlot.SetParameter(new core::param::IntParam(0, 0));
     this->MakeSlotAvailable(&this->listIndexSlot);
 }

@@ -1,5 +1,4 @@
 #include "ScatterplotMatrixRenderer2D.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"

@@ -7,9 +7,9 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "mmvtkm/mmvtkmDataCall.h"
 #include "mmvtkm/mmvtkmDataSource.h"
 #include "mmvtkm/mmvtkmFileLoader.h"
-#include "mmvtkm/mmvtkmDataCall.h"
 #include "mmvtkm/mmvtkmStreamLines.h"
 
 

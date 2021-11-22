@@ -31,14 +31,14 @@
 #ifndef THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
+#pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include <glm/glm.hpp>
 #include "mmcore/thecam/manipulator_base.h"
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace core {
@@ -49,7 +49,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class arcball_manipulator : public manipulator_base<T> {
+template<class T>
+class arcball_manipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -90,10 +91,11 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
-    
     /** The x-coordinate of the last clicked screen position */
     screen_type lastSx;
 
@@ -108,6 +110,6 @@ private:
 #include "mmcore/thecam/arcball_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(pop)
+#pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED */

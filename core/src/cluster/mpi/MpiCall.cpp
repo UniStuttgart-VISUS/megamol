@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
+#include "stdafx.h"
 
-#include "vislib/sys/CmdLineProvider.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/sys/CmdLineProvider.h"
 
 
 /*
@@ -23,8 +23,7 @@ unsigned int megamol::core::cluster::mpi::MpiCall::FunctionCount(void) {
 /*
  * megamol::core::cluster::mpi::MpiCall::FunctionName
  */
-const char *megamol::core::cluster::mpi::MpiCall::FunctionName(
-        unsigned int idx) {
+const char* megamol::core::cluster::mpi::MpiCall::FunctionName(unsigned int idx) {
     if (idx < MpiCall::FunctionCount()) {
         return MpiCall::INTENTS[idx];
     } else {
@@ -39,7 +38,7 @@ const char *megamol::core::cluster::mpi::MpiCall::FunctionName(
 bool megamol::core::cluster::mpi::MpiCall::IsAvailable(void) {
 #ifdef WITH_MPI
     return true;
-#else /* WITH_MPI */
+#else  /* WITH_MPI */
     return false;
 #endif /* WITH_MPI */
 }
@@ -64,7 +63,7 @@ megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base() {
 /*
  * megamol::core::cluster::mpi::MpiCall::~MpiCall
  */
-megamol::core::cluster::mpi::MpiCall::~MpiCall(void) { }
+megamol::core::cluster::mpi::MpiCall::~MpiCall(void) {}
 
 
 /*
@@ -94,6 +93,6 @@ int megamol::core::cluster::mpi::MpiCall::GetRank(void) const {
 /*
  * megamol::core::misc::VolumetricDataCall::INTENTS
  */
-const char *megamol::core::cluster::mpi::MpiCall::INTENTS[] = {
+const char* megamol::core::cluster::mpi::MpiCall::INTENTS[] = {
     "ProvideMpi",
 };

@@ -15,8 +15,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPUSurfaceMT.h"
-#include "vislib/Array.h"
 #include "helper_math.h"
+#include "vislib/Array.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -27,16 +27,15 @@ namespace protein_cuda {
 class DeformableGPUSurfaceMT : public GPUSurfaceMT {
 
 public:
-
     // Interpolation mode used when computing external forces based on gradient
-    enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
+    enum InterpolationMode { INTERP_LINEAR = 0, INTERP_CUBIC };
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "DeformableGPUSurfaceMT";
     }
 
@@ -47,11 +46,8 @@ public:
      * @param surf2 Pointer to the second surface.
      * @return The Hausdorff distance
      */
-    static float CalcHausdorffDistance(
-            DeformableGPUSurfaceMT *surf1,
-            DeformableGPUSurfaceMT *surf2,
-            float *hausdorffdistVtx_D,
-            bool symmetric=false);
+    static float CalcHausdorffDistance(DeformableGPUSurfaceMT* surf1, DeformableGPUSurfaceMT* surf2,
+        float* hausdorffdistVtx_D, bool symmetric = false);
 
     /**
      * Compute normals if subdivision has been performed.
@@ -65,77 +61,31 @@ public:
     /**
      * In this class, because it needs the offsets TODO
      */
-    static bool ComputeVtxDiffValue(
-            float *diff_D,
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1,
-            GLuint vtxDataVBO0,
-            GLuint vtxDataVBO1,
-            size_t vertexCnt);
+    static bool ComputeVtxDiffValue(float* diff_D, float* tex0_D, int3 texDim0, float3 texOrg0, float3 texDelta0,
+        float* tex1_D, int3 texDim1, float3 texOrg1, float3 texDelta1, GLuint vtxDataVBO0, GLuint vtxDataVBO1,
+        size_t vertexCnt);
 
     /**
      * In this class, because it needs the offsets TODO
      */
-    static bool ComputeVtxSignDiffValue(
-            float *signdiff_D,
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1,
-            GLuint vtxDataVBO0,
-            GLuint vtxDataVBO1,
-            size_t vertexCnt);
+    static bool ComputeVtxSignDiffValue(float* signdiff_D, float* tex0_D, int3 texDim0, float3 texOrg0,
+        float3 texDelta0, float* tex1_D, int3 texDim1, float3 texOrg1, float3 texDelta1, GLuint vtxDataVBO0,
+        GLuint vtxDataVBO1, size_t vertexCnt);
 
 
     /**
      * In this class, because it needs the offsets TODO
      */
-    static bool ComputeVtxDiffValueFitted(
-            float *diff_D,
-            float centroid[3],
-            float rotMat[9],
-            float transVec[3],
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1,
-            GLuint vtxDataVBO0,
-            GLuint vtxDataVBO1,
-            size_t vertexCnt);
+    static bool ComputeVtxDiffValueFitted(float* diff_D, float centroid[3], float rotMat[9], float transVec[3],
+        float* tex0_D, int3 texDim0, float3 texOrg0, float3 texDelta0, float* tex1_D, int3 texDim1, float3 texOrg1,
+        float3 texDelta1, GLuint vtxDataVBO0, GLuint vtxDataVBO1, size_t vertexCnt);
 
     /**
      * In this class, because it needs the offsets TODO
      */
-    static bool ComputeVtxSignDiffValueFitted(
-            float *signdiff_D,
-            float centroid[3],
-            float rotMat[9],
-            float transVec[3],
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1,
-            GLuint vtxDataVBO0,
-            GLuint vtxDataVBO1,
-            size_t vertexCnt);
+    static bool ComputeVtxSignDiffValueFitted(float* signdiff_D, float centroid[3], float rotMat[9], float transVec[3],
+        float* tex0_D, int3 texDim0, float3 texOrg0, float3 texDelta0, float* tex1_D, int3 texDim1, float3 texOrg1,
+        float3 texDelta1, GLuint vtxDataVBO0, GLuint vtxDataVBO1, size_t vertexCnt);
 
     /** DTor */
     DeformableGPUSurfaceMT();
@@ -170,13 +120,8 @@ public:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool FlagCorruptTriangles(
-            float *volume_D,
-            const unsigned int *targetActiveCells,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool FlagCorruptTriangles(float* volume_D, const unsigned int* targetActiveCells, int3 volDim, float3 volOrg,
+        float3 volDelta, float isovalue);
 
     /**
      * Answers the GPU handle for the VBO with the vertex data. Needs
@@ -225,7 +170,7 @@ public:
      * @param value_D The value to be integrated
      * @return The integral value
      */
-    float IntOverSurfArea(float *value_D);
+    float IntOverSurfArea(float* value_D);
 
     /**
      * Integrate scalar value (given per vertex in value_D) over surface area.
@@ -270,145 +215,61 @@ public:
      * TODO
      * @return The integral value
      */
-    float IntUncertaintyOverCorruptSurfArea(
-            float &corruptArea,
-            float minDisplScl,
-            float isovalue,
-            float forcesScl,
-            unsigned int *targetActiveCells_D,
-            float *targetVol_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            vislib::Array<float> &triArr,
-            int maxSteps,
-            int maxLevel,
-            float initStepSize);
+    float IntUncertaintyOverCorruptSurfArea(float& corruptArea, float minDisplScl, float isovalue, float forcesScl,
+        unsigned int* targetActiveCells_D, float* targetVol_D, int3 volDim, float3 volOrg, float3 volDelta,
+        vislib::Array<float>& triArr, int maxSteps, int maxLevel, float initStepSize);
 
     /**
      * TODO
      */
-    bool MorphToVolumeGradient(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight); // TODO
+    bool MorphToVolumeGradient(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl, float springStiffness, float forceScl,
+        float externalForcesWeight); // TODO
 
     /**
      * TODO
      */
-    bool MorphToVolumeDistfield(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            float distfieldDist); // TODO
+    bool MorphToVolumeDistfield(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl, float springStiffness, float forceScl,
+        float externalForcesWeight,
+        float distfieldDist); // TODO
 
     /**
      * TODO
      */
-    bool MorphToVolumeGVF(
-            float *volumeSource_D,
-            float *volumeTarget_D,
-            const unsigned int *targetCubeStates_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            float gvfScl,
-            unsigned int gvfIt); // TODO
+    bool MorphToVolumeGVF(float* volumeSource_D, float* volumeTarget_D, const unsigned int* targetCubeStates_D,
+        int3 volDim, float3 volOrg, float3 volDelta, float isovalue, InterpolationMode interpMode, size_t maxIt,
+        float surfMappedMinDisplScl, float springStiffness, float forceScl, float externalForcesWeight, float gvfScl,
+        unsigned int gvfIt); // TODO
 
     /**
      * TODO
      */
-    bool MorphToVolumeTwoWayGVF(
-            float *volumeSource_D,
-            float *volumeTarget_D,
-            const unsigned int *cellStatesSource_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            float gvfScl,
-            unsigned int gvfIt,
-            bool trackPath,
-            bool recomputeGVF); // TODO
+    bool MorphToVolumeTwoWayGVF(float* volumeSource_D, float* volumeTarget_D, const unsigned int* cellStatesSource_D,
+        const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl, float springStiffness, float forceScl,
+        float externalForcesWeight, float gvfScl, unsigned int gvfIt, bool trackPath,
+        bool recomputeGVF); // TODO
 
 
     /**
      * TODO Only for benchmarking
      */
-    bool MorphToVolumeTwoWayGVFBM(
-            float *volumeSource_D,
-            float *volumeTarget_D,
-            const unsigned int *cellStatesSource_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            float gvfScl,
-            unsigned int gvfIt,
-            bool trackPath,
-            bool recomputeGVF,
-            float &t_gvf,
-            float &t_map); // TODO
+    bool MorphToVolumeTwoWayGVFBM(float* volumeSource_D, float* volumeTarget_D, const unsigned int* cellStatesSource_D,
+        const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl, float springStiffness, float forceScl,
+        float externalForcesWeight, float gvfScl, unsigned int gvfIt, bool trackPath, bool recomputeGVF, float& t_gvf,
+        float& t_map); // TODO
 
     /**
      * TODO
      */
-    bool MorphToVolumeTwoWayGVFSubdiv(
-            float *volumeSource_D,
-            float *volumeTarget_D,
-            const unsigned int *cellStatesSource_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            InterpolationMode interpMode,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            float gvfScl,
-            unsigned int gvfIt,
-            bool trackPath,
-            bool recomputeGVF); // TODO
+    bool MorphToVolumeTwoWayGVFSubdiv(float* volumeSource_D, float* volumeTarget_D,
+        const unsigned int* cellStatesSource_D, const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg,
+        float3 volDelta, float isovalue, InterpolationMode interpMode, size_t maxIt, float surfMappedMinDisplScl,
+        float springStiffness, float forceScl, float externalForcesWeight, float gvfScl, unsigned int gvfIt,
+        bool trackPath,
+        bool recomputeGVF); // TODO
 
     /**
      * TODO
@@ -421,15 +282,15 @@ public:
      * @param rhs The assigned surface object
      * @return The returned surface object
      */
-    DeformableGPUSurfaceMT& operator=(const DeformableGPUSurfaceMT &rhs);
+    DeformableGPUSurfaceMT& operator=(const DeformableGPUSurfaceMT& rhs);
 
     /** TODO */
-    const unsigned int *PeekCubeStates() {
+    const unsigned int* PeekCubeStates() {
         return this->cubeStates_D.Peek();
     }
 
     /** TODO */
-    const float *PeekExternalForces() {
+    const float* PeekExternalForces() {
         return this->externalForces_D.Peek();
     }
 
@@ -442,13 +303,8 @@ public:
      * @return The number of newly created triangles or '-1' if something went
      *         wrong.
      */
-    int RefineMesh(uint maxSubdivLevel,
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            float maxEdgeLen);
+    int RefineMesh(uint maxSubdivLevel, float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        float maxEdgeLen);
 
     /**
      * Free all the device memory allocated in this class.
@@ -458,179 +314,97 @@ public:
     /**
      * TODO
      */
-    float *PeekVertexFlagDevPt() {
+    float* PeekVertexFlagDevPt() {
         return this->vertexFlag_D.Peek();
     }
 
     /**
      * TODO
      */
-    float *PeekOldVertexDataDevPt() {
+    float* PeekOldVertexDataDevPt() {
         return this->trackedSubdivVertexData_D.Peek();
     }
 
     /**
      * TODO
      */
-    bool TrackPathSubdivVertices(
-            float *sourceVolume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float forcesScl,
-            float minDispl,
-            float isoval,
-            uint maxIt);
+    bool TrackPathSubdivVertices(float* sourceVolume_D, int3 volDim, float3 volOrg, float3 volDelta, float forcesScl,
+        float minDispl, float isoval, uint maxIt);
 
-    bool ComputeSurfAttribDiff( DeformableGPUSurfaceMT &surfStart,
-            float centroid[3], // In case the start surface has been fitted using RMSD
-            float rotMat[9],
-            float transVec[3],
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1);
+    bool ComputeSurfAttribDiff(DeformableGPUSurfaceMT& surfStart,
+        float centroid[3], // In case the start surface has been fitted using RMSD
+        float rotMat[9], float transVec[3], float* tex0_D, int3 texDim0, float3 texOrg0, float3 texDelta0,
+        float* tex1_D, int3 texDim1, float3 texOrg1, float3 texDelta1);
 
-    bool ComputeSurfAttribSignDiff( DeformableGPUSurfaceMT &surfStart,
-            float centroid[3], // In case the start surface has been fitted using RMSD
-            float rotMat[9],
-            float transVec[3],
-            float *tex0_D,
-            int3 texDim0,
-            float3 texOrg0,
-            float3 texDelta0,
-            float *tex1_D,
-            int3 texDim1,
-            float3 texOrg1,
-            float3 texDelta1);
+    bool ComputeSurfAttribSignDiff(DeformableGPUSurfaceMT& surfStart,
+        float centroid[3], // In case the start surface has been fitted using RMSD
+        float rotMat[9], float transVec[3], float* tex0_D, int3 texDim0, float3 texOrg0, float3 texDelta0,
+        float* tex1_D, int3 texDim1, float3 texOrg1, float3 texDelta1);
 
     void PrintVertexBuffer(size_t cnt);
     void PrintExternalForces(size_t cnt);
     void PrintCubeStates(size_t cnt);
 
     bool ComputeMeshLaplacian();
-    bool ComputeMeshLaplacianDiff(DeformableGPUSurfaceMT &surfStart);
+    bool ComputeMeshLaplacianDiff(DeformableGPUSurfaceMT& surfStart);
 
-    float *PeekGeomLaplacian() {
+    float* PeekGeomLaplacian() {
         return this->geometricLaplacian_D.Peek();
     }
 
 protected:
+    /**
+     * TODO
+     */
+    bool initExtForcesGradient(float* volTarget_D, int3 volDim, float3 volOrg, float3 volDelta);
 
     /**
      * TODO
      */
-    bool initExtForcesGradient(
-            float *volTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta);
+    bool initExtForcesDistfield(float* volume_D, float* vertexBuffer_D, int3 volDim, float3 volOrg, float3 volDelta,
+        float distfieldDist, float isovalue);
 
     /**
      * TODO
      */
-    bool initExtForcesDistfield(
-            float *volume_D,
-            float *vertexBuffer_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float distfieldDist,
-            float isovalue);
+    bool initExtForcesGVF(float* volumeTarget_D, const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg,
+        float3 volDelta, float isovalue, float gvfScl, unsigned int gvfIt);
 
     /**
      * TODO
      */
-    bool initExtForcesGVF(
-            float *volumeTarget_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            float gvfScl,
-            unsigned int gvfIt);
+    bool initExtForcesTwoWayGVF(float* volumeSource_D, float* volumeTarget_D, const unsigned int* cellStatesSource_D,
+        const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue,
+        float gvfScl, unsigned int gvfIt);
 
     /**
      * TODO
      */
-    bool initExtForcesTwoWayGVF(
-            float *volumeSource_D,
-            float *volumeTarget_D,
-            const unsigned int *cellStatesSource_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            float gvfScl,
-            unsigned int gvfIt);
+    bool updateVtxPos(float* volTarget_D, float* vertexBuffer_D, float* vtxUncertainty_D, int3 volDim, float3 volOrg,
+        float3 volDelta, float isovalue, bool useCubicInterpolation, size_t maxIt, float surfMappedMinDisplScl,
+        float springStiffness, float forceScl, float externalForcesWeight, bool trackPath,
+        bool externalForcesOnly = false, bool useThinPlate = true);
 
     /**
      * TODO
      */
-    bool updateVtxPos(
-            float* volTarget_D,
-            float* vertexBuffer_D,
-            float* vtxUncertainty_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            bool useCubicInterpolation,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            bool trackPath,
-            bool externalForcesOnly=false,
-            bool useThinPlate=true);
+    bool updateVtxPosSubdiv(float* volTarget_D, float* vertexBuffer_D, float* vtxUncertainty_D, int3 volDim,
+        float3 volOrg, float3 volDelta, float isovalue, bool useCubicInterpolation, size_t maxIt,
+        float surfMappedMinDisplScl, float springStiffness, float forceScl, float externalForcesWeight, bool trackPath,
+        bool externalForcesOnly = false, bool useThinPlate = true);
 
-    /**
-     * TODO
-     */
-    bool updateVtxPosSubdiv(
-            float* volTarget_D,
-            float* vertexBuffer_D,
-            float* vtxUncertainty_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue,
-            bool useCubicInterpolation,
-            size_t maxIt,
-            float surfMappedMinDisplScl,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            bool trackPath,
-            bool externalForcesOnly=false,
-            bool useThinPlate=true);
-
-    float IntUncertaintyOverCorruptAreaRec(
-            float3 pos1, float3 pos2, float3 pos3, // Vertex positions of the triangle
-            float len1, float len2, float len3,    // Vertex path lengths of the triangle
-            float4 *gradient,                      // External forces
-            float *targetVol,                      // The target volume
-            unsigned int *targetActiveCells,       // Active cells of the target volume
-            float minDisplScl,                     // Minimum displacement for convergence
-            float forcesScl,                       // General scaling factor for forces
-            float isovalue,                        // Isovalue
-            float &triArea,
-            uint depth,
-            float org[3], float delta[3], int dim[3],
-            vislib::Array<float> &triArr,
-            int maxSteps,
-            int maxLevel,
-            float initStepSize);
+    float IntUncertaintyOverCorruptAreaRec(float3 pos1, float3 pos2, float3 pos3, // Vertex positions of the triangle
+        float len1, float len2, float len3,                                       // Vertex path lengths of the triangle
+        float4* gradient,                                                         // External forces
+        float* targetVol,                                                         // The target volume
+        unsigned int* targetActiveCells,                                          // Active cells of the target volume
+        float minDisplScl, // Minimum displacement for convergence
+        float forcesScl,   // General scaling factor for forces
+        float isovalue,    // Isovalue
+        float& triArea, uint depth, float org[3], float delta[3], int dim[3], vislib::Array<float>& triArr,
+        int maxSteps, int maxLevel, float initStepSize);
 
 private:
-
     /* Device arrays for external forces */
 
     /// Device pointer to external forces for every vertex

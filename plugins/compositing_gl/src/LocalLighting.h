@@ -10,9 +10,9 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "mmcore/param/ParamSlot.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
@@ -33,21 +33,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "LocalLighting"; }
+    static const char* ClassName() {
+        return "LocalLighting";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Compositing module that computes local lighting"; }
+    static const char* Description() {
+        return "Compositing module that computes local lighting";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     LocalLighting();
     ~LocalLighting();
@@ -101,7 +107,7 @@ private:
     std::vector<LightParams> m_point_lights, m_distant_lights;
 
 
-    /**Parameter for different illuminations e.g. Lambertian, Phong */ 
+    /**Parameter for different illuminations e.g. Lambertian, Phong */
     megamol::core::param::ParamSlot m_illuminationmode;
 
     /**Parameters for Blinn-Phong Illumination*/

@@ -5,12 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "DataSetTimeRewriteModule.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/IntParam.h"
+#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;
@@ -19,12 +19,13 @@ using namespace megamol;
 /*
  * datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule
  */
-datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule(void) : core::Module(),
-        outDataSlot("outData", "The slot for publishing data to the writer"),
-        inDataSlot("inData", "The slot for requesting data from the source"),
-        firstFrameSlot("firstFrame", "The number of the first frame"),
-        lastFrameSlot("lastFrame", "The number of the last frame"),
-        frameStepSlot("frameStep", "The step length between two frames") {
+datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule(void)
+        : core::Module()
+        , outDataSlot("outData", "The slot for publishing data to the writer")
+        , inDataSlot("inData", "The slot for requesting data from the source")
+        , firstFrameSlot("firstFrame", "The number of the first frame")
+        , lastFrameSlot("lastFrame", "The number of the last frame")
+        , frameStepSlot("frameStep", "The step length between two frames") {
 
     //core::CallDescriptionManager::DescriptionIterator iter(core::CallDescriptionManager::Instance()->GetIterator());
     //const core::CallDescription *cd = NULL;
@@ -76,17 +77,15 @@ bool datatools::DataSetTimeRewriteModule::create(void) {
 /*
  * datatools::DataSetTimeRewriteModule::release
  */
-void datatools::DataSetTimeRewriteModule::release(void) {
-}
+void datatools::DataSetTimeRewriteModule::release(void) {}
 
 
 /*
  * datatools::DataSetTimeRewriteModule::IsCallDescriptionCompatible
  */
 bool datatools::DataSetTimeRewriteModule::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
-    return (desc->FunctionCount() == 2)
-        && vislib::StringA("GetData").Equals(desc->FunctionName(0), false)
-        && vislib::StringA("GetExtent").Equals(desc->FunctionName(1), false);
+    return (desc->FunctionCount() == 2) && vislib::StringA("GetData").Equals(desc->FunctionName(0), false) &&
+           vislib::StringA("GetExtent").Equals(desc->FunctionName(1), false);
 }
 
 
@@ -95,13 +94,16 @@ bool datatools::DataSetTimeRewriteModule::IsCallDescriptionCompatible(core::fact
  */
 bool datatools::DataSetTimeRewriteModule::getDataCallback(core::Call& caller) {
     using megamol::core::AbstractGetData3DCall;
-    if (!this->checkConnections(&caller)) return false;
+    if (!this->checkConnections(&caller))
+        return false;
 
-    AbstractGetData3DCall *pgdc = dynamic_cast<AbstractGetData3DCall*>(&caller);
-    if (pgdc == NULL) return false;
+    AbstractGetData3DCall* pgdc = dynamic_cast<AbstractGetData3DCall*>(&caller);
+    if (pgdc == NULL)
+        return false;
 
-    AbstractGetData3DCall *ggdc = this->inDataSlot.CallAs<AbstractGetData3DCall>();
-    if (ggdc == NULL) return false;
+    AbstractGetData3DCall* ggdc = this->inDataSlot.CallAs<AbstractGetData3DCall>();
+    if (ggdc == NULL)
+        return false;
 
     int minF = this->firstFrameSlot.Param<core::param::IntParam>()->Value();
     int maxF = this->lastFrameSlot.Param<core::param::IntParam>()->Value();
@@ -111,7 +113,8 @@ bool datatools::DataSetTimeRewriteModule::getDataCallback(core::Call& caller) {
     // Change time code
     ggdc->SetFrameID(minF + pgdc->FrameID() * lenF, pgdc->IsFrameForced());
 
-    if (!(*ggdc)(0)) return false;
+    if (!(*ggdc)(0))
+        return false;
 
     this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
     ggdc->SetUnlocker(nullptr, false);
@@ -132,13 +135,16 @@ bool datatools::DataSetTimeRewriteModule::getDataCallback(core::Call& caller) {
  */
 bool datatools::DataSetTimeRewriteModule::getExtentCallback(core::Call& caller) {
     using megamol::core::AbstractGetData3DCall;
-    if (!this->checkConnections(&caller)) return false;
+    if (!this->checkConnections(&caller))
+        return false;
 
-    AbstractGetData3DCall *pgdc = dynamic_cast<AbstractGetData3DCall*>(&caller);
-    if (pgdc == NULL) return false;
+    AbstractGetData3DCall* pgdc = dynamic_cast<AbstractGetData3DCall*>(&caller);
+    if (pgdc == NULL)
+        return false;
 
-    AbstractGetData3DCall *ggdc = this->inDataSlot.CallAs<AbstractGetData3DCall>();
-    if (ggdc == NULL) return false;
+    AbstractGetData3DCall* ggdc = this->inDataSlot.CallAs<AbstractGetData3DCall>();
+    if (ggdc == NULL)
+        return false;
 
     int minF = this->firstFrameSlot.Param<core::param::IntParam>()->Value();
     int maxF = this->lastFrameSlot.Param<core::param::IntParam>()->Value();
@@ -148,7 +154,8 @@ bool datatools::DataSetTimeRewriteModule::getExtentCallback(core::Call& caller) 
     // Change time code
     ggdc->SetFrameID(minF + pgdc->FrameID() * lenF);
 
-    if (!(*ggdc)(1)) return false;
+    if (!(*ggdc)(1))
+        return false;
 
     this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
     ggdc->SetUnlocker(nullptr, false);
@@ -167,14 +174,18 @@ bool datatools::DataSetTimeRewriteModule::getExtentCallback(core::Call& caller) 
 /*
  * datatools::DataSetTimeRewriteModule::checkConnections
  */
-bool datatools::DataSetTimeRewriteModule::checkConnections(core::Call *outCall) {
-    if (this->inDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED) return false;
-    if (this->outDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED) return false;
-    core::Call *inCall = this->inDataSlot.CallAs<core::Call>();
-    if ((inCall == NULL) || (outCall == NULL)) return false;
+bool datatools::DataSetTimeRewriteModule::checkConnections(core::Call* outCall) {
+    if (this->inDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED)
+        return false;
+    if (this->outDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED)
+        return false;
+    core::Call* inCall = this->inDataSlot.CallAs<core::Call>();
+    if ((inCall == NULL) || (outCall == NULL))
+        return false;
     for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
         if (IsCallDescriptionCompatible(cd)) {
-            if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall)) return true;
+            if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall))
+                return true;
         }
     }
     return false;

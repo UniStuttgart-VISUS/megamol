@@ -17,40 +17,40 @@
 namespace vislib {
 
 
+/**
+ * Base class for container iterators
+ */
+template<class T>
+class Iterator {
+public:
+    /** The type returned by the iterator */
+    typedef T Type;
+
+    /** Dtor. */
+    virtual ~Iterator(void);
+
     /**
-     * Base class for container iterators
+     * Answer whether there is a next element to iterator to.
+     *
+     * @return true if there is a next element, false otherwise.
      */
-    template<class T> class Iterator {
-    public:
+    virtual bool HasNext(void) const = 0;
 
-        /** The type returned by the iterator */
-        typedef T Type;
-
-        /** Dtor. */
-        virtual ~Iterator(void);
-
-        /**
-         * Answer whether there is a next element to iterator to.
-         *
-         * @return true if there is a next element, false otherwise.
-         */
-        virtual bool HasNext(void) const = 0;
-
-        /**
-         * Iterates to the next element and returns this element.
-         *
-         * @return The next element, which becomes the current element after
-         *         calling this methode.
-         */
-        virtual T& Next(void) = 0;
-    };
-
-    /*
-     * Iterator::~Iterator
+    /**
+     * Iterates to the next element and returns this element.
+     *
+     * @return The next element, which becomes the current element after
+     *         calling this methode.
      */
-    template<class T> Iterator<T>::~Iterator() {
-    }
-    
+    virtual T& Next(void) = 0;
+};
+
+/*
+ * Iterator::~Iterator
+ */
+template<class T>
+Iterator<T>::~Iterator() {}
+
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)

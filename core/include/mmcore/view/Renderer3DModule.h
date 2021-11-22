@@ -18,7 +18,7 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModule : public view::RendererModule<CallRender3D,Module> {
+class MEGAMOLCORE_API Renderer3DModule : public view::RendererModule<CallRender3D, Module> {
 public:
     /** Ctor. */
     Renderer3DModule(void);

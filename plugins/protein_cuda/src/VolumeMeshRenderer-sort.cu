@@ -97,16 +97,16 @@ cudaError TriangleVerticesToIndexList( float4* featureVertices, float4* featureV
     thrust::sequence( thrust::device_ptr<uint>(featureVertexIdx), thrust::device_ptr<uint>(featureVertexIdx + triaVertexCnt));
     thrust::fill_n( thrust::device_ptr<uint>(featureVertexCnt), triaVertexCnt, 1);
     cudaDeviceSynchronize();
-	thrust::sort_by_key( thrust::device_ptr<float4>(featureVertices), 
+    thrust::sort_by_key( thrust::device_ptr<float4>(featureVertices),
         thrust::device_ptr<float4>(featureVertices + triaVertexCnt), 
         thrust::device_ptr<uint>(featureVertexIdx), less_float4());
-	cudaDeviceSynchronize();
-	float4* new_end = thrust::reduce_by_key( thrust::device_ptr<float4>(featureVertices), 
+    cudaDeviceSynchronize();
+    float4* new_end = thrust::reduce_by_key( thrust::device_ptr<float4>(featureVertices),
         thrust::device_ptr<float4>(featureVertices + triaVertexCnt), 
         thrust::device_ptr<uint>(featureVertexCnt),
         thrust::device_ptr<float4>(featureVerticesOut), 
         thrust::device_ptr<uint>(featureVertexCntOut), equal_float4()).first.get();
-	cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
     vertexCnt = (new_end - featureVerticesOut);
     thrust::exclusive_scan( thrust::device_ptr<uint>(featureVertexCntOut), thrust::device_ptr<uint>(featureVertexCntOut + vertexCnt), thrust::device_ptr<uint>(featureVertexStartIdx));
     WriteTriangleVertexIndexList( featureVertexIdx, featureVertexCntOut, featureVertexStartIdx, featureVertexIdxOut, triaVertexCnt, vertexCnt);
@@ -119,15 +119,15 @@ cudaError TriangleEdgeList( uint* featureVertexIdxOut, uint* featureEdgeCnt, uin
     // write edges
     WriteTriangleEdgeList( featureVertexIdxOut, triaCnt, featureEdges);
     cudaDeviceSynchronize();
-	thrust::sort( thrust::device_ptr<uint2>(featureEdges), 
+    thrust::sort( thrust::device_ptr<uint2>(featureEdges),
         thrust::device_ptr<uint2>(featureEdges + (triaCnt * 3)), less_uint2());
-	cudaDeviceSynchronize();
-	uint2* new_end = thrust::reduce_by_key( thrust::device_ptr<uint2>(featureEdges), 
+    cudaDeviceSynchronize();
+    uint2* new_end = thrust::reduce_by_key( thrust::device_ptr<uint2>(featureEdges),
         thrust::device_ptr<uint2>(featureEdges + (triaCnt * 3)), 
         thrust::device_ptr<uint>(featureEdgeCnt),
         thrust::device_ptr<uint2>(featureEdgesOut), 
         thrust::device_ptr<uint>(featureEdgeCntOut), equal_uint2()).first.get();
-	cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
     edgeCnt = (new_end - featureEdgesOut);
     return cudaGetLastError();
 }
@@ -162,7 +162,7 @@ cudaError SortTrianglesDevice( uint triaCnt, float4x3 *vertices, float4x3 *verti
     thrust::sort_by_key( thrust::device_ptr<float4x3>(verticesCopy), 
         thrust::device_ptr<float4x3>(verticesCopy + triaCnt), 
         thrust::device_ptr<float4x3>(normals), greater_float4x3());
-	cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
     return cudaGetLastError();
 }
 

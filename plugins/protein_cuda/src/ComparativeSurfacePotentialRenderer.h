@@ -14,20 +14,20 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/CallRender3D.h"
-#include "protein_calls/VTIDataCall.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
 #include "CUDAQuickSurf.h"
 #include "gridParams.h"
-#include <GL/glu.h>
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Cuboid.h"
+#include <GL/glu.h>
 
 //#include "vislib_vector_typedefs.h"
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
@@ -52,43 +52,37 @@ namespace protein_cuda {
 class ComparativeSurfacePotentialRenderer : public core::view::Renderer3DModuleDS {
 
 public:
-
     /// Render modes for the surfaces
-    enum SurfaceRenderMode {SURFACE_NONE=0, SURFACE_POINTS, SURFACE_WIREFRAME,
-        SURFACE_FILL};
+    enum SurfaceRenderMode { SURFACE_NONE = 0, SURFACE_POINTS, SURFACE_WIREFRAME, SURFACE_FILL };
 
     /// Color modes for the surfaces
     enum SurfaceColorMode {
-        SURFACE_UNI=0,            // #0
-        SURFACE_NORMAL,           // #1
-        SURFACE_TEXCOORDS,        // #2
-        SURFACE_POTENTIAL,        // #3
-        SURFACE_DIST_TO_OLD_POS,  // #4
-        SURFACE_POTENTIAL0,       // #5
-        SURFACE_POTENTIAL1,       // #6
-        SURFACE_POTENTIAL_DIFF,   // #7
-        SURFACE_POTENTIAL_SIGN};  // #8
+        SURFACE_UNI = 0,         // #0
+        SURFACE_NORMAL,          // #1
+        SURFACE_TEXCOORDS,       // #2
+        SURFACE_POTENTIAL,       // #3
+        SURFACE_DIST_TO_OLD_POS, // #4
+        SURFACE_POTENTIAL0,      // #5
+        SURFACE_POTENTIAL1,      // #6
+        SURFACE_POTENTIAL_DIFF,  // #7
+        SURFACE_POTENTIAL_SIGN
+    }; // #8
 
     /// Enum describing different ways of using RMS fitting
-    enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};
+    enum RMSFittingMode { RMS_NONE = 0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA };
 
     /// Different modes for frame-by-frame comparison
-    enum CompareMode {
-        COMPARE_1_1=0,
-        COMPARE_1_N,
-        COMPARE_N_1,
-        COMPARE_N_N
-    };
+    enum CompareMode { COMPARE_1_1 = 0, COMPARE_1_N, COMPARE_N_1, COMPARE_N_N };
 
     // Interpolation mode used when computing external forces based on gradient
-    enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
+    enum InterpolationMode { INTERP_LINEAR = 0, INTERP_CUBIC };
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "ComparativeSurfacePotentialRenderer";
     }
 
@@ -103,7 +97,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers comparative rendering of two molecular surfaces.";
     }
 
@@ -120,7 +114,6 @@ public:
     }
 
 protected:
-
     /**
      * Translate and rotate an array of positions according to the current
      * transformation obtained by RMS fitting (a translation vector and
@@ -137,9 +130,7 @@ protected:
      * @return 'True' on success, 'false' otherwise
      */
     bool applyRMSFittingToPosArray(
-            protein_calls::MolecularDataCall *mol,
-            cudaGraphicsResource **cudaTokenVboMapped,
-            uint vertexCnt);
+        protein_calls::MolecularDataCall* mol, cudaGraphicsResource** cudaTokenVboMapped, uint vertexCnt);
 
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
@@ -157,13 +148,13 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(const protein_calls::MolecularDataCall *mol, CUDAQuickSurf *cqs,
-                    gridParams &gridDensMap,
-                    const vislib::math::Cuboid<float> &bboxParticles
+    bool computeDensityMap(const protein_calls::MolecularDataCall* mol, CUDAQuickSurf* cqs, gridParams& gridDensMap,
+        const vislib::math::Cuboid<float>& bboxParticles
 #if defined(USE_TEXTURE_SLICES)
-                    ,HostArr<float> &volume, GLuint &volumeTex
+        ,
+        HostArr<float>& volume, GLuint& volumeTex
 #endif // defined(USE_TEXTURE_SLICES)
-                    );
+    );
 
 #if defined(USE_DISTANCE_FIELD)
     /**
@@ -178,12 +169,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDistField(const protein_calls::MolecularDataCall *mol,
-            cudaGraphicsResource **vboResource,
-            uint vertexCnt,
-            CudaDevArr<float> &distField_D,
-            float *volume_D,
-            gridParams &gridDistField);
+    bool computeDistField(const protein_calls::MolecularDataCall* mol, cudaGraphicsResource** vboResource,
+        uint vertexCnt, CudaDevArr<float>& distField_D, float* volume_D, gridParams& gridDistField);
 #endif
 
     /**
@@ -224,7 +211,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(protein_calls::MolecularDataCall *mol0, protein_calls::MolecularDataCall *mol1);
+    bool fitMoleculeRMS(protein_calls::MolecularDataCall* mol0, protein_calls::MolecularDataCall* mol1);
 
     /**
      * Frees all dynamically allocated memory (host and device) and sets all
@@ -273,8 +260,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotentialMap(protein_calls::VTIDataCall *cmd, gridParams &gridPotentialMap,
-                    GLuint &potentialTex);
+    bool initPotentialMap(protein_calls::VTIDataCall* cmd, gridParams& gridPotentialMap, GLuint& potentialTex);
 
     /**
      * Connectivity information of the isosurface vertices is used to compute
@@ -295,17 +281,9 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool isosurfComputeNormals(float *volume_D,
-            gridParams gridDensMap,
-            cudaGraphicsResource **vboResource,
-            CudaDevArr<uint> &vertexMap_D,
-            CudaDevArr<uint> &vertexMapInv_D,
-            CudaDevArr<uint> &cubeMap_D,
-            CudaDevArr<uint> &cubeMapInv_D,
-            uint vertexCnt,
-            uint arrDataOffsPos,
-            uint arrDataOffsNormals,
-            uint arrDataSize);
+    bool isosurfComputeNormals(float* volume_D, gridParams gridDensMap, cudaGraphicsResource** vboResource,
+        CudaDevArr<uint>& vertexMap_D, CudaDevArr<uint>& vertexMapInv_D, CudaDevArr<uint>& cubeMap_D,
+        CudaDevArr<uint>& cubeMapInv_D, uint vertexCnt, uint arrDataOffsPos, uint arrDataOffsNormals, uint arrDataSize);
 
     /**
      * Computed texture coordinates for an array of vertices based on the grid
@@ -322,14 +300,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool isosurfComputeTexCoords(
-            cudaGraphicsResource **vboResource,
-            uint vertexCnt,
-            float3 minC,
-            float3 maxC,
-            uint arrDataOffsPos,
-            uint arrDataOffsTexCoords,
-            uint arrDataSize);
+    bool isosurfComputeTexCoords(cudaGraphicsResource** vboResource, uint vertexCnt, float3 minC, float3 maxC,
+        uint arrDataOffsPos, uint arrDataOffsTexCoords, uint arrDataSize);
 
     /**
      * Extracts an isosurface from a given volume texture using Marching
@@ -352,20 +324,10 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool isosurfComputeVertices(
-            float *volume_D,
-            CudaDevArr<uint> &cubeMap_D,
-            CudaDevArr<uint> &cubeMapInv_D,
-            CudaDevArr<uint> &vertexMap_D,
-            CudaDevArr<uint> &vertexMapInv_D,
-            CudaDevArr<int> &vertexNeighbours_D,
-            gridParams gridDensMap,
-            uint &vertexCount,
-            GLuint &vbo,
-            cudaGraphicsResource **vboResource,
-            uint &triangleCount,
-            GLuint &vboTriangleIdx,
-            cudaGraphicsResource **vboTriangleIdxResource);
+    bool isosurfComputeVertices(float* volume_D, CudaDevArr<uint>& cubeMap_D, CudaDevArr<uint>& cubeMapInv_D,
+        CudaDevArr<uint>& vertexMap_D, CudaDevArr<uint>& vertexMapInv_D, CudaDevArr<int>& vertexNeighbours_D,
+        gridParams gridDensMap, uint& vertexCount, GLuint& vbo, cudaGraphicsResource** vboResource, uint& triangleCount,
+        GLuint& vboTriangleIdx, cudaGraphicsResource** vboTriangleIdxResource);
 
     /**
      * Maps an isosurface defined by an array of vertex positions with
@@ -400,19 +362,10 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool mapIsosurfaceToVolume(
-            float *volume_D,
-            gridParams gridDensMap,
-            cudaGraphicsResource **vboCudaRes,
-            cudaGraphicsResource **vboCudaResTriangleIdx,
-            uint vertexCnt,
-            uint triangleCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
+    bool mapIsosurfaceToVolume(float* volume_D, gridParams gridDensMap, cudaGraphicsResource** vboCudaRes,
+        cudaGraphicsResource** vboCudaResTriangleIdx, uint vertexCnt, uint triangleCnt,
+        CudaDevArr<int>& vertexNeighbours_D, uint maxIt, float springStiffness, float forceScl,
+        float externalForcesWeight, InterpolationMode interpMode);
 
 
     /**
@@ -443,16 +396,9 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool regularizeSurface(float *volume_D,
-            gridParams gridDensMap,
-            cudaGraphicsResource **vboCudaRes,
-            uint vertexCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
+    bool regularizeSurface(float* volume_D, gridParams gridDensMap, cudaGraphicsResource** vboCudaRes, uint vertexCnt,
+        CudaDevArr<int>& vertexNeighbours_D, uint maxIt, float springStiffness, float forceScl,
+        float externalForcesWeight, InterpolationMode interpMode);
 
     /**
      * Implementation of 'release'.
@@ -478,8 +424,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool renderSlices(GLuint densityTex, GLuint potentialTex,
-            gridParams potGrid, gridParams densGrid);
+    bool renderSlices(GLuint densityTex, GLuint potentialTex, gridParams potGrid, gridParams densGrid);
 #endif // defined(USE_TEXTURE_SLICES)
 
     /**
@@ -498,16 +443,9 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderSurface(
-            GLuint &vbo,
-            uint vertexCnt,
-            GLuint &vboTriangleIdx,
-            uint triangleVertexCnt,
-            SurfaceRenderMode renderMode,
-            SurfaceColorMode colorMode,
-            GLuint potentialTex,
-            Vec3f uniformColor,
-            float alphaScl);
+    bool renderSurface(GLuint& vbo, uint vertexCnt, GLuint& vboTriangleIdx, uint triangleVertexCnt,
+        SurfaceRenderMode renderMode, SurfaceColorMode colorMode, GLuint potentialTex, Vec3f uniformColor,
+        float alphaScl);
 
 
     /**
@@ -523,14 +461,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderMappedSurface(
-            GLuint &vbo,
-            uint vertexCnt,
-            GLuint &vboTriangleIdx,
-            uint triangleVertexCnt,
-            SurfaceRenderMode renderMode,
-            SurfaceColorMode colorMode
-            );
+    bool renderMappedSurface(GLuint& vbo, uint vertexCnt, GLuint& vboTriangleIdx, uint triangleVertexCnt,
+        SurfaceRenderMode renderMode, SurfaceColorMode colorMode);
 
 
     /**
@@ -549,12 +481,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool sortTriangles(cudaGraphicsResource **vboResource,
-            uint vertexCount,
-            cudaGraphicsResource **vboTriangleIdxResource,
-            uint triangleCnt,
-            uint dataBuffSize,
-            uint dataBuffOffsPos);
+    bool sortTriangles(cudaGraphicsResource** vboResource, uint vertexCount,
+        cudaGraphicsResource** vboTriangleIdxResource, uint triangleCnt, uint dataBuffSize, uint dataBuffOffsPos);
 
     /**
      * Update all parameters if necessary.
@@ -562,7 +490,6 @@ protected:
     void updateParams();
 
 private:
-
     /* Callee slots for slave renderers */
 
     /// Callee slot for slave renderer #0
@@ -816,14 +743,14 @@ private:
 
     /* Volume generation */
 
-    void *cudaqsurf0, *cudaqsurf1;   ///> Pointer to CUDAQuickSurf objects
+    void *cudaqsurf0, *cudaqsurf1; ///> Pointer to CUDAQuickSurf objects
 #if defined(USE_TEXTURE_SLICES)
     HostArr<float> volume0, volume1; ///> Arrays for volume data
     GLuint volumeTex0, volumeTex1;   ///> Volume textures
-#endif // defined(USE_TEXTURE_SLICES)
+#endif                               // defined(USE_TEXTURE_SLICES)
     HostArr<float> gridDataPos;      ///> Data array for intermediate calculations
-    float minAtomRad; ///> Minimum atom radius
-    float maxAtomRad; ///> Maximum atom radius
+    float minAtomRad;                ///> Minimum atom radius
+    float maxAtomRad;                ///> Maximum atom radius
 
 
     /* Bounding boxes and hash values of the data sets */
@@ -914,25 +841,25 @@ private:
 
     /* RMSD fitting */
 
-    HostArr<float> rmsPosVec0;  ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec1;  ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;  ///> Particle weights
-    HostArr<int> rmsMask;       ///> Mask for particles
-    float rmsValue;             ///> The calculated RMS value
-    Mat3f rmsRotation;          ///> Rotation matrix for the fitting
-    Vec3f rmsTranslation;       ///> Translation vector for the fitting
-    bool toggleRMSFit;          ///> Toggles RMS fitting
-    static const float maxRMSVal;  ///> Maximum RMS value to enable fitting
+    HostArr<float> rmsPosVec0;    ///> Position vector #0 for rms fitting
+    HostArr<float> rmsPosVec1;    ///> Position vector #1 for rms fitting
+    HostArr<float> rmsWeights;    ///> Particle weights
+    HostArr<int> rmsMask;         ///> Mask for particles
+    float rmsValue;               ///> The calculated RMS value
+    Mat3f rmsRotation;            ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation;         ///> Translation vector for the fitting
+    bool toggleRMSFit;            ///> Toggles RMS fitting
+    static const float maxRMSVal; ///> Maximum RMS value to enable fitting
 
 #if defined(USE_DISTANCE_FIELD)
     /* Distance field computation */
 
-    CudaDevArr<float> distField_D;    ///> Array holding the distance field (device memory)
+    CudaDevArr<float> distField_D; ///> Array holding the distance field (device memory)
 
 #if defined(USE_TEXTURE_SLICES)
-    HostArr<float> distField;         ///> Array holding the distance field (host memory)
-    GLuint distFieldTex;              ///> Texture handle for distance field
-#endif // defined(USE_TEXTURE_SLICES)
+    HostArr<float> distField; ///> Array holding the distance field (host memory)
+    GLuint distFieldTex;      ///> Texture handle for distance field
+#endif                        // defined(USE_TEXTURE_SLICES)
 
     bool triggerComputeDistanceField; ///> Triggers computation of the distance field
 #endif
@@ -947,7 +874,7 @@ private:
     GLuint vbo0;
 
     /// Cuda graphics ressource associated with vbo #0
-    struct cudaGraphicsResource *vbo0Resource;
+    struct cudaGraphicsResource* vbo0Resource;
 
     /// Vertex buffer object for surface #1.
     /// 3 float Position
@@ -956,7 +883,7 @@ private:
     GLuint vbo1;
 
     /// Cuda graphics ressource associated with vbo #1
-    struct cudaGraphicsResource *vbo1Resource;
+    struct cudaGraphicsResource* vbo1Resource;
 
     /// Vertex buffer object for mapped surface.
     /// 3 float New position
@@ -968,25 +895,25 @@ private:
     GLuint vboMapped;
 
     /// Cuda graphics ressource associated with mapped surface vbo
-    struct cudaGraphicsResource *vboMappedResource;
+    struct cudaGraphicsResource* vboMappedResource;
 
     /// Vertex buffer object for triangle indices of surface #0
     GLuint vboTriangleIdx0;
 
     /// Cuda graphics ressource associated with the triangle index buffer #0
-    struct cudaGraphicsResource *vboTriangleIdx0Resource;
+    struct cudaGraphicsResource* vboTriangleIdx0Resource;
 
     /// Vertex buffer object for triangle indices of surface #1
     GLuint vboTriangleIdx1;
 
     /// Cuda graphics ressource associated with the triangle index buffer #1
-    struct cudaGraphicsResource *vboTriangleIdx1Resource;
+    struct cudaGraphicsResource* vboTriangleIdx1Resource;
 
     /// Vertex buffer object for triangle indices of mapped surface
     GLuint vboTriangleIdxMapped;
 
     /// Cuda graphics ressource associated with the triangle index buffer #0
-    struct cudaGraphicsResource *vboTriangleIdxMappedResource;
+    struct cudaGraphicsResource* vboTriangleIdxMappedResource;
 
     /// The number of vertices of surface #0
     uint vertexCnt0;
@@ -1041,7 +968,6 @@ private:
 
     /// Array to safe displacement length
     CudaDevArr<float> displLen_D;
-
 };
 
 } // namespace protein_cuda

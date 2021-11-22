@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -15,8 +15,11 @@ using namespace megamol::core;
 /*
  * job::AbstractThreadedJob::AbstractThreadedJob
  */
-job::AbstractThreadedJob::AbstractThreadedJob() : AbstractJob(),
-        vislib::sys::Runnable(), thread(NULL), terminationRequest(false) {
+job::AbstractThreadedJob::AbstractThreadedJob()
+        : AbstractJob()
+        , vislib::sys::Runnable()
+        , thread(NULL)
+        , terminationRequest(false) {
     // intentionally empty
 }
 
@@ -52,8 +55,7 @@ bool job::AbstractThreadedJob::Start(void) {
             this->signalStart();
             return true;
         }
-    } catch(...) {
-    }
+    } catch (...) {}
     return false;
 }
 

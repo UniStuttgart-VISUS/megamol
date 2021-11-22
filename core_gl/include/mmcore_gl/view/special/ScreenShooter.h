@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/job/AbstractJob.h"
 #include "mmcore/Module.h"
 #include "mmcore/ViewInstance.h"
+#include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 
@@ -26,174 +26,170 @@ namespace view {
 namespace special {
 
 
+/**
+ * Class implementing the screen shooter job module
+ */
+class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
+public:
+    std::vector<std::string> requested_lifetime_resources() {
+        auto lifetime_resources = Module::requested_lifetime_resources();
+        lifetime_resources.push_back("MegaMolGraph");
+        return lifetime_resources;
+    }
+
     /**
-     * Class implementing the screen shooter job module
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
-    public:
+    static const char* ClassName(void) {
+        return "ScreenShooter";
+    }
 
-        std::vector<std::string> requested_lifetime_resources() {
-            auto lifetime_resources = Module::requested_lifetime_resources();
-            lifetime_resources.push_back("MegaMolGraph");
-            return lifetime_resources;
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "A simple job module used to create large off-screen renderings";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "ScreenShooter";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void);
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "A simple job module used to create large off-screen renderings";
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void);
+    /**
+     * Ctor
+     *
+     * @param reducedParameters True: only show necessary parameters, false: all
+     */
+    explicit ScreenShooter(bool reducedParameters = false);
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * Dtor
+     */
+    virtual ~ScreenShooter();
 
-        /**
-         * Ctor
-         *
-         * @param reducedParameters True: only show necessary parameters, false: all
-         */
-        explicit ScreenShooter(bool reducedParameters = false);
+    /**
+     * Answers whether or not this job is still running.
+     *
+     * @return 'true' if this job is still running, 'false' if it has
+     *         finished.
+     */
+    virtual bool IsRunning(void) const;
 
-        /**
-         * Dtor
-         */
-        virtual ~ScreenShooter();
+    /**
+     * Starts the job thread.
+     *
+     * @return true if the job has been successfully started.
+     */
+    virtual bool Start(void);
 
-        /**
-         * Answers whether or not this job is still running.
-         *
-         * @return 'true' if this job is still running, 'false' if it has
-         *         finished.
-         */
-        virtual bool IsRunning(void) const;
+    /**
+     * Terminates the job thread.
+     *
+     * @return true to acknowledge that the job will finish as soon
+     *         as possible, false if termination is not possible.
+     */
+    virtual bool Terminate(void);
 
-        /**
-         * Starts the job thread.
-         *
-         * @return true if the job has been successfully started.
-         */
-        virtual bool Start(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Terminates the job thread.
-         *
-         * @return true to acknowledge that the job will finish as soon
-         *         as possible, false if termination is not possible.
-         */
-        virtual bool Terminate(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-    protected:
+    /**
+     * Hook method to be called before the view is rendered.
+     *
+     * @param view The calling view
+     */
+    virtual void BeforeRender(core::view::AbstractView* view);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /*
+     * Create the screenshot.
+     *
+     * @param filename Filename of the output screenshot
+     */
+    void createScreenshot(const std::string& filename);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+private:
+    /**
+     * Starts the image making triggered by clicking on the trigger button.
+     *
+     * @param slot Must be the triggerButtonSlot
+     */
+    bool triggerButtonClicked(core::param::ParamSlot& slot);
 
-        /**
-         * Hook method to be called before the view is rendered.
-         *
-         * @param view The calling view
-         */
-        virtual void BeforeRender(core::view::AbstractView *view);
+    core::param::ParamSlot* findTimeParam(core::view::AbstractView* view);
 
-        /*
-         * Create the screenshot.
-         *
-         * @param filename Filename of the output screenshot
-         */
-        void createScreenshot(const std::string& filename);
+    /** The name of the view instance to be shot */
+    core::param::ParamSlot viewNameSlot;
 
-    private:
+    /** The width in pixel of the resulting image */
+    core::param::ParamSlot imgWidthSlot;
 
-        /**
-         * Starts the image making triggered by clicking on the trigger button.
-         *
-         * @param slot Must be the triggerButtonSlot
-         */
-        bool triggerButtonClicked(core::param::ParamSlot& slot);
+    /** The height in pixel of the resulting image */
+    core::param::ParamSlot imgHeightSlot;
 
-        core::param::ParamSlot* findTimeParam(core::view::AbstractView* view);
+    /** The width of a rendering tile in pixel */
+    core::param::ParamSlot tileWidthSlot;
 
-        /** The name of the view instance to be shot */
-        core::param::ParamSlot viewNameSlot;
+    /** The height of a rendering tile in pixel */
+    core::param::ParamSlot tileHeightSlot;
 
-        /** The width in pixel of the resulting image */
-        core::param::ParamSlot imgWidthSlot;
+    /** The file name to store the resulting image under */
+    core::param::ParamSlot imageFilenameSlot;
 
-        /** The height in pixel of the resulting image */
-        core::param::ParamSlot imgHeightSlot;
+    /** Enum controlling the background to be used */
+    core::param::ParamSlot backgroundSlot;
 
-        /** The width of a rendering tile in pixel */
-        core::param::ParamSlot tileWidthSlot;
+    /** The trigger button */
+    core::param::ParamSlot triggerButtonSlot;
 
-        /** The height of a rendering tile in pixel */
-        core::param::ParamSlot tileHeightSlot;
+    /** Bool whether or not to close the application after the screen shot was taken */
+    core::param::ParamSlot closeAfterShotSlot;
 
-        /** The file name to store the resulting image under */
-        core::param::ParamSlot imageFilenameSlot;
+    core::param::ParamSlot animFromSlot;
+    core::param::ParamSlot animToSlot;
+    core::param::ParamSlot animStepSlot;
+    core::param::ParamSlot animAddTime2FrameSlot;
+    core::param::ParamSlot makeAnimSlot;
+    core::param::ParamSlot animTimeParamNameSlot;
+    core::param::ParamSlot disableCompressionSlot;
+    float animLastFrameTime;
+    int outputCounter;
 
-        /** Enum controlling the background to be used */
-        core::param::ParamSlot backgroundSlot;
+    /** A simple running flag */
+    bool running;
 
-        /** The trigger button */
-        core::param::ParamSlot triggerButtonSlot;
-
-        /** Bool whether or not to close the application after the screen shot was taken */
-        core::param::ParamSlot closeAfterShotSlot;
-
-        core::param::ParamSlot animFromSlot;
-        core::param::ParamSlot animToSlot;
-        core::param::ParamSlot animStepSlot;
-        core::param::ParamSlot animAddTime2FrameSlot;
-        core::param::ParamSlot makeAnimSlot;
-        core::param::ParamSlot animTimeParamNameSlot;
-        core::param::ParamSlot disableCompressionSlot;
-        float animLastFrameTime;
-        int outputCounter;
-
-        /** A simple running flag */
-        bool running;
-
-        std::shared_ptr<glowl::FramebufferObject> currentFbo;
-
-    };
+    std::shared_ptr<glowl::FramebufferObject> currentFbo;
+};
 
 
 } /* end namespace special */
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_SCREENSHOOTER_H_INCLUDED */

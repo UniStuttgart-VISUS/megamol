@@ -16,37 +16,39 @@
 namespace megamol {
 namespace datatools {
 
+/**
+ * Module overriding global colors of multi particle lists
+ */
+class OverrideMultiParticleListGlobalColors : public AbstractParticleManipulator {
+public:
+    static const char* ClassName(void) {
+        return "OverrideMultiParticleListGlobalColors";
+    }
+    static const char* Description(void) {
+        return "Module overriding global colors of multi particle lists";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    OverrideMultiParticleListGlobalColors(void);
+    virtual ~OverrideMultiParticleListGlobalColors(void);
+
+protected:
     /**
-     * Module overriding global colors of multi particle lists
+     * Manipulates the particle data
+     *
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
      */
-    class OverrideMultiParticleListGlobalColors : public AbstractParticleManipulator {
-    public:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-        static const char *ClassName(void) { return "OverrideMultiParticleListGlobalColors"; }
-        static const char *Description(void) { return "Module overriding global colors of multi particle lists"; }
-        static bool IsAvailable(void) { return true; }
-
-        OverrideMultiParticleListGlobalColors(void);
-        virtual ~OverrideMultiParticleListGlobalColors(void);
-
-    protected:
-
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-
-    private:
-
-    };
+private:
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

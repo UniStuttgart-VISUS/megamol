@@ -4,8 +4,8 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "AbstractTexQuartzRenderer.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <vector>
 
@@ -15,23 +15,21 @@ namespace demos_gl {
 /*
  * AbstractTexQuartzRenderer::AbstractTexQuartzRenderer
  */
-AbstractTexQuartzRenderer::AbstractTexQuartzRenderer(void)
-    : AbstractQuartzRenderer(), typeTexture(0) {
-}
+AbstractTexQuartzRenderer::AbstractTexQuartzRenderer(void) : AbstractQuartzRenderer(), typeTexture(0) {}
 
 
 /*
  * AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer
  */
-AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer(void) {
-}
+AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer(void) {}
 
 
 /*
  * AbstractTexQuartzRenderer::assertTypeTexture
  */
 void AbstractTexQuartzRenderer::assertTypeTexture(CrystalDataCall& types) {
-    if ((this->typesDataHash != 0) && (this->typesDataHash == types.DataHash())) return; // all up to date
+    if ((this->typesDataHash != 0) && (this->typesDataHash == types.DataHash()))
+        return; // all up to date
     this->typesDataHash = types.DataHash();
 
     if (types.GetCount() == 0) {
@@ -80,12 +78,11 @@ void AbstractTexQuartzRenderer::assertTypeTexture(CrystalDataCall& types) {
     GLint initial_pack_alignment = 0;
     ::glGetIntegerv(GL_PACK_ALIGNMENT, &initial_pack_alignment);
     ::glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    
+
     ::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, mfc, types.GetCount(), 0, GL_RGBA, GL_FLOAT, dat.data());
     ::glBindTexture(GL_TEXTURE_2D, 0);
 
     ::glPixelStorei(GL_PACK_ALIGNMENT, initial_pack_alignment);
-
 }
 
 
@@ -97,5 +94,5 @@ void AbstractTexQuartzRenderer::releaseTypeTexture(void) {
     this->typeTexture = 0;
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

@@ -20,59 +20,55 @@ namespace megamol {
 namespace trisoup {
 
 
+/**
+ * Class creating a tri mesh from binary volume showing the blocks opaque
+ */
+class BlockVolumeMesh : public AbstractTriMeshDataSource {
+public:
     /**
-     * Class creating a tri mesh from binary volume showing the blocks opaque
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class BlockVolumeMesh : public AbstractTriMeshDataSource {
-    public:
+    static const char* ClassName(void) {
+        return "BlockVolumeMesh";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "BlockVolumeMesh";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Converts a binary volume into a tri mesh showing opaque blocks.";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Converts a binary volume into a tri mesh showing opaque blocks.";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor */
+    BlockVolumeMesh(void);
 
-        /** Ctor */
-        BlockVolumeMesh(void);
+    /** Dtor */
+    virtual ~BlockVolumeMesh(void);
 
-        /** Dtor */
-        virtual ~BlockVolumeMesh(void);
+protected:
+    /** Ensures that the data is loaded */
+    virtual void assertData(void);
 
-    protected:
+private:
+    /** The in data slot */
+    core::CallerSlot inDataSlot;
 
-        /** Ensures that the data is loaded */
-        virtual void assertData(void);
-
-    private:
-
-        /** The in data slot */
-        core::CallerSlot inDataSlot;
-
-        /** The incoming data hash */
-        SIZE_T inDataHash;
-
-    };
+    /** The incoming data hash */
+    SIZE_T inDataHash;
+};
 
 } /* end namespace trisoup */
 } /* end namespace megamol */

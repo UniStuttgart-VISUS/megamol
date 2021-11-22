@@ -23,31 +23,30 @@ public:
     struct RenderNode;
     struct MpiNode;
 
-    enum class Role {
-        None,
-        HeadNode,
-        RenderNode,
-        MPIRenderNode
-    };
+    enum class Role { None, HeadNode, RenderNode, MPIRenderNode };
     struct Config {
         Role role = Role::None;
 
-        bool headnode_broadcast_quit            = false; // if MegaMol exits in a normal way, broadcast mmQuit()
+        bool headnode_broadcast_quit = false;            // if MegaMol exits in a normal way, broadcast mmQuit()
         bool headnode_broadcast_initial_project = false; // send initial project/graph state at startup
-        bool headnode_connect_on_start          = false; // start headnode thread on startup or wait till later
+        bool headnode_connect_on_start = false;          // start headnode thread on startup or wait till later
 
-        std::string headnode_zmq_target_address   = "tcp://127.0.0.1:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
-        std::string rendernode_zmq_source_address = "tcp://*:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
+        std::string headnode_zmq_target_address =
+            "tcp://127.0.0.1:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
+        std::string rendernode_zmq_source_address =
+            "tcp://*:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
         //bool        head_distribute_local_project_at_startup = true;                    // "Sends project file on connect"
 
-        int  mpi_broadcast_rank = 0; // "Set which MPI rank is the broadcast master"
+        int mpi_broadcast_rank = 0; // "Set which MPI rank is the broadcast master"
 
         // UNUSED: bool render_use_mpi               = false; // "Requests initialization of MPI and the communicator for the view."
         // UNUSED: bool render_sync_data_sources_mpi = false; // "Requests synchronization of data sources in the MPI world."
         // TODO: decouple ZMQ send/recv vs MPI send/recv
     };
 
-    std::string serviceName() const override { return "Remote_Service"; }
+    std::string serviceName() const override {
+        return "Remote_Service";
+    }
 
     Remote_Service();
     ~Remote_Service();
@@ -64,13 +63,13 @@ public:
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
     void resetProvidedResources() override;
-    void preGraphRender() override;  
+    void preGraphRender() override;
     void postGraphRender() override;
 
-    // from AbstractFrontendService 
+    // from AbstractFrontendService
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
-    // 
+    //
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
@@ -100,16 +99,16 @@ private:
     // EXPERIMENTAL
     struct HeadNodeRemoteControl {
         enum class Command {
-            None = 0
-            , StartHeadNode
-            , CloseHeadNode
-            , ClearGraph
-            , SendGraph
-            , KeepSendingParams
-            , DontSendParams
-            , SetParamSendingModules
-            , SendLuaCommand
-            , Count // not a commnd, gives number of enum entries
+            None = 0,
+            StartHeadNode,
+            CloseHeadNode,
+            ClearGraph,
+            SendGraph,
+            KeepSendingParams,
+            DontSendParams,
+            SetParamSendingModules,
+            SendLuaCommand,
+            Count // not a commnd, gives number of enum entries
         };
         bool keep_sending_params = false;
         std::string modules_to_send_params_of = "all";
@@ -124,8 +123,8 @@ private:
     bool start_headnode(bool start_or_shutdown = true);
 };
 
-std::string handle_remote_session_config(megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config);
+std::string handle_remote_session_config(
+    megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config);
 
 } // namespace frontend
 } // namespace megamol
-

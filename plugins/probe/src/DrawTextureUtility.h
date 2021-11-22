@@ -6,13 +6,13 @@
 
 #pragma once
 
+#include "blend2d.h"
+#include "mmcore/utility/log/Log.h"
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <tuple>
 #include <vector>
-#include "blend2d.h"
-#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
@@ -36,23 +36,37 @@ public:
         return std::make_pair(this->_pixel_width, this->_pixel_height);
     }
 
-    inline uint32_t getPixelWidth() const { return this->_pixel_width; }
+    inline uint32_t getPixelWidth() const {
+        return this->_pixel_width;
+    }
 
-    inline uint32_t getPixelHeight() const { return this->_pixel_height; }
+    inline uint32_t getPixelHeight() const {
+        return this->_pixel_height;
+    }
 
-    inline void setGraphType(GraphType gt) { this->_graph_type = gt; }
+    inline void setGraphType(GraphType gt) {
+        this->_graph_type = gt;
+    }
 
-    inline GraphType getGraphType() const { return this->_graph_type; }
+    inline GraphType getGraphType() const {
+        return this->_graph_type;
+    }
 
-    template <typename T> uint8_t* draw(std::vector<T>& data, T min, T max);
+    template<typename T>
+    uint8_t* draw(std::vector<T>& data, T min, T max);
 
-    template <typename T> uint8_t* draw(std::vector<T>& data, std::array<float,3> probe_direction);
+    template<typename T>
+    uint8_t* draw(std::vector<T>& data, std::array<float, 3> probe_direction);
 
 private:
-    template <typename T> void drawPlot(std::vector<T>& data, T min, T max);
-    template <typename T> void drawStar(std::vector<T>& data, T min, T max);
-    template <typename T> void drawLinear(std::vector<T>& data, T min, T max);
-    template <typename T> void drawRadarGlyph(std::vector<T>& data, std::array<float, 3> probe_direction);
+    template<typename T>
+    void drawPlot(std::vector<T>& data, T min, T max);
+    template<typename T>
+    void drawStar(std::vector<T>& data, T min, T max);
+    template<typename T>
+    void drawLinear(std::vector<T>& data, T min, T max);
+    template<typename T>
+    void drawRadarGlyph(std::vector<T>& data, std::array<float, 3> probe_direction);
 
     uint32_t _pixel_width = 0;
     uint32_t _pixel_height = 0;
@@ -65,7 +79,8 @@ private:
 };
 
 
-template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T min, T max) {
+template<typename T>
+uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T min, T max) {
     _img = BLImage(this->_pixel_width, this->_pixel_height, BL_FORMAT_PRGB32);
     _ctx = BLContext(_img);
 
@@ -82,9 +97,8 @@ template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T 
         } else if (this->_graph_type == GLYPH) {
             this->drawStar(data, min, max);
         } else if (this->_graph_type == LINEAR) {
-            this->drawLinear(data,min,max);
+            this->drawLinear(data, min, max);
         }
-
     }
     _ctx.end();
 
@@ -99,7 +113,7 @@ template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T 
     return this->_pixel_data;
 }
 
-template <typename T>
+template<typename T>
 inline uint8_t* DrawTextureUtility::draw(std::vector<T>& data, std::array<float, 3> probe_direction) {
 
     _img = BLImage(this->_pixel_width, this->_pixel_height, BL_FORMAT_PRGB32);
@@ -112,11 +126,11 @@ inline uint8_t* DrawTextureUtility::draw(std::vector<T>& data, std::array<float,
     _ctx.fillAll();
 
     // Draw sample data
-    
+
     if (this->_graph_type == RADARGLYPH) {
         this->drawRadarGlyph(data, probe_direction);
     }
-    
+
     _ctx.end();
 
     // extract image
@@ -132,7 +146,8 @@ inline uint8_t* DrawTextureUtility::draw(std::vector<T>& data, std::array<float,
     return NULL;
 }
 
-template <typename T> void DrawTextureUtility::drawPlot(std::vector<T>& data, T min, T max) {
+template<typename T>
+void DrawTextureUtility::drawPlot(std::vector<T>& data, T min, T max) {
 
     uint32_t width_halo = this->_pixel_width * 0.1f;
     uint32_t height_halo = this->_pixel_height * 0.1f;
@@ -171,7 +186,8 @@ template <typename T> void DrawTextureUtility::drawPlot(std::vector<T>& data, T 
     _ctx.strokePath(path);
 }
 
-template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T min, T max) {
+template<typename T>
+void DrawTextureUtility::drawStar(std::vector<T>& data, T min, T max) {
 
     uint32_t width_halo = this->_pixel_width * 0.1f;
     uint32_t height_halo = this->_pixel_height * 0.1f;
@@ -192,28 +208,29 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     for (uint32_t i = 0; i < num_data; i++) {
 
         if (i == 0) {
-            data_polygon.moveTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
+            data_polygon.moveTo(
+                center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
                 center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step + angle_offset));
             max_polygon.moveTo(center[0] + max_radius * std::cos(i * angle_step + angle_offset),
-                center[1] + max_radius* std::sin(i * angle_step + angle_offset));
+                center[1] + max_radius * std::sin(i * angle_step + angle_offset));
         } else {
-            data_polygon.lineTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
+            data_polygon.lineTo(
+                center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
                 center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step + angle_offset));
-            max_polygon.lineTo(
-                center[0] + max_radius * std::cos(i * angle_step + angle_offset), center[1] + max_radius * std::sin(i * angle_step + angle_offset));
-            }
+            max_polygon.lineTo(center[0] + max_radius * std::cos(i * angle_step + angle_offset),
+                center[1] + max_radius * std::sin(i * angle_step + angle_offset));
+        }
 
         // Draw axes
         BLLine axis_line(center[0], center[1], center[0] + axis_radius * std::cos(i * angle_step + angle_offset),
             center[1] + axis_radius * std::sin(i * angle_step + angle_offset));
         axis.addLine(axis_line);
     }
-    //max_polygon.lineTo(center[0] + max_radius, center[1]); 
+    //max_polygon.lineTo(center[0] + max_radius, center[1]);
 
     BLPath cut;
     cut.moveTo(center[0], center[1]);
-    cut.lineTo(center[0] + axis_radius * std::cos(angle_offset),
-        center[1] + axis_radius * std::sin(angle_offset));
+    cut.lineTo(center[0] + axis_radius * std::cos(angle_offset), center[1] + axis_radius * std::sin(angle_offset));
 
     cut.lineTo(center[0] + axis_radius * std::cos((num_data - 1) * angle_step + angle_offset),
         center[1] + axis_radius * std::sin((num_data - 1) * angle_step + angle_offset));
@@ -250,37 +267,35 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     //_ctx.setFillStyle(BLRgba32(0xFFF3DF92));
     _ctx.setFillStyle(BLRgba32(0xFF2A5F3B));
     _ctx.fillPath(cut);
-
 }
 
-template <typename T> void DrawTextureUtility::drawLinear(std::vector<T>& data, T min, T max) {
-    
+template<typename T>
+void DrawTextureUtility::drawLinear(std::vector<T>& data, T min, T max) {
+
     uint32_t width_halo = this->_pixel_width * 0.2f;
     uint32_t height_halo = this->_pixel_height * 0.1f;
     std::array<uint32_t, 2> start = {this->_pixel_width / 2, height_halo};
     // calc clamp on texture
     auto num_data = data.size();
 
-    auto linear_step = (this->_pixel_height - 2*height_halo) / num_data;
+    auto linear_step = (this->_pixel_height - 2 * height_halo) / num_data;
 
     auto max_linear = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
 
     BLPath axis;
-    
+
     BLPath data_polygon;
     for (uint32_t i = 0; i < num_data; i++) {
 
         if (i == 0) {
-            data_polygon.moveTo(start[0] + ((data[i] - min) / (max - min)) * max_linear,
-                start[1]);
+            data_polygon.moveTo(start[0] + ((data[i] - min) / (max - min)) * max_linear, start[1]);
         } else {
-            data_polygon.lineTo(start[0] + ((data[i] - min) / (max - min)) * max_linear,
-                start[1] + i * linear_step );
+            data_polygon.lineTo(start[0] + ((data[i] - min) / (max - min)) * max_linear, start[1] + i * linear_step);
         }
 
         // Draw axes
-        BLLine axis_line(start[0] - max_linear, start[1] + i * linear_step, start[0] + max_linear,
-            start[1] + i * linear_step);
+        BLLine axis_line(
+            start[0] - max_linear, start[1] + i * linear_step, start[0] + max_linear, start[1] + i * linear_step);
         axis.addLine(axis_line);
     }
     // max_polygon.lineTo(center[0] + max_radius, center[1]);
@@ -308,10 +323,9 @@ template <typename T> void DrawTextureUtility::drawLinear(std::vector<T>& data, 
     // Data Filling
     _ctx.setFillStyle(BLRgba32(0x660000FF));
     _ctx.fillPath(data_polygon);
-
 }
 
-template <typename T>
+template<typename T>
 inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<float, 3> probe_direction) {
 
     uint32_t width_halo = this->_pixel_width * 0.1f;
@@ -330,7 +344,7 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
     //_ctx.setFillStyle(BLRgba32(0xCC2C0D0E));
     //_ctx.setFillStyle(BLRgba32(0xBBDABABE));
     _ctx.setFillStyle(BLRgba32(0x00FFFFFF));
-    _ctx.fillCircle(background); 
+    _ctx.fillCircle(background);
 
     BLArc border(center[0], center[1], max_radius, max_radius, 0.0, 2.0 * 3.14159);
     //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
@@ -362,14 +376,14 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
 
         float angle = proj_dir[1] > 0.0f ? acos(proj_dir[0]) : -acos(proj_dir[0]);
 
-        double arc_length = std::max(direction[2] * 2.0f * 3.14159f, (5.0f / 360.0f) * (2.0f * 3.14159f) );
+        double arc_length = std::max(direction[2] * 2.0f * 3.14159f, (5.0f / 360.0f) * (2.0f * 3.14159f));
 
         //arc_length = 50.0 * arc_length / (2.0f * 3.14159f * radius);
         BLArc arc(center[0], center[1], radius, radius, angle - arc_length / 2.0f, arc_length);
 
         //_ctx.setStrokeStyle(BLRgba32(0xFFFF00FF));
-        _ctx.setStrokeStyle(BLRgba32(length*255,0,0));
-        _ctx.setStrokeWidth( std::max(2.0 , radius_steps * (1.0 - (arc_length / (2.0 * 3.14159) ) ) ) );
+        _ctx.setStrokeStyle(BLRgba32(length * 255, 0, 0));
+        _ctx.setStrokeWidth(std::max(2.0, radius_steps * (1.0 - (arc_length / (2.0 * 3.14159)))));
         _ctx.strokeArc(arc);
     }
 
@@ -379,19 +393,18 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
     //  _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
     //  _ctx.setStrokeWidth(7);
     //  //_ctx.strokePath(data_polygon);
-    //  
+    //
     //  // Data Filling
     //  //_ctx.setFillStyle(BLRgba32(0x660000FF));
     //  _ctx.setFillStyle(BLRgba32(0xDD00B9FF));
     //  //_ctx.setFillStyle(BLRgba32(0xBBd3b180));
     //  _ctx.fillPath(data_polygon);
-    //  
+    //
     //  // Solid Cut
     //  //_ctx.setFillStyle(BLRgba32(0xFFF3DF92));
     //  _ctx.setFillStyle(BLRgba32(0xFF2A5F3B));
     //  _ctx.fillPath(cut);
 }
-
 
 
 } // namespace probe

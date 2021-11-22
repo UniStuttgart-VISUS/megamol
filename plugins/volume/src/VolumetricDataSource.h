@@ -21,9 +21,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/PtrArray.h"
 #include "vislib/sys/Event.h"
-#include "mmcore/utility/sys/Thread.h"
 
 namespace megamol {
 namespace volume {
@@ -38,21 +38,27 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) { return "VolumetricDataSource"; }
+    static inline const char* ClassName(void) {
+        return "VolumetricDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Data source for dat/raw-encoded volumetric data."; }
+    static inline const char* Description(void) {
+        return "Data source for dat/raw-encoded volumetric data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) { return true; }
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
     /**
      * Initialises a new instance.
@@ -225,7 +231,9 @@ private:
          *
          * @param buffer THe buffer that should be unlocked.
          */
-        inline BufferSlotUnlocker(BufferSlot* buffer) : Base(), buffers(2) { this->AddBuffer(buffer); }
+        inline BufferSlotUnlocker(BufferSlot* buffer) : Base(), buffers(2) {
+            this->AddBuffer(buffer);
+        }
 
         /** Dtor. */
         virtual ~BufferSlotUnlocker(void);
@@ -393,7 +401,7 @@ private:
 
     std::vector<double> mins, maxes;
 
-    template <class T>
+    template<class T>
     void calcMinMax(void const* vol_ptr, std::vector<double>& mins, std::vector<double>& maxes,
         DatRawFileInfo const& fileinfo, geocalls::VolumetricDataCall::Metadata const& metadata) {
         mins.resize(metadata.Components);
@@ -407,8 +415,10 @@ private:
             }
             auto* vol = reinterpret_cast<const T*>(vol_ptr);
             for (size_t x = c; x < totalLength; x += metadata.Components) {
-                if (vol[x] < min) min = vol[x];
-                if (vol[x] > max) max = vol[x];
+                if (vol[x] < min)
+                    min = vol[x];
+                if (vol[x] > max)
+                    max = vol[x];
             }
             mins[c] = min;
             maxes[c] = max;

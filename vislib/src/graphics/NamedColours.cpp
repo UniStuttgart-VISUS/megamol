@@ -502,8 +502,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::LightCyan(
 /*
  * vislib::graphics::NamedColours::LightGoldenrodYellow
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::LightGoldenrodYellow(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::LightGoldenrodYellow(
     vislib::graphics::NamedColours::colFromHex(0x00FAFAD2));
 
 
@@ -622,8 +621,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::Maroon(
 /*
  * vislib::graphics::NamedColours::MediumAquamarine
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::MediumAquamarine(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumAquamarine(
     vislib::graphics::NamedColours::colFromHex(0x0066CDAA));
 
 
@@ -658,32 +656,28 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumSeaGreen(
 /*
  * vislib::graphics::NamedColours::MediumSlateBlue
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::MediumSlateBlue(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumSlateBlue(
     vislib::graphics::NamedColours::colFromHex(0x007B68EE));
 
 
 /*
  * vislib::graphics::NamedColours::MediumSpringGreen
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::MediumSpringGreen(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumSpringGreen(
     vislib::graphics::NamedColours::colFromHex(0x0000FA9A));
 
 
 /*
  * vislib::graphics::NamedColours::MediumTurquoise
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::MediumTurquoise(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumTurquoise(
     vislib::graphics::NamedColours::colFromHex(0x0048D1CC));
 
 
 /*
  * vislib::graphics::NamedColours::MediumVioletRed
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::MediumVioletRed(
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MediumVioletRed(
     vislib::graphics::NamedColours::colFromHex(0x00C71585));
 
 
@@ -998,8 +992,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::Tomato(
 /*
  * vislib::graphics::NamedColours::Transparent
  */
-vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::Transparent(
-    0, 0, 0, 0);
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::Transparent(0, 0, 0, 0);
 
 
 /*
@@ -1063,7 +1056,8 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MegaMolBlue(
  */
 SIZE_T vislib::graphics::NamedColours::CountNamedColours(void) {
     if (count == 0) {
-        while (!index[count].name.IsEmpty()) count++;
+        while (!index[count].name.IsEmpty())
+            count++;
     }
     return count;
 }
@@ -1072,11 +1066,9 @@ SIZE_T vislib::graphics::NamedColours::CountNamedColours(void) {
 /*
  * vislib::graphics::NamedColours::GetColourByIndex
  */
-const vislib::graphics::ColourRGBAu8&
-vislib::graphics::NamedColours::GetColourByIndex(SIZE_T idx) {
+const vislib::graphics::ColourRGBAu8& vislib::graphics::NamedColours::GetColourByIndex(SIZE_T idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
-        throw vislib::OutOfRangeException(idx, 0, count - 1,
-            __FILE__, __LINE__);
+        throw vislib::OutOfRangeException(idx, 0, count - 1, __FILE__, __LINE__);
     }
     return index[idx].colour;
 }
@@ -1085,11 +1077,11 @@ vislib::graphics::NamedColours::GetColourByIndex(SIZE_T idx) {
 /*
  * vislib::graphics::NamedColours::GetColourByName
  */
-const vislib::graphics::ColourRGBAu8&
-vislib::graphics::NamedColours::GetColourByName(const char *name) {
+const vislib::graphics::ColourRGBAu8& vislib::graphics::NamedColours::GetColourByName(const char* name) {
     CountNamedColours();
     for (SIZE_T i = 0; i < count; i++) {
-        if (index[i].name.Equals(name, false)) return index[i].colour;
+        if (index[i].name.Equals(name, false))
+            return index[i].colour;
     }
     throw vislib::NoSuchElementException(name, __FILE__, __LINE__);
 }
@@ -1098,10 +1090,9 @@ vislib::graphics::NamedColours::GetColourByName(const char *name) {
 /*
  * vislib::graphics::NamedColours::GetNameByIndex
  */
-const char *vislib::graphics::NamedColours::GetNameByIndex(SIZE_T idx) {
+const char* vislib::graphics::NamedColours::GetNameByIndex(SIZE_T idx) {
     if ((idx < 0) || (idx >= CountNamedColours())) {
-        throw vislib::OutOfRangeException(idx, 0, count - 1,
-            __FILE__, __LINE__);
+        throw vislib::OutOfRangeException(idx, 0, count - 1, __FILE__, __LINE__);
     }
     return index[idx].name;
 }
@@ -1110,15 +1101,15 @@ const char *vislib::graphics::NamedColours::GetNameByIndex(SIZE_T idx) {
 /*
  * vislib::graphics::NamedColours::GetNameByColour
  */
-const char *vislib::graphics::NamedColours::GetNameByColour(
-        const vislib::graphics::ColourRGBAu8& col, bool throwException) {
+const char* vislib::graphics::NamedColours::GetNameByColour(
+    const vislib::graphics::ColourRGBAu8& col, bool throwException) {
     CountNamedColours();
     for (SIZE_T i = 0; i < count; i++) {
-        if (index[i].colour == col) return index[i].name.PeekBuffer();
+        if (index[i].colour == col)
+            return index[i].name.PeekBuffer();
     }
     if (throwException) {
-        throw vislib::NoSuchElementException("col is not a named colour",
-            __FILE__, __LINE__);
+        throw vislib::NoSuchElementException("col is not a named colour", __FILE__, __LINE__);
     }
     return NULL;
 }
@@ -1133,174 +1124,79 @@ SIZE_T vislib::graphics::NamedColours::count = 0;
 /*
  * vislib::graphics::NamedColours::index
  */
-vislib::graphics::NamedColours::NamedColourIndex
-vislib::graphics::NamedColours::index[] = {
+vislib::graphics::NamedColours::NamedColourIndex vislib::graphics::NamedColours::index[] = {
     /* .Net named colours */
-    {"AliceBlue", colFromHex(0x00F0F8FF)},
-    {"AntiqueWhite", colFromHex(0x00FAEBD7)},
-    {"Aqua", colFromHex(0x0000FFFF)},
-    {"Aquamarine", colFromHex(0x007FFFD4)},
-    {"Azure", colFromHex(0x00F0FFFF)},
-    {"Beige", colFromHex(0x00F5F5DC)},
-    {"Bisque", colFromHex(0x00FFE4C4)},
-    {"Black", colFromHex(0x00000000)},
-    {"BlanchedAlmond", colFromHex(0x00FFEBCD)},
-    {"Blue", colFromHex(0x000000FF)},
-    {"BlueViolet", colFromHex(0x008A2BE2)},
-    {"Brown", colFromHex(0x00A52A2A)},
-    {"BurlyWood", colFromHex(0x00DEB887)},
-    {"CadetBlue", colFromHex(0x005F9EA0)},
-    {"Chartreuse", colFromHex(0x007FFF00)},
-    {"Chocolate", colFromHex(0x00D2691E)},
-    {"Coral", colFromHex(0x00FF7F50)},
-    {"CornflowerBlue", colFromHex(0x006495ED)},
-    {"Cornsilk", colFromHex(0x00FFF8DC)},
-    {"Crimson", colFromHex(0x00DC143C)},
-    {"Cyan", colFromHex(0x0000FFFF)},
-    {"DarkBlue", colFromHex(0x0000008B)},
-    {"DarkCyan", colFromHex(0x00008B8B)},
-    {"DarkGoldenrod", colFromHex(0x00B8860B)},
-    {"DarkGray", colFromHex(0x00A9A9A9)},
-    {"DarkGrey", colFromHex(0x00A9A9A9)},
-    {"DarkGreen", colFromHex(0x00006400)},
-    {"DarkKhaki", colFromHex(0x00BDB76B)},
-    {"DarkMagenta", colFromHex(0x008B008B)},
-    {"DarkOliveGreen", colFromHex(0x00556B2F)},
-    {"DarkOrange", colFromHex(0x00FF8C00)},
-    {"DarkOrchid", colFromHex(0x009932CC)},
-    {"DarkRed", colFromHex(0x008B0000)},
-    {"DarkSalmon", colFromHex(0x00E9967A)},
-    {"DarkSeaGreen", colFromHex(0x008FBC8B)},
-    {"DarkSlateBlue", colFromHex(0x00483D8B)},
-    {"DarkSlateGray", colFromHex(0x002F4F4F)},
-    {"DarkSlateGrey", colFromHex(0x002F4F4F)},
-    {"DarkTurquoise", colFromHex(0x0000CED1)},
-    {"DarkViolet", colFromHex(0x009400D3)},
-    {"DeepPink", colFromHex(0x00FF1493)},
-    {"DeepSkyBlue", colFromHex(0x0000BFFF)},
-    {"DimGray", colFromHex(0x00696969)},
-    {"DimGrey", colFromHex(0x00696969)},
-    {"DodgerBlue", colFromHex(0x001E90FF)},
-    {"Firebrick", colFromHex(0x00B22222)},
-    {"FloralWhite", colFromHex(0x00FFFAF0)},
-    {"ForestGreen", colFromHex(0x00228B22)},
-    {"Fuchsia", colFromHex(0x00FF00FF)},
-    {"Gainsboro", colFromHex(0x00DCDCDC)},
-    {"GhostWhite", colFromHex(0x00F8F8FF)},
-    {"Gold", colFromHex(0x00FFD700)},
-    {"Goldenrod", colFromHex(0x00DAA520)},
-    {"Gray", colFromHex(0x00808080)},
-    {"Grey", colFromHex(0x00808080)},
-    {"Green", colFromHex(0x00008000)},
-    {"GreenYellow", colFromHex(0x00ADFF2F)},
-    {"Honeydew", colFromHex(0x00F0FFF0)},
-    {"HotPink", colFromHex(0x00FF69B4)},
-    {"IndianRed", colFromHex(0x00CD5C5C)},
-    {"Indigo", colFromHex(0x004B0082)},
-    {"Ivory", colFromHex(0x00FFFFF0)},
-    {"Khaki", colFromHex(0x00F0E68C)},
-    {"Lavender", colFromHex(0x00E6E6FA)},
-    {"LavenderBlush", colFromHex(0x00FFF0F5)},
-    {"LawnGreen", colFromHex(0x007CFC00)},
-    {"LemonChiffon", colFromHex(0x00FFFACD)},
-    {"LightBlue", colFromHex(0x00ADD8E6)},
-    {"LightCoral", colFromHex(0x00F08080)},
-    {"LightCyan", colFromHex(0x00E0FFFF)},
-    {"LightGoldenrodYellow", colFromHex(0x00FAFAD2)},
-    {"LightGray", colFromHex(0x00D3D3D3)},
-    {"LightGrey", colFromHex(0x00D3D3D3)},
-    {"LightGreen", colFromHex(0x0090EE90)},
-    {"LightPink", colFromHex(0x00FFB6C1)},
-    {"LightSalmon", colFromHex(0x00FFA07A)},
-    {"LightSeaGreen", colFromHex(0x0020B2AA)},
-    {"LightSkyBlue", colFromHex(0x0087CEFA)},
-    {"LightSlateGray", colFromHex(0x00778899)},
-    {"LightSlateGrey", colFromHex(0x00778899)},
-    {"LightSteelBlue", colFromHex(0x00B0C4DE)},
-    {"LightYellow", colFromHex(0x00FFFFE0)},
-    {"Lime", colFromHex(0x0000FF00)},
-    {"LimeGreen", colFromHex(0x0032CD32)},
-    {"Linen", colFromHex(0x00FAF0E6)},
-    {"Magenta", colFromHex(0x00FF00FF)},
-    {"Maroon", colFromHex(0x00800000)},
-    {"MediumAquamarine", colFromHex(0x0066CDAA)},
-    {"MediumBlue", colFromHex(0x000000CD)},
-    {"MediumOrchid", colFromHex(0x00BA55D3)},
-    {"MediumPurple", colFromHex(0x009370DB)},
-    {"MediumSeaGreen", colFromHex(0x003CB371)},
-    {"MediumSlateBlue", colFromHex(0x007B68EE)},
-    {"MediumSpringGreen", colFromHex(0x0000FA9A)},
-    {"MediumTurquoise", colFromHex(0x0048D1CC)},
-    {"MediumVioletRed", colFromHex(0x00C71585)},
-    {"MidnightBlue", colFromHex(0x00191970)},
-    {"MintCream", colFromHex(0x00F5FFFA)},
-    {"MistyRose", colFromHex(0x00FFE4E1)},
-    {"Moccasin", colFromHex(0x00FFE4B5)},
-    {"NavajoWhite", colFromHex(0x00FFDEAD)},
-    {"Navy", colFromHex(0x00000080)},
-    {"OldLace", colFromHex(0x00FDF5E6)},
-    {"Olive", colFromHex(0x00808000)},
-    {"OliveDrab", colFromHex(0x006B8E23)},
-    {"Orange", colFromHex(0x00FFA500)},
-    {"OrangeRed", colFromHex(0x00FF4500)},
-    {"Orchid", colFromHex(0x00DA70D6)},
-    {"PaleGoldenrod", colFromHex(0x00EEE8AA)},
-    {"PaleGreen", colFromHex(0x0098FB98)},
-    {"PaleTurquoise", colFromHex(0x00AFEEEE)},
-    {"PaleVioletRed", colFromHex(0x00DB7093)},
-    {"PapayaWhip", colFromHex(0x00FFEFD5)},
-    {"PeachPuff", colFromHex(0x00FFDAB9)},
-    {"Peru", colFromHex(0x00CD853F)},
-    {"Pink", colFromHex(0x00FFC0CB)},
-    {"Plum", colFromHex(0x00DDA0DD)},
-    {"PowderBlue", colFromHex(0x00B0E0E6)},
-    {"Purple", colFromHex(0x00800080)},
-    {"Red", colFromHex(0x00FF0000)},
-    {"RosyBrown", colFromHex(0x00BC8F8F)},
-    {"RoyalBlue", colFromHex(0x004169E1)},
-    {"SaddleBrown", colFromHex(0x008B4513)},
-    {"Salmon", colFromHex(0x00FA8072)},
-    {"SandyBrown", colFromHex(0x00F4A460)},
-    {"SeaGreen", colFromHex(0x002E8B57)},
-    {"SeaShell", colFromHex(0x00FFF5EE)},
-    {"Sienna", colFromHex(0x00A0522D)},
-    {"Silver", colFromHex(0x00C0C0C0)},
-    {"SkyBlue", colFromHex(0x0087CEEB)},
-    {"SlateBlue", colFromHex(0x006A5ACD)},
-    {"SlateGray", colFromHex(0x00708090)},
-    {"SlateGrey", colFromHex(0x00708090)},
-    {"Snow", colFromHex(0x00FFFAFA)},
-    {"SpringGreen", colFromHex(0x0000FF7F)},
-    {"SteelBlue", colFromHex(0x004682B4)},
-    {"Tan", colFromHex(0x00D2B48C)},
-    {"Teal", colFromHex(0x00008080)},
-    {"Thistle", colFromHex(0x00D8BFD8)},
-    {"Tomato", colFromHex(0x00FF6347)},
-    {"Transparent", ColourRGBAu8(0, 0, 0, 0)},
-    {"Turquoise", colFromHex(0x0040E0D0)},
-    {"Violet", colFromHex(0x00EE82EE)},
-    {"Wheat", colFromHex(0x00F5DEB3)},
-    {"White", colFromHex(0x00FFFFFF)},
-    {"WhiteSmoke", colFromHex(0x00F5F5F5)},
-    {"Yellow", colFromHex(0x00FFFF00)},
+    {"AliceBlue", colFromHex(0x00F0F8FF)}, {"AntiqueWhite", colFromHex(0x00FAEBD7)}, {"Aqua", colFromHex(0x0000FFFF)},
+    {"Aquamarine", colFromHex(0x007FFFD4)}, {"Azure", colFromHex(0x00F0FFFF)}, {"Beige", colFromHex(0x00F5F5DC)},
+    {"Bisque", colFromHex(0x00FFE4C4)}, {"Black", colFromHex(0x00000000)}, {"BlanchedAlmond", colFromHex(0x00FFEBCD)},
+    {"Blue", colFromHex(0x000000FF)}, {"BlueViolet", colFromHex(0x008A2BE2)}, {"Brown", colFromHex(0x00A52A2A)},
+    {"BurlyWood", colFromHex(0x00DEB887)}, {"CadetBlue", colFromHex(0x005F9EA0)},
+    {"Chartreuse", colFromHex(0x007FFF00)}, {"Chocolate", colFromHex(0x00D2691E)}, {"Coral", colFromHex(0x00FF7F50)},
+    {"CornflowerBlue", colFromHex(0x006495ED)}, {"Cornsilk", colFromHex(0x00FFF8DC)},
+    {"Crimson", colFromHex(0x00DC143C)}, {"Cyan", colFromHex(0x0000FFFF)}, {"DarkBlue", colFromHex(0x0000008B)},
+    {"DarkCyan", colFromHex(0x00008B8B)}, {"DarkGoldenrod", colFromHex(0x00B8860B)},
+    {"DarkGray", colFromHex(0x00A9A9A9)}, {"DarkGrey", colFromHex(0x00A9A9A9)}, {"DarkGreen", colFromHex(0x00006400)},
+    {"DarkKhaki", colFromHex(0x00BDB76B)}, {"DarkMagenta", colFromHex(0x008B008B)},
+    {"DarkOliveGreen", colFromHex(0x00556B2F)}, {"DarkOrange", colFromHex(0x00FF8C00)},
+    {"DarkOrchid", colFromHex(0x009932CC)}, {"DarkRed", colFromHex(0x008B0000)}, {"DarkSalmon", colFromHex(0x00E9967A)},
+    {"DarkSeaGreen", colFromHex(0x008FBC8B)}, {"DarkSlateBlue", colFromHex(0x00483D8B)},
+    {"DarkSlateGray", colFromHex(0x002F4F4F)}, {"DarkSlateGrey", colFromHex(0x002F4F4F)},
+    {"DarkTurquoise", colFromHex(0x0000CED1)}, {"DarkViolet", colFromHex(0x009400D3)},
+    {"DeepPink", colFromHex(0x00FF1493)}, {"DeepSkyBlue", colFromHex(0x0000BFFF)}, {"DimGray", colFromHex(0x00696969)},
+    {"DimGrey", colFromHex(0x00696969)}, {"DodgerBlue", colFromHex(0x001E90FF)}, {"Firebrick", colFromHex(0x00B22222)},
+    {"FloralWhite", colFromHex(0x00FFFAF0)}, {"ForestGreen", colFromHex(0x00228B22)},
+    {"Fuchsia", colFromHex(0x00FF00FF)}, {"Gainsboro", colFromHex(0x00DCDCDC)}, {"GhostWhite", colFromHex(0x00F8F8FF)},
+    {"Gold", colFromHex(0x00FFD700)}, {"Goldenrod", colFromHex(0x00DAA520)}, {"Gray", colFromHex(0x00808080)},
+    {"Grey", colFromHex(0x00808080)}, {"Green", colFromHex(0x00008000)}, {"GreenYellow", colFromHex(0x00ADFF2F)},
+    {"Honeydew", colFromHex(0x00F0FFF0)}, {"HotPink", colFromHex(0x00FF69B4)}, {"IndianRed", colFromHex(0x00CD5C5C)},
+    {"Indigo", colFromHex(0x004B0082)}, {"Ivory", colFromHex(0x00FFFFF0)}, {"Khaki", colFromHex(0x00F0E68C)},
+    {"Lavender", colFromHex(0x00E6E6FA)}, {"LavenderBlush", colFromHex(0x00FFF0F5)},
+    {"LawnGreen", colFromHex(0x007CFC00)}, {"LemonChiffon", colFromHex(0x00FFFACD)},
+    {"LightBlue", colFromHex(0x00ADD8E6)}, {"LightCoral", colFromHex(0x00F08080)},
+    {"LightCyan", colFromHex(0x00E0FFFF)}, {"LightGoldenrodYellow", colFromHex(0x00FAFAD2)},
+    {"LightGray", colFromHex(0x00D3D3D3)}, {"LightGrey", colFromHex(0x00D3D3D3)},
+    {"LightGreen", colFromHex(0x0090EE90)}, {"LightPink", colFromHex(0x00FFB6C1)},
+    {"LightSalmon", colFromHex(0x00FFA07A)}, {"LightSeaGreen", colFromHex(0x0020B2AA)},
+    {"LightSkyBlue", colFromHex(0x0087CEFA)}, {"LightSlateGray", colFromHex(0x00778899)},
+    {"LightSlateGrey", colFromHex(0x00778899)}, {"LightSteelBlue", colFromHex(0x00B0C4DE)},
+    {"LightYellow", colFromHex(0x00FFFFE0)}, {"Lime", colFromHex(0x0000FF00)}, {"LimeGreen", colFromHex(0x0032CD32)},
+    {"Linen", colFromHex(0x00FAF0E6)}, {"Magenta", colFromHex(0x00FF00FF)}, {"Maroon", colFromHex(0x00800000)},
+    {"MediumAquamarine", colFromHex(0x0066CDAA)}, {"MediumBlue", colFromHex(0x000000CD)},
+    {"MediumOrchid", colFromHex(0x00BA55D3)}, {"MediumPurple", colFromHex(0x009370DB)},
+    {"MediumSeaGreen", colFromHex(0x003CB371)}, {"MediumSlateBlue", colFromHex(0x007B68EE)},
+    {"MediumSpringGreen", colFromHex(0x0000FA9A)}, {"MediumTurquoise", colFromHex(0x0048D1CC)},
+    {"MediumVioletRed", colFromHex(0x00C71585)}, {"MidnightBlue", colFromHex(0x00191970)},
+    {"MintCream", colFromHex(0x00F5FFFA)}, {"MistyRose", colFromHex(0x00FFE4E1)}, {"Moccasin", colFromHex(0x00FFE4B5)},
+    {"NavajoWhite", colFromHex(0x00FFDEAD)}, {"Navy", colFromHex(0x00000080)}, {"OldLace", colFromHex(0x00FDF5E6)},
+    {"Olive", colFromHex(0x00808000)}, {"OliveDrab", colFromHex(0x006B8E23)}, {"Orange", colFromHex(0x00FFA500)},
+    {"OrangeRed", colFromHex(0x00FF4500)}, {"Orchid", colFromHex(0x00DA70D6)},
+    {"PaleGoldenrod", colFromHex(0x00EEE8AA)}, {"PaleGreen", colFromHex(0x0098FB98)},
+    {"PaleTurquoise", colFromHex(0x00AFEEEE)}, {"PaleVioletRed", colFromHex(0x00DB7093)},
+    {"PapayaWhip", colFromHex(0x00FFEFD5)}, {"PeachPuff", colFromHex(0x00FFDAB9)}, {"Peru", colFromHex(0x00CD853F)},
+    {"Pink", colFromHex(0x00FFC0CB)}, {"Plum", colFromHex(0x00DDA0DD)}, {"PowderBlue", colFromHex(0x00B0E0E6)},
+    {"Purple", colFromHex(0x00800080)}, {"Red", colFromHex(0x00FF0000)}, {"RosyBrown", colFromHex(0x00BC8F8F)},
+    {"RoyalBlue", colFromHex(0x004169E1)}, {"SaddleBrown", colFromHex(0x008B4513)}, {"Salmon", colFromHex(0x00FA8072)},
+    {"SandyBrown", colFromHex(0x00F4A460)}, {"SeaGreen", colFromHex(0x002E8B57)}, {"SeaShell", colFromHex(0x00FFF5EE)},
+    {"Sienna", colFromHex(0x00A0522D)}, {"Silver", colFromHex(0x00C0C0C0)}, {"SkyBlue", colFromHex(0x0087CEEB)},
+    {"SlateBlue", colFromHex(0x006A5ACD)}, {"SlateGray", colFromHex(0x00708090)}, {"SlateGrey", colFromHex(0x00708090)},
+    {"Snow", colFromHex(0x00FFFAFA)}, {"SpringGreen", colFromHex(0x0000FF7F)}, {"SteelBlue", colFromHex(0x004682B4)},
+    {"Tan", colFromHex(0x00D2B48C)}, {"Teal", colFromHex(0x00008080)}, {"Thistle", colFromHex(0x00D8BFD8)},
+    {"Tomato", colFromHex(0x00FF6347)}, {"Transparent", ColourRGBAu8(0, 0, 0, 0)},
+    {"Turquoise", colFromHex(0x0040E0D0)}, {"Violet", colFromHex(0x00EE82EE)}, {"Wheat", colFromHex(0x00F5DEB3)},
+    {"White", colFromHex(0x00FFFFFF)}, {"WhiteSmoke", colFromHex(0x00F5F5F5)}, {"Yellow", colFromHex(0x00FFFF00)},
     {"YellowGreen", colFromHex(0x009ACD32)},
     /* additional named colours */
     {"MegaMolBlue", colFromHex(0x0080C0FF)},
     /* end of list guard */
-    {NULL, colFromHex(0x00000000)}
-};
+    {NULL, colFromHex(0x00000000)}};
 
 
 /*
  * vislib::graphics::NamedColours::colFromHex
  */
-vislib::graphics::ColourRGBAu8
-vislib::graphics::NamedColours::colFromHex(DWORD hex) {
-    return ColourRGBAu8(
-        static_cast<unsigned char>((hex & 0x00FF0000) >> 16),
-        static_cast<unsigned char>((hex & 0x0000FF00) >> 8),
-        static_cast<unsigned char>(hex & 0x000000FF),
-        255);
+vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::colFromHex(DWORD hex) {
+    return ColourRGBAu8(static_cast<unsigned char>((hex & 0x00FF0000) >> 16),
+        static_cast<unsigned char>((hex & 0x0000FF00) >> 8), static_cast<unsigned char>(hex & 0x000000FF), 255);
 }
 
 
@@ -1308,8 +1204,7 @@ vislib::graphics::NamedColours::colFromHex(DWORD hex) {
  * vislib::graphics::NamedColours::NamedColours
  */
 vislib::graphics::NamedColours::NamedColours(void) {
-    throw vislib::UnsupportedOperationException("NamedColours::Ctor",
-        __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("NamedColours::Ctor", __FILE__, __LINE__);
 }
 
 
@@ -1317,6 +1212,5 @@ vislib::graphics::NamedColours::NamedColours(void) {
  * vislib::graphics::NamedColours::~NamedColours
  */
 vislib::graphics::NamedColours::~NamedColours(void) {
-    throw vislib::UnsupportedOperationException("NamedColours::Dtor",
-        __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("NamedColours::Dtor", __FILE__, __LINE__);
 }

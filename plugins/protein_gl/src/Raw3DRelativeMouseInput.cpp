@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "Raw3DRelativeMouseInput.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
@@ -209,9 +209,9 @@ LRESULT WINAPI Raw3DRelativeMouseInput::wndProc(HWND hWnd, UINT msg, WPARAM wPar
                  * the definition for QWORD. The way it is shown now is a de-macroed version
                  * of the NEXTRAWINPUTBLOCK macro using DWORDs.
                  */
-                pCurrentInput = (PRAWINPUT) ((((ULONG_PTR) ((PBYTE) pCurrentInput + pCurrentInput->header.dwSize)) +
-                                                 sizeof(DWORD) - 1) &
-                                             ~(sizeof(DWORD) - 1));
+                pCurrentInput = (PRAWINPUT)((((ULONG_PTR)((PBYTE)pCurrentInput + pCurrentInput->header.dwSize)) +
+                                                sizeof(DWORD) - 1) &
+                                            ~(sizeof(DWORD) - 1));
             }
 
             inputSize = bufferSize;

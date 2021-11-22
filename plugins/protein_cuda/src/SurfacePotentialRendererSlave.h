@@ -14,14 +14,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/CallerSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "mmcore/view/CallRender3D.h"
 //#include "vislib_vector_typedefs.h"
-#include "mmcore/param/ParamSlot.h"
 #include "VBODataCall.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -29,13 +28,12 @@ namespace protein_cuda {
 class SurfacePotentialRendererSlave : public core::view::Renderer3DModuleDS {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "SurfacePotentialRendererSlave";
     }
 
@@ -45,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers rendering of molecular surfaces textured by electrostatic potential";
     }
 
@@ -72,7 +70,6 @@ public:
 
 
 protected:
-
     /**
      * Implementation of 'create'.
      *
@@ -115,11 +112,10 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderSurface(VBODataCall *c);
+    bool renderSurface(VBODataCall* c);
 
 
 private:
-
     /// Caller slot to obtaing vbo data
     core::CallerSlot vboSlot;
 
@@ -131,7 +127,6 @@ private:
 
     /// Shader implementing per pixel lighting
     vislib::graphics::gl::GLSLShader pplSurfaceShader;
-
 };
 
 } // namespace protein_cuda

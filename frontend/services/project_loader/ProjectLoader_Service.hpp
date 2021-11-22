@@ -16,11 +16,11 @@ namespace frontend {
 
 class ProjectLoader_Service final : public AbstractFrontendService {
 public:
+    struct Config {};
 
-    struct Config {
-    };
-
-    std::string serviceName() const override { return "ProjectLoader_Service";}
+    std::string serviceName() const override {
+        return "ProjectLoader_Service";
+    }
 
     ProjectLoader_Service();
     ~ProjectLoader_Service();

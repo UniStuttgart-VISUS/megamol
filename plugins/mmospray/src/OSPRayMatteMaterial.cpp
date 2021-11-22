@@ -1,21 +1,22 @@
 /*
-* OSPRayMatteMaterial.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayMatteMaterial.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "OSPRayMatteMaterial.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 
 
-OSPRayMatteMaterial::OSPRayMatteMaterial(void) :
-    AbstractOSPRayMaterial(),
-    // MATTE
-    matteReflectance("Reflectance", "") {
+OSPRayMatteMaterial::OSPRayMatteMaterial(void)
+        : AbstractOSPRayMaterial()
+        ,
+        // MATTE
+        matteReflectance("Reflectance", "") {
 
     this->matteReflectance << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->MakeSlotAvailable(&this->matteReflectance);
@@ -37,9 +38,7 @@ void OSPRayMatteMaterial::readParams() {
 }
 
 bool OSPRayMatteMaterial::InterfaceIsDirty() {
-    if (
-        this->matteReflectance.IsDirty()
-        ) {
+    if (this->matteReflectance.IsDirty()) {
         this->matteReflectance.ResetDirty();
         return true;
     } else {

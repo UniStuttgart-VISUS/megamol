@@ -1,23 +1,23 @@
 /*
-* BezierCPUMeshRenderer.cpp
-*
-* Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
-*/
+ * BezierCPUMeshRenderer.cpp
+ *
+ * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "BezierCPUMeshRenderer.h"
 #include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/IntParam.h"
-#include <cmath>
-#include "vislib/math/Vector.h"
-#include "vislib/math/ShallowVector.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/PointLight.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Vector.h"
+#include <cmath>
 
 #include <glm/ext.hpp>
 
@@ -27,12 +27,14 @@ namespace demos_gl {
 /*
  * BezierCPUMeshRenderer::BezierCPUMeshRenderer
  */
-BezierCPUMeshRenderer::BezierCPUMeshRenderer(void) : AbstractBezierRenderer(),
-        lightsSlot("lights", "Lights are retrieved over this slot."),
-        curveSectionsSlot("curveSections", "Linear sections approximating the curve"),
-        profileSectionsSlot("profileSections", "Linear sections approximating the profile"),
-        capSectionsSlot("capSections", "Linear sections approximating the cap spheres"),
-        geo(0), dataHash(0) {
+BezierCPUMeshRenderer::BezierCPUMeshRenderer(void)
+        : AbstractBezierRenderer()
+        , lightsSlot("lights", "Lights are retrieved over this slot.")
+        , curveSectionsSlot("curveSections", "Linear sections approximating the curve")
+        , profileSectionsSlot("profileSections", "Linear sections approximating the profile")
+        , capSectionsSlot("capSections", "Linear sections approximating the cap spheres")
+        , geo(0)
+        , dataHash(0) {
 
     this->getDataSlot.SetCompatibleCall<geocalls::BezierCurvesListDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -48,7 +50,6 @@ BezierCPUMeshRenderer::BezierCPUMeshRenderer(void) : AbstractBezierRenderer(),
 
     this->capSectionsSlot << new core::param::IntParam(1, 0, 1); // hazard: cone only, for now
     this->MakeSlotAvailable(&this->capSectionsSlot);
-
 }
 
 
@@ -65,10 +66,12 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
  */
 bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call) {
     using geocalls::BezierCurvesListDataCall;
-    BezierCurvesListDataCall *data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
-    if (data == nullptr) return false;
+    BezierCurvesListDataCall* data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
+    if (data == nullptr)
+        return false;
     data->SetFrameID(static_cast<unsigned int>(call.Time()));
-    if (!(*data)(1)) return false;
+    if (!(*data)(1))
+        return false;
 
     ::glDisable(GL_TEXTURE);
     ::glEnable(GL_DEPTH_TEST);
@@ -88,7 +91,8 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
 
     if (needUpdate) {
         data->SetFrameID(static_cast<unsigned int>(call.Time()));
-        if (!(*data)(0)) return false;
+        if (!(*data)(0))
+            return false;
         this->dataHash = data->DataHash();
         this->curveSectionsSlot.ResetDirty();
         this->profileSectionsSlot.ResetDirty();
@@ -110,16 +114,16 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
             bool with_col = false;
             bool with_rad = false;
             switch (c.GetDataLayout()) {
-            case BezierCurvesListDataCall::DATALAYOUT_NONE :
+            case BezierCurvesListDataCall::DATALAYOUT_NONE:
                 continue;
-            case BezierCurvesListDataCall::DATALAYOUT_XYZ_F :
+            case BezierCurvesListDataCall::DATALAYOUT_XYZ_F:
                 bpp = 3 * 4;
                 break;
-            case BezierCurvesListDataCall::DATALAYOUT_XYZ_F_RGB_B :
+            case BezierCurvesListDataCall::DATALAYOUT_XYZ_F_RGB_B:
                 bpp = 3 * 4 + 3 * 1;
                 with_col = true;
                 break;
-            case BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B :
+            case BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B:
                 bpp = 4 * 4 + 3 * 1;
                 with_col = true;
                 with_rad = true;
@@ -135,52 +139,55 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
             for (size_t j = 0; j < p_cnt; j += 4) {
                 size_t jp = c.GetIndex()[j + 0] * bpp;
 
-                const float *p1 = static_cast<const float*>(c.GetDataAt(jp));
-                const float *r1 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
-                const unsigned char *c1 = static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
+                const float* p1 = static_cast<const float*>(c.GetDataAt(jp));
+                const float* r1 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
+                const unsigned char* c1 =
+                    static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
 
                 jp = c.GetIndex()[j + 1] * bpp;
 
-                const float *p2 = static_cast<const float*>(c.GetDataAt(jp));
-                const float *r2 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
-                const unsigned char *c2 = static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
+                const float* p2 = static_cast<const float*>(c.GetDataAt(jp));
+                const float* r2 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
+                const unsigned char* c2 =
+                    static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
 
                 jp = c.GetIndex()[j + 2] * bpp;
 
-                const float *p3 = static_cast<const float*>(c.GetDataAt(jp));
-                const float *r3 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
-                const unsigned char *c3 = static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
+                const float* p3 = static_cast<const float*>(c.GetDataAt(jp));
+                const float* r3 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
+                const unsigned char* c3 =
+                    static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
 
                 jp = c.GetIndex()[j + 3] * bpp;
 
-                const float *p4 = static_cast<const float*>(c.GetDataAt(jp));
-                const float *r4 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
-                const unsigned char *c4 = static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
+                const float* p4 = static_cast<const float*>(c.GetDataAt(jp));
+                const float* r4 = static_cast<const float*>(with_rad ? c.GetDataAt(jp + 12) : &globRad);
+                const unsigned char* c4 =
+                    static_cast<const unsigned char*>(with_col ? c.GetDataAt(jp + (with_rad ? 16 : 12)) : globCol);
 
-                this->drawTube(p1, r1, c1, p2, r2, c2, p3, r3, c3, p4, r4, c4, with_rad, with_col, curSeg, proSeg, capSeg);
+                this->drawTube(
+                    p1, r1, c1, p2, r2, c2, p3, r3, c3, p4, r4, c4, with_rad, with_col, curSeg, proSeg, capSeg);
             }
-
         }
 
         ::glEndList();
 
         data->Unlock();
-
     }
 
-	core::view::Camera cam = call.GetCamera();
+    core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
     glLoadMatrixf(glm::value_ptr(proj));
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
     glLoadMatrixf(glm::value_ptr(view));
 
-	// determine position of point light
+    // determine position of point light
     std::array<float, 3> lightPos = {0.0f, 0.0f, 0.0f};
 
     auto call_light = lightsSlot.CallAs<core::view::light::CallLight>();
@@ -222,10 +229,10 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
 
     glCallList(this->geo);
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
 
@@ -241,7 +248,8 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
  * BezierCPUMeshRenderer::create
  */
 bool BezierCPUMeshRenderer::create(void) {
-    if (!AbstractBezierRenderer::create()) return false;
+    if (!AbstractBezierRenderer::create())
+        return false;
 
     this->geo = ::glGenLists(1);
 
@@ -261,12 +269,10 @@ void BezierCPUMeshRenderer::release(void) {
 /*
  * BezierCPUMeshRenderer::drawTube
  */
-void BezierCPUMeshRenderer::drawTube(
-        float const *p1, float const *r1, unsigned char const *c1,
-        float const *p2, float const *r2, unsigned char const *c2,
-        float const *p3, float const *r3, unsigned char const *c3,
-        float const *p4, float const *r4, unsigned char const *c4,
-        bool hasRad, bool hasCol, int curSeg, int proSeg, int capSeg) {
+void BezierCPUMeshRenderer::drawTube(float const* p1, float const* r1, unsigned char const* c1, float const* p2,
+    float const* r2, unsigned char const* c2, float const* p3, float const* r3, unsigned char const* c3,
+    float const* p4, float const* r4, unsigned char const* c4, bool hasRad, bool hasCol, int curSeg, int proSeg,
+    int capSeg) {
 
     typedef vislib::math::Vector<float, 3> vec3;
     typedef vislib::math::Point<float, 3> pt3;
@@ -275,11 +281,10 @@ void BezierCPUMeshRenderer::drawTube(
     typedef vislib::math::ShallowVector<float, 3> svec3;
     typedef vislib::math::ShallowPoint<float, 3> spt3;
 
-    vec2 *ringfac = new vec2[proSeg];
+    vec2* ringfac = new vec2[proSeg];
     for (int i = 0; i < proSeg; ++i) {
         ringfac[i].Set(
-            static_cast<float>(::cos(M_PI * 2.0 * i / proSeg)),
-            static_cast<float>(::sin(M_PI * 2.0 * i / proSeg)));
+            static_cast<float>(::cos(M_PI * 2.0 * i / proSeg)), static_cast<float>(::sin(M_PI * 2.0 * i / proSeg)));
     }
 
     vislib::math::BezierCurve<pt3, 3> pos;
@@ -308,7 +313,8 @@ void BezierCPUMeshRenderer::drawTube(
     pos.CalcTangent(dir1, 0.f);
     dir1.Normalise();
     vec3 x1(1.f, 0.f, 0.f);
-    if (dir1.IsParallel(x1)) x1.Set(0.f, 1.f, 0.f);
+    if (dir1.IsParallel(x1))
+        x1.Set(0.f, 1.f, 0.f);
     vec3 y1 = x1.Cross(dir1);
     y1.Normalise();
     x1 = dir1.Cross(y1);
@@ -373,7 +379,6 @@ void BezierCPUMeshRenderer::drawTube(
         dir1 = dir2;
         x1 = x2;
         y1 = y2;
-
     }
 
     if (capSeg > 0) {
@@ -383,7 +388,7 @@ void BezierCPUMeshRenderer::drawTube(
         ::glNormal3fv(dir1.PeekComponents());
         ::glVertex3fv((pos1 + dir1 * rad1[0]).PeekCoordinates());
 
-        for (int i =proSeg; i >= 0; --i) {
+        for (int i = proSeg; i >= 0; --i) {
             ::glColor3fv(col1.PeekCoordinates());
             vec3 n = x1 * ringfac[i % proSeg].X() + y1 * ringfac[i % proSeg].Y();
             ::glNormal3fv(n.PeekComponents());
@@ -392,8 +397,7 @@ void BezierCPUMeshRenderer::drawTube(
 
         ::glEnd();
     }
-
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

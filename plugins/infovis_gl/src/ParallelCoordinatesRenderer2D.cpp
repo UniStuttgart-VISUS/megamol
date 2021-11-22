@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>
@@ -8,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/BoolParam.h"
@@ -22,7 +22,6 @@
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "datatools/table/TableDataCall.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -174,7 +173,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
     this->MakeSlotAvailable(&filterStateSlot);
 
-    this->triangleModeSlot << new core::param::BoolParam(true);
+    this->triangleModeSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&triangleModeSlot);
 
     this->lineThicknessSlot << new core::param::FloatParam(1.5);

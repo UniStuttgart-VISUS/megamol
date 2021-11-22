@@ -131,6 +131,6 @@ private:
     core::param::ParamSlot sphereModeSlot;
 };
 
-} // namespace megamol::megamol101
+} // namespace megamol::megamol101_gl
 
 #endif // MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H

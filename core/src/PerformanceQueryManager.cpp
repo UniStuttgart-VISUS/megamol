@@ -1,10 +1,10 @@
 #ifdef PROFILING
+#include "mmcore/PerformanceQueryManager.h"
+#include "mmcore/Call.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cassert>
 #include <ctime>
-#include "mmcore/Call.h"
-#include "mmcore/PerformanceQueryManager.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -42,7 +42,8 @@ void PerformanceQueryManager::ResetGLProfiling() {
 }
 
 void PerformanceQueryManager::AdvanceGLProfiling() {
-    if (all_calls.empty()) return;
+    if (all_calls.empty())
+        return;
     starting_func = (starting_func + 1) % all_calls[starting_call]->GetCallbackCount();
     if (starting_func == 0) {
         // we wrapped, advance to next call!
@@ -103,4 +104,3 @@ void PerformanceQueryManager::Collect() {
 
 
 #endif
-

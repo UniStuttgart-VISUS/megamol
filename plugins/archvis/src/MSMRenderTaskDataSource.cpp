@@ -8,7 +8,8 @@
 #include "ArchVisCalls.h"
 
 megamol::archvis::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
-        : m_MSM_callerSlot("getMSM", "Connects the "), m_version(0) {
+        : m_MSM_callerSlot("getMSM", "Connects the ")
+        , m_version(0) {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
@@ -82,7 +83,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
                     if (sub_mesh.mesh != nullptr) {
                         break;
                     }
-                } 
+                }
             } else if (elem_tpye == ScaleModel::DIAGONAL) {
                 for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
                     sub_mesh = gpu_mesh_collection->getSubMesh("diagonal");
@@ -90,7 +91,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
                     if (sub_mesh.mesh != nullptr) {
                         break;
                     }
-                } 
+                }
             } else if (elem_tpye == ScaleModel::FLOOR) {
                 for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
                     sub_mesh = gpu_mesh_collection->getSubMesh("floor");
@@ -98,7 +99,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
                     if (sub_mesh.mesh != nullptr) {
                         break;
                     }
-                } 
+                }
             }
 
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
@@ -145,15 +146,15 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
     return true;
 }
 
-bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) 
-{ 
+bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
     megamol::mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     auto meta_data = lhs_rtc->getMetaData();
 
     megamol::core::BoundingBoxes bboxs;
-    bboxs.SetObjectSpaceBBox(-5.f,-5.0f,-5.0f,5.0f,5.0,5.0f);
+    bboxs.SetObjectSpaceBBox(-5.f, -5.0f, -5.0f, 5.0f, 5.0, 5.0f);
     bboxs.SetObjectSpaceClipBox(-5.f, -5.0f, -5.0f, 5.0f, 5.0, 5.0f);
 
     meta_data.m_frame_cnt = 1;
@@ -161,5 +162,5 @@ bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& 
 
     lhs_rtc->setMetaData(meta_data);
 
-    return true; 
+    return true;
 }

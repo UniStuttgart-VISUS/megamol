@@ -30,7 +30,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "QuartzRenderer"; }
+    static const char* ClassName(void) {
+        return "QuartzRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -46,7 +48,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return AbstractMultiShaderQuartzRenderer::IsAvailable(); }
+    static bool IsAvailable(void) {
+        return AbstractMultiShaderQuartzRenderer::IsAvailable();
+    }
 
     /** Ctor */
     QuartzRenderer(void);
@@ -107,5 +111,5 @@ private:
     GLuint vbo;
 };
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

@@ -1,22 +1,22 @@
 /*
  * BTFParser.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/utility/BTFParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/assert.h"
 //#include "vislib/memutils.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/VersionNumber.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/xmlUtils.h"
-#include <sstream>
 #include <fstream>
+#include <sstream>
 
 using namespace megamol::core_gl;
 using namespace megamol::core::utility::xml;
@@ -31,9 +31,7 @@ unsigned int utility::BTFParser::XMLSTATE_CONTENT = XmlReader::STATE_USER + 50;
 /*
  * utility::BTFParser::BTFParser
  */
-utility::BTFParser::BTFParser(ShaderSourceFactory& factory)
-    : ConditionalParser(), factory(factory), root(),
-    stack() {
+utility::BTFParser::BTFParser(ShaderSourceFactory& factory) : ConditionalParser(), factory(factory), root(), stack() {
     // intentionally empty
 }
 
@@ -49,9 +47,8 @@ utility::BTFParser::~BTFParser(void) {
 /*
  * utility::BTFParser::SetRootElement
  */
-void utility::BTFParser::SetRootElement(
-        const vislib::SmartPtr<utility::BTFParser::BTFElement>& root,
-        const vislib::SmartPtr<utility::BTFParser::BTFElement>& masterroot) {
+void utility::BTFParser::SetRootElement(const vislib::SmartPtr<utility::BTFParser::BTFElement>& root,
+    const vislib::SmartPtr<utility::BTFParser::BTFElement>& masterroot) {
     ASSERT(!root.IsNull());
     ASSERT(!root->Name().IsEmpty());
     ASSERT(root.DynamicCast<BTFNamespace>() != NULL);
@@ -66,13 +63,14 @@ void utility::BTFParser::SetRootElement(
 /*
  * utility::BTFParser::CharacterData
  */
-void utility::BTFParser::CharacterData(unsigned int level, const XML_Char *text,
-        int len, XmlReader::ParserState state) {
-    if (state != XMLSTATE_CONTENT) return;
+void utility::BTFParser::CharacterData(
+    unsigned int level, const XML_Char* text, int len, XmlReader::ParserState state) {
+    if (state != XMLSTATE_CONTENT)
+        return;
 
     ASSERT(this->stack.Peek() != NULL);
     vislib::SmartPtr<BTFElement> stacktop = *this->stack.Peek();
-    BTFSnippet *snippet = stacktop.DynamicCast<BTFSnippet>();
+    BTFSnippet* snippet = stacktop.DynamicCast<BTFSnippet>();
     if (snippet == NULL) {
         this->FatalError("Internal Error: stack corruption");
         return;
@@ -88,13 +86,13 @@ void utility::BTFParser::CharacterData(unsigned int level, const XML_Char *text,
 /*
  * utility::BTFParser::Comment
  */
-void utility::BTFParser::Comment(unsigned int level, const XML_Char *text,
-        XmlReader::ParserState state) {
-    if (state != XMLSTATE_CONTENT) return;
+void utility::BTFParser::Comment(unsigned int level, const XML_Char* text, XmlReader::ParserState state) {
+    if (state != XMLSTATE_CONTENT)
+        return;
 
     ASSERT(this->stack.Peek() != NULL);
     vislib::SmartPtr<BTFElement> stacktop = *this->stack.Peek();
-    BTFSnippet *snippet = stacktop.DynamicCast<BTFSnippet>();
+    BTFSnippet* snippet = stacktop.DynamicCast<BTFSnippet>();
     if (snippet == NULL) {
         this->FatalError("Internal Error: stack corruption");
         return;
@@ -109,8 +107,7 @@ void utility::BTFParser::Comment(unsigned int level, const XML_Char *text,
  */
 bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("btf"))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
-            "BTF file does not specify <btf/> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "BTF file does not specify <btf/> as base tag");
         return false;
     }
 
@@ -118,8 +115,7 @@ bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     bool versionValid = false;
     bool nmspcValid = false;
 
-    const vislib::Array<XmlReader::XmlAttribute>& attrib
-        = reader.BaseTagAttributes();
+    const vislib::Array<XmlReader::XmlAttribute>& attrib = reader.BaseTagAttributes();
     for (unsigned int i = 0; i < attrib.Count(); i++) {
         const XmlReader::XmlAttribute& attr = attrib[i];
 
@@ -143,30 +139,26 @@ bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
                 }
             }
         } else if (attr.Key().Equals(MMXML_STRING("namespace"))) {
-            if (!this->root.IsNull()
-                    && (attr.Value().Equals(MMXML_STRING(this->root->Name())))) {
+            if (!this->root.IsNull() && (attr.Value().Equals(MMXML_STRING(this->root->Name())))) {
                 nmspcValid = true;
             }
         } else {
-            this->Warning(
-                vislib::StringA("Ignoring unexpected base tag attribute ") +
-                vislib::StringA(attr.Key()));
+            this->Warning(vislib::StringA("Ignoring unexpected base tag attribute ") + vislib::StringA(attr.Key()));
         }
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
-            "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
-            "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            1, "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (!nmspcValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, 
-            "base tag attribute \"namespace\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            1, "base tag attribute \"namespace\" not present or invalid.");
         return false;
     }
 
@@ -179,15 +171,12 @@ bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
 /*
  * utility::BTFParser::StartTag
  */
-bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
-        const XML_Char * name, const XML_Char ** attrib,
-        XmlReader::ParserState state,
-        XmlReader::ParserState& outChildState,
-        XmlReader::ParserState& outEndTagState,
-        XmlReader::ParserState& outPostEndTagState) {
+bool utility::BTFParser::StartTag(unsigned int num, unsigned int level, const XML_Char* name, const XML_Char** attrib,
+    XmlReader::ParserState state, XmlReader::ParserState& outChildState, XmlReader::ParserState& outEndTagState,
+    XmlReader::ParserState& outPostEndTagState) {
 
-    if (ConditionalParser::StartTag(num, level, name, attrib, state, 
-            outChildState, outEndTagState, outPostEndTagState)) {
+    if (ConditionalParser::StartTag(
+            num, level, name, attrib, state, outChildState, outEndTagState, outPostEndTagState)) {
         return true; // handled by base class
     }
     if (this->root.IsNull()) {
@@ -197,9 +186,10 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
 
     ASSERT(this->stack.Peek() != NULL);
     vislib::SmartPtr<BTFElement> stacktop = *this->stack.Peek();
-    BTFNamespace *nmspc = stacktop.DynamicCast<BTFNamespace>();
-    BTFShader *shader = stacktop.DynamicCast<BTFShader>();
-    if (shader != NULL) nmspc = NULL;
+    BTFNamespace* nmspc = stacktop.DynamicCast<BTFNamespace>();
+    BTFShader* shader = stacktop.DynamicCast<BTFShader>();
+    if (shader != NULL)
+        nmspc = NULL;
     if ((shader == NULL) && (nmspc == NULL)) {
         this->FatalError("Internal Error: stack corruption");
         return true;
@@ -207,7 +197,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
 
     vislib::SmartPtr<BTFElement> newEl;
     if (MMXML_STRING("include").Equals(name)) {
-        const XML_Char *filename = NULL;
+        const XML_Char* filename = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("file").Equals(attrib[i])) {
                 if (filename == NULL) {
@@ -220,8 +210,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
             }
         }
         if (filename != NULL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 150,
                 "Including BTF \"%s\" ...", vislib::StringA(filename).PeekBuffer());
             if (!this->factory.LoadBTF(vislib::StringA(filename))) {
                 vislib::StringA msg;
@@ -235,10 +224,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         outChildState = XmlReader::STATE_IGNORE_SUBTREE;
         outEndTagState = XmlReader::STATE_IGNORE_SUBTREE;
         return true;
-    } else
-    if (MMXML_STRING("namespace").Equals(name)) {
+    } else if (MMXML_STRING("namespace").Equals(name)) {
         if (nmspc != NULL) {
-            const XML_Char *nname = NULL;
+            const XML_Char* nname = NULL;
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
                     if (nname == NULL) {
@@ -258,13 +246,12 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         } else {
             this->Warning("\"namespace\" tag ignored: only valid within root or namespace tag.");
         }
-    } else
-    if (MMXML_STRING("snippet").Equals(name)) {
+    } else if (MMXML_STRING("snippet").Equals(name)) {
         SIZE_T line = this->Reader().XmlLine();
         vislib::StringA file = this->root->Name();
         if (nmspc != NULL) {
-            const XML_Char *sname = NULL;
-            const XML_Char *stype = NULL;
+            const XML_Char* sname = NULL;
+            const XML_Char* stype = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -309,15 +296,14 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                     outChildState = XMLSTATE_CONTENT;
                 } else {
                     vislib::StringA msg;
-                    msg.Format("The namespace already contains a child named \"%s\"",
-                        snameA.PeekBuffer());
+                    msg.Format("The namespace already contains a child named \"%s\"", snameA.PeekBuffer());
                     this->Error(msg);
                 }
             }
         } else if (shader != NULL) {
-            const XML_Char *sname = NULL;
-            const XML_Char *stype = NULL;
-            const XML_Char *sid = NULL;
+            const XML_Char* sname = NULL;
+            const XML_Char* stype = NULL;
+            const XML_Char* sid = NULL;
 
             for (int i = 0; attrib[i]; i += 2) {
                 if (MMXML_STRING("name").Equals(attrib[i])) {
@@ -364,20 +350,19 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
                 vislib::StringA sidA(sid);
                 if (shader->NameIDs().Contains(sidA)) {
                     vislib::StringA msg;
-                    msg.Format("\"id\" attribute of \"snippet\" tag ignored: parent shader already has a name id \"%s\"",
+                    msg.Format(
+                        "\"id\" attribute of \"snippet\" tag ignored: parent shader already has a name id \"%s\"",
                         sidA.PeekBuffer());
                     this->Warning(msg);
                 } else {
-                    shader->NameIDs()[sidA] = static_cast<unsigned int>(
-                        shader->Children().Count());
+                    shader->NameIDs()[sidA] = static_cast<unsigned int>(shader->Children().Count());
                 }
             }
         } else {
             this->Warning("\"snippet\" tag ignored: only valid within root, namespace, or shader tag.");
         }
-    } else
-    if (MMXML_STRING("shader").Equals(name)) {
-        const XML_Char *sname = NULL;
+    } else if (MMXML_STRING("shader").Equals(name)) {
+        const XML_Char* sname = NULL;
         for (int i = 0; attrib[i]; i += 2) {
             if (MMXML_STRING("name").Equals(attrib[i])) {
                 if (sname == NULL) {
@@ -395,8 +380,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
             vislib::StringA snameA(sname);
             if (!nmspc->FindChild(snameA).IsNull()) {
                 vislib::StringA msg;
-                msg.Format("The namespace already contains a child named \"%s\"",
-                    snameA.PeekBuffer());
+                msg.Format("The namespace already contains a child named \"%s\"", snameA.PeekBuffer());
                 this->Error(msg);
             } else {
                 newEl = new BTFShader(snameA);
@@ -404,42 +388,45 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
         } else if (shader != NULL) {
             vislib::StringA snameA(sname);
             // this is always a reference, so search for the name!
-            vislib::Stack<vislib::SmartPtr<BTFElement> > stck(this->stack);
+            vislib::Stack<vislib::SmartPtr<BTFElement>> stck(this->stack);
             vislib::Array<vislib::StringA> namepath = vislib::StringTokeniserA::Split(snameA, "::");
             if (namepath.Count() <= 0) {
                 this->Warning("\"shader\" tag ignored: empty or invalid \"name\" attribute");
             } else {
                 if (namepath[0].IsEmpty()) {
                     // global namespace operator
-                    while (stck.Count() > 1) stck.RemoveTop();
+                    while (stck.Count() > 1)
+                        stck.RemoveTop();
                     namepath.RemoveFirst();
                 }
                 if (namepath.Count() <= 0) {
                     this->Warning("\"shader\" tag ignored: empty or invalid \"name\" attribute");
-                } else while ((stck.Count() > 0) && (newEl == NULL)) {
-                    vislib::SmartPtr<BTFElement> rn = *stck.Peek();
-                    ASSERT(!rn.IsNull());
+                } else
+                    while ((stck.Count() > 0) && (newEl == NULL)) {
+                        vislib::SmartPtr<BTFElement> rn = *stck.Peek();
+                        ASSERT(!rn.IsNull());
 
-                    for (SIZE_T i = 0; i < namepath.Count(); i++) {
-                        if (rn.DynamicCast<BTFShader>() != NULL) {
-                            rn = rn.DynamicCast<BTFShader>()->FindChild(namepath[i]);
-                        } else if (rn.DynamicCast<BTFNamespace>() != NULL) {
-                            rn = rn.DynamicCast<BTFNamespace>()->FindChild(namepath[i]);
-                        } else break;
-                        if (rn.IsNull()) break;
-                    }
-                    if ((!rn.IsNull()) && (rn.DynamicCast<BTFShader>() != NULL)) {
-                        newEl = rn;
-                    }
+                        for (SIZE_T i = 0; i < namepath.Count(); i++) {
+                            if (rn.DynamicCast<BTFShader>() != NULL) {
+                                rn = rn.DynamicCast<BTFShader>()->FindChild(namepath[i]);
+                            } else if (rn.DynamicCast<BTFNamespace>() != NULL) {
+                                rn = rn.DynamicCast<BTFNamespace>()->FindChild(namepath[i]);
+                            } else
+                                break;
+                            if (rn.IsNull())
+                                break;
+                        }
+                        if ((!rn.IsNull()) && (rn.DynamicCast<BTFShader>() != NULL)) {
+                            newEl = rn;
+                        }
 
-                    if (newEl.IsNull()) {
-                        stck.RemoveTop();
+                        if (newEl.IsNull()) {
+                            stck.RemoveTop();
+                        }
                     }
-                }
                 if (newEl.IsNull()) {
                     vislib::StringA msg;
-                    msg.Format("\"shader\" tag ignored: unable to find referred shader \"%s\"",
-                        snameA.PeekBuffer());
+                    msg.Format("\"shader\" tag ignored: unable to find referred shader \"%s\"", snameA.PeekBuffer());
                     this->Warning(msg);
                 } else {
                     // test for cycle
@@ -458,9 +445,12 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
     }
     if (!newEl.IsNull()) {
         this->stack.Push(newEl);
-        if (nmspc != NULL) nmspc->Children().Append(newEl);
-        else if (shader != NULL) shader->Children().Append(newEl);
-        else ASSERT(false);
+        if (nmspc != NULL)
+            nmspc->Children().Append(newEl);
+        else if (shader != NULL)
+            shader->Children().Append(newEl);
+        else
+            ASSERT(false);
         return true;
     } else {
         outChildState = XmlReader::STATE_IGNORE_SUBTREE;
@@ -475,11 +465,9 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level,
 /*
  * utility::BTFParser::EndTag
  */
-bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
-        const XML_Char * name, XmlReader::ParserState state,
-        XmlReader::ParserState& outPostEndTagState) {
-    if (ConditionalParser::EndTag(num, level, name, state, 
-            outPostEndTagState)) {
+bool utility::BTFParser::EndTag(unsigned int num, unsigned int level, const XML_Char* name,
+    XmlReader::ParserState state, XmlReader::ParserState& outPostEndTagState) {
+    if (ConditionalParser::EndTag(num, level, name, state, outPostEndTagState)) {
         return true; // handled by base class
     }
     if (this->root.IsNull()) {
@@ -492,7 +480,7 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
     if (MMXML_STRING("snippet").Equals(name)) {
         vislib::SmartPtr<BTFElement> e = this->stack.Pop();
         ASSERT(!e.IsNull());
-        BTFSnippet *s = e.DynamicCast<BTFSnippet>();
+        BTFSnippet* s = e.DynamicCast<BTFSnippet>();
         ASSERT(s != NULL);
         ASSERT(this->stack.Peek() != NULL);
         vislib::SmartPtr<BTFElement> p = *this->stack.Peek();
@@ -501,11 +489,11 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
             vislib::StringA str = s->Content();
             str.TrimSpaces();
             try {
-                /*int vn = */vislib::CharTraitsA::ParseInt(str);
+                /*int vn = */ vislib::CharTraitsA::ParseInt(str);
                 s->SetContent(str);
-            } catch(...) {
+            } catch (...) {
                 this->Warning("\"snippet\" tag ignored: unable to parse version number content.");
-                BTFNamespace *pn = p.DynamicCast<BTFNamespace>();
+                BTFNamespace* pn = p.DynamicCast<BTFNamespace>();
                 ASSERT(pn != NULL);
                 pn->Children().RemoveAll(e);
             }
@@ -542,7 +530,7 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
             }
         }
 
-        BTFShader *ps = p.DynamicCast<BTFShader>();
+        BTFShader* ps = p.DynamicCast<BTFShader>();
         if (ps != NULL) {
             if (s->Name().IsEmpty()) {
                 // cannot be a reference. We are done!
@@ -553,8 +541,7 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
                 // check if name already present
                 if (ps->FindChild(s->Name()) != e) {
                     vislib::StringA msg;
-                    msg.Format("The shader already contains a child named \"%s\"",
-                        s->Name().PeekBuffer());
+                    msg.Format("The shader already contains a child named \"%s\"", s->Name().PeekBuffer());
                     this->Error(msg.PeekBuffer());
                     ps->Children().RemoveAll(e);
                 }
@@ -570,7 +557,7 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
             }
 
             vislib::SmartPtr<BTFElement> newEl;
-            vislib::Stack<vislib::SmartPtr<BTFElement> > stck(this->stack);
+            vislib::Stack<vislib::SmartPtr<BTFElement>> stck(this->stack);
             vislib::Array<vislib::StringA> namepath = vislib::StringTokeniserA::Split(s->Name(), "::");
             if (namepath.Count() <= 0) {
                 this->Warning("\"snippet\" tag ignored: empty or invalid \"name\" attribute");
@@ -578,40 +565,44 @@ bool utility::BTFParser::EndTag(unsigned int num, unsigned int level,
             } else {
                 if (namepath[0].IsEmpty()) {
                     // global namespace operator
-                    while (stck.Count() > 1) stck.RemoveTop();
+                    while (stck.Count() > 1)
+                        stck.RemoveTop();
                     namepath.RemoveFirst();
                 }
                 if (namepath.Count() <= 0) {
                     this->Warning("\"snippet\" tag ignored: empty or invalid \"name\" attribute");
                     ps->Children().RemoveAll(e);
-                } else while ((stck.Count() > 0) && (newEl == NULL)) {
-                    vislib::SmartPtr<BTFElement> rn = *stck.Peek();
-                    ASSERT(!rn.IsNull());
+                } else
+                    while ((stck.Count() > 0) && (newEl == NULL)) {
+                        vislib::SmartPtr<BTFElement> rn = *stck.Peek();
+                        ASSERT(!rn.IsNull());
 
-                    for (SIZE_T i = 0; i < namepath.Count(); i++) {
-                        if (rn.DynamicCast<BTFShader>() != NULL) {
-                            rn = rn.DynamicCast<BTFShader>()->FindChild(namepath[i]);
-                        } else if (rn.DynamicCast<BTFNamespace>() != NULL) {
-                            rn = rn.DynamicCast<BTFNamespace>()->FindChild(namepath[i]);
-                        } else break;
-                        if (rn == e) {
-                            rn = NULL;
-                            break;
+                        for (SIZE_T i = 0; i < namepath.Count(); i++) {
+                            if (rn.DynamicCast<BTFShader>() != NULL) {
+                                rn = rn.DynamicCast<BTFShader>()->FindChild(namepath[i]);
+                            } else if (rn.DynamicCast<BTFNamespace>() != NULL) {
+                                rn = rn.DynamicCast<BTFNamespace>()->FindChild(namepath[i]);
+                            } else
+                                break;
+                            if (rn == e) {
+                                rn = NULL;
+                                break;
+                            }
+                            if (rn.IsNull())
+                                break;
                         }
-                        if (rn.IsNull()) break;
-                    }
-                    if ((!rn.IsNull()) && (rn.DynamicCast<BTFSnippet>() != NULL)) {
-                        newEl = rn;
-                    }
+                        if ((!rn.IsNull()) && (rn.DynamicCast<BTFSnippet>() != NULL)) {
+                            newEl = rn;
+                        }
 
-                    if (newEl.IsNull()) {
-                        stck.RemoveTop();
+                        if (newEl.IsNull()) {
+                            stck.RemoveTop();
+                        }
                     }
-                }
                 if (newEl.IsNull()) {
                     vislib::StringA msg;
-                    msg.Format("\"snippet\" tag ignored: unable to find referred snippet \"%s\"",
-                        s->Name().PeekBuffer());
+                    msg.Format(
+                        "\"snippet\" tag ignored: unable to find referred snippet \"%s\"", s->Name().PeekBuffer());
                     ps->Children().RemoveAll(e);
                     this->Warning(msg);
                 } else {

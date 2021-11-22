@@ -36,7 +36,7 @@ public:
 
     bool ParseValue(std::string const& v) override {
         try {
-            this->SetValue((float) vislib::TCharTraits::ParseDouble(v.c_str()));
+            this->SetValue((float)vislib::TCharTraits::ParseDouble(v.c_str()));
             return true;
         } catch (...) {}
         return false;

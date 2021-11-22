@@ -19,7 +19,7 @@ uniform vec2 valRange;
 /* slice */
 uniform vec4 slice;
 
-/*	texture that houses the volume data */
+/* texture that houses the volume data */
 uniform highp sampler3D volume_tx3D;
 
 layout(rgba32f, binding = 0) writeonly uniform highp image2D render_target_tx2D;
@@ -81,37 +81,37 @@ void main() {
     // to compute a ray direction in world space.
     unproj = inv_view_proj_mx * vec4(clip_space_pixel_coords, 0.0f, 1.0f);
     ray.d = normalize((unproj.xyz / unproj.w) - ray.o);
-	
+
     float tnear, tfar;
 
     // Require tnear or tfar to be positive, so that we can renderer from inside the box,
     // but do not render if the box is completely behind the camera.
     if (intersectBox(ray, boxMin, boxMax, tnear, tfar) && (tnear > 0.0f || tfar > 0.0f)) {
-		ray.o += tnear * ray.d;
-		ray.d *= tfar - tnear;
+        ray.o += tnear * ray.d;
+        ray.d *= tfar - tnear;
 
         // Intersect ray with plane
-		const vec3 normal = normalize(slice.xyz);
+        const vec3 normal = normalize(slice.xyz);
 
-		if (abs(dot(normal, ray.d)) < 0.00001) {
-			imageStore(render_target_tx2D, pixel_coords, vec4(0.0f));
-			return;
-		}
+        if (abs(dot(normal, ray.d)) < 0.00001) {
+            imageStore(render_target_tx2D, pixel_coords, vec4(0.0f));
+            return;
+        }
 
-		const float t = (slice.w - dot(normal, ray.o)) / dot(normal, ray.d);
+        const float t = (slice.w - dot(normal, ray.o)) / dot(normal, ray.d);
 
-		// Check intersection within the bounding box
-		if (t < 0.0f || t > 1.0f) {
-			imageStore(render_target_tx2D, pixel_coords, vec4(0.0f));
-			return;
-		}
+        // Check intersection within the bounding box
+        if (t < 0.0f || t > 1.0f) {
+            imageStore(render_target_tx2D, pixel_coords, vec4(0.0f));
+            return;
+        }
 
-		const vec3 contact = ray.o + t * ray.d;
+        const vec3 contact = ray.o + t * ray.d;
 
-		// Get color
-		vec4 result = tflookup((texture(volume_tx3D, (contact - boxMin) / (boxMax - boxMin)).x - valRange.x) / (valRange.y - valRange.x));
+        // Get color
+        vec4 result = tflookup((texture(volume_tx3D, (contact - boxMin) / (boxMax - boxMin)).x - valRange.x) / (valRange.y - valRange.x));
 
-		// Store result
+        // Store result
         imageStore(render_target_tx2D, pixel_coords, result);
     } else {
         // Always write out to make sure that data from the previous frame is overwritten.

@@ -4,16 +4,18 @@
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore_gl/view/SplitViewGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
+
+#include "OpenGL_Context.h"
 
 
 using namespace megamol;
@@ -23,8 +25,7 @@ using megamol::core::utility::log::Log;
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitViewGL::SplitViewGL()
-        : AbstractView()
-        , _render1Slot("render1", "Connects to the view 1 (left or top)")
+        : _render1Slot("render1", "Connects to the view 1 (left or top)")
         , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
         , _splitOrientationSlot("split.orientation", "Splitter orientation")
         , _splitPositionSlot("split.pos", "Splitter position")
@@ -44,21 +45,25 @@ view::SplitViewGL::SplitViewGL()
         , _mouseY(0.0f)
         , _dragSplitter(false) {
 
-    this->_lhsRenderSlot.SetCallback(
-        view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &AbstractView::OnCharCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
+        &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
+        &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
@@ -298,7 +303,8 @@ bool view::SplitViewGL::OnRenderView(core::Call& call) {
     return true;
 }
 
-bool view::SplitViewGL::OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
+bool view::SplitViewGL::OnKey(
+    frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -356,7 +362,8 @@ bool view::SplitViewGL::OnChar(unsigned int codePoint) {
     return false;
 }
 
-bool view::SplitViewGL::OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) {
+bool view::SplitViewGL::OnMouseButton(frontend_resources::MouseButton button,
+    frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -479,6 +486,10 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitViewGL::create() {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
+        return false;
+
     _fboFull = std::make_shared<glowl::FramebufferObject>(1, 1);
     _fbo1 = std::make_shared<glowl::FramebufferObject>(1, 1);
     _fbo2 = std::make_shared<glowl::FramebufferObject>(1, 1);

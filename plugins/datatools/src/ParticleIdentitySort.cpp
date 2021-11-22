@@ -1,13 +1,15 @@
-#include "stdafx.h"
 #include "ParticleIdentitySort.h"
+#include "stdafx.h"
 #include <numeric>
 
 
 megamol::datatools::ParticleIdentitySort::ParticleIdentitySort(void)
-    : AbstractParticleManipulator("outData", "indata") {}
+        : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::datatools::ParticleIdentitySort::~ParticleIdentitySort(void) { this->Release(); };
+megamol::datatools::ParticleIdentitySort::~ParticleIdentitySort(void) {
+    this->Release();
+};
 
 
 bool megamol::datatools::ParticleIdentitySort::manipulateData(
@@ -25,7 +27,8 @@ bool megamol::datatools::ParticleIdentitySort::manipulateData(
         auto& p = outData.AccessParticles(i);
 
         if (p.GetIDDataType() == geocalls::SimpleSphericalParticles::IDDATA_NONE) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleIdentitySort: Particlelist %d has no indentity array\n", i);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "ParticleIdentitySort: Particlelist %d has no indentity array\n", i);
             continue;
         }
 

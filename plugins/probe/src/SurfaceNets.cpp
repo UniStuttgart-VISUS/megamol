@@ -5,22 +5,22 @@
  */
 
 #include "SurfaceNets.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 
 namespace megamol {
 namespace probe {
 
 
 SurfaceNets::SurfaceNets()
-    : Module()
-    , _getDataCall("getData", "")
-    , _deployMeshCall("deployMesh", "")
-    , _deployNormalsCall("deployNormals", "")
-    , _isoSlot("IsoValue", "")
-    , _faceTypeSlot("FaceType", "") {
+        : Module()
+        , _getDataCall("getData", "")
+        , _deployMeshCall("deployMesh", "")
+        , _deployNormalsCall("deployNormals", "")
+        , _isoSlot("IsoValue", "")
+        , _faceTypeSlot("FaceType", "") {
 
     this->_isoSlot << new core::param::FloatParam(1.0f);
     this->_isoSlot.SetUpdateCallback(&SurfaceNets::isoChanged);
@@ -46,16 +46,21 @@ SurfaceNets::SurfaceNets()
 
     this->_getDataCall.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->_getDataCall);
+}
 
- }
+SurfaceNets::~SurfaceNets() {
+    this->Release();
+}
 
-SurfaceNets::~SurfaceNets() { this->Release(); }
-
-bool SurfaceNets::create() { return true; }
+bool SurfaceNets::create() {
+    return true;
+}
 
 void SurfaceNets::release() {}
 
-bool SurfaceNets::InterfaceIsDirty() { return this->_isoSlot.IsDirty(); }
+bool SurfaceNets::InterfaceIsDirty() {
+    return this->_isoSlot.IsDirty();
+}
 
 void SurfaceNets::calculateSurfaceNets() {
 
@@ -137,7 +142,7 @@ void SurfaceNets::calculateSurfaceNets() {
     _vertices.clear();
     _faces.clear();
     int32_t n = 0;
-    std::array<uint32_t, 3> x = {0,0,0};
+    std::array<uint32_t, 3> x = {0, 0, 0};
     std::array<uint32_t, 3> R = {1, (_dims[0] + 1), (_dims[0] + 1) * (_dims[1] + 1)};
     std::array<float, 8> grid;
     int32_t buf_no = 1;
@@ -157,7 +162,7 @@ void SurfaceNets::calculateSurfaceNets() {
         int32_t m = 1 + (_dims[0] + 1) * (1 + buf_no * (_dims[1] + 1));
 
         for (x[1] = 0; x[1] < _dims[1] - 1; ++x[1], ++n, m += 2) {
-        
+
             for (x[0] = 0; x[0] < _dims[0] - 1; ++x[0], ++n, ++m) {
 
                 // Read in 8 field values around this vertex and store them in an array
@@ -201,10 +206,10 @@ void SurfaceNets::calculateSurfaceNets() {
                     auto g0 = grid[e0]; // Unpack grid values
                     auto g1 = grid[e1];
                     auto t = g0 - g1; // Compute point of intersection
-                    //if (std::abs(t) > 1e-6) {
-                    //if (std::abs(t) >= iso_value) {
-                        //t = g0 / t;
-                        t = (iso_value - g1) / t;
+                                      //if (std::abs(t) > 1e-6) {
+                                      //if (std::abs(t) >= iso_value) {
+                    //t = g0 / t;
+                    t = (iso_value - g1) / t;
                     //} else {
                     //    continue;
                     //    //t = (iso_value - g1) / std::abs(t);
@@ -280,7 +285,7 @@ void SurfaceNets::calculateSurfaceNets2() {
     cube_offsets[6] = {0, 1, 1};
     cube_offsets[7] = {1, 1, 1};
 
-    const std::array<uint32_t,24> edge_vertex_offsets = {// 0
+    const std::array<uint32_t, 24> edge_vertex_offsets = {// 0
         0, 1,
         // 1
         0, 2,
@@ -307,7 +312,7 @@ void SurfaceNets::calculateSurfaceNets2() {
 
     float const iso_value = this->_isoSlot.Param<core::param::FloatParam>()->Value();
 
-    std::vector<uint32_t> voxel_lookup(_dims[0]*_dims[1]*_dims[2]);
+    std::vector<uint32_t> voxel_lookup(_dims[0] * _dims[1] * _dims[2]);
     std::vector<uint32_t> voxel_filled;
     voxel_filled.reserve(voxel_lookup.size());
 
@@ -315,7 +320,8 @@ void SurfaceNets::calculateSurfaceNets2() {
 
     auto dims = _dims;
 
-    auto const offset_now = [dims](uint32_t x, uint32_t y, uint32_t z) { return dims[0] * dims[1] * z + dims[0] * y + x; };
+    auto const offset_now = [dims](
+                                uint32_t x, uint32_t y, uint32_t z) { return dims[0] * dims[1] * z + dims[0] * y + x; };
 
     for (uint32_t z = 0; z < _dims[2] - 1; z++) {
         for (uint32_t y = 0; y < _dims[1] - 1; y++) {
@@ -394,13 +400,13 @@ void SurfaceNets::calculateSurfaceNets2() {
                     voxel_lookup[offset_now(x, y, z)] = _vertices.size() - 1;
                     voxel_filled.push_back(offset_now(x, y, z));
 
-                    std::array<float,3> normal;
-                    normal[0] =
-                        _data[offset_now(x >= _dims[0]-1 ? x : x + 1, y, z)] - _data[offset_now(x < 1 ? x : x - 1, y, z)];
-                    normal[1] =
-                        _data[offset_now(x, y >= _dims[1] -1 ? y : y + 1, z)] - _data[offset_now(x, y < 1 ? y : y - 1, z)];
-                    normal[2] =
-                        _data[offset_now(x, y, z>= _dims[2] -1 ? z : z + 1)] - _data[offset_now(x, y, z < 1 ? z : z - 1)];
+                    std::array<float, 3> normal;
+                    normal[0] = _data[offset_now(x >= _dims[0] - 1 ? x : x + 1, y, z)] -
+                                _data[offset_now(x < 1 ? x : x - 1, y, z)];
+                    normal[1] = _data[offset_now(x, y >= _dims[1] - 1 ? y : y + 1, z)] -
+                                _data[offset_now(x, y < 1 ? y : y - 1, z)];
+                    normal[2] = _data[offset_now(x, y, z >= _dims[2] - 1 ? z : z + 1)] -
+                                _data[offset_now(x, y, z < 1 ? z : z - 1)];
                     if (normal[0] <= 1e-6 && normal[1] <= 1e-6 && normal[2] <= 1e-6) {
                         normal[0] = _data[offset_now(x >= _dims[0] - 2 ? x : x + 2, y, z)] -
                                     _data[offset_now(x < 2 ? x : x - 2, y, z)];
@@ -409,7 +415,8 @@ void SurfaceNets::calculateSurfaceNets2() {
                         normal[2] = _data[offset_now(x, y, z >= _dims[2] - 2 ? z : z + 2)] -
                                     _data[offset_now(x, y, z < 2 ? z : z - 2)];
                     }
-                    auto const normal_length = std::sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+                    auto const normal_length =
+                        std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
                     normal[0] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
                     normal[1] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
                     normal[2] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
@@ -421,8 +428,8 @@ void SurfaceNets::calculateSurfaceNets2() {
     voxel_filled.shrink_to_fit();
 
     auto const coordinateFromLinearIndex = [](uint32_t idx, uint32_t max_x, uint32_t max_y) {
-        std::array<uint32_t,3> coords;
-        coords[0] = idx % (max_x) ;
+        std::array<uint32_t, 3> coords;
+        coords[0] = idx % (max_x);
         idx /= (max_x);
         coords[1] = idx % (max_y);
         idx /= (max_y);
@@ -469,7 +476,7 @@ void SurfaceNets::calculateSurfaceNets2() {
                 }
             }
         } // for i < 3
-    } // for voxel_filled
+    }     // for voxel_filled
 }
 
 bool SurfaceNets::getData(core::Call& call) {
@@ -477,14 +484,17 @@ bool SurfaceNets::getData(core::Call& call) {
     bool something_changed = _recalc;
 
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     // get data from adios
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+            return false;
         something_changed = true;
 
         auto mesh_meta_data = cm->getMetaData();
@@ -503,7 +513,8 @@ bool SurfaceNets::getData(core::Call& call) {
     _spacing[0] = meta_data->SliceDists[0][0];
     _spacing[1] = meta_data->SliceDists[1][0];
     _spacing[2] = meta_data->SliceDists[2][0];
-    if (cd->GetScalarType() != core::misc::FLOATING_POINT) return false;
+    if (cd->GetScalarType() != core::misc::FLOATING_POINT)
+        return false;
     _data = reinterpret_cast<float*>(cd->GetData());
 
     if (something_changed || _recalc) {
@@ -544,7 +555,7 @@ bool SurfaceNets::getData(core::Call& call) {
     mesh::MeshDataAccessCollection mesh;
 
     mesh.addMesh(_mesh_attribs, _mesh_indices, _mesh_type);
-    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)),_version);
+    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
     _old_datahash = cd->DataHash();
     _recalc = false;
 
@@ -554,18 +565,22 @@ bool SurfaceNets::getData(core::Call& call) {
 bool SurfaceNets::getMetaData(core::Call& call) {
 
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     auto meta_data = cm->getMetaData();
 
     // get metadata from adios
     cd->SetFrameID(meta_data.m_frame_ID);
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
 
-    if (cd->DataHash() == _old_datahash && !_recalc) return true;
+    if (cd->DataHash() == _old_datahash && !_recalc)
+        return true;
 
     // put metadata in mesh call
     meta_data.m_bboxs = cd->AccessBoundingBoxes();
@@ -585,15 +600,18 @@ bool SurfaceNets::isoChanged(core::param::ParamSlot& p) {
 
 bool SurfaceNets::getNormalData(core::Call& call) {
     bool something_changed = _recalc;
-    
+
     auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-    if (mpd == nullptr) return false;
+    if (mpd == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     if (cd->DataHash() != _old_datahash) {
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+            return false;
         something_changed = true;
     }
 
@@ -607,7 +625,8 @@ bool SurfaceNets::getNormalData(core::Call& call) {
     _spacing[0] = meta_data->SliceDists[0][0];
     _spacing[1] = meta_data->SliceDists[1][0];
     _spacing[2] = meta_data->SliceDists[2][0];
-    if (cd->GetScalarType() != core::misc::FLOATING_POINT) return false;
+    if (cd->GetScalarType() != core::misc::FLOATING_POINT)
+        return false;
     _data = reinterpret_cast<float*>(cd->GetData());
 
     if (something_changed || _recalc) {
@@ -618,9 +637,9 @@ bool SurfaceNets::getNormalData(core::Call& call) {
     mpd->AccessParticles(0).SetGlobalRadius(cd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge() * 1e-3);
     mpd->AccessParticles(0).SetCount(_vertices.size());
     mpd->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-        _vertices.data(), sizeof(std::array<float,3>));
+        _vertices.data(), sizeof(std::array<float, 3>));
     mpd->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
-        _normals.data(), sizeof(std::array<float,3>));
+        _normals.data(), sizeof(std::array<float, 3>));
 
     _old_datahash = cd->DataHash();
     _recalc = false;
@@ -630,15 +649,19 @@ bool SurfaceNets::getNormalData(core::Call& call) {
 
 bool SurfaceNets::getNormalMetaData(core::Call& call) {
     auto mpd = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-    if (mpd == nullptr) return false;
+    if (mpd == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<core::misc::VolumetricDataCall>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
-    if (cd->DataHash() == _old_datahash && !_recalc) return true;
+    if (cd->DataHash() == _old_datahash && !_recalc)
+        return true;
 
     // get metadata from adios
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
 
     mpd->AccessBoundingBoxes() = cd->AccessBoundingBoxes();
     mpd->SetFrameCount(cd->FrameCount());

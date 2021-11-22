@@ -1,9 +1,9 @@
 /*
-* PointcloudHelpers.h
-*
-* Copyright (C) 2017 by MegaMol team
-* Alle Rechte vorbehalten.
-*/
+ * PointcloudHelpers.h
+ *
+ * Copyright (C) 2017 by MegaMol team
+ * Alle Rechte vorbehalten.
+ */
 
 #pragma once
 
@@ -14,23 +14,20 @@ namespace megamol {
 namespace datatools {
 
 /**
-* Class that implements the interface nanoflann needs for simple spherical particles.
-* The index vector addresses all of the particles across all lists, so its
-* range is (0,Sum(Allof(particleLists).Count)).
-*/
+ * Class that implements the interface nanoflann needs for simple spherical particles.
+ * The index vector addresses all of the particles across all lists, so its
+ * range is (0,Sum(Allof(particleLists).Count)).
+ */
 class simplePointcloud {
 private:
-
-    geocalls::MultiParticleDataCall *dat;
-    std::vector<size_t> &indices;
+    geocalls::MultiParticleDataCall* dat;
+    std::vector<size_t>& indices;
     bool cycleX, cycleY, cycleZ;
 
 public:
-
     typedef float coord_t;
 
-    simplePointcloud(geocalls::MultiParticleDataCall *dat, std::vector<size_t> &indices)
-        : dat(dat), indices(indices) {
+    simplePointcloud(geocalls::MultiParticleDataCall* dat, std::vector<size_t>& indices) : dat(dat), indices(indices) {
         // intentionally empty
     }
     ~simplePointcloud() {
@@ -43,8 +40,8 @@ public:
     }
 
     // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
-    inline coord_t kdtree_distance(const coord_t *p1, const size_t idx_p2, size_t /*size*/) const {
-        float const *p2 = get_position(idx_p2);
+    inline coord_t kdtree_distance(const coord_t* p1, const size_t idx_p2, size_t /*size*/) const {
+        float const* p2 = get_position(idx_p2);
 
         const coord_t d0 = p1[0] - p2[0];
         const coord_t d1 = p1[1] - p2[1];
@@ -64,7 +61,7 @@ public:
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.
     //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
     //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX>
+    template<class BBOX>
     bool kdtree_get_bbox(BBOX& bb) const {
         //return false;
 
@@ -85,20 +82,23 @@ public:
         unsigned int plc = dat->GetParticleListCount();
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = dat->AccessParticles(pli);
-            if ((pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-                && (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
+            if ((pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZ) &&
+                (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
                 continue;
             }
 
             if (index < pl.GetCount()) {
                 unsigned int vert_stride = 0;
-                if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ) vert_stride = 12;
-                else if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) vert_stride = 16;
-                else continue;
+                if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
+                    vert_stride = 12;
+                else if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)
+                    vert_stride = 16;
+                else
+                    continue;
                 vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
-                const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
+                const unsigned char* vert = static_cast<const unsigned char*>(pl.GetVertexData());
 
-                return reinterpret_cast<const float *>(vert + (index * vert_stride));
+                return reinterpret_cast<const float*>(vert + (index * vert_stride));
             }
 
             index -= static_cast<size_t>(pl.GetCount());
@@ -138,7 +138,6 @@ public:
 
         return nullptr;
     }
-
 };
 
 
@@ -148,7 +147,9 @@ public:
     using coord_t = T;
 
     genericPointcloud(std::vector<T> const& data, std::array<T, 2 * DIM> const& bbox, std::array<T, DIM> const& weights)
-            : _point_data(data), _bbox(bbox), _weights(weights) {}
+            : _point_data(data)
+            , _bbox(bbox)
+            , _weights(weights) {}
 
     ~genericPointcloud() = default;
 

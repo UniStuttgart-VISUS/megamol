@@ -19,14 +19,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "BoxRenderer"; }
+    static const char* ClassName(void) {
+        return "BoxRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Renderer for box glyphs."; }
+    static const char* Description(void) {
+        return "Renderer for box glyphs.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -35,14 +39,14 @@ public:
      */
     static bool IsAvailable(void) {
 #ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         ASSERT(dc != NULL);
         ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
-#endif     // _WIN32
-        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+#endif // DEBUG || _DEBUG
+#endif // _WIN32
+        return true;
     }
 
     /** Ctor. */
@@ -225,5 +229,5 @@ private:
 }; // end class BoxRenderer
 
 } // end namespace rendering
-} // end namespace thermodyn
+} // namespace thermodyn_gl
 } // end namespace megamol

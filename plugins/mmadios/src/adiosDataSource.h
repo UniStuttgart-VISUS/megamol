@@ -1,16 +1,16 @@
 #pragma once
 
-#include <adios2.h>
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "vislib/math/Cuboid.h"
-#include "mmadios/CallADIOSData.h"
 #include "vislib/String.h"
+#include "vislib/math/Cuboid.h"
+#include <adios2.h>
 #ifdef WITH_MPI
-#    include <mpi.h>
+#include <mpi.h>
 #endif
 
 namespace megamol {
@@ -29,21 +29,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "adiosDataSource"; }
+    static const char* ClassName(void) {
+        return "adiosDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source module for ADIOS-based IO."; }
+    static const char* Description(void) {
+        return "Data source module for ADIOS-based IO.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     adiosDataSource(void);
@@ -99,7 +105,7 @@ private:
 
     /** Data file load id counter */
     size_t data_hash = 0;
-	bool dataHashChanged = false;
+    bool dataHashChanged = false;
     bool inquireChanged = false;
 
     /** The file name */
@@ -136,7 +142,7 @@ void adiosDataSource::inquireRead(
         advar.SetStepSelection({frameIDtoLoad, 1});
         container->shape = advar.Shape(frameIDtoLoad);
         if (container->shape.empty()) {
-            container->shape ={advar.Count()};
+            container->shape = {advar.Count()};
         }
         if (!singleValue) {
             advar.SetSelection({advar.Start(), container->shape});

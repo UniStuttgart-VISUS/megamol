@@ -9,8 +9,9 @@
 #include "mmcore/view/BaseView.h"
 #include "vislib/graphics/Cursor2D.h"
 
-#include "mmcore_gl/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraControllers.h"
+#include "mmcore_gl/view/AbstractTileViewGL.h"
+#include "mmcore_gl/view/CallRenderViewGL.h"
 
 #include "glowl/FramebufferObject.hpp"
 
@@ -18,23 +19,27 @@ namespace megamol {
 namespace core_gl {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController> {
+class MEGAMOLCORE_API View3DGL
+        : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "View3DGL"; }
+    static const char* ClassName(void) {
+        return "View3DGL";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "New and improved 3D View Module"; }
+    static const char* Description(void) {
+        return "New and improved 3D View Module";
+    }
 
     /** Ctor. */
     View3DGL(void);
@@ -55,7 +60,6 @@ public:
     virtual void Resize(unsigned int width, unsigned int height) override;
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -65,6 +69,5 @@ protected:
 };
 
 } // namespace view
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
-

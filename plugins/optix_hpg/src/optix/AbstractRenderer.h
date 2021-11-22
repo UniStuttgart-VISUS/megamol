@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/RendererModule.h"
 
 #include "CallRender3DCUDA.h"
 
@@ -14,10 +14,10 @@
 #include "optix/Context.h"
 
 namespace megamol::optix_hpg {
-class AbstractRenderer : public core::view::RendererModule<CallRender3DCUDA> {
+class AbstractRenderer : public core::view::RendererModule<CallRender3DCUDA, core::Module> {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
-        auto res = core::view::RendererModule<CallRender3DCUDA>::requested_lifetime_resources();
+        auto res = core::view::RendererModule<CallRender3DCUDA, Module>::requested_lifetime_resources();
         res.push_back(frontend_resources::CUDA_Context_Req_Name);
         return res;
     }

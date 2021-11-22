@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableSort.h"
+#include "stdafx.h"
 
 #include <algorithm>
 #include <cassert>
@@ -22,9 +22,9 @@
  * megamol::datatools::table::TableSort::TableSort
  */
 megamol::datatools::table::TableSort::TableSort(void)
-        : paramColumn("column", "The column to be filtered."),
-        paramIsDescending("descending", "Sort in descending instead of ascending order."),
-        paramIsStable("stableSort", "Use a stable sorting algorithm.") {
+        : paramColumn("column", "The column to be filtered.")
+        , paramIsDescending("descending", "Sort in descending instead of ascending order.")
+        , paramIsStable("stableSort", "Use a stable sorting algorithm.") {
     /* Configure and export the parameters. */
     this->paramColumn << new core::param::FlexEnumParam("");
     this->MakeSlotAvailable(&this->paramColumn);
@@ -57,36 +57,30 @@ bool megamol::datatools::table::TableSort::create(void) {
 /*
  * megamol::datatools::table::TableSort::prepareData
  */
-bool megamol::datatools::table::TableSort::prepareData(
-        TableDataCall& src, const unsigned int frameID) {
+bool megamol::datatools::table::TableSort::prepareData(TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
     using megamol::core::utility::log::Log;
 
     /* Request the source data. */
     src.SetFrameID(frameID);
     if (!(src)(0)) {
-        Log::DefaultLog.WriteError(_T("The call to %hs failed in %hs."),
-            TableDataCall::FunctionName(0), TableDataCall::ClassName());
+        Log::DefaultLog.WriteError(
+            _T("The call to %hs failed in %hs."), TableDataCall::FunctionName(0), TableDataCall::ClassName());
         return false;
     }
 
-    auto isParamsChanged = this->paramColumn.IsDirty()
-        || this->paramColumn.IsDirty()
-        || this->paramIsDescending.IsDirty()
-        || this->paramIsStable.IsDirty();
+    auto isParamsChanged = this->paramColumn.IsDirty() || this->paramColumn.IsDirty() ||
+                           this->paramIsDescending.IsDirty() || this->paramIsStable.IsDirty();
 
     /* (Re-) Generate the data. */
-    if (isParamsChanged || (this->inputHash != src.DataHash())
-            || (this->frameID != src.GetFrameID())) {
+    if (isParamsChanged || (this->inputHash != src.DataHash()) || (this->frameID != src.GetFrameID())) {
         auto column = 0;
         const auto data = src.GetData();
         std::vector<std::size_t> proxy(src.GetRowsCount());
 
         /* Copy the column descriptors. */
         this->columns.resize(src.GetColumnsCount());
-        std::copy(src.GetColumnsInfos(),
-            src.GetColumnsInfos() + this->columns.size(),
-            this->columns.begin());
+        std::copy(src.GetColumnsInfos(), src.GetColumnsInfos() + this->columns.size(), this->columns.begin());
 
         /* Update the column selector. */
         {
@@ -109,7 +103,7 @@ bool megamol::datatools::table::TableSort::prepareData(
 
             if (column == this->columns.size()) {
                 Log::DefaultLog.WriteError("The column \"hs\" cannot be used for "
-                    "sorting, because it does not exist in the source data.",
+                                           "sorting, because it does not exist in the source data.",
                     c.c_str());
             }
         }
@@ -118,8 +112,7 @@ bool megamol::datatools::table::TableSort::prepareData(
         std::iota(proxy.begin(), proxy.end(), 0);
 
         const auto isDesc = this->paramIsDescending.Param<BoolParam>()->Value();
-        auto pred = [this, column, data, isDesc](const std::size_t l,
-                const std::size_t r) {
+        auto pred = [this, column, data, isDesc](const std::size_t l, const std::size_t r) {
             auto lhs = data[l * this->columns.size() + column];
             auto rhs = data[r * this->columns.size() + column];
             return isDesc ? (rhs < lhs) : (lhs < rhs);
@@ -136,9 +129,7 @@ bool megamol::datatools::table::TableSort::prepareData(
         auto dst = this->values.data();
 
         for (auto r : proxy) {
-            std::copy(data + r * this->columns.size(),
-                data + (r + 1) * this->columns.size(),
-                dst);
+            std::copy(data + r * this->columns.size(), data + (r + 1) * this->columns.size(), dst);
             dst += this->columns.size();
         }
 
@@ -161,4 +152,4 @@ bool megamol::datatools::table::TableSort::prepareData(
 /*
  * megamol::datatools::table::TableSort::release
  */
-void megamol::datatools::table::TableSort::release(void) { }
+void megamol::datatools::table::TableSort::release(void) {}

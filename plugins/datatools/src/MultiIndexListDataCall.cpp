@@ -4,13 +4,17 @@
  * Copyright (C) 2016 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "datatools/MultiIndexListDataCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 
-datatools::MultiIndexListDataCall::MultiIndexListDataCall() : AbstractGetDataCall(),
-        lsts(nullptr), lsts_len(0), frameCnt(0), frameID(0) {
+datatools::MultiIndexListDataCall::MultiIndexListDataCall()
+        : AbstractGetDataCall()
+        , lsts(nullptr)
+        , lsts_len(0)
+        , frameCnt(0)
+        , frameID(0) {
     // intentionally empty
 }
 

@@ -1,7 +1,7 @@
 /*
  * Serialisable.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -33,10 +33,9 @@ vislib::Serialisable::Serialisable(const Serialisable& rhs) {
 
 
 /*
- * vislib::Serialisable::operator = 
+ * vislib::Serialisable::operator =
  */
-vislib::Serialisable& vislib::Serialisable::operator =(
-        const Serialisable& rhs) {
+vislib::Serialisable& vislib::Serialisable::operator=(const Serialisable& rhs) {
     // Nothing to do.
     return *this;
 }

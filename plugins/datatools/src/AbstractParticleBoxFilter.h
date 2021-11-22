@@ -12,7 +12,8 @@
 namespace megamol {
 namespace datatools {
 
-template <class T> class AbstractParticleBoxFilter : public AbstractManipulator<T> {
+template<class T>
+class AbstractParticleBoxFilter : public AbstractManipulator<T> {
 public:
     /** Return module class name */
     static constexpr const char* ClassName(void) {
@@ -20,10 +21,14 @@ public:
     }
 
     /** Return module class description */
-    static const char* Description(void) { return "Applies a box filter on a set of particles"; }
+    static const char* Description(void) {
+        return "Applies a box filter on a set of particles";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     AbstractParticleBoxFilter(void);
@@ -32,7 +37,6 @@ public:
     virtual ~AbstractParticleBoxFilter(void);
 
 protected:
-
     /**
      * Manipulates the particle data
      *
@@ -69,7 +73,9 @@ private:
         return part.GetDirDataType();
     }
 
-    static unsigned int getDirDataType(typename T::Particles const& part, std::false_type) { return 0; }
+    static unsigned int getDirDataType(typename T::Particles const& part, std::false_type) {
+        return 0;
+    }
 
     static void setDirData(
         typename T::Particles& part, unsigned int const type, char const* ptr, size_t const stride, std::true_type) {
@@ -89,19 +95,23 @@ private:
 }; // end class AbstractParticleBoxFilter
 
 
-template <class T>
+template<class T>
 AbstractParticleBoxFilter<T>::AbstractParticleBoxFilter()
-    : AbstractManipulator<T>("dataIn", "dataOut")
-    , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)") {
+        : AbstractManipulator<T>("dataIn", "dataOut")
+        , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)") {
     boxSlot_ << new core::param::StringParam("0.0, 0.0, 0.0, 1.0, 1.0, 1.0");
     this->MakeSlotAvailable(&boxSlot_);
 }
 
 
-template <class T> AbstractParticleBoxFilter<T>::~AbstractParticleBoxFilter() { this->Release(); }
+template<class T>
+AbstractParticleBoxFilter<T>::~AbstractParticleBoxFilter() {
+    this->Release();
+}
 
 
-template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData, T& inData) {
+template<class T>
+bool AbstractParticleBoxFilter<T>::manipulateData(T& outData, T& inData) {
     outData = inData;
 
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -142,7 +152,8 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
 
         if (idt == geocalls::SimpleSphericalParticles::IDDATA_NONE)
             id_ptr = vert_ptr;
-        if (cdt == geocalls::SimpleSphericalParticles::COLDATA_NONE) col_ptr = vert_ptr;
+        if (cdt == geocalls::SimpleSphericalParticles::COLDATA_NONE)
+            col_ptr = vert_ptr;
 
         auto const base_ptr = std::min(id_ptr, std::min(vert_ptr, col_ptr));
         auto const max_ptr = std::max(id_ptr, std::max(vert_ptr, col_ptr));

@@ -4,12 +4,12 @@
  * Copyright (C) 2014 by CGV TU Dresden
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TransferFunctionQuery.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 
@@ -18,8 +18,9 @@ using namespace megamol;
  * datatools::TransferFunctionQuery::TransferFunctionQuery
  */
 datatools::TransferFunctionQuery::TransferFunctionQuery(void)
-        : getTFSlot("gettransferfunction", "Connects to the transfer function module"),
-        texDat(), texDatSize(0) {
+        : getTFSlot("gettransferfunction", "Connects to the transfer function module")
+        , texDat()
+        , texDatSize(0) {
     this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
 }
 
@@ -36,12 +37,13 @@ datatools::TransferFunctionQuery::~TransferFunctionQuery(void) {
 /*
  * datatools::TransferFunctionQuery::Query
  */
-void datatools::TransferFunctionQuery::Query(float *col, float val) {
+void datatools::TransferFunctionQuery::Query(float* col, float val) {
     const size_t col_size = 4 * sizeof(float);
 
     if (this->texDatSize < 2) {
         // fetch transfer function
-        core_gl::view::CallGetTransferFunctionGL *cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+        core_gl::view::CallGetTransferFunctionGL* cgtf =
+            this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
         if ((cgtf != nullptr) && ((*cgtf)(0))) {
             ::glGetError();
             ::glEnable(GL_TEXTURE_1D);
@@ -89,12 +91,13 @@ void datatools::TransferFunctionQuery::Query(float *col, float val) {
     }
 
     val -= static_cast<float>(valIdx);
-    if (val < 0.0f) val = 0.0f;
-    if (val > 1.0f) val = 1.0f;
+    if (val < 0.0f)
+        val = 0.0f;
+    if (val > 1.0f)
+        val = 1.0f;
 
     vislib::math::ShallowPoint<float, 4> c(col);
     vislib::math::ShallowPoint<float, 4> c1(texDat.AsAt<float>(valIdx * col_size));
     vislib::math::ShallowPoint<float, 4> c2(texDat.AsAt<float>((valIdx + 1) * col_size));
     c = c1.Interpolate(c2, val);
-
 }
