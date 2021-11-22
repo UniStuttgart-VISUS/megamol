@@ -1,16 +1,16 @@
 /*
  * ChronoGraph.cpp
  *
- * Copyright (C) 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "mmcore_gl/view/special/ChronoGraph.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/view/special/ChronoGraph.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cmath>
 
 using namespace megamol::core_gl;
@@ -60,8 +60,7 @@ bool view::special::ChronoGraph::Render(core_gl::view::CallRender2DGL& call) {
 
     float time = static_cast<float>(call.InstanceTime());
 
-    this->renderInfoGrid(time,
-        call.GetBoundingBoxes().BoundingBox().Left(),
+    this->renderInfoGrid(time, call.GetBoundingBoxes().BoundingBox().Left(),
         call.GetBoundingBoxes().BoundingBox().Bottom(), call.GetBoundingBoxes().BoundingBox().Width(),
         call.GetBoundingBoxes().BoundingBox().Height());
 
@@ -99,7 +98,7 @@ void view::special::ChronoGraph::renderInfoGrid(float time, float x, float y, fl
 
     ::glBegin(GL_LINES);
 
-    for (int i = 0; i <= steps; i++){
+    for (int i = 0; i <= steps; i++) {
         a = static_cast<float>(i) / static_cast<float>(steps);
         ::glVertex2f(x, y + h * a);
         ::glVertex2f(x + w, y + h * a);
@@ -139,7 +138,7 @@ void view::special::ChronoGraph::renderInfoCircle(float time, float x, float y, 
 
     ::glBegin(GL_LINE_LOOP);
 
-    for (int i = 0; i < steps; i++){
+    for (int i = 0; i < steps; i++) {
         a = 2.0f * static_cast<float>(M_PI) * static_cast<float>(i) / static_cast<float>(steps);
         ::glVertex2f(x + w * 0.5f + rad * ::cosf(a), y + h * 0.5f + rad * ::sinf(a));
     }

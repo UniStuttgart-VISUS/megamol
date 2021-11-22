@@ -1,15 +1,15 @@
-#include "stdafx.h"
 #include "TableToLines.h"
+#include "stdafx.h"
 
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -25,102 +25,109 @@ using namespace megamol;
  * THIS IS THE APEX OF SHIT and a non-quality copy from nanoflann/examples/utils.h
  * TODO: Replace it with a proper adapter instead of creating a copy to index data!
  */
-template <typename T>
-struct PointCloud
-{
-	struct Point
-	{
-		T  x,y,z;
-	};
+template<typename T>
+struct PointCloud {
+    struct Point {
+        T x, y, z;
+    };
 
-	std::vector<Point>  pts;
+    std::vector<Point> pts;
 
-	// Must return the number of data points
-	inline size_t kdtree_get_point_count() const { return pts.size(); }
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const {
+        return pts.size();
+    }
 
-	// Returns the dim'th component of the idx'th point in the class:
-	// Since this is inlined and the "dim" argument is typically an immediate value, the
-	//  "if/else's" are actually solved at compile time.
-	inline T kdtree_get_pt(const size_t idx, const size_t dim) const
-	{
-		if (dim == 0) return pts[idx].x;
-		else if (dim == 1) return pts[idx].y;
-		else return pts[idx].z;
-	}
+    // Returns the dim'th component of the idx'th point in the class:
+    // Since this is inlined and the "dim" argument is typically an immediate value, the
+    //  "if/else's" are actually solved at compile time.
+    inline T kdtree_get_pt(const size_t idx, const size_t dim) const {
+        if (dim == 0)
+            return pts[idx].x;
+        else if (dim == 1)
+            return pts[idx].y;
+        else
+            return pts[idx].z;
+    }
 
-	// Optional bounding-box computation: return false to default to a standard bbox computation loop.
-	//   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
-	//   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-	template <class BBOX>
-	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
+    //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+    template<class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const {
+        return false;
+    }
 };
 
 /*
  * FloattableToLines::FloattableToLines
  */
-TableToLines::TableToLines(void) : Module(),
-        slotTF("gettransferfunction", "Connects to the transfer function module"),
-        slotDeployData("linedata", "Provides the data as line data call."),
-        slotCallTable("table", "table input call"),
-        slotColumnR("redcolumnname", "The name of the column holding the red colour channel value."),
-        slotColumnG("greencolumnname", "The name of the column holding the green colour channel value."),
-        slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value."),
-        slotColumnI("intensitycolumnname", "The name of the column holding the intensity colour channel value."),
-        slotGlobalColor("color", "Constant sphere color."),
-        slotColumnIndex("indexcolumnname", "The name of the column holding the index data."),
-        slotConnectionType("connectiontype", "Type of the line connection."),
-        slotColorMode("colormode", "Pass on color as RGB or intensity"),
-        slotColumnX("xcolumnname", "The name of the column holding the x-coordinate."),
-        slotColumnY("ycolumnname", "The name of the column holding the y-coordinate."),
-        slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate."),
-        inputHash(0), myHash(0), columnIndex() {
+TableToLines::TableToLines(void)
+        : Module()
+        , slotTF("gettransferfunction", "Connects to the transfer function module")
+        , slotDeployData("linedata", "Provides the data as line data call.")
+        , slotCallTable("table", "table input call")
+        , slotColumnR("redcolumnname", "The name of the column holding the red colour channel value.")
+        , slotColumnG("greencolumnname", "The name of the column holding the green colour channel value.")
+        , slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value.")
+        , slotColumnI("intensitycolumnname", "The name of the column holding the intensity colour channel value.")
+        , slotGlobalColor("color", "Constant sphere color.")
+        , slotColumnIndex("indexcolumnname", "The name of the column holding the index data.")
+        , slotConnectionType("connectiontype", "Type of the line connection.")
+        , slotColorMode("colormode", "Pass on color as RGB or intensity")
+        , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
+        , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
+        , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
+        , inputHash(0)
+        , myHash(0)
+        , columnIndex() {
 
     /* Register parameters. */
-    core::param::FlexEnumParam *rColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* rColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnR << rColumnEp;
     this->MakeSlotAvailable(&this->slotColumnR);
 
-    core::param::FlexEnumParam *gColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* gColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnG << gColumnEp;
     this->MakeSlotAvailable(&this->slotColumnG);
 
-    core::param::FlexEnumParam *bColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* bColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnB << bColumnEp;
     this->MakeSlotAvailable(&this->slotColumnB);
 
-    core::param::FlexEnumParam *iColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* iColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnI << iColumnEp;
     this->MakeSlotAvailable(&this->slotColumnI);
 
     this->slotGlobalColor << new megamol::core::param::StringParam(_T("white"));
     this->MakeSlotAvailable(&this->slotGlobalColor);
 
-    core::param::EnumParam *ep = new core::param::EnumParam(2);
+    core::param::EnumParam* ep = new core::param::EnumParam(2);
     ep->SetTypePair(0, "RGB");
     ep->SetTypePair(1, "Intensity");
     ep->SetTypePair(2, "global RGB");
     this->slotColorMode << ep;
     this->MakeSlotAvailable(&this->slotColorMode);
 
-    core::param::EnumParam *ct = new core::param::EnumParam(1);
+    core::param::EnumParam* ct = new core::param::EnumParam(1);
     ct->SetTypePair(0, "Grid");
     ct->SetTypePair(1, "Index");
     this->slotConnectionType << ct;
     this->MakeSlotAvailable(&this->slotConnectionType);
 
-    core::param::FlexEnumParam *indexep= new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* indexep = new core::param::FlexEnumParam("undef");
     this->slotColumnIndex << indexep;
     this->MakeSlotAvailable(&this->slotColumnIndex);
 
-    core::param::FlexEnumParam *xColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* xColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnX << xColumnEp;
     this->MakeSlotAvailable(&this->slotColumnX);
 
-    core::param::FlexEnumParam *yColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* yColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnY << yColumnEp;
     this->MakeSlotAvailable(&this->slotColumnY);
 
-    core::param::FlexEnumParam *zColumnEp = new core::param::FlexEnumParam("undef");
+    core::param::FlexEnumParam* zColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnZ << zColumnEp;
     this->MakeSlotAvailable(&this->slotColumnZ);
 
@@ -128,14 +135,9 @@ TableToLines::TableToLines(void) : Module(),
     this->slotTF.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->slotTF);
 
+    this->slotDeployData.SetCallback(geocalls::LinesDataCall::ClassName(), "GetData", &TableToLines::getLineData);
     this->slotDeployData.SetCallback(
-        geocalls::LinesDataCall::ClassName(),
-        "GetData",
-        &TableToLines::getLineData);
-    this->slotDeployData.SetCallback(
-        geocalls::LinesDataCall::ClassName(),
-        "GetExtent",
-        &TableToLines::getLineDataExtent);
+        geocalls::LinesDataCall::ClassName(), "GetExtent", &TableToLines::getLineDataExtent);
     this->MakeSlotAvailable(&this->slotDeployData);
 
     this->slotCallTable.SetCompatibleCall<table::TableDataCallDescription>();
@@ -160,17 +162,10 @@ bool TableToLines::create(void) {
 }
 
 bool TableToLines::anythingDirty() {
-    return this->slotColumnR.IsDirty()
-        || this->slotColumnG.IsDirty()
-        || this->slotColumnB.IsDirty()
-        || this->slotColumnI.IsDirty()
-        || this->slotGlobalColor.IsDirty()
-        || this->slotColorMode.IsDirty()
-        || this->slotColumnX.IsDirty()
-        || this->slotColumnY.IsDirty()
-        || this->slotColumnZ.IsDirty()
-        || this->slotColumnIndex.IsDirty()
-        || this->slotConnectionType.IsDirty();
+    return this->slotColumnR.IsDirty() || this->slotColumnG.IsDirty() || this->slotColumnB.IsDirty() ||
+           this->slotColumnI.IsDirty() || this->slotGlobalColor.IsDirty() || this->slotColorMode.IsDirty() ||
+           this->slotColumnX.IsDirty() || this->slotColumnY.IsDirty() || this->slotColumnZ.IsDirty() ||
+           this->slotColumnIndex.IsDirty() || this->slotConnectionType.IsDirty();
 }
 
 void TableToLines::resetAllDirty() {
@@ -209,11 +204,13 @@ bool TableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib::TStr
     }
 }
 
-bool TableToLines::assertData(table::TableDataCall *ft) {
-    if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
+bool TableToLines::assertData(table::TableDataCall* ft) {
+    if (this->inputHash == ft->DataHash() && !anythingDirty())
+        return true;
 
     if (this->inputHash != ft->DataHash()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("TableToLines: Dataset changed -> Updating EnumParams\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "TableToLines: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -255,16 +252,16 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
 
     stride = 3;
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
-        case 0: // RGB
-            stride += 3;
-            allColor.reserve(rows * 3);
-            break;
-        case 1: // I
-            stride += 1;
-            allColor.reserve(rows);
-            break;
-        case 2: // global RGB
-            break;
+    case 0: // RGB
+        stride += 3;
+        allColor.reserve(rows * 3);
+        break;
+    case 1: // I
+        stride += 1;
+        allColor.reserve(rows);
+        break;
+    case 2: // global RGB
+        break;
     }
 
     switch (this->slotConnectionType.Param<core::param::EnumParam>()->Value()) {
@@ -275,7 +272,6 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
         lineIndices.resize(rows);
         break;
     }
-
 
 
     bool retValue = true;
@@ -307,34 +303,34 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
 
 
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
-        case 0: // RGB
+    case 0: // RGB
         if (!pushColumnIndex(
                 indicesToCollect, this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
-                retValue = false;
-            }
+            retValue = false;
+        }
         if (!pushColumnIndex(
                 indicesToCollect, this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
-                retValue = false;
-            }
+            retValue = false;
+        }
         if (!pushColumnIndex(
                 indicesToCollect, this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
-                retValue = false;
-            }
-            break;
-        case 1: // I
-            if (!pushColumnIndex(
-                    indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
-                retValue = false;
-            } else {
-                iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
-                iMax = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MaximumValue();
-            }
-            break;
-        case 2: // global RGB
-            break;
+            retValue = false;
+        }
+        break;
+    case 1: // I
+        if (!pushColumnIndex(
+                indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
+            retValue = false;
+        } else {
+            iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
+            iMax = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MaximumValue();
+        }
+        break;
+    case 2: // global RGB
+        break;
     }
 
-    const float *ftData = ft->GetData();
+    const float* ftData = ft->GetData();
     size_t numIndices = indicesToCollect.size();
 
     for (size_t i = 0; i < rows; i++) {
@@ -346,17 +342,17 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
                 if (this->slotConnectionType.Param<core::param::EnumParam>()->Value() == 1) {
                     lineIndices[i] = ftData[cols * i + indicesToCollect[j]];
                 } else {
-                    allColor.push_back( (ftData[cols * i + indicesToCollect[j]] - 
-                        ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue())/
-                        (ft->GetColumnsInfos()[indicesToCollect[j]].MaximumValue() - 
-                        ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()));
+                    allColor.push_back((ftData[cols * i + indicesToCollect[j]] -
+                                           ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()) /
+                                       (ft->GetColumnsInfos()[indicesToCollect[j]].MaximumValue() -
+                                           ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()));
                 }
             }
             if (j > 3) {
                 allColor.push_back((ftData[cols * i + indicesToCollect[j]] -
-                    ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()) /
-                    (ft->GetColumnsInfos()[indicesToCollect[j]].MaximumValue() -
-                    ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()));
+                                       ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()) /
+                                   (ft->GetColumnsInfos()[indicesToCollect[j]].MaximumValue() -
+                                       ft->GetColumnsInfos()[indicesToCollect[j]].MinimumValue()));
             }
         }
     }
@@ -365,7 +361,8 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
     std::vector<float> processedColor;
     processedColor.reserve(allColor.size() * 3);
     if (!(this->slotColorMode.Param<core::param::EnumParam>()->Value() == 2)) { // I or RGB
-        core_gl::view::CallGetTransferFunctionGL *cgtf = this->slotTF.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+        core_gl::view::CallGetTransferFunctionGL* cgtf =
+            this->slotTF.CallAs<core_gl::view::CallGetTransferFunctionGL>();
         if (cgtf != NULL && ((*cgtf)())) {
             float const* tf_tex = cgtf->GetTextureData();
             tex_size = cgtf->TextureSize();
@@ -378,8 +375,9 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
     // GRID
     if (this->slotConnectionType.Param<core::param::EnumParam>()->Value() == 0) {
 
-        typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float, PointCloud<float>>,
-            PointCloud<float>, 3> kd_tree;
+        typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Adaptor<float, PointCloud<float>>, PointCloud<float>,
+            3>
+            kd_tree;
 
         PointCloud<float> pc;
         pc.pts.resize(rows);
@@ -459,7 +457,7 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
 
 
             } // for num_neighbors end
-        } // for rows end
+        }     // for rows end
 
     } else { // INDEX
         // distinguish lines
@@ -487,7 +485,7 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
                     }
                 }
             } // end for lineIndices
-        } // end for uniqueLineIndices
+        }     // end for uniqueLineIndices
     }
 
 
@@ -507,31 +505,34 @@ bool TableToLines::assertData(table::TableDataCall *ft) {
  */
 bool TableToLines::getLineData(core::Call& call) {
     try {
-        geocalls::LinesDataCall& c = dynamic_cast<
-            geocalls::LinesDataCall&>(call);
-        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
-        if (ft == NULL) return false;
+        geocalls::LinesDataCall& c = dynamic_cast<geocalls::LinesDataCall&>(call);
+        table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
+        if (ft == NULL)
+            return false;
         (*ft)();
 
-        if (!assertData(ft)) return false;
+        if (!assertData(ft))
+            return false;
 
         c.SetFrameCount(1);
         c.SetFrameID(0);
         c.SetDataHash(this->myHash);
 
-        c.SetExtent(1,
-            this->bboxMin[0], this->bboxMin[1], this->bboxMin[2],
-            this->bboxMax[0], this->bboxMax[1], this->bboxMax[2]);
+        c.SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            this->bboxMax[2]);
 
         lines.resize(lineVerts.size());
 
         for (size_t loop = 0; loop < lineVerts.size(); loop++) {
             if (this->slotColorMode.Param<core::param::EnumParam>()->Value() == 2) {
                 unsigned char rgb[3];
-                core::utility::ColourParser::FromString(this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), 3, rgb);
-                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), vislib::graphics::ColourRGBAu8(rgb[0], rgb[1], rgb[2], 255));
+                core::utility::ColourParser::FromString(
+                    this->slotGlobalColor.Param<core::param::StringParam>()->Value().c_str(), 3, rgb);
+                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(),
+                    vislib::graphics::ColourRGBAu8(rgb[0], rgb[1], rgb[2], 255));
             } else {
-                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(), lineColor[loop].data(), false);
+                lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].size() / 3), lineVerts[loop].data(),
+                    lineColor[loop].data(), false);
             }
         }
 
@@ -544,7 +545,7 @@ bool TableToLines::getLineData(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-            _T("in callback getMultiParticleData."));
+                                                                   _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -555,21 +556,21 @@ bool TableToLines::getLineData(core::Call& call) {
  */
 bool TableToLines::getLineDataExtent(core::Call& call) {
     try {
-        geocalls::LinesDataCall& c = dynamic_cast<
-            geocalls::LinesDataCall&>(call);
-        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
-        if (ft == NULL) return false;
+        geocalls::LinesDataCall& c = dynamic_cast<geocalls::LinesDataCall&>(call);
+        table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
+        if (ft == NULL)
+            return false;
         (*ft)();
 
-        if (!assertData(ft)) return false;
+        if (!assertData(ft))
+            return false;
 
         c.SetFrameCount(1);
         c.SetFrameID(0);
         c.SetDataHash(this->myHash);
 
-        c.SetExtent(1,
-            this->bboxMin[0], this->bboxMin[1], this->bboxMin[2],
-            this->bboxMax[0], this->bboxMax[1], this->bboxMax[2]);
+        c.SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            this->bboxMax[2]);
         c.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
@@ -577,7 +578,7 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-            _T("in callback getLineDataExtend."));
+                                                                   _T("in callback getLineDataExtend."));
         return false;
     }
 }
@@ -586,11 +587,11 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableToLines::release(void) {
-}
+void TableToLines::release(void) {}
 
 
-void TableToLines::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray, unsigned int target_length=3) {
+void TableToLines::colorTransferGray(std::vector<float>& grayArray, float const* transferTable, unsigned int tableSize,
+    std::vector<float>& rgbaArray, unsigned int target_length = 3) {
 
     if (grayArray.size() == 0) {
         return;
@@ -599,7 +600,7 @@ void TableToLines::colorTransferGray(std::vector<float> &grayArray, float const*
     float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
     float gray_min = *std::min_element(grayArray.begin(), grayArray.end());
 
-    for (auto &gray : grayArray) {
+    for (auto& gray : grayArray) {
         float scaled_gray;
         if ((gray_max - gray_min) <= 1e-4f) {
             scaled_gray = 0;
@@ -621,7 +622,7 @@ void TableToLines::colorTransferGray(std::vector<float> &grayArray, float const*
             for (int i = 0; i < target_length; i++) {
                 float colorFloor = transferTable[floor + i];
                 float colorCeil = transferTable[floor + i + 4];
-                float finalColor = colorFloor + (colorCeil - colorFloor)*(tail);
+                float finalColor = colorFloor + (colorCeil - colorFloor) * (tail);
                 rgbaArray.push_back(finalColor);
             }
         }

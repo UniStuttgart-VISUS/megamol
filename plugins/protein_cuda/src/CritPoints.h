@@ -10,11 +10,11 @@
 #ifndef MMPROTEINCUDAPLUGIN_CRITPOINTS_H
 #define MMPROTEINCUDAPLUGIN_CRITPOINTS_H
 
-#include "protein_calls/CrystalStructureDataCall.h"
 #include "UniGrid3D.h"
+#include "protein_calls/CrystalStructureDataCall.h"
 
-#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
+#include "vislib/math/Vector.h"
 
 #include "helper_math.h"
 
@@ -27,13 +27,12 @@ namespace protein_cuda {
 class CritPoints {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "CritPoints";
     }
 
@@ -47,21 +46,16 @@ public:
      *
      * @return The array containing the critical points
      */
-    static vislib::Array<float> GetCritPoints(UniGrid3D<float3> &uniGrid,
-            vislib::math::Vector<float, 3> minCoord,
-            vislib::math::Vector<float, 3> maxCoord);
+    static vislib::Array<float> GetCritPoints(
+        UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> minCoord, vislib::math::Vector<float, 3> maxCoord);
 
     /**
      * TODO
      */
-    static vislib::Array<float> GetCritPointsGreene(
-            UniGrid3D<float3> &uniGrid,
-                    vislib::math::Vector<float, 3> minGridCoord,
-                    vislib::math::Vector<float, 3> maxGridCoord,
-                    float cellCize);
+    static vislib::Array<float> GetCritPointsGreene(UniGrid3D<float3>& uniGrid,
+        vislib::math::Vector<float, 3> minGridCoord, vislib::math::Vector<float, 3> maxGridCoord, float cellCize);
 
 protected:
-
     /**
      * Computes the topological degree of a cell. If the degree is != 0 the cell
      * contains a critical point.
@@ -72,9 +66,8 @@ protected:
      *
      * @return The degree of the cell
      */
-    static int calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
-            vislib::math::Vector<float, 3> minCoord,
-            vislib::math::Vector<float, 3> maxCoord);
+    static int calcDegreeOfCell(
+        UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> minCoord, vislib::math::Vector<float, 3> maxCoord);
 
     /**
      * Computes the solid angle covered by the vectors of a given triangle.
@@ -85,15 +78,12 @@ protected:
      * @returm The solid angle
      */
     static float calcSolidAngleOfTriangle(
-            UniGrid3D<float3> &uniGrid,
-            vislib::Array<vislib::math::Vector<float, 3> > points);
+        UniGrid3D<float3>& uniGrid, vislib::Array<vislib::math::Vector<float, 3>> points);
 
     static float calcSolidAngleOfTriangleAlt(
-            UniGrid3D<float3> &uniGrid,
-            vislib::Array<vislib::math::Vector<float, 3> > points);
+        UniGrid3D<float3>& uniGrid, vislib::Array<vislib::math::Vector<float, 3>> points);
 
 private:
-
     /**
      * Sample the uniform grid by nearest neighbour manner.
      *
@@ -103,9 +93,7 @@ private:
      * @return The sampled vector
      */
     static vislib::math::Vector<float, 3> sampleUniGridNearestNeighbour(
-            UniGrid3D<float3> &uniGrid,
-            vislib::math::Vector<float, 3> pos);
-
+        UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> pos);
 };
 
 } /* end namespace protein_cuda */

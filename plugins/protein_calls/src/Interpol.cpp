@@ -8,10 +8,7 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "protein_calls/Interpol.h"
+#include "stdafx.h"
 
 // EMPTY
-
-
-

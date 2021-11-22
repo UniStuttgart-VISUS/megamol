@@ -1,20 +1,21 @@
 #include "LocalBoundingBoxExtractor.h"
-#include "vislib/math/Cuboid.h"
-#include "mmcore/utility/ColourParser.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/utility/ColourParser.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace datatools {
 
 
 LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
-    : core::Module()
-    , inDataSlot("inDataSlot","MPDC connection")
-    , outLinesSlot("outLinesSlot","Line connection")
-    , outMeshSlot("outMeshSlot","Mesh connection")
-    , colorSlot ("color", "Sets color of bounding box rendering") {
+        : core::Module()
+        , inDataSlot("inDataSlot", "MPDC connection")
+        , outLinesSlot("outLinesSlot", "Line connection")
+        , outMeshSlot("outMeshSlot", "Mesh connection")
+        , colorSlot("color", "Sets color of bounding box rendering") {
 
-    this->outLinesSlot.SetCallback(geocalls::LinesDataCall::ClassName(), "GetData", &LocalBoundingBoxExtractor::getDataCallback);
+    this->outLinesSlot.SetCallback(
+        geocalls::LinesDataCall::ClassName(), "GetData", &LocalBoundingBoxExtractor::getDataCallback);
     this->outLinesSlot.SetCallback(
         geocalls::LinesDataCall::ClassName(), "GetExtent", &LocalBoundingBoxExtractor::getExtentCallback);
     this->MakeSlotAvailable(&this->outLinesSlot);
@@ -28,35 +29,38 @@ LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
     this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->colorSlot << new megamol::core::param::ColorParam(0.8 ,0.8, 0.8, 1.0);
+    this->colorSlot << new megamol::core::param::ColorParam(0.8, 0.8, 0.8, 1.0);
     this->MakeSlotAvailable(&this->colorSlot);
-
-
-
 }
 
-LocalBoundingBoxExtractor::~LocalBoundingBoxExtractor() { this->Release(); }
+LocalBoundingBoxExtractor::~LocalBoundingBoxExtractor() {
+    this->Release();
+}
 
-bool LocalBoundingBoxExtractor::create() { return true; }
+bool LocalBoundingBoxExtractor::create() {
+    return true;
+}
 
 void LocalBoundingBoxExtractor::release() {
     // empty
 }
 
 bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
-    
+
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
-    if (!(*mpdc)(0)) return false;
+    if (!(*mpdc)(0))
+        return false;
 
 
-    geocalls::MultiParticleDataCall::Particles& parts =  mpdc->AccessParticles(0);
+    geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(0);
 
     vislib::math::Cuboid<float> a = parts.GetBBox();
-        
+
     if (a.IsEmpty()) {
         this->calcLocalBox(parts, a);
         if (!(parts.GetCount() > 0)) {
@@ -74,13 +78,13 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
     std::array<float, 3> rbb = {a.Right(), a.Bottom(), a.Back()};
     std::array<float, 3> rtf = {a.Right(), a.Top(), a.Front()};
     std::array<float, 3> rtb = {a.Right(), a.Top(), a.Back()};
-                                                    
+
     // set line data
     if (ldc != nullptr) {
         this->lines.clear();
         this->lines.resize(12); // edges of a cube
 
-        // 12 combinations 
+        // 12 combinations
         lineMap.clear();
         lineMap["l1"] = std::array<float, 6>();
         lineMap["l2"] = std::array<float, 6>();
@@ -119,7 +123,7 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
         std::copy(rbb.begin(), rbb.end(), lineMap["l12"].begin());
         std::copy(rbf.begin(), rbf.end(), lineMap["l12"].begin() + 3);
 
-        std::array<unsigned char,4> rgba = {
+        std::array<unsigned char, 4> rgba = {
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[0] * 255),
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[1] * 255),
             static_cast<unsigned char>(this->colorSlot.Param<core::param::ColorParam>()->Value()[2] * 255),
@@ -154,16 +158,7 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
         allVerts.insert(allVerts.end(), rtf.begin(), rtf.end());
         allVerts.insert(allVerts.end(), rtb.begin(), rtb.end());
 
-        enum cornerMap {
-            LBF = 0,
-            LBB = 1,
-            LTF = 2,
-            LTB = 3,
-            RBF = 4,
-            RBB = 5,
-            RTF = 6,
-            RTB = 7
-        };
+        enum cornerMap { LBF = 0, LBB = 1, LTF = 2, LTB = 3, RBF = 4, RBB = 5, RTF = 6, RTB = 7 };
 
 
         allCols.clear();
@@ -173,24 +168,12 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
             allCols[colCount * i + 0] = this->colorSlot.Param<core::param::ColorParam>()->Value()[0];
             allCols[colCount * i + 1] = this->colorSlot.Param<core::param::ColorParam>()->Value()[1];
             allCols[colCount * i + 2] = this->colorSlot.Param<core::param::ColorParam>()->Value()[2];
-           // allCols[colCount * i + 3] = this->colorSlot.Param<core::param::ColorParam>()->Value()[3];
+            // allCols[colCount * i + 3] = this->colorSlot.Param<core::param::ColorParam>()->Value()[3];
         }
 
         allIdx.clear();
-        allIdx = {
-            LBF, RBF, LTF,
-            LBF, RBF, LBB,
-            LBF, LTF, LBB,
-            RTF, RBF, LTF,
-            RTF, RBF, RTB,
-            RTF, LTF, RTB,
-            RBB, RTB, RBF,
-            RBB, RTB, LBB,
-            RBB, RBF, LBB,
-            LTB, LBB, RTB,
-            LTB, LBB, LTF,
-            LTB, RTB, LTF
-        };
+        allIdx = {LBF, RBF, LTF, LBF, RBF, LBB, LBF, LTF, LBB, RTF, RBF, LTF, RTF, RBF, RTB, RTF, LTF, RTB, RBB, RTB,
+            RBF, RBB, RTB, LBB, RBB, RBF, LBB, LTB, LBB, RTB, LTB, LBB, LTF, LTB, RTB, LTF};
 
         this->mesh.SetVertexData(vertCount, allVerts.data(), nullptr, allCols.data(), nullptr, false);
         this->mesh.SetTriangleData(triCount, allIdx.data(), false);
@@ -206,34 +189,39 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 }
 
 bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
-    
+
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
-    if (!(*mpdc)(1)) return false;
+    if (!(*mpdc)(1))
+        return false;
 
     auto globalBB = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
 
     if (ldc != nullptr) {
-        ldc->SetExtent(1, globalBB.Left(),globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
+        ldc->SetExtent(
+            1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
     }
 
     if (ctmd != nullptr) {
-        ctmd->SetExtent(1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
-     }
+        ctmd->SetExtent(
+            1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
+    }
 
     return true;
 }
 
 void LocalBoundingBoxExtractor::calcLocalBox(
     geocalls::MultiParticleDataCall::Particles& parts, vislib::math::Cuboid<float>& box) {
-    
-    if (!(parts.GetCount() > 0)) return;
+
+    if (!(parts.GetCount() > 0))
+        return;
 
     for (int i = 0; i < parts.GetCount(); i++) {
-        box.SetLeft(std::min(box.GetLeft(),parts.GetParticleStore().GetXAcc()->Get_f(i)));
+        box.SetLeft(std::min(box.GetLeft(), parts.GetParticleStore().GetXAcc()->Get_f(i)));
         box.SetRight(std::max(box.GetRight(), parts.GetParticleStore().GetXAcc()->Get_f(i)));
         box.SetBottom(std::min(box.GetBottom(), parts.GetParticleStore().GetYAcc()->Get_f(i)));
         box.SetTop(std::max(box.GetTop(), parts.GetParticleStore().GetYAcc()->Get_f(i)));

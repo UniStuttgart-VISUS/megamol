@@ -1,7 +1,7 @@
 /*
  * LamportClock.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -14,15 +14,13 @@
 /*
  * vislib::sys::LamportClock::LamportClock
  */
-vislib::sys::LamportClock::LamportClock(void) : value(0) {
-}
+vislib::sys::LamportClock::LamportClock(void) : value(0) {}
 
 
 /*
  * vislib::sys::LamportClock::~LamportClock
  */
-vislib::sys::LamportClock::~LamportClock(void) {
-}
+vislib::sys::LamportClock::~LamportClock(void) {}
 
 
 /*
@@ -47,7 +45,7 @@ UINT64 vislib::sys::LamportClock::StepReceive(UINT64 timestamp) {
 /*
  * vislib::sys::LamportClock::operator ++
  */
-UINT64 vislib::sys::LamportClock::operator ++(int) {
+UINT64 vislib::sys::LamportClock::operator++(int) {
     AutoLock l(this->lock);
     return this->value++;
 }
@@ -57,16 +55,14 @@ UINT64 vislib::sys::LamportClock::operator ++(int) {
  * vislib::sys::LamportClock::LamportClock
  */
 vislib::sys::LamportClock::LamportClock(const LamportClock& rhs) {
-    throw UnsupportedOperationException("LamportClock::LamportClock", __FILE__, 
-        __LINE__);
+    throw UnsupportedOperationException("LamportClock::LamportClock", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::sys::LamportClock::operator =
  */
-vislib::sys::LamportClock& vislib::sys::LamportClock::operator =(
-        const LamportClock& rhs) {
+vislib::sys::LamportClock& vislib::sys::LamportClock::operator=(const LamportClock& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

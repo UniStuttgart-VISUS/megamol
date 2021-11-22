@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/View3DGL.h"
+#include "stdafx.h"
 
 #include "GlobalValueStore.h"
 #include "mmcore/CoreInstance.h"

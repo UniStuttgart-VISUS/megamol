@@ -31,10 +31,10 @@
 #ifndef THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
+#pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
@@ -48,7 +48,8 @@ namespace thecam {
  * The purpose of the base class is the management of the camera to be
  * manipulated as well as the activation state of the derived manipulators.
  */
-template <class T> class manipulator_base {
+template<class T>
+class manipulator_base {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -60,7 +61,9 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline camera_type* camera(void) { return this->cam; }
+    inline camera_type* camera(void) {
+        return this->cam;
+    }
 
     /**
      * Answer the camera to manipulated.
@@ -68,7 +71,9 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline const camera_type* camera(void) const { return this->cam; }
+    inline const camera_type* camera(void) const {
+        return this->cam;
+    }
 
     /**
      * Enable or disable the manipulator.
@@ -76,7 +81,9 @@ public:
      * @param isEnabled If true, the manipulator will be enabled;
      *                  otherwise, it will be disabled.
      */
-    inline void enable(const bool isEnabled = true) { this->isEnabled = isEnabled; }
+    inline void enable(const bool isEnabled = true) {
+        this->isEnabled = isEnabled;
+    }
 
     /**
      * Answer whether the manipulator is enabled.
@@ -90,7 +97,9 @@ public:
      *
      * @return true if the manipulator is enabled; false otherwise.
      */
-    inline bool enabled(void) const { return (this->isEnabled && (this->cam != nullptr)); }
+    inline bool enabled(void) const {
+        return (this->isEnabled && (this->cam != nullptr));
+    }
 
     /**
      * Answer whether the manipulator is currently changing the camera.
@@ -103,13 +112,17 @@ public:
      * @return true if the manipulator is modifying the camera,
      *         false otherwie.
      */
-    inline bool manipulating(void) const { return this->isManipulating; }
+    inline bool manipulating(void) const {
+        return this->isManipulating;
+    }
 
     /**
      * Resets the target of the manipulation, effectively disabling the
      * manipulator.
      */
-    inline void reset_target(void) { this->cam = nullptr; }
+    inline void reset_target(void) {
+        this->cam = nullptr;
+    }
 
     /**
      * Sets the target of the manipulation.
@@ -119,7 +132,9 @@ public:
      *
      * @param cam A reference to the camera to be manipulated.
      */
-    inline void set_target(camera_type* cam) { this->cam = cam; }
+    inline void set_target(camera_type* cam) {
+        this->cam = cam;
+    }
 
 protected:
     /** Disallow instances except from derived classes. */
@@ -128,12 +143,16 @@ protected:
     /**
      * Sets the manipulation flag to true.
      */
-    inline void begin_manipulation(void) { this->isManipulating = true; }
+    inline void begin_manipulation(void) {
+        this->isManipulating = true;
+    }
 
     /**
      * Sets the manipulation flag to false.
      */
-    inline void end_manipulation(void) { this->isManipulating = false; }
+    inline void end_manipulation(void) {
+        this->isManipulating = false;
+    }
 
 private:
     /** The camera to be manipulated. */
@@ -154,6 +173,6 @@ private:
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(pop)
+#pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED */

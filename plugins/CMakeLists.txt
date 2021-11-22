@@ -91,6 +91,10 @@ function(megamol_plugin PLUGIN_NAME)
       PUBLIC $<BUILD_INTERFACE:${MMPLUGIN_DIR_INCLUDE}>
       PRIVATE $<BUILD_INTERFACE:${MMPLUGIN_DIR_SRC}>)
 
+    add_clang_format(${PLUGIN_NAME}
+      STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
+      FILES ${public_header_files} ${header_files} ${source_files})
+
     # List of reserved words in plugins or externals dependencies lists.
     # This keywords are passed to target_link_libraries, but are ignored on other processing.
     set(reserved_link_keywords "PUBLIC" "PRIVATE" "INTERFACE")

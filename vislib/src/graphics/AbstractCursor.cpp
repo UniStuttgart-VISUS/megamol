@@ -6,8 +6,8 @@
 
 
 #include "vislib/graphics/AbstractCursor.h"
-#include "vislib/memutils.h"
 #include "vislib/Trace.h"
+#include "vislib/memutils.h"
 
 #include <memory.h>
 
@@ -15,8 +15,7 @@
 /*
  * vislib::graphics::AbstractCursor::AbstractCursor
  */
-vislib::graphics::AbstractCursor::AbstractCursor(void) 
-        : btnCnt(0), btnStates(NULL), mods(NULL) {
+vislib::graphics::AbstractCursor::AbstractCursor(void) : btnCnt(0), btnStates(NULL), mods(NULL) {
     this->events.Clear();
 }
 
@@ -24,8 +23,10 @@ vislib::graphics::AbstractCursor::AbstractCursor(void)
 /*
  * vislib::graphics::AbstractCursor::AbstractCursor
  */
-vislib::graphics::AbstractCursor::AbstractCursor(const AbstractCursor& rhs) 
-        : btnCnt(0), btnStates(NULL), mods(rhs.mods) {
+vislib::graphics::AbstractCursor::AbstractCursor(const AbstractCursor& rhs)
+        : btnCnt(0)
+        , btnStates(NULL)
+        , mods(rhs.mods) {
     this->events.Clear();
     *this = rhs;
 }
@@ -36,7 +37,7 @@ vislib::graphics::AbstractCursor::AbstractCursor(const AbstractCursor& rhs)
  */
 vislib::graphics::AbstractCursor::~AbstractCursor(void) {
     delete[] this->btnStates;
-    
+
     this->events.Clear(); // Does not delete the event object listed
 }
 
@@ -45,7 +46,7 @@ vislib::graphics::AbstractCursor::~AbstractCursor(void) {
  * vislib::graphics::AbstractCursor::operator=
  */
 vislib::graphics::AbstractCursor& vislib::graphics::AbstractCursor::operator=(
-        const vislib::graphics::AbstractCursor &rhs) {
+    const vislib::graphics::AbstractCursor& rhs) {
     delete[] this->btnStates;
     this->btnCnt = rhs.btnCnt;
     this->btnStates = new bool[this->btnCnt];
@@ -70,10 +71,9 @@ void vislib::graphics::AbstractCursor::SetButtonCount(unsigned int btnCnt) {
 /*
  * vislib::graphics::AbstractCursor::SetButtonState
  */
-void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn, 
-                                                      bool down) {
+void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn, bool down) {
     // mueller: Some of our Linux-gluts report button 4 for scrolling using the
-    //          mouse wheel. This causes the application to crash, because no 
+    //          mouse wheel. This causes the application to crash, because no
     //          one checks for this error here. Therefore, I think it is better
     //          to fail silently.
     //if (btn >= this->btnCnt) {
@@ -85,15 +85,14 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
     }
 
     // no update message required
-    if (this->btnStates[btn] == down) return;
+    if (this->btnStates[btn] == down)
+        return;
 
     if (down) {
         this->btnStates[btn] = true;
-        this->TestTriggerAllEvents(true, true, 
-            AbstractCursorEvent::REASON_BUTTON_DOWN, btn);
+        this->TestTriggerAllEvents(true, true, AbstractCursorEvent::REASON_BUTTON_DOWN, btn);
     } else {
-        this->TestTriggerAllEvents(true, true, 
-            AbstractCursorEvent::REASON_BUTTON_UP, btn);
+        this->TestTriggerAllEvents(true, true, AbstractCursorEvent::REASON_BUTTON_UP, btn);
         this->btnStates[btn] = false;
     }
 }
@@ -103,9 +102,9 @@ void vislib::graphics::AbstractCursor::SetButtonState(unsigned int btn,
  * vislib::graphics::AbstractCursor::ModifierChanged
  */
 void vislib::graphics::AbstractCursor::ModifierChanged(
-        const InputModifiers& sender, InputModifiers::Modifier mod, bool pressed) {
+    const InputModifiers& sender, InputModifiers::Modifier mod, bool pressed) {
     // Trigger Events
-    this->TestTriggerAllEvents(true, true, 
+    this->TestTriggerAllEvents(true, true,
         pressed ? AbstractCursorEvent::REASON_MOD_DOWN : AbstractCursorEvent::REASON_MOD_UP,
         static_cast<unsigned int>(mod));
 }
@@ -121,10 +120,10 @@ void vislib::graphics::AbstractCursor::ModifierChanged(
 //
 //    if (down) {
 //        this->modStates[modifier] = true;
-//        this->TestTriggerAllEvents(true, true, 
+//        this->TestTriggerAllEvents(true, true,
 //            AbstractCursorEvent::REASON_MOD_DOWN, modifier);
 //    } else {
-//        this->TestTriggerAllEvents(true, true, 
+//        this->TestTriggerAllEvents(true, true,
 //            AbstractCursorEvent::REASON_MOD_UP, modifier);
 //        this->modStates[modifier] = false;
 //    }
@@ -134,7 +133,7 @@ void vislib::graphics::AbstractCursor::ModifierChanged(
 /*
  * vislib::graphics::AbstractCursor::UnregisterCursorEvent
  */
-void vislib::graphics::AbstractCursor::UnregisterCursorEvent(AbstractCursorEvent *cursorEvent) {
+void vislib::graphics::AbstractCursor::UnregisterCursorEvent(AbstractCursorEvent* cursorEvent) {
     this->events.RemoveAll(cursorEvent);
     cursorEvent->Trigger(this, AbstractCursorEvent::REASON_REMOVED, 0);
 }
@@ -151,7 +150,7 @@ void vislib::graphics::AbstractCursor::TriggerMoved(void) {
 /*
  * vislib::graphics::AbstractCursor::RegisterCursorEvent
  */
-void vislib::graphics::AbstractCursor::RegisterCursorEvent(AbstractCursorEvent *cursorEvent) {
+void vislib::graphics::AbstractCursor::RegisterCursorEvent(AbstractCursorEvent* cursorEvent) {
     if (!this->events.Contains(cursorEvent)) {
         this->events.Append(cursorEvent);
         cursorEvent->Trigger(this, AbstractCursorEvent::REASON_ADDED, 0);
@@ -162,8 +161,7 @@ void vislib::graphics::AbstractCursor::RegisterCursorEvent(AbstractCursorEvent *
 /*
  * vislib::graphics::AbstractCursor::TestEvent
  */
-bool vislib::graphics::AbstractCursor::TestEvent(
-        AbstractCursorEvent *cursorEvent, bool testBtn, bool testMod) const {
+bool vislib::graphics::AbstractCursor::TestEvent(AbstractCursorEvent* cursorEvent, bool testBtn, bool testMod) const {
 
     if (testBtn && cursorEvent->DoesButtonTest()) {
         unsigned int btn = cursorEvent->GetTestButton();
@@ -192,13 +190,13 @@ bool vislib::graphics::AbstractCursor::TestEvent(
 /*
  * vislib::graphics::AbstractCursor::TestTriggerAllEvents
  */
-void vislib::graphics::AbstractCursor::TestTriggerAllEvents(bool testBtn, bool testMod, 
-        AbstractCursorEvent::TriggerReason reason, unsigned int param) {
+void vislib::graphics::AbstractCursor::TestTriggerAllEvents(
+    bool testBtn, bool testMod, AbstractCursorEvent::TriggerReason reason, unsigned int param) {
 
-    vislib::SingleLinkedList<AbstractCursorEvent *>::Iterator it = this->events.GetIterator();
+    vislib::SingleLinkedList<AbstractCursorEvent*>::Iterator it = this->events.GetIterator();
 
     while (it.HasNext()) {
-        AbstractCursorEvent *e = it.Next();
+        AbstractCursorEvent* e = it.Next();
 
         if (this->TestEvent(e, testBtn, testMod)) {
             e->Trigger(this, reason, param);

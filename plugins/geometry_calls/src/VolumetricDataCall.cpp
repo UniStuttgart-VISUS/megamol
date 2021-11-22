@@ -5,8 +5,8 @@
  * Alle rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "geometry_calls/VolumetricDataCall.h"
+#include "stdafx.h"
 
 #include <utility>
 
@@ -30,8 +30,7 @@ unsigned int VolumetricDataCall::FunctionCount(void) {
 /*
  * megamol::pcl::CallPcd::FunctionName
  */
-const char *VolumetricDataCall::FunctionName(
-        unsigned int idx) {
+const char* VolumetricDataCall::FunctionName(unsigned int idx) {
     if (idx < VolumetricDataCall::FunctionCount()) {
         return VolumetricDataCall::FUNCTIONS[idx];
     } else {
@@ -43,14 +42,12 @@ const char *VolumetricDataCall::FunctionName(
 /*
  * VolumetricDataCall::GetMetadata
  */
-bool VolumetricDataCall::GetMetadata(
-        VolumetricDataCall& call) {
+bool VolumetricDataCall::GetMetadata(VolumetricDataCall& call) {
     using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     if (!call(VolumetricDataCall::IDX_GET_METADATA)) {
-        Log::DefaultLog.WriteError("%hs::%hs failed.",
-            VolumetricDataCall::ClassName(),
+        Log::DefaultLog.WriteError("%hs::%hs failed.", VolumetricDataCall::ClassName(),
             VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA));
         return false;
     }
@@ -58,8 +55,7 @@ bool VolumetricDataCall::GetMetadata(
     if (call.GetMetadata() == nullptr) {
         /* Second chance ... */
         if (!call(VolumetricDataCall::IDX_GET_DATA)) {
-            Log::DefaultLog.WriteError("%hs::%hs failed.",
-                VolumetricDataCall::ClassName(),
+            Log::DefaultLog.WriteError("%hs::%hs failed.", VolumetricDataCall::ClassName(),
                 VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
             return false;
         }
@@ -69,12 +65,10 @@ bool VolumetricDataCall::GetMetadata(
 
     if (!retval) {
         Log::DefaultLog.WriteError("Call to %hs::%hs or %hs::%hs succeeded, "
-            "but none of them did provide any metadata. The call will be "
-            "considered to have failed.",
-            VolumetricDataCall::ClassName(),
-            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
-            VolumetricDataCall::ClassName(),
-            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
+                                   "but none of them did provide any metadata. The call will be "
+                                   "considered to have failed.",
+            VolumetricDataCall::ClassName(), VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
+            VolumetricDataCall::ClassName(), VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
     }
 
     return retval;
@@ -114,23 +108,22 @@ const unsigned int VolumetricDataCall::IDX_STOP_ASYNC = 4;
 /*
  * VolumetricDataCall::IDX_TRY_GET_DATA
  */
-const unsigned int VolumetricDataCall::IDX_TRY_GET_DATA
-    = 5;
+const unsigned int VolumetricDataCall::IDX_TRY_GET_DATA = 5;
 
 
 /*
  * VolumetricDataCall::VolumetricDataCall
  */
-VolumetricDataCall::VolumetricDataCall(void)
-        : data(nullptr), metadata(nullptr), vram_volume_name(0) {
-}
+VolumetricDataCall::VolumetricDataCall(void) : data(nullptr), metadata(nullptr), vram_volume_name(0) {}
 
 
 /*
  * VolumetricDataCall::VolumetricDataCall
  */
-VolumetricDataCall::VolumetricDataCall(
-        const VolumetricDataCall& rhs) : data(nullptr), metadata(nullptr), vram_volume_name(0) {
+VolumetricDataCall::VolumetricDataCall(const VolumetricDataCall& rhs)
+        : data(nullptr)
+        , metadata(nullptr)
+        , vram_volume_name(0) {
     *this = rhs;
 }
 
@@ -138,8 +131,7 @@ VolumetricDataCall::VolumetricDataCall(
 /*
  * VolumetricDataCall::~VolumetricDataCall
  */
-VolumetricDataCall::~VolumetricDataCall(void) {
-}
+VolumetricDataCall::~VolumetricDataCall(void) {}
 
 
 /*
@@ -161,19 +153,15 @@ size_t VolumetricDataCall::GetFrames(void) const {
 /*
  * VolumetricDataCall::GetGridType
  */
-VolumetricDataCall::GridType
-VolumetricDataCall::GetGridType(void) const {
-    return (this->metadata != nullptr)
-        ? this->metadata->GridType
-        : GridType::NONE;
+VolumetricDataCall::GridType VolumetricDataCall::GetGridType(void) const {
+    return (this->metadata != nullptr) ? this->metadata->GridType : GridType::NONE;
 }
 
 
 /*
  * VolumetricDataCall::GetResolution
  */
-const size_t VolumetricDataCall::GetResolution(
-        const int axis) const {
+const size_t VolumetricDataCall::GetResolution(const int axis) const {
     if ((axis < 0) || (axis > 2)) {
         throw vislib::OutOfRangeException(axis, 0, 2, __FILE__, __LINE__);
     }
@@ -192,25 +180,19 @@ size_t VolumetricDataCall::GetScalarLength(void) const {
 /*
  * VolumetricDataCall::GetScalarType
  */
-VolumetricDataCall::ScalarType
-VolumetricDataCall::GetScalarType(void) const {
-    return (this->metadata != nullptr)
-        ? this->metadata->ScalarType
-        : ScalarType::UNKNOWN;
+VolumetricDataCall::ScalarType VolumetricDataCall::GetScalarType(void) const {
+    return (this->metadata != nullptr) ? this->metadata->ScalarType : ScalarType::UNKNOWN;
 }
 
 
 /*
  * VolumetricDataCall::GetSliceDistances
  */
-const float *VolumetricDataCall::GetSliceDistances(
-        const int axis) const {
+const float* VolumetricDataCall::GetSliceDistances(const int axis) const {
     if ((axis < 0) || (axis > 2)) {
         throw vislib::OutOfRangeException(axis, 0, 2, __FILE__, __LINE__);
     }
-    return (this->metadata != nullptr)
-        ? this->metadata->SliceDists[axis]
-        : nullptr;
+    return (this->metadata != nullptr) ? this->metadata->SliceDists[axis] : nullptr;
 }
 
 
@@ -222,8 +204,7 @@ size_t VolumetricDataCall::GetVoxelsPerFrame(void) const {
         return 0;
     } else {
         size_t retval = 1;
-        for (int i = 0; i < STATIC_ARRAY_COUNT(this->metadata->Resolution);
-                ++i) {
+        for (int i = 0; i < STATIC_ARRAY_COUNT(this->metadata->Resolution); ++i) {
             retval *= this->metadata->Resolution[i];
         }
         return retval;
@@ -231,8 +212,8 @@ size_t VolumetricDataCall::GetVoxelsPerFrame(void) const {
 }
 
 
-const float VolumetricDataCall::GetRelativeVoxelValue(const uint32_t x, const uint32_t y,
-    const uint32_t z, const uint32_t c) const {
+const float VolumetricDataCall::GetRelativeVoxelValue(
+    const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t c) const {
 
     float theVal = 0.0f;
 
@@ -241,8 +222,7 @@ const float VolumetricDataCall::GetRelativeVoxelValue(const uint32_t x, const ui
         megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
 
     } else {
-        uint64_t idx =
-            (z * this->metadata->Resolution[1] + y) * this->metadata->Resolution[0] + x;
+        uint64_t idx = (z * this->metadata->Resolution[1] + y) * this->metadata->Resolution[0] + x;
         idx *= this->metadata->Components;
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
@@ -250,32 +230,26 @@ const float VolumetricDataCall::GetRelativeVoxelValue(const uint32_t x, const ui
             megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
             break;
 
-        case SIGNED_INTEGER: 
-            {
-                const int* theVol = static_cast<int*>(this->data);
-                theVal = theVol[idx];
-                theVal -= this->metadata->MinValues[c];
-                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
-            }
-            break;
+        case SIGNED_INTEGER: {
+            const int* theVol = static_cast<int*>(this->data);
+            theVal = theVol[idx];
+            theVal -= this->metadata->MinValues[c];
+            theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+        } break;
 
-        case UNSIGNED_INTEGER: 
-            {
-                const unsigned int* theVol = static_cast<unsigned int*>(this->data);
-                theVal = theVol[idx];
-                theVal -= this->metadata->MinValues[c];
-                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
-            }
-            break;
+        case UNSIGNED_INTEGER: {
+            const unsigned int* theVol = static_cast<unsigned int*>(this->data);
+            theVal = theVol[idx];
+            theVal -= this->metadata->MinValues[c];
+            theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+        } break;
 
-        case FLOATING_POINT:
-            {
-                const float* theVol = static_cast<float*>(this->data);
-                theVal = theVol[idx];
-                theVal -= this->metadata->MinValues[c];
-                theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
-            }
-            break;
+        case FLOATING_POINT: {
+            const float* theVol = static_cast<float*>(this->data);
+            theVal = theVol[idx];
+            theVal -= this->metadata->MinValues[c];
+            theVal /= (this->metadata->MaxValues[c] - this->metadata->MinValues[c]);
+        } break;
         }
     }
 
@@ -335,8 +309,7 @@ bool VolumetricDataCall::IsUniform(const int axis) const {
 /*
  * VolumetricDataCall::SetMetadata
  */
-void VolumetricDataCall::SetMetadata(
-        const Metadata *metadata) {
+void VolumetricDataCall::SetMetadata(const Metadata* metadata) {
     this->metadata = metadata;
 }
 
@@ -344,10 +317,9 @@ void VolumetricDataCall::SetMetadata(
 /*
  * VolumetricDataCall::operator =
  */
-VolumetricDataCall&
-VolumetricDataCall::operator =(const VolumetricDataCall& rhs) {
+VolumetricDataCall& VolumetricDataCall::operator=(const VolumetricDataCall& rhs) {
     if (this != &rhs) {
-        Base::operator =(rhs);
+        Base::operator=(rhs);
         this->data = rhs.data;
         this->metadata = rhs.metadata;
     }
@@ -358,12 +330,6 @@ VolumetricDataCall::operator =(const VolumetricDataCall& rhs) {
 /*
  * VolumetricDataCall::FUNCTIONS
  */
-const char *VolumetricDataCall::FUNCTIONS[] = {
-    "GetExtents",
-    "GetData",
-    "GetMetadata",
-    "StartAsync",
-    "StopAsync",
-    "TryGetData"
-};
-}
+const char* VolumetricDataCall::FUNCTIONS[] = {
+    "GetExtents", "GetData", "GetMetadata", "StartAsync", "StopAsync", "TryGetData"};
+} // namespace megamol::geocalls

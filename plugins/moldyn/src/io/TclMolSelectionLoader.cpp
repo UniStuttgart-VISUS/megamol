@@ -4,30 +4,34 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TclMolSelectionLoader.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/CoreInstance.h"
-#include <vector>
+#include "stdafx.h"
 #include <deque>
+#include <vector>
 
 using namespace megamol;
 using namespace megamol::moldyn;
 
 
-io::TclMolSelectionLoader::TclMolSelectionLoader() : core::Module(),
-        getDataSlot("getdata", "Access to the data"),
-        filenameSlot("filename", "Path to the Tcl file to load"),
-        hash(0), cnt(0), data() {
+io::TclMolSelectionLoader::TclMolSelectionLoader()
+        : core::Module()
+        , getDataSlot("getdata", "Access to the data")
+        , filenameSlot("filename", "Path to the Tcl file to load")
+        , hash(0)
+        , cnt(0)
+        , data() {
 
-    getDataSlot.SetCallback(geocalls::ParticleRelistCall::ClassName(), "GetData", &TclMolSelectionLoader::getDataCallback);
-    getDataSlot.SetCallback(geocalls::ParticleRelistCall::ClassName(), "GetExtent", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(
+        geocalls::ParticleRelistCall::ClassName(), "GetData", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(
+        geocalls::ParticleRelistCall::ClassName(), "GetExtent", &TclMolSelectionLoader::getDataCallback);
     MakeSlotAvailable(&getDataSlot);
 
     filenameSlot.SetParameter(new core::param::FilePathParam(""));
     MakeSlotAvailable(&filenameSlot);
-
 }
 
 io::TclMolSelectionLoader::~TclMolSelectionLoader() {
@@ -44,9 +48,11 @@ void io::TclMolSelectionLoader::release(void) {
 }
 
 bool io::TclMolSelectionLoader::getDataCallback(core::Call& caller) {
-    geocalls::ParticleRelistCall *prc = dynamic_cast<geocalls::ParticleRelistCall*>(&caller);
-    if (prc == nullptr) return false;
-    if (filenameSlot.IsDirty()) load();
+    geocalls::ParticleRelistCall* prc = dynamic_cast<geocalls::ParticleRelistCall*>(&caller);
+    if (prc == nullptr)
+        return false;
+    if (filenameSlot.IsDirty())
+        load();
 
     prc->SetDataHash(hash);
     prc->Set(cnt, data.size(), data.data());
@@ -84,12 +90,13 @@ void io::TclMolSelectionLoader::load(void) {
 
     SIZE_T lineCount = file.Count();
     for (SIZE_T li = 0; li < lineCount; ++li) {
-        const auto &line = file.Line(li);
+        const auto& line = file.Line(li);
         SIZE_T wordCount = line.Count();
-        if (wordCount < 4) continue;
-        if ((vislib::StringA(line.Word(0)).Equals("mol", false)
-                && vislib::StringA(line.Word(1)).Equals("color", false)
-                && vislib::StringA(line.Word(2)).Equals("ColorID", false))) {
+        if (wordCount < 4)
+            continue;
+        if ((vislib::StringA(line.Word(0)).Equals("mol", false) &&
+                vislib::StringA(line.Word(1)).Equals("color", false) &&
+                vislib::StringA(line.Word(2)).Equals("ColorID", false))) {
             try {
                 int v = vislib::CharTraitsA::ParseInt(line.Word(3));
                 if (actCol != v) {
@@ -99,23 +106,26 @@ void io::TclMolSelectionLoader::load(void) {
                     }
                     actCol = v;
                 }
-            } catch (...) { }
+            } catch (...) {}
         }
-        if (!(vislib::StringA(line.Word(0)).Equals("mol", false)
-            && vislib::StringA(line.Word(1)).Equals("selection", false)
-            && vislib::StringA(line.Word(2)).Equals("serial", false))) continue;
+        if (!(vislib::StringA(line.Word(0)).Equals("mol", false) &&
+                vislib::StringA(line.Word(1)).Equals("selection", false) &&
+                vislib::StringA(line.Word(2)).Equals("serial", false)))
+            continue;
 
         for (SIZE_T wi = 3; wi < wordCount; ++wi) {
             try {
                 uint64_t v = vislib::CharTraitsA::ParseUInt64(line.Word(wi)); // these are 1-based
                 partCnt++;
-                if (maxPart < v) maxPart = v;
-            } catch (...) { }
+                if (maxPart < v)
+                    maxPart = v;
+            } catch (...) {}
         }
     }
 
     bool incompleteSelection = (partCnt != maxPart);
-    if (incompleteSelection) cols.insert(cols.begin(), -1);
+    if (incompleteSelection)
+        cols.insert(cols.begin(), -1);
     // GetCoreInstance()->Log().WriteWarn("Particle selection", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
     hash++;
@@ -123,12 +133,13 @@ void io::TclMolSelectionLoader::load(void) {
     ::memset(data.data(), 0, sizeof(ListIDType) * maxPart);
     selCnt = 0;
     for (SIZE_T li = 0; li < lineCount; ++li) {
-        const auto &line = file.Line(li);
+        const auto& line = file.Line(li);
         SIZE_T wordCount = line.Count();
-        if (wordCount < 4) continue;
-        if ((vislib::StringA(line.Word(0)).Equals("mol", false)
-                && vislib::StringA(line.Word(1)).Equals("color", false)
-                && vislib::StringA(line.Word(2)).Equals("ColorID", false))) {
+        if (wordCount < 4)
+            continue;
+        if ((vislib::StringA(line.Word(0)).Equals("mol", false) &&
+                vislib::StringA(line.Word(1)).Equals("color", false) &&
+                vislib::StringA(line.Word(2)).Equals("ColorID", false))) {
             try {
                 int v = vislib::CharTraitsA::ParseInt(line.Word(3));
                 if (actCol != v) {
@@ -137,17 +148,18 @@ void io::TclMolSelectionLoader::load(void) {
                     actCol = v;
                     selCnt = static_cast<ListIDType>(std::distance(cols.begin(), ci));
                 }
-            } catch (...) { }
+            } catch (...) {}
         }
-        if (!(vislib::StringA(line.Word(0)).Equals("mol", false)
-            && vislib::StringA(line.Word(1)).Equals("selection", false)
-            && vislib::StringA(line.Word(2)).Equals("serial", false))) continue;
+        if (!(vislib::StringA(line.Word(0)).Equals("mol", false) &&
+                vislib::StringA(line.Word(1)).Equals("selection", false) &&
+                vislib::StringA(line.Word(2)).Equals("serial", false)))
+            continue;
 
         for (SIZE_T wi = 3; wi < wordCount; ++wi) {
             try {
                 uint64_t v = vislib::CharTraitsA::ParseUInt64(line.Word(wi)); // these are 1-based
                 data[v - 1] = selCnt;
-            } catch (...) { }
+            } catch (...) {}
         }
     }
 

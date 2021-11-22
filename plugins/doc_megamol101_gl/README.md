@@ -91,17 +91,17 @@ public:
         return "Loads sphere data from a csv file that contains one sphere per line.";
     }
 
-    // Answers whether this module is available on the current system, returns 'true' 		if the module is available, 'false' otherwise.
+    // Answers whether this module is available on the current system, returns 'true' if the module is available, 'false' otherwise.
     static bool IsAvailable(void) {
         return true;
     }
 
 private:
 
-    // Implementation of 'Create' (called after constructor, loads shaders etc.) ‚ 			returns 'true' on success, 'false' otherwise.
+    // Implementation of 'Create' (called after constructor, loads shaders etc.) ‚ returns 'true' on success, 'false' otherwise.
     virtual bool create(void);
 
-    // Implementation of 'Release'. Should free all the memory used by member variables 		(called by destructor).
+    // Implementation of 'Release'. Should free all the memory used by member variables (called by destructor).
     virtual void release(void);
 
     [...]
@@ -123,21 +123,21 @@ Example code can be found in ``src/ASCIISphereLoader.h`` and `src/ASCIISphereLoa
 
 An example for valid and invalid lines is shown in the following:
 
-​	:white_check_mark: `# this is a comment`
+:white_check_mark: `# this is a comment`
 
-​	:white_check_mark: `1.0, 5.0, 2.5, 3.75`
+:white_check_mark: `1.0, 5.0, 2.5, 3.75`
 
-​	:white_check_mark: `4.2, 1.8, 2.0, 0.4 # some information`
+:white_check_mark: `4.2, 1.8, 2.0, 0.4 # some information`
 
-​	:x: `4.5, 2.3, 1.0 #text`
+:x: `4.5, 2.3, 1.0 #text`
 
 All valid lines containing values are interpreted as spheres. The have one three-dimensional position and a radius. The value order is x, y, z, r. 
 
 To load the data, several steps are necessary:
 
- 	1. Read an input filename from the GUI
- 	2. Read the data from the now known file from disk
- 	3. Pass the read data to other Modules
+    1. Read an input filename from the GUI
+    2. Read the data from the now known file from disk
+    3. Pass the read data to other Modules
 
 For the first step we need a mechanism to read input from the GUI or config files. We call this mechanism a parameter slot
 
@@ -160,12 +160,12 @@ From ``src/ASCIISphereLoader.cpp``:
 
 ```cpp
 ASCIISphereLoader::ASCIISphereLoader(void) : core::Module(),
-	filenameSlot("filename", "The path to the file that contains the data") {
+    filenameSlot("filename", "The path to the file that contains the data") {
         
-	//…
-	this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
-	this->MakeSlotAvailable(&this->filenameSlot);
-	//…
+    //…
+    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->filenameSlot);
+    //…
 }
 ```
 
@@ -200,27 +200,27 @@ From ``src/ASCIISphereLoader.cpp``:
 
 ```cpp
 if (this->filenameSlot.IsDirty()) {
-	this->filenameSlot.ResetDirty();
-	this->spheres.clear(); // std::vector<float>
-	this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-	bool retval = false;
+    this->filenameSlot.ResetDirty();
+    this->spheres.clear(); // std::vector<float>
+    this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    bool retval = false;
 
-	try {
-		// load the data from file
-		retval = this->load(this->filenameSlot
+    try {
+        // load the data from file
+        retval = this->load(this->filenameSlot
                   .Param<core::param::FilePathParam>()->Value());
-	} catch (vislib::Exception ex) {
-		// a known vislib exception was raised
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), 	               ex.GetLine());
-		retval = false;
-	} catch (...) {
-		// an unknown exception was raised
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unexpected exception: unkown exception\n");
-		retval = false;
-	}
-	this->datahash++;
+    } catch (vislib::Exception ex) {
+        // a known vislib exception was raised
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(),                    ex.GetLine());
+        retval = false;
+    } catch (...) {
+        // an unknown exception was raised
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unexpected exception: unkown exception\n");
+        retval = false;
+    }
+    this->datahash++;
 }
 ```
 
@@ -299,16 +299,16 @@ It is typically a good idea to override the assignment operator, especially if y
 
 ```cpp
 static unsigned int FunctionCount(void) {
-	// return 2
-	return core::AbstractGetData3DCall::FunctionCount();
+    // return 2
+    return core::AbstractGetData3DCall::FunctionCount();
 }
 
 static const char * FunctionName(unsigned int idx) {
-	//switch (idx) {
-    //	case 0: return "GetData";
-    //	case 1: return "GetExtent";
-	//}
-	return core::AbstractGetData3DCall::FunctionName(idx);
+    //switch (idx) {
+    //    case 0: return "GetData";
+    //    case 1: return "GetExtent";
+    //}
+    return core::AbstractGetData3DCall::FunctionName(idx);
 }
 ```
 
@@ -338,26 +338,26 @@ The ``GetExtents`` method of the ``SimplestSphereRenderer`` then looks like this
 
 ```cpp
 bool SimplestSphereRenderer::GetExtents(core::Call& call) {
-	core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
+    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr3d == nullptr) return false;
 
-	CallSpheres *cs = this->sphereDataSlot.CallAs<CallSpheres>();
-	if (cs == nullptr) return false;
-	if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
+    CallSpheres *cs = this->sphereDataSlot.CallAs<CallSpheres>();
+    if (cs == nullptr) return false;
+    if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
 
-	float scale;
-	if (!vislib::math::IsEqual(cs->AccessBoundingBoxes()
+    float scale;
+    if (!vislib::math::IsEqual(cs->AccessBoundingBoxes()
                                            .ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-		scale = 10.0f / cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-	} else {
-		scale = 1.0f;
-	}
+        scale = 10.0f / cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    } else {
+        scale = 1.0f;
+    }
 
-	cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
-	cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-	cr3d->SetTimeFramesCount(cs->FrameCount());
+    cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
+    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
+    cr3d->SetTimeFramesCount(cs->FrameCount());
 
-	return true;
+    return true;
 }
 ```
 
@@ -367,14 +367,14 @@ The ``GetCapabilites`` method of the ``SimplestSphereRenderer`` looks like this:
 
 ```cpp
 bool SimplestSphereRenderer::GetCapabilities(core::Call& call) {
-	core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-	if (cr3d == nullptr) return false;
+    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr3d == nullptr) return false;
 
-	cr3d->SetCapabilities(core::view::CallRender3D::CAP_RENDER
-				| core::view::CallRender3D::CAP_LIGHTING
-				| core::view::CallRender3D::CAP_ANIMATION);
+    cr3d->SetCapabilities(core::view::CallRender3D::CAP_RENDER
+                | core::view::CallRender3D::CAP_LIGHTING
+                | core::view::CallRender3D::CAP_ANIMATION);
 
-	return true;
+    return true;
 }
 ```
 
@@ -396,26 +396,26 @@ ShaderSource vertSrc;
 ShaderSource fragSrc;
 if (!this->GetCoreInstance()->ShaderSourceFactory()
                                .MakeShaderSource("simplePoints::vertex", vertSrc)) {
-	Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
                             "Unable to load vertex shader source for simple points");
-	return false;
+    return false;
 }
 
 if (!this->GetCoreInstance()->ShaderSourceFactory()
                                .MakeShaderSource("simplePoints::fragment", fragSrc)) {
-   	Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
                             "Unable to load fragment shader source for simple points");
-	return false;
+    return false;
 }
 try {
-	if (!this->simpleShader.Create(vertSrc.Code(), vertSrc.Count(), 
+    if (!this->simpleShader.Create(vertSrc.Code(), vertSrc.Count(), 
                                    fragSrc.Code(), fragSrc.Count())) {
-		throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-	}
+        throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+    }
 } catch (vislib::Exception e) {
-	Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
                              "Unable to create point shader: %s\n", e.GetMsgA());
-	return false;
+    return false;
 }
 ```
 

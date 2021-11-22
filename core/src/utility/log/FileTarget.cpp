@@ -24,13 +24,17 @@ megamol::core::utility::log::FileTarget::FileTarget(std::string const& path, Log
 /*
  * megamol::core::utility::log::FileTarget::~FileTarget
  */
-megamol::core::utility::log::FileTarget::~FileTarget(void) { logger->flush(); }
+megamol::core::utility::log::FileTarget::~FileTarget(void) {
+    logger->flush();
+}
 
 
 /*
  * megamol::core::utility::log::FileTarget::Flush
  */
-void megamol::core::utility::log::FileTarget::Flush(void) { logger->flush(); }
+void megamol::core::utility::log::FileTarget::Flush(void) {
+    logger->flush();
+}
 
 
 /*
@@ -47,22 +51,23 @@ void megamol::core::utility::log::FileTarget::Msg(Log::UINT level, megamol::core
  */
 void megamol::core::utility::log::FileTarget::Msg(Log::UINT level, megamol::core::utility::log::Log::TimeStamp time,
     megamol::core::utility::log::Log::SourceID sid, std::string const& msg) {
-    if (level > this->Level()) return;
+    if (level > this->Level())
+        return;
 
     struct tm* timeStamp;
 #ifdef _WIN32
-#    if (_MSC_VER >= 1400)
+#if (_MSC_VER >= 1400)
     struct tm __tS;
     timeStamp = &__tS;
     if (localtime_s(timeStamp, &time) != 0) {
         // timestamp error
         __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
     }
-#    else  /* (_MSC_VER >= 1400) */
+#else  /* (_MSC_VER >= 1400) */
     timeStamp = localtime(&time);
-#    endif /* (_MSC_VER >= 1400) */
-#else      /* _WIN32 */
+#endif /* (_MSC_VER >= 1400) */
+#else  /* _WIN32 */
     timeStamp = localtime(&time);
-#endif     /* _WIN32 */
+#endif /* _WIN32 */
     logger->info("{}:{}:{}|{}|{}|{}", timeStamp->tm_hour, timeStamp->tm_min, timeStamp->tm_sec, sid, level, msg);
 }

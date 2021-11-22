@@ -8,11 +8,10 @@
 #ifndef MEGAMOLCORE_RENDERER2DMODULE_H_INCLUDED
 #define MEGAMOLCORE_RENDERER2DMODULE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallRender2DGL.h"
-#include "mmcore/view/RendererModule.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
 
@@ -28,8 +27,8 @@ class MEGAMOLCORE_API Renderer2DModuleGL : public core::view::RendererModule<Cal
 public:
     /** Ctor. */
     Renderer2DModuleGL() : core::view::RendererModule<CallRender2DGL, ModuleGL>() {
-	    this->MakeSlotAvailable(&this->renderSlot);
-	}
+        this->MakeSlotAvailable(&this->renderSlot);
+    }
 
     /** Dtor. */
     virtual ~Renderer2DModuleGL(void) = default;
@@ -64,7 +63,7 @@ inline bool Renderer2DModuleGL::RenderChain(CallRender2DGL& call) {
 }
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_RENDERERMODULE_H_INCLUDED */

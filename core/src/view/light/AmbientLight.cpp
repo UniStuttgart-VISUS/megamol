@@ -4,10 +4,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/AmbientLight.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -25,7 +25,9 @@ AmbientLight::AmbientLight(void) : AbstractLight() {
 /*
  * megamol::core::view::light::AmbientLight::AmbientLight
  */
-AmbientLight::~AmbientLight(void) { this->Release(); }
+AmbientLight::~AmbientLight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::AmbientLight::readParams

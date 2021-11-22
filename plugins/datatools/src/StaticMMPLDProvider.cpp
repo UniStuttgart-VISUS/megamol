@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "StaticMMPLDProvider.h"
+#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringConverter.h"
@@ -7,7 +7,8 @@
 
 
 megamol::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
-    : outDataSlot("outData", "Output"), filenamesSlot("filenames", "Set of filenames separated with ';'") {
+        : outDataSlot("outData", "Output")
+        , filenamesSlot("filenames", "Set of filenames separated with ';'") {
     outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &StaticMMPLDProvider::getDataCallback);
     outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
@@ -19,10 +20,14 @@ megamol::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
 }
 
 
-megamol::datatools::StaticMMPLDProvider::~StaticMMPLDProvider() { this->Release(); }
+megamol::datatools::StaticMMPLDProvider::~StaticMMPLDProvider() {
+    this->Release();
+}
 
 
-bool megamol::datatools::StaticMMPLDProvider::create() { return true; }
+bool megamol::datatools::StaticMMPLDProvider::create() {
+    return true;
+}
 
 
 void megamol::datatools::StaticMMPLDProvider::release() {}
@@ -72,8 +77,7 @@ bool megamol::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticle
                 particles.SetVertexData(
                     static_cast<geocalls::SimpleSphericalParticles::VertexDataType>(entry.list_header.vert_type),
                     entry.data.data() + entry.vertex_offset, entry.vertex_stride + entry.color_stride);
-                particles.SetColourData(
-                    ColorTypeTranslator(entry.list_header.col_type),
+                particles.SetColourData(ColorTypeTranslator(entry.list_header.col_type),
                     entry.data.data() + entry.color_offset, entry.vertex_stride + entry.color_stride);
                 particles.SetGlobalRadius(entry.list_header.global_radius);
                 particles.SetGlobalColour(entry.list_header.global_color[0], entry.list_header.global_color[1],
@@ -94,7 +98,7 @@ bool megamol::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticle
 
         filenamesSlot.ResetDirty();
     }
-    
+
 
     return !output_frames.empty();
 }
@@ -102,7 +106,8 @@ bool megamol::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticle
 
 bool megamol::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
     auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     return assertData(*outCall);
 }
@@ -110,7 +115,8 @@ bool megamol::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
 
 bool megamol::datatools::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
     auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     return assertData(*outCall);
 }

@@ -12,17 +12,17 @@
 namespace megamol {
 namespace core {
 
-    class FlagCollection_CPU {
-    public:
-        std::shared_ptr<FlagStorage::FlagVectorType> flags;
+class FlagCollection_CPU {
+public:
+    std::shared_ptr<FlagStorage::FlagVectorType> flags;
 
-        void validateFlagCount(uint32_t num) {
-            if (flags->size() < num) {
-                flags->resize(num);
-                std::fill(flags->begin(), flags->end(), FlagStorage::ENABLED);
-            }
+    void validateFlagCount(uint32_t num) {
+        if (flags->size() < num) {
+            flags->resize(num);
+            std::fill(flags->begin(), flags->end(), FlagStorage::ENABLED);
         }
-    };
+    }
+};
 
 } // namespace core
 } // namespace megamol

@@ -4,13 +4,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "OSPRayRenderer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
-#include <chrono>
 #include "ospray/ospray_cpp.h"
+#include "stdafx.h"
+#include <chrono>
 
 #include <sstream>
 #include <stdint.h>
@@ -21,16 +21,16 @@ using namespace megamol::ospray;
 ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
 OSPRayRenderer::OSPRayRenderer(void)
-    : AbstractOSPRayRenderer()
-    , _cam()
-    , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
+        : AbstractOSPRayRenderer()
+        , _cam()
+        , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
         , _enablePickingSlot("enable picking", "")
 
 {
     this->_getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
     this->MakeSlotAvailable(&this->_getStructureSlot);
 
-    _imgSize = {0,0};
+    _imgSize = {0, 0};
     _time = 0;
     _framebuffer = nullptr;
     _renderer = nullptr;
@@ -96,15 +96,18 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         this->_rd_type.ResetDirty();
     }
 
-    if (&cr == nullptr) return false;
+    if (&cr == nullptr)
+        return false;
 
 
     CallOSPRayStructure* os = this->_getStructureSlot.CallAs<CallOSPRayStructure>();
-    if (os == nullptr) return false;
+    if (os == nullptr)
+        return false;
     // read data
     os->setStructureMap(&_structureMap);
     os->setTime(cr.Time());
-    if (!os->fillStructureMap()) return false;
+    if (!os->fillStructureMap())
+        return false;
     // check if data has changed
     _data_has_changed = false;
     _material_has_changed = false;
@@ -139,10 +142,10 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     Camera cam = cr.GetCamera();
 
     // check data and camera hash
-    if (_cam.get<Camera::Pose>() == cam.get<Camera::Pose>()){
-	    _cam_has_changed = false;
+    if (_cam.get<Camera::Pose>() == cam.get<Camera::Pose>()) {
+        _cam_has_changed = false;
     } else {
-	    _cam_has_changed = true;
+        _cam_has_changed = true;
     }
 
     // Generate complete snapshot and calculate matrices
@@ -155,17 +158,18 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     if (fbo == nullptr) {
         return false;
     }
-    if (fbo->width == 0 && fbo->height == 0) return false;
+    if (fbo->width == 0 && fbo->height == 0)
+        return false;
 
     // bool triggered = false;
-    if (_imgSize[0] != fbo->width ||
-        _imgSize[1] != fbo->height || _accumulateSlot.IsDirty()) {
+    if (_imgSize[0] != fbo->width || _imgSize[1] != fbo->height || _accumulateSlot.IsDirty()) {
         // triggered = true;
         // Breakpoint for Screenshooter debugging
         // if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         _imgSize[0] = fbo->width;
         _imgSize[1] = fbo->height;
-        _framebuffer = std::make_shared<::ospray::cpp::FrameBuffer>(_imgSize[0], _imgSize[1], OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+        _framebuffer = std::make_shared<::ospray::cpp::FrameBuffer>(
+            _imgSize[0], _imgSize[1], OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         _db.resize(_imgSize[0] * _imgSize[1]);
         _framebuffer->commit();
     }
@@ -196,12 +200,13 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         _frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
-        
+
         auto cam_pose = _cam.get<Camera::Pose>();
         std::array<float, 3> eyeDir = {cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z};
         if (_data_has_changed || _frameID != static_cast<size_t>(cr.Time()) || _renderer_has_changed) {
             // || this->InterfaceIsDirty()) {
-            if (!this->generateRepresentations()) return false;
+            if (!this->generateRepresentations())
+                return false;
             this->createInstances();
             std::vector<::ospray::cpp::Instance> instanceArray;
             std::transform(_instances.begin(), _instances.end(), std::back_inserter(instanceArray), second(_instances));
@@ -222,7 +227,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         if (_material_has_changed && !_data_has_changed) {
             this->changeMaterial();
         }
-        if (_transformation_has_changed  || _material_has_changed && !_data_has_changed) {
+        if (_transformation_has_changed || _material_has_changed && !_data_has_changed) {
             this->changeTransformation();
             std::vector<::ospray::cpp::Instance> instanceArray;
             std::transform(_instances.begin(), _instances.end(), std::back_inserter(instanceArray), second(_instances));
@@ -277,7 +282,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         // setup framebuffer and measure time
         auto t1 = std::chrono::high_resolution_clock::now();
 
-        _framebuffer->clear();//(OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+        _framebuffer->clear(); //(OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         _framebuffer->renderFrame(*_renderer, *_camera, *_world);
 
         // get the texture from the framebuffer
@@ -291,7 +296,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         _accum_time.count += 1;
         if (_accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
             const unsigned long long int mean_rendertime = _accum_time.amount / _accum_time.count;
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
             _accum_time.count = 0;
             _accum_time.amount = 0;
         }
@@ -317,17 +323,16 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
 
         //std::string fname("blub.ppm");
         //writePPM(fname, _imgSize, fb);
-        
+
         auto frmbuffer = cr.GetFramebuffer();
         frmbuffer->width = _imgSize[0];
         frmbuffer->height = _imgSize[1];
         frmbuffer->depthBuffer = _db;
         frmbuffer->colorBuffer = _fb;
-        frmbuffer->depthBufferActive = this->_useDB.Param<core::param::BoolParam>()
-                                           ->Value();
+        frmbuffer->depthBufferActive = this->_useDB.Param<core::param::BoolParam>()->Value();
 
         // clear stuff
-         _framebuffer->unmap(fb);
+        _framebuffer->unmap(fb);
 
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
@@ -395,7 +400,9 @@ bool OSPRayRenderer::InterfaceIsDirty() {
 /*
 ospray::OSPRayRenderer::InterfaceResetDirty()
 */
-void OSPRayRenderer::InterfaceResetDirty() { this->AbstractResetDirty(); }
+void OSPRayRenderer::InterfaceResetDirty() {
+    this->AbstractResetDirty();
+}
 
 
 /*
@@ -403,12 +410,15 @@ void OSPRayRenderer::InterfaceResetDirty() { this->AbstractResetDirty(); }
  */
 bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D& cr) {
 
-    if (&cr == NULL) return false;
+    if (&cr == NULL)
+        return false;
     CallOSPRayStructure* os = this->_getStructureSlot.CallAs<CallOSPRayStructure>();
-    if (os == NULL) return false;
+    if (os == NULL)
+        return false;
     os->setTime(static_cast<int>(cr.Time()));
     os->setExtendMap(&(this->_extendMap));
-    if (!os->fillExtendMap()) return false;
+    if (!os->fillExtendMap())
+        return false;
 
     megamol::core::BoundingBoxes_2 finalBox;
     unsigned int frameCnt = 0;
@@ -502,11 +512,12 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db) {
     for (j = 0; j < ospDepthBufferHeight; j++) {
         for (i = 0; i < ospDepthBufferWidth; i++) {
             const auto dir_ij = glm::normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du +
-                                                      float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
+                                               float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
 
             const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];
             float res = 0.5 * (-A * tmp + B) / tmp + 0.5;
-            if (!std::isfinite(res)) res = 1.0f;
+            if (!std::isfinite(res))
+                res = 1.0f;
             db[j * ospDepthBufferWidth + i] = res;
         }
     }

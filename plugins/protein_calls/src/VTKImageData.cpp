@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "protein_calls/VTKImageData.h"
+#include "stdafx.h"
 
 // EMPTY
-
-
-
-

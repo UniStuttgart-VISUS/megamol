@@ -7,8 +7,8 @@
 
 #pragma once
 #include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "glowl/FramebufferObject.hpp"
@@ -19,8 +19,8 @@ template<typename FBO>
 using INITFUNC = void(std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
 
 template<typename FBO>
-using RENFUNC = void(std::shared_ptr<glowl::GLSLProgram>&, std::shared_ptr<glowl::FramebufferObject>&,
-    std::shared_ptr<FBO>&, int, int);
+using RENFUNC = void(
+    std::shared_ptr<glowl::GLSLProgram>&, std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
     char const* CN, char const* DESC>
@@ -124,7 +124,7 @@ protected:
             ci->SetInputEvent(evt);
             return (*ci)(core::view::InputCall::FnOnChar);
         }
-        return false; 
+        return false;
     }
 
     bool OnKey(frontend_resources::Key key, frontend_resources::KeyAction action,
@@ -167,7 +167,7 @@ protected:
             ci->SetInputEvent(evt);
             return (*ci)(core::view::InputCall::FnOnMouseMove);
         }
-        return false; 
+        return false;
     }
 
     bool OnMouseScroll(double dx, double dy) override {
@@ -180,7 +180,7 @@ protected:
             ci->SetInputEvent(evt);
             return (*ci)(core::view::InputCall::FnOnMouseScroll);
         }
-        return false; 
+        return false;
     }
 
 private:
@@ -247,9 +247,8 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
     return true;
 }
 
-inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader,
-    std::shared_ptr<glowl::FramebufferObject>& lhs_fbo, GLuint color_tex, GLuint depth_tex, int width,
-    int height) {
+inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader, std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
+    GLuint color_tex, GLuint depth_tex, int width, int height) {
     // draw into lhs fbo
     if ((lhs_fbo->getWidth() != width) || (lhs_fbo->getHeight() != height)) {
         lhs_fbo->resize(width, height);
@@ -281,4 +280,4 @@ inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader,
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-} // namespace megamol::core::view
+} // namespace megamol::core_gl::view

@@ -15,8 +15,12 @@ namespace frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
 public:
-    std::string serviceName() const override { return "Profiling_Service"; }
-    bool init(void* configPtr) override { return true;}
+    std::string serviceName() const override {
+        return "Profiling_Service";
+    }
+    bool init(void* configPtr) override {
+        return true;
+    }
     void close() override {}
     void updateProvidedResources() override {}
     void digestChangedRequestedResources() override {}
@@ -27,8 +31,12 @@ public:
 
     void preGraphRender() override {}
     void postGraphRender() override {}
-    std::vector<FrontendResource>& getProvidedResources() override { return m_providedResourceReferences; }
-    const std::vector<std::string> getRequestedResourceNames() const override { return m_requestedResourcesNames; }
+    std::vector<FrontendResource>& getProvidedResources() override {
+        return m_providedResourceReferences;
+    }
+    const std::vector<std::string> getRequestedResourceNames() const override {
+        return m_requestedResourcesNames;
+    }
     void setRequestedResources(std::vector<FrontendResource> resources) override {}
 
     std::vector<FrontendResource> m_providedResourceReferences;

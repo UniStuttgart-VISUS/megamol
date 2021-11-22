@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
 #include "glTFRenderTasksDataSource.h"
-#include "tiny_gltf.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/Matrix.h"
 #include "mmcore/param/FilePathParam.h"
+#include "tiny_gltf.h"
+#include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 
@@ -70,8 +70,7 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
 
             if (this->m_btf_filename_slot.IsDirty()) {
                 m_btf_filename_slot.ResetDirty();
-                auto filename =
-                    m_btf_filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
+                auto filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
                 m_material_collection->clear();
                 m_material_collection->addMaterial(this->instance(), filename, filename);
             }
@@ -108,15 +107,15 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
                         std::string sub_mesh_identifier = gltf_call->getData().first +
                                                           model->meshes[model->nodes[node_idx].mesh].name + "_" +
                                                           std::to_string(primitive_idx);
-                        
+
                         GPUMeshCollection::SubMeshData sub_mesh;
-                        for (auto const& gpu_mesh_collection : gpu_mesh_storage){
+                        for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
                             sub_mesh = gpu_mesh_collection->getSubMesh(sub_mesh_identifier);
 
                             if (sub_mesh.mesh != nullptr) {
                                 break;
                             }
-                        } 
+                        }
 
                         //TODO will use its own material storage in the future
                         if (sub_mesh.mesh != nullptr && !m_material_collection->getMaterials().empty()) {

@@ -20,7 +20,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MeshViewerRenderTasks"; }
+    static const char* ClassName(void) {
+        return "MeshViewerRenderTasks";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -36,7 +38,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     MeshViewerRenderTasks();
     ~MeshViewerRenderTasks();
@@ -51,7 +55,7 @@ private:
     megamol::core::CallerSlot m_material_slot;
 };
 
-} // namespace mesh
+} // namespace mesh_gl
 } // namespace megamol
 
 

@@ -1,9 +1,9 @@
 #include "ProbeBillboardGlyphRenderTasks.h"
 
-#include "mmcore/view/CallGetTransferFunction.h"
 #include "ProbeCalls.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -12,9 +12,9 @@
 #include "mmcore/param/FloatParam.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
+#include <imgui_internal.h>
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 
@@ -42,17 +42,16 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::release() {}
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks()
-    : m_version(0)
-    , m_imgui_context(nullptr)
-    , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probe_manipulation_slot("GetProbeManipulation", "")
-    , m_billboard_dummy_mesh(nullptr)
-    , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
-    , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
-    , m_tf_min(0.0f)
-    , m_tf_max(1.0f)
-{
+        : m_version(0)
+        , m_imgui_context(nullptr)
+        , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_probe_manipulation_slot("GetProbeManipulation", "")
+        , m_billboard_dummy_mesh(nullptr)
+        , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
+        , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
+        , m_tf_min(0.0f)
+        , m_tf_max(1.0f) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
@@ -77,7 +76,8 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTas
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Call& caller) {
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
     // no incoming render task collection -> use your own collection
@@ -90,12 +90,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
         rhs_rtc->setData(rt_collection, 0);
-        if (!(*rhs_rtc)(0)) return false;
+        if (!(*rhs_rtc)(0))
+            return false;
     }
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
@@ -109,8 +112,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL) return false;
-    if (!(*pc)(0)) return false;
+    if (pc == NULL)
+        return false;
+    if (!(*pc)(0))
+        return false;
 
 
     auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
@@ -119,7 +124,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
-                                     this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
+                                 this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -164,19 +169,20 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            if (gpu_mtl_storage->getMaterials()[0].textures.size() > 0)
-            {
+            if (gpu_mtl_storage->getMaterials()[0].textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
-                    assert(probe_cnt <= (gpu_mtl_storage->getMaterials()[0].textures.size() * 2048) );
+                    assert(probe_cnt <= (gpu_mtl_storage->getMaterials()[0].textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                    GLuint64 texture_handle = gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->getTextureHandle();
+                    GLuint64 texture_handle =
+                        gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->getTextureHandle();
                     float slice_idx = probe_idx % 2048;
                     gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->makeResident();
 
-                    auto visitor = [&textured_gylph_draw_commands, draw_command, scale, texture_handle, slice_idx, probe_idx, this](auto&& arg) {
+                    auto visitor = [&textured_gylph_draw_commands, draw_command, scale, texture_handle, slice_idx,
+                                       probe_idx, this](auto&& arg) {
                         using T = std::decay_t<decltype(arg)>;
 
                         auto glyph_data = createTexturedGlyphData(arg, probe_idx, texture_handle, slice_idx, scale);
@@ -188,9 +194,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 }
             }
 
-        }
-        else
-        {
+        } else {
             // Update transfer texture only if it available and has changed
             if (tfc != NULL) {
                 if (tfc->IsDirty()) {
@@ -276,7 +280,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 data.max_value = max;
             }
         }
-        
+
         auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
         rt_collection->addRenderTasks(
             textured_shader, m_billboard_dummy_mesh, textured_gylph_draw_commands, m_textured_glyph_data);
@@ -293,7 +297,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     // check for pending probe manipulations
     CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
     if (pic != NULL) {
-        if (!(*pic)(0)) return false;
+        if (!(*pic)(0))
+            return false;
 
         if (pic->hasUpdate()) {
             auto interaction_collection = pic->getData();
@@ -301,7 +306,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             auto& pending_manips = interaction_collection->accessPendingManipulations();
 
             if (pc->hasUpdate()) {
-                if (!(*pc)(0)) return false;
+                if (!(*pc)(0))
+                    return false;
             }
             auto probes = pc->getData();
 
@@ -348,7 +354,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         // Display contents in a scrolling region
                         ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
                         ImGui::BeginChild("Scrolling");
-                        for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
+                        for (int n = 0; n < 50; n++)
+                            ImGui::Text("%04d: Some text", n);
                         ImGui::EndChild();
                         ImGui::End();
                     }
@@ -380,18 +387,21 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core::Call& caller) {
 
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL) return false;
+    if (probe_call == NULL)
+        return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     auto probe_meta_data = probe_call->getMetaData();
     probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1)) return false;
+    if (!(*probe_call)(1))
+        return false;
     probe_meta_data = probe_call->getMetaData();
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);

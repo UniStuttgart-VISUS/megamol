@@ -11,9 +11,11 @@
 /*
  * vislib::RawStorageWriter::RawStorageWriter
  */
-vislib::RawStorageWriter::RawStorageWriter(vislib::RawStorage &store,
-        SIZE_T pos, SIZE_T end, SIZE_T inc) : data(store), end(end), inc(inc),
-        pos(pos) {
+vislib::RawStorageWriter::RawStorageWriter(vislib::RawStorage& store, SIZE_T pos, SIZE_T end, SIZE_T inc)
+        : data(store)
+        , end(end)
+        , inc(inc)
+        , pos(pos) {
     if (this->end == SIZE_MAX) {
         this->end = this->data.GetSize();
     }
@@ -72,7 +74,7 @@ void vislib::RawStorageWriter::SetPosition(SIZE_T pos) {
 /*
  * vislib::RawStorageWriter::Write
  */
-void vislib::RawStorageWriter::Write(const void *buf, SIZE_T size) {
+void vislib::RawStorageWriter::Write(const void* buf, SIZE_T size) {
     this->assertSize(this->pos + size);
     ::memcpy(this->data.At(this->pos), buf, size);
     this->pos += size;
@@ -90,7 +92,8 @@ void vislib::RawStorageWriter::assertSize(SIZE_T e) {
         SIZE_T s = this->data.GetSize();
         SIZE_T d = e - s;
         SIZE_T f = d / this->inc;
-        if (d % this->inc) f++;
+        if (d % this->inc)
+            f++;
         d = f * this->inc;
         s = e + d;
         this->data.AssertSize(s, true);

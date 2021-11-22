@@ -4,22 +4,22 @@
  * Copyright (C) 2017 by MegaMol team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleThermodyn.h"
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <cfloat>
-#include <cfenv>
-#include <cstdint>
-#include <limits>
-#include <omp.h>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "stdafx.h"
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cfenv>
+#include <cfloat>
+#include <cstdint>
+#include <limits>
+#include <omp.h>
 
 #include "MinSphereWrapper.h"
 
@@ -29,34 +29,35 @@ using namespace megamol;
  * datatools::ParticleThermodyn::ParticleThermodyn
  */
 datatools::ParticleThermodyn::ParticleThermodyn(void)
-    : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
-    , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
-    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
-    , radiusSlot("radius", "the radius in which to look for neighbors")
-    , numNeighborSlot("numNeighbors", "how many neighbors to collect")
-    , searchTypeSlot("searchType", "num of neighbors or radius")
-    , minMetricSlot("minMetric", "the detected minimum of the selected metric")
-    , maxMetricSlot("maxMetric", "the detected maximum of the selected metric")
-    , massSlot("mass", "the mass of the particles")
-    , freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model")
-    , metricsSlot("metrics", "the metrics you want to computer from the neighborhood")
-    , removeSelfSlot("remove self", "whether a particle itself is part of the neighborhood")
-    , findExtremesSlot("find extremes", "whether to only color particles with values larger than extremevalue. Make "
-                                        "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
-                                        "allows you to highlight the neighbors responsible for the extremes.")
-    , extremeValueSlot("extreme value", "the extreme value that you find weird")
-    , fluidDensitySlot("phase01::fluid density", "Density of the fluid")
-    , tcSlot("phase02::Tc", "Critical temperature")
-    , rhocSlot("phase02::RhoC", "Critical density")
-    , datahash(0)
-    , lastTime(-1)
-    , newColors()
-    , allParts()
-    , maxDist(0.0f)
-    , particleTree(nullptr)
-    , myPts(nullptr)
-    , outDataSlot("outData", "Provides intensities based on a local particle metric")
-    , inDataSlot("inData", "Takes the directional particle data") {
+        : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+        , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+        , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+        , radiusSlot("radius", "the radius in which to look for neighbors")
+        , numNeighborSlot("numNeighbors", "how many neighbors to collect")
+        , searchTypeSlot("searchType", "num of neighbors or radius")
+        , minMetricSlot("minMetric", "the detected minimum of the selected metric")
+        , maxMetricSlot("maxMetric", "the detected maximum of the selected metric")
+        , massSlot("mass", "the mass of the particles")
+        , freedomSlot("freedomFactor", "factor reducing T* based on degrees of freedom of the molecular model")
+        , metricsSlot("metrics", "the metrics you want to computer from the neighborhood")
+        , removeSelfSlot("remove self", "whether a particle itself is part of the neighborhood")
+        , findExtremesSlot("find extremes",
+              "whether to only color particles with values larger than extremevalue. Make "
+              "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
+              "allows you to highlight the neighbors responsible for the extremes.")
+        , extremeValueSlot("extreme value", "the extreme value that you find weird")
+        , fluidDensitySlot("phase01::fluid density", "Density of the fluid")
+        , tcSlot("phase02::Tc", "Critical temperature")
+        , rhocSlot("phase02::RhoC", "Critical density")
+        , datahash(0)
+        , lastTime(-1)
+        , newColors()
+        , allParts()
+        , maxDist(0.0f)
+        , particleTree(nullptr)
+        , myPts(nullptr)
+        , outDataSlot("outData", "Provides intensities based on a local particle metric")
+        , inDataSlot("inData", "Takes the directional particle data") {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclXSlot);
@@ -135,12 +136,16 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleThermodyn::~ParticleThermodyn(void) { this->Release(); }
+datatools::ParticleThermodyn::~ParticleThermodyn(void) {
+    this->Release();
+}
 
 /*
  * datatools::ParticleThermodyn::create
  */
-bool datatools::ParticleThermodyn::create(void) { return true; }
+bool datatools::ParticleThermodyn::create(void) {
+    return true;
+}
 
 
 bool isListOK(geocalls::MultiParticleDataCall* in, const unsigned int i) {
@@ -148,7 +153,7 @@ bool isListOK(geocalls::MultiParticleDataCall* in, const unsigned int i) {
     auto& pl = in->AccessParticles(i);
     // TODO: double
     return ((pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
-               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR));
+            (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR));
 }
 
 
@@ -165,8 +170,8 @@ bool metricRequiresDir(megamol::datatools::ParticleThermodyn::metricsEnum metric
 }
 
 
-bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric,
-    geocalls::MultiParticleDataCall* in, const unsigned int i) {
+bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric, geocalls::MultiParticleDataCall* in,
+    const unsigned int i) {
     if (metricRequiresDir(metric) && !hasDir(in, i))
         return false;
     return true;
@@ -185,7 +190,8 @@ bool datatools::ParticleThermodyn::assertData(
     using geocalls::MultiParticleDataCall;
 
     megamol::core::AbstractGetData3DCall* out;
-    if (outMPDC != nullptr) out = outMPDC;
+    if (outMPDC != nullptr)
+        out = outMPDC;
 
     const unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
@@ -202,12 +208,15 @@ bool datatools::ParticleThermodyn::assertData(
     if (this->lastTime != time || this->datahash != in->DataHash()) {
         in->SetFrameID(time, true);
         do {
-            if (!(*in)(1)) return false;
-            if (!(*in)(0)) return false;
-        } while(in->FrameID() != time);
+            if (!(*in)(1))
+                return false;
+            if (!(*in)(0))
+                return false;
+        } while (in->FrameID() != time);
 
         if (!(*in)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: could not get frame (%u)", time);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "ParticleThermodyn: could not get frame (%u)", time);
             return false;
         }
 
@@ -285,11 +294,12 @@ bool datatools::ParticleThermodyn::assertData(
         // bbox.EnforcePositiveSize(); // paranoia
         auto bbox_cntr = bbox.CalcCenter();
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: calculating thermodynamics for frame %u...", out->FrameID());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "ParticleThermodyn: calculating thermodynamics for frame %u...", out->FrameID());
         vislib::sys::ConsoleProgressBar cpb;
         const int progressDivider = 100;
-        cpb.Start("calculating",
-            static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
+        cpb.Start(
+            "calculating", static_cast<vislib::sys::ConsoleProgressBar::Size>(newColors.size() / progressDivider));
 
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
@@ -423,26 +433,26 @@ bool datatools::ParticleThermodyn::assertData(
                         magnitude = computeFractionalAnisotropy(ret_matches, num_matches);
                         break;
                     case metricsEnum::PRESSURE:
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                            "ParticleThermodyn: cannot compute pressure yet!");
                         break;
                     case metricsEnum::NEIGHBORS:
                         magnitude = num_matches;
                         break;
-                    case metricsEnum::NEAREST_DISTANCE:
-                        {
-                            magnitude = std::numeric_limits<float>::max();
-                            if (remove_self) {
-                                // nearest is a neighbor
-                                if (!ret_matches.empty()) {
-                                    magnitude = ret_matches[0].second;
-                                }
-                            } else {
-                                // nearest should be ourselves, with distance 0, so take the next best
-                                if (ret_matches.size() > 1) {
-                                    magnitude = ret_matches[1].second;
-                                }
+                    case metricsEnum::NEAREST_DISTANCE: {
+                        magnitude = std::numeric_limits<float>::max();
+                        if (remove_self) {
+                            // nearest is a neighbor
+                            if (!ret_matches.empty()) {
+                                magnitude = ret_matches[0].second;
                             }
-                        } break;
+                        } else {
+                            // nearest should be ourselves, with distance 0, so take the next best
+                            if (ret_matches.size() > 1) {
+                                magnitude = ret_matches[1].second;
+                            }
+                        }
+                    } break;
                     case metricsEnum::PHASE01: {
                         auto const inv_search_volume = 1.0f / (4.0f / 3.0f * 3.14f * maxDist * maxDist * maxDist);
                         auto const num_density = num_matches * inv_search_volume;
@@ -492,8 +502,10 @@ bool datatools::ParticleThermodyn::assertData(
                         newColors[myIndex] = magnitude;
                     }
 
-                    if (magnitude < metricMin[threadIdx]) metricMin[threadIdx] = magnitude;
-                    if (magnitude > metricMax[threadIdx]) metricMax[threadIdx] = magnitude;
+                    if (magnitude < metricMin[threadIdx])
+                        metricMin[threadIdx] = magnitude;
+                    if (magnitude > metricMax[threadIdx])
+                        metricMax[threadIdx] = magnitude;
 #pragma omp atomic
                     ++counter;
                     if ((counter % progressDivider) == 0)
@@ -501,8 +513,10 @@ bool datatools::ParticleThermodyn::assertData(
                 }
             } // end #pragma omp parallel num_threads(num_thr)
             for (auto i = 0; i < num_thr; ++i) {
-                if (metricMin[i] < theMinTemp) theMinTemp = metricMin[i];
-                if (metricMax[i] > theMaxTemp) theMaxTemp = metricMax[i];
+                if (metricMin[i] < theMinTemp)
+                    theMinTemp = metricMin[i];
+                if (metricMax[i] > theMaxTemp)
+                    theMaxTemp = metricMax[i];
             }
             allpartcnt += pl.GetCount();
         }
@@ -547,8 +561,7 @@ bool datatools::ParticleThermodyn::assertData(
             outMPDC->AccessParticles(i).SetVertexData(
                 pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(
-                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
+                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt, 0);
             outMPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
             outMPDC->AccessParticles(i).SetIDData(pl.GetIDDataType(), pl.GetIDData(), pl.GetIDDataStride());
             outMPDC->AccessParticles(i).SetColourMapIndexValues(
@@ -599,7 +612,8 @@ float megamol::datatools::ParticleThermodyn::computeFractionalAnisotropy(
     for (size_t i = 0; i < num_matches; ++i) {
         const float* velo = myPts->get_velocity(matches[i].first);
         for (int x = 0; x < 3; ++x)
-            for (int y = 0; y < 3; ++y) mat(x, y) += velo[x] * velo[y];
+            for (int y = 0; y < 3; ++y)
+                mat(x, y) += velo[x] * velo[y];
     }
     mat /= static_cast<float>(num_matches);
 
@@ -641,11 +655,11 @@ float megamol::datatools::ParticleThermodyn::computeDensity(std::vector<std::pai
 
     auto sphere = getMinSphere(part);
 
-    auto minSphereVolume = 4.0f/3.0f*3.14f*sphere[3]*sphere[3]*sphere[3];
+    auto minSphereVolume = 4.0f / 3.0f * 3.14f * sphere[3] * sphere[3] * sphere[3];
 
-    auto parVolume = 4.0f/3.0f*3.14f*radius*radius*radius;
+    auto parVolume = 4.0f / 3.0f * 3.14f * radius * radius * radius;
 
-    return parVolume/minSphereVolume;
+    return parVolume / minSphereVolume;
 }
 
 
@@ -653,13 +667,16 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
     using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr) return false;
+    if (outMpdc == nullptr)
+        return false;
 
     MultiParticleDataCall* inDpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inDpdc == nullptr) return false;
+    if (inDpdc == nullptr)
+        return false;
 
     megamol::core::AbstractGetData3DCall* out;
-    if (outMpdc != nullptr) out = outMpdc;
+    if (outMpdc != nullptr)
+        out = outMpdc;
 
     inDpdc->SetFrameID(out->FrameID(), true);
     if (!(*inDpdc)(1)) {
@@ -685,12 +702,15 @@ bool datatools::ParticleThermodyn::getDataCallback(megamol::core::Call& c) {
     using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr) return false;
+    if (outMpdc == nullptr)
+        return false;
 
     MultiParticleDataCall* inDpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inDpdc == nullptr) return false;
+    if (inDpdc == nullptr)
+        return false;
 
-    if (!this->assertData(inDpdc, outMpdc)) return false;
+    if (!this->assertData(inDpdc, outMpdc))
+        return false;
 
     // inMpdc->Unlock();
 

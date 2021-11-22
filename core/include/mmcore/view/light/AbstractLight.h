@@ -8,9 +8,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol {
 namespace core {
@@ -29,7 +29,9 @@ protected:
     virtual void release();
     bool getLightCallback(core::Call& call);
     bool getMetaDataCallback(core::Call& call);
-    virtual bool InterfaceIsDirty() { return false; };
+    virtual bool InterfaceIsDirty() {
+        return false;
+    };
     virtual void readParams(){};
     virtual void addLight(LightCollection& light_collection) = 0;
     bool AbstractIsDirty();

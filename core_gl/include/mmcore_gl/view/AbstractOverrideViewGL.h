@@ -1,7 +1,7 @@
 /*
  * AbstractOverrideView.h
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -22,131 +22,131 @@ namespace core_gl {
 namespace view {
 
 
+/**
+ * Abstract base class of override rendering views
+ */
+class MEGAMOLCORE_API AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
+public:
+    /** Ctor. */
+    AbstractOverrideViewGL(void);
+
+    /** Dtor. */
+    virtual ~AbstractOverrideViewGL(void);
+
     /**
-     * Abstract base class of override rendering views
+     * Answer the default time for this view
+     *
+     * @return The default time
      */
-    class MEGAMOLCORE_API AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
-    public:
+    virtual float DefaultTime(double instTime) const;
 
-        /** Ctor. */
-        AbstractOverrideViewGL(void);
+    /**
+     * Serialises the camera of the view
+     *
+     * @param serialiser Serialises the camera of the view
+     */
+    virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
 
-        /** Dtor. */
-        virtual ~AbstractOverrideViewGL(void);
+    /**
+     * Deserialises the camera of the view
+     *
+     * @param serialiser Deserialises the camera of the view
+     */
+    virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
 
-        /**
-         * Answer the default time for this view
-         *
-         * @return The default time
-         */
-        virtual float DefaultTime(double instTime) const;
+    /**
+     * Resets the view. This normally sets the camera parameters to
+     * default values.
+     */
+    virtual void ResetView(void);
 
-        /**
-         * Serialises the camera of the view
-         *
-         * @param serialiser Serialises the camera of the view
-         */
-        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
+    /**
+     * Resizes the AbstractView3D.
+     *
+     * @param width The new width.
+     * @param height The new height.
+     */
+    virtual void Resize(unsigned int width, unsigned int height);
 
-        /**
-         * Deserialises the camera of the view
-         *
-         * @param serialiser Deserialises the camera of the view
-         */
-        virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
+    virtual bool OnKey(
+        frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
 
-        /**
-         * Resets the view. This normally sets the camera parameters to
-         * default values.
-         */
-        virtual void ResetView(void);
+    virtual bool OnChar(unsigned int codePoint) override;
 
-        /**
-         * Resizes the AbstractView3D.
-         *
-         * @param width The new width.
-         * @param height The new height.
-         */
-        virtual void Resize(unsigned int width, unsigned int height);
+    virtual bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
+        frontend_resources::Modifiers mods) override;
 
-        virtual bool OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
+    virtual bool OnMouseMove(double x, double y) override;
 
-        virtual bool OnChar(unsigned int codePoint) override;
+    virtual bool OnMouseScroll(double dx, double dy) override;
 
-        virtual bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) override;
+    core::CallerSlot* GetCallerSlot() {
+        return &renderViewSlot;
+    }
 
-        virtual bool OnMouseMove(double x, double y) override;
+protected:
+    /**
+     * Answer the call connected to the render view slot.
+     *
+     * @return The call connected to the render view slot.
+     */
+    inline CallRenderViewGL* getCallRenderView(void) {
+        return this->renderViewSlot.CallAs<CallRenderViewGL>();
+    }
 
-        virtual bool OnMouseScroll(double dx, double dy) override;
+    /**
+     * Packs the mouse coordinates, which are relative to the virtual
+     * viewport size.
+     *
+     * @param x The x coordinate of the mouse position
+     * @param y The y coordinate of the mouse position
+     */
+    virtual void packMouseCoordinates(float& x, float& y);
 
-        core::CallerSlot* GetCallerSlot() { return &renderViewSlot; }
+    /**
+     * Answer the width of the actual viewport in pixels
+     *
+     * @return The width of the actual viewport in pixels
+     */
+    VISLIB_FORCEINLINE unsigned int getViewportWidth(void) const {
+        return this->viewportWidth;
+    }
 
-    protected:
+    /**
+     * Answer the height of the actual viewport in pixels
+     *
+     * @return The height of the actual viewport in pixels
+     */
+    VISLIB_FORCEINLINE unsigned int getViewportHeight(void) const {
+        return this->viewportHeight;
+    }
 
-        /**
-         * Answer the call connected to the render view slot.
-         *
-         * @return The call connected to the render view slot.
-         */
-        inline CallRenderViewGL *getCallRenderView(void) {
-            return this->renderViewSlot.CallAs<CallRenderViewGL>();
-        }
+    /**
+     * Disconnects the outgoing render call
+     */
+    void disconnectOutgoingRenderCall(void);
 
-        /**
-         * Packs the mouse coordinates, which are relative to the virtual
-         * viewport size.
-         *
-         * @param x The x coordinate of the mouse position
-         * @param y The y coordinate of the mouse position
-         */
-        virtual void packMouseCoordinates(float &x, float &y);
+    /**
+     * Answer the connected view
+     *
+     * @return The connected view or NULL if no view is connected
+     */
+    core::view::AbstractView* getConnectedView(void) const;
 
-        /**
-         * Answer the width of the actual viewport in pixels
-         *
-         * @return The width of the actual viewport in pixels
-         */
-        VISLIB_FORCEINLINE unsigned int getViewportWidth(void) const {
-            return this->viewportWidth;
-        }
+private:
+    /** Slot for outgoing rendering requests to other views */
+    core::CallerSlot renderViewSlot;
 
-        /**
-         * Answer the height of the actual viewport in pixels
-         *
-         * @return The height of the actual viewport in pixels
-         */
-        VISLIB_FORCEINLINE unsigned int getViewportHeight(void) const {
-            return this->viewportHeight;
-        }
+    /** The width of the actual viewport in pixels */
+    unsigned int viewportWidth;
 
-        /**
-         * Disconnects the outgoing render call
-         */
-        void disconnectOutgoingRenderCall(void);
-
-        /**
-         * Answer the connected view
-         *
-         * @return The connected view or NULL if no view is connected
-         */
-        core::view::AbstractView *getConnectedView(void) const;
-
-    private:
-
-        /** Slot for outgoing rendering requests to other views */
-        core::CallerSlot renderViewSlot;
-
-        /** The width of the actual viewport in pixels */
-        unsigned int viewportWidth;
-
-        /** The height of the actual viewport in pixels */
-        unsigned int viewportHeight;
-
-    };
+    /** The height of the actual viewport in pixels */
+    unsigned int viewportHeight;
+};
 
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_ABSTRACTOVERRIDEVIEW_H_INCLUDED */

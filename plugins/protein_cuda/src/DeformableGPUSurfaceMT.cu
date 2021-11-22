@@ -3293,7 +3293,7 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
     int cellIdx = (dim[0]-1)*((dim[1]-1)*coords.z + coords.y) + coords.x;
     uint cellState = targetActiveCells[cellIdx];
 
-	if ((cellState == 1) || (depth >= (int)maxLevel)) {
+    if ((cellState == 1) || (depth >= (int)maxLevel)) {
 
         triArr.Add(newPos1.x);
         triArr.Add(newPos1.y);

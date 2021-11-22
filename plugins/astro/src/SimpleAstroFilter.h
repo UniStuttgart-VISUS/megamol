@@ -6,21 +6,27 @@
  */
 #pragma once
 
-#include <set>
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include <set>
 
 namespace megamol {
 namespace astro {
 
 class SimpleAstroFilter : public core::Module {
 public:
-    static const char* ClassName(void) { return "SimpleAstroFilter"; }
-    static const char* Description(void) { return "Filters the filament particles of a AstroParticleDataCall"; }
-    static bool IsAvailable(void) { return true; }
+    static const char* ClassName(void) {
+        return "SimpleAstroFilter";
+    }
+    static const char* Description(void) {
+        return "Filters the filament particles of a AstroParticleDataCall";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     SimpleAstroFilter(void);
@@ -143,7 +149,7 @@ private:
 
     /** Pointer to the particle ID array */
     idArrayPtr particleIDs = nullptr;
-    
+
     /** Pointer to the agn distance array */
     floatArrayPtr agnDistances = nullptr;
 

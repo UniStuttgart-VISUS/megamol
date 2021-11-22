@@ -1,10 +1,10 @@
 #pragma once
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "optix/CallContext.h"
 
@@ -79,4 +79,4 @@ private:
 
     uint64_t program_version = 0;
 };
-} // namespace megamol::hpg::optix
+} // namespace megamol::optix_hpg

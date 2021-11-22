@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "TableToParticles.h"
+#include "stdafx.h"
 
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -16,10 +16,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "vislib/Trace.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
+#include "vislib/Trace.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 using namespace megamol::datatools;
 using namespace megamol;
@@ -28,40 +28,41 @@ using namespace megamol;
  * TableToParticles::TableToParticles
  */
 TableToParticles::TableToParticles(void)
-    : Module()
-    , slotCallMultiPart("multidata", "Provides the data as MultiParticle call.")
-    , slotCallTable("floattable", "float table input call")
-    , slotColumnR("redcolumnname", "The name of the column holding the red colour channel value.")
-    , slotColumnG("greencolumnname", "The name of the column holding the green colour channel value.")
-    , slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value.")
-    , slotColumnI("intensitycolumnname", "The name of the column holding the intensity colour channel value.")
-    , slotGlobalColor("color", "Constant sphere color.")
-    , slotColorMode("colormode", "Pass on color as RGB or intensity")
-    , slotColumnRadius("radiuscolumnname", "The name of the column holding the particle radius.")
-    , slotGlobalRadius("radius", "Constant sphere radius.")
-    , slotRadiusMode("radiusmode", "pass on global or per-particle radius.")
-    , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
-    , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
-    , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
-    , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
-    , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
-    , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
-    , slotTensorColumn{{{"tensor::x1columnname", "The name of the column holding the first vector (row) x component"},
-          {"tensor::y1columnname", "The name of the column holding the first vector (row) y component"},
-          {"tensor::z1columnname", "The name of the column holding the first vector (row) z component"},
-          {"tensor::x2columnname", "The name of the column holding the second vector (row) x component"},
-          {"tensor::y2columnname", "The name of the column holding the second vector (row) y component"},
-          {"tensor::z2columnname", "The name of the column holding the second vector (row) z component"},
-          {"tensor::x3columnname", "The name of the column holding the third vector (row) x component"},
-          {"tensor::y3columnname", "The name of the column holding the third vector (row) y component"},
-          {"tensor::z3columnname", "The name of the column holding the third vector (row) z component"}}}
-    , slotTensorMagnitudeColumn{{{"tensor::magnitude1", "the magnitude of the first vector (row)"},
-          {"tensor::magnitude2", "the magnitude of the second vector (row)"},
-          {"tensor::magnitude3", "the magnitude of the third vector (row)"}}}
-    , inputHash(0)
-    , myHash(0)
-    , lastTimeStep(0)
-    , columnIndex() {
+        : Module()
+        , slotCallMultiPart("multidata", "Provides the data as MultiParticle call.")
+        , slotCallTable("floattable", "float table input call")
+        , slotColumnR("redcolumnname", "The name of the column holding the red colour channel value.")
+        , slotColumnG("greencolumnname", "The name of the column holding the green colour channel value.")
+        , slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value.")
+        , slotColumnI("intensitycolumnname", "The name of the column holding the intensity colour channel value.")
+        , slotGlobalColor("color", "Constant sphere color.")
+        , slotColorMode("colormode", "Pass on color as RGB or intensity")
+        , slotColumnRadius("radiuscolumnname", "The name of the column holding the particle radius.")
+        , slotGlobalRadius("radius", "Constant sphere radius.")
+        , slotRadiusMode("radiusmode", "pass on global or per-particle radius.")
+        , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
+        , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
+        , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
+        , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
+        , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
+        , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
+        , slotTensorColumn{{{"tensor::x1columnname",
+                                "The name of the column holding the first vector (row) x component"},
+              {"tensor::y1columnname", "The name of the column holding the first vector (row) y component"},
+              {"tensor::z1columnname", "The name of the column holding the first vector (row) z component"},
+              {"tensor::x2columnname", "The name of the column holding the second vector (row) x component"},
+              {"tensor::y2columnname", "The name of the column holding the second vector (row) y component"},
+              {"tensor::z2columnname", "The name of the column holding the second vector (row) z component"},
+              {"tensor::x3columnname", "The name of the column holding the third vector (row) x component"},
+              {"tensor::y3columnname", "The name of the column holding the third vector (row) y component"},
+              {"tensor::z3columnname", "The name of the column holding the third vector (row) z component"}}}
+        , slotTensorMagnitudeColumn{{{"tensor::magnitude1", "the magnitude of the first vector (row)"},
+              {"tensor::magnitude2", "the magnitude of the second vector (row)"},
+              {"tensor::magnitude3", "the magnitude of the third vector (row)"}}}
+        , inputHash(0)
+        , myHash(0)
+        , lastTimeStep(0)
+        , columnIndex() {
 
     /* Register parameters. */
     core::param::FlexEnumParam* rColumnEp = new core::param::FlexEnumParam("undef");
@@ -160,7 +161,9 @@ TableToParticles::TableToParticles(void)
 /*
  * TableToParticles::~TableToParticles
  */
-TableToParticles::~TableToParticles(void) { this->Release(); }
+TableToParticles::~TableToParticles(void) {
+    this->Release();
+}
 
 
 /*
@@ -231,10 +234,13 @@ bool TableToParticles::pushColumnIndex(std::vector<uint32_t>& cols, const vislib
 }
 
 bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID) {
-    if (this->inputHash == ft->DataHash() && this->myTime == ft->GetFrameID() && !anythingDirty() && this->lastTimeStep == frameID) return true;
+    if (this->inputHash == ft->DataHash() && this->myTime == ft->GetFrameID() && !anythingDirty() &&
+        this->lastTimeStep == frameID)
+        return true;
 
     if (this->inputHash != ft->DataHash()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "TableToParticles: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -347,11 +353,14 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     bool vx, vy, vz;
     vx = vy = vz = false;
     std::string c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
-    if (this->columnIndex.find(c) != columnIndex.end()) vx = true;
+    if (this->columnIndex.find(c) != columnIndex.end())
+        vx = true;
     c = cleanUpColumnHeader(this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
-    if (this->columnIndex.find(c) != columnIndex.end()) vy = true;
+    if (this->columnIndex.find(c) != columnIndex.end())
+        vy = true;
     c = cleanUpColumnHeader(this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString());
-    if (this->columnIndex.find(c) != columnIndex.end()) vz = true;
+    if (this->columnIndex.find(c) != columnIndex.end())
+        vz = true;
 
     if (vx && vy && vz) {
         retValue = retValue && pushColumnIndex(indicesToCollect,
@@ -380,7 +389,8 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     }
     for (auto& x : this->slotTensorMagnitudeColumn) {
         c = cleanUpColumnHeader(x.Param<core::param::FlexEnumParam>()->ValueString());
-        if (this->columnIndex.find(c) == columnIndex.end()) this->haveTensorMagnitudes = false;
+        if (this->columnIndex.find(c) == columnIndex.end())
+            this->haveTensorMagnitudes = false;
     }
     if (this->haveTensor) {
         // we are always going to pass magnitudes per 'basis vector' (3) and a quaternion (4)
@@ -470,16 +480,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             tmp1 *= quatC.w;
             tmp1.w = -quatConst.z;
             rotMatT0.xyz() = tmp1.wzy() * quatConst.xxy() + tmp.wxy(); // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
-            rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;       // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
-            rotMatT0 = rotMatT0 + rotMatT0;                    // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+            rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;               // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+            rotMatT0 = rotMatT0 + rotMatT0; // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
             rotMatT1.xyz() = tmp1.zwx() * quatConst.yxx() + tmp.xwz(); // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
-            rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;       // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
-            rotMatT1 = rotMatT1 + rotMatT1;                    // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+            rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;               // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+            rotMatT1 = rotMatT1 + rotMatT1; // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
             rotMatT2.xyz() = tmp1.yxw() * quatConst.xyx() + tmp.yzw(); // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
-            rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;       // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
-            rotMatT2 = rotMatT2 + rotMatT2;                    // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
+            rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;               // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+            rotMatT2 = rotMatT2 + rotMatT2;                            // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
             // End: Holy code!
 
             rotMatRec = glm::mat3(rotMatT0, rotMatT1, rotMatT2);
@@ -492,10 +502,12 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             float(&diffarr)[9] = *reinterpret_cast<float(*)[9]>(diffptr);
             if (std::any_of(std::begin(diffarr), std::end(diffarr), [](float f) { return f > 0.01f; })) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "TableToParticles: difference too large when encoding matrix as quaternion:\n%s\n", glm::to_string(diff).c_str());
+                    "TableToParticles: difference too large when encoding matrix as quaternion:\n%s\n",
+                    glm::to_string(diff).c_str());
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: matrix =\n%s\n", glm::to_string(rotate_world_into_tensor).c_str());
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("TableToParticles: quat = %s\n", glm::to_string(quat).c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "TableToParticles: quat = %s\n", glm::to_string(quat).c_str());
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "TableToParticles: reconstructed matrix =\n%s\n", glm::to_string(rotMatRec).c_str());
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -535,21 +547,23 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         auto* ft = this->slotCallTable.CallAs<table::TableDataCall>();
-        if (ft == nullptr) return false;
+        if (ft == nullptr)
+            return false;
 
         if (c != nullptr) {
             ft->SetFrameID(c->FrameID());
             (*ft)(1);
             (*ft)(0);
 
-            if (!assertData(ft, c->FrameID())) return false;
+            if (!assertData(ft, c->FrameID()))
+                return false;
 
             c->SetFrameCount(ft->GetFrameCount());
             c->SetFrameID(ft->GetFrameID());
             c->SetDataHash(this->myHash);
 
-            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
-                this->bboxMax[2]);
+            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0],
+                this->bboxMax[1], this->bboxMax[2]);
             c->SetParticleListCount(1);
             c->AccessParticles(0).SetCount(ft->GetRowsCount());
             c->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
@@ -565,14 +579,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 uint32_t colOffset = 0;
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
-                    c->AccessParticles(0).SetVertexData(
-                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                    c->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
-                    c->AccessParticles(0).SetVertexData(
-                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                    c->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -580,13 +592,11 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
 
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
-                    c->AccessParticles(0).SetColourData(
-                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                    c->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
-                    c->AccessParticles(0).SetColourData(
-                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    c->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     c->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
@@ -606,14 +616,15 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             (*ft)(1);
             (*ft)(0);
 
-            if (!assertData(ft, e->FrameID())) return false;
+            if (!assertData(ft, e->FrameID()))
+                return false;
 
             e->SetFrameCount(ft->GetFrameCount());
             e->SetFrameID(ft->GetFrameID());
             e->SetDataHash(this->myHash);
 
-            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
-                this->bboxMax[2]);
+            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0],
+                this->bboxMax[1], this->bboxMax[2]);
             e->SetParticleListCount(1);
             e->AccessParticles(0).SetCount(ft->GetRowsCount());
             e->AccessParticles(0).SetGlobalRadius(this->slotGlobalRadius.Param<core::param::FloatParam>()->Value());
@@ -629,14 +640,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 uint32_t colOffset = 0;
                 switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // per particle
-                    e->AccessParticles(0).SetVertexData(
-                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                    e->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 4;
                     break;
                 case 1: // global
-                    e->AccessParticles(0).SetVertexData(
-                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                    e->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
                     colOffset = 3;
                     break;
@@ -644,13 +653,11 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
 
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
-                    e->AccessParticles(0).SetColourData(
-                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                    e->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     break;
                 case 1: // I
-                    e->AccessParticles(0).SetColourData(
-                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    e->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
                     e->AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
                     break;
@@ -682,7 +689,7 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                   _T("in callback getMultiParticleData."));
+                                                                   _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -696,35 +703,38 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         auto* c = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         auto* e = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&call);
         table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
-        if (ft == nullptr) return false;
+        if (ft == nullptr)
+            return false;
 
         if (c != nullptr) {
             ft->SetFrameID(c->FrameID());
             (*ft)(1);
             (*ft)(0); // the bounding box is calculated from the data, so we have to call getData here
 
-            if (!assertData(ft, c->FrameID())) return false;
+            if (!assertData(ft, c->FrameID()))
+                return false;
 
             c->SetFrameCount(ft->GetFrameCount());
             c->SetFrameID(ft->GetFrameID());
             c->SetDataHash(this->myHash);
 
-            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
-                this->bboxMax[2]);
+            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0],
+                this->bboxMax[1], this->bboxMax[2]);
             c->SetUnlocker(NULL);
         } else if (e != nullptr) {
             ft->SetFrameID(e->FrameID());
             (*ft)(1);
             (*ft)(0); // the bounding box is calculated from the data, so we have to call getData here
 
-            if (!assertData(ft, e->FrameID())) return false;
+            if (!assertData(ft, e->FrameID()))
+                return false;
 
             e->SetFrameCount(ft->GetFrameCount());
             e->SetFrameID(ft->GetFrameID());
             e->SetDataHash(this->myHash);
 
-            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
-                this->bboxMax[2]);
+            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0],
+                this->bboxMax[1], this->bboxMax[2]);
             e->SetUnlocker(NULL);
         }
         return true;
@@ -733,7 +743,7 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                   _T("in callback getMultiparticleExtent."));
+                                                                   _T("in callback getMultiparticleExtent."));
         return false;
     }
 }

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <string>
-#include <thread>
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/AbstractService.h"
+#include <string>
+#include <thread>
 //#include "CommandFunctionPtr.h"
+#include "mmcore/utility/ZMQContextUser.h"
 #include <atomic>
 #include <map>
-#include "mmcore/utility/ZMQContextUser.h"
 
 namespace megamol {
 namespace core {
@@ -18,7 +18,9 @@ class LuaHostService : public core::AbstractService {
 public:
     static unsigned int ID;
 
-    virtual const char* Name() const { return "LuaRemote"; }
+    virtual const char* Name() const {
+        return "LuaRemote";
+    }
 
     LuaHostService(core::CoreInstance& core);
     virtual ~LuaHostService();
@@ -26,7 +28,9 @@ public:
     virtual bool Initalize(bool& autoEnable);
     virtual bool Deinitialize();
 
-    inline const std::string& GetAddress(void) const { return address; }
+    inline const std::string& GetAddress(void) const {
+        return address;
+    }
     void SetAddress(const std::string& ad);
 
 protected:
@@ -54,4 +58,3 @@ private:
 } /* namespace utility */
 } /* namespace core */
 } /* namespace megamol */
-

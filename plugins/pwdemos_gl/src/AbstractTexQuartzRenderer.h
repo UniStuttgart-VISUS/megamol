@@ -14,35 +14,31 @@
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * Module rendering gridded quarts particle data
+ */
+class AbstractTexQuartzRenderer : public AbstractQuartzRenderer {
+public:
+    /** Ctor */
+    AbstractTexQuartzRenderer(void);
+
+    /** Dtor */
+    virtual ~AbstractTexQuartzRenderer(void);
+
+protected:
     /**
-     * Module rendering gridded quarts particle data
+     * Ensures the actuality of the type texture
+     *
+     * @param types The types
      */
-    class AbstractTexQuartzRenderer : public AbstractQuartzRenderer {
-    public:
+    void assertTypeTexture(CrystalDataCall& types);
 
-        /** Ctor */
-        AbstractTexQuartzRenderer(void);
+    /** Releases the type texture */
+    void releaseTypeTexture(void);
 
-        /** Dtor */
-        virtual ~AbstractTexQuartzRenderer(void);
+    /** The type texture */
+    unsigned int typeTexture;
+};
 
-    protected:
-
-        /**
-         * Ensures the actuality of the type texture
-         *
-         * @param types The types
-         */
-        void assertTypeTexture(CrystalDataCall& types);
-
-        /** Releases the type texture */
-        void releaseTypeTexture(void);
-
-        /** The type texture */
-        unsigned int typeTexture;
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */
-

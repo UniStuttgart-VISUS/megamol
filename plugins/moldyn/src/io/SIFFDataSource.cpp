@@ -1,21 +1,21 @@
 /*
  * SIFFDataSource.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/SIFFDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
+#include "stdafx.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
-#include "vislib/sys/sysfunctions.h"
 #include "vislib/VersionNumber.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/sysfunctions.h"
 
 using namespace megamol;
 using namespace megamol::moldyn::io;
@@ -24,12 +24,16 @@ using namespace megamol::moldyn::io;
 /*
  * SIFFDataSource::SIFFDataSource
  */
-SIFFDataSource::SIFFDataSource(void) : core::Module(),
-        filenameSlot("filename", "The path to the trisoup file to load."),
-        radSlot("radius", "The radius used when loading a version 1.1 file"),
-        getDataSlot("getdata", "Slot to request data from this data source."),
-        bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data(), datahash(0),
-        verNum(100), hasAlpha(false) {
+SIFFDataSource::SIFFDataSource(void)
+        : core::Module()
+        , filenameSlot("filename", "The path to the trisoup file to load.")
+        , radSlot("radius", "The radius used when loading a version 1.1 file")
+        , getDataSlot("getdata", "Slot to request data from this data source.")
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , data()
+        , datahash(0)
+        , verNum(100)
+        , hasAlpha(false) {
 
     this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&SIFFDataSource::filenameChanged);
@@ -38,12 +42,9 @@ SIFFDataSource::SIFFDataSource(void) : core::Module(),
     this->radSlot << new core::param::FloatParam(0.1f, 0.0f);
     this->MakeSlotAvailable(&this->radSlot);
 
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData",
-        &SIFFDataSource::getDataCallback);
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent",
-        &SIFFDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &SIFFDataSource::getDataCallback);
+    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &SIFFDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
-
 }
 
 
@@ -78,22 +79,23 @@ void SIFFDataSource::release(void) {
 #ifdef SIFFREAD
 #error WTF? Why is SIFFREAD already defined?
 #endif
-#define SIFFREAD(BUF, SIZE, LINE) if (file.Read(BUF, SIZE) != SIZE) {\
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-IO-Error@%d", LINE);\
-    file.Close();\
-    return true;\
-}
+#define SIFFREAD(BUF, SIZE, LINE)                                             \
+    if (file.Read(BUF, SIZE) != SIZE) {                                       \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-IO-Error@%d", LINE); \
+        file.Close();                                                         \
+        return true;                                                          \
+    }
 
 /*
  * SIFFDataSource::filenameChanged
  */
 bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::File;
     using megamol::core::utility::log::Log;
+    using vislib::sys::File;
     vislib::sys::FastFile file;
 
-    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
-            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
+    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open file \"%s\"",
             this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return true; // reset dirty flag!
@@ -131,8 +133,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         //  version 1.1 body:  3*floats (xyz) = 12 Bytes pro Sphere
         File::FileSize size = file.GetSize() - 9; // remaining bytes
         if ((size % bpp) != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "SIFF-Size not aligned, ignoring last %d bytes",
-                (size % bpp));
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "SIFF-Size not aligned, ignoring last %d bytes", (size % bpp));
             size -= (size % bpp);
         }
         this->data.EnforceSize(static_cast<SIZE_T>(size));
@@ -174,7 +175,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         unsigned int t1 = vislib::sys::GetTicksOfDay();
 
         const SIZE_T bufferSize = 1024 * 1024 * 8;
-        char *buffer = new char[bufferSize];
+        char* buffer = new char[bufferSize];
         vislib::StringA lineOnBreak;
         float x, y, z, rad;
         int r, g, b, colA;
@@ -188,7 +189,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 }
                 if ((sepos < read) || file.IsEOF()) {
                     // handle string input
-                    const char *line;
+                    const char* line;
                     if ((sepos == read) || !lineOnBreak.IsEmpty()) {
                         lineOnBreak += vislib::StringA(buffer + sspos, static_cast<unsigned int>(sepos - sspos));
                         line = lineOnBreak.PeekBuffer();
@@ -202,34 +203,50 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
                         int srv =
 #ifdef _WIN32
                             sscanf_s
-#else /* _WIN32 */
+#else  /* _WIN32 */
                             sscanf
 #endif /* _WIN32 */
-                                (line, "%f %f %f %f %d %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b, &colA);
+                            (line, "%f %f %f %f %d %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b, &colA);
                         if (srv == 8) {
                             if (cnt == 0) {
                                 this->hasAlpha = true;
                                 bpp = 20; // because we now store alpha too
                             }
-                            if (colA < 0) colA = 0; else if (colA > 255) colA = 255;
+                            if (colA < 0)
+                                colA = 0;
+                            else if (colA > 255)
+                                colA = 255;
                             srv = 7;
-                        } else colA = 255;
+                        } else
+                            colA = 255;
                         if (srv == 7) {
-                            if (r < 0) r = 0; else if (r > 255) r = 255;
-                            if (g < 0) g = 0; else if (g > 255) g = 255;
-                            if (b < 0) b = 0; else if (b > 255) b = 255;
-                        } else valid = false;
+                            if (r < 0)
+                                r = 0;
+                            else if (r > 255)
+                                r = 255;
+                            if (g < 0)
+                                g = 0;
+                            else if (g > 255)
+                                g = 255;
+                            if (b < 0)
+                                b = 0;
+                            else if (b > 255)
+                                b = 255;
+                        } else
+                            valid = false;
                     } else if (this->verNum == 101) {
                         if (
 #ifdef _WIN32
                             sscanf_s
-#else /* _WIN32 */
+#else  /* _WIN32 */
                             sscanf
 #endif /* _WIN32 */
-                                (line, "%f %f %f\n", &x, &y, &z) == 3) {
+                            (line, "%f %f %f\n", &x, &y, &z) == 3) {
                             // everything fine
-                        } else valid = false;
-                    } else valid = false;
+                        } else
+                            valid = false;
+                    } else
+                        valid = false;
 
                     if (valid) {
                         blocks = this->data.GetSize() / (bpp * blockGrow);
@@ -262,7 +279,6 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
                     lineOnBreak += vislib::StringA(buffer + sspos, static_cast<unsigned int>(sepos - sspos));
                 }
             }
-
         }
 
         delete[] buffer;
@@ -281,28 +297,26 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
     } else {
         // unknown siff
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Header-Error: Unknown subformat");
-
     }
 
     // calc bounding box
     if (this->data.GetSize() >= bpp) {
-        float *ptr = this->data.As<float>();
+        float* ptr = this->data.As<float>();
         float rad = 0.0f;
-        if (this->verNum == 100) rad = ptr[3];
-        this->bbox.Set(
-            ptr[0] - rad, ptr[1] - rad, ptr[2] - rad,
-            ptr[0] + rad, ptr[1] + rad, ptr[2] + rad);
+        if (this->verNum == 100)
+            rad = ptr[3];
+        this->bbox.Set(ptr[0] - rad, ptr[1] - rad, ptr[2] - rad, ptr[0] + rad, ptr[1] + rad, ptr[2] + rad);
 
         for (unsigned int i = bpp; i < this->data.GetSize(); i += bpp) {
             ptr = this->data.AsAt<float>(i);
-            if (this->verNum == 100) rad = ptr[3];
+            if (this->verNum == 100)
+                rad = ptr[3];
             this->bbox.GrowToPoint(ptr[0] - rad, ptr[1] - rad, ptr[2] - rad);
             this->bbox.GrowToPoint(ptr[0] + rad, ptr[1] + rad, ptr[2] + rad);
         }
 
     } else {
         this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-
     }
 
     this->datahash++; // so simple, it might work
@@ -318,33 +332,29 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * SIFFDataSource::getDataCallback
  */
 bool SIFFDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
     c2->SetUnlocker(NULL);
     c2->SetParticleListCount(1);
 
     c2->AccessParticles(0).SetCount(0);
 
-    unsigned int bpp = (this->verNum == 100)
-        ? (this->hasAlpha ? 20 : 19)
-        : 12;
+    unsigned int bpp = (this->verNum == 100) ? (this->hasAlpha ? 20 : 19) : 12;
 
     c2->AccessParticles(0).SetCount(this->data.GetSize() / bpp);
     if (this->data.GetSize() >= bpp) {
         if (this->verNum == 100) {
-            c2->AccessParticles(0).SetColourData(
-                this->hasAlpha
-                ? geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA
-                : geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
+            c2->AccessParticles(0).SetColourData(this->hasAlpha
+                                                     ? geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA
+                                                     : geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
                 this->data.At(16), bpp);
             c2->AccessParticles(0).SetVertexData(
-                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
-                this->data, bpp);
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->data, bpp);
         } else if (this->verNum == 101) {
             c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
-            c2->AccessParticles(0).SetColourData(
-                geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+            c2->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
             c2->AccessParticles(0).SetGlobalRadius(this->radSlot.Param<core::param::FloatParam>()->Value());
             c2->AccessParticles(0).SetVertexData(
                 geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->data);
@@ -362,12 +372,12 @@ bool SIFFDataSource::getDataCallback(core::Call& caller) {
  * SIFFDataSource::getExtentCallback
  */
 bool SIFFDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
-    c2->SetExtent(1,
-        this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(),
-        this->bbox.Right(), this->bbox.Top(), this->bbox.Front());
+    c2->SetExtent(1, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(), this->bbox.Top(),
+        this->bbox.Front());
     c2->SetDataHash(this->datahash);
 
     return true;

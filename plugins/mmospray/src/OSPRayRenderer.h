@@ -1,8 +1,8 @@
 /*
-* OSPRaySphereRenderer.h
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRaySphereRenderer.h
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
 #include "AbstractOSPRayRenderer.h"
@@ -15,30 +15,29 @@ namespace ospray {
 
 class OSPRayRenderer : public AbstractOSPRayRenderer {
 public:
-
     /**
-    * Answer the name of this module.
-    *
-    * @return The name of this module.
-    */
-    static const char *ClassName(void) {
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
         return "OSPRayRenderer";
     }
 
     /**
-    * Answer a human readable description of this module.
-    *
-    * @return A human readable description of this module.
-    */
-    static const char *Description(void) {
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
         return "Renderer for OSPRay structures.";
     }
 
     /**
-    * Answers whether this module is available on the current system.
-    *
-    * @return 'true' if the module is available, 'false' otherwise.
-    */
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
     static bool IsAvailable(void) {
         return true;
     }
@@ -50,39 +49,37 @@ public:
     OSPRayRenderer(void);
 
 protected:
-
     /**
-    * Implementation of 'Create'.
-    *
-    * @return 'true' on success, 'false' otherwise.
-    */
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
     virtual bool create(void);
 
     /**
-    * Implementation of 'Release'.
-    */
+     * Implementation of 'Release'.
+     */
     virtual void release(void);
 
     /**
-    * The render callback.
-    *
-    * @param call The calling call.
-    *
-    * @return The return value of the function.
-    */
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
     virtual bool Render(megamol::core::view::CallRender3D& call);
 
 private:
-
     /**
-    * The get extents callback. The module should set the members of
-    * 'call' to tell the caller the extents of its data (bounding boxes
-    * and times).
-    *
-    * @param call The calling call.
-    *
-    * @return The return value of the function.
-    */
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
     virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
     bool OnMouseButton(
@@ -112,7 +109,7 @@ private:
     float _time;
     size_t _frameID;
 
-    std::array<int,2> _imgSize;
+    std::array<int, 2> _imgSize;
 
     // OSPRay textures
     std::vector<uint32_t> _fb;

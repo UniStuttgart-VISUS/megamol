@@ -4,9 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "OSPRayMeshGeometry.h"
-#include <functional>
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
@@ -15,6 +13,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <functional>
 
 
 using namespace megamol::ospray;
@@ -163,7 +163,6 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
         ms.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
 
 
-
         unsigned int triangleCount = 0;
         unsigned int vertexCount = 0;
 
@@ -223,7 +222,7 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
                 case geocalls::CallTriMeshData::Mesh::DT_BYTE:
                     _color.reserve(vertexCount * 4);
                     for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
-                        _color.push_back((float) obj.GetColourPointerByte()[i] / 255.0f);
+                        _color.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
                         if ((i + 1) % 3 == 0) {
                             _color.push_back(1.0f);
                         }

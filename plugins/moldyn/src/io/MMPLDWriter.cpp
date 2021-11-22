@@ -5,19 +5,19 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "MMPLDWriter.h"
+#include "mmcore/BoundingBoxes.h"
 #include "stdafx.h"
 #include <algorithm>
-#include "mmcore/BoundingBoxes.h"
-#include "MMPLDWriter.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/String.h"
-#include "vislib/sys/FastFile.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 
 namespace megamol::moldyn::io {
 
@@ -25,13 +25,13 @@ namespace megamol::moldyn::io {
  * :MMPLDWriter::MMPLDWriter
  */
 MMPLDWriter::MMPLDWriter(void)
-    : AbstractDataWriter()
-    , filenameSlot("filename", "The path to the MMPLD file to be written")
-    , versionSlot("version", "The file format version to be written")
-    , dataSlot("data", "The slot requesting the data to be written")
-    , startFrameSlot("startFrame", "the first frame to write")
-    , endFrameSlot("endFrame", "the last frame to write")
-    , subsetSlot("writeSubset", "use the specified start and end"){
+        : AbstractDataWriter()
+        , filenameSlot("filename", "The path to the MMPLD file to be written")
+        , versionSlot("version", "The file format version to be written")
+        , dataSlot("data", "The slot requesting the data to be written")
+        , startFrameSlot("startFrame", "the first frame to write")
+        , endFrameSlot("endFrame", "the last frame to write")
+        , subsetSlot("writeSubset", "use the specified start and end") {
 
     this->filenameSlot << new core::param::FilePathParam(
         "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmpld"});
@@ -62,13 +62,17 @@ MMPLDWriter::MMPLDWriter(void)
 /*
  * MMPLDWriter::~MMPLDWriter
  */
-MMPLDWriter::~MMPLDWriter(void) { this->Release(); }
+MMPLDWriter::~MMPLDWriter(void) {
+    this->Release();
+}
 
 
 /*
  * MMPLDWriter::create
  */
-bool MMPLDWriter::create(void) { return true; }
+bool MMPLDWriter::create(void) {
+    return true;
+}
 
 
 /*
@@ -82,7 +86,8 @@ void MMPLDWriter::release(void) {}
  */
 bool MMPLDWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+    vislib::TString filename(
+        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;
@@ -151,12 +156,12 @@ bool MMPLDWriter::run(void) {
         return false;
     }
 
-#define ASSERT_WRITEOUT(A, S)                                                                                          \
-    if (file.Write((A), (S)) != (S)) {                                                                                 \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__);                                        \
-        file.Close();                                                                                                  \
-        mpdc->Unlock();                                                                                                \
-        return false;                                                                                                  \
+#define ASSERT_WRITEOUT(A, S)                                                   \
+    if (file.Write((A), (S)) != (S)) {                                          \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
+        file.Close();                                                           \
+        mpdc->Unlock();                                                         \
+        return false;                                                           \
     }
 
     vislib::StringA magicID("MMPLD");
@@ -246,11 +251,11 @@ bool MMPLDWriter::getCapabilities(core::DataWriterCtrlCall& call) {
  * MMPLDWriter::writeFrame
  */
 bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDataCall& data) {
-#define ASSERT_WRITEOUT(A, S)                                                                                          \
-    if (file.Write((A), (S)) != (S)) {                                                                                 \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__);                                        \
-        file.Close();                                                                                                  \
-        return false;                                                                                                  \
+#define ASSERT_WRITEOUT(A, S)                                                   \
+    if (file.Write((A), (S)) != (S)) {                                          \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
+        file.Close();                                                           \
+        return false;                                                           \
     }
     using megamol::core::utility::log::Log;
     uint8_t const alpha = 255;
@@ -339,9 +344,11 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
             ct = 0;
         }
         ASSERT_WRITEOUT(&vt, 1);
-        if (ct == 1) ct = 2; // UINT8_RGB is unaligned and will never be written again.
+        if (ct == 1)
+            ct = 2;              // UINT8_RGB is unaligned and will never be written again.
         if (vt == 4 && ct < 5) { // TODO: fragile if we add another color type beyond DOUBLE_I!
-            if (ct == 3) { // VERTDATA_DOUBLE_XYZ needs COLDATA_DOUBLE_I instead of COLDATA_FLOAT_I to be aligned for modern renderers (NG and OPSRay)
+            if (ct ==
+                3) { // VERTDATA_DOUBLE_XYZ needs COLDATA_DOUBLE_I instead of COLDATA_FLOAT_I to be aligned for modern renderers (NG and OPSRay)
                 UINT8 x = 7;
                 ASSERT_WRITEOUT(&x, 1);
             } else { // VERTDATA_DOUBLE_XYZ needs COLDATA_USHORT_RGBA to be aligned for modern renderers (NG and OPSRay)
@@ -378,65 +385,61 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
         }
 
         UINT64 cnt = points.GetCount();
-        if (vt == 0) cnt = 0;
+        if (vt == 0)
+            cnt = 0;
         ASSERT_WRITEOUT(&cnt, 8);
 
         if (ver >= 103) {
             ASSERT_WRITEOUT(points.GetBBox().PeekBounds(), 24);
         }
 
-        if (vt == 0) continue;
+        if (vt == 0)
+            continue;
         const unsigned char* vp = static_cast<const unsigned char*>(points.GetVertexData());
         const unsigned char* cp = static_cast<const unsigned char*>(points.GetColourData());
         if (vt == 4 && ct < 5) {
             switch (points.GetColourDataType()) {
-            case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
-                {
-                    auto col = points.GetGlobalColour();
-                    uint16_t colNew[4] = {col[0] * 257, col[1] * 257, col[2] * 257, col[3] * 257};
-                    for (UINT64 i = 0; i < cnt; ++i) {
-                        ASSERT_WRITEOUT(vp, vs);
-                        vp += vo;
-                        ASSERT_WRITEOUT(colNew, 8);
-                    }
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: {
+                auto col = points.GetGlobalColour();
+                uint16_t colNew[4] = {col[0] * 257, col[1] * 257, col[2] * 257, col[3] * 257};
+                for (UINT64 i = 0; i < cnt; ++i) {
+                    ASSERT_WRITEOUT(vp, vs);
+                    vp += vo;
+                    ASSERT_WRITEOUT(colNew, 8);
                 }
-                break;
-            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                {
-                    uint16_t colNew[4];
-                    for (UINT64 i = 0; i < cnt; ++i) {
-                        ASSERT_WRITEOUT(vp, vs);
-                        vp += vo;
-                        colNew[0] = cp[0] * 257;
-                        colNew[1] = cp[1] * 257;
-                        colNew[2] = cp[2] * 257;
-                        colNew[3] = 65535;
-                        ASSERT_WRITEOUT(colNew, 8);
-                        cp += co;
-                    }
+            } break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: {
+                uint16_t colNew[4];
+                for (UINT64 i = 0; i < cnt; ++i) {
+                    ASSERT_WRITEOUT(vp, vs);
+                    vp += vo;
+                    colNew[0] = cp[0] * 257;
+                    colNew[1] = cp[1] * 257;
+                    colNew[2] = cp[2] * 257;
+                    colNew[3] = 65535;
+                    ASSERT_WRITEOUT(colNew, 8);
+                    cp += co;
                 }
-                break;
-            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                {
-                    uint16_t colNew[4];
-                    for (UINT64 i = 0; i < cnt; ++i) {
-                        ASSERT_WRITEOUT(vp, vs);
-                        vp += vo;
-                        colNew[0] = cp[0] * 257;
-                        colNew[1] = cp[1] * 257;
-                        colNew[2] = cp[2] * 257;
-                        colNew[3] = cp[3] * 257;
-                        ASSERT_WRITEOUT(colNew, 8);
-                        cp += co;
-                    }
+            } break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: {
+                uint16_t colNew[4];
+                for (UINT64 i = 0; i < cnt; ++i) {
+                    ASSERT_WRITEOUT(vp, vs);
+                    vp += vo;
+                    colNew[0] = cp[0] * 257;
+                    colNew[1] = cp[1] * 257;
+                    colNew[2] = cp[2] * 257;
+                    colNew[3] = cp[3] * 257;
+                    ASSERT_WRITEOUT(colNew, 8);
+                    cp += co;
                 }
-                break;
+            } break;
             case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 double iNew;
                 for (UINT64 i = 0; i < cnt; ++i) {
                     ASSERT_WRITEOUT(vp, vs);
                     vp += vo;
-                    iNew = *(reinterpret_cast<const float *>(cp));
+                    iNew = *(reinterpret_cast<const float*>(cp));
                     ASSERT_WRITEOUT(&iNew, 8);
                     cp += co;
                 }
@@ -446,7 +449,7 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
                 for (UINT64 i = 0; i < cnt; ++i) {
                     ASSERT_WRITEOUT(vp, vs);
                     vp += vo;
-                    const auto * col = reinterpret_cast<const float*>(cp);
+                    const auto* col = reinterpret_cast<const float*>(cp);
                     colNew[0] = col[0] * 65535.0f;
                     colNew[1] = col[1] * 65535.0f;
                     colNew[2] = col[2] * 65535.0f;
@@ -493,4 +496,4 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
     return true;
 #undef ASSERT_WRITEOUT
 }
-}
+} // namespace megamol::moldyn::io

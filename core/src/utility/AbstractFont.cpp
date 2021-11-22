@@ -1,7 +1,7 @@
 /*
  * AbstractFont.cpp
  *
- * Copyright (C) 2006 - 2018 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  *
  * This implementation is based on "vislib/graphics/AbstractFont.h"
@@ -10,7 +10,7 @@
 #include "mmcore/utility/AbstractFont.h"
 
 
- /*
+/*
  * megamol::core::utility::AbstractFont::AbstractFont
  */
 megamol::core::utility::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
@@ -30,7 +30,7 @@ megamol::core::utility::AbstractFont::~AbstractFont(void) {
 /*
  * megamol::core::utility::AbstractFont::Initialise
  */
-bool megamol::core::utility::AbstractFont::Initialise(megamol::core::CoreInstance *core) {
+bool megamol::core::utility::AbstractFont::Initialise(megamol::core::CoreInstance* core) {
     if (!this->initialised) {
         if (!this->initialise(core)) {
             return false;
@@ -42,8 +42,8 @@ bool megamol::core::utility::AbstractFont::Initialise(megamol::core::CoreInstanc
 
 
 /*
-* megamol::core::utility::AbstractFont::Deinitialise
-*/
+ * megamol::core::utility::AbstractFont::Deinitialise
+ */
 void megamol::core::utility::AbstractFont::Deinitialise(void) {
     if (this->initialised) {
         this->deinitialise();
@@ -77,5 +77,3 @@ void megamol::core::utility::AbstractFont::SetSize(float size) {
     }
     this->size = size;
 }
-
-

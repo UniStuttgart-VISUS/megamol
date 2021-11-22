@@ -1,7 +1,7 @@
 /*
  * COMException.h
  *
- * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -26,69 +26,66 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * This exception represents a COM error (HRESULT).
+ */
+class COMException : public Exception {
+
+public:
+#ifdef _WIN32
     /**
-     * This exception represents a COM error (HRESULT).
+     * Ctor.
+     *
+     * @param hr   A COM error code.
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
      */
-    class COMException : public Exception {
-
-    public:
-
-#ifdef _WIN32
-        /**
-         * Ctor.
-         *
-         * @param hr   A COM error code.
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        COMException(const HRESULT hr, const char *file, const int line);
-# else /* _WIN32 */
-        COMException(const char *file, const int line);
+    COMException(const HRESULT hr, const char* file, const int line);
+#else  /* _WIN32 */
+    COMException(const char* file, const int line);
 #endif /* _WIN32 */
 
-        /**
-         * Clone 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        COMException(const COMException& rhs);
+    /**
+     * Clone 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    COMException(const COMException& rhs);
 
 
-        /** Dtor. */
-        virtual ~COMException(void);
-
-#ifdef _WIN32
-        /**
-         * Gets the COM error code associated with the exception.
-         *
-         * @return The error code.
-         */
-        inline HRESULT GetErrorCode(void) const {
-            return this->hr;
-        }
-#endif /* _WIN32 */
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        COMException& operator =(const COMException& rhs);
-
-    private:
-
-        /** Superclass alias. */
-        typedef Exception Super;
+    /** Dtor. */
+    virtual ~COMException(void);
 
 #ifdef _WIN32
-        /** The COM error code. */
-        HRESULT hr;
+    /**
+     * Gets the COM error code associated with the exception.
+     *
+     * @return The error code.
+     */
+    inline HRESULT GetErrorCode(void) const {
+        return this->hr;
+    }
 #endif /* _WIN32 */
 
-    };
-    
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    COMException& operator=(const COMException& rhs);
+
+private:
+    /** Superclass alias. */
+    typedef Exception Super;
+
+#ifdef _WIN32
+    /** The COM error code. */
+    HRESULT hr;
+#endif /* _WIN32 */
+};
+
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -96,4 +93,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_COMEXCEPTION_H_INCLUDED */
-

@@ -1,7 +1,7 @@
 /*
  * ChronoGraph.h
  *
- * Copyright (C) 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2010 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -21,120 +21,116 @@ namespace view {
 namespace special {
 
 
+/**
+ * A simple 2d renderer which just creates a circle
+ */
+class ChronoGraph : public core_gl::view::Renderer2DModuleGL {
+public:
     /**
-     * A simple 2d renderer which just creates a circle
+     * The class name for the factory
+     *
+     * @return The class name
      */
-    class ChronoGraph : public core_gl::view::Renderer2DModuleGL {
-    public:
+    static const char* ClassName(void) {
+        return "ChronoGraph";
+    }
 
-        /**
-         * The class name for the factory
-         *
-         * @return The class name
-         */
-        static const char *ClassName(void) {
-            return "ChronoGraph";
-        }
+    /**
+     * A human-readable description string for the module
+     *
+     * @return The description string
+     */
+    static const char* Description(void) {
+        return "ChronoGraph renderer displaying the core instance time";
+    }
 
-        /**
-         * A human-readable description string for the module
-         *
-         * @return The description string
-         */
-        static const char *Description(void) {
-            return "ChronoGraph renderer displaying the core instance time";
-        }
+    /**
+     * Test if the module can be instanziated
+     *
+     * @return 'true'
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Test if the module can be instanziated
-         *
-         * @return 'true'
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * ctor
+     */
+    ChronoGraph();
 
-        /**
-         * ctor
-         */
-        ChronoGraph();
+    /**
+     * dtor
+     */
+    virtual ~ChronoGraph();
 
-        /**
-         * dtor
-         */
-        virtual ~ChronoGraph();
+protected:
+    /**
+     * Initializes the module directly after instanziation
+     *
+     * @return 'true' on success
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Sets the extents (animation and bounding box) into the call object
+     *
+     * @param call The incoming call
+     *
+     * @return 'true' on success
+     */
+    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
 
-        /**
-         * Initializes the module directly after instanziation
-         *
-         * @return 'true' on success
-         */
-        virtual bool create(void);
+    /**
+     * Renders the scene
+     *
+     * @param call The incoming call
+     *
+     * @return 'true' on success
+     */
+    virtual bool Render(core_gl::view::CallRender2DGL& call);
 
-        /**
-         * Sets the extents (animation and bounding box) into the call object
-         *
-         * @param call The incoming call
-         *
-         * @return 'true' on success
-         */
-        virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    /**
+     * Releases all resources of the module
+     */
+    virtual void release(void);
 
-        /**
-         * Renders the scene
-         *
-         * @param call The incoming call
-         *
-         * @return 'true' on success
-         */
-        virtual bool Render(core_gl::view::CallRender2DGL& call);
+private:
+    /**
+     * Renders the info grid into the given rectangle
+     *
+     * @param time The time code to show
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param w The width
+     * @param h The height
+     */
+    void renderInfoGrid(float time, float x, float y, float w, float h);
 
-        /**
-         * Releases all resources of the module
-         */
-        virtual void release(void);
-
-    private:
-
-        /**
-         * Renders the info grid into the given rectangle
-         *
-         * @param time The time code to show
-         * @param x The x coordinate
-         * @param y The y coordinate
-         * @param w The width
-         * @param h The height
-         */
-        void renderInfoGrid(float time, float x, float y, float w, float h);
-
-        /**
-         * Renders the info circle into the given rectangle
-         *
-         * @param time The time code to show
-         * @param x The x coordinate
-         * @param y The y coordinate
-         * @param w The width
-         * @param h The height
-         */
-        void renderInfoCircle(float time, float x, float y, float w, float h);
-
-    };
+    /**
+     * Renders the info circle into the given rectangle
+     *
+     * @param time The time code to show
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param w The width
+     * @param h The height
+     */
+    void renderInfoCircle(float time, float x, float y, float w, float h);
+};
 
 
 } /* end namespace special */
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED */
