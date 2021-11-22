@@ -1,18 +1,17 @@
 /*
  * ViewDescription.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/ViewDescription.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::ViewDescription::ViewDescription
  */
-megamol::core::ViewDescription::ViewDescription(const char *classname)
-        : InstanceDescription(classname), viewID("") {
+megamol::core::ViewDescription::ViewDescription(const char* classname) : InstanceDescription(classname), viewID("") {
     vislib::StringA d;
     d.Format("View %s", classname);
     this->SetDescription(d);

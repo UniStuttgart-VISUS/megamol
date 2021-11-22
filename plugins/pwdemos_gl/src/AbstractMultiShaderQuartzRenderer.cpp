@@ -5,11 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "AbstractMultiShaderQuartzRenderer.h"
+#include "OpenGL_Context.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -18,8 +19,11 @@ namespace demos_gl {
 /*
  * AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer
  */
-AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer(void) : AbstractQuartzRenderer(),
-        cntShaders(0), shaders(NULL), errShader() {
+AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer(void)
+        : AbstractQuartzRenderer()
+        , cntShaders(0)
+        , shaders(NULL)
+        , errShader() {
     // intentionally empty
 }
 
@@ -35,8 +39,8 @@ AbstractMultiShaderQuartzRenderer::~AbstractMultiShaderQuartzRenderer(void) {
 /*
  * AbstractMultiShaderQuartzRenderer::getCrystaliteData
  */
-CrystalDataCall *AbstractMultiShaderQuartzRenderer::getCrystaliteData(void) {
-    CrystalDataCall *tdc = AbstractQuartzRenderer::getCrystaliteData();
+CrystalDataCall* AbstractMultiShaderQuartzRenderer::getCrystaliteData(void) {
+    CrystalDataCall* tdc = AbstractQuartzRenderer::getCrystaliteData();
     if (tdc != NULL) {
         if ((tdc->DataHash() == 0) || (this->typesDataHash != tdc->DataHash())) {
             this->releaseShaders();
@@ -66,5 +70,5 @@ void AbstractMultiShaderQuartzRenderer::releaseShaders(void) {
     }
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

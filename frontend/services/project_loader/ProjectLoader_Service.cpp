@@ -45,21 +45,11 @@ bool ProjectLoader_Service::init(void* configPtr) {
 
 bool ProjectLoader_Service::init(const Config& config) {
 
-    m_loader.load_filename = [&](std::filesystem::path const& filename) {
-        return this->load_file(filename);
-    };
+    m_loader.load_filename = [&](std::filesystem::path const& filename) { return this->load_file(filename); };
 
-    this->m_providedResourceReferences =
-    {
-        {"ProjectLoader", m_loader}
-    };
+    this->m_providedResourceReferences = {{"ProjectLoader", m_loader}};
 
-    this->m_requestedResourcesNames =
-    {
-        "ExecuteLuaScript",
-        "SetScriptPath",
-        "optional<WindowEvents>"
-    };
+    this->m_requestedResourcesNames = {"ExecuteLuaScript", "SetScriptPath", "optional<WindowEvents>"};
 
     log("initialized successfully");
     return true;
@@ -82,7 +72,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     const auto load_png = [](std::filesystem::path const& filename, std::string& script) -> bool {
         script = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename);
 
-        if(script.empty())
+        if (script.empty())
             return false;
 
         return true;
@@ -90,15 +80,12 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
 
     // do we support the file type?
     std::vector<std::tuple<const char*, std::function<bool(std::filesystem::path const&, std::string&)>>>
-        supported_filetypes =
-        {
-            std::make_tuple(".lua", load_lua),
-            std::make_tuple(".png", load_png)
-        };
+        supported_filetypes = {std::make_tuple(".lua", load_lua), std::make_tuple(".png", load_png)};
 
-    auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item){
+    auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item) {
         const std::string suffix = std::get<0>(item);
-        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(filename.generic_u8string(), suffix);
+        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
+            filename.generic_u8string(), suffix);
     });
 
     if (found_it == supported_filetypes.end()) {
@@ -117,7 +104,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     }
 
     // run lua
-    using LuaFuncType = std::function<std::tuple<bool,std::string>(std::string const&)>;
+    using LuaFuncType = std::function<std::tuple<bool, std::string>(std::string const&)>;
     const LuaFuncType& execute_lua = m_requestedResourceReferences[0].getResource<LuaFuncType>();
 
     auto result = execute_lua(script);
@@ -138,8 +125,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     return true;
 }
 
-void ProjectLoader_Service::close() {
-}
+void ProjectLoader_Service::close() {}
 
 std::vector<FrontendResource>& ProjectLoader_Service::getProvidedResources() {
     return m_providedResourceReferences;
@@ -153,8 +139,7 @@ void ProjectLoader_Service::setRequestedResources(std::vector<FrontendResource> 
     this->m_requestedResourceReferences = resources;
 }
 
-void ProjectLoader_Service::updateProvidedResources() {
-}
+void ProjectLoader_Service::updateProvidedResources() {}
 
 void ProjectLoader_Service::digestChangedRequestedResources() {
     // if a project file that containts mmRenderNextFrame is dropped into the window
@@ -165,7 +150,8 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
         return;
 
     // execute lua files dropped into megamol window
-    auto maybe_window_events = this->m_requestedResourceReferences[2].getOptionalResource<frontend_resources::WindowEvents>();
+    auto maybe_window_events =
+        this->m_requestedResourceReferences[2].getOptionalResource<frontend_resources::WindowEvents>();
     if (!maybe_window_events.has_value()) {
         return;
     }
@@ -177,16 +163,10 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     // in mmRenderNextFrame recursion the dropped paths get cleared. remember them.
     auto possible_files = window_events.dropped_path_events;
 
-    for(auto& events: possible_files)
-        std::remove_if(events.begin(), events.end(),
-            [&](auto& filename) -> bool {
-                return this->load_file(filename);
-            });
+    for (auto& events : possible_files)
+        std::remove_if(events.begin(), events.end(), [&](auto& filename) -> bool { return this->load_file(filename); });
 
-    std::remove_if(possible_files.begin(), possible_files.end(),
-        [&](auto& events) -> bool {
-            return events.empty();
-        });
+    std::remove_if(possible_files.begin(), possible_files.end(), [&](auto& events) -> bool { return events.empty(); });
 
     // restore, this gets cleared by the service outside of the recursion again
     window_events.dropped_path_events = possible_files;
@@ -194,8 +174,7 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     m_digestion_recursion = false;
 }
 
-void ProjectLoader_Service::resetProvidedResources() {
-}
+void ProjectLoader_Service::resetProvidedResources() {}
 
 void ProjectLoader_Service::preGraphRender() {
     // this gets called right before the graph is told to render something

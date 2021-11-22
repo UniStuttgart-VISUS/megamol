@@ -12,14 +12,12 @@
  * vislib::sys::COMException::COMException
  */
 #ifdef _WIN32
-vislib::sys::COMException::COMException(const HRESULT hr, const char *file, 
-        const int line) : Super(file, line) {
+vislib::sys::COMException::COMException(const HRESULT hr, const char* file, const int line) : Super(file, line) {
     _com_error ce(hr);
     this->setMsg(ce.ErrorMessage());
 }
-#else /* _WIN32 */
-vislib::sys::COMException::COMException(const char *file, const int line) 
-        : Super("COMException", file, line) {
+#else  /* _WIN32 */
+vislib::sys::COMException::COMException(const char* file, const int line) : Super("COMException", file, line) {
     // Nothing to do.
 }
 #endif /* _WIN32 */
@@ -43,8 +41,7 @@ vislib::sys::COMException::~COMException(void) {
 /*
  * vislib::sys::COMException::operator =
  */
-vislib::sys::COMException& vislib::sys::COMException::operator =(
-        const COMException& rhs) {
+vislib::sys::COMException& vislib::sys::COMException::operator=(const COMException& rhs) {
     if (this != &rhs) {
         Super::operator=(rhs);
 #ifdef _WIN32

@@ -9,11 +9,11 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
-#include "Window_Events.h"
-#include "WindowManipulation.h"
+#include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "WindowManipulation.h"
+#include "Window_Events.h"
 
 #include <memory>
 
@@ -38,7 +38,6 @@ class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using WindowManipulation = megamol::frontend_resources::WindowManipulation;
 
 public:
-
     struct Config {
         int versionMajor = 4;
         int versionMinor = 6;
@@ -49,7 +48,9 @@ public:
         bool glContextCoreProfile = false;
     };
 
-    std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
+    std::string serviceName() const override {
+        return "OpenGL_GLFW_Service";
+    }
 
     OpenGL_GLFW_Service() = default;
     ~OpenGL_GLFW_Service() override;
@@ -59,7 +60,7 @@ public:
     bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
-    
+
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
     void resetProvidedResources() override;

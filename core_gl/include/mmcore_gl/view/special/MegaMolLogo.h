@@ -20,72 +20,69 @@ namespace core {
 namespace view {
 namespace special {
 
+/**
+ * Logo rendering helper class for the MegaMol logo
+ */
+class MegaMolLogo : public vislib::graphics::AbstractVISLogo {
+public:
+    /** Ctor. */
+    MegaMolLogo(void);
+
+    /** Dtor. */
+    virtual ~MegaMolLogo(void);
+
     /**
-     * Logo rendering helper class for the MegaMol logo
+     * Create all required resources for rendering a VIS logo.
+     *
+     * @throws Exception In case of an error.
      */
-    class MegaMolLogo : public vislib::graphics::AbstractVISLogo {
-    public:
+    virtual void Create(void);
 
-        /** Ctor. */
-        MegaMolLogo(void);
+    /**
+     * Render the VIS logo. Create() must have been called before.
+     *
+     * @throws Exception In case of an error.
+     */
+    virtual void Draw(void);
 
-        /** Dtor. */
-        virtual ~MegaMolLogo(void);
+    /**
+     * Release all resources of the VIS logo.
+     *
+     * @throws Exception In case of an error.
+     */
+    virtual void Release(void);
 
-        /**
-         * Create all required resources for rendering a VIS logo.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Create(void);
+    /**
+     * Answer the maximum x coordinate
+     *
+     * @return The maximum x coordinate
+     */
+    inline float MaxX(void) const {
+        return this->maxX;
+    }
 
-        /**
-         * Render the VIS logo. Create() must have been called before.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Draw(void);
+private:
+    /** vertex pointer */
+    float* vertices;
 
-        /**
-         * Release all resources of the VIS logo.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Release(void);
+    /** colour pointer */
+    unsigned char* colours;
 
-        /**
-         * Answer the maximum x coordinate
-         *
-         * @return The maximum x coordinate
-         */
-        inline float MaxX(void) const {
-            return this->maxX;
-        }
+    /** The triangles index pointer */
+    unsigned int* triIdxs;
 
-    private:
+    /** number of triangle indices*/
+    unsigned int triIdxCnt;
 
-        /** vertex pointer */
-        float *vertices;
+    /** The lines index pointer */
+    unsigned int* lineIdxs;
 
-        /** colour pointer */
-        unsigned char *colours;
+    /** number of lines indices*/
+    unsigned int lineIdxCnt;
 
-        /** The triangles index pointer */
-        unsigned int *triIdxs;
-
-        /** number of triangle indices*/
-        unsigned int triIdxCnt;
-
-        /** The lines index pointer */
-        unsigned int *lineIdxs;
-
-        /** number of lines indices*/
-        unsigned int lineIdxCnt;
-
-        /** The maximum x coordinate */
-        float maxX;
-
-    };
+    /** The maximum x coordinate */
+    float maxX;
+};
 
 
 } /* end namespace special */

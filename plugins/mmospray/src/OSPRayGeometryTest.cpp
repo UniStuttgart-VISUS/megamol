@@ -1,20 +1,20 @@
 /*
-* OSPRayGeometryTest.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayGeometryTest.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "OSPRayGeometryTest.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 
 OSPRayGeometryTest::OSPRayGeometryTest(void) : AbstractOSPRayStructure() {}
 
 
-bool OSPRayGeometryTest::readData(megamol::core::Call &call) {
+bool OSPRayGeometryTest::readData(megamol::core::Call& call) {
 
     // fill material container
     this->processMaterial();
@@ -42,9 +42,7 @@ bool OSPRayGeometryTest::create() {
     return true;
 }
 
-void OSPRayGeometryTest::release() {
-
-}
+void OSPRayGeometryTest::release() {}
 
 /*
 ospray::OSPRayGeometryTest::InterfaceIsDirty()
@@ -54,11 +52,11 @@ bool OSPRayGeometryTest::InterfaceIsDirty() {
 }
 
 
-bool OSPRayGeometryTest::getExtends(megamol::core::Call &call) {
-    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
+bool OSPRayGeometryTest::getExtends(megamol::core::Call& call) {
+    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
-    this->extendContainer.boundingBox->SetBoundingBox(-1,-1,1,1,1,-1);
+    this->extendContainer.boundingBox->SetBoundingBox(-1, -1, 1, 1, 1, -1);
     this->extendContainer.timeFramesCount = 1;
     this->extendContainer.isValid = true;
 

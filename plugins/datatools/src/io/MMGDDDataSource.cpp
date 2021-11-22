@@ -5,28 +5,31 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/MMGDDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 #include <cassert>
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 
-io::MMGDDDataSource::MMGDDDataSource(void) : core::view::AnimDataModule(),
-        filename("filename", "The path to the MMPLD file to load."),
-        getData("getdata", "Slot to request data from this data source."),
-        file(nullptr), frameIdx(), data_hash(0) {
+io::MMGDDDataSource::MMGDDDataSource(void)
+        : core::view::AnimDataModule()
+        , filename("filename", "The path to the MMPLD file to load.")
+        , getData("getdata", "Slot to request data from this data source.")
+        , file(nullptr)
+        , frameIdx()
+        , data_hash(0) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMGDDDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
-    
+
     this->getData.SetCallback("GraphDataCall", "GetData", &MMGDDDataSource::getDataCallback);
     this->getData.SetCallback("GraphDataCall", "GetExtent", &MMGDDDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
@@ -40,7 +43,7 @@ io::MMGDDDataSource::~MMGDDDataSource(void) {
 }
 
 core::view::AnimDataModule::Frame* io::MMGDDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<io::MMGDDDataSource*>(this));
+    Frame* f = new Frame(*const_cast<io::MMGDDDataSource*>(this));
     return f;
 }
 
@@ -49,10 +52,11 @@ bool io::MMGDDDataSource::create(void) {
     return true;
 }
 
-void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsigned int idx) {
+void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
     using megamol::core::utility::log::Log;
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == nullptr) return;
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == nullptr)
+        return;
     if (this->file == nullptr) {
         f->Clear();
         return;
@@ -69,7 +73,7 @@ void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, un
 void io::MMGDDDataSource::release(void) {
     this->resetFrameCache();
     if (file != nullptr) {
-        vislib::sys::File *f = file;
+        vislib::sys::File* f = file;
         file = nullptr;
         f->Close();
         delete f;
@@ -99,14 +103,16 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-        SAFE_DELETE(this->file); \
-        this->setFrameCount(1); \
-        this->initFrameCache(1); \
-        return true;
-#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-        _ERROR_OUT("Unable to read MMPLD file header"); \
-        }
+#define _ERROR_OUT(MSG)                              \
+    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
+    SAFE_DELETE(this->file);                         \
+    this->setFrameCount(1);                          \
+    this->initFrameCache(1);                         \
+    return true;
+#define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                        \
+    if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
+        _ERROR_OUT("Unable to read MMPLD file header");             \
+    }
 
     char magicid[6];
     _ASSERT_READFILE(magicid, 6);
@@ -132,7 +138,8 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     memHere *= 0.25; // only use max 25% of the memory of this data
     Log::DefaultLog.WriteInfo("Memory available: %u MB\n", static_cast<uint32_t>(memHere / (1024.0 * 1024.0)));
     double memWant = static_cast<double>(frameIdx.back() - frameIdx.front());
-    Log::DefaultLog.WriteInfo("Memory required: %u MB for %u frames total\n", static_cast<uint32_t>(memWant / (1024.0 * 1024.0)), static_cast<uint32_t>(frameIdx.size()));
+    Log::DefaultLog.WriteInfo("Memory required: %u MB for %u frames total\n",
+        static_cast<uint32_t>(memWant / (1024.0 * 1024.0)), static_cast<uint32_t>(frameIdx.size()));
     uint32_t cacheSize = static_cast<uint32_t>((memHere / memWant) * static_cast<double>(frameIdx.size()) + 0.5);
     Log::DefaultLog.WriteInfo("Cache set to %u frames\n", cacheSize);
 
@@ -146,13 +153,15 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 }
 
 bool io::MMGDDDataSource::getDataCallback(core::Call& caller) {
-    GraphDataCall *c2 = dynamic_cast<GraphDataCall*>(&caller);
-    if (c2 == nullptr) return false;
+    GraphDataCall* c2 = dynamic_cast<GraphDataCall*>(&caller);
+    if (c2 == nullptr)
+        return false;
 
-    Frame *f = nullptr;
+    Frame* f = nullptr;
     if (c2 != nullptr) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID(), true));
-        if (f == nullptr) return false;
+        f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID(), true));
+        if (f == nullptr)
+            return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         c2->SetDataHash(this->data_hash);
@@ -163,7 +172,7 @@ bool io::MMGDDDataSource::getDataCallback(core::Call& caller) {
 }
 
 bool io::MMGDDDataSource::getExtentCallback(core::Call& caller) {
-    GraphDataCall *c2 = dynamic_cast<GraphDataCall*>(&caller);
+    GraphDataCall* c2 = dynamic_cast<GraphDataCall*>(&caller);
 
     if (c2 != nullptr) {
         c2->SetFrameCount(this->FrameCount());

@@ -9,7 +9,7 @@
 #ifndef MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
 #define MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/CallTriMeshData.h"
@@ -33,7 +33,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MSMSGenus0Generator"; }
+    static const char* ClassName(void) {
+        return "MSMSGenus0Generator";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -49,7 +51,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     MSMSGenus0Generator(void);

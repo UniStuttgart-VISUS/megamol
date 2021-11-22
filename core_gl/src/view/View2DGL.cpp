@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/View2DGL.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -16,10 +15,11 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
+#include "stdafx.h"
 #include "vislib/Trace.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 using namespace megamol::core_gl;
@@ -28,24 +28,28 @@ using namespace megamol::core_gl;
 /*
  * view::View2DGL::View2DGL
  */
-view::View2DGL::View2DGL(void) : core::view::BaseView<CallRenderViewGL, core::view::Camera2DController>() {
+view::View2DGL::View2DGL(void) {
 
     // Override renderSlot behavior
-    this->_lhsRenderSlot.SetCallback(
-        view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &AbstractView::OnCharCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
+        &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
+        &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
@@ -68,7 +72,7 @@ view::View2DGL::~View2DGL(void) {
  */
 megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double instanceTime) {
 
-    AbstractView::beforeRender(time,instanceTime);
+    AbstractView::beforeRender(time, instanceTime);
 
     CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
 
@@ -116,7 +120,7 @@ bool view::View2DGL::create(void) {
     this->_firstImg = true;
 
     // intialize fbo with dummy size until the actual size is set during first call to Resize
-    this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
+    this->_fbo = std::make_shared<glowl::FramebufferObject>(1, 1);
 
     return true;
 }
@@ -128,7 +132,7 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
     bool create_fbo = false;
     if (_fbo == nullptr) {
         create_fbo = true;
-    } else if ( ((_fbo->getWidth() != width) || (_fbo->getHeight() != height)) && width != 0 && height != 0) {
+    } else if (((_fbo->getWidth() != width) || (_fbo->getHeight() != height)) && width != 0 && height != 0) {
         create_fbo = true;
     }
 

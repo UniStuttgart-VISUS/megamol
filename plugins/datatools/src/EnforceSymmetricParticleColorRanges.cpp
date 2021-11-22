@@ -4,10 +4,10 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "EnforceSymmetricParticleColorRanges.h"
-#include <cstdint>
+#include "stdafx.h"
 #include <algorithm>
+#include <cstdint>
 
 using namespace megamol;
 
@@ -34,7 +34,7 @@ datatools::EnforceSymmetricParticleColorRanges::~EnforceSymmetricParticleColorRa
  */
 bool datatools::EnforceSymmetricParticleColorRanges::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
-    outData = inData; // also transfers the unlocker to 'outData'
+    outData = inData;                   // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
     unsigned int plc = outData.GetParticleListCount();

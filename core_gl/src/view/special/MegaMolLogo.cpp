@@ -5,23 +5,28 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore_gl/view/special/MegaMolLogo.h"
 #include "MegaMolLogoData.inl"
-#include "vislib/assert.h"
+#include "stdafx.h"
 #include "vislib/Array.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/Pair.h"
+#include "vislib/assert.h"
 #include "vislib/math/Vector.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 /*
  * megamol::core::view::special::MegaMolLogo::MegaMolLogo
  */
 megamol::core::view::special::MegaMolLogo::MegaMolLogo(void)
-        : vertices(NULL), colours(NULL), triIdxs(NULL), triIdxCnt(0),
-        lineIdxs(NULL), lineIdxCnt(0), maxX(0.0f) {
+        : vertices(NULL)
+        , colours(NULL)
+        , triIdxs(NULL)
+        , triIdxCnt(0)
+        , lineIdxs(NULL)
+        , lineIdxCnt(0)
+        , maxX(0.0f) {
     // intentionally empty
 }
 
@@ -50,8 +55,8 @@ void megamol::core::view::special::MegaMolLogo::Create(void) {
     // MegaMolLogoElements (count)
     // MegaMolLogoVertices
     // MegaMolLogoColors
-    vislib::Array<vislib::math::Vector<float, 2> > pos;
-    vislib::Array<vislib::math::Vector<unsigned char, 3> > col;
+    vislib::Array<vislib::math::Vector<float, 2>> pos;
+    vislib::Array<vislib::math::Vector<unsigned char, 3>> col;
     this->triIdxs = new unsigned int[MegaMolLogoElements];
     this->triIdxCnt = MegaMolLogoElements;
     pos.AssertCapacity(MegaMolLogoElements);
@@ -61,7 +66,7 @@ void megamol::core::view::special::MegaMolLogo::Create(void) {
     for (unsigned int i = 0; i < MegaMolLogoElements; i++) {
         vislib::math::Vector<float, 2> p(MegaMolLogoVertices[i * 3], -MegaMolLogoVertices[i * 3 + 2]);
         INT_PTR idx = pos.IndexOf(p);
-        if (idx == vislib::Array<vislib::math::Vector<float, 2> >::INVALID_POS) {
+        if (idx == vislib::Array<vislib::math::Vector<float, 2>>::INVALID_POS) {
             idx = pos.Count();
             pos.Append(p);
             col.Append(vislib::math::Vector<unsigned char, 3>(MegaMolLogoColors + i * 3));
@@ -83,7 +88,7 @@ void megamol::core::view::special::MegaMolLogo::Create(void) {
         }
     }
 
-    vislib::Array<vislib::Pair<unsigned int, unsigned int> > lines;
+    vislib::Array<vislib::Pair<unsigned int, unsigned int>> lines;
     lines.AssertCapacity(MegaMolLogoElements);
     for (unsigned int i = 0; i < MegaMolLogoElements; i += 3) {
         for (unsigned int j = 0; j < 3; j++) {

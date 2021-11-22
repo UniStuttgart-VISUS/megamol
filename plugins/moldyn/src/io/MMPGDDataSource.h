@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
 #define MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
@@ -37,21 +37,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) { return "MMPGDDataSource"; }
+    static const char* ClassName(void) {
+        return "MMPGDDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) { return "Data source module for MMPGD files."; }
+    static const char* Description(void) {
+        return "Data source module for MMPGD files.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     MMPGDDataSource(void);
@@ -66,7 +72,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual view::AnimDataModule::Frame *constructFrame(void) const;
+    virtual view::AnimDataModule::Frame* constructFrame(void) const;
 
     /**
      * Implementation of 'Create'.
@@ -84,7 +90,7 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx);
+    virtual void loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx);
 
     /**
      * Implementation of 'Release'.
@@ -100,7 +106,7 @@ private:
          *
          * @param owner The owning AnimDataModule
          */
-        Frame(view::AnimDataModule &owner);
+        Frame(view::AnimDataModule& owner);
 
         /** Dtor. */
         virtual ~Frame(void);
@@ -108,7 +114,9 @@ private:
         /**
          * Clears the loaded data
          */
-        inline void Clear(void) { this->dat.EnforceSize(0); }
+        inline void Clear(void) {
+            this->dat.EnforceSize(0);
+        }
 
         /**
          * Loads a frame from 'file' into this object
@@ -120,24 +128,24 @@ private:
          *
          * @return True on success
          */
-        bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size);
+        bool LoadFrame(vislib::sys::File* file, unsigned int idx, UINT64 size);
 
         /**
          * Sets the data into the call
          *
          * @param call The call to receive the data
          */
-        void SetData(ParticleGridDataCall &call);
+        void SetData(ParticleGridDataCall& call);
 
     private:
         /** position data per type */
         vislib::RawStorage dat;
 
         /** The types */
-		ParticleGridDataCall::ParticleType *types;
+        ParticleGridDataCall::ParticleType* types;
 
         /** The cells */
-		ParticleGridDataCall::GridCell *cells;
+        ParticleGridDataCall::GridCell* cells;
     };
 
     /**
@@ -151,9 +159,7 @@ private:
          *
          * @param frame The frame to unlock
          */
-        Unlocker(Frame &frame)
-            : ParticleGridDataCall::Unlocker()
-            , frame(&frame) {
+        Unlocker(Frame& frame) : ParticleGridDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
 
@@ -173,7 +179,7 @@ private:
 
     private:
         /** The frame to unlock */
-        Frame *frame;
+        Frame* frame;
     };
 
     /**
@@ -183,7 +189,7 @@ private:
      *
      * @return Always 'true' to reset the dirty flag.
      */
-    bool filenameChanged(param::ParamSlot &slot);
+    bool filenameChanged(param::ParamSlot& slot);
 
     /**
      * Gets the data from the source.
@@ -192,7 +198,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getDataCallback(Call &caller);
+    bool getDataCallback(Call& caller);
 
     /**
      * Gets the data from the source.
@@ -201,7 +207,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getExtentCallback(Call &caller);
+    bool getExtentCallback(Call& caller);
 
     /** The file name */
     param::ParamSlot filename;
@@ -210,10 +216,10 @@ private:
     CalleeSlot getData;
 
     /** The opened data file */
-    vislib::sys::File *file;
+    vislib::sys::File* file;
 
     /** The frame index table */
-    UINT64 *frameIdx;
+    UINT64* frameIdx;
 
     /** The data set bounding box */
     vislib::math::Cuboid<float> bbox;

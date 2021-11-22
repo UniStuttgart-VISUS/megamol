@@ -1,12 +1,12 @@
 /*
  * TernaryParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/TernaryParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::param;
 
@@ -51,7 +51,8 @@ void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         this->indicateChange();
-        if (setDirty) this->setDirty();
+        if (setDirty)
+            this->setDirty();
     }
 }
 

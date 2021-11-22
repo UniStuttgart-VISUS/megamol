@@ -1,7 +1,7 @@
 /*
  * NullLockable.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -20,44 +20,42 @@
 
 namespace vislib {
 
+/**
+ * This class implements a 'Lockable' interface without any locking
+ * mechanism. This should be used on all Objects requireing a 'Lockable'
+ * but do not have to be threadsafe for performance reasons.
+ */
+class NullLockable {
+
+public:
+    /** Ctor. */
+    NullLockable(void);
+
+    /** Dtor. */
+    virtual ~NullLockable(void);
+
     /**
-     * This class implements a 'Lockable' interface without any locking
-     * mechanism. This should be used on all Objects requireing a 'Lockable'
-     * but do not have to be threadsafe for performance reasons.
+     * Aquires the lock of this lockable.
+     * Details on the behaviour depend on the 'SyncObject' used.
+     *
+     * This implementation does nothing and therefore object using this
+     * lockable are not threadsafe.
      */
-    class NullLockable {
+    VISLIB_FORCEINLINE void Lock(void) {
+        // intentionally empty
+    }
 
-    public:
-
-        /** Ctor. */
-        NullLockable(void);
-
-        /** Dtor. */
-        virtual ~NullLockable(void);
-
-        /**
-         * Aquires the lock of this lockable.
-         * Details on the behaviour depend on the 'SyncObject' used.
-         *
-         * This implementation does nothing and therefore object using this
-         * lockable are not threadsafe.
-         */
-        VISLIB_FORCEINLINE void Lock(void) {
-            // intentionally empty
-        }
-
-        /**
-         * Releases the lock of this lockable.
-         * Details on the behaviour depend on the 'SyncObject' used.
-         *
-         * This implementation does nothing and therefore object using this
-         * lockable are not threadsafe.
-         */
-        VISLIB_FORCEINLINE void Unlock(void) {
-            // intentionally empty
-        }
-
-    };
+    /**
+     * Releases the lock of this lockable.
+     * Details on the behaviour depend on the 'SyncObject' used.
+     *
+     * This implementation does nothing and therefore object using this
+     * lockable are not threadsafe.
+     */
+    VISLIB_FORCEINLINE void Unlock(void) {
+        // intentionally empty
+    }
+};
 
 } /* end namespace vislib */
 

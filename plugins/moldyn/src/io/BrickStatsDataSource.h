@@ -7,126 +7,123 @@
 
 #pragma once
 
-#include "moldyn/BrickStatsCall.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
+#include "moldyn/BrickStatsCall.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
-#include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
 
 namespace megamol {
 namespace moldyn {
 
-    using namespace megamol::core;
+using namespace megamol::core;
 
+
+/**
+ * Data source module for MMPLD files
+ */
+class BrickStatsDataSource : public Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "PTSBrickStatsDataSource";
+    }
 
     /**
-     * Data source module for MMPLD files
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
      */
-    class BrickStatsDataSource : public Module {
-    public:
+    static const char* Description(void) {
+        return "Data source module for brick statistics files.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "PTSBrickStatsDataSource";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Data source module for brick statistics files.";
-        }
+    /** Ctor. */
+    BrickStatsDataSource(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Dtor. */
+    virtual ~BrickStatsDataSource(void);
 
-        /** Ctor. */
-        BrickStatsDataSource(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /** Dtor. */
-        virtual ~BrickStatsDataSource(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-    protected:
+    /**
+     * Callback receiving the update of the file name parameter.
+     *
+     * @param slot The updated ParamSlot.
+     *
+     * @return Always 'true' to reset the dirty flag.
+     */
+    bool filenameChanged(param::ParamSlot& slot);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(Call& caller);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(Call& caller);
 
-        /**
-         * Callback receiving the update of the file name parameter.
-         *
-         * @param slot The updated ParamSlot.
-         *
-         * @return Always 'true' to reset the dirty flag.
-         */
-        bool filenameChanged(param::ParamSlot& slot);
+private:
+    /** The file name */
+    param::ParamSlot filename;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(Call& caller);
+    param::ParamSlot skipHeaderLine;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(Call& caller);
+    /** The slot for requesting data */
+    CalleeSlot getData;
 
-	private:
+    /** The opened data file */
+    vislib::sys::File* file;
 
-        /** The file name */
-        param::ParamSlot filename;
+    /** The data set bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-        param::ParamSlot skipHeaderLine;
+    /** The data set clipping box */
+    vislib::math::Cuboid<float> clipbox;
 
-        /** The slot for requesting data */
-        CalleeSlot getData;
+    /** Data file load id counter */
+    size_t data_hash;
 
-        /** The opened data file */
-        vislib::sys::File *file;
-
-        /** The data set bounding box */
-        vislib::math::Cuboid<float> bbox;
-
-        /** The data set clipping box */
-        vislib::math::Cuboid<float> clipbox;
-
-        /** Data file load id counter */
-        size_t data_hash;
-
-        vislib::Array<BrickStatsCall::BrickInfo> info;
-    };
+    vislib::Array<BrickStatsCall::BrickInfo> info;
+};
 
 } /* end namespace moldyn */
 } /* end namespace megamol */

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mmcore/view/ContextToGL.h"
-#include "glad/glad_wgl.h"
 #include "CallRender3DCUDA.h"
+#include "glad/wgl.h"
+#include "mmcore_gl/view/ContextToGL.h"
 
 #include "cuda.h"
 // thank you Nvidia for breaking the typedef of HGPUNV if I do not have a Quadro board!
@@ -35,7 +35,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::Framebuff
 
     fbo = std::make_shared<CUDAFramebuffer>();
 
-    glGenTextures(1, (GLuint*) &fbo->data.col_tex);
+    glGenTextures(1, (GLuint*)&fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -59,7 +59,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::Framebuff
 
     CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->colorBuffer, &surf_desc));
 
-    glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
+    glGenTextures(1, (GLuint*)&fbo->data.depth_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -91,13 +91,13 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgra
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 
-    core::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
+    core_gl::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
 
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 };
 
-using CUDAToGL =
-    core::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
+using CUDAToGL = core_gl::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name,
+    cudatogl_desc>;
 
 } // namespace megamol::optix_hpg

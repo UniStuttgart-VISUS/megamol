@@ -130,7 +130,7 @@ __global__ void sortAtomsGenCellListsQSA(unsigned int natoms,
       if (index > 0)
         cellStartEnd_d[hash_s[threadIdx.x]].y = index; // set end
     }
-	
+
     if (index == natoms - 1) {
       cellStartEnd_d[hash].y = index + 1; // set end
     }
@@ -167,8 +167,8 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
 
   err = cudaGetLastError();
   if (err != cudaSuccess) {
-	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-	  return -1;
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
   }
   // If we have a very large atom count, we must either use 
   // larger thread blocks, or use multi-dimensional grids of thread blocks. 
@@ -189,8 +189,8 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
 
   err = cudaGetLastError();
   if (err != cudaSuccess) {
-	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-	  return -1;
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
   }
   // Sort atom indices by their grid cell address
   // (wrapping the device pointers with vector iterators)
@@ -200,8 +200,8 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
 
   err = cudaGetLastError();
   if (err != cudaSuccess) {
-	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-	  return -1;
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
   }
   // Initialize all cells to empty
   int ncells = volsz.x * volsz.y * volsz.z;
@@ -209,8 +209,8 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
 
   err = cudaGetLastError();
   if (err != cudaSuccess) {
-	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-	  return -1;
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
   }
   // Reorder atoms into sorted order and find start and end of each cell
   // XXX need to use 2-D indexing for large atom counts or we exceed the
@@ -794,7 +794,7 @@ int CUDAQuickSurfArray::alloc_bufs_map(long int natoms, int colorperatom,
   gpuh->devdensitySurface = 0;
   err = cudaCreateSurfaceObject(&gpuh->devdensitySurface, &resDesc);
   if (err != cudaSuccess)
-	  return -1;
+      return -1;
   */
 
   if (colorperatom) {
@@ -951,7 +951,7 @@ int CUDAQuickSurfArray::calc_map(long int natoms, const float *xyzr_f,
 
         xyzr[i].w = arinv;
     }
-	
+
     wkf_timerhandle globaltimer = wkf_timer_create();
     wkf_timer_start(globaltimer);
 
@@ -1109,11 +1109,11 @@ int CUDAQuickSurfArray::calc_map(long int natoms, const float *xyzr_f,
     if (deviceProp.major < 2)
         Gszslice.z = 1;
 
-	err = cudaBindSurfaceToArray(outputSurface, gpuh->devdensity);
-	if (err != cudaSuccess) {
-		printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-		return -1;
-	}
+    err = cudaBindSurfaceToArray(outputSurface, gpuh->devdensity);
+    if (err != cudaSuccess) {
+        printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+        return -1;
+    }
 
     if (colorperatom) {
         gaussdensity_fast_texQSA<<<Gszslice, Bsz, 0>>>(natoms, 

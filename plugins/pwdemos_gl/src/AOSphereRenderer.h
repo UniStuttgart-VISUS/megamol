@@ -7,213 +7,210 @@
 
 #pragma once
 
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib/Array.h"
-#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "vislib/Array.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * Renderer for simple sphere glyphs
+ */
+class AOSphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+public:
     /**
-     * Renderer for simple sphere glyphs
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class AOSphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
-    public:
+    static const char* ClassName(void) {
+        return "AOSphereRenderer";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "AOSphereRenderer";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for sphere glyphs.";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Renderer for sphere glyphs.";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
-        }
+    /** Ctor. */
+    AOSphereRenderer(void);
 
-        /** Ctor. */
-        AOSphereRenderer(void);
+    /** Dtor. */
+    virtual ~AOSphereRenderer(void);
 
-        /** Dtor. */
-        virtual ~AOSphereRenderer(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
-
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
-
-    private:
-
-        /**
-         * TODO: Document
-         */
-        void resizeVolume();
-        void uploadCameraUniforms(megamol::core_gl::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
-        void renderParticles(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
-        void renderParticles(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol);
-        void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
-        void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol);
+private:
+    /**
+     * TODO: Document
+     */
+    void resizeVolume();
+    void uploadCameraUniforms(
+        megamol::core_gl::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
+    void renderParticles(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
+    void renderParticles(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
+    void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
+    void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
 
 
-        /**
-         * TODO: Document
-         */
-        void createEmptyVolume();
+    /**
+     * TODO: Document
+     */
+    void createEmptyVolume();
 
-        /**
-         * TODO: Document
-         */
-        void createFullVolume();
+    /**
+     * TODO: Document
+     */
+    void createFullVolume();
 
-        /**
-         * TODO: Document
-         */
-        void createVolumeCPU(class geocalls::MultiParticleDataCall& c2);
+    /**
+     * TODO: Document
+     */
+    void createVolumeCPU(class geocalls::MultiParticleDataCall& c2);
 
-        /**
-         * TODO: Document
-         */
-        void createVolumeGLSL(class geocalls::MultiParticleDataCall& c2);
-        void createVolumeGLSL(protein_calls::MolecularDataCall &mol);
-
-
-        /**
-         * Write particle positions and radii to a VBO for rendering and processing in CUDA.
-         */
-        void writeParticlePositionsVBO(class geocalls::MultiParticleDataCall& c2);
-        void writeParticlePositionsVBO(protein_calls::MolecularDataCall &mol);
-        void createVolumeCPU(protein_calls::MolecularDataCall &mol);
+    /**
+     * TODO: Document
+     */
+    void createVolumeGLSL(class geocalls::MultiParticleDataCall& c2);
+    void createVolumeGLSL(protein_calls::MolecularDataCall& mol);
 
 
-        /** The sphere shader */
-        vislib_gl::graphics::gl::GLSLShader sphereShaderAOMainAxes[4];
+    /**
+     * Write particle positions and radii to a VBO for rendering and processing in CUDA.
+     */
+    void writeParticlePositionsVBO(class geocalls::MultiParticleDataCall& c2);
+    void writeParticlePositionsVBO(protein_calls::MolecularDataCall& mol);
+    void createVolumeCPU(protein_calls::MolecularDataCall& mol);
 
-        /** The sphere shader */
-        vislib_gl::graphics::gl::GLSLShader sphereShaderAONormals[4];
 
-        /** The call for data */
-        megamol::core::CallerSlot getDataSlot;
+    /** The sphere shader */
+    vislib_gl::graphics::gl::GLSLShader sphereShaderAOMainAxes[4];
 
-        /** The call for Transfer function */
-        megamol::core::CallerSlot getTFSlot;
+    /** The sphere shader */
+    vislib_gl::graphics::gl::GLSLShader sphereShaderAONormals[4];
 
-        /** The call for clipping plane */
-        megamol::core::CallerSlot getClipPlaneSlot;
+    /** The call for data */
+    megamol::core::CallerSlot getDataSlot;
 
-        /** A simple black-to-white transfer function texture as fallback */
-        unsigned int greyTF;
+    /** The call for Transfer function */
+    megamol::core::CallerSlot getTFSlot;
 
-        /** Turn rendering on/off */
-        megamol::core::param::ParamSlot renderFlagSlot;
+    /** The call for clipping plane */
+    megamol::core::CallerSlot getClipPlaneSlot;
 
-        /** The size of the volume in numbers of voxels */
-        megamol::core::param::ParamSlot volSizeXSlot;
+    /** A simple black-to-white transfer function texture as fallback */
+    unsigned int greyTF;
 
-        /** The size of the volume in numbers of voxels */
-        megamol::core::param::ParamSlot volSizeYSlot;
+    /** Turn rendering on/off */
+    megamol::core::param::ParamSlot renderFlagSlot;
 
-        /** The size of the volume in numbers of voxels */
-        megamol::core::param::ParamSlot volSizeZSlot;
+    /** The size of the volume in numbers of voxels */
+    megamol::core::param::ParamSlot volSizeXSlot;
 
-        /** The generation method */
-        megamol::core::param::ParamSlot volGenSlot;
+    /** The size of the volume in numbers of voxels */
+    megamol::core::param::ParamSlot volSizeYSlot;
 
-        /** The access method */
-        megamol::core::param::ParamSlot volAccSlot;
+    /** The size of the volume in numbers of voxels */
+    megamol::core::param::ParamSlot volSizeZSlot;
 
-        /** The access step length in voxels */
-        megamol::core::param::ParamSlot aoStepLengthSlot;
+    /** The generation method */
+    megamol::core::param::ParamSlot volGenSlot;
 
-        /** The generation factor (influence factor of a single sphere on a voxel) */
-        megamol::core::param::ParamSlot aoGenFacSlot;
+    /** The access method */
+    megamol::core::param::ParamSlot volAccSlot;
 
-        /** The evaluation factor (shadowing amount factor multiplied with the ambient occlusion factors) */
-        megamol::core::param::ParamSlot aoEvalFacSlot;
+    /** The access step length in voxels */
+    megamol::core::param::ParamSlot aoStepLengthSlot;
 
-        /** The shading mode */
-        megamol::core::param::ParamSlot aoShadModeSlot;
+    /** The generation factor (influence factor of a single sphere on a voxel) */
+    megamol::core::param::ParamSlot aoGenFacSlot;
 
-        /** Clip ambient occlusion data */
-        megamol::core::param::ParamSlot aoClipFlagSlot;
+    /** The evaluation factor (shadowing amount factor multiplied with the ambient occlusion factors) */
+    megamol::core::param::ParamSlot aoEvalFacSlot;
 
-        /** The density volume texture id */
-        unsigned int volTex;
+    /** The shading mode */
+    megamol::core::param::ParamSlot aoShadModeSlot;
 
-        /** FBO for GLSL volume generation */
-        GLuint volFBO;
+    /** Clip ambient occlusion data */
+    megamol::core::param::ParamSlot aoClipFlagSlot;
 
-        /** The volume generation shader */
-        vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
-        
-		// VBO for all particles
-		GLuint particleVBO;
-		// number of particles
-		UINT64 particleCountVBO;
+    /** The density volume texture id */
+    unsigned int volTex;
 
-        // vertex array for atom spheres (molecule rendering)
-        vislib::Array<float> vertSpheres;
-        // vertex array for atom colours (molecule rendering)
-        vislib::Array<unsigned char> vertColours;
+    /** FBO for GLSL volume generation */
+    GLuint volFBO;
 
-		vislib::Array<vislib::Array<float> > sphereSlices;
-		vislib::Array<unsigned int> sphereCountSlices;
+    /** The volume generation shader */
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
 
-	    float clipDat[4];
-	    float clipCol[3];
-    };
+    // VBO for all particles
+    GLuint particleVBO;
+    // number of particles
+    UINT64 particleCountVBO;
 
-} /* end namespace demos */
+    // vertex array for atom spheres (molecule rendering)
+    vislib::Array<float> vertSpheres;
+    // vertex array for atom colours (molecule rendering)
+    vislib::Array<unsigned char> vertColours;
+
+    vislib::Array<vislib::Array<float>> sphereSlices;
+    vislib::Array<unsigned int> sphereCountSlices;
+
+    float clipDat[4];
+    float clipCol[3];
+};
+
+} // namespace demos_gl
 } /* end namespace megamol */
-

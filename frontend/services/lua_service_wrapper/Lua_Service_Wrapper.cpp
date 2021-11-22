@@ -25,6 +25,7 @@
 #include "GUIRegisterWindow.h"
 #include "megamol_build_info.h"
 #include "mmcore/utility/log/Log.h"
+
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());

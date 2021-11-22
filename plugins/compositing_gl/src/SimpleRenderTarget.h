@@ -10,8 +10,8 @@
 
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 
 #include "glowl/FramebufferObject.hpp"
 #include "mmcore_gl/ModuleGL.h"
@@ -23,20 +23,24 @@ namespace compositing {
  * TODO
  */
 class SimpleRenderTarget : public core::view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
-    public:
+public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SimpleRenderTarget"; }
+    static const char* ClassName(void) {
+        return "SimpleRenderTarget";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Binds a FBO with color, normal and depth render targets."; }
+    static const char* Description(void) {
+        return "Binds a FBO with color, normal and depth render targets.";
+    }
 
     /**
      * Answers whether this module is available on the current system.

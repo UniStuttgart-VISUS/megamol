@@ -1,12 +1,12 @@
 /*
-* CallOSPRayTransformation.cpp
-*
-* Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
-* Alle Rechte vorbehalten.
-*/
+ * CallOSPRayTransformation.cpp
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "CallOSPRayTransformation.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 
 namespace megamol {
@@ -29,12 +29,12 @@ CallOSPRayTransformation& CallOSPRayTransformation::operator=(const CallOSPRayTr
 }
 
 void CallOSPRayTransformation::setTransformationContainer(std::shared_ptr<OSPRayTransformationContainer> tc) {
-    
+
     this->_transformationContainer = tc;
 }
 
 std::shared_ptr<OSPRayTransformationContainer> CallOSPRayTransformation::getTransformationParameter() {
-   
+
     if (!(*this)(0)) {
         throw vislib::IllegalParamException("[CallOSPRayTransformation]: Illegal parameter", __FILE__, __LINE__);
     }

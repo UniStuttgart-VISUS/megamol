@@ -9,10 +9,6 @@ if(BUILD_CORE)
   project(core)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
-
   # Add externals.
   require_external(expat)
   require_external(lua)
@@ -31,18 +27,13 @@ if(BUILD_CORE)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
 
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
-  if (ENABLE_GL)
   target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include" "${MEGAMOL_VISLIB_GL_DIR}/include" "${MEGAMOL_CORE_GL_DIR}/include")
-  else()
-  target_include_directories(${PROJECT_NAME}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include" "${CMAKE_BINARY_DIR}/config")
-  endif()
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> "${CMAKE_BINARY_DIR}/config")
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq megamol_build_info
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
@@ -65,30 +56,13 @@ if(BUILD_CORE)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
+  # Install resources
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
+
   # Source groups in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
-  foreach(FILE_NAME ${source_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Source Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${public_header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  source_group("Resources" FILES ${resource_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/mmcore" PREFIX "Public Header Files" FILES ${public_header_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Header Files" FILES ${header_files})
+  source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES ${source_files})
 
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
-  
 endif(BUILD_CORE)

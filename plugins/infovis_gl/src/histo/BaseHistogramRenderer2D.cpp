@@ -57,12 +57,12 @@ bool BaseHistogramRenderer2D::create() {
     auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
     try {
-        drawHistogramProgram_ = core::utility::make_glowl_shader(
-            "histo_base_draw", shaderOptions, "infovis_gl/histo/base_draw.vert.glsl", "infovis_gl/histo/base_draw.frag.glsl");
-        drawAxesProgram_ = core::utility::make_glowl_shader(
-            "histo_base_axes", shaderOptions, "infovis_gl/histo/base_axes.vert.glsl", "infovis_gl/histo/base_axes.frag.glsl");
-        calcMaxBinProgram_ =
-            core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
+        drawHistogramProgram_ = core::utility::make_glowl_shader("histo_base_draw", shaderOptions,
+            "infovis_gl/histo/base_draw.vert.glsl", "infovis_gl/histo/base_draw.frag.glsl");
+        drawAxesProgram_ = core::utility::make_glowl_shader("histo_base_axes", shaderOptions,
+            "infovis_gl/histo/base_axes.vert.glsl", "infovis_gl/histo/base_axes.frag.glsl");
+        calcMaxBinProgram_ = core::utility::make_glowl_shader(
+            "histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -237,8 +237,6 @@ bool BaseHistogramRenderer2D::OnMouseButton(
     } else {
         return false;
     }
-
-    std::cout << "mouse: " << mouseX_ << " " << mouseY_ << std::endl;
 
     needSelectionUpdate_ = true;
     selectedComponent_ = -1;

@@ -5,13 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "CPERAWDataSource.h"
+#include "stdafx.h"
 
 #include <chrono>
 #include <fstream>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -25,14 +25,16 @@ using namespace megamol;
 using namespace megamol::datatools::io;
 
 
-CPERAWDataSource::CPERAWDataSource(void) : core::Module(),
-      filenameSlot("filename", "The path to the CPERAW file to load."),
-      radiusSlot("radius", "the radius of the particles"),
-      getData("getdata", "Slot to request data from this data source.") {
+CPERAWDataSource::CPERAWDataSource(void)
+        : core::Module()
+        , filenameSlot("filename", "The path to the CPERAW file to load.")
+        , radiusSlot("radius", "the radius of the particles")
+        , getData("getdata", "Slot to request data from this data source.") {
 
-    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(), geocalls::MultiParticleDataCall::FunctionName(0), &CPERAWDataSource::getDataCallback);
-    this->getData.SetCallback(
-        geocalls::MultiParticleDataCall::ClassName(), geocalls::MultiParticleDataCall::FunctionName(1), &CPERAWDataSource::getExtentCallback);
+    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &CPERAWDataSource::getDataCallback);
+    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &CPERAWDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->filenameSlot << new core::param::FilePathParam("");
@@ -55,8 +57,7 @@ bool CPERAWDataSource::create(void) {
 }
 
 
-void CPERAWDataSource::release(void) {
-}
+void CPERAWDataSource::release(void) {}
 
 
 bool CPERAWDataSource::assertData() {
@@ -66,7 +67,7 @@ bool CPERAWDataSource::assertData() {
 
     const char* fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
 
-    FILE *f;
+    FILE* f;
 #ifdef WIN32
     auto const err = fopen_s(&f, fname, "rb");
 #else
@@ -74,11 +75,11 @@ bool CPERAWDataSource::assertData() {
 #endif
     if (err == 0) {
 #ifdef WIN32
-        struct _stat64 fs{};
+        struct _stat64 fs {};
         _fstat64(_fileno(f), &fs);
         len = fs.st_size;
 #else
-        struct stat fs{};
+        struct stat fs {};
         fstat(fileno(f), &fs);
         len = fs.st_size;
 #endif
@@ -89,7 +90,8 @@ bool CPERAWDataSource::assertData() {
     }
 
     if (len < headerLen) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("File %s has illegal content: not enough information for both bounding boxes", fname);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "File %s has illegal content: not enough information for both bounding boxes", fname);
         return false;
     }
     if (len == headerLen) {
@@ -101,20 +103,21 @@ bool CPERAWDataSource::assertData() {
     size_t const payload = len - headerLen; // we have two float bounding boxes up front
 
     if (payload % pointStride != 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("File %s has illegal content: payload is not a multiple of %u bytes: %llu", fname, pointStride, payload);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "File %s has illegal content: payload is not a multiple of %u bytes: %llu", fname, pointStride, payload);
         return false;
     }
 
     data.resize(payload);
 
     for (int x = 0; x < 6; ++x) {
-        file.read(reinterpret_cast<char *>(&globalBBox[x]), 4);
+        file.read(reinterpret_cast<char*>(&globalBBox[x]), 4);
     }
     for (int x = 0; x < 6; ++x) {
-        file.read(reinterpret_cast<char *>(&localBBox[x]), 4);
+        file.read(reinterpret_cast<char*>(&localBBox[x]), 4);
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("File %s global bbox: (%f, %f, %f - %f, %f, %f)", fname, 
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("File %s global bbox: (%f, %f, %f - %f, %f, %f)", fname,
         globalBBox[0], globalBBox[1], globalBBox[2], globalBBox[3], globalBBox[4], globalBBox[5]);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("File %s local bbox : (%f, %f, %f - %f, %f, %f)", fname,
         localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]);
@@ -140,20 +143,20 @@ void CPERAWDataSource::resetDirty(void) {
 }
 
 
-bool CPERAWDataSource::radiusChanged(core::param::ParamSlot &slot) {
+bool CPERAWDataSource::radiusChanged(core::param::ParamSlot& slot) {
     //this->dataHash++;
     return true;
 }
 
 
-bool CPERAWDataSource::getDataCallback(core::Call &c) {
+bool CPERAWDataSource::getDataCallback(core::Call& c) {
     try {
         if (this->filenameSlot.IsDirty()) {
             this->assertData();
             this->filenameSlot.ResetDirty();
         }
 
-        auto *mdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&c);
+        auto* mdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
 
         if (this->numPoints > 0) {
             if (newFile) {
@@ -161,12 +164,15 @@ bool CPERAWDataSource::getDataCallback(core::Call &c) {
                 mdc->SetFrameID(0);
                 mdc->SetDataHash(this->dataHash);
                 // TODO Unlocker
-                auto &pl = mdc->AccessParticles(0);
+                auto& pl = mdc->AccessParticles(0);
                 pl.SetGlobalRadius(this->radiusSlot.Param<core::param::FloatParam>()->Value());
-                pl.SetBBox(vislib::math::Cuboid<float>(localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]));
+                pl.SetBBox(vislib::math::Cuboid<float>(
+                    localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]));
                 pl.SetCount(numPoints);
-                pl.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, this->data.data() + 0, this->pointStride);
-                pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB, this->data.data() + 24, this->pointStride);
+                pl.SetVertexData(
+                    geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, this->data.data() + 0, this->pointStride);
+                pl.SetColourData(
+                    geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB, this->data.data() + 24, this->pointStride);
                 newFile = false;
             } else {
                 // just update radius, if necessary
@@ -179,21 +185,19 @@ bool CPERAWDataSource::getDataCallback(core::Call &c) {
             mdc->SetParticleListCount(0);
             return true;
         }
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 
     return true;
 }
 
 
-bool CPERAWDataSource::getExtentCallback(core::Call &c) {
+bool CPERAWDataSource::getExtentCallback(core::Call& c) {
     try {
         if (this->filenameSlot.IsDirty()) {
             this->assertData();
             this->filenameSlot.ResetDirty();
         }
-        auto *mdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&c);
+        auto* mdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
         if (mdc != nullptr) {
 
             float const radius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
@@ -207,15 +211,15 @@ bool CPERAWDataSource::getExtentCallback(core::Call &c) {
             // TODO BBoxes
             mdc->SetFrameCount(1);
             mdc->AccessBoundingBoxes().Clear();
-            mdc->AccessBoundingBoxes().SetObjectSpaceBBox(globalBBox[0], globalBBox[1], globalBBox[2], globalBBox[3], globalBBox[4], globalBBox[5]);
-            mdc->AccessBoundingBoxes().SetObjectSpaceClipBox(globalCBox[0], globalCBox[1], globalCBox[2], globalCBox[3], globalCBox[4], globalCBox[5]);
+            mdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+                globalBBox[0], globalBBox[1], globalBBox[2], globalBBox[3], globalBBox[4], globalBBox[5]);
+            mdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+                globalCBox[0], globalCBox[1], globalCBox[2], globalCBox[3], globalCBox[4], globalCBox[5]);
             mdc->SetDataHash(this->dataHash);
         } else {
             return false;
         }
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 
     return true;
 }

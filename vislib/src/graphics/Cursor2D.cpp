@@ -6,8 +6,8 @@
 
 
 #include "vislib/graphics/Cursor2D.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/graphics/AbstractCursor2DEvent.h"
+#include "vislib/math/mathfunctions.h"
 
 #include <stdio.h>
 
@@ -15,20 +15,23 @@
 /*
  * vislib::graphics::Cursor2D::Cursor2D
  */
-vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), 
-        x(static_cast<ImageSpaceType>(0)), y(static_cast<ImageSpaceType>(0)), 
-        prevX(static_cast<ImageSpaceType>(0)), 
-        prevY(static_cast<ImageSpaceType>(0)) { 
-}
+vislib::graphics::Cursor2D::Cursor2D(void)
+        : AbstractCursor()
+        , x(static_cast<ImageSpaceType>(0))
+        , y(static_cast<ImageSpaceType>(0))
+        , prevX(static_cast<ImageSpaceType>(0))
+        , prevY(static_cast<ImageSpaceType>(0)) {}
 
 
 /*
  * vislib::graphics::Cursor2D::Cursor2D
  */
-vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs) 
-        : AbstractCursor(rhs), x(rhs.x), y(rhs.y), prevX(rhs.prevX), 
-        prevY(rhs.prevY) {
-}
+vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs)
+        : AbstractCursor(rhs)
+        , x(rhs.x)
+        , y(rhs.y)
+        , prevX(rhs.prevX)
+        , prevY(rhs.prevY) {}
 
 
 /*
@@ -65,7 +68,7 @@ void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y,
 /*
  * vislib::graphics::Cursor2D::RegisterCursorEvent
  */
-void vislib::graphics::Cursor2D::RegisterCursorEvent(AbstractCursor2DEvent *cursorEvent) {
+void vislib::graphics::Cursor2D::RegisterCursorEvent(AbstractCursor2DEvent* cursorEvent) {
     AbstractCursor::RegisterCursorEvent(cursorEvent);
 }
 
@@ -76,7 +79,7 @@ void vislib::graphics::Cursor2D::RegisterCursorEvent(AbstractCursor2DEvent *curs
 vislib::graphics::Cursor2D& vislib::graphics::Cursor2D::operator=(const Cursor2D& rhs) {
     AbstractCursor::operator=(rhs);
     this->x = rhs.x;
-    this->y = rhs.y; 
+    this->y = rhs.y;
     this->prevX = rhs.prevX;
     this->prevY = rhs.prevY;
     return *this;

@@ -1,7 +1,7 @@
 /*
  * OpenGLVISLogo.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -22,39 +22,37 @@ namespace vislib_gl {
 namespace graphics {
 namespace gl {
 
+/**
+ * Helper for rendering a VIS logo in OpenGL.
+ */
+class OpenGLVISLogo : public vislib::graphics::AbstractVISLogo {
+
+public:
+    /** Ctor. */
+    OpenGLVISLogo(void);
+
+    /** Dtor. */
+    virtual ~OpenGLVISLogo(void);
+
     /**
-     * Helper for rendering a VIS logo in OpenGL.
+     * Create all required resources for rendering a VIS logo.
      */
-    class OpenGLVISLogo : public vislib::graphics::AbstractVISLogo {
+    virtual void Create(void);
 
-    public:
+    /**
+     * Render the VIS logo. Create() must have been called before.
+     */
+    virtual void Draw(void);
 
-        /** Ctor. */
-        OpenGLVISLogo(void);
-
-        /** Dtor. */
-        virtual ~OpenGLVISLogo(void);
-
-        /**
-         * Create all required resources for rendering a VIS logo.
-         */
-        virtual void Create(void);
-
-        /**
-         * Render the VIS logo. Create() must have been called before.
-         */
-        virtual void Draw(void);
-
-        /**
-         * Release all resources of the VIS logo.
-         */
-        virtual void Release(void);
-
-    };
+    /**
+     * Release all resources of the VIS logo.
+     */
+    virtual void Release(void);
+};
 
 } /* end namespace gl */
 } /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib_gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

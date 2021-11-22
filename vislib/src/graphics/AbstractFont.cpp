@@ -1,13 +1,13 @@
 /*
  * AbstractFont.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "vislib/graphics/AbstractFont.h"
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/assert.h"
 
 
 /*
@@ -74,7 +74,6 @@ void vislib::graphics::AbstractFont::SetSize(float size) {
 /*
  * vislib::graphics::AbstractFont::AbstractFont
  */
-vislib::graphics::AbstractFont::AbstractFont(void) : initialised(false),
-        size(1.0f), flipY(false) {
+vislib::graphics::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
     // intentionally empty
 }

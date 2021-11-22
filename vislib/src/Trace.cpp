@@ -11,10 +11,10 @@
 #include <ctime>
 #include <stdexcept>
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/memutils.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -28,7 +28,7 @@ vislib::Trace& vislib::Trace::GetInstance(void) {
 /*
  * vislib::Trace::OverrideInstance
  */
-void vislib::Trace::OverrideInstance(vislib::Trace *inst) {
+void vislib::Trace::OverrideInstance(vislib::Trace* inst) {
     ASSERT(inst != NULL);
     vislib::Trace::instance = inst; // no need to delete the old object
 }
@@ -126,12 +126,11 @@ bool vislib::Trace::EnableDebuggerOutput(const bool useDebugger) {
 /*
  * vislib::Trace::EnableFileOutput
  */
-bool vislib::Trace::EnableFileOutput(const char *filename) {
+bool vislib::Trace::EnableFileOutput(const char* filename) {
     bool retval = true;
 
     if (filename != NULL) {
-        if ((this->filename == NULL) 
-                || (::strcmp(this->filename, filename) != 0)) {
+        if ((this->filename == NULL) || (::strcmp(this->filename, filename) != 0)) {
             ARY_SAFE_DELETE(this->filename);
             SIZE_T len = ::strlen(filename) + 1;
             this->filename = new char[len];
@@ -142,23 +141,22 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
                 ::fclose(this->fp);
                 this->fp = NULL;
             }
-        } 
-        /* 
-         * 'this->filename' is new trace file, 'this->fp' is NULL or the 
+        }
+        /*
+         * 'this->filename' is new trace file, 'this->fp' is NULL or the
          * correct file is still open.
          */
-        
+
         if (this->fp == NULL) {
 #ifdef _WIN32
-#pragma warning(disable: 4996)
+#pragma warning(disable : 4996)
 #endif /* _WIN32 */
             if ((retval = ((this->fp = ::fopen(this->filename, "w")) != NULL))) {
                 time_t now;
                 ::time(&now);
-                ::fprintf(this->fp, "Trace file opened at %s", 
-                    ::asctime(::localtime(&now)));
+                ::fprintf(this->fp, "Trace file opened at %s", ::asctime(::localtime(&now)));
 #ifdef _WIN32
-#pragma warning(default: 4996)
+#pragma warning(default : 4996)
 #endif /* _WIN32 */
             }
         }
@@ -166,7 +164,7 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
     } else {
         /* Disable tracing to file. */
         ARY_SAFE_DELETE(this->filename);
-        
+
         if (this->fp != NULL) {
             ::fclose(this->fp);
             this->fp = NULL;
@@ -180,15 +178,15 @@ bool vislib::Trace::EnableFileOutput(const char *filename) {
 /*
  * vislib::Trace::SetPrefix
  */
-void vislib::Trace::SetPrefix(const char *prefix) {
+void vislib::Trace::SetPrefix(const char* prefix) {
     ARY_SAFE_DELETE(this->prefix);
-    ASSERT(this->prefix == NULL);		// Ensure potential disabling.
+    ASSERT(this->prefix == NULL); // Ensure potential disabling.
 
     if (prefix != NULL) {
         SIZE_T len = ::strlen(prefix) + 1;
         this->prefix = new char[len];
-        ASSERT(this->prefix != NULL);	// std::bad_alloc or OK.
-        ::memcpy(this->prefix, prefix, len * sizeof(char));	
+        ASSERT(this->prefix != NULL); // std::bad_alloc or OK.
+        ::memcpy(this->prefix, prefix, len * sizeof(char));
     }
 }
 
@@ -196,8 +194,7 @@ void vislib::Trace::SetPrefix(const char *prefix) {
 /*
  * vislib::Trace::operator ()
  */
-void vislib::Trace::operator ()(const UINT level, const char *fmt, ...) 
-        throw() {
+void vislib::Trace::operator()(const UINT level, const char* fmt, ...) throw() {
     va_list list;
     va_start(list, fmt);
     this->trace(level, fmt, list);
@@ -209,17 +206,17 @@ void vislib::Trace::operator ()(const UINT level, const char *fmt, ...)
 // * vislib::Trace::operator ()
 // */
 //void vislib::Trace::operator ()(const char *fmt, ...) {
-//	va_list list;
-//	va_start(list, fmt);
-//	this->trace(0, fmt, list);
-//	va_end(list);
+//    va_list list;
+//    va_start(list, fmt);
+//    this->trace(0, fmt, list);
+//    va_end(list);
 //}
 
 
 /*
  * vislib::Trace::DEFAULT_PREFIX
  */
-const char *vislib::Trace::DEFAULT_PREFIX = "TRACE: ";
+const char* vislib::Trace::DEFAULT_PREFIX = "TRACE: ";
 
 
 /*
@@ -231,14 +228,13 @@ static vislib::Trace __vl_trace_instance;
 /*
  * vislib::Trace::instance
  */
-vislib::Trace *vislib::Trace::instance(&__vl_trace_instance);
+vislib::Trace* vislib::Trace::instance(&__vl_trace_instance);
 
 
 /*
  * vislib::Trace::Trace
  */
-vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL), 
-        level(LEVEL_ERROR), useDebugger(true) {
+vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL), level(LEVEL_ERROR), useDebugger(true) {
 #if defined(DEBUG) || defined(_DEBUG)
     this->level = LEVEL_ALL;
 #endif /* defined(DEBUG) || defined(_DEBUG) */
@@ -250,16 +246,14 @@ vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL),
  * vislib::Trace::Trace
  */
 vislib::Trace::Trace(const Trace& rhs) {
-    throw UnsupportedOperationException("vislib::Trace::Trace", __FILE__, 
-        __LINE__);
+    throw UnsupportedOperationException("vislib::Trace::Trace", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::Trace::trace
  */
-void vislib::Trace::trace(const UINT level, const char *fmt, va_list list) 
-        throw() {
+void vislib::Trace::trace(const UINT level, const char* fmt, va_list list) throw() {
     if ((level <= this->level) && (level > 0) && (fmt != NULL)) {
         if (this->prefix != NULL) {
             ::fprintf(stderr, this->prefix);
@@ -276,18 +270,18 @@ void vislib::Trace::trace(const UINT level, const char *fmt, va_list list)
         if (this->useDebugger) {
             try {
                 int cnt = ::_vscprintf(fmt, list) + 1;
-                char *tmp = new char[cnt];
+                char* tmp = new char[cnt];
 #if (_MSC_VER >= 1400)
                 ::_vsnprintf_s(tmp, cnt, cnt, fmt, list);
-#else /* (_MSC_VER >= 1400) */
+#else  /* (_MSC_VER >= 1400) */
                 ::vsnprintf(tmp, cnt, fmt, list);
 #endif /* (_MSC_VER >= 1400) */
-                
+
                 ::OutputDebugStringA(tmp);
                 ARY_SAFE_DELETE(tmp);
             } catch (std::bad_alloc) {
                 ::fprintf(stderr, "OutputDebugStringA failed because of "
-                    "insufficient system memory\n");
+                                  "insufficient system memory\n");
                 ::fflush(stderr);
             }
         }
@@ -299,7 +293,7 @@ void vislib::Trace::trace(const UINT level, const char *fmt, va_list list)
 /*
  * vislib::Trace::operator =
  */
-vislib::Trace& vislib::Trace::operator =(const vislib::Trace &rhs) {
+vislib::Trace& vislib::Trace::operator=(const vislib::Trace& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

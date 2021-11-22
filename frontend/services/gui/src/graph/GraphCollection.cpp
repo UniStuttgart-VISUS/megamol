@@ -216,7 +216,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
         auto start_time = std::chrono::system_clock::now();
 #ifdef GUI_VERBOSE
         auto module_load_time = std::chrono::system_clock::now();
-#endif  // GUI_VERBOSE
+#endif // GUI_VERBOSE
         // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
 

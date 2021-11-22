@@ -20,7 +20,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class TurntableManipulator : public manipulator_base<T> {
+template<class T>
+class TurntableManipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -47,13 +48,8 @@ public:
      * @param x
      * @param y
      */
-    void on_drag(
-        const screen_type x,
-        const screen_type y,
-        const point_type& rotCentre,
-        const screen_type wnd_width,
-        const screen_type wnd_height)
-    {
+    void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre, const screen_type wnd_width,
+        const screen_type wnd_height) {
         if (this->manipulating() && this->enabled()) {
             auto cam = this->camera();
             assert(cam != nullptr);
@@ -90,7 +86,7 @@ public:
                 shifted_pos = glm::rotate(rot_lon, shifted_pos);
                 shifted_pos = glm::rotate(rot_lat, shifted_pos);
 
-                // transform back 
+                // transform back
                 cam_pose.position = shifted_pos + glm::vec3(rotCentre);
                 cam->setPose(cam_pose);
 
@@ -119,7 +115,9 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The x-coordinate of the last clicked screen position */

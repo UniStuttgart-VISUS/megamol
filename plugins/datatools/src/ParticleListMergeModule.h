@@ -11,104 +11,99 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/Module.h"
-#include "datatools/AbstractParticleManipulator.h"
-#include "vislib/math/Cuboid.h"
 #include "TransferFunctionQuery.h"
+#include "datatools/AbstractParticleManipulator.h"
+#include "mmcore/Module.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
 namespace datatools {
 
 
+/**
+ * In-Between management module to change time codes of a data set
+ */
+class ParticleListMergeModule : public AbstractParticleManipulator {
+public:
     /**
-     * In-Between management module to change time codes of a data set
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ParticleListMergeModule : public AbstractParticleManipulator {
-    public:
+    static const char* ClassName(void) {
+        return "ParticleListMergeModule";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "ParticleListMergeModule";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module to merge all lists from the MultiParticleDataCall into a single list";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module to merge all lists from the MultiParticleDataCall into a single list";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /** Ctor. */
+    ParticleListMergeModule(void);
 
-        /** Ctor. */
-        ParticleListMergeModule(void);
+    /** Dtor. */
+    virtual ~ParticleListMergeModule(void);
 
-        /** Dtor. */
-        virtual ~ParticleListMergeModule(void);
+protected:
+    /**
+     * Manipulates the particle data
+     *
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
+     */
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-    protected:
+private:
+    /**
+     * Copies the incoming data 'inDat' into the object's fields
+     *
+     * @param inDat The incoming data
+     */
+    void setData(geocalls::MultiParticleDataCall& inDat);
 
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    /** The transfer function query */
+    TransferFunctionQuery tfq;
 
-    private:
+    /** The hash id of the data stored */
+    size_t dataHash;
 
-        /**
-         * Copies the incoming data 'inDat' into the object's fields
-         *
-         * @param inDat The incoming data
-         */
-        void setData(geocalls::MultiParticleDataCall& inDat);
+    /** The frame id of the data stored */
+    unsigned int frameId;
 
-        /** The transfer function query */
-        TransferFunctionQuery tfq;
+    /** The single list of particles */
+    geocalls::MultiParticleDataCall::Particles parts;
 
-        /** The hash id of the data stored */
-        size_t dataHash;
-
-        /** The frame id of the data stored */
-        unsigned int frameId;
-
-        /** The single list of particles */
-        geocalls::MultiParticleDataCall::Particles parts;
-
-        /** The stored particle data */
-        vislib::RawStorage data;
-
-    };
+    /** The stored particle data */
+    vislib::RawStorage data;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

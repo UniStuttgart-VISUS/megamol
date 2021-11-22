@@ -71,29 +71,25 @@ vislib::math::Ternary::~Ternary(void) {
  * vislib::math::Ternary::Parse
  */
 bool vislib::math::Ternary::Parse(const vislib::StringA& str) {
-    if (str.Equals("yes", false) || str.Equals("y", false)
-            || str.Equals("true", false) || str.Equals("t", false)
-            || str.Equals("on", false)) {
+    if (str.Equals("yes", false) || str.Equals("y", false) || str.Equals("true", false) || str.Equals("t", false) ||
+        str.Equals("on", false)) {
         this->value = 1;
         return true;
     }
-    if (str.Equals("no", false) || str.Equals("n", false)
-            || str.Equals("false", false) || str.Equals("f", false)
-            || str.Equals("off", false)) {
+    if (str.Equals("no", false) || str.Equals("n", false) || str.Equals("false", false) || str.Equals("f", false) ||
+        str.Equals("off", false)) {
         this->value = -1;
         return true;
     }
-    if (str.Equals("undefined", false) || str.Equals("undef", false)
-            || str.Equals("unknown", false) || str.Equals("u", false)
-            || str.Equals("x", false)) { // x comes from 'digital design' VHDL
+    if (str.Equals("undefined", false) || str.Equals("undef", false) || str.Equals("unknown", false) ||
+        str.Equals("u", false) || str.Equals("x", false)) { // x comes from 'digital design' VHDL
         this->value = 0;
         return true;
     }
 
     try {
         *this = CharTraitsA::ParseInt(str);
-    } catch(...) {
-    }
+    } catch (...) {}
 
     return false;
 }
@@ -113,10 +109,14 @@ bool vislib::math::Ternary::Parse(const vislib::StringW& str) {
  */
 vislib::StringA vislib::math::Ternary::ToStringA(void) const {
     switch (this->value) {
-        case 1: return "true";
-        case 0: return "unknown";
-        case -1: return "false";
-        default: ASSERT(false);
+    case 1:
+        return "true";
+    case 0:
+        return "unknown";
+    case -1:
+        return "false";
+    default:
+        ASSERT(false);
     }
     return "";
 }
@@ -127,10 +127,14 @@ vislib::StringA vislib::math::Ternary::ToStringA(void) const {
  */
 vislib::StringW vislib::math::Ternary::ToStringW(void) const {
     switch (this->value) {
-        case 1: return L"true";
-        case 0: return L"unknown";
-        case -1: return L"false";
-        default: ASSERT(false);
+    case 1:
+        return L"true";
+    case 0:
+        return L"unknown";
+    case -1:
+        return L"false";
+    default:
+        ASSERT(false);
     }
     return L"";
 }
@@ -139,8 +143,7 @@ vislib::StringW vislib::math::Ternary::ToStringW(void) const {
 /*
  * vislib::math::Ternary::operator=
  */
-vislib::math::Ternary& vislib::math::Ternary::operator=(
-        const vislib::math::Ternary &rhs) {
+vislib::math::Ternary& vislib::math::Ternary::operator=(const vislib::math::Ternary& rhs) {
     this->value = rhs.value;
     return *this;
 }

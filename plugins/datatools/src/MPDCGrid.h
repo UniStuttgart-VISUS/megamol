@@ -29,7 +29,9 @@ public:
             return {upper[0] - lower[0], upper[1] - lower[1], upper[2] - lower[2]};
         }
 
-        vislib::math::Point<float, 3> calc_center() const { return lower + span() / 2.0f; }
+        vislib::math::Point<float, 3> calc_center() const {
+            return lower + span() / 2.0f;
+        }
     };
 
     struct BrickLet {
@@ -42,7 +44,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MPDCGrid"; }
+    static const char* ClassName(void) {
+        return "MPDCGrid";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -58,7 +62,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     MPDCGrid();
 

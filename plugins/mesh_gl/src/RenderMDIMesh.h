@@ -8,11 +8,11 @@
 #ifndef NG_MESH_RENDERER_H_INCLUDED
 #define NG_MESH_RENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -45,7 +45,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "RenderMDIMesh"; }
+    static const char* ClassName(void) {
+        return "RenderMDIMesh";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -63,15 +65,14 @@ public:
      */
     static bool IsAvailable(void) {
 #ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         ASSERT(dc != NULL);
         ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
+#endif // DEBUG || _DEBUG
 #endif // _WIN32
-        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
-               isExtAvailable("GL_ARB_shader_draw_parameters") && ogl_IsVersionGEQ(4, 3);
+        return true;
     }
 
     /** Ctor. */
@@ -125,7 +126,7 @@ private:
     megamol::core::CallerSlot m_framebuffer_slot;
 };
 
-} // namespace mesh
+} // namespace mesh_gl
 } // namespace megamol
 
 #endif

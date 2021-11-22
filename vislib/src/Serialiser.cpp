@@ -1,7 +1,7 @@
 /*
  * Serialiser.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -9,7 +9,7 @@
 
 
 /*
- * vislib::Serialiser::SERIALISER_SUPPORTS_NAMES 
+ * vislib::Serialiser::SERIALISER_SUPPORTS_NAMES
  */
 const UINT32 vislib::Serialiser::SERIALISER_SUPPORTS_NAMES = 0x00000001;
 
@@ -17,8 +17,7 @@ const UINT32 vislib::Serialiser::SERIALISER_SUPPORTS_NAMES = 0x00000001;
 /*
  * vislib::Serialiser::SERIALISER_REQUIRES_NAMES
  */
-const UINT32 vislib::Serialiser::SERIALISER_REQUIRES_NAMES = 0x00000002
-    | vislib::Serialiser::SERIALISER_SUPPORTS_NAMES;
+const UINT32 vislib::Serialiser::SERIALISER_REQUIRES_NAMES = 0x00000002 | vislib::Serialiser::SERIALISER_SUPPORTS_NAMES;
 
 
 /*
@@ -38,8 +37,7 @@ vislib::Serialiser::~Serialiser(void) {
 /*
  * vislib::Serialiser::Serialiser
  */
-vislib::Serialiser::Serialiser(const UINT32 properties) 
-        : properties(properties) {
+vislib::Serialiser::Serialiser(const UINT32 properties) : properties(properties) {
     // Nothing to do.
 }
 
@@ -47,8 +45,7 @@ vislib::Serialiser::Serialiser(const UINT32 properties)
 /*
  * vislib::Serialiser::Serialiser
  */
-vislib::Serialiser::Serialiser(const Serialiser& rhs) 
-        : properties(rhs.properties) {
+vislib::Serialiser::Serialiser(const Serialiser& rhs) : properties(rhs.properties) {
     // Nothing to do.
 }
 
@@ -56,8 +53,7 @@ vislib::Serialiser::Serialiser(const Serialiser& rhs)
 /*
  * vislib::Serialiser::operator =
  */
-vislib::Serialiser& vislib::Serialiser::operator =(
-        const Serialiser& rhs) {
+vislib::Serialiser& vislib::Serialiser::operator=(const Serialiser& rhs) {
     if (this != &rhs) {
         this->properties = rhs.properties;
     }

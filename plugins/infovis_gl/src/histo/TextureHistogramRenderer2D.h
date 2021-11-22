@@ -81,6 +81,6 @@ private:
     GLint maxWorkgroupCount_[3];
 };
 
-} // namespace megamol::infovis
+} // namespace megamol::infovis_gl
 
 #endif // MEGAMOL_INFOVIS_TEXTUREHISTOGRAMRENDERER2D_H_INCLUDED

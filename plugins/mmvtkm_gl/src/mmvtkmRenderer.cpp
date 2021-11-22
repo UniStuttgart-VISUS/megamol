@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmvtkm_gl/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmDataCall.h"
+#include "stdafx.h"
 
 #include "mmcore/param/EnumParam.h"
 
@@ -22,53 +22,56 @@ using namespace megamol::mmvtkm_gl;
  * mmvtkmDataRenderer::mmvtmDataRenderer
  */
 mmvtkmDataRenderer::mmvtkmDataRenderer(void)
-    : Renderer3DModuleGL()
-    , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
-    , psColorTables_("colorTable", "Colortables specify the color range of the data")
-    , vtkmDataSet_()
-    , vtkmMetaData_()
-    // , scene_()
-    // , mapper_()
-    // , canvas_()
-    // , vtkmCamera_()
-    , colorArray_(nullptr)
-    , canvasWidth_(0.f)
-    , canvasHeight_(0.f)
-    , canvasDepth_(0.f)
-	, localUpdate_(false) 
-{
+        : Renderer3DModuleGL()
+        , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
+        , psColorTables_("colorTable", "Colortables specify the color range of the data")
+        , vtkmDataSet_()
+        , vtkmMetaData_()
+        // , scene_()
+        // , mapper_()
+        // , canvas_()
+        // , vtkmCamera_()
+        , colorArray_(nullptr)
+        , canvasWidth_(0.f)
+        , canvasHeight_(0.f)
+        , canvasDepth_(0.f)
+        , localUpdate_(false) {
     this->vtkmDataCallerSlot_.SetCompatibleCall<megamol::mmvtkm::vtkmDataCallDescription>();
     this->MakeSlotAvailable(&this->vtkmDataCallerSlot_);
 
-	this->psColorTables_.SetParameter(new core::param::EnumParam(3));
+    this->psColorTables_.SetParameter(new core::param::EnumParam(3));
     this->psColorTables_.Param<core::param::EnumParam>()->SetTypePair(0, "normal");
     for (int i = 0; i < colorTables_.size(); ++i) {
         this->psColorTables_.Param<core::param::EnumParam>()->SetTypePair(i, colorTables_[i]);
-	}
+    }
     this->psColorTables_.SetUpdateCallback(&mmvtkmDataRenderer::setLocalUpdate);
     this->MakeSlotAvailable(&this->psColorTables_);
 }
 
 
 /**
-* mmvtkmDataRenderer::setLocalUpdate
-*/
+ * mmvtkmDataRenderer::setLocalUpdate
+ */
 bool mmvtkmDataRenderer::setLocalUpdate(core::param::ParamSlot& slot) {
     localUpdate_ = true;
-	return true; 
+    return true;
 }
 
 
 /**
  * mmvtkmDataRenderer::~mmvtkmDataRenderer
  */
-mmvtkmDataRenderer::~mmvtkmDataRenderer(void) { this->Release(); }
+mmvtkmDataRenderer::~mmvtkmDataRenderer(void) {
+    this->Release();
+}
 
 
 /**
  * mmvtkmDataRenderer::create
  */
-bool mmvtkmDataRenderer::create() { return true; }
+bool mmvtkmDataRenderer::create() {
+    return true;
+}
 
 
 /**
@@ -99,7 +102,7 @@ bool mmvtkmDataRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // if (rhsVtkmDc->hasUpdate() || localUpdate_) {
     //     vtkmDataSet_ = rhsVtkmDc->getData();
     //     vtkmMetaData_ = rhsVtkmDc->getMetaData();
-        
+
     //     vtkm::cont::ColorTable colorTable(psColorTables_.Param<core::param::EnumParam>()->ValueString().PeekBuffer());
     //     // default cellname = "cells"
     //     // default coordinatesystem name = "coordinates"

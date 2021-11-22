@@ -50,10 +50,6 @@
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
-#ifdef WITH_GL
-#include "mmcore_gl/factories/CallClassRegistryGL.h"
-#include "mmcore_gl/factories/ModuleClassRegistryGL.h"
-#endif
 #include "utility/ServiceManager.h"
 
 #include "mmcore/utility/log/Console.h"
@@ -128,9 +124,6 @@ megamol::core::CoreInstance::CoreInstance(void)
         , factories::AbstractObjectFactoryInstance()
         , preInit(new PreInit)
         , config()
-#ifdef WITH_GL
-        , shaderSourceFactory(config)
-#endif
         , lua(nullptr)
         , builtinViewDescs()
         , projViewDescs()
@@ -164,10 +157,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     this->namespaceRoot->SetCoreInstance(*this);
     factories::register_module_classes(this->module_descriptions);
     factories::register_call_classes(this->call_descriptions);
-#ifdef WITH_GL
-    core_gl::factories::register_module_classes_gl(this->module_descriptions);
-    core_gl::factories::register_call_classes_gl(this->call_descriptions);
-#endif
     for (auto md : this->module_descriptions)
         this->all_module_descriptions.Register(md);
     for (auto cd : this->call_descriptions)
@@ -1852,7 +1841,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-                /*	if(create)
+                /*  if(create)
                     {
                         param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                         *slotNew << new param::StringParam("");
@@ -1872,7 +1861,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     Module::ptr_type mod = Module::dynamic_pointer_cast(mn->FindChild(modName));
     if (!mod) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
                 *slot << new param::StringParam("");
@@ -1892,7 +1881,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName).get());
     if (slot == NULL) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                 *slotNew << new param::StringParam("");

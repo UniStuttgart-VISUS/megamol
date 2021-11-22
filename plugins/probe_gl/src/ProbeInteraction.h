@@ -16,15 +16,16 @@
 namespace megamol {
 namespace probe_gl {
 
-class ProbeInteraction : public megamol::core::view::Renderer3DModule_2
-{
+class ProbeInteraction : public megamol::core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProbeInteraction"; }
+    static const char* ClassName(void) {
+        return "ProbeInteraction";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -42,20 +43,18 @@ public:
      */
     static bool IsAvailable(void) {
 #ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         ASSERT(dc != NULL);
         ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
-#endif     // _WIN32
+#endif // DEBUG || _DEBUG
+#endif // _WIN32
         return true;
     }
 
     bool OnMouseButton(
-        core::view::MouseButton button, 
-        core::view::MouseButtonAction action, 
-        core::view::Modifiers mods) override;
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 
@@ -63,7 +62,6 @@ public:
     ~ProbeInteraction();
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -101,7 +99,6 @@ protected:
     bool getInteractionMetaData(core::Call& call);
 
 private:
-
     uint32_t m_version;
 
     double m_cursor_x, m_cursor_y;
@@ -111,19 +108,12 @@ private:
     bool m_open_context_menu;
 
     /** Map storing the pressed state of all mouse buttons */
-    std::map<core::view::MouseButton, bool> m_mouse_button_states = {
-        {core::view::MouseButton::BUTTON_1, false},
-        {core::view::MouseButton::BUTTON_2, false},
-        {core::view::MouseButton::BUTTON_3, false},
-        {core::view::MouseButton::BUTTON_4, false},
-        {core::view::MouseButton::BUTTON_5, false}, 
-        {core::view::MouseButton::BUTTON_6, false},
-        {core::view::MouseButton::BUTTON_7, false},
-        {core::view::MouseButton::BUTTON_8, false},
-        {core::view::MouseButton::BUTTON_LEFT, false},
-        {core::view::MouseButton::BUTTON_MIDDLE, false}, 
-        {core::view::MouseButton::BUTTON_RIGHT, false}
-    };
+    std::map<core::view::MouseButton, bool> m_mouse_button_states = {{core::view::MouseButton::BUTTON_1, false},
+        {core::view::MouseButton::BUTTON_2, false}, {core::view::MouseButton::BUTTON_3, false},
+        {core::view::MouseButton::BUTTON_4, false}, {core::view::MouseButton::BUTTON_5, false},
+        {core::view::MouseButton::BUTTON_6, false}, {core::view::MouseButton::BUTTON_7, false},
+        {core::view::MouseButton::BUTTON_8, false}, {core::view::MouseButton::BUTTON_LEFT, false},
+        {core::view::MouseButton::BUTTON_MIDDLE, false}, {core::view::MouseButton::BUTTON_RIGHT, false}};
 
     std::shared_ptr<ProbeInteractionCollection> m_interactions;
 
@@ -140,9 +130,8 @@ private:
     glm::mat4 m_proj_mx_cpy;
 };
 
-}
-}
-
+} // namespace probe_gl
+} // namespace megamol
 
 
 #endif // !PROBE_INTERACTION_H_INCLUDED

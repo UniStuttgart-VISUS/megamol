@@ -1,22 +1,26 @@
 /*
  * ParticleWorker.cpp
  *
- * Copyright (C) 2013 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2013 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "misc/ParticleWorker.h"
+#include "OpenGL_Context.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/BoolParam.h"
-#include <climits>
-#include <cfloat>
+#include "stdafx.h"
 #include "vislib/StringTokeniser.h"
+#include <cfloat>
+#include <climits>
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
+
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol::core;
 using namespace megamol::moldyn::misc;
@@ -25,13 +29,13 @@ using namespace megamol::moldyn::misc;
 /*
  * ParticleWorker::ParticleWorker
  */
-ParticleWorker::ParticleWorker(void) : Module(),
-        inParticlesDataSlot("inPartData", "Input for particle data"),
-        outParticlesDataSlot("outPartData", "Output of particle data"),
-		glClusterInfos(0)
-	//	glParticleList(0), 
-	//	glPrefixIn(0), glPrefixOut(0)
-        {
+ParticleWorker::ParticleWorker(void)
+        : inParticlesDataSlot("inPartData", "Input for particle data")
+        , outParticlesDataSlot("outPartData", "Output of particle data")
+        , glClusterInfos(0)
+// glParticleList(0),
+// glPrefixIn(0), glPrefixOut(0)
+{
 
     this->inParticlesDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
@@ -54,145 +58,38 @@ ParticleWorker::~ParticleWorker(void) {
  * ParticleWorker::create
  */
 bool ParticleWorker::create(void) {
-	
+
     using namespace megamol::core::utility::log;
     using namespace vislib_gl::graphics::gl;
 
     ASSERT(IsAvailable());
 
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3) ||
+        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
 
 
-    if( !this->GetCoreInstance() ) return false;
+    if (!this->GetCoreInstance())
+        return false;
 
-	ShaderSource compSrc;
-	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("::particleWorkerCompute::work_on_clusters", compSrc))
-	{
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load compute shader source for work_on_clusters shader", this->ClassName());
-		return false;
-	}
-	try
-	{
-		if (!this->shaderOnClusterComputation.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-		}
-	}
-	catch (vislib::Exception e)
-	{
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
-		return false;
-	}
-	/*
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::grid", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for grid shader", this->ClassName() );
-		return false;
-	}
-	try
-	{
-		if( !this->shaderComputeGrid.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create grid shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::griddify", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for griddify shader", this->ClassName() );
-		return false;
-	}
-	try
-	{
-		if( !this->shaderComputeGriddify.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create griddify shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::initParticlelist", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for initParticlelist shader", this->ClassName() );
-		return false;
-	}
-	try
-	{
-		if( !this->shaderComputeInitParticleList.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create initParticlelist shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::makeParticleList", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for makeParticleList shader", this->ClassName() );
-		return false;
-	}
-	try
-	{
-		if( !this->shaderComputeMakeParticleList.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create makeParticleList shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
-	/*
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::compactToClusterList", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for compactToClusterList shader", this->ClassName() );
-		return false;
-	}
-	try
-	{
-		if( !this->shaderComputeCompactToClusterList.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create compactToClusterList shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}*
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource( "::particleWorkerCompute::prefixSum", compSrc ) )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load compute shader source for prefixSum shader", this->ClassName() );
-		return false;
-	}
-	compSrc.Insert(1, this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSnippet("::particleWorkerCompute::prefix_type_float"));
-	try
-	{
-		if( !this->shaderComputePrefixSum.Compile(compSrc.Code(), compSrc.Count()))
-		{
-			throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__ );
-		}
-	}
-	catch( vislib::Exception e )
-	{
-		Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to create prefixSum shader: %s\n", this->ClassName(), e.GetMsgA() );
-		return false;
-	}
-	*/
+    ShaderSource compSrc;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("::particleWorkerCompute::work_on_clusters", compSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            "%s: Unable to load compute shader source for work_on_clusters shader", this->ClassName());
+        return false;
+    }
+    try {
+        if (!this->shaderOnClusterComputation.Compile(compSrc.Code(), compSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
+        return false;
+    }
+
     return true;
 }
 
@@ -200,11 +97,10 @@ bool ParticleWorker::create(void) {
 /*
  * ParticleWorker::release
  */
-void ParticleWorker::release(void)
-{
-	glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
-	glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
-	this->shaderOnClusterComputation.Release();
+void ParticleWorker::release(void) {
+    glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
+    glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
+    this->shaderOnClusterComputation.Release();
 }
 
 /*
@@ -212,317 +108,318 @@ void ParticleWorker::release(void)
  */
 bool ParticleWorker::getDataCallback(Call& call) {
     using geocalls::MultiParticleDataCall;
-    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (outMpdc == NULL) 
-		return false;
+    MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
+    if (outMpdc == NULL)
+        return false;
 
-	MultiParticleDataCall *inMpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
-	
-	if (!(*inMpdc)(0))
-		return false;
-	
-	unsigned int count = inMpdc->GetParticleListCount();
+    MultiParticleDataCall* inMpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
 
-	outMpdc->SetParticleListCount(count);
-	outMpdc->SetDataHash(inMpdc->DataHash());
-	outMpdc->SetFrameCount(inMpdc->FrameCount());
-	outMpdc->SetFrameID(inMpdc->FrameID());
-	outMpdc->SetUnlocker(new VAOUnlocker(), false);
+    if (!(*inMpdc)(0))
+        return false;
 
-	if (count == 0)
-	{
-		return false;
-	}
+    unsigned int count = inMpdc->GetParticleListCount();
 
-	glBindVertexArray(0);
-    glBindBufferARB (GL_ARRAY_BUFFER, 0);
-    glBindBufferARB (GL_ELEMENT_ARRAY_BUFFER, 0);
+    outMpdc->SetParticleListCount(count);
+    outMpdc->SetDataHash(inMpdc->DataHash());
+    outMpdc->SetFrameCount(inMpdc->FrameCount());
+    outMpdc->SetFrameID(inMpdc->FrameID());
+    outMpdc->SetUnlocker(new VAOUnlocker(), false);
 
-	// currently only 1 particle list is supported
-	ASSERT(count <= 1);
+    if (count == 0) {
+        return false;
+    }
 
-	// varying listcounts are bad
-	if(count != glVAO.Count())
-	{
-		glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
-		for (unsigned int i = 0; i < count; ++i)
-		{
-			GLuint buffer;
-			glGenBuffersARB(1, &buffer);
-			glVB.Append(buffer);
-		}
+    glBindVertexArray(0);
+    glBindBufferARB(GL_ARRAY_BUFFER, 0);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		glDeleteBuffersARB(static_cast<GLsizei>(glCB.Count()), glCB.PeekElements());
-		for (unsigned int i = 0; i < count; ++i)
-		{
-			GLuint buffer;
-			glGenBuffersARB(1, &buffer);
-			glCB.Append(buffer);
-		}
+    // currently only 1 particle list is supported
+    ASSERT(count <= 1);
 
-		glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
-		for(unsigned int i = 0; i < count; ++i)
-		{
-			GLuint buffer;
-			glGenVertexArrays(1, &buffer);
-			glVAO.Append(buffer);	
-		}
+    // varying listcounts are bad
+    if (count != glVAO.Count()) {
+        glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
+        for (unsigned int i = 0; i < count; ++i) {
+            GLuint buffer;
+            glGenBuffersARB(1, &buffer);
+            glVB.Append(buffer);
+        }
 
-		if (glClusterInfos)
-		{
-			glDeleteBuffersARB(1, &glClusterInfos);
-			glClusterInfos = 0;
-		}
-	}
-	
-	if (!glClusterInfos)
-	{
-		glGenBuffersARB(1, &glClusterInfos);
-	}
+        glDeleteBuffersARB(static_cast<GLsizei>(glCB.Count()), glCB.PeekElements());
+        for (unsigned int i = 0; i < count; ++i) {
+            GLuint buffer;
+            glGenBuffersARB(1, &buffer);
+            glCB.Append(buffer);
+        }
 
-	unsigned int particleCount = 0;
-	unsigned int particleStride = 0;
-	float particleRadius = 0.0f;
+        glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
+        for (unsigned int i = 0; i < count; ++i) {
+            GLuint buffer;
+            glGenVertexArrays(1, &buffer);
+            glVAO.Append(buffer);
+        }
+
+        if (glClusterInfos) {
+            glDeleteBuffersARB(1, &glClusterInfos);
+            glClusterInfos = 0;
+        }
+    }
+
+    if (!glClusterInfos) {
+        glGenBuffersARB(1, &glClusterInfos);
+    }
+
+    unsigned int particleCount = 0;
+    unsigned int particleStride = 0;
+    float particleRadius = 0.0f;
     using geocalls::SimpleSphericalParticles;
-	SimpleSphericalParticles::ClusterInfos *clusterInfos;
-	count = (inMpdc->GetParticleListCount() < 1) ? inMpdc->GetParticleListCount() : 1;
-	for(unsigned int i = 0; i < count; ++i)
-	{
-		MultiParticleDataCall::Particles &partsIn = inMpdc->AccessParticles(i);
-		MultiParticleDataCall::Particles &partsOut = outMpdc->AccessParticles(i);
+    SimpleSphericalParticles::ClusterInfos* clusterInfos;
+    count = (inMpdc->GetParticleListCount() < 1) ? inMpdc->GetParticleListCount() : 1;
+    for (unsigned int i = 0; i < count; ++i) {
+        MultiParticleDataCall::Particles& partsIn = inMpdc->AccessParticles(i);
+        MultiParticleDataCall::Particles& partsOut = outMpdc->AccessParticles(i);
 
-		// colour
-		unsigned int colorBytes = 0;
+        // colour
+        unsigned int colorBytes = 0;
         switch (partsIn.GetColourDataType()) {
-            case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-				colorBytes = 3 * sizeof(unsigned char);
-                break;
-            case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-				colorBytes = 4 * sizeof(unsigned char);
-                break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-				colorBytes = 3 * sizeof(float);
-                break;
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-				colorBytes = 4 * sizeof(float);
-                break;
-			case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
-				//unsupported
-				break;
-            default:
-                break;
+        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+            colorBytes = 3 * sizeof(unsigned char);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+            colorBytes = 4 * sizeof(unsigned char);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+            colorBytes = 3 * sizeof(float);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+            colorBytes = 4 * sizeof(float);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+            // unsupported
+            break;
+        default:
+            break;
         }
-		//
-		unsigned int elementBytes = 0;
+        //
+        unsigned int elementBytes = 0;
         switch (partsIn.GetVertexDataType()) {
-            case MultiParticleDataCall::Particles::VERTDATA_NONE:
-                continue;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-				elementBytes = 3 * sizeof(float);
-                break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-				elementBytes = 4 * sizeof(float);
-                break;
-            default:
-                continue;
+        case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            continue;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            elementBytes = 3 * sizeof(float);
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            elementBytes = 4 * sizeof(float);
+            break;
+        default:
+            continue;
         }
-		
-		partsOut.disableNullChecksForVAOs();
-		partsOut.SetIsVAO(true);
-		partsOut.SetCount(partsIn.GetCount());
-		partsOut.SetGlobalRadius(partsIn.GetGlobalRadius());
-		const unsigned char *color = partsIn.GetGlobalColour();
-		partsOut.SetGlobalColour(color[0], color[1], color[2], color[3]);
-		partsOut.SetGlobalType(partsIn.GetGlobalType());
 
-		GLuint &vao(glVAO[i]);
-		GLuint &vb(glVB[i]);
-		GLuint &cb(glCB[i]);
-		clusterInfos = partsIn.GetClusterInfos();
+        partsOut.disableNullChecksForVAOs();
+        partsOut.SetIsVAO(true);
+        partsOut.SetCount(partsIn.GetCount());
+        partsOut.SetGlobalRadius(partsIn.GetGlobalRadius());
+        const unsigned char* color = partsIn.GetGlobalColour();
+        partsOut.SetGlobalColour(color[0], color[1], color[2], color[3]);
+        partsOut.SetGlobalType(partsIn.GetGlobalType());
 
-		// support the rest yourself...
-		if (partsIn.GetVertexDataStride() == 3 * sizeof(float) && partsIn.GetColourDataStride() == 4 * sizeof(float))
-		{
-			// highly specific, because we know:
-			partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
-			partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, NULL, partsIn.GetColourDataStride());
+        GLuint& vao(glVAO[i]);
+        GLuint& vb(glVB[i]);
+        GLuint& cb(glCB[i]);
+        clusterInfos = partsIn.GetClusterInfos();
 
-			partsOut.SetVAOs(glVAO[i], glVB[i], glCB[i]);
-			glBindVertexArray(vao);
-			glBindBufferARB(GL_ARRAY_BUFFER, vb);
-			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride()*partsOut.GetCount()), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
-			glBindBufferARB(GL_ARRAY_BUFFER, cb);
-			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetColourDataStride()*partsOut.GetCount()), partsIn.GetColourData(), GL_DYNAMIC_DRAW);
-			glEnableClientState(GL_COLOR_ARRAY);
-			glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
-			glBindVertexArray(0);
-			glBindBufferARB(GL_ARRAY_BUFFER, 0);
+        // support the rest yourself...
+        if (partsIn.GetVertexDataStride() == 3 * sizeof(float) && partsIn.GetColourDataStride() == 4 * sizeof(float)) {
+            // highly specific, because we know:
+            partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
+            partsOut.SetColourData(
+                MultiParticleDataCall::Particles::COLDATA_FLOAT_I, NULL, partsIn.GetColourDataStride());
 
-			glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
-			glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
+            partsOut.SetVAOs(glVAO[i], glVB[i], glCB[i]);
+            glBindVertexArray(vao);
+            glBindBufferARB(GL_ARRAY_BUFFER, vb);
+            glBufferDataARB(GL_ARRAY_BUFFER,
+                static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride() * partsOut.GetCount()),
+                partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
+            glBindBufferARB(GL_ARRAY_BUFFER, cb);
+            glBufferDataARB(GL_ARRAY_BUFFER,
+                static_cast<GLsizeiptrARB>(partsOut.GetColourDataStride() * partsOut.GetCount()),
+                partsIn.GetColourData(), GL_DYNAMIC_DRAW);
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+            glBindVertexArray(0);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			shaderOnClusterComputation.Enable();
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"), partsOut.GetVertexDataStride() / sizeof(float));
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"), partsOut.GetColourDataStride() / sizeof(float));
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glCB[0]);
-			shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
-			shaderOnClusterComputation.Disable();
+            glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
+            glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
 
-			glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-		}
-		else if (partsIn.GetVertexDataStride() == 3 * sizeof(float)+4 * sizeof(float))
-		{
-			// highly specific, because we know:
-			partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
-			partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, (void*)(NULL + 3 * sizeof(float)), partsIn.GetVertexDataStride());
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            shaderOnClusterComputation.Enable();
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"),
+                partsOut.GetVertexDataStride() / sizeof(float));
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"),
+                partsOut.GetColourDataStride() / sizeof(float));
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glCB[0]);
+            shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
+            shaderOnClusterComputation.Disable();
 
-			partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
-			glBindVertexArray(vao);
-			glBindBufferARB(GL_ARRAY_BUFFER, vb);
-			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride()*partsOut.GetCount()), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
-//			glEnableClientState(GL_COLOR_ARRAY);
-	//		glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
-			glBindVertexArray(0);
-			glBindBufferARB(GL_ARRAY_BUFFER, 0);
+            glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+            glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        } else if (partsIn.GetVertexDataStride() == 3 * sizeof(float) + 4 * sizeof(float)) {
+            // highly specific, because we know:
+            partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
+            partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, (void*)(NULL + 3 * sizeof(float)),
+                partsIn.GetVertexDataStride());
 
-			glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
-			glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
+            partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
+            glBindVertexArray(vao);
+            glBindBufferARB(GL_ARRAY_BUFFER, vb);
+            glBufferDataARB(GL_ARRAY_BUFFER,
+                static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride() * partsOut.GetCount()),
+                partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
+            // glEnableClientState(GL_COLOR_ARRAY);
+            // glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+            glBindVertexArray(0);
+            glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			shaderOnClusterComputation.Enable();
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"), partsOut.GetVertexDataStride() / sizeof(float));
-			glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"), partsOut.GetVertexDataStride() / sizeof(float));
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glVB[0]);
-			shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
-			shaderOnClusterComputation.Disable();
+            glBindBufferARB(GL_ARRAY_BUFFER, glClusterInfos);
+            glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
 
-			glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-		}
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            shaderOnClusterComputation.Enable();
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"),
+                partsOut.GetVertexDataStride() / sizeof(float));
+            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"),
+                partsOut.GetVertexDataStride() / sizeof(float));
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glVB[0]);
+            shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
+            shaderOnClusterComputation.Disable();
 
-		particleCount += static_cast<unsigned int>(partsOut.GetCount());
-		particleStride = partsOut.GetVertexDataStride();
-		particleRadius = partsOut.GetGlobalRadius();
-	}
+            glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+            glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        }
 
-	
-	/*
-	
-	*/
-	/*
-	if(!glParticleList)
-	{
-		glGenBuffersARB(1, &glParticleList);
+        particleCount += static_cast<unsigned int>(partsOut.GetCount());
+        particleStride = partsOut.GetVertexDataStride();
+        particleRadius = partsOut.GetGlobalRadius();
+    }
+
+
+    /*
+
+    */
+    /*
+    if(!glParticleList)
+    {
+        glGenBuffersARB(1, &glParticleList);
         glBindBufferARB (GL_ARRAY_BUFFER, glParticleList);
-		glBufferDataARB (GL_ARRAY_BUFFER, particleCount * sizeof(unsigned int) * 2, NULL, GL_STREAM_DRAW);
-	}
-	
-	const unsigned int prefixTestCount = 6;
-	float prefixIn[prefixTestCount];
-	prefixIn[0] = 3.0f;
-	prefixIn[1] = 1.0f;
-	prefixIn[2] = 4.0f;
-	prefixIn[3] = 2.0f;
-	prefixIn[4] = 1.0f;
-	prefixIn[5] = 1.0f;
-	float prefixOut[prefixTestCount];
-	prefixOut[0] = -1.0f;
-	prefixOut[1] = -1.0f;
-	prefixOut[2] = -1.0f;
-	prefixOut[3] = -1.0f;
-	prefixOut[4] = -1.0f;
-	prefixOut[5] = -1.0f;
+        glBufferDataARB (GL_ARRAY_BUFFER, particleCount * sizeof(unsigned int) * 2, NULL, GL_STREAM_DRAW);
+    }
 
-	if(!glPrefixIn)
-	{
-		glGenBuffersARB(1, &glPrefixIn);
+    const unsigned int prefixTestCount = 6;
+    float prefixIn[prefixTestCount];
+    prefixIn[0] = 3.0f;
+    prefixIn[1] = 1.0f;
+    prefixIn[2] = 4.0f;
+    prefixIn[3] = 2.0f;
+    prefixIn[4] = 1.0f;
+    prefixIn[5] = 1.0f;
+    float prefixOut[prefixTestCount];
+    prefixOut[0] = -1.0f;
+    prefixOut[1] = -1.0f;
+    prefixOut[2] = -1.0f;
+    prefixOut[3] = -1.0f;
+    prefixOut[4] = -1.0f;
+    prefixOut[5] = -1.0f;
+
+    if(!glPrefixIn)
+    {
+        glGenBuffersARB(1, &glPrefixIn);
         glBindBufferARB (GL_ARRAY_BUFFER, glPrefixIn);
-		glGenBuffersARB(1, &glPrefixOut);
+        glGenBuffersARB(1, &glPrefixOut);
         glBindBufferARB (GL_ARRAY_BUFFER, glPrefixOut);
-	}
-	
-    glBindBufferARB (GL_ARRAY_BUFFER, glPrefixIn);
-	glBufferDataARB (GL_ARRAY_BUFFER, prefixTestCount * sizeof(float), prefixIn, GL_DYNAMIC_DRAW);
-    glBindBufferARB (GL_ARRAY_BUFFER, glPrefixOut);
-	glBufferDataARB (GL_ARRAY_BUFFER, prefixTestCount * sizeof(float), prefixOut, GL_DYNAMIC_DRAW);
-	glBindBufferARB (GL_ARRAY_BUFFER, 0);
-	
-	shaderComputePrefixSum.Enable();
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("count"), 4);
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("exclusive"), 0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glPrefixIn);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glPrefixOut);
-		shaderComputePrefixSum.Dispatch((((4/2))/1024)+1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    shaderComputePrefixSum.Disable();	
+    }
 
-	glBindBuffer(GL_ARRAY_BUFFER, glPrefixOut);
-    glGetBufferSubData(GL_ARRAY_BUFFER, 0, prefixTestCount * sizeof(float), &prefixOut);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-	shaderComputePrefixSum.Enable();
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("count"), 2);
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("exclusive"), 0);
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("memoryOffset"), 4);
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("memoryOffsetStartAdd"), 3);
-		glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("addMemoryOffsetStartAdd"), 1);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glPrefixIn);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glPrefixOut);
-		shaderComputePrefixSum.Dispatch((((2/2))/1024)+1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBufferARB (GL_ARRAY_BUFFER, glPrefixIn);
+    glBufferDataARB (GL_ARRAY_BUFFER, prefixTestCount * sizeof(float), prefixIn, GL_DYNAMIC_DRAW);
+    glBindBufferARB (GL_ARRAY_BUFFER, glPrefixOut);
+    glBufferDataARB (GL_ARRAY_BUFFER, prefixTestCount * sizeof(float), prefixOut, GL_DYNAMIC_DRAW);
+    glBindBufferARB (GL_ARRAY_BUFFER, 0);
+
+    shaderComputePrefixSum.Enable();
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("count"), 4);
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("exclusive"), 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glPrefixIn);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glPrefixOut);
+        shaderComputePrefixSum.Dispatch((((4/2))/1024)+1, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     shaderComputePrefixSum.Disable();
 
-	glBindBuffer(GL_ARRAY_BUFFER, glPrefixOut);
+    glBindBuffer(GL_ARRAY_BUFFER, glPrefixOut);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, prefixTestCount * sizeof(float), &prefixOut);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    shaderComputePrefixSum.Enable();
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("count"), 2);
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("exclusive"), 0);
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("memoryOffset"), 4);
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("memoryOffsetStartAdd"), 3);
+        glUniform1ui(this->shaderComputePrefixSum.ParameterLocation("addMemoryOffsetStartAdd"), 1);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glPrefixIn);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glPrefixOut);
+        shaderComputePrefixSum.Dispatch((((2/2))/1024)+1, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    shaderComputePrefixSum.Disable();
+
+    glBindBuffer(GL_ARRAY_BUFFER, glPrefixOut);
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, prefixTestCount * sizeof(float), &prefixOut);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	/*
-	shaderComputeInitParticleList.Enable();
-		glUniform1ui(this->shaderComputeInitParticleList.ParameterLocation("particleListStride"), 2 * sizeof(unsigned int));
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glParticleList);
-		shaderComputeInitParticleList.Dispatch((particleCount/1024)+1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    /*
+    shaderComputeInitParticleList.Enable();
+        glUniform1ui(this->shaderComputeInitParticleList.ParameterLocation("particleListStride"), 2 * sizeof(unsigned
+    int)); glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glParticleList);
+        shaderComputeInitParticleList.Dispatch((particleCount/1024)+1, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     shaderComputeInitParticleList.Disable();
 
-	shaderComputeGrid.Enable();
-		glUniform1ui(this->shaderComputeGrid.ParameterLocation("count"), particleCount);
-		glUniform1ui(this->shaderComputeGrid.ParameterLocation("stride"), particleStride);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glVB[0]);
-		shaderComputeGrid.Dispatch((particleCount/1024)+1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    shaderComputeGrid.Enable();
+        glUniform1ui(this->shaderComputeGrid.ParameterLocation("count"), particleCount);
+        glUniform1ui(this->shaderComputeGrid.ParameterLocation("stride"), particleStride);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glVB[0]);
+        shaderComputeGrid.Dispatch((particleCount/1024)+1, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     shaderComputeGrid.Disable();
 
-	shaderComputeGriddify.Enable();
-		glUniform1ui(this->shaderComputeGriddify.ParameterLocation("count"), particleCount);
-		glUniform1ui(this->shaderComputeGriddify.ParameterLocation("stride"), particleStride);
-		glUniform1f(this->shaderComputeGriddify.ParameterLocation("radius"), particleRadius);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glVB[0]);
-		shaderComputeGriddify.Dispatch((particleCount/1024)+1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    shaderComputeGriddify.Enable();
+        glUniform1ui(this->shaderComputeGriddify.ParameterLocation("count"), particleCount);
+        glUniform1ui(this->shaderComputeGriddify.ParameterLocation("stride"), particleStride);
+        glUniform1f(this->shaderComputeGriddify.ParameterLocation("radius"), particleRadius);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glVB[0]);
+        shaderComputeGriddify.Dispatch((particleCount/1024)+1, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     shaderComputeGriddify.Disable();
-	
 
-	
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-	*/
-	
-    //glBindBufferARB (GL_ARRAY_BUFFER, glVB[0]);
 
-	inMpdc->Unlock();
 
-	return true;
-	/*
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+    */
+
+    // glBindBufferARB (GL_ARRAY_BUFFER, glVB[0]);
+
+    inMpdc->Unlock();
+
+    return true;
+    /*
     DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
     if ((outMpdc == NULL) && (outDpdc == NULL)) return false;
 
@@ -531,7 +428,7 @@ bool ParticleWorker::getDataCallback(Call& call) {
         this->globalColorMapComputationSlot.ResetDirty();
         doStuff = true;
     }
-    if (this->includeHiddenInColorMapSlot.IsDirty()) { 
+    if (this->includeHiddenInColorMapSlot.IsDirty()) {
         this->includeHiddenInColorMapSlot.ResetDirty();
         doStuff = true;
     }
@@ -597,8 +494,9 @@ bool ParticleWorker::getDataCallback(Call& call) {
             if (this->includeHiddenInColorMapSlot.Param<megamol::core::param::BoolParam>()->Value()
                 || included.Count() == 0
                 || (included.Count() > 0 && included.Contains(inMpdc->AccessParticles(i).GetGlobalType()))) {
-                if (inMpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin) globalMin = inMpdc->AccessParticles(i).GetMinColourIndexValue();
-                if (inMpdc->AccessParticles(i).GetMaxColourIndexValue() > globalMax) globalMax = inMpdc->AccessParticles(i).GetMaxColourIndexValue();
+                if (inMpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin) globalMin =
+    inMpdc->AccessParticles(i).GetMinColourIndexValue(); if (inMpdc->AccessParticles(i).GetMaxColourIndexValue() >
+    globalMax) globalMax = inMpdc->AccessParticles(i).GetMaxColourIndexValue();
             }
             if (included.Count() > 0 && !included.Contains(inMpdc->AccessParticles(i).GetGlobalType())) {
                 continue;
@@ -696,8 +594,9 @@ bool ParticleWorker::getDataCallback(Call& call) {
             if (this->includeHiddenInColorMapSlot.Param<megamol::core::param::BoolParam>()->Value()
                 || included.Count() == 0
                 || (included.Count() > 0 && included.Contains(inDpdc->AccessParticles(i).GetGlobalType()))) {
-                if (inDpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin) globalMin = inDpdc->AccessParticles(i).GetMinColourIndexValue();
-                if (inDpdc->AccessParticles(i).GetMaxColourIndexValue() > globalMax) globalMax = inDpdc->AccessParticles(i).GetMaxColourIndexValue();
+                if (inDpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin) globalMin =
+    inDpdc->AccessParticles(i).GetMinColourIndexValue(); if (inDpdc->AccessParticles(i).GetMaxColourIndexValue() >
+    globalMax) globalMax = inDpdc->AccessParticles(i).GetMaxColourIndexValue();
             }
             if (included.Count() > 0 && !included.Contains(inDpdc->AccessParticles(i).GetGlobalType())) {
                 continue;
@@ -736,7 +635,7 @@ bool ParticleWorker::getDataCallback(Call& call) {
         outDpdc->SetDataHash(this->datahashParticlesOut);
     }
     return true;
-	*/
+    */
 }
 
 
@@ -745,12 +644,14 @@ bool ParticleWorker::getDataCallback(Call& call) {
  */
 bool ParticleWorker::getExtentCallback(Call& call) {
     using megamol::geocalls::MultiParticleDataCall;
-    MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (outMpdc == NULL) return false;
+    MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
+    if (outMpdc == NULL)
+        return false;
 
     if (outMpdc != NULL) {
-        MultiParticleDataCall *inMpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
-        if (inMpdc == NULL) return false;
+        MultiParticleDataCall* inMpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
+        if (inMpdc == NULL)
+            return false;
         // this is the devil. don't do it.
         //*inMpdc = *outMpdc;
         // this is better but still not good.
@@ -758,7 +659,7 @@ bool ParticleWorker::getExtentCallback(Call& call) {
         if ((*inMpdc)(1)) {
             //*outMpdc = *inMpdc;
             static_cast<AbstractGetData3DCall*>(outMpdc)->operator=(*inMpdc);
-			outMpdc->SetDataHash(inMpdc->DataHash());
+            outMpdc->SetDataHash(inMpdc->DataHash());
             return true;
         }
     }

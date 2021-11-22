@@ -5,25 +5,25 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core::utility;
 
 
 SSBOBufferArray::SSBOBufferArray(const std::string& debugLabel)
-    : theSSBOs()
-    //, fence(0)
-    , maxBufferSize(0)
-    , numBuffers(0)
-    , srcStride(0)
-    , dstStride(0)
-    , theData(nullptr)
-    , numItems(0)
-    , numChunks(0)
-    , numItemsPerChunk(0)
-    , debugLabel(debugLabel) {}
+        : theSSBOs()
+        //, fence(0)
+        , maxBufferSize(0)
+        , numBuffers(0)
+        , srcStride(0)
+        , dstStride(0)
+        , theData(nullptr)
+        , numItems(0)
+        , numChunks(0)
+        , numItemsPerChunk(0)
+        , debugLabel(debugLabel) {}
 
 
 SSBOBufferArray::~SSBOBufferArray() {
@@ -34,13 +34,14 @@ SSBOBufferArray::~SSBOBufferArray() {
 }
 
 
-void SSBOBufferArray::upload(const std::function<void(void *, const void *)> &copyOp) {
+void SSBOBufferArray::upload(const std::function<void(void*, const void*)>& copyOp) {
     const auto chunk_src_size = this->srcStride * this->numItemsPerChunk;
 
     if (this->maxSSBOSize == 0) {
         glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &this->maxSSBOSize);
     }
-    ASSERT(this->maxBufferSize <= this->maxSSBOSize && "The size per SSBO is larger than your OpenGL implementation allows!");
+    ASSERT(this->maxBufferSize <= this->maxSSBOSize &&
+           "The size per SSBO is larger than your OpenGL implementation allows!");
 
     // either we can grab all the data at once or we need the copyOp to re-arrange stuff for us
     ASSERT(this->dstStride == this->srcStride || copyOp);
@@ -69,12 +70,13 @@ void SSBOBufferArray::upload(const std::function<void(void *, const void *)> &co
         glObjectLabel(GL_BUFFER, this->theSSBOs[x], sublabel.length(), sublabel.c_str());
 #endif
         if (copyOp) {
-//#pragma omp parallel for
+            //#pragma omp parallel for
             for (auto l = 0; l < this->actualItemsPerChunk[x]; ++l) {
                 // todo we are all going to die
                 copyOp(&temp[this->dstStride * l], &ptr[this->srcStride * l]);
             }
-            glBufferData(GL_SHADER_STORAGE_BUFFER, this->actualItemsPerChunk[x] * this->dstStride, temp.data(), GL_STATIC_DRAW);
+            glBufferData(
+                GL_SHADER_STORAGE_BUFFER, this->actualItemsPerChunk[x] * this->dstStride, temp.data(), GL_STATIC_DRAW);
         } else {
             glBufferData(GL_SHADER_STORAGE_BUFFER, this->actualItemsPerChunk[x] * this->srcStride, ptr, GL_STATIC_DRAW);
         }
@@ -143,5 +145,3 @@ GLuint SSBOBufferArray::SetDataWithItems(const void* data, GLuint srcStride, GLu
 
     return this->maxBufferSize;
 }
-
-
