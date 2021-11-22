@@ -3,22 +3,25 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::infovis_gl;
 using megamol::core::utility::log::Log;
 
 ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
-        : BaseAmortizedRenderer2D(), amortLevelParam("AmortLevel", "Level of Amortization"), debugParam("Debug", "some"), debugFloatParam("debugInt", "some") {
+        : BaseAmortizedRenderer2D()
+        , amortLevelParam("AmortLevel", "Level of Amortization")
+        , debugParam("Debug", "some")
+        , debugFloatParam("debugInt", "some") {
 
     this->amortLevelParam << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&amortLevelParam);
     this->debugParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&debugParam);
-    this->debugFloatParam << new core::param::FloatParam(0.0,0.0);
+    this->debugFloatParam << new core::param::FloatParam(0.0, 0.0);
     this->MakeSlotAvailable(&debugFloatParam);
 }
 
@@ -94,7 +97,7 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
-            camOffsets_[j * a + i] = glm::fvec3(((float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
+            camOffsets_[j * a + i] = glm::fvec3(((float)a - 1.0 - 2.0 * i) / w, ((float)a - 1.0 - 2.0 * j) / h, 0.0);
         }
     }
 
@@ -118,26 +121,21 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
 
     auto p = cam.get<core::view::Camera::Pose>();
     p.position = p.position + 0.5f * adj_offset;
-    
+
 
     if (!debugParam.Param<core::param::BoolParam>()->Value()) {
         float hAdj = ceil(float(height) / float(a)) / (float(height) / float(a));
         float wAdj = ceil(float(width) / float(a)) / (float(width) / float(a));
 
         float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
-        float wOffs = wAdj  * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
-        p.position =
-            p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
+        float wOffs =
+            wAdj * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
+        p.position = p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
 
-        intrinsics.frustrum_height =
-            hAdj * intrinsics.frustrum_height.value();
+        intrinsics.frustrum_height = hAdj * intrinsics.frustrum_height.value();
         intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
         cam.setOrthographicProjection(intrinsics);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "%f",
-            hAdj);
-
-        
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%f", hAdj);
     }
     cam.setPose(p);
 }
