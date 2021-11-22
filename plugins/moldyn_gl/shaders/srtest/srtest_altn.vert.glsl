@@ -11,6 +11,18 @@ flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
 flat out vec3 oc_pos;
+flat out float c;
+flat out vec4 ve0;
+flat out vec4 ve1;
+flat out vec4 ve2;
+flat out vec4 ve3;
+flat out vec2 vb;
+flat out float l;
+
+//flat out vec3 tt0;
+//flat out vec3 tt1;
+//flat out vec3 tt2;
+//flat out vec3 tt3;
 
 #include "srtest_ubo.glsl"
 
@@ -50,6 +62,21 @@ void main(void) {
     vec4 v2 = vec4(objPos + vu, 1.0f);
     vec4 v3 = vec4(objPos - vu, 1.0f);
 
+    ve0 = vec4(normalize((v1.xyz - vu) - camPos), 0.0);
+    ve1 = vec4(normalize((v0.xyz - vu) - camPos), 0.0);
+    ve2 = vec4(normalize((v0.xyz + vu) - camPos), 0.0);
+    ve3 = vec4(normalize((v1.xyz + vu) - camPos), 0.0);
+
+    ve0.w = dot(oc_pos, ve0.xyz);
+    ve1.w = dot(oc_pos, ve1.xyz);
+    ve2.w = dot(oc_pos, ve2.xyz);
+    ve3.w = dot(oc_pos, ve3.xyz);
+
+    //tt0 = ve0.w * ve0.xyz - oc_pos;
+    //tt1 = ve1.w * ve1.xyz - oc_pos;
+    //tt2 = ve2.w * ve2.xyz - oc_pos;
+    //tt3 = ve3.w * ve3.xyz - oc_pos;
+
     v0 = MVP * v0;
     v1 = MVP * v1;
     v2 = MVP * v2;
@@ -83,7 +110,13 @@ void main(void) {
 
     projPos.xy = (mins + maxs) * 0.5f;
 
-    gl_PointSize = max(length(vw), length(vh));
+    vb = factor * (mins.xy + 1.0f);
+
+    l = max(length(vw), length(vh));
+
+    gl_PointSize = l;
+
+    l = 1.0f / l;
 
     gl_Position = projPos;
 }

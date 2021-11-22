@@ -154,6 +154,40 @@ private:
     per_list_package_t pl_data_;
 };
 
+class mesh_geo_rt : public rendering_task {
+public:
+    mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~mesh_geo_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
+class mesh_geo_altn_rt : public rendering_task {
+public:
+    mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~mesh_geo_altn_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> vbos_;
+    std::vector<GLuint> cbos_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
 class SRTest : public core_gl::view::Renderer3DModuleGL {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
@@ -199,7 +233,7 @@ protected:
     void release() override;
 
 private:
-    enum class method_e : uint8_t { VAO, SSBO, MESH, MESH_ALTN };
+    enum class method_e : uint8_t { VAO, SSBO, MESH, MESH_ALTN, MESH_GEO, MESH_GEO_ALTN };
 
     using method_ut = std::underlying_type_t<method_e>;
 

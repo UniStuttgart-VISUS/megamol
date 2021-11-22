@@ -1,12 +1,11 @@
 #version 450
 
 in Point {
+    flat vec4 pointColor;
     flat vec3 objPos;
+    flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
-    flat vec4 pointColor;
-    flat vec3 oc_pos;
-    flat float c;
 }
 pp;
 
@@ -22,12 +21,6 @@ layout(depth_greater) out float gl_FragDepth;
 #include "srtest_depth.glsl"
 
 void main() {
-    /*vec4 new_pos;
-    vec3 normal;
-    vec3 ray;
-    float t;
-    intersection(pp.objPos, pp.sqrRad, pp.oc_pos, pp.c, pp.rad, new_pos, normal, ray, t);*/
-
     vec4 pos_ndc =
         vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);
     vec4 pos_clip = MVPinv * pos_ndc;
@@ -49,6 +42,7 @@ void main() {
     vec3 normal = (new_pos.xyz - pp.objPos) / pp.rad;
 
     outColor = vec4(LocalLighting(ray, normal, lightDir, pp.pointColor.rgb), pp.pointColor.a);
+    // outColor = vec4(0.5f * (pp.ray + 1.0f), 1);
 
     gl_FragDepth = depth(t);
 }

@@ -2,13 +2,8 @@
 
 #extension GL_NV_mesh_shader : enable
 
-#define ROOT_2 1.414213562f
-#define WARP 32
-#define NUM_V 4
-#define NUM_P 2
-
-layout(local_size_x = WARP) in;
-layout(max_vertices = WARP * NUM_V, max_primitives = WARP * NUM_P, triangles) out;
+layout(local_size_x = 32) in;
+layout(max_vertices = 32, max_primitives = 32, points) out;
 
 #include "srtest_ubo.glsl"
 
@@ -25,12 +20,18 @@ uniform bool useGlobalRad;
 #include "srtest_touchplane.glsl"
 
 out Point {
-    flat vec4 pointColor;
     flat vec3 objPos;
-    vec3 ray;
-    flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
+    flat vec4 pointColor;
+    flat vec3 oc_pos;
+    flat float c;
+    flat out vec4 ve0;
+    flat out vec4 ve1;
+    flat out vec4 ve2;
+    flat out vec4 ve3;
+    flat out vec2 vb;
+    flat out float l;
 }
 pp[];
 
@@ -39,56 +40,91 @@ void main() {
     if (g_idx < num_points) {
         uint l_idx = gl_LocalInvocationID.x;
 
-        vec3 objPos;
-        float rad;
-        vec4 pointColor;
-        access_data(g_idx, objPos, pointColor, rad);
+        access_data(g_idx, pp[l_idx].objPos, pp[l_idx].pointColor, pp[l_idx].rad);
 
-        vec3 oc_pos = objPos - camPos;
-        float sqrRad = rad * rad;
+        // oc_pos = camPos - objPos;
+        pp[l_idx].oc_pos = pp[l_idx].objPos - camPos;
+        pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
 
-        float dd = dot(oc_pos, oc_pos);
+        /*vec4 projPos;
+        float l;
+        touchplane(objPos, rad, projPos, l);*/
 
-        float s = (sqrRad) / (dd);
 
-        float vi = rad / sqrt(1.0f - s);
+        vec2 mins, maxs;
 
-        vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
-        vec3 vu = normalize(cross(oc_pos, vr)) * vi;
+        float dd = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos);
 
-        vec4 v[NUM_V];
-        v[0] = vec4(objPos - vr - vu, 1.0f);
-        v[1] = vec4(objPos + vr - vu, 1.0f);
-        v[2] = vec4(objPos + vr + vu, 1.0f);
-        v[3] = vec4(objPos - vr + vu, 1.0f);
+        float s = (pp[l_idx].sqrRad) / (dd);
 
-        vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
+        float vi = pp[l_idx].rad / sqrt(1.0f - s);
+
+        vec3 vr = normalize(cross(pp[l_idx].oc_pos, camUp)) * vi;
+        vec3 vu = normalize(cross(pp[l_idx].oc_pos, vr)) * vi;
+
+        vec4 v0 = vec4(pp[l_idx].objPos + vr, 1.0f);
+        vec4 v1 = vec4(pp[l_idx].objPos - vr, 1.0f);
+        vec4 v2 = vec4(pp[l_idx].objPos + vu, 1.0f);
+        vec4 v3 = vec4(pp[l_idx].objPos - vu, 1.0f);
+
+        pp[l_idx].ve0 = vec4(normalize((v1.xyz - vu) - camPos), 0.0);
+        pp[l_idx].ve1 = vec4(normalize((v0.xyz - vu) - camPos), 0.0);
+        pp[l_idx].ve2 = vec4(normalize((v0.xyz + vu) - camPos), 0.0);
+        pp[l_idx].ve3 = vec4(normalize((v1.xyz + vu) - camPos), 0.0);
+
+        pp[l_idx].ve0.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve0.xyz);
+        pp[l_idx].ve1.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve1.xyz);
+        pp[l_idx].ve2.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve2.xyz);
+        pp[l_idx].ve3.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve3.xyz);
+
+        // tt0 = ve0.w * ve0.xyz - oc_pos;
+        // tt1 = ve1.w * ve1.xyz - oc_pos;
+        // tt2 = ve2.w * ve2.xyz - oc_pos;
+        // tt3 = ve3.w * ve3.xyz - oc_pos;
+
+        v0 = MVP * v0;
+        v1 = MVP * v1;
+        v2 = MVP * v2;
+        v3 = MVP * v3;
+
+        v0 /= v0.w;
+        v1 /= v1.w;
+        v2 /= v2.w;
+        v3 /= v3.w;
+
+        mins = v0.xy;
+        maxs = v0.xy;
+        mins = min(mins, v1.xy);
+        maxs = max(maxs, v1.xy);
+        mins = min(mins, v2.xy);
+        maxs = max(maxs, v2.xy);
+        mins = min(mins, v3.xy);
+        maxs = max(maxs, v3.xy);
+
+        vec2 factor = 0.5f * viewAttr.zw;
+        v0.xy = factor * (v0.xy + 1.0f);
+        v1.xy = factor * (v1.xy + 1.0f);
+        v2.xy = factor * (v2.xy + 1.0f);
+        v3.xy = factor * (v3.xy + 1.0f);
+
+        vec2 vw = (v0 - v1).xy;
+        vec2 vh = (v2 - v3).xy;
+
+        vec4 projPos = MVP * vec4(pp[l_idx].objPos + pp[l_idx].rad * (camDir), 1.0f);
         projPos = projPos / projPos.w;
 
-        for (int i = 0; i < NUM_V; ++i) {
-            pp[l_idx * NUM_V + i].ray = normalize(v[i].xyz - camPos);
-            v[i] = MVP * v[i];
-            v[i] /= v[i].w;
+        projPos.xy = (mins + maxs) * 0.5f;
 
-            pp[l_idx * NUM_V + i].pointColor = pointColor;
-            pp[l_idx * NUM_V + i].objPos = objPos;
+        pp[l_idx].vb = factor * (mins.xy + 1.0f);
 
-            pp[l_idx * NUM_V + i].oc_pos = oc_pos;
+        float l = max(length(vw), length(vh));
 
-            pp[l_idx * NUM_V + i].rad = rad;
-            pp[l_idx * NUM_V + i].sqrRad = sqrRad;
+        gl_MeshVerticesNV[l_idx].gl_Position = projPos;
+        gl_MeshVerticesNV[l_idx].gl_PointSize = l;
 
+        pp[l_idx].l = 1.0f / l;
 
-            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy, projPos.z, 1.0f);
-        }
-
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 1;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 1] = l_idx * NUM_V + 2;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 2] = l_idx * NUM_V + 0;
-
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 3] = l_idx * NUM_V + 0;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 4] = l_idx * NUM_V + 2;
-        gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 5] = l_idx * NUM_V + 3;
+        gl_PrimitiveIndicesNV[l_idx] = l_idx;
     }
-    gl_PrimitiveCountNV = min(num_points - gl_WorkGroupID.x * gl_WorkGroupSize.x, gl_WorkGroupSize.x) * NUM_P;
+    gl_PrimitiveCountNV = min(num_points - gl_WorkGroupID.x * gl_WorkGroupSize.x, gl_WorkGroupSize.x);
 }

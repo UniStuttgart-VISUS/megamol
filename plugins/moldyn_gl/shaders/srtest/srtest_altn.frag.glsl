@@ -5,6 +5,17 @@ flat in float rad;
 flat in float sqrRad;
 flat in vec4 pointColor;
 flat in vec3 oc_pos;
+flat in vec4 ve0;
+flat in vec4 ve1;
+flat in vec4 ve2;
+flat in vec4 ve3;
+flat in vec2 vb;
+flat in float l;
+
+//flat in vec3 tt0;
+//flat in vec3 tt1;
+//flat in vec3 tt2;
+//flat in vec3 tt3;
 
 #include "srtest_ubo.glsl"
 
@@ -24,14 +35,19 @@ void main(void) {
     float t;
     intersection(objPos, sqrRad, oc_pos, c, rad, new_pos, normal, ray, t);*/
 
-    vec4 pos_ndc =
-        vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);
-    vec4 pos_clip = MVPinv * pos_ndc;
-    vec3 pos_obj = pos_clip.xyz / pos_clip.w;
+    vec2 factor = (gl_FragCoord.xy - vb) * l;
 
-    vec3 ray = normalize(pos_obj - camPos);
+    vec4 v_bot = mix(ve0, ve1, factor.x);
+    vec4 v_top = mix(ve3, ve2, factor.x);
+    vec4 ray = mix(v_top, v_bot, factor.y);
 
-    float tf = dot(oc_pos, ray.xyz);
+    /*vec3 tt_bot = mix(tt0, tt1, factor.x);
+    vec3 tt_top = mix(tt3, tt2, factor.x);
+    vec3 tt = mix(tt_top, tt_bot, factor.y);*/
+
+    float tf = ray.w;
+
+    //float tf = dot(oc_pos, ray.xyz);
     vec3 tt = tf * ray.xyz - oc_pos;
     float delta = sqrRad - dot(tt, tt);
     if (delta < 0.0f)

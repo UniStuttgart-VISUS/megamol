@@ -36,7 +36,7 @@ void main() {
 
         access_data(g_idx, pp[l_idx].objPos, pp[l_idx].pointColor, pp[l_idx].rad);
 
-        pp[l_idx].oc_pos = camPos - pp[l_idx].objPos;
+        pp[l_idx].oc_pos = -(camPos - pp[l_idx].objPos);
         pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
         pp[l_idx].c = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos) - pp[l_idx].sqrRad;
 
