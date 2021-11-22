@@ -14,7 +14,7 @@
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs DEPENDS_CUDA DEPENDS_GL)
+  set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -47,16 +47,18 @@ function(megamol_plugin PLUGIN_NAME)
   endif ()
 
   # Enable plugin build option
-  option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
+  if (NOT MMPLUGIN_ARGS_ALWAYS_BUILD)
+    option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
 
-  # Show plugin option only to user if all requirements are available
-  if (REQUIREMENTS_AVAILABLE)
-    mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-  else ()
-    mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+    # Show plugin option only to user if all requirements are available
+    if (REQUIREMENTS_AVAILABLE)
+      mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+    else ()
+      mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+    endif ()
   endif ()
 
-  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER} AND REQUIREMENTS_AVAILABLE)
+  if ((BUILD_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
