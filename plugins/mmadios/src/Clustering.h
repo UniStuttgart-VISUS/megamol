@@ -20,13 +20,19 @@ public:
     enum Algorithm { DBSCAN };
 
     /** Return module class name */
-    static const char* ClassName(void) { return "Clustering"; }
+    static const char* ClassName(void) {
+        return "Clustering";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Applies clustering on input"; }
+    static const char* Description(void) {
+        return "Applies clustering on input";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     Clustering(void);
@@ -47,8 +53,8 @@ private:
 
     bool changeAlgCallback(core::param::ParamSlot& p);
 
-    void fillDataVec(datatools::clustering::clusters_t const& clusters, float const* table, size_t num_rows,
-        size_t num_columns) {
+    void fillDataVec(
+        datatools::clustering::clusters_t const& clusters, float const* table, size_t num_rows, size_t num_columns) {
         data_.resize(num_rows * (num_columns + 1));
         for (size_t row = 0; row < num_rows; ++row) {
             data_[row * (num_columns + 1)] = clusters[row];
@@ -58,7 +64,9 @@ private:
         }
     }
 
-    bool isDirty() { return min_pts_slot_.IsDirty() || sigma_slot_.IsDirty(); }
+    bool isDirty() {
+        return min_pts_slot_.IsDirty() || sigma_slot_.IsDirty();
+    }
 
     void resetDirty() {
         min_pts_slot_.ResetDirty();

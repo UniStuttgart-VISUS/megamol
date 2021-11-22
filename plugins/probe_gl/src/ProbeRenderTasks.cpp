@@ -2,10 +2,10 @@
 
 #include "mmcore/EventCall.h"
 
-#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
+#include "probe/ProbeCalls.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -13,7 +13,7 @@
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
         : m_version(0)
-        , m_material_collection(nullptr) 
+        , m_material_collection(nullptr)
         , m_show_probes(true)
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetEvents", "") {

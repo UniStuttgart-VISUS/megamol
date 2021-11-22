@@ -77,8 +77,8 @@ inline T frechet_distance(std::size_t sample_count, std::function<T(std::size_t,
     for (std::size_t i = 1; i < sample_count; ++i) {
         for (std::size_t j = 1; j < sample_count; ++j) {
             auto const c_0 = ca[i - 1 + j * sample_count];
-            auto const c_1 = ca[i - 1 + (j-1) * sample_count];
-            auto const c_2 = ca[i + (j-1) * sample_count];
+            auto const c_1 = ca[i - 1 + (j - 1) * sample_count];
+            auto const c_2 = ca[i + (j - 1) * sample_count];
             ca[i + j * sample_count] = std::max<T>(std::min<T>(c_0, std::min<T>(c_1, c_2)), dist(i, j));
         }
     }

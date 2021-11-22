@@ -5,7 +5,8 @@
 #include "mmcore/param/FilePathParam.h"
 
 megamol::mesh_gl::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
-        : m_version(0), m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
+        : m_version(0)
+        , m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }

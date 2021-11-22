@@ -1,15 +1,15 @@
 #include <iostream>
 
-#include "stdafx.h"
 #include "LocalLighting.h"
+#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/light/CallLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/TriDirectionalLighting.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -20,54 +20,54 @@
 
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-megamol::compositing::LocalLighting::LocalLighting() 
-    : core::Module()
-    , m_version(0)
-    , m_output_texture(nullptr)
-    , m_point_lights_buffer(nullptr)
-    , m_distant_lights_buffer(nullptr)
+megamol::compositing::LocalLighting::LocalLighting()
+        : core::Module()
+        , m_version(0)
+        , m_output_texture(nullptr)
+        , m_point_lights_buffer(nullptr)
+        , m_distant_lights_buffer(nullptr)
 
-    , m_illuminationmode("IlluminationMode", "Sets illumination mode e.g. Lambertian, Phong")
+        , m_illuminationmode("IlluminationMode", "Sets illumination mode e.g. Lambertian, Phong")
 
-    , m_phong_ambientColor("AmbientColor", "Sets the ambient Color for Blinn-Phong")
-    , m_phong_diffuseColor("DiffuseColor", "Sets the diffuse Color for Blinn-Phong")
-    , m_phong_specularColor("SpecularColor", "Sets the specular Color for Blinn-Phong")
+        , m_phong_ambientColor("AmbientColor", "Sets the ambient Color for Blinn-Phong")
+        , m_phong_diffuseColor("DiffuseColor", "Sets the diffuse Color for Blinn-Phong")
+        , m_phong_specularColor("SpecularColor", "Sets the specular Color for Blinn-Phong")
 
-    , m_phong_k_ambient("AmbientFactor", "Sets the ambient factor for Blinn-Phong")
-    , m_phong_k_diffuse("DiffuseFactor", "Sets the diffuse factor for Blinn-Phong")
-    , m_phong_k_specular("SpecularFactor", "Sets the specular factor for Blinn-Phong")
-    , m_phong_k_exp("ExponentialFactor", "Sets the exponential factor for Blinn-Phong")
+        , m_phong_k_ambient("AmbientFactor", "Sets the ambient factor for Blinn-Phong")
+        , m_phong_k_diffuse("DiffuseFactor", "Sets the diffuse factor for Blinn-Phong")
+        , m_phong_k_specular("SpecularFactor", "Sets the specular factor for Blinn-Phong")
+        , m_phong_k_exp("ExponentialFactor", "Sets the exponential factor for Blinn-Phong")
 
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_albedo_tex_slot("AlbedoTexture", "Connect to the albedo render target texture")
-    , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
-    , m_depth_tex_slot("DepthTexture", "Connects to the depth render target texture")
-    , m_roughness_metalness_tex_slot("RoughMetalTexture","Connects to the roughness/metalness render target texture")
-    , m_lightSlot("lights", "Lights are retrieved over this slot") 
-    , m_camera_slot("Camera", "Connects a (copy of) camera state")
-{
+        , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+        , m_albedo_tex_slot("AlbedoTexture", "Connect to the albedo render target texture")
+        , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
+        , m_depth_tex_slot("DepthTexture", "Connects to the depth render target texture")
+        , m_roughness_metalness_tex_slot(
+              "RoughMetalTexture", "Connects to the roughness/metalness render target texture")
+        , m_lightSlot("lights", "Lights are retrieved over this slot")
+        , m_camera_slot("Camera", "Connects a (copy of) camera state") {
     this->m_illuminationmode << new megamol::core::param::EnumParam(0);
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
     this->MakeSlotAvailable(&this->m_illuminationmode);
 
-    this->m_phong_ambientColor << new megamol::core::param::ColorParam(1.0,1.0,1.0,1.0);
+    this->m_phong_ambientColor << new megamol::core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
     this->MakeSlotAvailable(&this->m_phong_ambientColor);
     this->m_phong_diffuseColor << new megamol::core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
     this->MakeSlotAvailable(&this->m_phong_diffuseColor);
     this->m_phong_specularColor << new megamol::core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
     this->MakeSlotAvailable(&this->m_phong_specularColor);
 
-    this->m_phong_k_ambient << new megamol::core::param::FloatParam(0.2f,0.0f,1.0f);
+    this->m_phong_k_ambient << new megamol::core::param::FloatParam(0.2f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->m_phong_k_ambient);
 
-    this->m_phong_k_diffuse << new megamol::core::param::FloatParam(0.7f,0.0,1.0f);
+    this->m_phong_k_diffuse << new megamol::core::param::FloatParam(0.7f, 0.0, 1.0f);
     this->MakeSlotAvailable(&this->m_phong_k_diffuse);
 
-    this->m_phong_k_specular << new megamol::core::param::FloatParam(0.1f,0.0f,1.0f);
+    this->m_phong_k_specular << new megamol::core::param::FloatParam(0.1f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->m_phong_k_specular);
 
-    this->m_phong_k_exp << new megamol::core::param::FloatParam(120.0f,0.0f,1000.0f);
+    this->m_phong_k_exp << new megamol::core::param::FloatParam(120.0f, 0.0f, 1000.0f);
     this->MakeSlotAvailable(&this->m_phong_k_exp);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
@@ -93,7 +93,9 @@ megamol::compositing::LocalLighting::LocalLighting()
     this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
-megamol::compositing::LocalLighting::~LocalLighting() { this->Release(); }
+megamol::compositing::LocalLighting::~LocalLighting() {
+    this->Release();
+}
 
 bool megamol::compositing::LocalLighting::create() {
 
@@ -109,17 +111,22 @@ bool megamol::compositing::LocalLighting::create() {
             std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
         if (!ssf->MakeShaderSource("Compositing::lambert", compute_lambert_src))
             return false;
-        if (!m_lambert_prgm->Compile(compute_lambert_src.Code(), compute_lambert_src.Count())) return false;
-        if (!m_lambert_prgm->Link()) return false;
+        if (!m_lambert_prgm->Compile(compute_lambert_src.Code(), compute_lambert_src.Count()))
+            return false;
+        if (!m_lambert_prgm->Link())
+            return false;
 
         if (!ssf->MakeShaderSource("Compositing::phong", compute_phong_src))
             return false;
-        if (!m_phong_prgm->Compile(compute_phong_src.Code(), compute_phong_src.Count())) return false;
-        if (!m_phong_prgm->Link()) return false;
+        if (!m_phong_prgm->Compile(compute_phong_src.Code(), compute_phong_src.Count()))
+            return false;
+        if (!m_phong_prgm->Link())
+            return false;
 
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
@@ -136,8 +143,10 @@ bool megamol::compositing::LocalLighting::create() {
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("lighting_output", tx_layout, nullptr);
 
-    m_point_lights_buffer = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    m_distant_lights_buffer = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    m_point_lights_buffer =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    m_distant_lights_buffer =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     return true;
 }
@@ -181,8 +190,8 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         }
     }
 
-    bool all_calls_valid = (call_albedo != nullptr) && (call_normal != nullptr) &&
-                           (call_depth != nullptr) && (call_camera != nullptr) && (call_light != nullptr);
+    bool all_calls_valid = (call_albedo != nullptr) && (call_normal != nullptr) && (call_depth != nullptr) &&
+                           (call_camera != nullptr) && (call_light != nullptr);
 
     if (all_calls_valid) {
         // something has changed in the neath...
@@ -238,22 +247,22 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 for (auto tdl : tridirection_lights) {
                     if (tdl.in_view_space) {
                         auto inverse_view = glm::transpose(glm::mat3(view_mx));
-                        auto key_dir = inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1],
-                                                          tdl.key_direction[2]);
-                        auto fill_dir = inverse_view * glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1],
-                                                           tdl.fill_direction[2]);
-                        auto back_dir = inverse_view * glm::vec3(tdl.back_direction[0], tdl.back_direction[1],
-                                                           tdl.back_direction[2]);
+                        auto key_dir =
+                            inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1], tdl.key_direction[2]);
+                        auto fill_dir = inverse_view *
+                                        glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1], tdl.fill_direction[2]);
+                        auto back_dir = inverse_view *
+                                        glm::vec3(tdl.back_direction[0], tdl.back_direction[1], tdl.back_direction[2]);
                         m_distant_lights.push_back({key_dir[0], key_dir[1], key_dir[2], tdl.intensity});
                         m_distant_lights.push_back({fill_dir[0], fill_dir[1], fill_dir[2], tdl.intensity});
                         m_distant_lights.push_back({back_dir[0], back_dir[1], back_dir[2], tdl.intensity});
                     } else {
-                        m_distant_lights.push_back({tdl.key_direction[0], tdl.key_direction[1],
-                            tdl.key_direction[2], tdl.intensity});
-                        m_distant_lights.push_back({tdl.fill_direction[0], tdl.fill_direction[1],
-                            tdl.fill_direction[2], tdl.intensity});
-                        m_distant_lights.push_back({tdl.back_direction[0], tdl.back_direction[1],
-                            tdl.back_direction[2], tdl.intensity});
+                        m_distant_lights.push_back(
+                            {tdl.key_direction[0], tdl.key_direction[1], tdl.key_direction[2], tdl.intensity});
+                        m_distant_lights.push_back(
+                            {tdl.fill_direction[0], tdl.fill_direction[1], tdl.fill_direction[2], tdl.intensity});
+                        m_distant_lights.push_back(
+                            {tdl.back_direction[0], tdl.back_direction[1], tdl.back_direction[2], tdl.intensity});
                     }
                 }
             }
@@ -381,7 +390,9 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
     lhs_tc->setData(m_output_texture, m_version);
 
-    return true; 
+    return true;
 }
 
-bool megamol::compositing::LocalLighting::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::compositing::LocalLighting::getMetaDataCallback(core::Call& caller) {
+    return true;
+}

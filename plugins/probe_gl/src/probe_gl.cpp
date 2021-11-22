@@ -8,15 +8,15 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "ComputeDistance.h"
+#include "FilterByProbe.h"
+#include "PrecomputeGlyphTextures.h"
 #include "ProbeBillboardGlyphMaterial.h"
 #include "ProbeBillboardGlyphRenderTasks.h"
 #include "ProbeDetailViewRenderTasks.h"
+#include "ProbeGlCalls.h"
+#include "ProbeHullRenderTasks.h"
 #include "ProbeInteraction.h"
 #include "ProbeRenderTasks.h"
-#include "ProbeGlCalls.h"
-#include "FilterByProbe.h"
-#include "ProbeHullRenderTasks.h"
-#include "PrecomputeGlyphTextures.h"
 #include "ProbeShellElementsRenderTasks.h"
 
 namespace megamol::probe_gl {

@@ -20,12 +20,13 @@ namespace core {
 
 class EventCollection {
 public:
-    template<bool is_consumable> struct Event : public BaseEvent {
+    template<bool is_consumable>
+    struct Event : public BaseEvent {
         using is_consumable_t = typename std::conditional<is_consumable, std::true_type, std::false_type>::type;
 
         Event(size_t frame_id) : BaseEvent(frame_id) {}
     };
-    
+
 
     EventCollection() = default;
     ~EventCollection() = default;
@@ -33,19 +34,22 @@ public:
     /**
      *
      */
-    template <typename EventType> std::vector<EventType> get() const;
+    template<typename EventType>
+    std::vector<EventType> get() const;
 
     /**
      *
      */
-    template <typename EventType> void add(std::unique_ptr<EventType>&& event);
+    template<typename EventType>
+    void add(std::unique_ptr<EventType>&& event);
 
     /**
      *
      */
-    template <typename EventType> void remove();
+    template<typename EventType>
+    void remove();
 
-    /** 
+    /**
      *
      */
     void clear();
@@ -71,7 +75,8 @@ private:
     // static std::atomic_int last_type_id;
 };
 
-template <typename EventType> inline std::vector<EventType> EventCollection::get() const {
+template<typename EventType>
+inline std::vector<EventType> EventCollection::get() const {
 
     std::vector<EventType> retval;
 
@@ -83,17 +88,21 @@ template <typename EventType> inline std::vector<EventType> EventCollection::get
     return retval;
 }
 
-template <typename EventType> inline void EventCollection::add(std::unique_ptr<EventType>&& event) {
+template<typename EventType>
+inline void EventCollection::add(std::unique_ptr<EventType>&& event) {
 
     m_events.emplace(std::type_index(typeid(EventType)), std::forward<std::unique_ptr<EventType>>(event));
 }
 
-template <typename EventType> inline void EventCollection::remove() {
+template<typename EventType>
+inline void EventCollection::remove() {
 
     m_events.erase(std::type_index(typeid(EventType)));
 }
 
-inline void EventCollection::clear() { m_events.clear(); }
+inline void EventCollection::clear() {
+    m_events.clear();
+}
 
 } // namespace core
 } // namespace megamol

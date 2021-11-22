@@ -5,8 +5,8 @@
  */
 
 #include "SurfaceNets.h"
-#include "geometry_calls/VolumetricDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 
@@ -14,53 +14,53 @@ namespace megamol {
 namespace probe {
 
 
-    SurfaceNets::SurfaceNets()
-            : Module()
-            , _getDataCall("getData", "")
-            , _deployMeshCall("deployMesh", "")
-            , _deployNormalsCall("deployNormals", "")
-            , _isoSlot("IsoValue", "")
-            , _faceTypeSlot("FaceType", "") {
+SurfaceNets::SurfaceNets()
+        : Module()
+        , _getDataCall("getData", "")
+        , _deployMeshCall("deployMesh", "")
+        , _deployNormalsCall("deployNormals", "")
+        , _isoSlot("IsoValue", "")
+        , _faceTypeSlot("FaceType", "") {
 
-        this->_isoSlot << new core::param::FloatParam(1.0f);
-        this->_isoSlot.SetUpdateCallback(&SurfaceNets::isoChanged);
-        this->MakeSlotAvailable(&this->_isoSlot);
+    this->_isoSlot << new core::param::FloatParam(1.0f);
+    this->_isoSlot.SetUpdateCallback(&SurfaceNets::isoChanged);
+    this->MakeSlotAvailable(&this->_isoSlot);
 
-        core::param::EnumParam* ep = new core::param::EnumParam(0);
-        ep->SetTypePair(0, "Trianges");
-        ep->SetTypePair(1, "Quads");
-        this->_faceTypeSlot << ep;
-        this->MakeSlotAvailable(&this->_faceTypeSlot);
+    core::param::EnumParam* ep = new core::param::EnumParam(0);
+    ep->SetTypePair(0, "Trianges");
+    ep->SetTypePair(1, "Quads");
+    this->_faceTypeSlot << ep;
+    this->MakeSlotAvailable(&this->_faceTypeSlot);
 
-        this->_deployMeshCall.SetCallback(
-            mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &SurfaceNets::getData);
-        this->_deployMeshCall.SetCallback(
-            mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &SurfaceNets::getMetaData);
-        this->MakeSlotAvailable(&this->_deployMeshCall);
+    this->_deployMeshCall.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &SurfaceNets::getData);
+    this->_deployMeshCall.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &SurfaceNets::getMetaData);
+    this->MakeSlotAvailable(&this->_deployMeshCall);
 
-        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-            geocalls::MultiParticleDataCall::FunctionName(0), &SurfaceNets::getNormalData);
-        this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-            geocalls::MultiParticleDataCall::FunctionName(1), &SurfaceNets::getNormalMetaData);
-        this->MakeSlotAvailable(&this->_deployNormalsCall);
+    this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &SurfaceNets::getNormalData);
+    this->_deployNormalsCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &SurfaceNets::getNormalMetaData);
+    this->MakeSlotAvailable(&this->_deployNormalsCall);
 
-        this->_getDataCall.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
-        this->MakeSlotAvailable(&this->_getDataCall);
-    }
+    this->_getDataCall.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
+    this->MakeSlotAvailable(&this->_getDataCall);
+}
 
-    SurfaceNets::~SurfaceNets() {
-        this->Release();
-    }
+SurfaceNets::~SurfaceNets() {
+    this->Release();
+}
 
-    bool SurfaceNets::create() {
-        return true;
-    }
+bool SurfaceNets::create() {
+    return true;
+}
 
-    void SurfaceNets::release() {}
+void SurfaceNets::release() {}
 
-    bool SurfaceNets::InterfaceIsDirty() {
-        return this->_isoSlot.IsDirty();
-    }
+bool SurfaceNets::InterfaceIsDirty() {
+    return this->_isoSlot.IsDirty();
+}
 
 
 void SurfaceNets::calculateSurfaceNets() {
@@ -82,7 +82,7 @@ void SurfaceNets::calculateSurfaceNets() {
     cube_offsets[6] = {0, 1, 1};
     cube_offsets[7] = {1, 1, 1};
 
-    const std::array<uint32_t,24> edge_vertex_offsets = {// 0
+    const std::array<uint32_t, 24> edge_vertex_offsets = {// 0
         0, 1,
         // 1
         0, 2,
@@ -109,7 +109,7 @@ void SurfaceNets::calculateSurfaceNets() {
 
     float const iso_value = this->_isoSlot.Param<core::param::FloatParam>()->Value();
 
-    std::vector<uint32_t> voxel_lookup(_dims[0]*_dims[1]*_dims[2]);
+    std::vector<uint32_t> voxel_lookup(_dims[0] * _dims[1] * _dims[2]);
     std::vector<uint32_t> voxel_filled;
     voxel_filled.reserve(voxel_lookup.size());
 
@@ -117,7 +117,8 @@ void SurfaceNets::calculateSurfaceNets() {
 
     auto dims = _dims;
 
-    auto const offset_now = [dims](uint32_t x, uint32_t y, uint32_t z) { return dims[0] * dims[1] * z + dims[0] * y + x; };
+    auto const offset_now = [dims](
+                                uint32_t x, uint32_t y, uint32_t z) { return dims[0] * dims[1] * z + dims[0] * y + x; };
 
     for (uint32_t z = 0; z < _dims[2] - 1; z++) {
         for (uint32_t y = 0; y < _dims[1] - 1; y++) {
@@ -208,13 +209,13 @@ void SurfaceNets::calculateSurfaceNets() {
                     voxel_lookup[offset_now(x, y, z)] = _vertices.size() - 1;
                     voxel_filled.push_back(offset_now(x, y, z));
 
-                    std::array<float,3> normal;
-                    normal[0] =
-                        _data[offset_now(x >= _dims[0]-1 ? x : x + 1, y, z)] - _data[offset_now(x < 1 ? x : x - 1, y, z)];
-                    normal[1] =
-                        _data[offset_now(x, y >= _dims[1] -1 ? y : y + 1, z)] - _data[offset_now(x, y < 1 ? y : y - 1, z)];
-                    normal[2] =
-                        _data[offset_now(x, y, z>= _dims[2] -1 ? z : z + 1)] - _data[offset_now(x, y, z < 1 ? z : z - 1)];
+                    std::array<float, 3> normal;
+                    normal[0] = _data[offset_now(x >= _dims[0] - 1 ? x : x + 1, y, z)] -
+                                _data[offset_now(x < 1 ? x : x - 1, y, z)];
+                    normal[1] = _data[offset_now(x, y >= _dims[1] - 1 ? y : y + 1, z)] -
+                                _data[offset_now(x, y < 1 ? y : y - 1, z)];
+                    normal[2] = _data[offset_now(x, y, z >= _dims[2] - 1 ? z : z + 1)] -
+                                _data[offset_now(x, y, z < 1 ? z : z - 1)];
                     if (normal[0] <= 1e-6 && normal[1] <= 1e-6 && normal[2] <= 1e-6) {
                         normal[0] = _data[offset_now(x >= _dims[0] - 2 ? x : x + 2, y, z)] -
                                     _data[offset_now(x < 2 ? x : x - 2, y, z)];
@@ -222,119 +223,118 @@ void SurfaceNets::calculateSurfaceNets() {
                                     _data[offset_now(x, y < 2 ? y : y - 2, z)];
                         normal[2] = _data[offset_now(x, y, z >= _dims[2] - 2 ? z : z + 2)] -
                                     _data[offset_now(x, y, z < 2 ? z : z - 2)];
-                        }
-                        auto const normal_length =
-                            std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-                        normal[0] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
-                        normal[1] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
-                        normal[2] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
-                        _normals.push_back(normal);
                     }
-                } // for x
-            }     // for y
-        }         // for z
-        voxel_filled.shrink_to_fit();
-
-        auto const coordinateFromLinearIndex = [](uint32_t idx, uint32_t max_x, uint32_t max_y) {
-            std::array<uint32_t, 3> coords;
-            coords[0] = idx % (max_x);
-            idx /= (max_x);
-            coords[1] = idx % (max_y);
-            idx /= (max_y);
-            coords[2] = idx;
-            return coords;
-        };
-
-
-        for (auto id : voxel_filled) {
-            for (uint32_t i = 0; i < 3; ++i) {
-                auto const edge_crossing = 1 & (voxel_edge_crossings[id] >> i);
-                if (edge_crossing == 1) {
-                    auto coords = coordinateFromLinearIndex(id, _dims[0], _dims[1]);
-                    if (coords[0] > 0 && coords[1] > 0 && coords[2] > 0) {
-                        std::array<uint32_t, 4> indices;
-                        std::array<uint32_t, 3> triangle1;
-                        std::array<uint32_t, 3> triangle2;
-                        if (i == 0) {
-                            indices[0] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2])];
-                            indices[1] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2] - 1)];
-                            indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2] - 1)];
-                            indices[3] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])]; // or just id
-                        } else if (i == 1) {
-                            indices[0] = voxel_lookup[offset_now(coords[0] - 1, coords[1] - 1, coords[2])];
-                            indices[1] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2])];
-                            indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])];
-                            indices[3] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2])];
-                        } else if (i == 2) {
-                            indices[0] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2])];
-                            indices[1] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])];
-                            indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2] - 1)];
-                            indices[3] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2] - 1)];
-                        }
-                        triangle1[0] = indices[0];
-                        triangle1[1] = indices[1];
-                        triangle1[2] = indices[2];
-                        triangle2[0] = indices[0];
-                        triangle2[1] = indices[2];
-                        triangle2[2] = indices[3];
-
-                        // hack normals
-                        auto tangent = _vertices[indices[2]];
-                        auto bitangent = _vertices[indices[1]];
-
-                        tangent[0] -= _vertices[indices[0]][0];
-                        tangent[1] -= _vertices[indices[0]][1];
-                        tangent[2] -= _vertices[indices[0]][2];
-                        auto t_length =
-                            std::sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]);
-                        tangent[0] /= t_length;
-                        tangent[1] /= t_length;
-                        tangent[2] /= t_length;
-
-                        bitangent[0] -= _vertices[indices[0]][0];
-                        bitangent[1] -= _vertices[indices[0]][1];
-                        bitangent[2] -= _vertices[indices[0]][2];
-                        auto bt_length = std::sqrt(
-                            bitangent[0] * bitangent[0] + bitangent[1] * bitangent[1] + bitangent[2] * bitangent[2]);
-                        bitangent[0] /= bt_length;
-                        bitangent[1] /= bt_length;
-                        bitangent[2] /= bt_length;
-
-                        std::array<float, 3> normal;
-                        normal[0] = tangent[1] * bitangent[2] - tangent[2] * bitangent[1];
-                        normal[1] = tangent[2] * bitangent[0] - tangent[0] * bitangent[2];
-                        normal[2] = tangent[0] * bitangent[1] - tangent[1] * bitangent[0];
-                        auto n_length =
-                            std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-                        normal[0] /= n_length;
-                        normal[1] /= n_length;
-                        normal[2] /= n_length;
-
-                        auto myDot = [](std::array<float, 3> const& v0, std::array<float, 3> const& v1) -> float{
-                            return (v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2]);
-                        };
-
-                        _normals[indices[0]] = myDot(_normals[indices[0]], normal) > 0.0
-                                                   ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
-                        _normals[indices[1]] = myDot(_normals[indices[1]], normal) > 0.0
-                                                   ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
-                        _normals[indices[2]] = myDot(_normals[indices[2]], normal) > 0.0
-                                                   ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
-                        _normals[indices[3]] = myDot(_normals[indices[3]], normal) > 0.0
-                                                   ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
-
-                        _faces.emplace_back(indices);
-                        _triangles.emplace_back(triangle1);
-                        _triangles.emplace_back(triangle2);
-                    }
+                    auto const normal_length =
+                        std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+                    normal[0] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
+                    normal[1] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
+                    normal[2] /= (normal_length < 0.00000001) ? 1.0 : normal_length;
+                    _normals.push_back(normal);
                 }
-            } // for i < 3
-        }     // for voxel_filled
-    }
+            } // for x
+        }     // for y
+    }         // for z
+    voxel_filled.shrink_to_fit();
+
+    auto const coordinateFromLinearIndex = [](uint32_t idx, uint32_t max_x, uint32_t max_y) {
+        std::array<uint32_t, 3> coords;
+        coords[0] = idx % (max_x);
+        idx /= (max_x);
+        coords[1] = idx % (max_y);
+        idx /= (max_y);
+        coords[2] = idx;
+        return coords;
+    };
+
+
+    for (auto id : voxel_filled) {
+        for (uint32_t i = 0; i < 3; ++i) {
+            auto const edge_crossing = 1 & (voxel_edge_crossings[id] >> i);
+            if (edge_crossing == 1) {
+                auto coords = coordinateFromLinearIndex(id, _dims[0], _dims[1]);
+                if (coords[0] > 0 && coords[1] > 0 && coords[2] > 0) {
+                    std::array<uint32_t, 4> indices;
+                    std::array<uint32_t, 3> triangle1;
+                    std::array<uint32_t, 3> triangle2;
+                    if (i == 0) {
+                        indices[0] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2])];
+                        indices[1] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2] - 1)];
+                        indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2] - 1)];
+                        indices[3] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])]; // or just id
+                    } else if (i == 1) {
+                        indices[0] = voxel_lookup[offset_now(coords[0] - 1, coords[1] - 1, coords[2])];
+                        indices[1] = voxel_lookup[offset_now(coords[0], coords[1] - 1, coords[2])];
+                        indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])];
+                        indices[3] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2])];
+                    } else if (i == 2) {
+                        indices[0] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2])];
+                        indices[1] = voxel_lookup[offset_now(coords[0], coords[1], coords[2])];
+                        indices[2] = voxel_lookup[offset_now(coords[0], coords[1], coords[2] - 1)];
+                        indices[3] = voxel_lookup[offset_now(coords[0] - 1, coords[1], coords[2] - 1)];
+                    }
+                    triangle1[0] = indices[0];
+                    triangle1[1] = indices[1];
+                    triangle1[2] = indices[2];
+                    triangle2[0] = indices[0];
+                    triangle2[1] = indices[2];
+                    triangle2[2] = indices[3];
+
+                    // hack normals
+                    auto tangent = _vertices[indices[2]];
+                    auto bitangent = _vertices[indices[1]];
+
+                    tangent[0] -= _vertices[indices[0]][0];
+                    tangent[1] -= _vertices[indices[0]][1];
+                    tangent[2] -= _vertices[indices[0]][2];
+                    auto t_length =
+                        std::sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]);
+                    tangent[0] /= t_length;
+                    tangent[1] /= t_length;
+                    tangent[2] /= t_length;
+
+                    bitangent[0] -= _vertices[indices[0]][0];
+                    bitangent[1] -= _vertices[indices[0]][1];
+                    bitangent[2] -= _vertices[indices[0]][2];
+                    auto bt_length = std::sqrt(
+                        bitangent[0] * bitangent[0] + bitangent[1] * bitangent[1] + bitangent[2] * bitangent[2]);
+                    bitangent[0] /= bt_length;
+                    bitangent[1] /= bt_length;
+                    bitangent[2] /= bt_length;
+
+                    std::array<float, 3> normal;
+                    normal[0] = tangent[1] * bitangent[2] - tangent[2] * bitangent[1];
+                    normal[1] = tangent[2] * bitangent[0] - tangent[0] * bitangent[2];
+                    normal[2] = tangent[0] * bitangent[1] - tangent[1] * bitangent[0];
+                    auto n_length = std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+                    normal[0] /= n_length;
+                    normal[1] /= n_length;
+                    normal[2] /= n_length;
+
+                    auto myDot = [](std::array<float, 3> const& v0, std::array<float, 3> const& v1) -> float {
+                        return (v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2]);
+                    };
+
+                    _normals[indices[0]] = myDot(_normals[indices[0]], normal) > 0.0
+                                               ? normal
+                                               : std::array<float, 3>{-normal[0], -normal[1], -normal[2]};
+                    _normals[indices[1]] = myDot(_normals[indices[1]], normal) > 0.0
+                                               ? normal
+                                               : std::array<float, 3>{-normal[0], -normal[1], -normal[2]};
+                    _normals[indices[2]] = myDot(_normals[indices[2]], normal) > 0.0
+                                               ? normal
+                                               : std::array<float, 3>{-normal[0], -normal[1], -normal[2]};
+                    _normals[indices[3]] = myDot(_normals[indices[3]], normal) > 0.0
+                                               ? normal
+                                               : std::array<float, 3>{-normal[0], -normal[1], -normal[2]};
+
+                    _faces.emplace_back(indices);
+                    _triangles.emplace_back(triangle1);
+                    _triangles.emplace_back(triangle2);
+                }
+            }
+        } // for i < 3
+    }     // for voxel_filled
+}
 
 bool SurfaceNets::getData(core::Call& call) {
 
@@ -423,146 +423,145 @@ bool SurfaceNets::getData(core::Call& call) {
             _mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::QUADS;
         }
         ++_version;
-
-        }
-
-        // put data in mesh
-        mesh::MeshDataAccessCollection mesh;
-
-        std::string identifier = std::string(FullName()) + "_mesh";
-        mesh.addMesh(identifier, _mesh_attribs, _mesh_indices, _mesh_type);
-        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
-        _old_datahash = cd->DataHash();
-        _recalc = false;
-
-        auto meta_data = cm->getMetaData();
-        meta_data.m_bboxs = _bboxs;
-        cm->setMetaData(meta_data);
-
-        return true;
     }
 
-    bool SurfaceNets::getMetaData(core::Call& call) {
+    // put data in mesh
+    mesh::MeshDataAccessCollection mesh;
 
-        auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-        if (cm == nullptr)
-            return false;
+    std::string identifier = std::string(FullName()) + "_mesh";
+    mesh.addMesh(identifier, _mesh_attribs, _mesh_indices, _mesh_type);
+    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
+    _old_datahash = cd->DataHash();
+    _recalc = false;
 
-        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
-        if (cd == nullptr)
-            return false;
+    auto meta_data = cm->getMetaData();
+    meta_data.m_bboxs = _bboxs;
+    cm->setMetaData(meta_data);
 
-        auto meta_data = cm->getMetaData();
+    return true;
+}
 
-        // get metadata for volumetric call
-        cd->SetFrameID(meta_data.m_frame_ID);
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
-            return false;
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
-            return false;
+bool SurfaceNets::getMetaData(core::Call& call) {
 
-        //if (cd->DataHash() == _old_datahash && !_recalc)
-        //    return true;
+    auto cm = dynamic_cast<mesh::CallMesh*>(&call);
+    if (cm == nullptr)
+        return false;
 
-        // put metadata in mesh call
-        //meta_data.m_bboxs = cd->AccessBoundingBoxes();
-        meta_data.m_bboxs = _bboxs;
-        meta_data.m_frame_cnt = cd->GetAvailableFrames();
-        cm->setMetaData(meta_data);
+    auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
+    if (cd == nullptr)
+        return false;
 
-        return true;
+    auto meta_data = cm->getMetaData();
+
+    // get metadata for volumetric call
+    cd->SetFrameID(meta_data.m_frame_ID);
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
+        return false;
+
+    //if (cd->DataHash() == _old_datahash && !_recalc)
+    //    return true;
+
+    // put metadata in mesh call
+    //meta_data.m_bboxs = cd->AccessBoundingBoxes();
+    meta_data.m_bboxs = _bboxs;
+    meta_data.m_frame_cnt = cd->GetAvailableFrames();
+    cm->setMetaData(meta_data);
+
+    return true;
+}
+
+bool SurfaceNets::isoChanged(core::param::ParamSlot& p) {
+
+    _recalc = true;
+    _vertices.clear();
+    _normals.clear();
+    _faces.clear();
+    _triangles.clear();
+
+    return true;
+}
+
+
+bool SurfaceNets::getNormalData(core::Call& call) {
+    bool something_changed = _recalc;
+
+    auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (mpd == nullptr)
+        return false;
+
+    auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
+    if (cd == nullptr)
+        return false;
+
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
+        return false;
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
+        return false;
+
+    if (cd->DataHash() != _old_datahash) {
+        something_changed = true;
     }
 
-    bool SurfaceNets::isoChanged(core::param::ParamSlot& p) {
+    _dims[0] = cd->GetResolution(0);
+    _dims[1] = cd->GetResolution(1);
+    _dims[2] = cd->GetResolution(2);
+    auto meta_data = cd->GetMetadata();
+    _volume_origin[0] = meta_data->Origin[0];
+    _volume_origin[1] = meta_data->Origin[1];
+    _volume_origin[2] = meta_data->Origin[2];
+    _spacing[0] = meta_data->SliceDists[0][0];
+    _spacing[1] = meta_data->SliceDists[1][0];
+    _spacing[2] = meta_data->SliceDists[2][0];
+    if (cd->GetScalarType() != geocalls::FLOATING_POINT)
+        return false;
+    _data = reinterpret_cast<float*>(cd->GetData());
 
-        _recalc = true;
-        _vertices.clear();
-        _normals.clear();
-        _faces.clear();
-        _triangles.clear();
-
-        return true;
+    if (something_changed || _recalc) {
+        this->calculateSurfaceNets();
     }
-
-
-    bool SurfaceNets::getNormalData(core::Call& call) {
-        bool something_changed = _recalc;
-
-        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-        if (mpd == nullptr)
-            return false;
-
-        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
-        if (cd == nullptr)
-            return false;
-
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
-            return false;
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
-            return false;
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
-            return false;
-
-        if (cd->DataHash() != _old_datahash) {
-            something_changed = true;
-        }
-
-        _dims[0] = cd->GetResolution(0);
-        _dims[1] = cd->GetResolution(1);
-        _dims[2] = cd->GetResolution(2);
-        auto meta_data = cd->GetMetadata();
-        _volume_origin[0] = meta_data->Origin[0];
-        _volume_origin[1] = meta_data->Origin[1];
-        _volume_origin[2] = meta_data->Origin[2];
-        _spacing[0] = meta_data->SliceDists[0][0];
-        _spacing[1] = meta_data->SliceDists[1][0];
-        _spacing[2] = meta_data->SliceDists[2][0];
-        if (cd->GetScalarType() != geocalls::FLOATING_POINT)
-            return false;
-        _data = reinterpret_cast<float*>(cd->GetData());
-
-        if (something_changed || _recalc) {
-            this->calculateSurfaceNets();
-        }
 
     mpd->SetParticleListCount(1);
     mpd->AccessParticles(0).SetGlobalRadius(cd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge() * 1e-3);
     mpd->AccessParticles(0).SetCount(_vertices.size());
-    mpd->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-        _vertices.data(), sizeof(std::array<float,4>));
-    mpd->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
-        _normals.data(), sizeof(std::array<float,3>));
+    mpd->AccessParticles(0).SetVertexData(
+        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, _vertices.data(), sizeof(std::array<float, 4>));
+    mpd->AccessParticles(0).SetDirData(
+        geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ, _normals.data(), sizeof(std::array<float, 3>));
 
-        _old_datahash = cd->DataHash();
-        _recalc = false;
+    _old_datahash = cd->DataHash();
+    _recalc = false;
 
+    return true;
+}
+
+bool SurfaceNets::getNormalMetaData(core::Call& call) {
+    auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (mpd == nullptr)
+        return false;
+
+    auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
+    if (cd == nullptr)
+        return false;
+
+    if (cd->DataHash() == _old_datahash && !_recalc)
         return true;
-    }
 
-    bool SurfaceNets::getNormalMetaData(core::Call& call) {
-        auto mpd = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-        if (mpd == nullptr)
-            return false;
+    // get metadata from adios
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
 
-        auto cd = this->_getDataCall.CallAs<geocalls::VolumetricDataCall>();
-        if (cd == nullptr)
-            return false;
-
-        if (cd->DataHash() == _old_datahash && !_recalc)
-            return true;
-
-        // get metadata from adios
-        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
-            return false;
-
-        mpd->AccessBoundingBoxes() = cd->AccessBoundingBoxes();
-        mpd->SetFrameCount(cd->FrameCount());
-        cd->SetFrameID(mpd->FrameID());
-        mpd->SetDataHash(mpd->DataHash() + 1);
+    mpd->AccessBoundingBoxes() = cd->AccessBoundingBoxes();
+    mpd->SetFrameCount(cd->FrameCount());
+    cd->SetFrameID(mpd->FrameID());
+    mpd->SetDataHash(mpd->DataHash() + 1);
 
 
-        return true;
-    }
+    return true;
+}
 
 
 } // namespace probe

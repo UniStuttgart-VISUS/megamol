@@ -17,12 +17,14 @@ namespace megamol {
 namespace core {
 
 class MEGAMOLCORE_API CallEvent
-    : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
+        : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
 public:
     CallEvent() = default;
     ~CallEvent() = default;
 
-    static const char* ClassName(void) { return "CallEvent"; }
+    static const char* ClassName(void) {
+        return "CallEvent";
+    }
     static const char* Description(void) {
         return "Call that transports a DoubleBufferedEventCollection for read-write access";
     }

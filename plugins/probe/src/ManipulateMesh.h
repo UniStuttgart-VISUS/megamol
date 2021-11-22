@@ -22,21 +22,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ManipulateMesh"; }
+    static const char* ClassName(void) {
+        return "ManipulateMesh";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Manipulates Mesh data using libigl"; }
+    static const char* Description(void) {
+        return "Manipulates Mesh data using libigl";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ManipulateMesh(void);
@@ -63,8 +69,8 @@ private:
     bool convertToMesh();
 
     bool getMetaData(core::Call& call);
-    bool getParticleMetaData(core::Call &call);
-    bool getParticleData(core::Call &call);
+    bool getParticleMetaData(core::Call& call);
+    bool getParticleData(core::Call& call);
     bool getData(core::Call& call);
 
     bool parameterChanged(core::param::ParamSlot& p);

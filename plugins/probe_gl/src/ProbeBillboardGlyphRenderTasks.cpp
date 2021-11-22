@@ -1,24 +1,24 @@
 #include "ProbeBillboardGlyphRenderTasks.h"
 
-#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh_gl/MeshCalls_gl.h"
 #include "mmcore/EventCall.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "probe/ProbeCalls.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/transform.hpp"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/ColorParam.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
+#include <imgui_internal.h>
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 
@@ -65,7 +65,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
         , m_show_canvas_slot("ShowGlyphCanvas", "Render glyphs with opaque background")
         , m_canvas_color_slot("GlyphCanvasColor", "Color used for the background of individual glyphs")
-        , m_tf_range({0.0f,0.0f})
+        , m_tf_range({0.0f, 0.0f})
         , m_show_glyphs(true) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
@@ -97,7 +97,6 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 
     this->m_canvas_color_slot << new core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
     this->MakeSlotAvailable(&this->m_canvas_color_slot);
-
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTasks() {}
@@ -158,7 +157,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     if (tfc != NULL) {
         ((*tfc)(0));
     }
-    
+
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
                                  this->m_rendering_mode_slot.IsDirty();
 
@@ -170,18 +169,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         auto probes = pc->getData();
 
         auto visitor = [this](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::FloatProbe>) {
 
-            } else if constexpr (std::is_same_v<T, std::array<float,2>>) {
-            m_tf_range = arg;
-            } else if constexpr (std::is_same_v<T, std::array<int,2>>) {
+            } else if constexpr (std::is_same_v<T, std::array<float, 2>>) {
+                m_tf_range = arg;
+            } else if constexpr (std::is_same_v<T, std::array<int, 2>>) {
                 // TODO
             } else {
                 // unknown probe type, throw error? do nothing?
             }
         };
-        
+
         std::visit(visitor, probes->getGenericGlobalMinMax());
 
         //for (auto& identifier : m_rendertask_collection.second) {
@@ -312,7 +311,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         m_scalar_distribution_probe_glyph_identifiers.emplace_back(
                             std::string(FullName()) + "_sdg_" + std::to_string(probe_idx));
 
-                        this->m_type_index_map.push_back({std::type_index(typeid(GlyphScalarDistributionProbeData)), sp_idx});
+                        this->m_type_index_map.push_back(
+                            {std::type_index(typeid(GlyphScalarDistributionProbeData)), sp_idx});
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
                         // TODO
                     } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
@@ -379,14 +379,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         addAllRenderTasks();
     }
 
-    bool per_frame_data_has_changed = this->m_use_interpolation_slot.IsDirty() ||
-                                      this->m_show_canvas_slot.IsDirty() ||
-                                      this->m_canvas_color_slot.IsDirty() ||
-                                      ((tfc != NULL) ? tfc->IsDirty() : false) ||
+    bool per_frame_data_has_changed = this->m_use_interpolation_slot.IsDirty() || this->m_show_canvas_slot.IsDirty() ||
+                                      this->m_canvas_color_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false) ||
                                       m_rendertask_collection.first->getPerFrameBuffers().empty();
 
-    if (per_frame_data_has_changed)
-    {
+    if (per_frame_data_has_changed) {
         this->m_use_interpolation_slot.ResetDirty();
         this->m_show_canvas_slot.ResetDirty();
         this->m_canvas_color_slot.ResetDirty();
@@ -429,7 +426,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     {GL_TEXTURE_WRAP_S, GL_CLAMP}};
                 try {
                     this->m_transfer_function = std::make_shared<glowl::Texture2D>(
-                        "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
+                        "ProbeTransferFunction", tex_layout, (GLvoid*)tfc->GetTextureData());
                 } catch (glowl::TextureException const& exc) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
@@ -760,8 +757,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
 
     auto gpu_mtl_storage = mtlc->getData();
-    for (int i = 0; i < gpu_mtl_storage.size(); ++i)
-    {
+    for (int i = 0; i < gpu_mtl_storage.size(); ++i) {
         auto textured_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Textured");
         auto scalar_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Scalar");
         auto scalar_distribution_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ScalarDistribution");
@@ -787,7 +783,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
 
     if (textured_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Textured material, identifier not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Could not get ProbeBillboard_Textured material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
     }
     if (scalar_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -796,8 +793,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
     if (scalar_distribution_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Scalar_Distribution material, identifier not found. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "Could not get ProbeBillboard_Scalar_Distribution material, identifier not found. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
     }
     if (vector_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -825,8 +822,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
 
     if (!m_scalar_distribution_probe_glyph_data.empty()) {
-        m_rendertask_collection.first->addRenderTasks(m_scalar_distribution_probe_glyph_identifiers, scalar_distribution_shader,
-            m_billboard_dummy_mesh, m_scalar_distribution_probe_gylph_draw_commands, m_scalar_distribution_probe_glyph_data);
+        m_rendertask_collection.first->addRenderTasks(m_scalar_distribution_probe_glyph_identifiers,
+            scalar_distribution_shader, m_billboard_dummy_mesh, m_scalar_distribution_probe_gylph_draw_commands,
+            m_scalar_distribution_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
             m_scalar_distribution_probe_glyph_identifiers.begin(), m_scalar_distribution_probe_glyph_identifiers.end());
     }

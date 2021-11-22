@@ -14,11 +14,15 @@ public:
         return instance;
     }
 
-    ANNkd_tree get_kdtree(ANNpointArray pa, int n, int d) { return ANNkd_tree(pa, n, d); }
+    ANNkd_tree get_kdtree(ANNpointArray pa, int n, int d) {
+        return ANNkd_tree(pa, n, d);
+    }
 
 private:
     ann_instance() = default;
-    ~ann_instance() { annClose(); };
+    ~ann_instance() {
+        annClose();
+    };
     ann_instance(ann_instance const& rhs) = delete;
     ann_instance& operator=(ann_instance const& rhs) = delete;
 };
@@ -27,15 +31,20 @@ class ann_point {
 public:
     ann_point(int dim) : ptr_(annAllocPt(dim)) {}
 
-    template <typename T> ann_point(int dim, T* data) : ptr_(annAllocPt(dim)) {
+    template<typename T>
+    ann_point(int dim, T* data) : ptr_(annAllocPt(dim)) {
         for (int d = 0; d < dim; ++d) {
             ptr_[d] = data[d];
         }
     }
 
-    ~ann_point() { annDeallocPt(ptr_); }
+    ~ann_point() {
+        annDeallocPt(ptr_);
+    }
 
-    operator ANNpoint() { return ptr_; }
+    operator ANNpoint() {
+        return ptr_;
+    }
 
 private:
     ANNpoint ptr_;
@@ -51,7 +60,8 @@ public:
         }
     }
 
-    template <typename T> ann_points(int n, int dim, T* data) : ptr_(annAllocPts(n, dim)) {
+    template<typename T>
+    ann_points(int n, int dim, T* data) : ptr_(annAllocPts(n, dim)) {
         for (int idx = 0; idx < n; ++idx) {
             for (int d = 0; d < dim; ++d) {
                 ptr_[idx][d] = static_cast<ANNcoord>(data[idx * dim + d]);
@@ -59,9 +69,13 @@ public:
         }
     }
 
-    ~ann_points() { annDeallocPts(ptr_); }
+    ~ann_points() {
+        annDeallocPts(ptr_);
+    }
 
-    operator ANNpointArray() { return ptr_; }
+    operator ANNpointArray() {
+        return ptr_;
+    }
 
 private:
     ANNpointArray ptr_;

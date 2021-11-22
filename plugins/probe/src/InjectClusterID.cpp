@@ -2,7 +2,11 @@
 
 #include "probe/ProbeCalls.h"
 
-megamol::probe::InjectClusterID::InjectClusterID(void) : _version(0), _probes_rhs_slot("probes", ""), _mesh_rhs_slot("mesh",""), _mesh_lhs_slot("output_mesh","") {
+megamol::probe::InjectClusterID::InjectClusterID(void)
+        : _version(0)
+        , _probes_rhs_slot("probes", "")
+        , _mesh_rhs_slot("mesh", "")
+        , _mesh_lhs_slot("output_mesh", "") {
     this->_probes_rhs_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->_probes_rhs_slot);
 
@@ -89,8 +93,8 @@ bool megamol::probe::InjectClusterID::getData(core::Call& call) {
                                 probe_id_accessor[i] = cluster_id;
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "Tried injecting cluster ID to vertex with invalid probe ID. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                                    __LINE__);
+                                    "Tried injecting cluster ID to vertex with invalid probe ID. [%s, %s, line %d]\n",
+                                    __FILE__, __FUNCTION__, __LINE__);
                             }
                         }
                     }

@@ -17,60 +17,60 @@
 namespace megamol {
 namespace probe_gl {
 
-    class PrecomputeGlyphTextures : public core::Module {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char* ClassName(void) {
-            return "PrecomputeGlyphTextures";
-        }
+class PrecomputeGlyphTextures : public core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "PrecomputeGlyphTextures";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char* Description(void) {
-            return "...";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "...";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /** Ctor. */
-        PrecomputeGlyphTextures(void);
+    /** Ctor. */
+    PrecomputeGlyphTextures(void);
 
-        /** Dtor. */
-        virtual ~PrecomputeGlyphTextures(void);
+    /** Dtor. */
+    virtual ~PrecomputeGlyphTextures(void);
 
-    protected:
-        virtual bool create();
-        virtual void release();
+protected:
+    virtual bool create();
+    virtual void release();
 
-        core::CallerSlot _probes_rhs_slot;
-        core::CalleeSlot _textures_lhs_slot;
+    core::CallerSlot _probes_rhs_slot;
+    core::CalleeSlot _textures_lhs_slot;
 
-    private:
-        bool getMetaData(core::Call& call);
-        bool getData(core::Call& call);
+private:
+    bool getMetaData(core::Call& call);
+    bool getData(core::Call& call);
 
-        std::shared_ptr<mesh::ImageDataAccessCollection> _glyph_texture_data;
+    std::shared_ptr<mesh::ImageDataAccessCollection> _glyph_texture_data;
 
-        std::shared_ptr<glowl::GLSLProgram> _glyph_texture_compute_shader;
+    std::shared_ptr<glowl::GLSLProgram> _glyph_texture_compute_shader;
 
-        uint32_t _version = 0;
-    };
+    uint32_t _version = 0;
+};
 
-}
-}
+} // namespace probe_gl
+} // namespace megamol
 
 #endif // !PRECOMPUTE_GLYPH_TEXTURES_H_INCLUDED

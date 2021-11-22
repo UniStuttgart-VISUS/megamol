@@ -27,14 +27,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FilterByProbe"; }
+    static const char* ClassName(void) {
+        return "FilterByProbe";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "...TODO..."; }
+    static const char* Description(void) {
+        return "...TODO...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -117,10 +121,9 @@ private:
     core::CallerSlot m_readFlagsSlot;
 
     core::CallerSlot m_writeFlagsSlot;
-
 };
 
-} // namespace compositing
+} // namespace probe_gl
 } // namespace megamol
 
 #endif

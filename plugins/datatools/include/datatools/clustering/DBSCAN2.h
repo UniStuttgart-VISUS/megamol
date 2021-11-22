@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <stack>
 #include <queue>
+#include <stack>
 
 #include "ann_interface.h"
 
@@ -19,7 +19,8 @@ inline void DBSCAN_expand(ANNkd_tree& kd_tree, float srad, int minPts, cluster_i
     clusters_t& visited, ANNidx idx) {
     cluster[idx] = id;
 
-    if (visited[idx] == static_cast<int>(CLUSTER_IDS::VISITED)) return;
+    if (visited[idx] == static_cast<int>(CLUSTER_IDS::VISITED))
+        return;
     visited[idx] = static_cast<int>(CLUSTER_IDS::VISITED);
 
     auto const n = kd_tree.nPoints();
@@ -54,7 +55,8 @@ inline clusters_t DBSCAN_scan(ANNkd_tree& kd_tree, float eps, int minPts, int& n
     cluster_id_t current_id = 0;
 
     for (int idx = 0; idx < n; ++idx) {
-        if (visited[idx] != static_cast<int>(CLUSTER_IDS::UNVISITED)) continue;
+        if (visited[idx] != static_cast<int>(CLUSTER_IDS::UNVISITED))
+            continue;
 
         visited[idx] = static_cast<int>(CLUSTER_IDS::VISITED);
 
@@ -84,8 +86,8 @@ inline clusters_t DBSCAN_scan(ANNkd_tree& kd_tree, float eps, int minPts, int& n
 }
 
 
-inline void DBSCAN_expand_it(ANNkd_tree& kd_tree, std::vector<ANNidx>& indices, float srad, int minPts,
-    cluster_id_t id, clusters_t& cluster, clusters_t& visited, ANNidx idx) {
+inline void DBSCAN_expand_it(ANNkd_tree& kd_tree, std::vector<ANNidx>& indices, float srad, int minPts, cluster_id_t id,
+    clusters_t& cluster, clusters_t& visited, ANNidx idx) {
     //if (cluster[idx] > static_cast<int>(CLUSTER_IDS::NOISE)) return;
     cluster[idx] = id;
 
@@ -105,7 +107,8 @@ inline void DBSCAN_expand_it(ANNkd_tree& kd_tree, std::vector<ANNidx>& indices, 
         jobs.pop();
 
         if (visited[el] == static_cast<int>(CLUSTER_IDS::VISITED)) {
-            if (cluster[el] < 0) cluster[el] = id;
+            if (cluster[el] < 0)
+                cluster[el] = id;
             continue;
         }
 
@@ -120,13 +123,16 @@ inline void DBSCAN_expand_it(ANNkd_tree& kd_tree, std::vector<ANNidx>& indices, 
             std::vector<ANNidx> new_jobs(nn);
             kd_tree.annkFRSearch(p, srad, nn, new_indices.data());
             std::sort(new_indices.begin(), new_indices.end());
-            new_jobs.erase(std::set_difference(
-                new_indices.begin(), new_indices.end(), indices.begin(), indices.end(), new_jobs.begin()), new_jobs.end());
+            new_jobs.erase(std::set_difference(new_indices.begin(), new_indices.end(), indices.begin(), indices.end(),
+                               new_jobs.begin()),
+                new_jobs.end());
 
             for (auto const& el : new_jobs) {
-                if (visited[el] == static_cast<int>(CLUSTER_IDS::VISITED) && cluster[el] < 0) cluster[el] = id;
+                if (visited[el] == static_cast<int>(CLUSTER_IDS::VISITED) && cluster[el] < 0)
+                    cluster[el] = id;
 
-                if (visited[el] != static_cast<int>(CLUSTER_IDS::VISITED)) jobs.push(el);
+                if (visited[el] != static_cast<int>(CLUSTER_IDS::VISITED))
+                    jobs.push(el);
             }
         }
     }
@@ -146,7 +152,8 @@ inline clusters_t DBSCAN_scan_it(ANNkd_tree& kd_tree, float eps, int minPts, int
     cluster_id_t current_id = 0;
 
     for (int idx = 0; idx < n; ++idx) {
-        if (visited[idx] != static_cast<int>(CLUSTER_IDS::UNVISITED)) continue;
+        if (visited[idx] != static_cast<int>(CLUSTER_IDS::UNVISITED))
+            continue;
 
         visited[idx] = static_cast<int>(CLUSTER_IDS::VISITED);
 

@@ -478,8 +478,8 @@ inline cluster_result_t GROWING_with_similarity_and_score(std::shared_ptr<kd_tre
             T const idx_score = 0;
             /*expand_GROWING_with_similarity_and_score(D, idx, idx_score, tmp_res, cluster_idx, eps, minPts, clusters,
                 visited, params, similarity, score, cluster_identity);*/
-            expand_GROWING_with_similarity(D, idx, idx_score, candidates, cluster_idx, eps, minPts, clusters,
-                visited, params, similarity, score, cluster_identity);
+            expand_GROWING_with_similarity(D, idx, idx_score, candidates, cluster_idx, eps, minPts, clusters, visited,
+                params, similarity, score, cluster_identity);
         }
     }
 

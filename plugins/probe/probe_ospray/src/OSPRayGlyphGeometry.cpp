@@ -15,11 +15,10 @@ OSPRayGlyphGeometry::~OSPRayGlyphGeometry(void) {
     this->Release();
 }
 
-OSPRayGlyphGeometry::OSPRayGlyphGeometry(void) : 
-    AbstractOSPRayStructure()
-    , _get_mesh_slot("getMesh","")
-    , _get_texture_slot("getTexture","") 
-{
+OSPRayGlyphGeometry::OSPRayGlyphGeometry(void)
+        : AbstractOSPRayStructure()
+        , _get_mesh_slot("getMesh", "")
+        , _get_texture_slot("getTexture", "") {
     this->_get_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_get_mesh_slot);
 
@@ -29,21 +28,25 @@ OSPRayGlyphGeometry::OSPRayGlyphGeometry(void) :
     //this->SetSlotUnavailable(&this->getMaterialSlot);
 }
 
-bool OSPRayGlyphGeometry::create() { return true; }
+bool OSPRayGlyphGeometry::create() {
+    return true;
+}
 
 void OSPRayGlyphGeometry::release() {}
 
 
 bool OSPRayGlyphGeometry::readData(core::Call& call) {
-    
+
     // read Data, calculate  shape parameters, fill data vectors
     ospray::CallOSPRayStructure* os = dynamic_cast<ospray::CallOSPRayStructure*>(&call);
     auto cm = this->_get_mesh_slot.CallAs<mesh::CallMesh>();
 
     auto ctex = this->_get_texture_slot.CallAs<mesh::CallImage>();
 
-    if (cm == nullptr) return false;
-    if (ctex == nullptr) return false;
+    if (cm == nullptr)
+        return false;
+    if (ctex == nullptr)
+        return false;
 
     auto meta_data = cm->getMetaData();
     auto tex_meta_data = ctex->getMetaData();
@@ -56,11 +59,15 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
 
     cm->setMetaData(meta_data);
 
-    if (!(*cm)(1)) return false;
-    if (!(*cm)(0)) return false;
+    if (!(*cm)(1))
+        return false;
+    if (!(*cm)(0))
+        return false;
 
-    if (!(*ctex)(1)) return false;
-    if (!(*ctex)(0)) return false;
+    if (!(*ctex)(1))
+        return false;
+    if (!(*ctex)(0))
+        return false;
 
     meta_data = cm->getMetaData();
     auto interface_dirtyness = this->InterfaceIsDirty();
@@ -84,14 +91,15 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
         this->structureContainer.materialChanged = false;
     }
 
-     return true;
+    return true;
 }
 
 bool OSPRayGlyphGeometry::getExtends(core::Call& call) {
     ospray::CallOSPRayStructure* os = dynamic_cast<ospray::CallOSPRayStructure*>(&call);
     auto cm = this->_get_mesh_slot.CallAs<mesh::CallMesh>();
 
-    if (cm == NULL) return false;
+    if (cm == NULL)
+        return false;
     auto meta_data = cm->getMetaData();
     meta_data.m_frame_ID = os->getTime();
     cm->setMetaData(meta_data);
@@ -107,8 +115,9 @@ bool OSPRayGlyphGeometry::getExtends(core::Call& call) {
     return true;
 }
 
-bool OSPRayGlyphGeometry::InterfaceIsDirty() { return false; }
+bool OSPRayGlyphGeometry::InterfaceIsDirty() {
+    return false;
+}
 
 } // namespace probe
 } // namespace megamol
-

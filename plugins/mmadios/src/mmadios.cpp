@@ -14,38 +14,38 @@
 #include "TableToADIOS.h"
 #include "adiosDataSource.h"
 #include "adiosWriter.h"
-#include "mmadios/CallADIOSData.h"
 #include "ls1ParticleFormat.h"
+#include "mmadios/CallADIOSData.h"
 
-#include "SignalPeaks.h"
 #include "Clustering.h"
+#include "SignalPeaks.h"
 
 namespace megamol::adios {
 class MMADIOSPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MMADIOSPluginInstance)
 
-    public:
+public:
     MMADIOSPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmadios", "The adios plugin."){};
 
-        ~MMADIOSPluginInstance() override = default;
+    ~MMADIOSPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoMultiParticle>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoMultiParticle>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
 
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::adios::CallADIOSData>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::adios::CallADIOSData>();
+    }
+};
 } // namespace megamol::adios

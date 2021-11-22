@@ -8,11 +8,11 @@
 #ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED
 #define MEGAMOLCORE_COLORPARAM_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 #include <array>
-		
+
 
 namespace megamol {
 namespace core {
@@ -24,7 +24,6 @@ namespace param {
  */
 class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
-
     typedef std::array<float, 4> ColorType;
 
     /**
@@ -73,36 +72,36 @@ public:
     bool ParseValue(std::string const& v) override;
 
     /**
-    * Returns the value of the parameter as string.
-    *
-    * @return The value of the parameter as string.
-    */
+     * Returns the value of the parameter as string.
+     *
+     * @return The value of the parameter as string.
+     */
     std::string ValueString(void) const override;
 
     /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
+     * Sets the value of the parameter and optionally sets the dirty flag
+     * of the owning parameter slot.
+     *
+     * @param v the new value for the parameter
+     * @param setDirty If 'true' the dirty flag of the owning parameter
+     *                 slot is set and the update callback might be called.
+     */
     void SetValue(const ColorType& v, bool setDirty = true);
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const ColorType& Value(void) const {
         return this->val;
     }
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const void Value(float& outR, float& outG, float& outB, float& outA) const {
         outR = this->val[0];
         outG = this->val[1];
@@ -115,16 +114,16 @@ public:
      *
      * @return The array of values
      */
-    inline const std::array<float,4> GetArray() const {
+    inline const std::array<float, 4> GetArray() const {
         return val;
     }
 
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const void Value(float& outR, float& outG, float& outB) const {
         float a;
         this->Value(outR, outG, outB, a);
@@ -133,12 +132,11 @@ public:
     /**
      * Returns a 32bit RGBA color.
      */
-    inline operator const ColorType(void) const { 
+    inline operator const ColorType(void) const {
         return this->val;
     }
 
 private:
-
     /** The value of the parameter */
     ColorType val;
 

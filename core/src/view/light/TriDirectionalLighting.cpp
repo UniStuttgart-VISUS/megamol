@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/TriDirectionalLighting.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -12,6 +11,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -70,7 +70,7 @@ void TriDirectionalLighting::readParams() {
     light->in_view_space = this->m_in_view_space.Param<core::param::BoolParam>()->Value();
     if (light->in_view_space) {
         ++version; // force update every frame is eye direction is used
-    } 
+    }
 
     auto& key_dir = this->m_key_direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 key_dir_normalized(key_dir.X(), key_dir.Y(), key_dir.Z());
@@ -80,14 +80,14 @@ void TriDirectionalLighting::readParams() {
     auto& fill_dir = this->m_fill_direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 fill_dir_normalized(fill_dir.X(), fill_dir.Y(), fill_dir.Z());
     fill_dir_normalized = glm::normalize(fill_dir_normalized);
-    std::copy(glm::value_ptr(fill_dir_normalized), glm::value_ptr(fill_dir_normalized) + 3,
-        light->fill_direction.begin());
+    std::copy(
+        glm::value_ptr(fill_dir_normalized), glm::value_ptr(fill_dir_normalized) + 3, light->fill_direction.begin());
 
     auto& back_dir = this->m_back_direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 back_dir_normalized(back_dir.X(), back_dir.Y(), back_dir.Z());
     back_dir_normalized = glm::normalize(back_dir_normalized);
-    std::copy(glm::value_ptr(back_dir_normalized), glm::value_ptr(back_dir_normalized) + 3,
-        light->back_direction.begin());
+    std::copy(
+        glm::value_ptr(back_dir_normalized), glm::value_ptr(back_dir_normalized) + 3, light->back_direction.begin());
 }
 
 /*

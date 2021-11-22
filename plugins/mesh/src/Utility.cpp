@@ -24,7 +24,7 @@ std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
 
             auto lambda_u = static_cast<float>(u) / static_cast<float>(u_subdivs + 1);
             auto p = lambda_u * p_v_0 + (1.0f - lambda_u) * p_v_1;
-            vertex_positions.push_back({p.x,p.y,p.z});
+            vertex_positions.push_back({p.x, p.y, p.z});
             vertex_normals.push_back({normal.x, normal.y, normal.z});
         }
     }
@@ -35,7 +35,8 @@ std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
             // # faces per row = # u_subdivs + vertices on edges
             uint32_t base_idx = v * (u_subdivs + 2) + u;
 
-            quad_indices.push_back({base_idx, base_idx + 1, base_idx + (u_subdivs + 2) + 1, base_idx + (u_subdivs + 2)});
+            quad_indices.push_back(
+                {base_idx, base_idx + 1, base_idx + (u_subdivs + 2) + 1, base_idx + (u_subdivs + 2)});
         }
     }
 

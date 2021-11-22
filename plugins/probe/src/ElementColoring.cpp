@@ -5,25 +5,24 @@
  */
 
 #include "ElementColoring.h"
+#include "glm/glm.hpp"
+#include "mmadios/CallADIOSData.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"
-#include "mmadios/CallADIOSData.h"
-#include "glm/glm.hpp"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/ColorParam.h"
-
 
 
 namespace megamol {
 namespace probe {
 
 ElementColoring::ElementColoring()
-    : Module()
-    , _version(0)
-    , _probe_rhs_slot("getProbes", "")
-    , _elements_rhs_slot("getElements", "")
-    , _mesh_lhs_slot("deployMesh", "")
-    , _fallbackColor("FallbackColor", "") {
+        : Module()
+        , _version(0)
+        , _probe_rhs_slot("getProbes", "")
+        , _elements_rhs_slot("getElements", "")
+        , _mesh_lhs_slot("deployMesh", "")
+        , _fallbackColor("FallbackColor", "") {
 
     this->_probe_rhs_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->_probe_rhs_slot);
@@ -38,13 +37,14 @@ ElementColoring::ElementColoring()
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ElementColoring::getMetaData);
     this->MakeSlotAvailable(&this->_mesh_lhs_slot);
 
-    this->_fallbackColor << new core::param::ColorParam(0.8f,0.8f,0.8f,1.0f);
+    this->_fallbackColor << new core::param::ColorParam(0.8f, 0.8f, 0.8f, 1.0f);
     this->_fallbackColor.SetUpdateCallback(&ElementColoring::parameterChanged);
     this->MakeSlotAvailable(&this->_fallbackColor);
-
 }
 
-ElementColoring::~ElementColoring() { this->Release(); }
+ElementColoring::~ElementColoring() {
+    this->Release();
+}
 
 bool ElementColoring::create() {
     return true;
@@ -69,7 +69,8 @@ bool ElementColoring::getData(core::Call& call) {
     auto cp = this->_probe_rhs_slot.CallAs<probe::CallProbes>();
     if (cp != nullptr) {
         auto meta_data = cp->getMetaData();
-        if (!(*cp)(0)) return false;
+        if (!(*cp)(0))
+            return false;
         const bool cp_dirty = cp->hasUpdate();
         if (cp_dirty || celements_dirty) {
             ++_version;
@@ -119,9 +120,9 @@ bool ElementColoring::getData(core::Call& call) {
                 int shell_max = 0;
                 int shell_element_max = 0;
                 auto meshes = celements->getData()->accessMeshes();
-                for (auto& mesh: meshes) {
+                for (auto& mesh : meshes) {
                     auto tmp_string_vec = this->split(mesh.first, '_');
-                    auto index_vec = this->split(tmp_string_vec[tmp_string_vec.size()-1], ',');
+                    auto index_vec = this->split(tmp_string_vec[tmp_string_vec.size() - 1], ',');
                     auto shell = std::stoi(index_vec[0]);
                     auto shell_element = std::stoi(index_vec[1]);
                     shell_max = std::max(shell, shell_max);
@@ -139,11 +140,12 @@ bool ElementColoring::getData(core::Call& call) {
                         auto flat_id = shell_max * j;
                         std::string access_str = "element_mesh_" + std::to_string(i) + "," + std::to_string(j);
                         auto current_id = cluster_ids[j];
-                        auto current_color = hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
+                        auto current_color =
+                            hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
 
                         int num_verts = 0;
                         auto& attribs = celements->getData()->accessMesh(access_str).attributes;
-                        for (auto& attr :attribs) {
+                        for (auto& attr : attribs) {
                             if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
                                 num_verts = attr.byte_size / sizeof(std::array<float, 3>);
                             }
@@ -166,7 +168,8 @@ bool ElementColoring::getData(core::Call& call) {
                         _mesh_copy[flat_id] = _mesh_collection_copy.accessMesh(access_str);
                         _mesh_copy[flat_id].attributes.emplace_back(col_attr);
                         _mesh_collection_copy.deleteMesh(access_str);
-                        _mesh_collection_copy.addMesh(access_str, _mesh_copy[flat_id].attributes, _mesh_copy[flat_id].indices);
+                        _mesh_collection_copy.addMesh(
+                            access_str, _mesh_copy[flat_id].attributes, _mesh_copy[flat_id].indices);
                     }
                 }
             } else {
@@ -180,7 +183,7 @@ bool ElementColoring::getData(core::Call& call) {
                     auto current_id = cluster_ids[j];
                     auto current_color = hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
 
-                    _vertColors[j] = { current_color.x, current_color.y, current_color.z, 1.0f };
+                    _vertColors[j] = {current_color.x, current_color.y, current_color.z, 1.0f};
                 }
                 auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();
                 col_attr.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
@@ -251,7 +254,8 @@ bool ElementColoring::getMetaData(core::Call& call) {
         return false;
 
     mesh::CallMesh* cmesh = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cmesh == nullptr) return false;
+    if (cmesh == nullptr)
+        return false;
 
     auto meta_data = cmesh->getMetaData();
 
@@ -267,7 +271,8 @@ bool ElementColoring::getMetaData(core::Call& call) {
         probe_meta_data.m_frame_ID = meta_data.m_frame_ID;
         cp->setMetaData(probe_meta_data);
 
-        if (!(*cp)(1)) return false;
+        if (!(*cp)(1))
+            return false;
         probe_meta_data = cp->getMetaData();
     }
 

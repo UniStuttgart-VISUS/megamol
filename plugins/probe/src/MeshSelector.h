@@ -22,21 +22,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MeshSelector"; }
+    static const char* ClassName(void) {
+        return "MeshSelector";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Manipulates Mesh data using libigl"; }
+    static const char* Description(void) {
+        return "Manipulates Mesh data using libigl";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     MeshSelector(void);
@@ -89,7 +95,6 @@ private:
     std::vector<std::vector<std::array<uint32_t, 3>>> _grouped_indices;
 
     int _selected_mesh;
-
 };
 
 } // namespace probe

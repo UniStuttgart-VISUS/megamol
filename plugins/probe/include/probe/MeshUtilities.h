@@ -5,37 +5,43 @@
  */
 
 #pragma once
-#include <random>
 #include "glm/glm.hpp"
 #include "igl/boundary_loop.h"
 #include "igl/decimate.h"
 #include "igl/lscm.h"
 #include "mesh/MeshCalls.h"
 #include "nanoflann.hpp"
+#include <random>
 
 namespace megamol {
 namespace probe {
 
-inline float coulomb_force(float r) { return (1.0f / pow(r, 2)); }
+inline float coulomb_force(float r) {
+    return (1.0f / pow(r, 2));
+}
 
 // stackoverflow.com/questions/2550229/how-to-keep-only-duplicates-efficiently
-template <class I, class P> I remove_unique(I first, I last, P pred = P()) {
+template<class I, class P>
+I remove_unique(I first, I last, P pred = P()) {
     I dest = first;
     while ((first = std::adjacent_find(first, last, pred)) != last) {
         *dest = *first;
         ++first;
         ++dest;
-        if ((first = std::adjacent_find(first, last, std::not2(pred))) == last) break;
+        if ((first = std::adjacent_find(first, last, std::not2(pred))) == last)
+            break;
         ++first;
     }
     return dest;
 }
 
-template <class I> I remove_unique(I first, I last) {
+template<class I>
+I remove_unique(I first, I last) {
     return remove_unique(first, last, std::equal_to<typename std::iterator_traits<I>::value_type>());
 }
 
-template <typename Derived> struct MeshAdaptor {
+template<typename Derived>
+struct MeshAdaptor {
     typedef float coord_t;
 
     const Derived obj; //!< A const ref to the data set origin
@@ -50,10 +56,14 @@ template <typename Derived> struct MeshAdaptor {
     }
 
     /// CRTP helper method
-    inline const Derived& derived() const { return obj; }
+    inline const Derived& derived() const {
+        return obj;
+    }
 
     // Must return the number of data points
-    inline size_t kdtree_get_point_count() const { return point_count; }
+    inline size_t kdtree_get_point_count() const {
+        return point_count;
+    }
 
     // Returns the dim'th component of the idx'th point in the class:
     // Since this is inlined and the "dim" argument is typically an immediate value, the
@@ -70,7 +80,10 @@ template <typename Derived> struct MeshAdaptor {
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.
     //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
     //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX> bool kdtree_get_bbox(BBOX& /*bb*/) const { return false; }
+    template<class BBOX>
+    bool kdtree_get_bbox(BBOX& /*bb*/) const {
+        return false;
+    }
 };
 
 
@@ -80,8 +93,7 @@ public:
 
         this->_mesh = mesh_ptr;
         for (int i = 0; i < this->_mesh.attributes.size(); ++i) {
-            if (this->_mesh.attributes[i].semantic ==
-                mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION) {
+            if (this->_mesh.attributes[i].semantic == mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION) {
                 this->_pos_attribute_idx = i;
                 _va_ptr = &this->_mesh.attributes[i];
             } else if (this->_mesh.attributes[i].semantic ==
@@ -123,7 +135,9 @@ public:
         return true;
     }
 
-    uint32_t getNumTotalFaces() { return _faces.rows(); }
+    uint32_t getNumTotalFaces() {
+        return _faces.rows();
+    }
 
     float calcTriangleArea(uint32_t idx) {
 
@@ -140,19 +154,17 @@ public:
 
         std::array<glm::vec3, 3> edges = {
             vertices[1] - vertices[0], vertices[2] - vertices[1], vertices[0] - vertices[2]};
-        std::array<float, 3> edge_lengths = {
-            glm::length(edges[0]),
-            glm::length(edges[1]),
-            glm::length(edges[2]) };
+        std::array<float, 3> edge_lengths = {glm::length(edges[0]), glm::length(edges[1]), glm::length(edges[2])};
         int longest_edge =
             std::distance(edge_lengths.begin(), std::max_element(edge_lengths.begin(), edge_lengths.end()));
-        
 
-        float proj_on_longest_edge = glm::dot(glm::normalize(edges[longest_edge]), glm::normalize(edges[other_indices(longest_edge,0)]));
+
+        float proj_on_longest_edge =
+            glm::dot(glm::normalize(edges[longest_edge]), glm::normalize(edges[other_indices(longest_edge, 0)]));
         auto to_cut = edges[longest_edge] * std::abs(proj_on_longest_edge);
         auto e = to_cut + vertices[longest_edge];
         auto e_o1 = e - vertices[other_indices(longest_edge, 0)];
-        auto e_o2 = e - vertices[other_indices(longest_edge,1)];
+        auto e_o2 = e - vertices[other_indices(longest_edge, 1)];
 
         auto area = (glm::length(to_cut) * glm::length(e_o1)) / 2.0f + (glm::length(e_o1) * glm::length(e_o2)) / 2.0f;
 
@@ -197,7 +209,7 @@ public:
         //auto last = std::unique(neighboring_triangles.begin(), neighboring_triangles.end());
         //neighboring_triangles.erase(last, neighboring_triangles.end());
         std::sort(neighboring_triangles.begin(), neighboring_triangles.end());
-        auto rmv =remove_unique(neighboring_triangles.begin(), neighboring_triangles.end());
+        auto rmv = remove_unique(neighboring_triangles.begin(), neighboring_triangles.end());
         neighboring_triangles.erase(rmv, neighboring_triangles.end());
         return neighboring_triangles;
     }
@@ -211,8 +223,7 @@ public:
         auto e1 = v0 - v2;
         auto e2 = v1 - v2;
 
-        return std::max(std::max(glm::length(e0),glm::length(e1)),glm::length(e2));
-
+        return std::max(std::max(glm::length(e0), glm::length(e1)), glm::length(e2));
     }
 
     void UVMapping(const Eigen::MatrixXi& faces, const Eigen::MatrixXd& vertices, Eigen::MatrixXd& vertices_uv) {
@@ -278,7 +289,7 @@ public:
     bool performInverse2Dprojection(uint32_t idx, const Eigen::MatrixXd& points, Eigen::MatrixXd& projected_points) {
 
         projected_points.resize(points.rows(), 3);
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < points.rows(); ++i) {
             for (int j = 0; j < projected_points.cols(); ++j) {
                 projected_points(i, j) = points(i, 0) * _orthonormalBasis[idx][0][j] +
@@ -338,15 +349,15 @@ public:
         auto v1_idx = this->_faces(idx, 1);
         auto v2_idx = this->_faces(idx, 2);
 
-        auto v0_0 = this->_vertices(v0_idx,0);
+        auto v0_0 = this->_vertices(v0_idx, 0);
         auto v0_1 = this->_vertices(v0_idx, 1);
         auto v0_2 = this->_vertices(v0_idx, 2);
 
-        auto v1_0 = this->_vertices(v1_idx,0);
+        auto v1_0 = this->_vertices(v1_idx, 0);
         auto v1_1 = this->_vertices(v1_idx, 1);
         auto v1_2 = this->_vertices(v1_idx, 2);
 
-        auto v2_0 = this->_vertices(v2_idx,0);
+        auto v2_0 = this->_vertices(v2_idx, 0);
         auto v2_1 = this->_vertices(v2_idx, 1);
         auto v2_2 = this->_vertices(v2_idx, 2);
 
@@ -363,9 +374,9 @@ public:
                 //               rnd_u * (this->_vertices(v1_idx, j) - this->_vertices(v0_idx, j)) + rnd_v *
                 //               (this->_vertices(v2_idx, j) - this->_vertices(v0_idx, j));
                 result(i, j) = (1 - std::sqrt(rnd_u)) * this->_vertices(v0_idx, j) +
-                                   (std::sqrt(rnd_u) * (1 - rnd_v)) * this->_vertices(v1_idx, j) +
-                                   (rnd_v * std::sqrt(rnd_u)) * this->_vertices(v2_idx, j);
-                result_vec[j] = result(i,j);
+                               (std::sqrt(rnd_u) * (1 - rnd_v)) * this->_vertices(v1_idx, j) +
+                               (rnd_v * std::sqrt(rnd_u)) * this->_vertices(v2_idx, j);
+                result_vec[j] = result(i, j);
             }
         }
         return true;
@@ -417,7 +428,8 @@ public:
 
         // Check if point is in triangle
         bool res = (u > 0) && (v > 0) && (u + v < 1);
-        if (res) return true;
+        if (res)
+            return true;
         return false;
     }
 
@@ -442,16 +454,23 @@ public:
 
         // Check if point is in triangle
         bool res = (u > 0) && (v > 0) && (u + v < 1);
-        if (res) return true;
+        if (res)
+            return true;
         return false;
     }
 
     bool pointInTriangle(const std::array<glm::vec2, 3>& vertices, glm::vec2 p) {
 
-        const auto signed_area = 0.5 * (-vertices[1].y * vertices[2].x + vertices[0].y * (-vertices[1].x + vertices[2].x) + vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * vertices[2].y);
+        const auto signed_area =
+            0.5 * (-vertices[1].y * vertices[2].x + vertices[0].y * (-vertices[1].x + vertices[2].x) +
+                      vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * vertices[2].y);
 
-        const auto s = 1 / (2 * signed_area) * (vertices[0].y * vertices[2].x - vertices[0].x * vertices[2].y + (vertices[2].y - vertices[0].y) * p.x + (vertices[0].x - vertices[2].x) * p.y);
-        const auto t = 1 / (2 * signed_area) * (vertices[0].x * vertices[1].y - vertices[0].y * vertices[1].x + (vertices[0].y - vertices[1].y) * p.x + (vertices[1].x - vertices[0].x) * p.y);
+        const auto s = 1 / (2 * signed_area) *
+                       (vertices[0].y * vertices[2].x - vertices[0].x * vertices[2].y +
+                           (vertices[2].y - vertices[0].y) * p.x + (vertices[0].x - vertices[2].x) * p.y);
+        const auto t = 1 / (2 * signed_area) *
+                       (vertices[0].x * vertices[1].y - vertices[0].y * vertices[1].x +
+                           (vertices[0].y - vertices[1].y) * p.x + (vertices[1].x - vertices[0].x) * p.y);
 
         return (s > 0 && t > 0 && 1 - s - t > 0);
 
@@ -463,7 +482,6 @@ public:
         //const auto has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
         //return !(has_neg && has_pos);
-
     }
 
     bool getPatch(uint32_t idx, Eigen::MatrixXd& out_verts, Eigen::MatrixXi& out_indices,
@@ -585,7 +603,8 @@ private:
         this->_kd_tree->buildIndex();
     }
 
-    template <typename T> void fillVertexMatrix(const T vert_data) {
+    template<typename T>
+    void fillVertexMatrix(const T vert_data) {
 #pragma omp parallel for
         for (int i = 0; i < _vertices.rows(); ++i) {
             _vertices(i, 0) =
@@ -597,7 +616,8 @@ private:
         }
     }
 
-    template <typename T> void fillNormalMatrix(const T vert_data) {
+    template<typename T>
+    void fillNormalMatrix(const T vert_data) {
 #pragma omp parallel for
         for (int i = 0; i < _normals.rows(); ++i) {
             _normals(i, 0) =
@@ -609,7 +629,8 @@ private:
         }
     }
 
-    template <typename T> void fillFaceMatrix(const T faces) {
+    template<typename T>
+    void fillFaceMatrix(const T faces) {
 #pragma omp parallel for
         for (int j = 0; j < _faces.rows(); ++j) {
             _faces(j, 0) = static_cast<int>(faces[3 * j + 0]);
@@ -695,7 +716,7 @@ private:
 
         _orthonormalBasis.resize(_faces.rows());
 
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int idx = 0; idx < _faces.rows(); ++idx) {
             // create new orthonormal basis
             glm::vec3 u;
@@ -730,7 +751,7 @@ private:
     Eigen::MatrixXi _faces;
     uint32_t _pos_attribute_idx;
     int _normal_attribute_idx = -1;
-    std::vector<std::array<glm::vec3,3>> _orthonormalBasis;
+    std::vector<std::array<glm::vec3, 3>> _orthonormalBasis;
 
     std::vector<int> _std_faces;
 

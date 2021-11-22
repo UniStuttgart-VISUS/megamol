@@ -11,28 +11,28 @@
 #include <glm/glm.hpp>
 
 #include "mesh/MeshCalls.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmadios/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {
 
-    inline std::array<glm::mat3,3> get_rot_mx(float angle) {
-        std::array<glm::mat3,3> ret_val;
-        ret_val[0] = glm::mat3(0,0,1,0,glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle));
-        ret_val[1] = glm::mat3(glm::cos(angle), 0, -glm::sin(angle), 0,1,0,glm::sin(angle), 0,glm::cos(angle));
-        ret_val[2] = glm::mat3(glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle), 0, 0,0,1);
-        return ret_val;
-    }
+inline std::array<glm::mat3, 3> get_rot_mx(float angle) {
+    std::array<glm::mat3, 3> ret_val;
+    ret_val[0] = glm::mat3(0, 0, 1, 0, glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle));
+    ret_val[1] = glm::mat3(glm::cos(angle), 0, -glm::sin(angle), 0, 1, 0, glm::sin(angle), 0, glm::cos(angle));
+    ret_val[2] = glm::mat3(glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle), 0, 0, 0, 1);
+    return ret_val;
+}
 
-    // default triangulation for Surface_mesher
-    typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
-    typedef Tr::Geom_traits GT;
-    typedef GT::Point_3 Point;
-    typedef CGAL::Surface_mesh<Point> Surface_mesh;
+// default triangulation for Surface_mesher
+typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
+typedef Tr::Geom_traits GT;
+typedef GT::Point_3 Point;
+typedef CGAL::Surface_mesh<Point> Surface_mesh;
 
 class ReconstructSurface : public core::Module {
 public:
@@ -41,21 +41,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ReconstructSurface"; }
+    static const char* ClassName(void) {
+        return "ReconstructSurface";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Extracts a surface mesh from volume data."; }
+    static const char* Description(void) {
+        return "Extracts a surface mesh from volume data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ReconstructSurface(void);
@@ -119,8 +125,9 @@ private:
         std::vector<std::array<uint32_t, 3>>& indices);
 
     // CallMesh stuff
-    typedef std::pair<
-        mesh::MeshDataAccessCollection::IndexData, std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> Mesh;
+    typedef std::pair<mesh::MeshDataAccessCollection::IndexData,
+        std::vector<mesh::MeshDataAccessCollection::VertexAttribute>>
+        Mesh;
     Mesh _mesh;
     uint32_t _version = 0;
 
@@ -132,7 +139,7 @@ private:
     bool _useBBoxAsHull = false;
 
     int _main_axis;
-    std::array<int,2> _off_axes;
+    std::array<int, 2> _off_axes;
     glm::vec3 _data_origin;
     std::vector<std::array<float, 4>> _ellipsoid_backup;
 
@@ -144,7 +151,8 @@ private:
     std::vector<std::vector<std::vector<std::array<float, 3>>>> _shellElementsNormals;
     std::vector<std::vector<std::vector<std::array<uint32_t, 3>>>> _shellElementsTriangles;
     std::vector<core::BoundingBoxes_2> _shellBBoxes;
-    bool _shellToShowChanged = false;;
+    bool _shellToShowChanged = false;
+    ;
     std::vector<std::vector<Mesh>> _elementMesh;
 
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_for_call;
@@ -158,7 +166,6 @@ private:
     megamol::core::BoundingBoxes_2 _bbox;
 
     adios::adiosDataMap _dataMap;
-
 };
 
 } // namespace probe

@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "ProbeClustering.h"
+#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -206,8 +206,8 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                         });*/
                 _cluster_res = datatools::clustering::GROWING_with_similarity_and_score<float, 3>(
                     _kd_tree, eps * eps, minpts,
-                    [this, threshold, angle_threshold](datatools::clustering::index_t a,
-                        datatools::clustering::index_t b) -> bool {
+                    [this, threshold, angle_threshold](
+                        datatools::clustering::index_t a, datatools::clustering::index_t b) -> bool {
                         auto const val = _sim_matrix[a + b * _col_count];
                         auto const crit_a = val <= threshold;
 
@@ -219,8 +219,7 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                         return crit_a && crit_b;
                     },
                     [this, handwaving](datatools::clustering::index_t pivot,
-                        std::vector<datatools::clustering::index_t> const& cluster)
-                        -> datatools::clustering::index_t {
+                        std::vector<datatools::clustering::index_t> const& cluster) -> datatools::clustering::index_t {
                         if (cluster.empty())
                             return pivot;
                         std::vector<float> scores;
@@ -277,9 +276,7 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
         bool toggle_reps = _toggle_reps_slot.Param<core::param::BoolParam>()->Value();
 
         if (toggle_reps) {
-            std::unordered_map<datatools::clustering::index_t,
-                std::vector<datatools::clustering::index_t>>
-                cluster_map;
+            std::unordered_map<datatools::clustering::index_t, std::vector<datatools::clustering::index_t>> cluster_map;
             cluster_map.reserve(*max_el);
 
             for (decltype(_cluster_res)::size_type pidx = 0; pidx < _cluster_res.size(); ++pidx) {

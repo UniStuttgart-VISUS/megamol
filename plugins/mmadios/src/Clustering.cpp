@@ -1,26 +1,25 @@
-#include "stdafx.h"
 #include "Clustering.h"
+#include "stdafx.h"
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "datatools/table/TableDataCall.h"
 #include "datatools/clustering/DBSCAN2.h"
+#include "datatools/table/TableDataCall.h"
 
 
 megamol::adios::Clustering::Clustering()
-    : data_out_slot_("dataOut", "Output")
-    , data_in_slot_("dataIn", "Input")
-    , alg_selector_slot_("algorithm", "Select algorithm for clustering")
-    , min_pts_slot_("DBSCAN::minPts", "MinPts")
-    , sigma_slot_("DBSCAN::sigma", "Sigma")
-    , data_hash_(std::numeric_limits<size_t>::max()) {
+        : data_out_slot_("dataOut", "Output")
+        , data_in_slot_("dataIn", "Input")
+        , alg_selector_slot_("algorithm", "Select algorithm for clustering")
+        , min_pts_slot_("DBSCAN::minPts", "MinPts")
+        , sigma_slot_("DBSCAN::sigma", "Sigma")
+        , data_hash_(std::numeric_limits<size_t>::max()) {
     data_out_slot_.SetCallback(datatools::table::TableDataCall::ClassName(),
         datatools::table::TableDataCall::FunctionName(0), &Clustering::getDataCallback);
     data_out_slot_.SetCallback(datatools::table::TableDataCall::ClassName(),
-        datatools::table::TableDataCall::FunctionName(1),
-        &Clustering::getHeaderCallback);
+        datatools::table::TableDataCall::FunctionName(1), &Clustering::getHeaderCallback);
     MakeSlotAvailable(&data_out_slot_);
 
     data_in_slot_.SetCompatibleCall<datatools::table::TableDataCallDescription>();
@@ -40,7 +39,9 @@ megamol::adios::Clustering::Clustering()
 }
 
 
-megamol::adios::Clustering::~Clustering() { this->Release(); }
+megamol::adios::Clustering::~Clustering() {
+    this->Release();
+}
 
 
 bool megamol::adios::Clustering::create() {
@@ -56,10 +57,12 @@ void megamol::adios::Clustering::release() {}
 
 bool megamol::adios::Clustering::getDataCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     if (!(*in_data)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
@@ -124,10 +127,12 @@ bool megamol::adios::Clustering::getDataCallback(core::Call& c) {
 
 bool megamol::adios::Clustering::getHeaderCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {

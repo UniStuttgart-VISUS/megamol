@@ -17,13 +17,14 @@ namespace core {
 
 class MEGAMOLCORE_API EventStorage : public core::Module {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "EventStorage"; }
+    static const char* ClassName(void) {
+        return "EventStorage";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -39,7 +40,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
 
     /** Ctor. */
@@ -89,7 +92,7 @@ private:
     uint32_t m_version = 0;
 };
 
-}
-}
+} // namespace core
+} // namespace megamol
 
 #endif // !MEGAMOL_EVENT_STORAGE_H_INCLUDED

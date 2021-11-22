@@ -13,49 +13,55 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "probe/ProbeCollection.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/EnumParam.h"
-#include <CGAL/Surface_mesh/Surface_mesh.h>
-#include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "probe/ProbeCollection.h"
 #include <CGAL/Polygon_mesh_processing/shape_predicates.h>
 #include <CGAL/Side_of_triangle_mesh.h>
-#include "mmcore/BoundingBoxes_2.h"
+#include <CGAL/Surface_mesh/Surface_mesh.h>
+#include <CGAL/Surface_mesh_default_triangulation_3.h>
 
 
 namespace megamol {
 namespace probe {
-    // default triangulation for Surface_mesher
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-    typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
-    typedef Tr::Geom_traits GT;
-    typedef GT::Point_3 Point;
-    typedef CGAL::Surface_mesh<Point> Surface_mesh;
+// default triangulation for Surface_mesher
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
+typedef Tr::Geom_traits GT;
+typedef GT::Point_3 Point;
+typedef CGAL::Surface_mesh<Point> Surface_mesh;
 
-    class ElementSampling : public core::Module {
+class ElementSampling : public core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ElementSampling"; }
+    static const char* ClassName() {
+        return "ElementSampling";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "..."; }
+    static const char* Description() {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     ElementSampling();
     virtual ~ElementSampling();
@@ -80,15 +86,14 @@ protected:
     core::param::ParamSlot _zSlot;
     core::param::ParamSlot _xyzSlot;
     core::param::ParamSlot _formatSlot;
- 
-private:
 
+private:
     bool getData(core::Call& call);
     bool getMetaData(core::Call& call);
 
     bool readElements();
 
-    template <typename T>
+    template<typename T>
     void doScalarSampling(const std::vector<std::vector<Surface_mesh>>& elements, const std::vector<T>& data,
         const std::vector<T>& data_positions);
     void do_triangulation(Surface_mesh& mesh_);
@@ -106,8 +111,9 @@ private:
 };
 
 
-template <typename T>
-void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mesh>>& elements, const std::vector<T>& data, const std::vector<T>& data_positions) {
+template<typename T>
+void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mesh>>& elements,
+    const std::vector<T>& data, const std::vector<T>& data_positions) {
 
     float global_min = std::numeric_limits<T>::max();
     float global_max = -std::numeric_limits<T>::max();
@@ -115,7 +121,7 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
     // select Element
     for (int j = 0; j < elements[0].size(); ++j) {
         FloatDistributionProbe probe;
-        
+
 
         auto visitor = [&probe, j, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
@@ -168,7 +174,7 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
 
             typedef boost::graph_traits<Surface_mesh>::edge_descriptor edge_descriptor;
             std::vector<edge_descriptor> edges;
-            Surface_mesh current_mesh = elements[i][j]; 
+            Surface_mesh current_mesh = elements[i][j];
 
             CGAL::Polygon_mesh_processing::degenerate_edges(current_mesh, std::back_inserter(edges));
             if (!edges.empty()) {
@@ -188,23 +194,22 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
             float min_data = std::numeric_limits<T>::max();
             float max_data = -std::numeric_limits<T>::max();
 #pragma parallel for
-            for (int n = 0; n < (data_positions.size()/3); ++n) {
+            for (int n = 0; n < (data_positions.size() / 3); ++n) {
 
                 const glm::vec3 pos =
                     glm::vec3(data_positions[3 * n + 0], data_positions[3 * n + 1], data_positions[3 * n + 2]);
 
                 if (pos.x <= element_max_coord.x && pos.y <= element_max_coord.y && pos.z <= element_max_coord.z &&
                     pos.x >= element_min_coord.x && pos.y >= element_min_coord.y && pos.z >= element_min_coord.z) {
-                    
-                    const Point p = Point(data_positions[3 * n + 0], data_positions[3 * n + 1], data_positions[3 * n + 2]);
+
+                    const Point p =
+                        Point(data_positions[3 * n + 0], data_positions[3 * n + 1], data_positions[3 * n + 2]);
 
                     CGAL::Bounded_side res;
                     try {
                         res = inside->operator()(p);
                     } catch (std::exception& e) {
-                        std::string message =
-                            "[ElementSampling] Inside check threw error:" +
-                            std::string(e.what());
+                        std::string message = "[ElementSampling] Inside check threw error:" + std::string(e.what());
                         core::utility::log::Log::DefaultLog.WriteError(message.c_str());
                         return;
                     }
@@ -266,7 +271,6 @@ inline void ElementSampling::do_triangulation(Surface_mesh& mesh_) {
     Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
     mesh_.clear();
     CGAL::convex_hull_3_to_face_graph(T, mesh_);
-
 }
 
 } // namespace probe

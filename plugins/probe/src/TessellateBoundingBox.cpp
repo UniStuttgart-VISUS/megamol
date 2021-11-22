@@ -7,10 +7,10 @@
 #include "glm/glm.hpp"
 
 #include "TessellateBoundingBox.h"
-#include "mmadios/CallADIOSData.h"
 #include "mesh/Utility.h"
-#include "mmcore/param/IntParam.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
         : AbstractMeshDataSource()
@@ -18,7 +18,7 @@ megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
         , _x_subdiv_slot("x_subdiv_param", "")
         , _y_subdiv_slot("y_subdiv_param", "")
         , _z_subdiv_slot("z_subdiv_param", "")
-        , _padding_slot("padding_param","") {
+        , _padding_slot("padding_param", "") {
 
     this->_bounding_box_rhs_slot.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_bounding_box_rhs_slot);
@@ -196,7 +196,7 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
             bbox[4] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
             bbox[5] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
 
-            _bboxs.SetBoundingBox(bbox[0],bbox[1],bbox[2],bbox[3],bbox[4],bbox[5]);
+            _bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
 
             // get bounding box corners
             glm::vec3 lbb = glm::vec3(bbox[0], bbox[1], bbox[2]);
@@ -273,7 +273,9 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
                 mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals[i].data());
                 mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
 
-                _probe_index[i].resize(_vertices[i].size(), std::numeric_limits<int>::max()); // allocate memory for probe ID now, but the acutal data will be written later (by probe placement)
+                _probe_index[i].resize(_vertices[i].size(),
+                    std::numeric_limits<int>::
+                        max()); // allocate memory for probe ID now, but the acutal data will be written later (by probe placement)
                 mesh_attribs[2].component_type = mesh::MeshDataAccessCollection::ValueType::INT;
                 mesh_attribs[2].byte_size = _probe_index[i].size() * sizeof(int);
                 mesh_attribs[2].component_cnt = 1;

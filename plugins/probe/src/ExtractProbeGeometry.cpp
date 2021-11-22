@@ -6,11 +6,15 @@
 
 #include "ExtractProbeGeometry.h"
 
-#include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
+#include "probe/ProbeCalls.h"
 
 megamol::probe::ExtractProbeGeometry::ExtractProbeGeometry()
-        : Module(), _version(0), _line(nullptr), m_mesh_slot("deployMesh", ""), m_probe_slot("getProbes", "") {
+        : Module()
+        , _version(0)
+        , _line(nullptr)
+        , m_mesh_slot("deployMesh", "")
+        , m_probe_slot("getProbes", "") {
 
     this->m_mesh_slot.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ExtractProbeGeometry::getData);

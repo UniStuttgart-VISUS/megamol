@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "ComputeDistance.h"
+#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
@@ -165,7 +165,7 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
                 auto D = sv.asDiagonal();
                 X_sub = U * D * V.transpose();*/
             }
-        
+
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Prepared probes");
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
@@ -212,7 +212,7 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
                 if (std::isnan(el))
                     el = 1.0;
             });*/
-                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
             if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
@@ -222,7 +222,8 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
             }
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         } else if (distrib_probe) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for distribution probes");
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[ComputeDistance] Computing distances for distribution probes");
             std::size_t base_skip = 0;
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
                 auto const a_probe = probe_data->getProbe<probe::FloatDistributionProbe>(a_pidx);
@@ -302,7 +303,7 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
             if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
@@ -386,7 +387,7 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
             if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
@@ -394,7 +395,8 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
                         el = 1.0;
                 });
             }
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished with %f and %f", min_val, max_val);
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[ComputeDistance] Finished with %f and %f", min_val, max_val);
         }
         for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
             auto const minmax = std::minmax_element(

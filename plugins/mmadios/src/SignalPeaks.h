@@ -19,13 +19,19 @@ public:
     enum class PeakSelector : int { EQUIDISTANT, MAXVARIANCE, NTHHIGHEST };
 
     /** Return module class name */
-    static const char* ClassName(void) { return "SignalPeaks"; }
+    static const char* ClassName(void) {
+        return "SignalPeaks";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Extracts local peaks from a signal"; }
+    static const char* Description(void) {
+        return "Extracts local peaks from a signal";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     SignalPeaks(void);
@@ -54,12 +60,12 @@ private:
         column_grouping_factor_slot_.ResetDirty();
     }
 
-    std::vector<size_t> equidistant(datatools::table::TableDataCall::ColumnInfo const* infos,
-        float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
+    std::vector<size_t> equidistant(datatools::table::TableDataCall::ColumnInfo const* infos, float const* data,
+        size_t num_cols, size_t num_rows, size_t num_peaks) {
         return std::vector<size_t>();
     }
-    std::vector<size_t> maxvariance(datatools::table::TableDataCall::ColumnInfo const* infos,
-        float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
+    std::vector<size_t> maxvariance(datatools::table::TableDataCall::ColumnInfo const* infos, float const* data,
+        size_t num_cols, size_t num_rows, size_t num_peaks) {
         std::vector<std::pair<size_t, float>> col_variance;
         col_variance.reserve(num_cols);
 
@@ -79,8 +85,8 @@ private:
 
         return ret;
     }
-    std::vector<size_t> nthhighest(datatools::table::TableDataCall::ColumnInfo const* infos,
-        float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
+    std::vector<size_t> nthhighest(datatools::table::TableDataCall::ColumnInfo const* infos, float const* data,
+        size_t num_cols, size_t num_rows, size_t num_peaks) {
         std::vector<std::pair<size_t, float>> col_max;
         col_max.reserve(num_cols);
 
@@ -117,8 +123,8 @@ private:
     }
 
     std::vector<datatools::table::TableDataCall::ColumnInfo> extract_peaks(
-        datatools::table::TableDataCall::ColumnInfo const* infos,
-        size_t num_cols, size_t num_rows, std::vector<size_t> indices) {
+        datatools::table::TableDataCall::ColumnInfo const* infos, size_t num_cols, size_t num_rows,
+        std::vector<size_t> indices) {
         auto const num_peaks = indices.size();
         std::vector<datatools::table::TableDataCall::ColumnInfo> ret(num_peaks);
 
@@ -141,8 +147,10 @@ private:
 
             for (size_t row = 0; row < num_rows; ++row) {
                 auto const val = data[col + row * num_cols];
-                if (val < min_val) min_val = val;
-                if (val > max_val) max_val = val;
+                if (val < min_val)
+                    min_val = val;
+                if (val > max_val)
+                    max_val = val;
             }
 
             ret.push_back(std::make_pair(min_val, max_val));

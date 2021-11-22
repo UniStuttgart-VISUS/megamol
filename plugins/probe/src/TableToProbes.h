@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include "datatools/table/TableDataCall.h"
+#include "mesh/MeshCalls.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mesh/MeshCalls.h"
-#include "probe/ProbeCollection.h"
 #include "probe/MeshUtilities.h"
-#include "mmadios/CallADIOSData.h"
-#include "datatools/table/TableDataCall.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe {
@@ -26,21 +26,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "TableToProbes"; }
+    static const char* ClassName() {
+        return "TableToProbes";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "..."; }
+    static const char* Description() {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     TableToProbes();

@@ -2,11 +2,11 @@
 
 #include "mmcore/EventCall.h"
 
-#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "probe/ProbeCalls.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
         : AbstractGPURenderTaskDataSource()

@@ -1,11 +1,12 @@
 #include "ProbeBillboardGlyphMaterial.h"
 
-#include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "probe/ProbeCalls.h"
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()
-        : m_version(0), m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
+        : m_version(0)
+        , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
 
     this->m_glyph_images_slot.SetCompatibleCall<mesh::CallImageDescription>();
     this->MakeSlotAvailable(&this->m_glyph_images_slot);
@@ -84,8 +85,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         this->m_scalar_distribution_probe_glyph_prgm = create_progam("ScalarDistributionProbeGlyph");
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "ScalarDistributionProbeGlyph", exc.what(),
-            __FILE__, __FUNCTION__, __LINE__);
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "ScalarDistributionProbeGlyph",
+            exc.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -138,7 +139,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
     m_material_collection.second.push_back("ProbeBillboard_Textured");
     m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Scalar");
-    m_material_collection.first->addMaterial("ProbeBillboard_ScalarDistribution", m_scalar_distribution_probe_glyph_prgm);
+    m_material_collection.first->addMaterial(
+        "ProbeBillboard_ScalarDistribution", m_scalar_distribution_probe_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_ScalarDistribution");
     m_material_collection.first->addMaterial("ProbeBillboard_Vector", m_vector_probe_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Vector");

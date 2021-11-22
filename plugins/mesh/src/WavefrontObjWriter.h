@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include "mmcore/AbstractDataWriter.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
+#include "mmcore/AbstractDataWriter.h"
 
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "obj_io/obj_io.h"
@@ -21,8 +21,7 @@ namespace megamol {
 namespace mesh {
 
 class WavefrontObjWriter : public core::AbstractDataWriter {
-    public:
-
+public:
     struct Vec2 {
         float x;
         float y;
@@ -50,21 +49,27 @@ class WavefrontObjWriter : public core::AbstractDataWriter {
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "WavefrontObjWriter"; }
+    static const char* ClassName(void) {
+        return "WavefrontObjWriter";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for simply loading a wavefront obj file from disk"; }
+    static const char* Description(void) {
+        return "Data source for simply loading a wavefront obj file from disk";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     WavefrontObjWriter();
     ~WavefrontObjWriter();
@@ -94,7 +99,6 @@ protected:
     virtual bool getCapabilities(core::DataWriterCtrlCall& call);
 
 private:
-
     void WriteMesh(const std::string&, const ObjMesh&);
 
     uint32_t _version;
@@ -108,9 +112,7 @@ private:
     core::param::ParamSlot _filename_slot;
 
     core::CallerSlot _rhs_mesh_slot;
-
 };
 
 } // namespace mesh
 } // namespace megamol
-

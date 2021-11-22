@@ -1,19 +1,19 @@
-#include "stdafx.h"
 #include "TableItemSelector.h"
+#include "stdafx.h"
 
 #include <functional>
 
-#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 
 #include "datatools/table/TableDataCall.h"
 
 
 megamol::datatools::table::TableItemSelector::TableItemSelector()
-    : data_out_slot_("dataOut", "Output")
-    , data_in_slot_("dataIn", "Input")
-    , selection_column_slot_("selectionColumn", "Column that defines the selection")
-    , selection_algorithm_slot_("selectionAlgorithm", "Algorithm for selection") {
+        : data_out_slot_("dataOut", "Output")
+        , data_in_slot_("dataIn", "Input")
+        , selection_column_slot_("selectionColumn", "Column that defines the selection")
+        , selection_algorithm_slot_("selectionAlgorithm", "Algorithm for selection") {
     data_out_slot_.SetCallback(
         TableDataCall::ClassName(), TableDataCall::FunctionName(0), &TableItemSelector::getDataCallback);
     data_out_slot_.SetCallback(
@@ -34,10 +34,14 @@ megamol::datatools::table::TableItemSelector::TableItemSelector()
 }
 
 
-megamol::datatools::table::TableItemSelector::~TableItemSelector() { this->Release(); }
+megamol::datatools::table::TableItemSelector::~TableItemSelector() {
+    this->Release();
+}
 
 
-bool megamol::datatools::table::TableItemSelector::create() { return true; }
+bool megamol::datatools::table::TableItemSelector::create() {
+    return true;
+}
 
 
 void megamol::datatools::table::TableItemSelector::release() {}
@@ -45,10 +49,12 @@ void megamol::datatools::table::TableItemSelector::release() {}
 
 bool megamol::datatools::table::TableItemSelector::getDataCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     if (!(*in_data)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("SignalPeaks: Error during GetHeader");
@@ -92,13 +98,13 @@ bool megamol::datatools::table::TableItemSelector::getDataCallback(core::Call& c
 
             switch (method) {
             case static_cast<int>(SELECT_ALG::FIRST_OF_ALL):
-                selector = std::bind(&TableItemSelector::first_of_all, this, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+                selector = std::bind(&TableItemSelector::first_of_all, this, std::placeholders::_1,
+                    std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
                 break;
             case static_cast<int>(SELECT_ALG::MIN_DIFF):
             default:
-                selector = std::bind(&TableItemSelector::min_difference, this, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+                selector = std::bind(&TableItemSelector::min_difference, this, std::placeholders::_1,
+                    std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
             }
 
             auto const indices = selector(in_data_ptr, num_columns, num_rows, selection_column, selection_column_idx);
@@ -125,10 +131,12 @@ bool megamol::datatools::table::TableItemSelector::getDataCallback(core::Call& c
 
 bool megamol::datatools::table::TableItemSelector::getHashCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {

@@ -1,7 +1,7 @@
 #include "ProbeInteraction.h"
 
-#include "compositing_gl/CompositingCalls.h"
 #include "ProbeGlCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
@@ -10,30 +10,30 @@
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
+#include <imgui_internal.h>
 
 megamol::probe_gl::ProbeInteraction::ProbeInteraction()
-    : Renderer3DModuleGL()
-    , m_version(0)
-    , m_cursor_x(0)
-    , m_cursor_y(0)
-    , m_cursor_x_lastRightClick(0)
-    , m_cursor_y_lastRightClick(0)
-    , m_open_context_menu(false)
-    , m_open_showMenu_dropdown(false)
-    , m_open_probeMenu_dropdown(false)
-    , m_open_dataMenu_dropdown(false)
-    , m_open_dataFilterByDepth_popup(false)
-    , m_show_probes(true)
-    , m_show_hull(true)
-    , m_show_glyphs(true)
-    , last_active_probe_id(-1)
-    , m_probe_fbo_slot("getProbeFBO", "")
-    , m_hull_fbo_slot("getHullFBO", "")
-    , m_glyph_fbo_slot("getGlyphFBO", "")
-    , m_event_write_slot("deployInteractionEvents", "") {
+        : Renderer3DModuleGL()
+        , m_version(0)
+        , m_cursor_x(0)
+        , m_cursor_y(0)
+        , m_cursor_x_lastRightClick(0)
+        , m_cursor_y_lastRightClick(0)
+        , m_open_context_menu(false)
+        , m_open_showMenu_dropdown(false)
+        , m_open_probeMenu_dropdown(false)
+        , m_open_dataMenu_dropdown(false)
+        , m_open_dataFilterByDepth_popup(false)
+        , m_show_probes(true)
+        , m_show_hull(true)
+        , m_show_glyphs(true)
+        , last_active_probe_id(-1)
+        , m_probe_fbo_slot("getProbeFBO", "")
+        , m_hull_fbo_slot("getHullFBO", "")
+        , m_glyph_fbo_slot("getGlyphFBO", "")
+        , m_event_write_slot("deployInteractionEvents", "") {
     this->m_probe_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_probe_fbo_slot);
 
@@ -47,15 +47,19 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     this->MakeSlotAvailable(&this->m_event_write_slot);
 }
 
-megamol::probe_gl::ProbeInteraction::~ProbeInteraction() { this->Release(); }
+megamol::probe_gl::ProbeInteraction::~ProbeInteraction() {
+    this->Release();
+}
 
 bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
     // Get event storage to queue new events
     auto call_event_storage = this->m_event_write_slot.CallAs<core::CallEvent>();
-    if (call_event_storage == NULL) return false;
-    if ((!(*call_event_storage)(0))) return false;
+    if (call_event_storage == NULL)
+        return false;
+    if ((!(*call_event_storage)(0)))
+        return false;
     auto event_collection = call_event_storage->getData();
 
     if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS &&
@@ -67,8 +71,8 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
             auto evt = std::make_unique<ProbeSelectExclusive>(
                 this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(last_active_probe_id));
             event_collection->add<ProbeSelectExclusive>(std::move(evt));
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Selected probe: %d\n", last_active_probe_id);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_INFO, "Selected probe: %d\n", last_active_probe_id);
         } else {
             auto evt = std::make_unique<ProbeClearSelection>(this->GetCoreInstance()->GetFrameID());
             event_collection->add<ProbeClearSelection>(std::move(evt));
@@ -119,16 +123,21 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool megamol::probe_gl::ProbeInteraction::create() { return true; }
+bool megamol::probe_gl::ProbeInteraction::create() {
+    return true;
+}
 
 void megamol::probe_gl::ProbeInteraction::release() {}
 
-bool megamol::probe_gl::ProbeInteraction::GetExtents(core_gl::view::CallRender3DGL& call) { return true; }
+bool megamol::probe_gl::ProbeInteraction::GetExtents(core_gl::view::CallRender3DGL& call) {
+    return true;
+}
 
 bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& call) {
 
     core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     // obtain camera information
     core::view::Camera cam = cr->GetCamera();
@@ -160,14 +169,13 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
         // get depth at cursor location from framebuffer's second color attachment
         // TODO check if cursor position is within framebuffer pixel range?
         glReadPixels(static_cast<GLint>(this->m_cursor_x), hull_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y),
-            1, 1, GL_RED, GL_FLOAT,
-            &hull_depth_pixel_data);
+            1, 1, GL_RED, GL_FLOAT, &hull_depth_pixel_data);
         {
             // auto err = glGetError();
             // std::cerr << err << std::endl;
         }
     }
-    
+
     if (call_probe_fbo != nullptr) {
         if ((!(*call_probe_fbo)(0))) {
             return false;
@@ -211,7 +219,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
         }
         auto glyph_fbo = call_glyph_fbo->getData();
 
-        
+
         glyph_fbo->bindToRead(2);
         {
             // auto err = glGetError();
@@ -274,8 +282,10 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
 
     // Get event storage to queue new events
     auto call_event_storage = this->m_event_write_slot.CallAs<core::CallEvent>();
-    if (call_event_storage == NULL) return false;
-    if ((!(*call_event_storage)(0))) return false;
+    if (call_event_storage == NULL)
+        return false;
+    if ((!(*call_event_storage)(0)))
+        return false;
     auto event_collection = call_event_storage->getData();
 
     if (objId > -1) {
@@ -293,33 +303,33 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
 
 
     if (m_open_context_menu) {
-    //    bool my_tool_active = true;
-    //
-    //    auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-    //    if (ctx != nullptr) {
-    //        ImGui::SetCurrentContext(ctx);
-    //
-    //        ImGuiIO& io = ImGui::GetIO();
-    //        ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
-    //
-    //        ImGui::SetNextWindowPos(ImVec2(m_cursor_x_lastRightClick, m_cursor_y_lastRightClick));
-    //
-    //        ImGui::Begin(
-    //            "ProbeInteractionTools", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-    //
-    //        if (ImGui::Button("AddProbe")) {
-    //            // TODO add interaction to stack
-    //            m_open_context_menu = false;
-    //        }
-    //
-    //        if (ImGui::Button("MoveProbe")) {
-    //            // TODO add interaction to stack
-    //
-    //            m_open_context_menu = false;
-    //        }
-    //
-    //        ImGui::End();
-    //    }
+        //    bool my_tool_active = true;
+        //
+        //    auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+        //    if (ctx != nullptr) {
+        //        ImGui::SetCurrentContext(ctx);
+        //
+        //        ImGuiIO& io = ImGui::GetIO();
+        //        ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+        //
+        //        ImGui::SetNextWindowPos(ImVec2(m_cursor_x_lastRightClick, m_cursor_y_lastRightClick));
+        //
+        //        ImGui::Begin(
+        //            "ProbeInteractionTools", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+        //
+        //        if (ImGui::Button("AddProbe")) {
+        //            // TODO add interaction to stack
+        //            m_open_context_menu = false;
+        //        }
+        //
+        //        if (ImGui::Button("MoveProbe")) {
+        //            // TODO add interaction to stack
+        //
+        //            m_open_context_menu = false;
+        //        }
+        //
+        //        ImGui::End();
+        //    }
     }
 
     // Add toolbar in Blender style
@@ -478,7 +488,6 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
                 ImGui::Separator();
 
                 ImGui::End();
-            
             }
 
             if (m_open_dataFilterByDepth_popup) {
@@ -492,8 +501,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
 
                     ImGui::SetNextWindowPos(ImVec2(750, 150));
 
-                    ImGui::Begin("Filter By Probing Depth", &m_open_dataFilterByDepth_popup,
-                        ImGuiWindowFlags_NoResize);
+                    ImGui::Begin("Filter By Probing Depth", &m_open_dataFilterByDepth_popup, ImGuiWindowFlags_NoResize);
 
                     static float probing_depth = 5.0f;
                     if (ImGui::SliderFloat("DataFilter::robingDepth", &probing_depth, 0.0f, 100.0f)) {
@@ -510,12 +518,12 @@ bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& 
                     ImGui::End();
                 }
             }
-
-
         }
     }
 
     return true;
 }
 
-bool megamol::probe_gl::ProbeInteraction::getInteractionMetaData(core::Call& call) { return true; }
+bool megamol::probe_gl::ProbeInteraction::getInteractionMetaData(core::Call& call) {
+    return true;
+}

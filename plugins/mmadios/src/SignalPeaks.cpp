@@ -1,19 +1,19 @@
-#include "stdafx.h"
 #include "SignalPeaks.h"
+#include "stdafx.h"
 
 #include <functional>
 
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
 
 
 megamol::adios::SignalPeaks::SignalPeaks()
-    : data_out_slot_("dataOut", "Output")
-    , data_in_slot_("dataIn", "Input")
-    , num_peaks_slot_("numPeaks", "Number of peaks to select")
-    , peak_selector_slot_("peakSelector", "Select peak detection method")
-    , column_grouping_factor_slot_("columnGroupingFactor", "Size of column group")
-    , data_hash_(std::numeric_limits<size_t>::max()) {
+        : data_out_slot_("dataOut", "Output")
+        , data_in_slot_("dataIn", "Input")
+        , num_peaks_slot_("numPeaks", "Number of peaks to select")
+        , peak_selector_slot_("peakSelector", "Select peak detection method")
+        , column_grouping_factor_slot_("columnGroupingFactor", "Size of column group")
+        , data_hash_(std::numeric_limits<size_t>::max()) {
     data_out_slot_.SetCallback(datatools::table::TableDataCall::ClassName(),
         datatools::table::TableDataCall::FunctionName(0), &SignalPeaks::getDataCallback);
     data_out_slot_.SetCallback(datatools::table::TableDataCall::ClassName(),
@@ -38,10 +38,14 @@ megamol::adios::SignalPeaks::SignalPeaks()
 }
 
 
-megamol::adios::SignalPeaks::~SignalPeaks() { this->Release(); }
+megamol::adios::SignalPeaks::~SignalPeaks() {
+    this->Release();
+}
 
 
-bool megamol::adios::SignalPeaks::create() { return true; }
+bool megamol::adios::SignalPeaks::create() {
+    return true;
+}
 
 
 void megamol::adios::SignalPeaks::release() {}
@@ -49,10 +53,12 @@ void megamol::adios::SignalPeaks::release() {}
 
 bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     if (!(*in_data)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("SignalPeaks: Error during GetHeader");
@@ -83,8 +89,9 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
 
         auto const method = peak_selector_slot_.Param<core::param::EnumParam>()->Value();
 
-        std::function<std::vector<size_t>(datatools::table::TableDataCall::ColumnInfo const* infos,
-            float const* data, size_t num_cols, size_t num_rows, size_t num_peaks)> selector;
+        std::function<std::vector<size_t>(datatools::table::TableDataCall::ColumnInfo const* infos, float const* data,
+            size_t num_cols, size_t num_rows, size_t num_peaks)>
+            selector;
 
         switch (method) {
         case static_cast<int>(PeakSelector::EQUIDISTANT):
@@ -123,10 +130,12 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
 
 bool megamol::adios::SignalPeaks::getHeaderCallback(core::Call& c) {
     auto out_data = dynamic_cast<datatools::table::TableDataCall*>(&c);
-    if (out_data == nullptr) return false;
+    if (out_data == nullptr)
+        return false;
 
     auto in_data = data_in_slot_.CallAs<datatools::table::TableDataCall>();
-    if (in_data == nullptr) return false;
+    if (in_data == nullptr)
+        return false;
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {

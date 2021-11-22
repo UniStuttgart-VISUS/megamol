@@ -79,4 +79,4 @@ private:
 
     vislib_gl::graphics::gl::ShaderSource _compute_shader_src;
 };
-} // namespace megamol::probe
+} // namespace megamol::probe_gl

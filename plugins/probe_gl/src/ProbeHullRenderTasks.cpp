@@ -11,10 +11,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeHUllRenderTasks.h"
+#include "probe/ProbeCalls.h"
 
 #include "mesh/MeshCalls.h"
 
@@ -45,9 +45,8 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
         , m_show_hull(true)
         //, m_probes_slot("probes","")
         , m_event_slot("GetEvents", "")
-        , m_shading_mode_slot("ShadingMode","")
-        , m_hull_color_slot("HullColor", "")
-{
+        , m_shading_mode_slot("ShadingMode", "")
+        , m_hull_color_slot("HullColor", "") {
     //this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
     //this->MakeSlotAvailable(&this->m_probes_slot);
 
@@ -118,7 +117,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
             for (int i = 0; i < m_batch_meshes.size(); ++i) {
                 for (int j = 0; j < m_identifiers[i].size(); ++j) {
-                    m_rendertask_collection.first->updatePerDrawData(m_identifiers[i][j], std::vector<PerObjectData>{m_per_object_data[i][j]});
+                    m_rendertask_collection.first->updatePerDrawData(
+                        m_identifiers[i][j], std::vector<PerObjectData>{m_per_object_data[i][j]});
                 }
             }
         }

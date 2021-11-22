@@ -1,14 +1,14 @@
 /*
-* AbstractOSPRayStructure.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * AbstractOSPRayStructure.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmospray/AbstractOSPRayStructure.h"
+#include "stdafx.h"
 
-#include "mmcore/view/CallClipPlane.h"
 #include "glm/glm.hpp"
+#include "mmcore/view/CallClipPlane.h"
 
 
 namespace megamol {
@@ -16,14 +16,14 @@ namespace ospray {
 
 
 AbstractOSPRayStructure::AbstractOSPRayStructure()
-    : Module()
-    , deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure")
-    , getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure")
-    , getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial") 
-    , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform")
-    , writeFlagsSlot("writeFlags", "")
-    , readFlagsSlot("readFlags", "")
-    , getClipplaneSlot("getClipPlaneSlot", "Connects to a Clipping plane slot") {
+        : Module()
+        , deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure")
+        , getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure")
+        , getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial")
+        , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform")
+        , writeFlagsSlot("writeFlags", "")
+        , readFlagsSlot("readFlags", "")
+        , getClipplaneSlot("getClipPlaneSlot", "Connects to a Clipping plane slot") {
 
     this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0),
         &AbstractOSPRayStructure::getStructureCallback);
@@ -62,25 +62,27 @@ AbstractOSPRayStructure::~AbstractOSPRayStructure() {
 ospray::OSPRaySphereGeometry::getStructureCallback
 */
 bool AbstractOSPRayStructure::getStructureCallback(megamol::core::Call& call) {
-    CallOSPRayStructure *os_in = dynamic_cast<CallOSPRayStructure*>(&call);
-    CallOSPRayStructure *os_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
+    CallOSPRayStructure* os_in = dynamic_cast<CallOSPRayStructure*>(&call);
+    CallOSPRayStructure* os_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
 
     if (os_in != NULL) {
-        if (!this->readData(call)) return false;
+        if (!this->readData(call))
+            return false;
         os_in->addStructure(this->structureContainer);
     }
 
     if (os_out != NULL) {
         *os_out = *os_in;
-        if (!os_out->fillStructureMap()) return false;
+        if (!os_out->fillStructureMap())
+            return false;
     }
 
     return true;
 }
 
-bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call &call) {
-    CallOSPRayStructure *os_in = dynamic_cast<CallOSPRayStructure*>(&call);
-    CallOSPRayStructure *os_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
+bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call& call) {
+    CallOSPRayStructure* os_in = dynamic_cast<CallOSPRayStructure*>(&call);
+    CallOSPRayStructure* os_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
 
     if (os_in != NULL) {
         if (!this->getExtends(call)) {
@@ -91,14 +93,15 @@ bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call &call) {
 
     if (os_out != NULL) {
         *os_out = *os_in;
-        if (!os_out->fillExtendMap()) return false;
+        if (!os_out->fillExtendMap())
+            return false;
     }
 
     return true;
 }
 
 void AbstractOSPRayStructure::processMaterial() {
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
+    CallOSPRayMaterial* cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
     if (cm != NULL) {
         this->structureContainer.materialChanged = false;
         if (cm->InterfaceIsDirty()) {
@@ -136,8 +139,8 @@ void AbstractOSPRayStructure::processClippingPlane() {
 
     if ((ccp != nullptr) && (*ccp)()) {
         this->structureContainer.clippingPlane.isValid = true;
-        glm::vec3 normal = {ccp->GetPlane().Normal().GetX(), ccp->GetPlane().Normal().GetY(),
-            ccp->GetPlane().Normal().GetZ()};
+        glm::vec3 normal = {
+            ccp->GetPlane().Normal().GetX(), ccp->GetPlane().Normal().GetY(), ccp->GetPlane().Normal().GetZ()};
         float d = ccp->GetPlane().D();
         //glm::vec3 point = {
         //    ccp->GetPlane().Point().GetX(), ccp->GetPlane().Point().GetY(), ccp->GetPlane().Point().GetZ()};

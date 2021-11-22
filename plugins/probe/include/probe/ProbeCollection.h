@@ -10,8 +10,8 @@
 #define PROBE_COLLECTION_H_INCLUDED
 
 #include <array>
-#include <string>
 #include <random>
+#include <string>
 #include <variant>
 
 namespace megamol {
@@ -56,9 +56,13 @@ public:
 
     FloatProbe() : m_result(std::make_shared<SamplingResult>()) {}
 
-    template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
+    template<typename DatafieldType>
+    void probe(DatafieldType const& datafield) { /* ToDo*/
+    }
 
-    std::shared_ptr<SamplingResult> getSamplingResult() const { return m_result; }
+    std::shared_ptr<SamplingResult> getSamplingResult() const {
+        return m_result;
+    }
 
 private:
     std::shared_ptr<SamplingResult> m_result;
@@ -101,34 +105,49 @@ struct IntProbe : public BaseProbe {
 struct Vec4Probe : public BaseProbe {
 public:
     struct SamplingResult {
-        std::vector<std::array<float,4>> samples;
+        std::vector<std::array<float, 4>> samples;
     };
 
     Vec4Probe() : m_result(std::make_shared<SamplingResult>()) {}
 
-    template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
+    template<typename DatafieldType>
+    void probe(DatafieldType const& datafield) { /* ToDo*/
+    }
 
-    std::shared_ptr<SamplingResult> getSamplingResult() const { return m_result; }
+    std::shared_ptr<SamplingResult> getSamplingResult() const {
+        return m_result;
+    }
 
 private:
     std::shared_ptr<SamplingResult> m_result;
 };
 
 using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe, FloatDistributionProbe>;
-using GenericMinMax = std::variant< std::array<float,2> , std::array<int,2> >;
+using GenericMinMax = std::variant<std::array<float, 2>, std::array<int, 2>>;
 
 class ProbeCollection {
 public:
     ProbeCollection() = default;
     ~ProbeCollection() = default;
 
-    template <typename ProbeType> void addProbe(ProbeType const& probe) { m_probes.push_back(probe); }
+    template<typename ProbeType>
+    void addProbe(ProbeType const& probe) {
+        m_probes.push_back(probe);
+    }
 
-    template <typename ProbeType> void setProbe(size_t idx, ProbeType const& probe) { m_probes[idx] = probe; }
+    template<typename ProbeType>
+    void setProbe(size_t idx, ProbeType const& probe) {
+        m_probes[idx] = probe;
+    }
 
-    template <typename ProbeType> ProbeType getProbe(size_t idx) const { return std::get<ProbeType>(m_probes[idx]); }
+    template<typename ProbeType>
+    ProbeType getProbe(size_t idx) const {
+        return std::get<ProbeType>(m_probes[idx]);
+    }
 
-    GenericProbe getGenericProbe(size_t idx) const { return m_probes[idx]; }
+    GenericProbe getGenericProbe(size_t idx) const {
+        return m_probes[idx];
+    }
 
     BaseProbe getBaseProbe(size_t idx) const {
         using T = std::decay_t<decltype(m_probes[idx])>;
@@ -152,10 +171,13 @@ public:
         }
     }
 
-    uint32_t getProbeCount() const { return m_probes.size(); }
+    uint32_t getProbeCount() const {
+        return m_probes.size();
+    }
 
-    template <typename T> void setGlobalMinMax(T min_, T max_) {
-        m_global_min_max = std::array<T,2>({min_,max_});
+    template<typename T>
+    void setGlobalMinMax(T min_, T max_) {
+        m_global_min_max = std::array<T, 2>({min_, max_});
     }
 
     template<typename T>

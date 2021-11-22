@@ -5,20 +5,20 @@
  */
 
 #include "TableToProbes.h"
-#include "probe/ProbeCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "probe/MeshUtilities.h"
+#include "probe/ProbeCalls.h"
 
 
 namespace megamol {
 namespace probe {
 
 megamol::probe::TableToProbes::TableToProbes()
-    : Module()
-    , _version(0)
-    , _table_slot("getTable", "")
-    , _probe_slot("deployProbes", "")
-    , _accumulate_clustered_slot("accumulate_clustered", "") {
+        : Module()
+        , _version(0)
+        , _table_slot("getTable", "")
+        , _probe_slot("deployProbes", "")
+        , _accumulate_clustered_slot("accumulate_clustered", "") {
 
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &TableToProbes::getData);
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &TableToProbes::getMetaData);
@@ -44,21 +44,26 @@ megamol::probe::TableToProbes::TableToProbes()
     auto result = retrieved_probe.getSamplingResult();
 }
 
-megamol::probe::TableToProbes::~TableToProbes() { this->Release(); }
+megamol::probe::TableToProbes::~TableToProbes() {
+    this->Release();
+}
 
-bool megamol::probe::TableToProbes::create() { return true; }
+bool megamol::probe::TableToProbes::create() {
+    return true;
+}
 
 void megamol::probe::TableToProbes::release() {}
 
 bool megamol::probe::TableToProbes::getData(core::Call& call) {
 
     auto* pc = dynamic_cast<CallProbes*>(&call);
-    datatools::table::TableDataCall* ct =
-        this->_table_slot.CallAs<datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* ct = this->_table_slot.CallAs<datatools::table::TableDataCall>();
 
 
-    if (ct == nullptr) return false;
-    if (!(*ct)(0)) return false;
+    if (ct == nullptr)
+        return false;
+    if (!(*ct)(0))
+        return false;
 
 
     bool something_changed = ct->DataHash() != _table_data_hash;
@@ -72,7 +77,7 @@ bool megamol::probe::TableToProbes::getData(core::Call& call) {
         _table = ct->GetData();
         _col_info = ct->GetColumnsInfos();
         _num_cols = ct->GetColumnsCount();
-        _num_rows= ct->GetRowsCount();
+        _num_rows = ct->GetRowsCount();
 
         this->generateProbes();
     }
@@ -90,17 +95,18 @@ bool megamol::probe::TableToProbes::getData(core::Call& call) {
 bool megamol::probe::TableToProbes::getMetaData(core::Call& call) {
 
     auto* pc = dynamic_cast<CallProbes*>(&call);
-    datatools::table::TableDataCall* ct =
-        this->_table_slot.CallAs<datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* ct = this->_table_slot.CallAs<datatools::table::TableDataCall>();
 
-    if (ct == nullptr) return false;
+    if (ct == nullptr)
+        return false;
 
     // set frame id before callback
     auto probe_meta_data = pc->getMetaData();
 
     ct->SetFrameID(probe_meta_data.m_frame_ID);
 
-    if (!(*ct)(1)) return false;
+    if (!(*ct)(1))
+        return false;
 
 
     probe_meta_data.m_frame_cnt = ct->GetFrameCount();
@@ -120,7 +126,7 @@ bool megamol::probe::TableToProbes::generateProbes() {
     // check for probe type
     bool distrib_probe = false;
     for (uint32_t i = 0; i < _num_cols; i++) {
-       if (_col_info[i].Name().find("sample_value_lower") != std::string::npos) {
+        if (_col_info[i].Name().find("sample_value_lower") != std::string::npos) {
             distrib_probe = true;
         }
     }

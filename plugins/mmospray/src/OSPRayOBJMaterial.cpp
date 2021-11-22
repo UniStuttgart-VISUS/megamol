@@ -1,27 +1,28 @@
 /*
-* OSPRayOBJMaterial.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayOBJMaterial.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "OSPRayOBJMaterial.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 
 
-OSPRayOBJMaterial::OSPRayOBJMaterial(void) :
-    AbstractOSPRayMaterial(),
-    // Distant light parameters
-    // OBJMATERIAL
+OSPRayOBJMaterial::OSPRayOBJMaterial(void)
+        : AbstractOSPRayMaterial()
+        ,
+        // Distant light parameters
+        // OBJMATERIAL
 
-    Kd("DiffuseColor", "Diffuse color"),
-    Ks("SpecularColor", "Specular color"),
-    Ns("Shininess", "Phong exponent"),
-    d("Opacity", "Opacity"),
-    Tf("TransparencyFilterColor", "Transparency filter color") {
+        Kd("DiffuseColor", "Diffuse color")
+        , Ks("SpecularColor", "Specular color")
+        , Ns("Shininess", "Phong exponent")
+        , d("Opacity", "Opacity")
+        , Tf("TransparencyFilterColor", "Transparency filter color") {
 
     this->Kd << new core::param::ColorParam(0.8f * 255, 0.8f * 255, 0.8f * 255, 1.0f * 255);
     this->Ks << new core::param::ColorParam(0, 0, 0, 1);
@@ -47,9 +48,9 @@ void OSPRayOBJMaterial::readParams() {
     auto kd = this->Kd.Param<core::param::ColorParam>()->GetArray();
     obj.Kd = {kd[0], kd[1], kd[2]};
     auto ks = this->Ks.Param<core::param::ColorParam>()->GetArray();
-    obj.Ks = {ks[0], ks[1],ks[2]};
+    obj.Ks = {ks[0], ks[1], ks[2]};
     auto tf = this->Tf.Param<core::param::ColorParam>()->GetArray();
-    obj.Tf = {tf[0],tf[1],tf[2]};
+    obj.Tf = {tf[0], tf[1], tf[2]};
     obj.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
     obj.d = this->d.Param<core::param::FloatParam>()->Value();
 
@@ -57,13 +58,7 @@ void OSPRayOBJMaterial::readParams() {
 }
 
 bool OSPRayOBJMaterial::InterfaceIsDirty() {
-    if (
-        this->Kd.IsDirty() ||
-        this->Ks.IsDirty() ||
-        this->Ns.IsDirty() ||
-        this->d.IsDirty() ||
-        this->Tf.IsDirty()
-        ) {
+    if (this->Kd.IsDirty() || this->Ks.IsDirty() || this->Ns.IsDirty() || this->d.IsDirty() || this->Tf.IsDirty()) {
         this->Kd.ResetDirty();
         this->Ks.ResetDirty();
         this->Ns.ResetDirty();

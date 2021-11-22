@@ -5,36 +5,36 @@
  */
 
 #include "SampleAlongProbes.h"
-#include "probe/CallKDTree.h"
-#include "probe/ProbeCalls.h"
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "probe/CallKDTree.h"
+#include "probe/ProbeCalls.h"
 
 
 namespace megamol {
 namespace probe {
 
 SampleAlongPobes::SampleAlongPobes()
-    : Module()
-    , _version(0)
-    , _old_datahash(0)
-    , _probe_lhs_slot("deployProbe", "")
-    , _probe_rhs_slot("getProbe", "")
-    , _adios_rhs_slot("getData", "")
-    , _full_tree_rhs_slot("getTree", "")
-    , _parameter_to_sample_slot("ParameterToSample", "")
-    , _num_samples_per_probe_slot(
-          "NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
-    , _sample_radius_factor_slot("SampleRadiusFactor", "Multiplier for base sampling distance.")
-    , _sampling_mode("SamplingMode", "")
-    , _weighting("weighting", "")
-    , _vec_param_to_samplex_x("ParameterToSampleX", "")
-    , _vec_param_to_samplex_y("ParameterToSampleY", "")
-    , _vec_param_to_samplex_z("ParameterToSampleZ", "")
-    , _vec_param_to_samplex_w("ParameterToSampleW", "")
-    , _volume_rhs_slot("getVolumeData", "") {
+        : Module()
+        , _version(0)
+        , _old_datahash(0)
+        , _probe_lhs_slot("deployProbe", "")
+        , _probe_rhs_slot("getProbe", "")
+        , _adios_rhs_slot("getData", "")
+        , _full_tree_rhs_slot("getTree", "")
+        , _parameter_to_sample_slot("ParameterToSample", "")
+        , _num_samples_per_probe_slot(
+              "NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
+        , _sample_radius_factor_slot("SampleRadiusFactor", "Multiplier for base sampling distance.")
+        , _sampling_mode("SamplingMode", "")
+        , _weighting("weighting", "")
+        , _vec_param_to_samplex_x("ParameterToSampleX", "")
+        , _vec_param_to_samplex_y("ParameterToSampleY", "")
+        , _vec_param_to_samplex_z("ParameterToSampleZ", "")
+        , _vec_param_to_samplex_w("ParameterToSampleW", "")
+        , _volume_rhs_slot("getVolumeData", "") {
 
     this->_probe_lhs_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &SampleAlongPobes::getData);
     this->_probe_lhs_slot.SetCallback(
@@ -105,9 +105,13 @@ SampleAlongPobes::SampleAlongPobes()
     this->MakeSlotAvailable(&this->_vec_param_to_samplex_w);
 }
 
-SampleAlongPobes::~SampleAlongPobes() { this->Release(); }
+SampleAlongPobes::~SampleAlongPobes() {
+    this->Release();
+}
 
-bool SampleAlongPobes::create() { return true; }
+bool SampleAlongPobes::create() {
+    return true;
+}
 
 void SampleAlongPobes::release() {}
 
@@ -115,7 +119,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
     bool something_has_changed = false;
     auto cp = dynamic_cast<CallProbes*>(&call);
-    if (cp == nullptr) return false;
+    if (cp == nullptr)
+        return false;
 
     // query adios data
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
@@ -169,11 +174,13 @@ bool SampleAlongPobes::getData(core::Call& call) {
         }
 
         if (cd->getDataHash() != _old_datahash || _trigger_recalc) {
-            if (!(*cd)(0)) return false;
+            if (!(*cd)(0))
+                return false;
         }
 
         // query kd tree data
-        if (!(*ct)(0)) return false;
+        if (!(*ct)(0))
+            return false;
 
 
         tree_meta_data = ct->getMetaData();
@@ -182,7 +189,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
     } else if (cv != nullptr) {
 
         // get volume data
-        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_DATA)) return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_DATA))
+            return false;
 
         meta_data.m_frame_cnt = cv->FrameCount();
         _vol_metadata = cv->GetMetadata();
@@ -199,8 +207,10 @@ bool SampleAlongPobes::getData(core::Call& call) {
     }
 
     // query probe data
-    if (cprobes == nullptr) return false;
-    if (!(*cprobes)(0)) return false;
+    if (cprobes == nullptr)
+        return false;
+    if (!(*cprobes)(0))
+        return false;
 
     something_has_changed = something_has_changed || cprobes->hasUpdate() || _trigger_recalc;
 
@@ -298,7 +308,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doVolumeTrilinSampling(data);
                 } else {
                     auto data = reinterpret_cast<unsigned int*>(cv->GetData());
-                    doVolumeTrilinSampling(data);  
+                    doVolumeTrilinSampling(data);
                 }
             } else if (type == geocalls::SIGNED_INTEGER) {
                 if (type_length < 4) {
@@ -368,13 +378,15 @@ bool SampleAlongPobes::getData(core::Call& call) {
 bool SampleAlongPobes::getMetaData(core::Call& call) {
 
     auto cp = dynamic_cast<CallProbes*>(&call);
-    if (cp == nullptr) return false;
+    if (cp == nullptr)
+        return false;
 
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
     auto cv = this->_volume_rhs_slot.CallAs<geocalls::VolumetricDataCall>();
     auto ct = this->_full_tree_rhs_slot.CallAs<CallKDTree>();
     auto cprobes = this->_probe_rhs_slot.CallAs<CallProbes>();
-    if (cprobes == nullptr) return false;
+    if (cprobes == nullptr)
+        return false;
 
     auto meta_data = cp->getMetaData();
     // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_trigger_recalc)
@@ -382,8 +394,10 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
 
     if (cd != nullptr && ct != nullptr) {
         cd->setFrameIDtoLoad(meta_data.m_frame_ID);
-        if (!(*cd)(1)) return false;
-        if (!(*ct)(1)) return false;
+        if (!(*cd)(1))
+            return false;
+        if (!(*ct)(1))
+            return false;
         meta_data.m_frame_cnt = cd->getFrameCount();
 
         // get adios meta data
@@ -397,8 +411,10 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
         }
     } else if (cv != nullptr) {
         cv->SetFrameID(meta_data.m_frame_ID);
-        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
+            return false;
+        if (!(*cv)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
+            return false;
         meta_data.m_frame_cnt = cv->FrameCount();
     } else {
         return false;
@@ -407,7 +423,8 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
     auto probes_meta_data = cprobes->getMetaData();
     probes_meta_data.m_frame_ID = meta_data.m_frame_ID;
     cprobes->setMetaData(probes_meta_data);
-    if (!(*cprobes)(1)) return false;
+    if (!(*cprobes)(1))
+        return false;
 
     // put metadata in mesh call
     cp->setMetaData(meta_data);

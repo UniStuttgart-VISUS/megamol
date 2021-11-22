@@ -22,22 +22,30 @@ ProbeToTable::ProbeToTable() : Module(), _getDataSlot("getData", ""), _deployTab
     this->MakeSlotAvailable(&this->_getDataSlot);
 }
 
-ProbeToTable::~ProbeToTable() { this->Release(); }
+ProbeToTable::~ProbeToTable() {
+    this->Release();
+}
 
-bool ProbeToTable::create() { return true; }
+bool ProbeToTable::create() {
+    return true;
+}
 
 void ProbeToTable::release() {}
 
-bool ProbeToTable::InterfaceIsDirty() { return false; }
+bool ProbeToTable::InterfaceIsDirty() {
+    return false;
+}
 
 
 bool ProbeToTable::getData(core::Call& call) {
 
     datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
-    if (ctd == nullptr) return false;
+    if (ctd == nullptr)
+        return false;
 
     CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();
-    if (cpd == nullptr) return false;
+    if (cpd == nullptr)
+        return false;
 
     auto meta_data = cpd->getMetaData();
     // maybe get meta data was not called jet
@@ -71,8 +79,8 @@ bool ProbeToTable::getData(core::Call& call) {
             auto num_samples = probe_one.getSamplingResult()->samples.size();
             _rows = num_probes;
 
-            var_names = {"id", "position_x", "position_y", "position_z", "direction_x",
-                "direction_y", "direction_z", "begin", "end", "timestamp", "sample_radius", "cluster_id"};
+            var_names = {"id", "position_x", "position_y", "position_z", "direction_x", "direction_y", "direction_z",
+                "begin", "end", "timestamp", "sample_radius", "cluster_id"};
             auto fixed_var_names_index = var_names.size();
             _fixed_cols = var_names.size();
 
@@ -141,12 +149,13 @@ bool ProbeToTable::getData(core::Call& call) {
 
                 auto result = probe.getSamplingResult()->samples;
                 for (int k = 0; k < num_samples; ++k) {
-                    raw_data[i][fixed_var_names_index + 3*k+0] = result[k].mean;
-                    raw_data[i][fixed_var_names_index + 3*k+1] = result[k].lower_bound;
-                    raw_data[i][fixed_var_names_index + 3*k+2] = result[k].upper_bound;
+                    raw_data[i][fixed_var_names_index + 3 * k + 0] = result[k].mean;
+                    raw_data[i][fixed_var_names_index + 3 * k + 1] = result[k].lower_bound;
+                    raw_data[i][fixed_var_names_index + 3 * k + 2] = result[k].upper_bound;
 
                     mins[fixed_var_names_index + k] = std::min(mins[fixed_var_names_index + k], result[k].lower_bound);
-                    maxes[fixed_var_names_index + k] = std::max(maxes[fixed_var_names_index + k], result[k].upper_bound);
+                    maxes[fixed_var_names_index + k] =
+                        std::max(maxes[fixed_var_names_index + k], result[k].upper_bound);
                 }
             }
         } else {
@@ -154,8 +163,8 @@ bool ProbeToTable::getData(core::Call& call) {
             auto num_samples = probe_one.getSamplingResult()->samples.size();
             _rows = num_probes;
 
-            var_names = {"id", "position_x", "position_y", "position_z", "direction_x",
-                "direction_y", "direction_z", "begin", "end", "timestamp", "sample_radius", "cluster_id"};
+            var_names = {"id", "position_x", "position_y", "position_z", "direction_x", "direction_y", "direction_z",
+                "begin", "end", "timestamp", "sample_radius", "cluster_id"};
             auto fixed_var_names_index = var_names.size();
             _fixed_cols = var_names.size();
 
@@ -245,29 +254,33 @@ bool ProbeToTable::getData(core::Call& call) {
         }
     }
 
-    if (_floatBlob.empty()) return false;
+    if (_floatBlob.empty())
+        return false;
 
     _currentFrame = ctd->GetFrameID();
     ctd->Set(_total_cols, _rows, _colinfo.data(), _floatBlob.data());
     ctd->SetDataHash(_datahash++);
 
     return true;
-} 
+}
 
 bool ProbeToTable::getMetaData(core::Call& call) {
 
     datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
-    if (ctd == nullptr) return false;
+    if (ctd == nullptr)
+        return false;
 
     CallProbes* cpd = this->_getDataSlot.CallAs<CallProbes>();
-    if (cpd == nullptr) return false;
+    if (cpd == nullptr)
+        return false;
 
     // get metadata from probes
     auto meta_data = cpd->getMetaData();
     meta_data.m_frame_ID = ctd->GetFrameID();
     cpd->setMetaData(meta_data);
 
-    if (!(*cpd)(1)) return false;
+    if (!(*cpd)(1))
+        return false;
 
     // put metadata in table call
     meta_data = cpd->getMetaData();

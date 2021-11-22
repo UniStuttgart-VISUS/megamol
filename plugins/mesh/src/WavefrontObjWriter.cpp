@@ -34,7 +34,8 @@ bool megamol::mesh::WavefrontObjWriter::run() {
     meta_data.m_frame_ID = 0;
     rhs_mesh_call->setMetaData(meta_data);
 
-    if (!(*rhs_mesh_call)(1)) return false;
+    if (!(*rhs_mesh_call)(1))
+        return false;
     if (!(*rhs_mesh_call)(0))
         return false;
 
@@ -49,11 +50,12 @@ bool megamol::mesh::WavefrontObjWriter::run() {
     int affix = 0;
     for (auto& mesh : meshes) {
         // attributes (vertices, normals, texcoords, colors)
-        for (auto& attribute: mesh.second.attributes) {
+        for (auto& attribute : mesh.second.attributes) {
             if (attribute.semantic == MeshDataAccessCollection::AttributeSemanticType::POSITION) {
                 auto num_vertices = attribute.byte_size / attribute.stride;
                 auto floats = reinterpret_cast<float*>(attribute.data);
-                if (objIter->vertices.empty()) objIter->vertices.resize(num_vertices);
+                if (objIter->vertices.empty())
+                    objIter->vertices.resize(num_vertices);
                 for (int i = 0; i < num_vertices; ++i) {
                     objIter->vertices[i].position.x = floats[attribute.component_cnt * i + 0];
                     objIter->vertices[i].position.y = floats[attribute.component_cnt * i + 1];
@@ -62,7 +64,8 @@ bool megamol::mesh::WavefrontObjWriter::run() {
             } else if (attribute.semantic == MeshDataAccessCollection::AttributeSemanticType::NORMAL) {
                 auto num_normals = attribute.byte_size / attribute.stride;
                 auto floats = reinterpret_cast<float*>(attribute.data);
-                if (objIter->vertices.empty()) objIter->vertices.resize(num_normals);
+                if (objIter->vertices.empty())
+                    objIter->vertices.resize(num_normals);
                 for (int i = 0; i < num_normals; ++i) {
                     objIter->vertices[i].normal.x = floats[attribute.component_cnt * i + 0];
                     objIter->vertices[i].normal.y = floats[attribute.component_cnt * i + 1];
@@ -80,7 +83,8 @@ bool megamol::mesh::WavefrontObjWriter::run() {
             }
         }
         // indices
-        auto num_indices = mesh.second.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
+        auto num_indices =
+            mesh.second.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
         auto uints = reinterpret_cast<unsigned*>(mesh.second.indices.data);
         objIter->indices.reserve(num_indices);
         objIter->indices.insert(objIter->indices.begin(), uints, uints + num_indices);

@@ -6,8 +6,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "datatools/table/TableDataCall.h"
 
@@ -17,13 +17,12 @@ namespace table {
 
 class TableItemSelector : public core::Module {
 public:
-    enum class SELECT_ALG {
-        FIRST_OF_ALL,
-        MIN_DIFF
-    };
+    enum class SELECT_ALG { FIRST_OF_ALL, MIN_DIFF };
 
     /** Return module class name */
-    static const char* ClassName(void) { return "TableItemSelector"; }
+    static const char* ClassName(void) {
+        return "TableItemSelector";
+    }
 
     /** Return module class description */
     static const char* Description(void) {
@@ -31,7 +30,9 @@ public:
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     TableItemSelector(void);
@@ -70,12 +71,16 @@ private:
         return ret;
     }
 
-    bool is_dirty() { return selection_column_slot_.IsDirty(); }
+    bool is_dirty() {
+        return selection_column_slot_.IsDirty();
+    }
 
-    void reset_dirty() { selection_column_slot_.ResetDirty(); }
+    void reset_dirty() {
+        selection_column_slot_.ResetDirty();
+    }
 
-    std::vector<size_t> first_of_all(
-        float const* data, size_t num_columns, size_t num_rows, std::vector<float> const& selector, size_t selector_idx) {
+    std::vector<size_t> first_of_all(float const* data, size_t num_columns, size_t num_rows,
+        std::vector<float> const& selector, size_t selector_idx) {
         std::unordered_map<float, size_t> cat;
 
         for (size_t row = 0; row < num_rows; ++row) {
@@ -95,8 +100,8 @@ private:
 
         return ret;
     }
-    std::vector<size_t> min_difference(
-        float const* data, size_t num_columns, size_t num_rows, std::vector<float> const& selector, size_t selector_idx) {
+    std::vector<size_t> min_difference(float const* data, size_t num_columns, size_t num_rows,
+        std::vector<float> const& selector, size_t selector_idx) {
         std::vector<float> cat;
 
         for (auto const& el : selector) {

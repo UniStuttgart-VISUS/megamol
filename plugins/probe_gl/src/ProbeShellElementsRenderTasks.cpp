@@ -11,10 +11,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeShellElementsRenderTasks.h"
+#include "probe/ProbeCalls.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 
@@ -40,7 +40,7 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::create() {
 megamol::probe_gl::ProbeShellElementsRenderTasks::ProbeShellElementsRenderTasks()
         : m_version(0)
         , m_show_elements(true)
-        , m_probes_slot("Probes","")
+        , m_probes_slot("Probes", "")
         , m_event_slot("Events", "")
         , m_shading_mode_slot("ShadingMode", "")
         , m_hull_color_slot("ElementsColor", "") {

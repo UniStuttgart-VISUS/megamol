@@ -7,14 +7,14 @@
 #ifndef PLACE_PROBES_H_INCLUDED
 #define PLACE_PROBES_H_INCLUDED
 
+#include "mesh/MeshCalls.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mesh/MeshCalls.h"
-#include "probe/ProbeCollection.h"
 #include "probe/MeshUtilities.h"
-#include "mmadios/CallADIOSData.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe {
@@ -26,21 +26,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "PlaceProbes"; }
+    static const char* ClassName() {
+        return "PlaceProbes";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "..."; }
+    static const char* Description() {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     PlaceProbes();
@@ -74,25 +80,21 @@ private:
 
     bool getMetaData(core::Call& call);
 
-    void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices, mesh::MeshDataAccessCollection::IndexData indexData,
-        float distanceIndicator);
-    void forceDirectedSampling(
-        const mesh::MeshDataAccessCollection::Mesh& mesh);
+    void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::IndexData indexData, float distanceIndicator);
+    void forceDirectedSampling(const mesh::MeshDataAccessCollection::Mesh& mesh);
     void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices);
-    void vertexNormalSampling(
-        mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+    void vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals,
         mesh::MeshDataAccessCollection::VertexAttribute& probe_ids);
-    void faceNormalSampling(
-        mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+    void faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals,
-        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids,
-        mesh::MeshDataAccessCollection::IndexData& indices);
+        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids, mesh::MeshDataAccessCollection::IndexData& indices);
     bool placeProbes();
     bool placeByCenterline(uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline);
     bool placeByCenterpoint();
-    bool getADIOSData(core::Call &call);
-    bool getADIOSMetaData(core::Call &call);
+    bool getADIOSData(core::Call& call);
+    bool getADIOSMetaData(core::Call& call);
     bool loadFromFile();
     bool parameterChanged(core::param::ParamSlot& p);
 

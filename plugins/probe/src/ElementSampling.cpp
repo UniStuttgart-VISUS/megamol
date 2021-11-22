@@ -5,32 +5,31 @@
  */
 
 #include "ElementSampling.h"
-#include "probe/CallKDTree.h"
-#include "probe/ProbeCalls.h"
-#include "mmadios/CallADIOSData.h"
 #include "glm/glm.hpp"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "probe/CallKDTree.h"
+#include "probe/ProbeCalls.h"
 
 
 namespace megamol {
 namespace probe {
 
 ElementSampling::ElementSampling()
-    : Module()
-    , _version(0)
-    , _old_datahash(0)
-    , _probe_lhs_slot("deployProbe", "")
-    , _elements_rhs_slot("getElements", "")
-    , _adios_rhs_slot("getData", "")
-    , _parameter_to_sample_slot("ParameterToSample", "")
-    , _xSlot("x", "")
-    , _ySlot("y", "")
-    , _zSlot("z", "")
-    , _xyzSlot("xyz", "")
-    , _formatSlot("format", "")
-    {
+        : Module()
+        , _version(0)
+        , _old_datahash(0)
+        , _probe_lhs_slot("deployProbe", "")
+        , _elements_rhs_slot("getElements", "")
+        , _adios_rhs_slot("getData", "")
+        , _parameter_to_sample_slot("ParameterToSample", "")
+        , _xSlot("x", "")
+        , _ySlot("y", "")
+        , _zSlot("z", "")
+        , _xyzSlot("xyz", "")
+        , _formatSlot("format", "") {
 
     core::param::EnumParam* fp = new core::param::EnumParam(0);
     fp->SetTypePair(0, "separated");
@@ -72,10 +71,11 @@ ElementSampling::ElementSampling()
     this->_parameter_to_sample_slot << paramEnum;
     this->_parameter_to_sample_slot.SetUpdateCallback(&ElementSampling::paramChanged);
     this->MakeSlotAvailable(&this->_parameter_to_sample_slot);
-
 }
 
-ElementSampling::~ElementSampling() { this->Release(); }
+ElementSampling::~ElementSampling() {
+    this->Release();
+}
 
 bool ElementSampling::create() {
     _probes = std::make_shared<ProbeCollection>();
@@ -88,13 +88,16 @@ bool ElementSampling::getData(core::Call& call) {
 
     bool something_has_changed = false;
     auto cp = dynamic_cast<CallProbes*>(&call);
-    if (cp == nullptr) return false;
+    if (cp == nullptr)
+        return false;
 
     // query adios data
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
     auto celements = this->_elements_rhs_slot.CallAs<adios::CallADIOSData>();
-    if (celements == nullptr) return false;
+    if (celements == nullptr)
+        return false;
 
 
     std::vector<std::string> toInq;
@@ -120,17 +123,20 @@ bool ElementSampling::getData(core::Call& call) {
     }
 
     if (cd->getDataHash() != _old_datahash || _trigger_recalc) {
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(0))
+            return false;
     }
 
     if (celements->getDataHash() != _elements_cached_hash || _trigger_recalc) {
-        if (!readElements()) return false;
+        if (!readElements())
+            return false;
         auto bbox = celements->getData("bbox")->GetAsFloat();
         if (bbox.size() == 6) {
             _bbox.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         }
     }
-    something_has_changed = something_has_changed || (cd->getDataHash() != _old_datahash) || (celements->getDataHash() != _elements_cached_hash);
+    something_has_changed = something_has_changed || (cd->getDataHash() != _old_datahash) ||
+                            (celements->getDataHash() != _elements_cached_hash);
 
 
     if (something_has_changed) {
@@ -166,7 +172,7 @@ bool ElementSampling::getData(core::Call& call) {
         placeProbes(_elements);
         doScalarSampling(_elements, data, raw_positions);
         //}
-    } 
+    }
 
 
     // put data into probes
@@ -185,7 +191,8 @@ bool ElementSampling::getData(core::Call& call) {
 bool ElementSampling::getMetaData(core::Call& call) {
 
     auto cp = dynamic_cast<CallProbes*>(&call);
-    if (cp == nullptr) return false;
+    if (cp == nullptr)
+        return false;
 
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
     auto celements = this->_elements_rhs_slot.CallAs<adios::CallADIOSData>();
@@ -199,8 +206,10 @@ bool ElementSampling::getMetaData(core::Call& call) {
     if (cd != nullptr && celements != nullptr) {
         cd->setFrameIDtoLoad(meta_data.m_frame_ID);
         celements->setFrameIDtoLoad(meta_data.m_frame_ID);
-        if (!(*cd)(1)) return false;
-        if (!(*celements)(1)) return false;
+        if (!(*cd)(1))
+            return false;
+        if (!(*celements)(1))
+            return false;
         meta_data.m_frame_cnt = cd->getFrameCount();
 
         // get adios meta data
@@ -269,11 +278,13 @@ bool ElementSampling::readElements() {
 void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& elements) {
 
     if (elements.empty()) {
-        core::utility::log::Log::DefaultLog.WriteError("[ElementSampling] placeProbes exited because elements are empty.");
+        core::utility::log::Log::DefaultLog.WriteError(
+            "[ElementSampling] placeProbes exited because elements are empty.");
         return;
     }
     if (elements[0].empty()) {
-        core::utility::log::Log::DefaultLog.WriteError("[ElementSampling] placeProbes exited because elements are empty.");
+        core::utility::log::Log::DefaultLog.WriteError(
+            "[ElementSampling] placeProbes exited because elements are empty.");
         return;
     }
 
@@ -287,7 +298,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         geom_ids.resize(elements.size());
         // generate flat geomety indices
         for (int k = 0; k < elements.size(); ++k) {
-            geom_ids[k] = "element_mesh_"  + std::to_string(k) + "," + std::to_string(j);
+            geom_ids[k] = "element_mesh_" + std::to_string(k) + "," + std::to_string(j);
         }
 
         BaseProbe new_probe;

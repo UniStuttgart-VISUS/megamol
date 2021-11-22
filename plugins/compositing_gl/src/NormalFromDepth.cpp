@@ -2,9 +2,9 @@
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::NormalFromDepth::NormalFromDepth()
         : m_version(0)
@@ -78,7 +78,7 @@ bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) 
     }
 
     // something has changed in the neath...
-    bool something_has_changed = (call_input != NULL ? call_input->hasUpdate() : false) ||                                 
+    bool something_has_changed = (call_input != NULL ? call_input->hasUpdate() : false) ||
                                  (call_camera != NULL ? call_camera->hasUpdate() : false);
 
     if (something_has_changed) {
