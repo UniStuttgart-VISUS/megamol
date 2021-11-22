@@ -735,7 +735,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 #endif
 
 #if 0
-	// get CUDA stuff
+    // get CUDA stuff
     copyArrayFromDevice( m_hNeighborCount, m_dNeighborCount, 0, sizeof(uint)*this->numAtoms);
     //copyArrayFromDevice( m_hNeighbors, m_dNeighbors, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
     //copyArrayFromDevice( m_hParticleIndex, m_dGridParticleIndex, 0, sizeof(uint)*this->numAtoms);
@@ -744,28 +744,28 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     copyArrayFromDevice( m_hArcCount, m_dArcCount, 0, sizeof(uint)*this->numAtoms*this->atomNeighborCount);
     copyArrayFromDevice( m_hArcs, m_dArcs, 0, sizeof(float)*4*this->numAtoms*this->atomNeighborCount*this->atomNeighborCount);
 
-	// do actual rendering
-	float viewportStuff[4] = {
-		cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-		cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
-	if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-	if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-	viewportStuff[2] = 2.0f / viewportStuff[2];
-	viewportStuff[3] = 2.0f / viewportStuff[3];
+    // do actual rendering
+    float viewportStuff[4] = {
+        cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    if( viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if( viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	this->sphereShader.Enable();
-	glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-	glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    this->sphereShader.Enable();
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
 
     int cnt1, cnt2, cnt3; 
-	vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
-	vislib::math::Quaternion<float> tmpQuat;
+    vislib::math::Vector<float, 3> tmpVec1, tmpVec2, tmpVec3, ex( 1, 0, 0), ey( 0, 1, 0);
+    vislib::math::Quaternion<float> tmpQuat;
 
-	// draw small circles
-	glBegin( GL_POINTS);
-	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+    // draw small circles
+    glBegin( GL_POINTS);
+    for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
         tmpVec1.Set( m_hPos[cnt1*4], m_hPos[cnt1*4+1], m_hPos[cnt1*4+2]);
         for( cnt2 = 0; cnt2 < m_hNeighborCount[cnt1]; ++cnt2 ) {
             if( m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3] < 0.0 )
@@ -774,40 +774,40 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
                 m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 1],
                 m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 2]);
             // center of small circle
-			//glColor3f( 0.0f, 0.0f, 1.0f);
-			//glVertex4f(
-			//	tmpVec1.X() + tmpVec2.X(),
-			//	tmpVec1.Y() + tmpVec2.Y(),
-			//	tmpVec1.Z() + tmpVec2.Z(),
-			//	0.1f);
-			// point on small circle
-			glColor3f( 1.0f, 1.0f, 0.0f);
-			tmpVec3 = tmpVec2.Cross( ey);
-			tmpVec3.Normalise();
+            //glColor3f( 0.0f, 0.0f, 1.0f);
+            //glVertex4f(
+            //    tmpVec1.X() + tmpVec2.X(),
+            //    tmpVec1.Y() + tmpVec2.Y(),
+            //    tmpVec1.Z() + tmpVec2.Z(),
+            //    0.1f);
+            // point on small circle
+            glColor3f( 1.0f, 1.0f, 0.0f);
+            tmpVec3 = tmpVec2.Cross( ey);
+            tmpVec3.Normalise();
             tmpVec3 *= 
                 //sqrt(((m_hPos[cnt1*4+3] + this->probeRadius) * (m_hPos[cnt1*4+3] + this->probeRadius)) - tmpVec2.Dot( tmpVec2));
                 m_hSmallCircles[cnt1 * params.maxNumNeighbors * 4 + cnt2 * 4 + 3];
-			tmpQuat.Set( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
-			for( cnt3 = 0; cnt3 < 100; ++cnt3 ) {
-				tmpVec3 = tmpQuat * tmpVec3;
-				glVertex4f(
-					tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
-					tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
-					tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
-					0.1f);
-			}
-		}
-	}
-	glEnd();
+            tmpQuat.Set( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
+            for( cnt3 = 0; cnt3 < 100; ++cnt3 ) {
+                tmpVec3 = tmpQuat * tmpVec3;
+                glVertex4f(
+                    tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
+                    tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
+                    tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
+                    0.1f);
+            }
+        }
+    }
+    glEnd();
 
-	// draw arc start and end points
+    // draw arc start and end points
     glColor3f( 0.0f, 1.0f, 0.0f);
-	glBegin( GL_POINTS);
-	for( cnt1 = 0; cnt1 < ( this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * 4); cnt1 += 4 ) {
+    glBegin( GL_POINTS);
+    for( cnt1 = 0; cnt1 < ( this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * 4); cnt1 += 4 ) {
         //glVertex4f( m_hArcs[cnt1], m_hArcs[cnt1+1], m_hArcs[cnt1+2], 0.2f);
         glVertex4fv( &m_hArcs[cnt1]);
-	}
-	glEnd();
+    }
+    glEnd();
 
     /*
     // render atoms    
@@ -821,32 +821,32 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     glDisableClientState( GL_VERTEX_ARRAY);
     */
 
-	// START draw atoms ...
+    // START draw atoms ...
     //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // standard transparency
     //glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);   // pretty cool & useful...
     glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);     // very useful
-	glEnable( GL_BLEND);
+    glEnable( GL_BLEND);
     glDisable( GL_CULL_FACE);
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
-	glBegin( GL_POINTS);
-	for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
-		if( cnt1 == 0 )
-			glColor4f( 1.0, 0.0, 1.0, this->opacityParam.Param<param::FloatParam>()->Value());
-		else
-			glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
-		glVertex4f(
+    glBegin( GL_POINTS);
+    for( cnt1 = 0; cnt1 < mol->AtomCount(); ++cnt1 ) {
+        if( cnt1 == 0 )
+            glColor4f( 1.0, 0.0, 1.0, this->opacityParam.Param<param::FloatParam>()->Value());
+        else
+            glColor4f( 1.0, 0.0, 0.0, this->opacityParam.Param<param::FloatParam>()->Value());
+        glVertex4f(
             //m_hPos[cnt1*4+0],
             //m_hPos[cnt1*4+1],
             //m_hPos[cnt1*4+2],
             //m_hPos[cnt1*4+3] + this->probeRadius);
-			mol->AtomPositions()[cnt1*3+0],
-			mol->AtomPositions()[cnt1*3+1],
-			mol->AtomPositions()[cnt1*3+2],
-			//mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
+            mol->AtomPositions()[cnt1*3+0],
+            mol->AtomPositions()[cnt1*3+1],
+            mol->AtomPositions()[cnt1*3+2],
+            //mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius());
             //mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() * 0.1f);
-			mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius);
-	}
-	glEnd();
+            mol->AtomTypes()[mol->AtomTypeIndices()[cnt1]].Radius() + this->probeRadius);
+    }
+    glEnd();
     glDisable( GL_BLEND);
     // ... END draw atoms
 
@@ -1032,10 +1032,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
             // center of small circle
             //glColor3f( 0.0f, 0.0f, 1.0f);
             //glVertex4f(
-            //	tmpVec1.X() + tmpVec2.X(),
-            //	tmpVec1.Y() + tmpVec2.Y(),
-            //	tmpVec1.Z() + tmpVec2.Z(),
-            //	0.1f);
+            //    tmpVec1.X() + tmpVec2.X(),
+            //    tmpVec1.Y() + tmpVec2.Y(),
+            //    tmpVec1.Z() + tmpVec2.Z(),
+            //    0.1f);
             // point on small circle
             glColor3f(1.0f, 1.0f, 0.0f);
             tmpVec3 = tmpVec2.Cross(ey);
@@ -1253,11 +1253,11 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
                             } else {
                                 if( d3 > 0 ) {
                                     // kreisbogen wird aufgeteilt
-									vislib::math::Vector<float, 3> tmpVecE( arcs.Last().Second());
+                                    vislib::math::Vector<float, 3> tmpVecE( arcs.Last().Second());
                                     arcs.Last().SetSecond( x2);
                                     arcs.SetCount( arcs.Count() + 1);
                                     arcs.Last().SetFirst( x1);
-									arcs.Last().SetSecond( tmpVecE);
+                                    arcs.Last().SetSecond( tmpVecE);
                                 } else {
                                     // keine auswirkung
                                 }
@@ -1393,24 +1393,24 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
 #endif
             } // for( int kCnt = 0; kCnt < this->neighbors[iCnt].Count(); ++kCnt )
 #if 0
-			// draw small circles
-			tmpVec1.Set( mol->AtomPositions()[iCnt*3], mol->AtomPositions()[iCnt*3+1], mol->AtomPositions()[iCnt*3+2]);
-			//for( cnt2 = 0; cnt2 < arcs.Count(); ++cnt2 ) {
-			for( cnt2 = 0; cnt2 < arcs.Count(); ++cnt2 ) {
-				vislib::math::Vector<float, 3> tmpVec2 = this->smallCircles[iCnt][jCnt];
-				// point on small circle
-				glColor3f( 0.0f, 1.0f, 1.0f);
-				vislib::math::Vector<float, 3> tmpVec3( arcs[cnt2].First() - tmpVec2);
-				vislib::math::Quaternion<float> tmpQuat( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
-				for( cnt3 = 0; cnt3 < this->stepsParam.Param<param::IntParam>()->Value(); ++cnt3 ) {
-					tmpVec3 = tmpQuat * tmpVec3;
-					glVertex4f(
-						tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
-						tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
-						tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
-						0.15f);
-				}
-			}
+            // draw small circles
+            tmpVec1.Set( mol->AtomPositions()[iCnt*3], mol->AtomPositions()[iCnt*3+1], mol->AtomPositions()[iCnt*3+2]);
+            //for( cnt2 = 0; cnt2 < arcs.Count(); ++cnt2 ) {
+            for( cnt2 = 0; cnt2 < arcs.Count(); ++cnt2 ) {
+                vislib::math::Vector<float, 3> tmpVec2 = this->smallCircles[iCnt][jCnt];
+                // point on small circle
+                glColor3f( 0.0f, 1.0f, 1.0f);
+                vislib::math::Vector<float, 3> tmpVec3( arcs[cnt2].First() - tmpVec2);
+                vislib::math::Quaternion<float> tmpQuat( float( vislib::math::PI_DOUBLE / 50.0), tmpVec2 / tmpVec2.Length());
+                for( cnt3 = 0; cnt3 < this->stepsParam.Param<param::IntParam>()->Value(); ++cnt3 ) {
+                    tmpVec3 = tmpQuat * tmpVec3;
+                    glVertex4f(
+                        tmpVec1.X() + tmpVec2.X() + tmpVec3.X(),
+                        tmpVec1.Y() + tmpVec2.Y() + tmpVec3.Y(),
+                        tmpVec1.Z() + tmpVec2.Z() + tmpVec3.Z(),
+                        0.15f);
+                }
+            }
             // draw all arc start & end points
             for( unsigned int aCnt = 0; aCnt < arcs.Count(); aCnt++ ) {
                 glColor3f( 0, 1, 0);
@@ -1608,7 +1608,7 @@ bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core
     //uint free, total;
     //cuMemGetInfo( &free, &total);
     //megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
-    //	"Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
+    //    "Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
     // array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);
     // array for sorted atom positions
@@ -1810,28 +1810,28 @@ void MoleculeCBCudaRenderer::writeAtomPositionsVBO(MolecularDataCall* mol) {
     }
 #if 0
     // set next frame ID to get positions of the second frame
-	if( ( mol->FrameID() + 1) < int(mol->FrameCount()) ) 
-		mol->SetFrameID( mol->FrameID() + 1);
+    if( ( mol->FrameID() + 1) < int(mol->FrameCount()) ) 
+        mol->SetFrameID( mol->FrameID() + 1);
     if( (*mol)(MolecularDataCall::CallForGetData)) {
-		float inter = mol->Calltime() - static_cast<float>(static_cast<int>( mol->Calltime()));
-		float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-			vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-			mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+        float inter = mol->Calltime() - static_cast<float>(static_cast<int>( mol->Calltime()));
+        float threshold = vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
+            vislib::math::Min( mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
+            mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
 #pragma omp parallel for
-		for( int cnt = 0; cnt < int(mol->AtomCount()); ++cnt ) {
-			if( std::sqrt( std::pow( m_hPos[4*cnt+0] - mol->AtomPositions()[3*cnt+0], 2) +
-					std::pow( m_hPos[4*cnt+1] - mol->AtomPositions()[3*cnt+1], 2) +
-					std::pow( m_hPos[4*cnt+2] - mol->AtomPositions()[3*cnt+2], 2) ) < threshold ) {
-				m_hPos[4*cnt+0] = (1.0f - inter) * m_hPos[4*cnt+0] + inter * mol->AtomPositions()[3*cnt+0];
-				m_hPos[4*cnt+1] = (1.0f - inter) * m_hPos[4*cnt+1] + inter * mol->AtomPositions()[3*cnt+1];
-				m_hPos[4*cnt+2] = (1.0f - inter) * m_hPos[4*cnt+2] + inter * mol->AtomPositions()[3*cnt+2];
-			} else if( inter > 0.5f ) {
-				m_hPos[4*cnt+0] = mol->AtomPositions()[3*cnt+0];
-				m_hPos[4*cnt+1] = mol->AtomPositions()[3*cnt+1];
-				m_hPos[4*cnt+2] = mol->AtomPositions()[3*cnt+2];
-			}
-		}
-	}
+        for( int cnt = 0; cnt < int(mol->AtomCount()); ++cnt ) {
+            if( std::sqrt( std::pow( m_hPos[4*cnt+0] - mol->AtomPositions()[3*cnt+0], 2) +
+                    std::pow( m_hPos[4*cnt+1] - mol->AtomPositions()[3*cnt+1], 2) +
+                    std::pow( m_hPos[4*cnt+2] - mol->AtomPositions()[3*cnt+2], 2) ) < threshold ) {
+                m_hPos[4*cnt+0] = (1.0f - inter) * m_hPos[4*cnt+0] + inter * mol->AtomPositions()[3*cnt+0];
+                m_hPos[4*cnt+1] = (1.0f - inter) * m_hPos[4*cnt+1] + inter * mol->AtomPositions()[3*cnt+1];
+                m_hPos[4*cnt+2] = (1.0f - inter) * m_hPos[4*cnt+2] + inter * mol->AtomPositions()[3*cnt+2];
+            } else if( inter > 0.5f ) {
+                m_hPos[4*cnt+0] = mol->AtomPositions()[3*cnt+0];
+                m_hPos[4*cnt+1] = mol->AtomPositions()[3*cnt+1];
+                m_hPos[4*cnt+2] = mol->AtomPositions()[3*cnt+2];
+            }
+        }
+    }
 #endif
 
     bool newlyGenerated = false;

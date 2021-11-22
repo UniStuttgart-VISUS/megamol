@@ -93,7 +93,7 @@ public:
      * @param p_resultFaceIndices Vector containing the indices of the found faces
      *
      * @return True, if at least one face lies partially or totally inside the query sphere.
-     *			False otherwise.
+     *         False otherwise.
      */
     bool RadiusSearch(const std::vector<uint>& p_faces, const vec4d& p_querySphere,
         const std::vector<float>& p_vertices, std::vector<uint>& p_resultFaceIndices);

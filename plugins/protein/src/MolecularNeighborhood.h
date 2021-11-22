@@ -78,10 +78,10 @@ protected:
 
 private:
     /**
-     *	Searches the neighboring atoms for each atom in the given call.
+     * Searches the neighboring atoms for each atom in the given call.
      *
-     *	@param call The call providing the atom data.
-     *	@param radius The search radius around each atom.
+     * @param call The call providing the atom data.
+     * @param radius The search radius around each atom.
      */
     void findNeighborhoods(megamol::protein_calls::MolecularDataCall& call, float radius);
 

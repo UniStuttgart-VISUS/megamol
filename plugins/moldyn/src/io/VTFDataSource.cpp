@@ -143,7 +143,7 @@ bool io::VTFDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int i
         ++this->partCnt[0];
         ++id;
     }
-    //								                  count + start                              + data
+    // count + start + data
     this->clusterInfos.sizeofPlainData =
         2 * this->clusterInfos.data.Count() * sizeof(int) + this->partCnt[0] * sizeof(int);
     this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);

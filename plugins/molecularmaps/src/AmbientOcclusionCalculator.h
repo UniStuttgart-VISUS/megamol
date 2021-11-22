@@ -23,7 +23,7 @@ namespace molecularmaps {
 class AmbientOcclusionCalculator {
 public:
     /**
-     *	Struct for settings for the ambient occlusion.
+     * Struct for settings for the ambient occlusion.
      */
     struct AOSettings {
         /* The angle factor for the direction generation */

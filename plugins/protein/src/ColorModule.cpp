@@ -202,7 +202,7 @@ bool ColorModule::create(void) {
 void ColorModule::release(void) {}
 
 /*
- *	ColorModule::getData
+ * ColorModule::getData
  */
 bool ColorModule::getColor(core::Call& call) {
     CallColor* col = dynamic_cast<CallColor*>(&call);

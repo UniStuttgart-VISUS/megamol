@@ -16,7 +16,7 @@ namespace megamol {
 namespace molecularmaps {
 
 /**
- *	Class encapsulating an OpenGL Shader Storage Buffer Object (SSBO)
+ * Class encapsulating an OpenGL Shader Storage Buffer Object (SSBO)
  */
 class ShaderStorageBufferObject {
 public:

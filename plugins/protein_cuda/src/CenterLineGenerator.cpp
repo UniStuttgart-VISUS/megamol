@@ -146,8 +146,8 @@ void CenterLineGenerator::NextSection(Edges& current, NodeSet& currentNodes, Sec
     /*
             1. Input:
                     Mesh M
-                    S0: Set of nodes which define the current section	= current
-                    E0: Set of the elements already visited				= visited
+                    S0: Set of nodes which define the current section = current
+                    E0: Set of the elements already visited = visited
             2. Create E1, set of the elements which have nodes in S0 but do not belong to E0
             3. Create A1, set of the edges of the elements in E1
             4. Create A2, subset of A1 composed by the edges which do not have any node in S0
@@ -232,7 +232,7 @@ CenterLineGenerator::Node* CenterLineGenerator::nodeSharedByEdges(Edge* e1, Edge
 void CenterLineGenerator::FindBranch(Section* current, std::list<Section*>& branches) {
     /*
             1. Input:
-                    A0 : Set of edges of the current section	= current
+                    A0 : Set of edges of the current section = current
                     S0 : Set of edges which define a section (empty, initially)
                     S : Set of edges found in A0 (empty, initially)
             2. a0 = First non-visited edge in A0

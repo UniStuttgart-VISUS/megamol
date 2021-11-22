@@ -91,8 +91,8 @@ void Stride::FreeResidue(RESIDUE* r) {
 }
 
 void Stride::FreeHBond(HBOND* h) {
-    //	free( h->Dnr); // TODO: free FreeChain(Dnr->Chain)?
-    //	free( h->Acc); // TODO: free FreeChain(Dnr->Chain)?
+    // free( h->Dnr); // TODO: free FreeChain(Dnr->Chain)?
+    // free( h->Acc); // TODO: free FreeChain(Dnr->Chain)?
     free(h);
 }
 
@@ -841,9 +841,9 @@ int Stride::FindHydrogenBonds(CHAIN** Chain, int NChain, HBOND** HBond, COMMAND*
         if (!BondedAcceptor[i])
             free(Acc[i]);
 
-    //	if ( NDnr )
+    // if ( NDnr )
     free(BondedDonor);
-    //	if ( NAcc )
+    // if ( NAcc )
     free(BondedAcceptor);
 
     free(Dnr);
@@ -1888,7 +1888,7 @@ int Stride::FindAcc(CHAIN* Chain, ACCEPTOR** Acc, int* NAcc, COMMAND* Cmd) {
 
 int Stride::DefineAcceptor(
     CHAIN* Chain, ACCEPTOR** Acc, int* ac, int Res, enum HYBRID Hybrid, enum GROUP Group, float HB_Radius, int N) {
-    //	Acc[*ac] = ( ACCEPTOR * ) ckalloc ( sizeof ( ACCEPTOR ) );
+    // Acc[*ac] = ( ACCEPTOR * ) ckalloc ( sizeof ( ACCEPTOR ) );
     ACCEPTOR tempAcc;
 
     tempAcc.Chain = Chain;

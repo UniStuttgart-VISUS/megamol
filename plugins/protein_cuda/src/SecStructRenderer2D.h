@@ -1,8 +1,8 @@
 /*
- *	SecStructRenderer2D.h
+ * SecStructRenderer2D.h
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED
@@ -22,27 +22,27 @@ namespace protein_cuda {
 class SecStructRenderer2D : public core::view::Renderer2DModule {
 public:
     /**
-     *	Answer the name of this module.
+     * Answer the name of this module.
      *
-     *	@return The name of this module.
+     * @return The name of this module.
      */
     static const char* ClassName(void) {
         return "SecStructRenderer2D";
     }
 
     /**
-     *	Answer a human readable description of this module.
+     * Answer a human readable description of this module.
      *
-     *	@return A human readable description of this module.
+     * @return A human readable description of this module.
      */
     static const char* Description(void) {
         return "Offers renderings of protein secondary structures in a 2D domain.";
     }
 
     /**
-     *	Answers whether this module is available on the current system.
+     * Answers whether this module is available on the current system.
      *
-     *	@return 'true' if the module is available, 'false' otherwise.
+     * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
         return true;
@@ -56,23 +56,23 @@ public:
 
 protected:
     /**
-     *	Implementation of 'Create'.
+     * Implementation of 'Create'.
      *
-     *	@return 'true' on success, 'false' otherwise.
+     * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create(void);
 
     /**
-     *	Implementation of 'Release'.
+     * Implementation of 'Release'.
      */
     virtual void release(void);
 
     /**
-     *	Callback for mouse events (move, press, and release)
+     * Callback for mouse events (move, press, and release)
      *
-     *	@param x The x coordinate of the mouse in world space
-     *	@param y The y coordinate of the mouse in world space
-     *	@param flags The mouse flags
+     * @param x The x coordinate of the mouse in world space
+     * @param y The y coordinate of the mouse in world space
+     * @param flags The mouse flags
      */
     virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
@@ -82,11 +82,11 @@ private:
         /** Position */
         float pos[3];
         /**
-         *	Secondary structure type
-         *	0 = unclassified
-         *	1 = beta sheet
-         *	2 = alpha helix
-         *	3 = turn
+         * Secondary structure type
+         * 0 = unclassified
+         * 1 = beta sheet
+         * 2 = alpha helix
+         * 3 = turn
          */
         int type;
 
@@ -96,29 +96,29 @@ private:
     };
 
     /**
-     *	The get extents callback. The module should set the members of
-     *	'call' to tell the caller the extents of its data (bounding boxes
-     *	and times).
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
      *
-     *	@param call The calling call.
+     * @param call The calling call.
      *
-     *	@return The return value of the function.
+     * @return The return value of the function.
      */
     virtual bool GetExtents(megamol::core::view::CallRender2D& call);
 
     /**
-     *	The Open GL Render callback.
+     * The Open GL Render callback.
      *
-     *	@param call The calling call.
-     *	@return The return value of the function.
+     * @param call The calling call.
+     * @return The return value of the function.
      */
     virtual bool Render(megamol::core::view::CallRender2D& call);
 
     /**
-     *	Rotates a given 3D plane to the xy plane and returns the needed matrix for the operation.
+     * Rotates a given 3D plane to the xy plane and returns the needed matrix for the operation.
      *
-     *	@param plane The source plane.
-     *	@return The matrix that is necessary to rotate and translate the given plane to the xy plane.
+     * @param plane The source plane.
+     * @return The matrix that is necessary to rotate and translate the given plane to the xy plane.
      */
     vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> rotatePlaneToXY(
         const vislib::math::Plane<float> plane);

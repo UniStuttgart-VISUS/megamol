@@ -1,8 +1,8 @@
 /*
- *	SecStructFlattener.cpp
+ * SecStructFlattener.cpp
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #include "SecStructFlattener.h"
@@ -28,7 +28,7 @@ using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 
 /*
- *	SecStructFlattener::SecStructFlattener
+ * SecStructFlattener::SecStructFlattener
  */
 SecStructFlattener::SecStructFlattener(void)
         : Module()
@@ -173,21 +173,21 @@ SecStructFlattener::SecStructFlattener(void)
 }
 
 /*
- *	SecStructFlattener::~SecStructFlattener
+ * SecStructFlattener::~SecStructFlattener
  */
 SecStructFlattener::~SecStructFlattener(void) {
     this->Release();
 }
 
 /*
- *	SecStructFlattener::create
+ * SecStructFlattener::create
  */
 bool SecStructFlattener::create(void) {
     return true;
 }
 
 /*
- *	SecStructFlattener::release
+ * SecStructFlattener::release
  */
 void SecStructFlattener::release(void) {
     clearAll();
@@ -199,7 +199,7 @@ void SecStructFlattener::release(void) {
 }
 
 /*
- *	SecStructFlattener::computeMainDirectionPCA
+ * SecStructFlattener::computeMainDirectionPCA
  */
 void SecStructFlattener::computeMainDirectionPCA(void) {
     vislib::math::Matrix<float, 3, vislib::math::ROW_MAJOR> covMat;
@@ -240,7 +240,7 @@ void SecStructFlattener::computeMainDirectionPCA(void) {
 }
 
 /*
- *	SecStructFlattener::flatten
+ * SecStructFlattener::flatten
  */
 void SecStructFlattener::flatten(bool transferPositions) {
 
@@ -358,7 +358,7 @@ void SecStructFlattener::flatten(bool transferPositions) {
 }
 
 /*
- *	SecStructFlattener::getFlatPlaneByIndex
+ * SecStructFlattener::getFlatPlaneByIndex
  */
 SecStructFlattener::FlatPlane SecStructFlattener::getFlatPlaneByIndex(unsigned int idx) {
     switch (idx) {
@@ -378,14 +378,14 @@ SecStructFlattener::FlatPlane SecStructFlattener::getFlatPlaneByIndex(unsigned i
 }
 
 /*
- *	SecStructFlattener::getFlatPlaneModeNumber
+ * SecStructFlattener::getFlatPlaneModeNumber
  */
 int SecStructFlattener::getFlatPlaneModeNumber(void) {
     return 5;
 }
 
 /*
- *	SecStructFlattener::getFlatPlaneName
+ * SecStructFlattener::getFlatPlaneName
  */
 std::string SecStructFlattener::getFlatPlaneName(SecStructFlattener::FlatPlane fp) {
     switch (fp) {
@@ -405,7 +405,7 @@ std::string SecStructFlattener::getFlatPlaneName(SecStructFlattener::FlatPlane f
 }
 
 /*
- *	SecStructFlattener::getData
+ * SecStructFlattener::getData
  */
 bool SecStructFlattener::getData(core::Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
@@ -424,7 +424,7 @@ bool SecStructFlattener::getData(core::Call& call) {
 }
 
 /*
- *	SecStructFlattener::getExtent
+ * SecStructFlattener::getExtent
  */
 bool SecStructFlattener::getExtent(core::Call& call) {
 
@@ -575,7 +575,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 }
 
 /*
- *	SecStructFlattener::getPlaneData
+ * SecStructFlattener::getPlaneData
  */
 bool SecStructFlattener::getPlaneData(core::Call& call) {
     PlaneDataCall* pdc = dynamic_cast<PlaneDataCall*>(&call);
@@ -617,7 +617,7 @@ bool SecStructFlattener::getPlaneData(core::Call& call) {
 }
 
 /*
- *	SecStructFlattener::getPlaneExtent
+ * SecStructFlattener::getPlaneExtent
  */
 bool SecStructFlattener::getPlaneExtent(core::Call& call) {
     PlaneDataCall* pdc = dynamic_cast<PlaneDataCall*>(&call);
@@ -631,7 +631,7 @@ bool SecStructFlattener::getPlaneExtent(core::Call& call) {
 }
 
 /*
- *	SecStructFlattener::onPlayToggleButton
+ * SecStructFlattener::onPlayToggleButton
  */
 bool SecStructFlattener::onPlayToggleButton(param::ParamSlot& p) {
     param::BoolParam* bp = this->playParam.Param<param::BoolParam>();
@@ -641,7 +641,7 @@ bool SecStructFlattener::onPlayToggleButton(param::ParamSlot& p) {
 }
 
 /*
- *	SecStructFlattener::onResetButton
+ * SecStructFlattener::onResetButton
  */
 bool SecStructFlattener::onResetButton(param::ParamSlot& p) {
     this->forceReset = true;
@@ -649,7 +649,7 @@ bool SecStructFlattener::onResetButton(param::ParamSlot& p) {
 }
 
 /*
- *	SecStructFlattener::onSingleStepButton
+ * SecStructFlattener::onSingleStepButton
  */
 bool SecStructFlattener::onSingleStepButton(param::ParamSlot& p) {
     this->oneStep = true;
@@ -657,7 +657,7 @@ bool SecStructFlattener::onSingleStepButton(param::ParamSlot& p) {
 }
 
 /*
- *	SecStructFlattener::runSimulation
+ * SecStructFlattener::runSimulation
  */
 void SecStructFlattener::runSimulation(void) {
 

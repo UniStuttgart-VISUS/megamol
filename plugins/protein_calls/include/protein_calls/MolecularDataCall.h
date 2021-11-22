@@ -1221,28 +1221,28 @@ public:
     }
 
     /**
-     *	Returns whether the set hydrogen bonds are fake ones, e. g. the point from c alpha atom to c alpha atom
+     * Returns whether the set hydrogen bonds are fake ones, e. g. the point from c alpha atom to c alpha atom
      *
-     *	@return True, if the hydrogen bonds are fake. False otherwise.
+     * @return True, if the hydrogen bonds are fake. False otherwise.
      */
     bool AtomHydrogenBondsFake(void) {
         return this->atomHydrogenBondsFake;
     }
 
     /**
-     *	Sets whether the set hydrogen bonds are fake.
+     * Sets whether the set hydrogen bonds are fake.
      *
-     *	@param fake True, if the hydrogen bonds are fake. False otherwise
+     * @param fake True, if the hydrogen bonds are fake. False otherwise
      */
     void SetAtomHydrogenBondsFake(const bool fake) {
         this->atomHydrogenBondsFake = fake;
     }
 
     /**
-     *	Set the index array of the solvent residues.
+     * Set the index array of the solvent residues.
      *
-     *	@param count The number of solvent residues.
-     *	@param residueIndex The index array itself
+     * @param count The number of solvent residues.
+     * @param residueIndex The index array itself
      */
     void SetSolventResidueIndices(unsigned int count, const unsigned int* residueIndices) {
         this->solventResidueIdx = residueIndices;
@@ -1250,20 +1250,20 @@ public:
     }
 
     /**
-     *	Returns the solvent residue index array.
+     * Returns the solvent residue index array.
      *
-     *	@return The solvent residue index array.
+     * @return The solvent residue index array.
      */
     const unsigned int* SolventResidueIndices(void) const {
         return solventResidueIdx;
     }
 
     /**
-     *	Sets the hydrogen bonds.
+     * Sets the hydrogen bonds.
      *
-     *	@param hydroBonds The hydrogen bonds array. Two atom indices per hydrogen bond (donor, acceptor, donor,
+     * @param hydroBonds The hydrogen bonds array. Two atom indices per hydrogen bond (donor, acceptor, donor,
      *acceptor, ...).
-     *	@param count The number of hydrogen bonds (array size / 2).
+     * @param count The number of hydrogen bonds (array size / 2).
      */
     void SetHydrogenBonds(const unsigned int* hydroBonds, unsigned int count) {
         this->hydrogenBonds = hydroBonds;
@@ -1271,20 +1271,20 @@ public:
     }
 
     /**
-     *	Returns the hydrogen bond array of the molecule.
-     *	Every hydrogen bond consists of two unsigned int atom indices.
-     *	First Index: Donor. Second Index: Acceptor
+     * Returns the hydrogen bond array of the molecule.
+     * Every hydrogen bond consists of two unsigned int atom indices.
+     * First Index: Donor. Second Index: Acceptor
      *
-     *	@return The hydrogen bond array.
+     * @return The hydrogen bond array.
      */
     const unsigned int* GetHydrogenBonds(void) const {
         return this->hydrogenBonds;
     }
 
     /**
-     *	Returns the number of available hydrogen bonds.
+     * Returns the number of available hydrogen bonds.
      *
-     *	@param The number of hydrogen bonds.
+     * @param The number of hydrogen bonds.
      */
     unsigned int HydrogenBondCount(void) const {
         return this->numHydrogenBonds;
@@ -1626,38 +1626,38 @@ public:
     }
 
     /**
-     *	Get the neighborhood sizes.
+     * Get the neighborhood sizes.
      *
-     *	@return The neighborhood sizes.
-     *				May be null if no neighboring information is available
+     * @return The neighborhood sizes.
+     *         May be null if no neighboring information is available
      */
     const unsigned int* NeighborhoodSizes(void) const {
         return this->neighborhoodSizes;
     }
 
     /**
-     *	Sets the neighborhood sizes.
+     * Sets the neighborhood sizes.
      *
-     *	@param neighborhoodSizes The list containing the neighborhoodSizes
+     * @param neighborhoodSizes The list containing the neighborhoodSizes
      */
     void SetNeighborhoodSizes(const unsigned int* neighborhoodSizes) {
         this->neighborhoodSizes = neighborhoodSizes;
     }
 
     /**
-     *	Get the atom neighborhood indices.
+     * Get the atom neighborhood indices.
      *
-     *	@return The neighborhood indices per atom.
-     *				May be null if no neighboring information is available
+     * @return The neighborhood indices per atom.
+     *         May be null if no neighboring information is available
      */
     const unsigned int** Neighborhoods(void) const {
         return this->neighborhoods;
     }
 
     /**
-     *	Sets the neighborhood indices.
+     * Sets the neighborhood indices.
      *
-     *	@param neighborhoods The neighborhood indices per atom.
+     * @param neighborhoods The neighborhood indices per atom.
      */
     void SetNeighborhoods(const unsigned int** neighborhoods) {
         this->neighborhoods = neighborhoods;

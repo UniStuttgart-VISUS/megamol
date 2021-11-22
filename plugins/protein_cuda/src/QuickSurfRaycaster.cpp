@@ -1,8 +1,8 @@
 /*
- *	QuickSurfRaycaster.cpp
+ * QuickSurfRaycaster.cpp
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #include "stdafx.h"
@@ -36,7 +36,7 @@ using namespace megamol::core::misc;
 using namespace megamol::core::utility::log;
 
 /*
- *	QuickSurfRaycaster::QuickSurfRaycaster
+ * QuickSurfRaycaster::QuickSurfRaycaster
  */
 QuickSurfRaycaster::QuickSurfRaycaster(void)
         : Renderer3DModule()
@@ -123,7 +123,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void)
 }
 
 /*
- *	QuickSurfRaycaster::~QuickSurfRaycaster
+ * QuickSurfRaycaster::~QuickSurfRaycaster
  */
 QuickSurfRaycaster::~QuickSurfRaycaster(void) {
     if (cudaqsurf) {
@@ -152,7 +152,7 @@ QuickSurfRaycaster::~QuickSurfRaycaster(void) {
 }
 
 /*
- *	QuickSurfRaycaster::release
+ * QuickSurfRaycaster::release
  */
 void QuickSurfRaycaster::release(void) {}
 
@@ -218,14 +218,14 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 }
 
 /*
- *	QuickSurfRaycaster::create
+ * QuickSurfRaycaster::create
  */
 bool QuickSurfRaycaster::create(void) {
     return initOpenGL();
 }
 
 /*
- *	QuickSurfRaycaster::convertToMesh
+ * QuickSurfRaycaster::convertToMesh
  */
 void QuickSurfRaycaster::convertToMesh(
     float* volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
@@ -372,7 +372,7 @@ void QuickSurfRaycaster::convertToMesh(
 }
 
 /*
- *	QuickSurfRaycaster::GetExtents
+ * QuickSurfRaycaster::GetExtents
  */
 bool QuickSurfRaycaster::GetExtents(Call& call) {
     view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
@@ -436,7 +436,7 @@ bool QuickSurfRaycaster::GetExtents(Call& call) {
 }
 
 /*
- *	QuickSurfRaycaster::initCuda
+ * QuickSurfRaycaster::initCuda
  */
 bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
 
@@ -466,7 +466,7 @@ bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
 }
 
 /*
- *	QuickSurfRaycaster::initPixelBuffer
+ * QuickSurfRaycaster::initPixelBuffer
  */
 bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
 
@@ -525,7 +525,7 @@ bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
 }
 
 /*
- *	QuickSurfRaycaster::initOpenGL
+ * QuickSurfRaycaster::initOpenGL
  */
 bool QuickSurfRaycaster::initOpenGL() {
 
@@ -577,7 +577,7 @@ bool QuickSurfRaycaster::initOpenGL() {
 }
 
 /*
- *	QuickSurfRaycaster::Render
+ * QuickSurfRaycaster::Render
  */
 bool QuickSurfRaycaster::Render(Call& call) {
     view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);

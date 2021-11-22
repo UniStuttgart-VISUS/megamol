@@ -107,7 +107,7 @@ public:
         }
 
         // loop over all cells inside the sphere (point, distance)
-        /*		for(float x = relPos[0]-distance; x <= relPos[0]+distance+cellSize[0]; x += cellSize[0]) {
+        /*              for(float x = relPos[0]-distance; x <= relPos[0]+distance+cellSize[0]; x += cellSize[0]) {
                                 for(float y = relPos[1]-distance; y <= relPos[1]+distance+cellSize[1]; y += cellSize[1]) {
                                         for(float z = relPos[2]-distance; z <= relPos[2]+distance+cellSize[2]; z += cellSize[2]) {
                                                 unsigned int indexX = x * gridResolutionFactors[0]; // floor()

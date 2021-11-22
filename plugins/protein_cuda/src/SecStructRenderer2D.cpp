@@ -1,8 +1,8 @@
 /*
- *	SecStructRenderer2D.cpp
+ * SecStructRenderer2D.cpp
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All Rights reserved.
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All Rights reserved.
  */
 
 #include "stdafx.h"
@@ -31,82 +31,82 @@ using namespace megamol::protein_calls;
 const GLuint SSBOBindingPoint = 2;
 
 /*
- *	MyFunkyDebugCallback
+ * MyFunkyDebugCallback
  */
 //void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-//	const GLchar* message, const GLvoid* userParam) {
-//	const char *sourceText, *typeText, *severityText;
-//	switch (source) {
-//	case GL_DEBUG_SOURCE_API:
-//		sourceText = "API";
-//		break;
-//	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-//		sourceText = "Window System";
-//		break;
-//	case GL_DEBUG_SOURCE_SHADER_COMPILER:
-//		sourceText = "Shader Compiler";
-//		break;
-//	case GL_DEBUG_SOURCE_THIRD_PARTY:
-//		sourceText = "Third Party";
-//		break;
-//	case GL_DEBUG_SOURCE_APPLICATION:
-//		sourceText = "Application";
-//		break;
-//	case GL_DEBUG_SOURCE_OTHER:
-//		sourceText = "Other";
-//		break;
-//	default:
-//		sourceText = "Unknown";
-//		break;
-//	}
-//	switch (type) {
-//	case GL_DEBUG_TYPE_ERROR:
-//		typeText = "Error";
-//		break;
-//	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-//		typeText = "Deprecated Behavior";
-//		break;
-//	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-//		typeText = "Undefined Behavior";
-//		break;
-//	case GL_DEBUG_TYPE_PORTABILITY:
-//		typeText = "Portability";
-//		break;
-//	case GL_DEBUG_TYPE_PERFORMANCE:
-//		typeText = "Performance";
-//		break;
-//	case GL_DEBUG_TYPE_OTHER:
-//		typeText = "Other";
-//		break;
-//	case GL_DEBUG_TYPE_MARKER:
-//		typeText = "Marker";
-//		break;
-//	default:
-//		typeText = "Unknown";
-//		break;
-//	}
-//	switch (severity) {
-//	case GL_DEBUG_SEVERITY_HIGH:
-//		severityText = "High";
-//		break;
-//	case GL_DEBUG_SEVERITY_MEDIUM:
-//		severityText = "Medium";
-//		break;
-//	case GL_DEBUG_SEVERITY_LOW:
-//		severityText = "Low";
-//		break;
-//	case GL_DEBUG_SEVERITY_NOTIFICATION:
-//		severityText = "Notification";
-//		break;
-//	default:
-//		severityText = "Unknown";
-//		break;
-//	}
-//	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+//    const GLchar* message, const GLvoid* userParam) {
+//    const char *sourceText, *typeText, *severityText;
+//    switch (source) {
+//    case GL_DEBUG_SOURCE_API:
+//        sourceText = "API";
+//        break;
+//    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+//        sourceText = "Window System";
+//        break;
+//    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+//        sourceText = "Shader Compiler";
+//        break;
+//    case GL_DEBUG_SOURCE_THIRD_PARTY:
+//        sourceText = "Third Party";
+//        break;
+//    case GL_DEBUG_SOURCE_APPLICATION:
+//        sourceText = "Application";
+//        break;
+//    case GL_DEBUG_SOURCE_OTHER:
+//        sourceText = "Other";
+//        break;
+//    default:
+//        sourceText = "Unknown";
+//        break;
+//    }
+//    switch (type) {
+//    case GL_DEBUG_TYPE_ERROR:
+//        typeText = "Error";
+//        break;
+//    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+//        typeText = "Deprecated Behavior";
+//        break;
+//    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+//        typeText = "Undefined Behavior";
+//        break;
+//    case GL_DEBUG_TYPE_PORTABILITY:
+//        typeText = "Portability";
+//        break;
+//    case GL_DEBUG_TYPE_PERFORMANCE:
+//        typeText = "Performance";
+//        break;
+//    case GL_DEBUG_TYPE_OTHER:
+//        typeText = "Other";
+//        break;
+//    case GL_DEBUG_TYPE_MARKER:
+//        typeText = "Marker";
+//        break;
+//    default:
+//        typeText = "Unknown";
+//        break;
+//    }
+//    switch (severity) {
+//    case GL_DEBUG_SEVERITY_HIGH:
+//        severityText = "High";
+//        break;
+//    case GL_DEBUG_SEVERITY_MEDIUM:
+//        severityText = "Medium";
+//        break;
+//    case GL_DEBUG_SEVERITY_LOW:
+//        severityText = "Low";
+//        break;
+//    case GL_DEBUG_SEVERITY_NOTIFICATION:
+//        severityText = "Notification";
+//        break;
+//    default:
+//        severityText = "Unknown";
+//        break;
+//    }
+//    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 //}
 
 /*
- *	SecStructRenderer2D::SecStructRenderer2D
+ * SecStructRenderer2D::SecStructRenderer2D
  */
 SecStructRenderer2D::SecStructRenderer2D(void)
         : Renderer2DModule()
@@ -157,14 +157,14 @@ SecStructRenderer2D::SecStructRenderer2D(void)
 }
 
 /*
- *	SecStructRenderer2D::~SecStructRenderer2D
+ * SecStructRenderer2D::~SecStructRenderer2D
  */
 SecStructRenderer2D::~SecStructRenderer2D(void) {
     this->Release();
 }
 
 /*
- *	SecStructRenderer2D::create
+ * SecStructRenderer2D::create
  */
 bool SecStructRenderer2D::create(void) {
     using namespace vislib::sys;
@@ -277,14 +277,14 @@ bool SecStructRenderer2D::create(void) {
 }
 
 /*
- *	SecStructRenderer2D::release
+ * SecStructRenderer2D::release
  */
 void SecStructRenderer2D::release(void) {
     glDeleteBuffers(1, &this->ssbo);
 }
 
 /*
- *	SecStructRenderer2D::GetExtents
+ * SecStructRenderer2D::GetExtents
  */
 bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 
@@ -476,7 +476,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 }
 
 /*
- *	SecStructRenderer2D::MouseEvents
+ * SecStructRenderer2D::MouseEvents
  */
 bool SecStructRenderer2D::MouseEvent(float x, float y, view::MouseFlags flags) {
 
@@ -486,7 +486,7 @@ bool SecStructRenderer2D::MouseEvent(float x, float y, view::MouseFlags flags) {
 }
 
 /*
- *	SecStructRenderer2D::Render
+ * SecStructRenderer2D::Render
  */
 bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 
@@ -666,13 +666,13 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 }
 
 /*
- *	SecStructRenderer2D::rotatePlaneToXY
+ * SecStructRenderer2D::rotatePlaneToXY
  */
 vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> SecStructRenderer2D::rotatePlaneToXY(
     const vislib::math::Plane<float> plane) {
 
     /**
-     *	http://math.stackexchange.com/questions/1167717/transform-a-plane-to-the-xy-plane
+     * http://math.stackexchange.com/questions/1167717/transform-a-plane-to-the-xy-plane
      */
 
     // translate plane to origin

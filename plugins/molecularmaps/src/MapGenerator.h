@@ -39,27 +39,27 @@ namespace molecularmaps {
 class MapGenerator : public core::view::Renderer3DModuleGL {
 public:
     /**
-     *	Answer the name of this module.
+     * Answer the name of this module.
      *
-     *	@return The name of this module.
+     * @return The name of this module.
      */
     static const char* ClassName(void) {
         return "MapGenerator";
     }
 
     /**
-     *	Answer a human readable description of this module.
+     * Answer a human readable description of this module.
      *
-     *	@return A human readable description of this module.
+     * @return A human readable description of this module.
      */
     static const char* Description(void) {
         return "Generates a molecular map out of an incoming triangle mesh";
     }
 
     /**
-     *	Answers whether this module is available on the current system.
+     * Answers whether this module is available on the current system.
      *
-     *	@return 'true' if the module is available, 'false' otherwise.
+     * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
         return true;
@@ -73,14 +73,14 @@ public:
 
 protected:
     /**
-     *	Implementation of 'Create'.
+     * Implementation of 'Create'.
      *
-     *	@return 'true' on success, 'false' otherwise.
+     * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create(void);
 
     /**
-     *	Implementation of 'Release'.
+     * Implementation of 'Release'.
      */
     virtual void release(void);
 
@@ -248,12 +248,12 @@ private:
 
 
     /**
-     *	The get extents callback. The module should set the members of
-     *	'call' to tell the caller the extents of its data (bounding boxes
-     *	and times).
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
      *
-     *	@param call The calling call.
-     *	@return The return value of the function.
+     * @param call The calling call.
+     * @return The return value of the function.
      */
     virtual bool GetExtents(core::view::CallRender3DGL& call);
 
@@ -262,7 +262,7 @@ private:
      * 'call' to give the caller access to its data.
      *
      *  @param call The calling call.
-     *	@return The return value of the function.
+     * @return The return value of the function.
      */
     virtual bool GetMeshData(core::Call& call);
 
@@ -277,10 +277,10 @@ private:
     virtual bool GetMeshExtents(core::Call& call);
 
     /**
-     *	Fills the local mesh data vectors with a given mesh
+     * Fills the local mesh data vectors with a given mesh
      *
-     *	@param emsh The triangle mesh
-     *	@return True on success. False otherwise.
+     * @param emsh The triangle mesh
+     * @return True on success. False otherwise.
      */
     bool fillLocalMesh(const geocalls::CallTriMeshData::Mesh& mesh);
 
@@ -545,10 +545,10 @@ private:
         const std::vector<Cut>& p_cuts, const bool p_second_rebuild, const std::vector<bool>& p_tunnels);
 
     /**
-     *	The Open GL Render callback.
+     * The Open GL Render callback.
      *
-     *	@param call The calling call.
-     *	@return The return value of the function.
+     * @param call The calling call.
+     * @return The return value of the function.
      */
     virtual bool Render(core::view::CallRender3DGL& call);
 

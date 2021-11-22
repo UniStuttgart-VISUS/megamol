@@ -106,16 +106,16 @@ bool io::VTFResDataSource::Frame::LoadFrame(
     1 197.734277202 282.285642972 248.881401574
     ...
     15999 178.196066635 58.20785402 218.434803974
--	analyzing
--	analyzing
+-    analyzing
+-    analyzing
 -
     Number of agglomerates: 2
--	Format: [particle ids] ; size_of_agglomerate longest_distance Df(diameter) Df(radius_of_gyration)
+-    Format: [particle ids] ; size_of_agglomerate longest_distance Df(diameter) Df(radius_of_gyration)
     [4020, 4464] ; 2 1.06054 3 1
     [4105, 11283] ; 2 0.979599 3 1
 
--	histogram:
--	2 2
+-    histogram:
+-    2 2
 
     */
 
@@ -232,7 +232,7 @@ bool io::VTFResDataSource::Frame::LoadFrame(
             break;
         }
     }
-    //								                  count + start                              + data
+    // count + start + data
     this->clusterInfos.sizeofPlainData =
         2 * this->clusterInfos.data.Count() * sizeof(int) + this->partCnt[0] * sizeof(int);
     this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);
@@ -299,7 +299,7 @@ bool io::VTFResDataSource::Frame::LoadFrame(
                     ++this->partCnt[0];
                     ++id;
             }
-            //								                  count + start                              + data
+            // count + start + data
             this->clusterInfos.sizeofPlainData = 2 * this->clusterInfos.data.Count() * sizeof(int)+this->partCnt[0] * sizeof(int);
             this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);
             this->clusterInfos.numClusters = this->clusterInfos.data.Count();
@@ -880,7 +880,7 @@ bool io::VTFResDataSource::getDataCallback(Call& caller) {
 
 
         //        if (f->FrameNumber() != c2->FrameID())
-        //			c2->SetFrameID(f->FrameNumber());
+        //            c2->SetFrameID(f->FrameNumber());
 
 
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);

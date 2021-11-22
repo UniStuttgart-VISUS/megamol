@@ -9,9 +9,9 @@
 /***************************************************************************
  * RCS INFORMATION:
  *
- *	$RCSfile: CUDAQuickSurf.h,v $
- *	$Author: johns $	$Locker:  $		$State: Exp $
- *	$Revision: 1.2 $	$Date: 2011/12/03 20:24:55 $
+ * $RCSfile: CUDAQuickSurf.h,v $
+ * $Author: johns $    $Locker:  $    $State: Exp $
+ * $Revision: 1.2 $    $Date: 2011/12/03 20:24:55 $
  *
  ***************************************************************************
  * DESCRIPTION:

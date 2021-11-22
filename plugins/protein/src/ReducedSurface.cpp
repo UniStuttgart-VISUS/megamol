@@ -894,7 +894,7 @@ void ReducedSurface::ComputeVicinity(vislib::math::Vector<float, 3> m, float rad
                     // if distance < threshold --> add atom 'cnt' to vicinity
                     // if( distance <= threshold )
                     //{
-                    //	this->vicinity.push_back( this->voxelMap[xId+cntX][yId+cntY][zId+cntZ][cnt]);
+                    //    this->vicinity.push_back( this->voxelMap[xId+cntX][yId+cntY][zId+cntZ][cnt]);
                     //}
                     this->vicinity.push_back(this->voxelMap[xId + cntX][yId + cntY][zId + cntZ][cnt]);
                 }

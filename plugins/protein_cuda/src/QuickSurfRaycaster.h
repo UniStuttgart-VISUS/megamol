@@ -1,8 +1,8 @@
 /*
- *	QuickSurfRaycaster.h
+ * QuickSurfRaycaster.h
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #ifndef MMPROTEINCUDAPLUGIN_QUICKSURFRAYCASTER_H_INCLUDED
@@ -118,7 +118,7 @@ protected:
 
 private:
     /*
-     *	Struct representing a vertex with a position and a color.
+     * Struct representing a vertex with a position and a color.
      */
     struct Vertex {
         // The vertex position.
@@ -204,42 +204,42 @@ private:
     virtual bool Render(megamol::core::Call& call);
 
     /**
-     *	Initializes all CUDA related stuff
+     * Initializes all CUDA related stuff
      *
-     *	@param cr3d The calling call.
-     *	@return True on success, false otherwise.
+     * @param cr3d The calling call.
+     * @return True on success, false otherwise.
      */
     bool initCuda(megamol::core::view::CallRender3D& cr3d);
 
     /**
-     *	Initializes all OpenGL related structures
+     * Initializes all OpenGL related structures
      *
-     *	@return True on success, false otherwise.
+     * @return True on success, false otherwise.
      */
     bool initOpenGL();
 
     /**
-     *	Initializes the pixel buffer and other related structures
+     * Initializes the pixel buffer and other related structures
      *
-     *	@return True on success, false otherwise.
+     * @return True on success, false otherwise.
      */
     bool initPixelBuffer(megamol::core::view::CallRender3D& cr3d);
 
     /**
-     *	Calculates the volume data used for ray casting from the given call and other values
+     * Calculates the volume data used for ray casting from the given call and other values
      *
-     *	@param bbMin The min values of the object space bounding box
-     *	@param bbMax The max values of the object space bounding box
-     *	@param position Array containing all particle positions followed by the radii.
-     *	@param quality
-     *	@param radscale
-     *	@param gridspacing
-     *	@param isoval
-     *	@param minConcentration Minimal concentration over all particles
-     *	@param maxConcentration Maximal concentration over all particles
-     *	@param useCol
-     *	@param timestep The current timestep index
-     *	@return True on success, false otherwise
+     * @param bbMin The min values of the object space bounding box
+     * @param bbMax The max values of the object space bounding box
+     * @param position Array containing all particle positions followed by the radii.
+     * @param quality
+     * @param radscale
+     * @param gridspacing
+     * @param isoval
+     * @param minConcentration Minimal concentration over all particles
+     * @param maxConcentration Maximal concentration over all particles
+     * @param useCol
+     * @param timestep The current timestep index
+     * @return True on success, false otherwise
      */
     bool calcVolume(float3 bbMin, float3 bbMax, float* positions, int quality, float radscale, float gridspacing,
         float isoval, float minConcentration, float maxConcentration, bool useCol, int timestep = 0);

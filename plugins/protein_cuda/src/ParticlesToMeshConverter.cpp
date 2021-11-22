@@ -1,8 +1,8 @@
 /*
- *	ParticlesToMeshConverter.cpp
+ * ParticlesToMeshConverter.cpp
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #include "stdafx.h"
@@ -80,7 +80,7 @@ VISLIB_FORCEINLINE void copyCol_UINT8_RGBA(const void* source, float* dest) {
 typedef void (*copyColFunc)(const void*, float*);
 
 /*
- *	ParticlesToMeshConverter::ParticlesToMeshConverter
+ * ParticlesToMeshConverter::ParticlesToMeshConverter
  */
 ParticlesToMeshConverter::ParticlesToMeshConverter(void)
         : Module()
@@ -145,7 +145,7 @@ ParticlesToMeshConverter::ParticlesToMeshConverter(void)
 }
 
 /*
- *	QuickSurfRaycaster::~QuickSurfRaycaster
+ * QuickSurfRaycaster::~QuickSurfRaycaster
  */
 ParticlesToMeshConverter::~ParticlesToMeshConverter(void) {
     if (cudaqsurf) {
@@ -174,7 +174,7 @@ ParticlesToMeshConverter::~ParticlesToMeshConverter(void) {
 }
 
 /*
- *	QuickSurfRaycaster::release
+ * QuickSurfRaycaster::release
  */
 void ParticlesToMeshConverter::release(void) {}
 
@@ -240,14 +240,14 @@ bool ParticlesToMeshConverter::calcVolume(float3 bbMin, float3 bbMax, float* pos
 }
 
 /*
- *	QuickSurfRaycaster::create
+ * QuickSurfRaycaster::create
  */
 bool ParticlesToMeshConverter::create(void) {
     return true; // initOpenGL();
 }
 
 /*
- *	QuickSurfRaycaster::convertToMesh
+ * QuickSurfRaycaster::convertToMesh
  */
 void ParticlesToMeshConverter::makeMesh(
     float* volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
@@ -394,7 +394,7 @@ void ParticlesToMeshConverter::makeMesh(
 }
 
 /*
- *	ParticlesToMeshConverter::GetExtents
+ * ParticlesToMeshConverter::GetExtents
  */
 bool ParticlesToMeshConverter::GetExtents(Call& call) {
     view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
@@ -457,7 +457,7 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
 
 
 /*
- *	QuickSurfRaycaster::GetData
+ * QuickSurfRaycaster::GetData
  */
 bool ParticlesToMeshConverter::GetData(Call& call) {
     geocalls::CallTriMeshData* cmesh = dynamic_cast<geocalls::CallTriMeshData*>(&call);
@@ -607,27 +607,27 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
                     copier(colorPos, &this->colorTable[particleCnt * 4]);
                     //#define ALWAYS4COLORS
                     //#ifndef ALWAYS4COLORS
-                    //						// 1. copy all available values into the color, the rest gets filled up with the last available value
-                    //						for (int k = 0; k < numColors; k++) {
-                    //							for (int l = 0; l < 3 - k; l++) {
-                    //								this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
-                    //							}
-                    //						}
+                    //                        // 1. copy all available values into the color, the rest gets filled up with the last available value
+                    //                        for (int k = 0; k < numColors; k++) {
+                    //                            for (int l = 0; l < 3 - k; l++) {
+                    //                                this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
+                    //                            }
+                    //                        }
                     //#else
-                    //						for (int k = 0; k < 4; k++) {
-                    //							this->colorTable[particleCnt * 4 + k] = colorPos[k];
-                    //						}
+                    //                        for (int k = 0; k < 4; k++) {
+                    //                            this->colorTable[particleCnt * 4 + k] = colorPos[k];
+                    //                        }
                     //#endif
                     //
-                    //						// normalization of the values happens later
-                    //						this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
+                    //                        // normalization of the values happens later
+                    //                        this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
                     //
-                    //						// 2. fill r,g & b with the last available color value (should be density)
-                    //						/*for (int k = 0; k < 3; k++) {
-                    //							this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
-                    //							}*/
+                    //                        // 2. fill r,g & b with the last available color value (should be density)
+                    //                        /*for (int k = 0; k < 3; k++) {
+                    //                            this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
+                    //                            }*/
                     //
-                    //						/*---------------------------------------------------------------------------------------------------*/
+                    //                        /*---------------------------------------------------------------------------------------------------*/
 
                     particleCnt++;
                 }
@@ -641,7 +641,7 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
         //glPushMatrix();
         //float scale = 1.0f;
         //if (!vislib::math::IsEqual(mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        //	scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        //    scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         //}
         //glScalef(scale, scale, scale);
 
@@ -670,7 +670,7 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
         //glPushMatrix();
         //float scale = 1.0f;
         //if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        //	scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        //    scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         //}
         //glScalef(scale, scale, scale);
         onlyVolumetric = true;

@@ -925,7 +925,7 @@ bool PDBLoader::getData(core::Call& call) {
         static_cast<unsigned int>(this->connectivity.Count() / 2), (unsigned int*)this->connectivity.PeekElements());
     dc->SetResidues(static_cast<unsigned int>(this->residue.Count()),
         (const MolecularDataCall::Residue**)this->residue.PeekElements());
-    //	dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
+    // dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
     dc->SetSolventResidueIndices(
         static_cast<unsigned int>(this->solventResidueIdx.Count()), this->solventResidueIdx.PeekElements());
     dc->SetResidueTypeNames(static_cast<unsigned int>(this->residueTypeName.Count()),

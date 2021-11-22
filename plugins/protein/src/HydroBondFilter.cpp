@@ -1,8 +1,8 @@
 /*
- *	HydroBondFilter.cpp
+ * HydroBondFilter.cpp
  *
- *	Copyright (C) 2016 by University of Stuttgart (VISUS).
- *	All rights reserved.
+ * Copyright (C) 2016 by University of Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #include "HydroBondFilter.h"
@@ -24,7 +24,7 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
 /*
- *	HydroBondFilter::~HydroBondFilter
+ * HydroBondFilter::~HydroBondFilter
  */
 HydroBondFilter::HydroBondFilter()
         : Module()
@@ -67,21 +67,21 @@ HydroBondFilter::HydroBondFilter()
 }
 
 /*
- *	HydroBondFilter::~HydroBondFilter
+ * HydroBondFilter::~HydroBondFilter
  */
 HydroBondFilter::~HydroBondFilter(void) {
     this->Release();
 }
 
 /*
- *	HydroBondFilter::create
+ * HydroBondFilter::create
  */
 bool HydroBondFilter::create(void) {
     return true;
 }
 
 /*
- *	HydroBondFilter::fillSecStructVector
+ * HydroBondFilter::fillSecStructVector
  */
 void HydroBondFilter::fillSecStructVector(MolecularDataCall& mdc) {
 
@@ -145,7 +145,7 @@ void HydroBondFilter::fillSecStructVector(MolecularDataCall& mdc) {
 }
 
 /*
- *	HydroBondFilter::getData
+ * HydroBondFilter::getData
  */
 bool HydroBondFilter::getData(Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
@@ -192,7 +192,7 @@ bool HydroBondFilter::getData(Call& call) {
 }
 
 /*
- *	HydroBondFilter::getExtent
+ * HydroBondFilter::getExtent
  */
 bool HydroBondFilter::getExtent(Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
@@ -221,7 +221,7 @@ bool HydroBondFilter::getExtent(Call& call) {
 }
 
 /*
- *	HydroBondFilter::isValidHBond
+ * HydroBondFilter::isValidHBond
  */
 bool HydroBondFilter::isValidHBond(unsigned int donorIndex, unsigned int acceptorIndex, MolecularDataCall& mdc) {
 
@@ -239,7 +239,7 @@ bool HydroBondFilter::isValidHBond(unsigned int donorIndex, unsigned int accepto
 }
 
 /*
- *	HydroBondFilter::filterHBonds
+ * HydroBondFilter::filterHBonds
  */
 void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
 
@@ -327,6 +327,6 @@ void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
 }
 
 /*
- *	HydroBondFilter::release
+ * HydroBondFilter::release
  */
 void HydroBondFilter::release(void) {}

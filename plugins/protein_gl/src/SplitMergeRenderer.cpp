@@ -307,7 +307,7 @@ bool SplitMergeRenderer::Render(core_gl::view::CallRender2DGL& call) {
     FastMapWrapper::diagram = diagram;
     fmps.AssertCapacity(diagram->GetSeriesCount());
     fmps.SetCount(diagram->GetSeriesCount());
-	for (int i = 0; i < (int)diagram->GetSeriesCount(); i++) {
+    for (int i = 0; i < (int)diagram->GetSeriesCount(); i++) {
         fmps[i].index = i;
     }
     vislib::math::Fastmap<FastMapWrapper, int, 1> fm;

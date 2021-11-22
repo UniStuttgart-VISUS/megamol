@@ -5,12 +5,12 @@ using namespace megamol;
 using namespace megamol::moldyn;
 
 /*
- *	IntSelectionCall:IntSelectionCall
+ * IntSelectionCall:IntSelectionCall
  */
 BrickStatsCall::BrickStatsCall(void) : bricks() {}
 
 /*
- *	IntSelectionCall::~IntSelectionCall
+ * IntSelectionCall::~IntSelectionCall
  */
 BrickStatsCall::~BrickStatsCall(void) {}
 

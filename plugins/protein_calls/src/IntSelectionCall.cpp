@@ -16,12 +16,12 @@ const unsigned int IntSelectionCall::CallForGetSelection = 0;
 const unsigned int IntSelectionCall::CallForSetSelection = 1;
 
 /*
- *	IntSelectionCall:IntSelectionCall
+ * IntSelectionCall:IntSelectionCall
  */
 IntSelectionCall::IntSelectionCall(void) : selection(NULL) {}
 
 /*
- *	IntSelectionCall::~IntSelectionCall
+ * IntSelectionCall::~IntSelectionCall
  */
 IntSelectionCall::~IntSelectionCall(void) {
     selection = NULL;

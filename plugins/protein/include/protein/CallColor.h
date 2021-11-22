@@ -68,8 +68,8 @@ public:
     }
 
     /**
-     *	Struct to store information for a single c-alpha atom
-     *	containing position and relevant atom indices
+     * Struct to store information for a single c-alpha atom
+     * containing position and relevant atom indices
      */
     struct cAlpha {
         /** position of the c-alpha atom*/
@@ -100,16 +100,16 @@ public:
     }
 
     /**
-     *	Sets the protein that the color table is computed for
+     * Sets the protein that the color table is computed for
      *
-     *	@param mol1 The MolecularDataCall of the protein
+     * @param mol1 The MolecularDataCall of the protein
      */
     void SetColoringTarget(megamol::protein_calls::MolecularDataCall* mol1) {
         this->mol1 = mol1;
     }
 
     /**
-     *	Returns the MolecularDataCall that contains the
+     * Returns the MolecularDataCall that contains the
      * protein that should be colored.
      *
      * @return The MolecularDataCall containing the protein.
@@ -119,72 +119,72 @@ public:
     }
 
     /**
-     *	Sets the BindingSiteCall.
+     * Sets the BindingSiteCall.
      *
-     *	@param bs The BindingSiteCall
+     * @param bs The BindingSiteCall
      */
     void SetBindingSiteCall(const protein_calls::BindingSiteCall* bs) {
         this->bs = bs;
     }
 
     /**
-     *	Returns the BindingSiteCall
+     * Returns the BindingSiteCall
      *
-     *	@return The BindingSiteCall
+     * @return The BindingSiteCall
      */
     const protein_calls::BindingSiteCall* GetBindingSiteCall() {
         return this->bs;
     }
 
     /**
-     *	Sets the forceRecompute flag.
+     * Sets the forceRecompute flag.
      *
-     *	@param fr true, if the color table should be recomputed
+     * @param fr true, if the color table should be recomputed
      */
     void SetForceRecompute(bool fr) {
         this->forceRecompute = fr;
     }
 
     /**
-     *	Returns, if the recomputation of the color table should
+     * Returns, if the recomputation of the color table should
      * be forced.
      *
-     *	@return true, if the recomputation should be forced, false otherwise
+     * @return true, if the recomputation should be forced, false otherwise
      */
     bool GetForceRecompute() {
         return forceRecompute;
     }
 
     /**
-     *	Sets the weighted flag.
+     * Sets the weighted flag.
      *
-     *	@param w true, if the colortable should weight between two coloring modes
+     * @param w true, if the colortable should weight between two coloring modes
      */
     void SetWeighted(bool w) {
         this->isWeighted = w;
     }
 
     /**
-     *	Returns, if the color table computation should weight between
+     * Returns, if the color table computation should weight between
      * two different coloring modes.
      *
-     *	@return true, if the computation weights between two modes, false otherwise
+     * @return true, if the computation weights between two modes, false otherwise
      */
     bool GetWeighted() {
         return this->isWeighted;
     }
 
     /**
-     *	Sets the color table for the protein.
+     * Sets the color table for the protein.
      *
-     *	@param atomColorTable The color table
+     * @param atomColorTable The color table
      */
     void SetAtomColorTable(vislib::Array<float>* atomColorTable) {
         this->atomColorTable = atomColorTable;
     }
 
     /**
-     *	Returns the color table used to color the protein.
+     * Returns the color table used to color the protein.
      *
      * @return The atom color table
      */
@@ -193,108 +193,108 @@ public:
     }
 
     /**
-     *	Sets the color lookup table.
+     * Sets the color lookup table.
      *
-     *	@param clt The color lookup table
+     * @param clt The color lookup table
      */
     void SetColorLookupTable(vislib::Array<vislib::math::Vector<float, 3>>* clt) {
         this->colorLookupTable = clt;
     }
 
     /**
-     *	Returns the color lookup table.
+     * Returns the color lookup table.
      *
-     *	@return The color lookup table
+     * @return The color lookup table
      */
     vislib::Array<vislib::math::Vector<float, 3>>* GetColorLookupTable() {
         return this->colorLookupTable;
     }
 
     /**
-     *	Sets the rainbow color table.
+     * Sets the rainbow color table.
      *
-     *	@param rct The rainbow color table
+     * @param rct The rainbow color table
      */
     void SetRainbowColorTable(vislib::Array<vislib::math::Vector<float, 3>>* rct) {
         this->rainbowColors = rct;
     }
 
     /**
-     *	Returns the rainbow color table.
+     * Returns the rainbow color table.
      *
-     *	@return The rainbow color table
+     * @return The rainbow color table
      */
     vislib::Array<vislib::math::Vector<float, 3>>* GetRainbowColorTable() {
         return this->rainbowColors;
     }
 
     /**
-     *	Sets the number of entries the rainbow color table should have.
+     * Sets the number of entries the rainbow color table should have.
      *
-     *	@param num The number of entries of the rainbow color table
+     * @param num The number of entries of the rainbow color table
      */
     void SetNumEntries(unsigned int num) {
         this->numEntries = num;
     }
 
     /**
-     *	Returns the number of entries of the rainbow color table.
+     * Returns the number of entries of the rainbow color table.
      *
-     *	@return The number of entries of the rainbow color table
+     * @return The number of entries of the rainbow color table
      */
     unsigned int GetNumEntries() {
         return this->numEntries;
     }
 
     /**
-     *	Enables or disables comparison of proteins.
+     * Enables or disables comparison of proteins.
      *
-     *	@param ce true to enable, false do disable
+     * @param ce true to enable, false do disable
      */
     void SetComparisonEnabled(bool ce) {
         this->comparisonEnabled = ce;
     }
 
     /**
-     *	Returns if the comparison of proteins is enabled
+     * Returns if the comparison of proteins is enabled
      *
-     *	@return true, if comparison is enabled, false otherwise
+     * @return true, if comparison is enabled, false otherwise
      */
     bool GetComparisonEnabled() {
         return this->comparisonEnabled;
     }
 
     /**
-     *	Sets the dirty flag for the color module
+     * Sets the dirty flag for the color module
      *
-     *	@param d true, if the module is dirty, false otherwise
+     * @param d true, if the module is dirty, false otherwise
      */
     void SetDirty(bool d) {
         this->isDirty = d;
     }
 
     /**
-     *	Returns if the dirty flag is set
+     * Returns if the dirty flag is set
      *
-     *	@param true, if the dirty flag is set, false otherwise
+     * @param true, if the dirty flag is set, false otherwise
      */
     bool IsDirty() {
         return this->isDirty;
     }
 
     /**
-     *	Sets the frame ID for the MolecularDataCall
+     * Sets the frame ID for the MolecularDataCall
      *
-     *	@param fid The frame id
+     * @param fid The frame id
      */
     void SetFrameID(unsigned int fid) {
         this->frameID = fid;
     }
 
     /**
-     *	Returns the frame ID of the MolecularDataCall
+     * Returns the frame ID of the MolecularDataCall
      *
-     *	@return The frame ID
+     * @return The frame ID
      */
     unsigned int GetFrameID() {
         return this->frameID;

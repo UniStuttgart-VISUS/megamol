@@ -152,8 +152,8 @@ typedef struct {
     int nrngi;
     int flags;              /* Flags telling which entries are present      */
     real lambda;            /* the free energy switching parameter          */
-    matrix box;             /* box vector coordinates                      	*/
-    matrix box_rel;         /* Relitaive box vectors to preserve shape    	*/
+    matrix box;             /* box vector coordinates                       */
+    matrix box_rel;         /* Relitaive box vectors to preserve shape      */
     matrix boxv;            /* box velocitites for Parrinello-Rahman pcoupl */
     matrix pres_prev;       /* Pressure of the previous step for pcoupl  */
     matrix svir_prev;       /* Shake virial for previous step for pcoupl */

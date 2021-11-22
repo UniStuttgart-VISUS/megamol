@@ -68,8 +68,8 @@ public:
     class Edge {
     public:
         Edge() : node1(0), node2(0), visited(false) {}
-        //	: nodes()
-        //	, visited(false)
+        // : nodes()
+        // , visited(false)
         //{}
 
         ~Edge() {}

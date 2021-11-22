@@ -151,7 +151,7 @@ public:
      * @param atomColorTable      The atom color table.
      * @param colorLookupTable    The color lookup table.
      * @param rainbowColors       The rainbow color lookup table.
-     *	@param frameID			   The frame ID
+     * @param frameID             The frame ID
      * @param forceRecompute      Force recomputation of the color table.
      * @param bs                  The binding site data call.
      */
@@ -272,7 +272,7 @@ protected:
 
 
     /**
-     *	Get the Number of coloring modes.
+     * Get the Number of coloring modes.
      *
      * @return The number of coloring modes.
      */
@@ -281,7 +281,7 @@ protected:
     };
 
     /**
-     *	Get the Number of comparison modes.
+     * Get the Number of comparison modes.
      *
      * @return The number of comparison modes.
      */
@@ -290,7 +290,7 @@ protected:
     };
 
     /**
-     *	Get the Number of comparison coloring modes.
+     * Get the Number of comparison coloring modes.
      *
      * @return The number of comparison coloring modes.
      */
@@ -299,9 +299,9 @@ protected:
     };
 
     /**
-     *	Checks, if some params are changed by the user
+     * Checks, if some params are changed by the user
      *
-     *	@return true, if a param was changed, false otherwise
+     * @return true, if a param was changed, false otherwise
      */
     bool updateParams();
 

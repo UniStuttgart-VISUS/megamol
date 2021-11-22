@@ -16,12 +16,12 @@ const unsigned int ResidueSelectionCall::CallForGetSelection = 0;
 const unsigned int ResidueSelectionCall::CallForSetSelection = 1;
 
 /*
- *	ResidueSelectionCall::ResidueSelectionCall
+ * ResidueSelectionCall::ResidueSelectionCall
  */
 ResidueSelectionCall::ResidueSelectionCall(void) : selection(NULL) {}
 
 /*
- *	ResidueSelectionCall::~ResidueSelectionCall
+ * ResidueSelectionCall::~ResidueSelectionCall
  */
 ResidueSelectionCall::~ResidueSelectionCall(void) {
     selection = NULL;

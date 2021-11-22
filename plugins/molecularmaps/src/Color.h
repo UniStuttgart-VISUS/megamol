@@ -191,7 +191,7 @@ public:
      *
      * @param mol1                The first data interface.
      *                            This one is rendered
-     * @param mol2				  The second data interface.
+     * @param mol2                The second data interface.
      * @param currentColoringMode The current coloring mode.
      * @param atomColorTable      The atom color table.
      * @param colorLookupTable    The color lookup table.

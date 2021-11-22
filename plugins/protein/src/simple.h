@@ -60,10 +60,10 @@ extern "C" {
 #endif
 
 
-#define XX 0 /* Defines for indexing in	*/
-#define YY 1 /* vectors			*/
+#define XX 0 /* Defines for indexing in */
+#define YY 1 /* vectors                 */
 #define ZZ 2
-#define DIM 3  /* Dimension of vectors		*/
+#define DIM 3  /* Dimension of vectors      */
 #define XXXX 0 /* defines to index matrices */
 #define XXYY 1
 #define XXZZ 2

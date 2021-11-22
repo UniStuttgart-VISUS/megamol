@@ -9,9 +9,9 @@
 /***************************************************************************
  * RCS INFORMATION:
  *
- *	$RCSfile: utilities.h,v $
- *	$Author: johns $	$Locker:  $		$State: Exp $
- *	$Revision: 1.96 $	$Date: 2010/12/16 04:08:58 $
+ * $RCSfile: utilities.h,v $
+ * $Author: johns $    $Locker:  $    $State: Exp $
+ * $Revision: 1.96 $    $Date: 2010/12/16 04:08:58 $
  *
  ***************************************************************************
  * DESCRIPTION:
@@ -80,7 +80,7 @@ extern void breakup_filename(const char*, char**, char**);
 extern char* str_tokenize(const char*, int*, char**);
 
 /// get the time of day from the system clock, and return it (in seconds)
-///	(This is supposedly accurate to within about 1 millisecond
+///    (This is supposedly accurate to within about 1 millisecond
 extern double time_of_day(void);
 
 /// check for input on stdin

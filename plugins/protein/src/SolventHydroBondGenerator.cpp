@@ -152,80 +152,80 @@ void megamol::protein::SolventDataGenerator::findDonors(MolecularDataCall *data)
 #if 0
 class HbondIO {
 private:
-	vislib::sys::File *readHandle, *writeHandle;
+    vislib::sys::File *readHandle, *writeHandle;
 
-	/*vislib::sys::File::FileSize*/
-	unsigned int dataStartOffset, atomCount, frameCount, frameSizeInBytes;
+    /*vislib::sys::File::FileSize*/
+    unsigned int dataStartOffset, atomCount, frameCount, frameSizeInBytes;
 
 public:
-	HbondIO(unsigned int atomCount, unsigned int frameCount, const vislib::StringA& fname, bool read)
-		: dataStartOffset(0), atomCount(atomCount), frameCount(frameCount) {
-		if (read) {
-			readHandle = new vislib::sys::MemmappedFile();
-			if (!readHandle->Open(fname, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-				delete readHandle;
-				readHandle = 0;
-			}
-			writeHandle = 0;
-		} else {
-			writeHandle = new vislib::sys::MemmappedFile();
-			if (!writeHandle->Open(fname, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
-				delete writeHandle;
-				writeHandle = 0;
-			}
-			readHandle = 0;
-		}
-	}
-	~HbondIO() {
-		delete readHandle;
-		delete writeHandle;
-	}
+    HbondIO(unsigned int atomCount, unsigned int frameCount, const vislib::StringA& fname, bool read)
+        : dataStartOffset(0), atomCount(atomCount), frameCount(frameCount) {
+        if (read) {
+            readHandle = new vislib::sys::MemmappedFile();
+            if (!readHandle->Open(fname, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+                delete readHandle;
+                readHandle = 0;
+            }
+            writeHandle = 0;
+        } else {
+            writeHandle = new vislib::sys::MemmappedFile();
+            if (!writeHandle->Open(fname, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
+                delete writeHandle;
+                writeHandle = 0;
+            }
+            readHandle = 0;
+        }
+    }
+    ~HbondIO() {
+        delete readHandle;
+        delete writeHandle;
+    }
 
-	bool writeFrame(int *frame, unsigned int frameId) {
-		if (!writeHandle)
-			return false;
+    bool writeFrame(int *frame, unsigned int frameId) {
+        if (!writeHandle)
+            return false;
 
-		// write header at first
-		if ( dataStartOffset == 0) {
-			dataStartOffset = 4*sizeof(dataStartOffset); // store 4 ineteger entries as header for now ...
-			frameSizeInBytes = atomCount * sizeof(int); // 1 signed integer per atom specifying the hbond connection to another atom
-			writeHandle->Write(&dataStartOffset, sizeof(dataStartOffset));
-			writeHandle->Write(&atomCount, sizeof(atomCount));
-			writeHandle->Write(&frameCount, sizeof(frameCount));
-			writeHandle->Write(&frameSizeInBytes, sizeof(frameSizeInBytes));
-			ASSERT(writeHandle->Tell()==dataStartOffset);
-			if (writeHandle->Tell()!=dataStartOffset)
-				return false;
-		}
+        // write header at first
+        if ( dataStartOffset == 0) {
+            dataStartOffset = 4*sizeof(dataStartOffset); // store 4 ineteger entries as header for now ...
+            frameSizeInBytes = atomCount * sizeof(int); // 1 signed integer per atom specifying the hbond connection to another atom
+            writeHandle->Write(&dataStartOffset, sizeof(dataStartOffset));
+            writeHandle->Write(&atomCount, sizeof(atomCount));
+            writeHandle->Write(&frameCount, sizeof(frameCount));
+            writeHandle->Write(&frameSizeInBytes, sizeof(frameSizeInBytes));
+            ASSERT(writeHandle->Tell()==dataStartOffset);
+            if (writeHandle->Tell()!=dataStartOffset)
+                return false;
+        }
 
-		ASSERT(frameId < frameCount);
-		writeHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
-		if (writeHandle->Write(frame, frameSizeInBytes) != frameSizeInBytes)
-			return false;
-		return true;
-	}
+        ASSERT(frameId < frameCount);
+        writeHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
+        if (writeHandle->Write(frame, frameSizeInBytes) != frameSizeInBytes)
+            return false;
+        return true;
+    }
 
-	bool readFrame(int *frame, unsigned int frameId) {
-		if (!readHandle)
-			return false;
+    bool readFrame(int *frame, unsigned int frameId) {
+        if (!readHandle)
+            return false;
 
-		// read header at first
-		if ( dataStartOffset == 0) {
-			readHandle->Read(&dataStartOffset, sizeof(dataStartOffset));
-			readHandle->Read(&atomCount, sizeof(atomCount));
-			readHandle->Read(&frameCount, sizeof(frameCount));
-			readHandle->Read(&frameSizeInBytes, sizeof(frameSizeInBytes));
-			ASSERT(frameSizeInBytes==atomCount * sizeof(int)); // this is some sort of file type/integrity check ...
-			if (frameSizeInBytes!=atomCount * sizeof(int))
-				return false;
-		}
+        // read header at first
+        if ( dataStartOffset == 0) {
+            readHandle->Read(&dataStartOffset, sizeof(dataStartOffset));
+            readHandle->Read(&atomCount, sizeof(atomCount));
+            readHandle->Read(&frameCount, sizeof(frameCount));
+            readHandle->Read(&frameSizeInBytes, sizeof(frameSizeInBytes));
+            ASSERT(frameSizeInBytes==atomCount * sizeof(int)); // this is some sort of file type/integrity check ...
+            if (frameSizeInBytes!=atomCount * sizeof(int))
+                return false;
+        }
 
-		ASSERT(frameId < frameCount);
-		readHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
-		if (readHandle->Read(frame, frameSizeInBytes) != frameSizeInBytes)
-			return false;
-		return true;
-	}
+        ASSERT(frameId < frameCount);
+        readHandle->Seek(dataStartOffset + frameId*frameSizeInBytes);
+        if (readHandle->Read(frame, frameSizeInBytes) != frameSizeInBytes)
+            return false;
+        return true;
+    }
 };
 #endif
 
@@ -249,59 +249,59 @@ void megamol::protein::SolventHydroBondGenerator::calcHydroBondsForCurFrame(
     //timer.SetMark();
 
 #if 0
-	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
-	neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
+    float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
+    neighbourFinder.SetPointData(atomPositions, data->AtomCount(), data->AccessBoundingBoxes().ObjectSpaceBBox(), hbondDist);
 
-	// looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
+    // looping over residues may not be a good idea?! (index-traversal?) loop over all possible acceptors ...
 #pragma omp parallel for
-	for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
-		const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
+    for( int rIdx = 0; rIdx < data->ResidueCount(); rIdx++ ) {
+        const MolecularDataCall::Residue *residue = data->Residues()[rIdx];
 
-		// we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
-		if (data->IsSolvent(residue))
-			continue;
+        // we're only interested in hydrogen bonds between polymer/protein molecule and surounding solvent
+        if (data->IsSolvent(residue))
+            continue;
 
-		// find possible acceptor atoms in the current residuum (for now just O, N, C(?)
+        // find possible acceptor atoms in the current residuum (for now just O, N, C(?)
 
-		// vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
-		int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
-		for(int aIdx = residue->FirstAtomIndex(); aIdx < lastAtomIdx; aIdx++) {
-			// is this atom already connected?
-			if (reverseConnectionPtr[aIdx] != -1)
-				continue;
+        // vorerst nur Sauerstoff und Stickstoff als Akzeptor/Donator (N, O)
+        int lastAtomIdx = residue->FirstAtomIndex()+residue->AtomCount();
+        for(int aIdx = residue->FirstAtomIndex(); aIdx < lastAtomIdx; aIdx++) {
+            // is this atom already connected?
+            if (reverseConnectionPtr[aIdx] != -1)
+                continue;
 
-			const MolecularDataCall::AtomType& t = atomTypes[atomTypeIndices[aIdx]];
-			const vislib::StringA& name = t.Name();
-			char element = name[0];
+            const MolecularDataCall::AtomType& t = atomTypes[atomTypeIndices[aIdx]];
+            const vislib::StringA& name = t.Name();
+            char element = name[0];
 
 /*
 JW: ich fuerchte fuer eine allgemeine Deffinition der Wasserstoffbruecken muss man ueber die Bindungsenergien gehen und diese berechnen.
 Fuer meine Simulationen und alle Bio-Geschichten reicht die Annahme, dass Sauerstoff, Stickstoff und Fluor (was fast nie vorkommt)
 Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabei ist der Wasserstoff am Donor gebunden und bildet die Bruecke zum Akzeptor.
 */
-			if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
-				int ompThreadID = omp_get_thread_num();
-				neighbourIndices[ompThreadID].Clear(); // clear, keep capacity ...
-				neighbourIndices[ompThreadID].SetCapacityIncrement( 100); // set capacity increment
-				neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices[ompThreadID]);
-				for(int nIdx = 0; nIdx<neighbourIndices[ompThreadID].Count(); nIdx++) {
-					int neighbIndex = neighbourIndices[ompThreadID][nIdx];
-					// atom from the current residue?
-					if (atomResidueIndices[neighbIndex]==rIdx)
-						continue;
-					// check if a H-atom is in range and add a h-bond...
-					if (atomTypes[atomTypeIndices[neighbIndex]].Name()[0]=='H') {
-						atomHydroBondsIndicesPtr[aIdx] = neighbIndex;
-						// avoid double checks - only one hydrogen bond per atom?!
-						reverseConnectionPtr[neighbIndex] = aIdx;
-						// TODO: maybe mark double time? or double with negative index?
-					}
-				}
-			} else if (element=='H') {
-				// TODO !?
-			}
-		}
-	}
+            if (element=='N' || element=='O' /*|| element=='F' || element=='C'??*/) {
+                int ompThreadID = omp_get_thread_num();
+                neighbourIndices[ompThreadID].Clear(); // clear, keep capacity ...
+                neighbourIndices[ompThreadID].SetCapacityIncrement( 100); // set capacity increment
+                neighbourFinder.FindNeighboursInRange(&atomPositions[aIdx*3], hbondDist, neighbourIndices[ompThreadID]);
+                for(int nIdx = 0; nIdx<neighbourIndices[ompThreadID].Count(); nIdx++) {
+                    int neighbIndex = neighbourIndices[ompThreadID][nIdx];
+                    // atom from the current residue?
+                    if (atomResidueIndices[neighbIndex]==rIdx)
+                        continue;
+                    // check if a H-atom is in range and add a h-bond...
+                    if (atomTypes[atomTypeIndices[neighbIndex]].Name()[0]=='H') {
+                        atomHydroBondsIndicesPtr[aIdx] = neighbIndex;
+                        // avoid double checks - only one hydrogen bond per atom?!
+                        reverseConnectionPtr[neighbIndex] = aIdx;
+                        // TODO: maybe mark double time? or double with negative index?
+                    }
+                }
+            } else if (element=='H') {
+                // TODO !?
+            }
+        }
+    }
 #else
 
     /* create hydrogen connections */
@@ -564,51 +564,51 @@ bool megamol::protein::SolventHydroBondGenerator::getHBonds(
         atomHydroBonds.SetCount(dataSource->AtomCount());
 
 #if 0
-	const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
-	if (fileName.IsEmpty())
-		return false;
+    const vislib::TString fileName = hBondDataFile.Param<param::StringParam>()->Value();
+    if (fileName.IsEmpty())
+        return false;
 
-	if (vislib::sys::File::Exists(fileName)) {
-		HbondIO input(dataSource->AtomCount(), dataSource->FrameCount(), fileName, true);
-		if (input.readFrame(&atomHydroBonds[0], reqFrame)) {
-			curHBondFrame[cacheIndex] = reqFrame;
-			dataTarget->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
-			dataTarget->SetAtomHydrogenBondDistance(hbondDist);
-			return true;
-		}
-		return false;
-	}
+    if (vislib::sys::File::Exists(fileName)) {
+        HbondIO input(dataSource->AtomCount(), dataSource->FrameCount(), fileName, true);
+        if (input.readFrame(&atomHydroBonds[0], reqFrame)) {
+            curHBondFrame[cacheIndex] = reqFrame;
+            dataTarget->SetAtomHydrogenBondIndices(atomHydroBonds.PeekElements());
+            dataTarget->SetAtomHydrogenBondDistance(hbondDist);
+            return true;
+        }
+        return false;
+    }
 
-	HbondIO *output = new HbondIO(data->AtomCount(), data->FrameCount(), fileName, false);
+    HbondIO *output = new HbondIO(data->AtomCount(), data->FrameCount(), fileName, false);
 
-	int *tmpArray = new int[data->AtomCount()];
+    int *tmpArray = new int[data->AtomCount()];
 
-	// calculate hydrogen bounds for all frames and store them in a file ...
-	for(int frameId = 0; frameId < data->FrameCount(); frameId++) {
-		int *atomHydroBondsIndicesPtr = (frameId == reqFrame ? &atomHydroBonds[0] : tmpArray);
+    // calculate hydrogen bounds for all frames and store them in a file ...
+    for(int frameId = 0; frameId < data->FrameCount(); frameId++) {
+        int *atomHydroBondsIndicesPtr = (frameId == reqFrame ? &atomHydroBonds[0] : tmpArray);
 
 #if 0
-		// workaround to avoid recursion ...
-		{
-			int tmp = curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE];
-			curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = frameId;
-			data->SetFrameID(frameId);
-			if( !(*dataTarget)(MolecularDataCall::CallForGetData))
-				return false;
-			curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = tmp;
-			calcHydroBondsForCurFrame(dataTarget, atomHydroBondsIndicesPtr);
-		}
+        // workaround to avoid recursion ...
+        {
+            int tmp = curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE];
+            curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = frameId;
+            data->SetFrameID(frameId);
+            if( !(*dataTarget)(MolecularDataCall::CallForGetData))
+                return false;
+            curHBondFrame[frameId % HYDROGEN_BOND_IN_CORE] = tmp;
+            calcHydroBondsForCurFrame(dataTarget, atomHydroBondsIndicesPtr);
+        }
 #else
-		dataSource->SetFrameId(frameId);
-		if( !(*dataSource)(MolecularDataCall::CallForGetData))
-			return false;
-		calcHydroBondsForCurFrame(dataSource, atomHydroBondsIndicesPtr);
+        dataSource->SetFrameId(frameId);
+        if( !(*dataSource)(MolecularDataCall::CallForGetData))
+            return false;
+        calcHydroBondsForCurFrame(dataSource, atomHydroBondsIndicesPtr);
 #endif
 
-		output->writeFrame(atomHydroBondsIndicesPtr, frameId);
-	}
-	delete output;
-	delete tmpArray;
+        output->writeFrame(atomHydroBondsIndicesPtr, frameId);
+    }
+    delete output;
+    delete tmpArray;
 
 #else
     dataSource->SetFrameID(reqFrame);

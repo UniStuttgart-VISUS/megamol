@@ -24,7 +24,7 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
 /*
- *	MolecularNeighborhood::MolecularNeighborhood
+ * MolecularNeighborhood::MolecularNeighborhood
  */
 MolecularNeighborhood::MolecularNeighborhood(void)
         : Module()
@@ -51,26 +51,26 @@ MolecularNeighborhood::MolecularNeighborhood(void)
 }
 
 /*
- *	MolecularNeighborhood::~MolecularNeighborhood
+ * MolecularNeighborhood::~MolecularNeighborhood
  */
 MolecularNeighborhood::~MolecularNeighborhood(void) {
     this->Release();
 }
 
 /*
- *	MolecularNeighborhood::create
+ * MolecularNeighborhood::create
  */
 bool MolecularNeighborhood::create(void) {
     return true;
 }
 
 /*
- *	MolecularNeighborhood::release
+ * MolecularNeighborhood::release
  */
 void MolecularNeighborhood::release(void) {}
 
 /*
- *	MolecularNeighborhood::getData
+ * MolecularNeighborhood::getData
  */
 bool MolecularNeighborhood::getData(core::Call& call) {
     MolecularDataCall* outCall = dynamic_cast<MolecularDataCall*>(&call);
@@ -118,7 +118,7 @@ bool MolecularNeighborhood::getData(core::Call& call) {
 }
 
 /*
- *	MolecularNeighborhood::getExtent
+ * MolecularNeighborhood::getExtent
  */
 bool MolecularNeighborhood::getExtent(core::Call& call) {
 
@@ -139,7 +139,7 @@ bool MolecularNeighborhood::getExtent(core::Call& call) {
 }
 
 /*
- *	MolecularNeighborhood::findNeighborhoods
+ * MolecularNeighborhood::findNeighborhoods
  */
 void MolecularNeighborhood::findNeighborhoods(MolecularDataCall& call, float radius) {
     GridNeighbourFinder<float> finder;

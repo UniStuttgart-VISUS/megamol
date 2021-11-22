@@ -13,12 +13,12 @@
 #include <string>
 
 /**
- *	Returns the weight of the chemical element with the given proton count
- *	This method currently only knows the weights of the elements that are
- *	common in proteins (H, C, N, O, S).
+ * Returns the weight of the chemical element with the given proton count
+ * This method currently only knows the weights of the elements that are
+ * common in proteins (H, C, N, O, S).
  *
- *	@param protonCount The number of protons in the asked element
- *	@return The weight of the element with the given symbol.
+ * @param protonCount The number of protons in the asked element
+ * @return The weight of the element with the given symbol.
  */
 static float getElementWeightByProtonCount(unsigned int protonCount) {
     switch (protonCount) {
@@ -44,12 +44,12 @@ static float getElementWeightByProtonCount(unsigned int protonCount) {
 }
 
 /**
- *	Returns the weight of the chemical element with the given element symbol.
- *	This method currently only knows the weights of the elements that are
- *	common in proteins (H, C, N, O, S).
+ * Returns the weight of the chemical element with the given element symbol.
+ * This method currently only knows the weights of the elements that are
+ * common in proteins (H, C, N, O, S).
  *
- *	@param elementString The element symbol as string.
- *	@return The weight of the element with the given symbol.
+ * @param elementString The element symbol as string.
+ * @return The weight of the element with the given symbol.
  */
 static float getElementWeightBySymbolString(const vislib::StringA& elementString) {
     vislib::StringA es = elementString;

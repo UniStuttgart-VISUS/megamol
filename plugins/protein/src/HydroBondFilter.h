@@ -1,8 +1,8 @@
 /*
- *	HydroBondFilter.h
+ * HydroBondFilter.h
  *
- *	Copyright (C) 2016 by University of Stuttgart (VISUS).
- *	All rights reserved.
+ * Copyright (C) 2016 by University of Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #ifndef MMPROTEINPLUGIN_HYDROBONDFILTER_H_INCLUDED
@@ -29,27 +29,27 @@ public:
     virtual ~HydroBondFilter(void);
 
     /**
-     *	Answer the name of this module.
+     * Answer the name of this module.
      *
-     *	@return The name of this module.
+     * @return The name of this module.
      */
     static const char* ClassName(void) {
         return "HydroBondFilter";
     }
 
     /**
-     *	Answer a human readable description of this module.
+     * Answer a human readable description of this module.
      *
-     *	@return A human readable description of this module.
+     * @return A human readable description of this module.
      */
     static const char* Description(void) {
         return "Filters molecular hydrogen bonds due to certain criteria.";
     }
 
     /**
-     *	Answers whether this module is available on the current system.
+     * Answers whether this module is available on the current system.
      *
-     *	@return 'true' if the module is available, 'false' otherwise.
+     * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
         return true;
@@ -57,36 +57,36 @@ public:
 
 protected:
     /**
-     *	Implementation of 'Create'.
+     * Implementation of 'Create'.
      *
-     *	@return 'true' on success, 'false' otherwise.
+     * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create(void);
 
     /**
-     *	Implementation of 'Release'.
+     * Implementation of 'Release'.
      */
     virtual void release(void);
 
     /**
-     *	Call callback to get the data
+     * Call callback to get the data
      *
-     *	@param c The calling call
-     *	@return True on success
+     * @param c The calling call
+     * @return True on success
      */
     bool getData(core::Call& call);
 
     /**
-     *	Call callback to get the extents
+     * Call callback to get the extents
      *
-     *	@param c The calling call
-     *	@return True on success
+     * @param c The calling call
+     * @return True on success
      */
     bool getExtent(core::Call& call);
 
 private:
     /**
-     *	Struct representing a hydrogen bond
+     * Struct representing a hydrogen bond
      */
     struct HBond {
 
@@ -103,12 +103,12 @@ private:
         HBond() : donorIdx(0), acceptorIdx(0), hydrogenIdx(0), angle(0.0f) {}
 
         /**
-         *	Constructor for a hydrogen bond.
+         * Constructor for a hydrogen bond.
          *
-         *	@param donorIdx The index of the donor atom.
-         *	@param acceptorIdx The index of the acceptor atom.
-         *	@param hydrogenIdx The index of the hydrogen atom.
-         *	@param angle The angle of the connection.
+         * @param donorIdx The index of the donor atom.
+         * @param acceptorIdx The index of the acceptor atom.
+         * @param hydrogenIdx The index of the hydrogen atom.
+         * @param angle The angle of the connection.
          */
         HBond(unsigned int donorIdx, unsigned int acceptorIdx, unsigned int hydrogenIdx, float angle = -1.0f)
                 : donorIdx(donorIdx)
@@ -117,10 +117,10 @@ private:
                 , angle(angle) {}
 
         /**
-         *	Overload of the comparison operator
+         * Overload of the comparison operator
          *
-         *	@param rhs The right hand side of the comparison
-         *	@return True, when this is smaller than the right hand side, false otherwise.
+         * @param rhs The right hand side of the comparison
+         * @return True, when this is smaller than the right hand side, false otherwise.
          */
         bool operator<(const HBond& rhs) {
             if (this->donorIdx == rhs.donorIdx)
@@ -130,7 +130,7 @@ private:
         }
 
         /**
-         *	Prints a representation of this struct to the console
+         * Prints a representation of this struct to the console
          */
         void print() {
             printf("H-Bond from %u to %u over %u with angle %f\n", donorIdx, acceptorIdx, hydrogenIdx, angle);
@@ -138,25 +138,25 @@ private:
     };
 
     /**
-     *	Post process the computed hydrogen bonds by deleting unneccessary ones.
+     * Post process the computed hydrogen bonds by deleting unneccessary ones.
      *
-     *	@param mdc The call storing all relevant molecular information.
+     * @param mdc The call storing all relevant molecular information.
      */
     void filterHBonds(protein_calls::MolecularDataCall& mdc);
 
     /**
-     *	Fills the secondary structure vector with information about the secondary structure of every atom.
+     * Fills the secondary structure vector with information about the secondary structure of every atom.
      *
-     *	@param mdc The call storing all relevant molecular information.
+     * @param mdc The call storing all relevant molecular information.
      */
     void fillSecStructVector(protein_calls::MolecularDataCall& mdc);
 
     /**
-     *	Computes whether a given hydrogen bond is valid.
+     * Computes whether a given hydrogen bond is valid.
      *
-     *	@param donorIndex The index of the donor of the hydrogen bond.
-     *	@param accptorIndex The index of the acceptor of the hydrogen bond.
-     *	@param mdc The MolecularDataCall containing the data.
+     * @param donorIndex The index of the donor of the hydrogen bond.
+     * @param accptorIndex The index of the acceptor of the hydrogen bond.
+     * @param mdc The MolecularDataCall containing the data.
      */
     bool isValidHBond(unsigned int donorIndex, unsigned int acceptorIndex, protein_calls::MolecularDataCall& mdc);
 
