@@ -44,6 +44,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_smaa_detection_technique(
             "EdgeDetection", "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
                             "texture can be provided as it is mandatory to have one")
+    , m_smaa_predication("Predication", "Used to counter ghosting, which gets introduced in SMAAT2x")
     , m_smaa_view("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
                             "only be used when directly connected to the screen for debug purposes")
     , m_output_tex_slot("OutputTexture", "Gives access to the resulting output texture")
@@ -123,6 +124,9 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Color");
     this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Depth");
     this->MakeSlotAvailable(&this->m_smaa_detection_technique);
+
+    this->m_smaa_predication << new megamol::core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->m_smaa_predication);
 
     this->m_smaa_view << new megamol::core::param::EnumParam(0);
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Result");
@@ -398,16 +402,28 @@ bool megamol::compositing::AntiAliasing::setCustomSettingsCallback(core::param::
 }
 
 bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSlot& slot) {
+    // smaa enabled
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_mode.Param<core::param::EnumParam>()->SetGUIVisible(true);
-    } else {
+    }
+    // smaa disabled
+    else {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_mode.Param<core::param::EnumParam>()->SetGUIVisible(false);
+    }
+
+    // smaat2x enabled
+    if (this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        m_smaa_predication.Param<core::param::BoolParam>()->SetGUIVisible(true);
+    }
+    // smaat2x disabled
+    else {
+        m_smaa_predication.Param<core::param::BoolParam>()->SetGUIVisible(false);
     }
 
     m_settings_have_changed = true;
@@ -420,6 +436,7 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
     const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
     std::shared_ptr<glowl::Texture2D> output,
     const std::vector<std::pair<const char*, int>>& uniforms,
+    bool blending_pass,
     const std::shared_ptr<glowl::BufferObject>& ssbo) {
     prgm->Enable();
 
@@ -431,6 +448,18 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
 
     for (const auto& uniform : uniforms) {
         glUniform1i(prgm->ParameterLocation(uniform.first), uniform.second);
+    }
+
+    if (blending_pass) {
+        // smaat2x enabled
+        if (this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1) {
+            glUniform4fv(prgm->ParameterLocation("g_subsampleIndices"), 1, glm::value_ptr(m_subsampleIndices[m_version % 2]));
+        }
+        // smaat2x disabled
+        else {
+            glUniform4fv(
+                prgm->ParameterLocation("g_subsampleIndices"), 1, glm::value_ptr(glm::vec4(0.0)));
+        }
     }
 
     if (ssbo != nullptr) {
@@ -654,7 +683,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_velocity_tex->bindTexture();
                 glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("g_velocityTex"), 2);
 
-                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("SMAA_REPROJECTION"), 0);
+                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("SMAA_REPROJECTION"),
+                    m_smaa_predication.Param<core::param::BoolParam>()->Value());
 
                 m_ssbo_constants->bind(0);
 
@@ -679,27 +709,27 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             if (technique == 2) inputs.push_back({ m_depth_tx2D, "g_depthTex" });
             std::vector<std::pair<const char*, int>> uniforms = {{"technique", technique}};
 
-            dispatchComputeShader(m_smaa_edge_detection_prgm, inputs, m_edges_tex, uniforms, m_ssbo_constants);
+            dispatchComputeShader(m_smaa_edge_detection_prgm, inputs, m_edges_tex, uniforms, false, m_ssbo_constants);
 
             // blending weights calculation
             inputs.clear();
             inputs = {{m_edges_tex, "g_edgesTex"}, {m_area_tex, "g_areaTex"}, {m_search_tex, "g_searchTex"}};
 
-            dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, m_ssbo_constants);
+            dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, false, m_ssbo_constants);
 
             // final step: neighborhood blending
             inputs.clear();
             inputs = {{input_tx2D, "g_colorTex"}, {m_blend_tex, "g_blendingWeightsTex"}};
 
             dispatchComputeShader(
-                m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, m_ssbo_constants);
+                m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, true, m_ssbo_constants);
 
 
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }
         // fxaa
         else if (mode == 1) {
-            dispatchComputeShader(m_fxaa_prgm, {{input_tx2D, "src_tx2D"}}, m_output_texture, {});
+            dispatchComputeShader(m_fxaa_prgm, {{input_tx2D, "src_tx2D"}}, m_output_texture, {}, false);
         }
         // no aa
         else if (mode == 2) {

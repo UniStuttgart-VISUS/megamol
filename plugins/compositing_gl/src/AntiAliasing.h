@@ -137,6 +137,7 @@ private:
         const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
         std::shared_ptr<glowl::Texture2D> output,
         const std::vector<std::pair<const char*, int>>& uniforms,
+        bool blending_pass,
         const std::shared_ptr<glowl::BufferObject>& ssbo = nullptr);
 
     void copyTextureViaShader(
@@ -244,6 +245,9 @@ private:
 
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot m_smaa_detection_technique;
+
+    /** Parameter for toggling predication, used to counter ghosting */
+    megamol::core::param::ParamSlot m_smaa_predication;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

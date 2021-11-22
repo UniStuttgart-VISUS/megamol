@@ -36,6 +36,8 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
+uniform vec4 g_subsampleIndices;
+
 uniform sampler2D g_edgesTex;
 uniform sampler2D g_areaTex;
 uniform sampler2D g_searchTex;
@@ -488,15 +490,13 @@ void main() {
                     vec4(offset[0].xz, offset[1].yw));
 
     // Just pass zero for SMAA 1x, see @SUBSAMPLE_INDICES.
-    // TODO: what about other modes, e.g. SMAA2Sx?
-    vec4 subsampleIndices = vec4(0.0);
     vec4 weights = SMAABlendingWeightCalculationPS(texCoords,
                                        inPos.xy,
                                        offset,
                                        g_edgesTex,
                                        g_areaTex,
                                        g_searchTex,
-                                       subsampleIndices);
+                                       g_subsampleIndices);
 
     imageStore(g_blendingWeightsTex, ivec2(inPos.xy), weights);
 }
