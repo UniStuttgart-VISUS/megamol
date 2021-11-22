@@ -216,7 +216,6 @@ void SimpleMoleculeRenderer::release(void) {}
 bool SimpleMoleculeRenderer::create(void) {
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -502,7 +501,6 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_PROGRAM_POINT_SIZE);
