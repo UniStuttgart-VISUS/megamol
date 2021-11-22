@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // ** WARNING ** if changing anything here, please remember to update the corresponding C++ code!
 struct SMAAConstants
 {

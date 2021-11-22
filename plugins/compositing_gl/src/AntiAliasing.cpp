@@ -129,6 +129,8 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Edges");
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Weights");
     this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Velocity");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Temporal");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(5, "PrevInput");
     this->MakeSlotAvailable(&this->m_smaa_view);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
@@ -236,6 +238,8 @@ bool megamol::compositing::AntiAliasing::create() {
     // TODO: we are using 64 bit colors here, see the note in the shader instructions about point sampling
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
+    m_prev_input_tx2D = std::make_shared<glowl::Texture2D>("prev_frame_input_texture", tx_layout, nullptr);
+    m_temporal_tex = std::make_shared<glowl::Texture2D>("intermediate_temporal_texture", tx_layout, nullptr);
 
     // texture for smaa
     std::vector<std::pair<GLenum, GLint>> int_params = {
@@ -549,24 +553,43 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
         // smaa
         if (mode == 0) {
-            if (temporal || technique == 2) {
-                m_depth_tx2D = rhs_call_depth->getData();
-            }
-
             int input_width = input_tx2D->getWidth();
             int input_height = input_tx2D->getHeight();
+
+            if (temporal || technique == 2) {
+                m_depth_tx2D = rhs_call_depth->getData();
+                if ((m_prev_depth_tx2D->getWidth() != input_width)
+                    || (m_prev_depth_tx2D->getHeight() != input_height)) {
+                    glowl::TextureLayout ly = m_prev_depth_tx2D->getTextureLayout();
+                    ly.width = input_width;
+                    ly.height = input_height;
+                    m_prev_depth_tx2D->reload(ly, nullptr);
+                }
+
+                if ((m_velocity_tex->getWidth() != input_width)
+                    || (m_velocity_tex->getHeight() != input_height)) {
+                    glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
+                    ly.width = input_width;
+                    ly.height = input_height;
+                    m_velocity_tex->reload(ly, nullptr);
+                }
+
+                if ((m_temporal_tex->getWidth() != input_width)
+                    || (m_temporal_tex->getHeight() != input_height)) {
+                    glowl::TextureLayout ly = m_temporal_tex->getTextureLayout();
+                    ly.width = input_width;
+                    ly.height = input_height;
+                    m_temporal_tex->reload(ly, nullptr);
+                }
+            }
+
 
             // init textures
             if ((input_width != m_smaa_layout.width) || (input_height != m_smaa_layout.height)) {
                 m_smaa_layout.width = input_width;
                 m_smaa_layout.height = input_height;
                 m_edges_tex->reload(m_smaa_layout, nullptr);
-                m_blend_tex->reload(m_smaa_layout, nullptr);
-
-                glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
-                ly.width = input_width;
-                ly.height = input_height;
-                m_velocity_tex->reload(ly, nullptr);
+                m_blend_tex->reload(m_smaa_layout, nullptr); 
             }
 
             // always clear them
@@ -603,27 +626,22 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                     1, false, glm::value_ptr(curr_view_proj_mx));
                 glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevViewProjMx"),
                     1, false, glm::value_ptr(m_prev_view_proj_mx));
-                glUniform4fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, glm::value_ptr(m_jitter[m_version % 2]));
+                glUniform2fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, glm::value_ptr(m_jitter[m_version % 2]));
 
                 m_velocity_tex->bindImage(0, GL_WRITE_ONLY);
 
-                m_smaa_velocity_prgm->Dispatch(static_cast<int>(std::ceil(m_velocity_tex->getWidth() / 8.0f)),
-                    static_cast<int>(std::ceil(m_velocity_tex->getHeight() / 8.0f)), 1);
+                m_smaa_velocity_prgm->Dispatch(static_cast<int>(std::ceil(input_width / 8.0f)),
+                    static_cast<int>(std::ceil(input_height / 8.0f)), 1);
 
                 m_smaa_velocity_prgm->Disable();
 
                 glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-
                 m_prev_view_proj_mx = curr_view_proj_mx;
-                copyTextureViaShader(m_depth_tx2D, m_prev_depth_tx2D);
-            }
+                glowl::Texture2D::copy(m_depth_tx2D.get(), m_prev_depth_tx2D.get());
 
-            // TODO: unite the shaders/programs for velocity calculation and temporal resolving above and below
-            // only used for temporal reprojection
-            if (temporal) {
+
+                // only used for temporal reprojection
                 m_smaa_temporal_resolving_prgm->Enable();
 
                 glActiveTexture(GL_TEXTURE0);
@@ -636,14 +654,14 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_velocity_tex->bindTexture();
                 glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("g_velocityTex"), 2);
 
-                glUniform1i(m_smaa_velocity_prgm->ParameterLocation("SMAA_REPROJECTION"), 1);
+                glUniform1i(m_smaa_temporal_resolving_prgm->ParameterLocation("SMAA_REPROJECTION"), 0);
 
                 m_ssbo_constants->bind(0);
 
                 m_temporal_tex->bindImage(0, GL_WRITE_ONLY);
 
-                m_smaa_temporal_resolving_prgm->Dispatch(static_cast<int>(std::ceil(input_tx2D->getWidth() / 8.0f)),
-                    static_cast<int>(std::ceil(input_tx2D->getHeight() / 8.0f)), 1);
+                m_smaa_temporal_resolving_prgm->Dispatch(static_cast<int>(std::ceil(input_width / 8.0f)),
+                    static_cast<int>(std::ceil(input_height / 8.0f)), 1);
 
                 m_smaa_temporal_resolving_prgm->Disable();
 
@@ -676,11 +694,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             dispatchComputeShader(
                 m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, m_ssbo_constants);
 
-            
-            /*glActiveTexture(GL_TEXTURE2);
-            m_velocity_tex->bindTexture();
-            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_velocityTex"), 2);*/
-
 
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }
@@ -710,6 +723,12 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             break;
         case 3:
             lhs_tc->setData(m_velocity_tex, m_version);
+            break;
+        case 4:
+            lhs_tc->setData(m_temporal_tex, m_version);
+            break;
+        case 5:
+            lhs_tc->setData(m_prev_input_tx2D, m_version);
             break;
         default:
             lhs_tc->setData(m_output_texture, m_version);

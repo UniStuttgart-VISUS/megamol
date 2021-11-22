@@ -176,7 +176,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_input_tx2D;
-    /** Texture to store velocity for each pixel used in SMAA S2x */
+    /** Texture to store velocity for each pixel used in SMAA T2x */
     std::shared_ptr<glowl::Texture2D> m_velocity_tex;
     std::shared_ptr<glowl::Texture2D> m_temporal_tex;
 

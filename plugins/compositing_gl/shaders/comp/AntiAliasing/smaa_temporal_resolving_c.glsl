@@ -26,18 +26,24 @@
  * SOFTWARE.
  */
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
 uniform int SMAA_REPROJECTION;
-uniform sampler2D g_currentColorTex;
-uniform sampler2D g_previousColorTex;
+uniform sampler2D g_currColorTex;
+uniform sampler2D g_prevColorTex;
 uniform sampler2D g_velocityTex;
 
 layout(rgba16f, binding = 0) uniform writeonly image2D g_outputTex;
 
-                     
+
 void main() {
 
     vec3 inPos = gl_GlobalInvocationID.xyz;
@@ -50,22 +56,24 @@ void main() {
         vec2 velocity = -texture(g_velocityTex, texCoords).rg;
 
         // Fetch current pixel:
-        vec4 current = texture(g_currentColorTex, texCoords);
+        vec4 current = texture(g_currColorTex, texCoords);
 
         // Reproject current coordinates and fetch previous pixel:
-        vec4 previous = texture(g_previousColorTex, texCoords + velocity);
+        vec4 previous = texture(g_prevColorTex, texCoords + velocity);
 
         // Attenuate the previous pixel if the velocity is different:
         float delta = abs(current.a * current.a - previous.a * previous.a) / 5.0;
         float weight = 0.5 * clamp(1.0 - sqrt(delta) * g_SMAAConsts.SMAA_REPROJECTION_WEIGHT_SCALE, 0.0, 1.0);
 
         // Blend the pixels according to the calculated weight:
-        imageStore(g_outputTex, ivec2(inPos.xy), mix(current, previous, weight));
+        vec4 result = mix(current, previous, weight);
+        imageStore(g_outputTex, ivec2(inPos.xy), result);
     }
     else {
         // Just blend the pixels:
-        vec4 current = texture(g_currentColorTex, texCoords);
-        vec4 previous = texture(g_previousColorTex, texCoords);
-        imageStore(g_outputTex, ivec2(inPos.xy), mix(current, previous, 0.5));
+        vec4 current = texture(g_currColorTex, texCoords);
+        vec4 previous = texture(g_prevColorTex, texCoords);
+        vec4 result = mix(current, previous, 0.5);
+        imageStore(g_outputTex, ivec2(inPos.xy), result);
     }
 }
