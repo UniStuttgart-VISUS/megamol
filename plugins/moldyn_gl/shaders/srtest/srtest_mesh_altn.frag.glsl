@@ -4,10 +4,9 @@ in Point {
     flat vec4 pointColor;
     flat vec3 objPos;
     vec3 ray;
-    vec3 tt;
+    flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
-    float tf;
 }
 pp;
 
@@ -23,18 +22,21 @@ layout(depth_greater) out float gl_FragDepth;
 #include "srtest_depth.glsl"
 
 void main() {
-    float delta = pp.sqrRad - dot(pp.tt, pp.tt);
+    float tf = dot(pp.oc_pos, pp.ray);
+    vec3 tt = tf * pp.ray - pp.oc_pos;
+    float delta = pp.sqrRad - dot(tt, tt);
     if (delta < 0.0f)
         discard;
 
     float tb = sqrt(delta);
-    float t = pp.tf - tb;
+    float t = dot(pp.oc_pos, pp.ray) - tb;
 
     vec4 new_pos = vec4(camPos + t * pp.ray, 1.0f);
 
     vec3 normal = (new_pos.xyz - pp.objPos) / pp.rad;
 
     outColor = vec4(LocalLighting(pp.ray, normal, lightDir, pp.pointColor.rgb), pp.pointColor.a);
+    //outColor = vec4(0.5f * (pp.ray + 1.0f), 1);
 
     gl_FragDepth = depth(t);
 }

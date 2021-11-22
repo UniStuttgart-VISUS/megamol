@@ -28,10 +28,9 @@ out Point {
     flat vec4 pointColor;
     flat vec3 objPos;
     vec3 ray;
-    vec3 tt;
+    flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
-    float tf;
 }
 pp[];
 
@@ -57,7 +56,6 @@ void main() {
         vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
         vec3 vu = normalize(cross(oc_pos, vr)) * vi;
 
-        vec3 vd[NUM_V];
         vec4 v[NUM_V];
         v[0] = vec4(objPos - vr - vu, 1.0f);
         v[1] = vec4(objPos + vr - vu, 1.0f);
@@ -68,18 +66,14 @@ void main() {
         projPos = projPos / projPos.w;
 
         for (int i = 0; i < NUM_V; ++i) {
-            vd[i] = normalize(v[i].xyz - camPos);
+            pp[l_idx * NUM_V + i].ray = normalize(v[i].xyz - camPos);
             v[i] = MVP * v[i];
             v[i] /= v[i].w;
-        }
 
-        for (int i = 0; i < NUM_V; ++i) {
             pp[l_idx * NUM_V + i].pointColor = pointColor;
             pp[l_idx * NUM_V + i].objPos = objPos;
 
-            pp[l_idx * NUM_V + i].ray = vd[i];
-            pp[l_idx * NUM_V + i].tf = dot(oc_pos, vd[i]);
-            pp[l_idx * NUM_V + i].tt = pp[l_idx * NUM_V + i].tf * vd[i] - oc_pos;
+            pp[l_idx * NUM_V + i].oc_pos = oc_pos;
 
             pp[l_idx * NUM_V + i].rad = rad;
             pp[l_idx * NUM_V + i].sqrRad = sqrRad;
