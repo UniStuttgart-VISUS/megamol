@@ -26,7 +26,7 @@
 #include <memory.h>
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
 #endif /* _WIN32 */

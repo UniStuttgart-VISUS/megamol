@@ -39,25 +39,24 @@
  *  ________________________________________________________________________
  *
  *  code modified for usage in megamol 0.3 (date: 2009/03/03)
- * 
+ *
  */
 
 
-#include "stdafx.h"
 #include "RMS.h"
-#include <cmath>
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <cmath>
 
 using namespace megamol;
 
 /*
  *  protein::Normalize
  */
-void protein::Normalize(double a[3])
-{
+void protein::Normalize(double a[3]) {
     double b;
 
-    b = 1.0/sqrt((double)(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]));
+    b = 1.0 / sqrt((double)(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]));
     a[0] *= b;
     a[1] *= b;
     a[2] *= b;
@@ -67,34 +66,31 @@ void protein::Normalize(double a[3])
 /*
  *  protein::DiagEsort
  */
-int protein::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenvalue)
-{
+int protein::DiagEsort(double* mat, double* Emat, double* Evec[], double* Eigenvalue) {
     int njrot;
     int i, j, k, i3;
     double eigenvector[9], *eA, v;
 
-    if(!Jacobi3(mat, Eigenvalue, eigenvector, &njrot)) 
-    {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: DiagEsort - convergence failed! \n");
-        return(0);
+    if (!Jacobi3(mat, Eigenvalue, eigenvector, &njrot)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: DiagEsort - convergence failed! \n");
+        return (0);
     }
 
-    for(i = i3 = 0; i < 3; i++, i3 += 3)
-        for (j=0; j<3; j++)
-            Emat[i3+j] = eigenvector[j*3+i];
+    for (i = i3 = 0; i < 3; i++, i3 += 3)
+        for (j = 0; j < 3; j++)
+            Emat[i3 + j] = eigenvector[j * 3 + i];
 
-    for(i = 0; i < 3; i++)
-        Evec[i] = (double *) &Emat[i*3];
+    for (i = 0; i < 3; i++)
+        Evec[i] = (double*)&Emat[i * 3];
 
-    for(i = 0; i < 2; i++) 
-    {
-        v = Eigenvalue[k=i];
-        for(j = i+1; j < 3; j++)
-            if(Eigenvalue[j] > v)  
-                v = Eigenvalue[k=j];
+    for (i = 0; i < 2; i++) {
+        v = Eigenvalue[k = i];
+        for (j = i + 1; j < 3; j++)
+            if (Eigenvalue[j] > v)
+                v = Eigenvalue[k = j];
 
-        if(k != i) 
-        {
+        if (k != i) {
             Eigenvalue[k] = Eigenvalue[i];
             Eigenvalue[i] = v;
             eA = Evec[i];
@@ -102,28 +98,26 @@ int protein::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenv
             Evec[k] = eA;
         }
     }
-    return(1);
+    return (1);
 }
 
 
 /*
  *  protein::Jacobi3
  */
-int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
-{
-    int  i, j, ip, iq, p3, j3;
-    double  tresh, theta, tau, t, sm, s, h, g, c, b[3], z[3];
+int protein::Jacobi3(double* a, double* d, double* v, int* nrot) {
+    int i, j, ip, iq, p3, j3;
+    double tresh, theta, tau, t, sm, s, h, g, c, b[3], z[3];
 
-    for(ip = p3=0; ip < 3; ip++, p3 += 3) 
-    {
+    for (ip = p3 = 0; ip < 3; ip++, p3 += 3) {
         /*
-         *  initialize the identity matrix 
+         *  initialize the identity matrix
          */
-        for(iq = 0; iq < 3; iq++) 
+        for (iq = 0; iq < 3; iq++)
             v[p3 + iq] = 0.0;
 
         v[p3 + ip] = 1.0;
-        /* 
+        /*
          *  initialize b and d to diagonal of a
          */
         b[ip] = d[ip] = a[p3 + ip];
@@ -131,47 +125,38 @@ int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
     }
 
     *nrot = 0;
-    for(i = 0; i < 50; i++) 
-    {
+    for (i = 0; i < 50; i++) {
         sm = 0.0;
-        for(ip = p3 = 0; ip < 2; ip++, p3 += 3) 
-        {
-            for(iq = ip+1; iq < 3; iq++)
+        for (ip = p3 = 0; ip < 2; ip++, p3 += 3) {
+            for (iq = ip + 1; iq < 3; iq++)
                 sm += fabs(a[p3 + iq]);
         }
 
-        if(sm == 0.0) 
-        {
-            return(1);
+        if (sm == 0.0) {
+            return (1);
         }
-        if(i < 3) 
+        if (i < 3)
             tresh = sm * 0.2 / 9.0; /* on 1st three sweeps... */
-        else       
+        else
             tresh = 0.0; /* thereafter... */
 
-        for(ip = p3 = 0; ip < 2; ip++, p3 += 3) 
-        {
-            for(iq = ip+1; iq < 3; iq++) 
-            {
+        for (ip = p3 = 0; ip < 2; ip++, p3 += 3) {
+            for (iq = ip + 1; iq < 3; iq++) {
                 g = 100.0 * fabs(a[p3 + iq]);
 
-                if((i > 3) && (fabs(d[ip])+g == fabs(d[ip])) && (fabs(d[iq])+g == fabs(d[iq]))) 
-                {
+                if ((i > 3) && (fabs(d[ip]) + g == fabs(d[ip])) && (fabs(d[iq]) + g == fabs(d[iq]))) {
                     a[p3 + iq] = 0.0;
-                } 
-                else if(fabs(a[p3 + iq]) > tresh) 
-                {
-                    h = d[iq]-d[ip];
-                    if(fabs(h)+g == fabs(h))
+                } else if (fabs(a[p3 + iq]) > tresh) {
+                    h = d[iq] - d[ip];
+                    if (fabs(h) + g == fabs(h))
                         t = a[p3 + iq] / h;
-                    else 
-                    {
+                    else {
                         theta = 0.5 * h / a[p3 + iq];
-                        t = 1.0 / (fabs(theta)+(double)sqrt(1.0+theta*theta));
-                        if (theta < 0.0) 
+                        t = 1.0 / (fabs(theta) + (double)sqrt(1.0 + theta * theta));
+                        if (theta < 0.0)
                             t = -t;
                     }
-                    c = 1.0 / (double)sqrt(1.0 + t*t);
+                    c = 1.0 / (double)sqrt(1.0 + t * t);
                     s = t * c;
                     tau = s / (1.0 + c);
                     h = t * a[p3 + iq];
@@ -180,42 +165,41 @@ int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
                     d[ip] -= h;
                     d[iq] += h;
                     a[p3 + iq] = 0.0;
-                    for(j = j3 = 0; j <= ip-1; j++, j3 += 3) 
-                        ROTATE_JACOBI3(a,j3,ip,j3,iq)
-	                for(j = ip+1; j <= iq-1; j++) 
-		                ROTATE_JACOBI3(a,p3,j,j*3,iq)
-		            for(j = iq+1; j < 3; j++) 
-		                ROTATE_JACOBI3(a,p3,j,iq*3,j)
-		            for(j3 = 0; j3 < 9; j3 += 3) 
-			            ROTATE_JACOBI3(v,j3,ip,j3,iq)
+                    for (j = j3 = 0; j <= ip - 1; j++, j3 += 3)
+                        ROTATE_JACOBI3(a, j3, ip, j3, iq)
+                    for (j = ip + 1; j <= iq - 1; j++)
+                        ROTATE_JACOBI3(a, p3, j, j * 3, iq)
+                    for (j = iq + 1; j < 3; j++)
+                        ROTATE_JACOBI3(a, p3, j, iq * 3, j)
+                    for (j3 = 0; j3 < 9; j3 += 3)
+                        ROTATE_JACOBI3(v, j3, ip, j3, iq)
 
-			        ++(*nrot);
+                    ++(*nrot);
                 }
             }
         }
-        for(ip = 0; ip < 3; ip++) 
-        {
+        for (ip = 0; ip < 3; ip++) {
             b[ip] += z[ip];
             d[ip] = b[ip];
             z[ip] = 0.0;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: Jacobi3 - there are too many iterations! \n");
-    return(0);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: Jacobi3 - there are too many iterations! \n");
+    return (0);
 }
 
 
 /*
  *  protein::CalculateRMS
  */
-float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *mass, int *mask, 
-	               float *toFitVec, float *Vec, float rotation[3][3], float translation[3])
-{
-    int ierr=0;
+float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float* mass, int* mask, float* toFitVec,
+    float* Vec, float rotation[3][3], float translation[3]) {
+    int ierr = 0;
     unsigned int i, j, k, modifiedCount;
-    const char *err;
+    const char* err;
     double rms_return = 0.0; // do not know. however, better than uninitialized
-    double *weights;
+    double* weights;
     double rot[9], rtr[9];
     int i3, k3;
     double mwss;
@@ -232,49 +216,42 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
     weights = new double[n];
     total_mass = 0.0;
 
-    if(!fit) 
-    {
+    if (!fit) {
         /*
-         *  Don't do the fit, just calculate rmsd: don't calculate 
-         *  any translation/rotation 
+         *  Don't do the fit, just calculate rmsd: don't calculate
+         *  any translation/rotation
          */
         rms_return = 0.0;
-        for(i = 0; i < n; i++) 
-        {
-            if (mask != NULL && mask[i] == 1) 
-            {
+        for (i = 0; i < n; i++) {
+            if (mask != NULL && mask[i] == 1) {
                 if (mass != NULL)
                     weights[i] = mass[i];
                 else
                     weights[i] = 1.0;
 
                 total_mass += weights[i];
-                xx = Vec[3*i] - toFitVec[3*i];
-                yy = Vec[3*i+1] - toFitVec[3*i+1];
-                zz = Vec[3*i+2] - toFitVec[3*i+2];
-                rms_return += weights[i]*(xx*xx + yy*yy + zz*zz);
+                xx = Vec[3 * i] - toFitVec[3 * i];
+                yy = Vec[3 * i + 1] - toFitVec[3 * i + 1];
+                zz = Vec[3 * i + 2] - toFitVec[3 * i + 2];
+                rms_return += weights[i] * (xx * xx + yy * yy + zz * zz);
             }
         }
         rms_return = sqrt(rms_return / total_mass);
-        delete []weights;
-        return (float) rms_return;
+        delete[] weights;
+        return (float)rms_return;
     }
 
     /*
      *  the rest below is for fit=1, i.e. calculate translation and
-     *  rotation matrix as well as rmsd value of the fitted region 
+     *  rotation matrix as well as rmsd value of the fitted region
      */
 
-    for(i = 0, modifiedCount = n; i < n; i++) 
-    {
-        if((mask != NULL) && (mask[i] == 0)) 
-        {
+    for (i = 0, modifiedCount = n; i < n; i++) {
+        if ((mask != NULL) && (mask[i] == 0)) {
             weights[i] = 0.0;
             modifiedCount--;
-        }
-        else
-        {
-            if(mass != NULL)
+        } else {
+            if (mass != NULL)
                 weights[i] = mass[i];
             else
                 weights[i] = 1.0;
@@ -283,23 +260,21 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
         }
     }
 
-    if((mode == 1) || (mode == 2))
-    {
-        if((rotation == NULL) || (translation == NULL))
-        {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: CalculateRMS - rotation matrix and translation vector are NULL ? \n");
+    if ((mode == 1) || (mode == 2)) {
+        if ((rotation == NULL) || (translation == NULL)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "RMS: CalculateRMS - rotation matrix and translation vector are NULL ? \n");
         }
     }
 
-    if(modifiedCount > 2) 
-    {
+    if (modifiedCount > 2) {
         memset(rot, 0, sizeof(double) * 9);
         memset(rtr, 0, sizeof(double) * 9);
-        memset(U,   0, sizeof(double) * 9);
+        memset(U, 0, sizeof(double) * 9);
 
-        cofmX =  0.0;
-        cofmY =  0.0;
-        cofmZ =  0.0;
+        cofmX = 0.0;
+        cofmY = 0.0;
+        cofmZ = 0.0;
         cofmX1 = 0.0;
         cofmY1 = 0.0;
         cofmZ1 = 0.0;
@@ -308,15 +283,14 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
          *  First shift the center of mass of all the atoms to be fit to
          *  the origin for both trajectory and reference coordinates.
          */
-        for(k = 0; k < n; k++) 
-        {
-            cofmX += weights[k] * toFitVec[3*k];
-            cofmY += weights[k] * toFitVec[3*k+1];
-            cofmZ += weights[k] * toFitVec[3*k+2];
-            cofmX1 += weights[k] * Vec[3*k];
-            cofmY1 += weights[k] * Vec[3*k+1];
-            cofmZ1 += weights[k] * Vec[3*k+2];
-//            printf("RMS %f %f %f\n", Vec[3*k], Vec[3*k+1], Vec[3*k+2]);
+        for (k = 0; k < n; k++) {
+            cofmX += weights[k] * toFitVec[3 * k];
+            cofmY += weights[k] * toFitVec[3 * k + 1];
+            cofmZ += weights[k] * toFitVec[3 * k + 2];
+            cofmX1 += weights[k] * Vec[3 * k];
+            cofmY1 += weights[k] * Vec[3 * k + 1];
+            cofmZ1 += weights[k] * Vec[3 * k + 2];
+            //            printf("RMS %f %f %f\n", Vec[3*k], Vec[3*k+1], Vec[3*k+2]);
         }
 
         cofmX /= total_mass;
@@ -326,32 +300,30 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
         cofmY1 /= total_mass;
         cofmZ1 /= total_mass;
 
-        for(k = 0; k < n; k++) 
-        {
-            toFitVec[3*k] -= (float)cofmX;
-            toFitVec[3*k+1] -= (float)cofmY;
-            toFitVec[3*k+2] -= (float)cofmZ;
+        for (k = 0; k < n; k++) {
+            toFitVec[3 * k] -= (float)cofmX;
+            toFitVec[3 * k + 1] -= (float)cofmY;
+            toFitVec[3 * k + 2] -= (float)cofmZ;
 
-            Vec[3*k] -= (float)cofmX1;
-            Vec[3*k+1] -= (float)cofmY1;
-            Vec[3*k+2] -= (float)cofmZ1;
+            Vec[3 * k] -= (float)cofmX1;
+            Vec[3 * k + 1] -= (float)cofmY1;
+            Vec[3 * k + 2] -= (float)cofmZ1;
         }
 
         mwss = 0.0;
-        for (k = 0; k < n; k++) 
-        {
-            x  = toFitVec[3*k];
-            y  = toFitVec[3*k+1];
-            z  = toFitVec[3*k+2];
-            xx = Vec[3*k];
-            yy = Vec[3*k+1];
-            zz = Vec[3*k+2];
+        for (k = 0; k < n; k++) {
+            x = toFitVec[3 * k];
+            y = toFitVec[3 * k + 1];
+            z = toFitVec[3 * k + 2];
+            xx = Vec[3 * k];
+            yy = Vec[3 * k + 1];
+            zz = Vec[3 * k + 2];
 
-            mwss += weights[k] * ( x*x + y*y + z*z + xx*xx + yy*yy + zz*zz );
+            mwss += weights[k] * (x * x + y * y + z * z + xx * xx + yy * yy + zz * zz);
 
             /*
-            *  calculate the Kabsch matrix: R = (rij) = Sum(wn*yni*xnj) 
-            */
+             *  calculate the Kabsch matrix: R = (rij) = Sum(wn*yni*xnj)
+             */
             rot[0] += weights[k] * x * xx;
             rot[1] += weights[k] * x * yy;
             rot[2] += weights[k] * x * zz;
@@ -365,75 +337,57 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
             rot[8] += weights[k] * z * zz;
         }
 
-        mwss *= 0.5f;   /* E0 = 0.5*Sum(wn*(xn^2+yn^2)) */
+        mwss *= 0.5f; /* E0 = 0.5*Sum(wn*(xn^2+yn^2)) */
 
         /*
-         *  calculate Kabsch multiplied by its transpose: RtR 
+         *  calculate Kabsch multiplied by its transpose: RtR
          */
-        rtr[0] = rot[0]*rot[0] + rot[1]*rot[1] + rot[2]*rot[2];
-        rtr[1] = rot[0]*rot[3] + rot[1]*rot[4] + rot[2]*rot[5];
-        rtr[2] = rot[0]*rot[6] + rot[1]*rot[7] + rot[2]*rot[8];
-        rtr[3] = rot[3]*rot[0] + rot[4]*rot[1] + rot[5]*rot[2];
-        rtr[4] = rot[3]*rot[3] + rot[4]*rot[4] + rot[5]*rot[5];
-        rtr[5] = rot[3]*rot[6] + rot[4]*rot[7] + rot[5]*rot[8];
-        rtr[6] = rot[6]*rot[0] + rot[7]*rot[1] + rot[8]*rot[2];
-        rtr[7] = rot[6]*rot[3] + rot[7]*rot[4] + rot[8]*rot[5];
-        rtr[8] = rot[6]*rot[6] + rot[7]*rot[7] + rot[8]*rot[8];
+        rtr[0] = rot[0] * rot[0] + rot[1] * rot[1] + rot[2] * rot[2];
+        rtr[1] = rot[0] * rot[3] + rot[1] * rot[4] + rot[2] * rot[5];
+        rtr[2] = rot[0] * rot[6] + rot[1] * rot[7] + rot[2] * rot[8];
+        rtr[3] = rot[3] * rot[0] + rot[4] * rot[1] + rot[5] * rot[2];
+        rtr[4] = rot[3] * rot[3] + rot[4] * rot[4] + rot[5] * rot[5];
+        rtr[5] = rot[3] * rot[6] + rot[4] * rot[7] + rot[5] * rot[8];
+        rtr[6] = rot[6] * rot[0] + rot[7] * rot[1] + rot[8] * rot[2];
+        rtr[7] = rot[6] * rot[3] + rot[7] * rot[4] + rot[8] * rot[5];
+        rtr[8] = rot[6] * rot[6] + rot[7] * rot[7] + rot[8] * rot[8];
 
-        if(!DiagEsort(rtr, Emat, Evector, Eigenvalue))
-            return(0.0f);
+        if (!DiagEsort(rtr, Emat, Evector, Eigenvalue))
+            return (0.0f);
 
         /*
-         *  a3 = a1 x a2 
+         *  a3 = a1 x a2
          */
-        /*VOP_3D_COORDS_CROSS_PRODUCT(Evector[2][0], Evector[2][1], Evector[2][2], 
-				    Evector[0][0], Evector[0][1], Evector[0][2],
-				    Evector[1][0], Evector[1][1], Evector[1][2]);*/
+        /*VOP_3D_COORDS_CROSS_PRODUCT(Evector[2][0], Evector[2][1], Evector[2][2],
+                                    Evector[0][0], Evector[0][1], Evector[0][2],
+                                    Evector[1][0], Evector[1][1], Evector[1][2]);*/
         Evector[2][0] = (Evector[0][1] * Evector[1][2]) - (Evector[0][2] * Evector[1][1]);
         Evector[2][1] = (Evector[0][2] * Evector[1][0]) - (Evector[0][0] * Evector[1][2]);
         Evector[2][2] = (Evector[0][0] * Evector[1][1]) - (Evector[0][1] * Evector[1][0]);
 
         /*
-         *  Evector dot transpose rot:  b = R.ak 
+         *  Evector dot transpose rot:  b = R.ak
          */
-        b[0] = Evector[0][0] * rot[0] + 
-        Evector[0][1] * rot[3] + 
-        Evector[0][2] * rot[6];
-        b[1] = Evector[0][0] * rot[1] + 
-        Evector[0][1] * rot[4] + 
-        Evector[0][2] * rot[7];
-        b[2] = Evector[0][0] * rot[2] + 
-        Evector[0][1] * rot[5] + 
-        Evector[0][2] * rot[8];
+        b[0] = Evector[0][0] * rot[0] + Evector[0][1] * rot[3] + Evector[0][2] * rot[6];
+        b[1] = Evector[0][0] * rot[1] + Evector[0][1] * rot[4] + Evector[0][2] * rot[7];
+        b[2] = Evector[0][0] * rot[2] + Evector[0][1] * rot[5] + Evector[0][2] * rot[8];
 
         Normalize(&b[0]);
 
-        b[3] = Evector[1][0] * rot[0] + 
-        Evector[1][1] * rot[3] + 
-        Evector[1][2] * rot[6];
-        b[4] = Evector[1][0] * rot[1] + 
-        Evector[1][1] * rot[4] + 
-        Evector[1][2] * rot[7];
-        b[5] = Evector[1][0] * rot[2] + 
-        Evector[1][1] * rot[5] + 
-        Evector[1][2] * rot[8];
+        b[3] = Evector[1][0] * rot[0] + Evector[1][1] * rot[3] + Evector[1][2] * rot[6];
+        b[4] = Evector[1][0] * rot[1] + Evector[1][1] * rot[4] + Evector[1][2] * rot[7];
+        b[5] = Evector[1][0] * rot[2] + Evector[1][1] * rot[5] + Evector[1][2] * rot[8];
 
         Normalize(&b[3]);
 
-        b[6] = Evector[2][0] * rot[0] + 
-        Evector[2][1] * rot[3] + 
-        Evector[2][2] * rot[6];
-        b[7] = Evector[2][0] * rot[1] + 
-        Evector[2][1] * rot[4] + 
-        Evector[2][2] * rot[7];
-        b[8] = Evector[2][0] * rot[2] + 
-        Evector[2][1] * rot[5] + 
-        Evector[2][2] * rot[8];
+        b[6] = Evector[2][0] * rot[0] + Evector[2][1] * rot[3] + Evector[2][2] * rot[6];
+        b[7] = Evector[2][0] * rot[1] + Evector[2][1] * rot[4] + Evector[2][2] * rot[7];
+        b[8] = Evector[2][0] * rot[2] + Evector[2][1] * rot[5] + Evector[2][2] * rot[8];
 
         Normalize(&b[6]);
 
         /*
-         *  b3 = b1 x b2 
+         *  b3 = b1 x b2
          */
         /*VOP_3D_COORDS_CROSS_PRODUCT(cp[0], cp[1], cp[2],
                                       b[0],   b[1],  b[2],
@@ -442,53 +396,47 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
         cp[1] = (b[2] * b[3]) - (b[0] * b[5]);
         cp[2] = (b[0] * b[4]) - (b[1] * b[3]);
 
-        if((cp[0] * b[6] + cp[1] * b[7] + cp[2] * b[8]) < 0.0f)
+        if ((cp[0] * b[6] + cp[1] * b[7] + cp[2] * b[8]) < 0.0f)
             sig3 = -1.0f;
         else
             sig3 = 1.0f;
 
-        b[6] = cp[0]; 
-        b[7] = cp[1]; 
+        b[6] = cp[0];
+        b[7] = cp[1];
         b[8] = cp[2];
 
         /*
-         *  U has the best rotation 
+         *  U has the best rotation
          */
-        for(k=k3=0; k<3; k++,k3+=3)
-            for(i=i3=0;i<3; i++,i3+=3)
-                for(j=0; j<3; j++) 
-                {
+        for (k = k3 = 0; k < 3; k++, k3 += 3)
+            for (i = i3 = 0; i < 3; i++, i3 += 3)
+                for (j = 0; j < 3; j++) {
                     U[i3 + j] += Evector[k][j] * b[k3 + i];
                 }
 
         /*
-         *  E = E0 - sqrt(mu1) - sqrt(mu2) - sig3*sqrt(mu3) 
+         *  E = E0 - sqrt(mu1) - sqrt(mu2) - sig3*sqrt(mu3)
          */
         rms_return = mwss - sqrt(fabs(Eigenvalue[0])) - sqrt(fabs(Eigenvalue[1])) - sig3 * sqrt(fabs(Eigenvalue[2]));
-        if(rms_return < 0.0f)
-        {
+        if (rms_return < 0.0f) {
             rms_return = 0.0f;
-        } 
-        else 
-        {
-            rms_return = sqrt( (2.0f * rms_return) / total_mass);
+        } else {
+            rms_return = sqrt((2.0f * rms_return) / total_mass);
         }
 
 
         /*
          *  Move the reference back so that it stays unchanged. This is
          *  necessary to preserve the meaning of CM shift on next frame
-         *  iteration. 
+         *  iteration.
          */
-        for(k = 0; k < n; k++) 
-        {
-            Vec[3*k] += (float)cofmX1;
-            Vec[3*k+1] += (float)cofmY1;
-            Vec[3*k+2] += (float)cofmZ1;
+        for (k = 0; k < n; k++) {
+            Vec[3 * k] += (float)cofmX1;
+            Vec[3 * k + 1] += (float)cofmY1;
+            Vec[3 * k + 2] += (float)cofmZ1;
         }
 
-        if(mode == 2) 
-        {
+        if (mode == 2) {
             /*
              *  Save rotation matrix which does the best overlap of trajectory
              *  coordinates to reference coordinates when they are both centered
@@ -508,7 +456,7 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
             /*
              *  Once the reference coords are shifted back to its original
              *  position (the for-cycle above), we need to shift trajectory
-             *  coordinates by the same amount (i.e. CM of the reference) 
+             *  coordinates by the same amount (i.e. CM of the reference)
              *  to get them overlapped with the reference. The actual
              *  translation of trajectory coordinates happens in the calling
              *  routine (actions.c::transformRMS() )
@@ -517,55 +465,54 @@ float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *
             translation[1] = (float)cofmY1;
             translation[2] = (float)cofmZ1;
 
-            /* First apply the rotation (which was calculated for both 
+            /* First apply the rotation (which was calculated for both
             trajectory and reference coords shifted to their CMs). The
             order (first rotation, then translation) is important.*/
-            for (k=0; k < n; k++) 
-            {
+            for (k = 0; k < n; k++) {
                 /*VOP_3x3_TIMES_COORDS(rotation, toFitX[k], toFitY[k], toFitZ[k], xtemp, ytemp, ztemp);*/
-                xtemp = rotation[0][0] * toFitVec[3*k] +  rotation[0][1] * toFitVec[3*k+1] +  rotation[0][2] * toFitVec[3*k+2];
-                ytemp = rotation[1][0] * toFitVec[3*k] +  rotation[1][1] * toFitVec[3*k+1] +  rotation[1][2] * toFitVec[3*k+2];
-                ztemp = rotation[2][0] * toFitVec[3*k] +  rotation[2][1] * toFitVec[3*k+1] +  rotation[2][2] * toFitVec[3*k+2];
-                toFitVec[3*k] = xtemp;
-                toFitVec[3*k+1] = ytemp;
-                toFitVec[3*k+2] = ztemp;
+                xtemp = rotation[0][0] * toFitVec[3 * k] + rotation[0][1] * toFitVec[3 * k + 1] +
+                        rotation[0][2] * toFitVec[3 * k + 2];
+                ytemp = rotation[1][0] * toFitVec[3 * k] + rotation[1][1] * toFitVec[3 * k + 1] +
+                        rotation[1][2] * toFitVec[3 * k + 2];
+                ztemp = rotation[2][0] * toFitVec[3 * k] + rotation[2][1] * toFitVec[3 * k + 1] +
+                        rotation[2][2] * toFitVec[3 * k + 2];
+                toFitVec[3 * k] = xtemp;
+                toFitVec[3 * k + 1] = ytemp;
+                toFitVec[3 * k + 2] = ztemp;
 
-                toFitVec[3*k] += (float)cofmX1;
-                toFitVec[3*k+1] += (float)cofmY1;
-                toFitVec[3*k+2] += (float)cofmZ1;
+                toFitVec[3 * k] += (float)cofmX1;
+                toFitVec[3 * k + 1] += (float)cofmY1;
+                toFitVec[3 * k + 2] += (float)cofmZ1;
             }
-        } 
-        else if(mode == 1)
-        {
+        } else if (mode == 1) {
             /* Nothing. XYZ moved back. ToFitXYZ moved to (0,0,0) */
-        }
-        else if(mode == 0)
-        {
+        } else if (mode == 0) {
             /* Or just move them back to their original position */
-            for(k = 0; k < n; k++) 
-            {
-                toFitVec[3*k] += (float)cofmX;
-                toFitVec[3*k+1] += (float)cofmY;
-                toFitVec[3*k+2] += (float)cofmZ;
+            for (k = 0; k < n; k++) {
+                toFitVec[3 * k] += (float)cofmX;
+                toFitVec[3 * k + 1] += (float)cofmY;
+                toFitVec[3 * k + 2] += (float)cofmZ;
             }
-        } 
-    } 
-    else
-    {
+        }
+    } else {
         ierr = -1;
     }
 
-    if (ierr != 0) 
-    {
-        switch (ierr) 
-        {
-            case -1: err = "Number of atoms less than 2"; break;
-            case -2: /* ierr is never set to -2 previously ?? */
-                     err = "Illegal weights"; break;
-            default: err = "Unknown error"; break;
+    if (ierr != 0) {
+        switch (ierr) {
+        case -1:
+            err = "Number of atoms less than 2";
+            break;
+        case -2: /* ierr is never set to -2 previously ?? */
+            err = "Illegal weights";
+            break;
+        default:
+            err = "Unknown error";
+            break;
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: CalculateRMS - error: %s\n", err);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "RMS: CalculateRMS - error: %s\n", err);
     }
-    delete []weights;
-    return (float) rms_return;
+    delete[] weights;
+    return (float)rms_return;
 }

@@ -10,7 +10,8 @@ using namespace megamol::infovis_gl;
 using megamol::core::utility::log::Log;
 
 ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
-        : BaseAmortizedRenderer2D(), amortLevelParam("AmortLevel", "Level of Amortization") {
+        : BaseAmortizedRenderer2D()
+        , amortLevelParam("AmortLevel", "Level of Amortization") {
 
     this->amortLevelParam << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&amortLevelParam);
@@ -88,7 +89,7 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
-            camOffsets_[j * a + i] = glm::fvec3(((float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
+            camOffsets_[j * a + i] = glm::fvec3(((float)a - 1.0 - 2.0 * i) / w, ((float)a - 1.0 - 2.0 * j) / h, 0.0);
         }
     }
 

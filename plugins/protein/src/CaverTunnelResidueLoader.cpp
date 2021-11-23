@@ -3,18 +3,18 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "CaverTunnelResidueLoader.h"
+#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Dimension.h"
 #include "vislib/math/Point.h"
 #include "vislib/sys/FastFile.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/TextFileReader.h"
 
 #include <string>
@@ -28,11 +28,11 @@ using namespace megamol::protein_calls;
  * CaverTunnelResidueLoader::CaverTunnelResidueLoader
  */
 CaverTunnelResidueLoader::CaverTunnelResidueLoader(void)
-    : Module()
-    , getData("getData", "The slot providing the data loaded by this module.")
-    , filenameSlot("filename", "The path to the residues.txt input file produced by caver.")
-    , tunnelFilenameSlot("tunnelFilename", "The path to the tunnel_profiles.csv input file produced by caver.")
-    , data_hash(0) {
+        : Module()
+        , getData("getData", "The slot providing the data loaded by this module.")
+        , filenameSlot("filename", "The path to the residues.txt input file produced by caver.")
+        , tunnelFilenameSlot("tunnelFilename", "The path to the tunnel_profiles.csv input file produced by caver.")
+        , data_hash(0) {
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&CaverTunnelResidueLoader::filenameChanged);
@@ -55,7 +55,9 @@ CaverTunnelResidueLoader::CaverTunnelResidueLoader(void)
 /*
  * CaverTunnelResidueLoader::~CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) { this->Release(); }
+CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) {
+    this->Release();
+}
 
 /*
  * CaverTunnelResidueLoader::create
@@ -88,8 +90,8 @@ void CaverTunnelResidueLoader::release(void) {
  * CaverTunnelResidueLoader::filenameChanged
  */
 bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
-    using vislib::sys::File;
     using megamol::core::utility::log::Log;
+    using vislib::sys::File;
 
     this->data_hash++;
 
@@ -104,8 +106,7 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
         ASSERT(this->filenameSlot.Param<param::FilePathParam>() != nullptr);
 
         if (!this->file->Open(this->filenameSlot.Param<param::FilePathParam>()->Value().native().c_str(),
-                File::READ_ONLY,
-                File::SHARE_READ, File::OPEN_ONLY)) {
+                File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
             Log::DefaultLog.WriteError("Unable to open residues-File \"%s\".",
                 this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
             SAFE_DELETE(this->file);
@@ -132,7 +133,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 
             // parse the line
             line.TrimSpaces();
-            if (line.IsEmpty()) continue;
+            if (line.IsEmpty())
+                continue;
 
             // split the line into the different parts
             std::vector<vislib::StringA> parts = splitLine(line);
@@ -164,10 +166,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
         }
         ASSERT(this->tunnelFilenameSlot.Param<param::FilePathParam>() != nullptr);
 
-        if (!this->tunnelFile->Open(
-                this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value().native().c_str(),
-                File::READ_ONLY,
-                File::SHARE_READ, File::OPEN_ONLY)) {
+        if (!this->tunnelFile->Open(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value().native().c_str(),
+                File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
             Log::DefaultLog.WriteError("Unable to open tunnel-File \"%s\".",
                 this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
             SAFE_DELETE(this->file);
@@ -270,7 +270,8 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
 std::vector<vislib::StringA> CaverTunnelResidueLoader::splitLine(vislib::StringA line, char splitChar) {
     std::vector<vislib::StringA> result;
     line.TrimSpaces();
-    if (line.IsEmpty()) return result;
+    if (line.IsEmpty())
+        return result;
 
     // special case when there is only one word in the line
     if (line.Find(vislib::StringA(std::string(1, splitChar).c_str())) == line.INVALID_POS) {
@@ -305,7 +306,8 @@ std::vector<vislib::StringA> CaverTunnelResidueLoader::splitLine(vislib::StringA
  */
 bool CaverTunnelResidueLoader::getDataCallback(core::Call& caller) {
     TunnelResidueDataCall* trdc = dynamic_cast<TunnelResidueDataCall*>(&caller);
-    if (trdc == nullptr) return false;
+    if (trdc == nullptr)
+        return false;
 
     trdc->setTunnelNumber(static_cast<int>(this->tunnelVector.size()));
     trdc->setTunnelDescriptions(this->tunnelVector.data());

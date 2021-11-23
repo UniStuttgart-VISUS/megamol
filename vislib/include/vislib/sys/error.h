@@ -18,13 +18,13 @@
 #include <Windows.h>
 
 
-#else  /* _WIN32 */
+#else /* _WIN32 */
 #include <errno.h>
 
 #include "vislib/types.h"
 
 /**
- * Answer the last system error (::errno). This function is for enabling 
+ * Answer the last system error (::errno). This function is for enabling
  * compatible error code handling under Windows and Linux.
  *
  * @return The last error.

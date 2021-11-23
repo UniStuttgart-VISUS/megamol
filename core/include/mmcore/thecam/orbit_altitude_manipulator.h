@@ -19,7 +19,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class OrbitAltitudeManipulator : public manipulator_base<T> {
+template<class T>
+class OrbitAltitudeManipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -84,7 +85,9 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The x-coordinate of the last clicked screen position */

@@ -118,7 +118,6 @@ public:
         return val;
     }
 
-
     /**
      * Gets the value of the parameter
      *

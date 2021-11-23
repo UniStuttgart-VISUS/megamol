@@ -5,12 +5,12 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "protein/SphereDataCall.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -29,9 +29,15 @@ const unsigned int protein::SphereDataCall::CallForGetExtent = 1;
 /*
  * protein::SphereDataCall::SphereDataCall
  */
-protein::SphereDataCall::SphereDataCall(void) : AbstractGetData3DCall(),
-        sphereCount( 0), spheres( 0), colors( 0), charges( 0), 
-        minCharge( 0.0f), maxCharge( 0.0f), types( 0) {
+protein::SphereDataCall::SphereDataCall(void)
+        : AbstractGetData3DCall()
+        , sphereCount(0)
+        , spheres(0)
+        , colors(0)
+        , charges(0)
+        , minCharge(0.0f)
+        , maxCharge(0.0f)
+        , types(0) {
     // intentionally empty
 }
 
@@ -39,14 +45,13 @@ protein::SphereDataCall::SphereDataCall(void) : AbstractGetData3DCall(),
 /*
  * protein::SphereDataCall::~SphereDataCall
  */
-protein::SphereDataCall::~SphereDataCall(void) {
-}
+protein::SphereDataCall::~SphereDataCall(void) {}
 
 /*
- * Set the spheres. 
+ * Set the spheres.
  */
-void SphereDataCall::SetSpheres( unsigned int sphereCnt, float* data, 
-    unsigned int* type, float* charge, unsigned char* color) {
+void SphereDataCall::SetSpheres(
+    unsigned int sphereCnt, float* data, unsigned int* type, float* charge, unsigned char* color) {
     // set all values
     this->sphereCount = sphereCnt;
     this->spheres = data;

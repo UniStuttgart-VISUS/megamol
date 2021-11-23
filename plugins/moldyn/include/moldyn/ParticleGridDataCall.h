@@ -11,13 +11,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "geometry_calls/MultiParticleDataCall.h"
-#include "vislib/assert.h"
 #include "vislib/Array.h"
-#include "vislib/math/Cuboid.h"
+#include "vislib/assert.h"
 #include "vislib/forceinline.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
@@ -29,7 +29,6 @@ namespace moldyn {
  */
 class ParticleGridDataCall : public core::AbstractGetData3DCall {
 public:
-
     /**
      * Class holding all information about one particle type
      *
@@ -39,7 +38,6 @@ public:
      */
     class ParticleType {
     public:
-
         /** type alias for the vertex data type */
         typedef geocalls::MultiParticleDataCall::Particles::VertexDataType VertexDataType;
 
@@ -56,7 +54,7 @@ public:
          *
          * @param src The object to clone from
          */
-        ParticleType(const ParticleType &src);
+        ParticleType(const ParticleType& src);
 
         /**
          * Dtor
@@ -78,7 +76,7 @@ public:
          * @return The global colour as a pointer to four unsigned bytes
          *         storing the RGBA colour components
          */
-        inline const unsigned char *GetGlobalColour(void) const {
+        inline const unsigned char* GetGlobalColour(void) const {
             return this->col;
         }
 
@@ -146,8 +144,7 @@ public:
          * @param b The blue colour component
          * @param a The opacity alpha
          */
-        inline void SetGlobalColour(unsigned int r, unsigned int g,
-            unsigned int b, unsigned int a = 255) {
+        inline void SetGlobalColour(unsigned int r, unsigned int g, unsigned int b, unsigned int a = 255) {
             this->col[0] = r;
             this->col[1] = g;
             this->col[2] = b;
@@ -159,7 +156,7 @@ public:
          *
          * @param col Pointer to the RGBA byte colour array
          */
-        inline void SetGlobalColour(const unsigned char *col) {
+        inline void SetGlobalColour(const unsigned char* col) {
             this->col[0] = col[0];
             this->col[1] = col[1];
             this->col[2] = col[2];
@@ -191,7 +188,7 @@ public:
          *
          * @return A reference to 'this'
          */
-        ParticleType &operator=(const ParticleType &rhs);
+        ParticleType& operator=(const ParticleType& rhs);
 
         /**
          * Test for equality
@@ -200,10 +197,9 @@ public:
          *
          * @return 'true' if 'this' and 'rhs' are equal.
          */
-        bool operator==(const ParticleType &rhs) const;
+        bool operator==(const ParticleType& rhs) const;
 
     private:
-
         /** The global colour */
         unsigned char col[4];
 
@@ -221,7 +217,6 @@ public:
 
         /** The vertex data type */
         VertexDataType vertDataType;
-
     };
 
     /**
@@ -229,7 +224,6 @@ public:
      */
     class Particles {
     public:
-
         /**
          * Ctor
          */
@@ -240,7 +234,7 @@ public:
          *
          * @param src The object to clone from
          */
-        Particles(const Particles &rhs);
+        Particles(const Particles& rhs);
 
         /**
          * Dtor
@@ -252,7 +246,7 @@ public:
          *
          * @return The colour data pointer
          */
-        inline const void *GetColourData(void) const {
+        inline const void* GetColourData(void) const {
             return this->colPtr;
         }
 
@@ -288,7 +282,7 @@ public:
          *
          * @return The vertex data pointer
          */
-        inline const void *GetVertexData(void) const {
+        inline const void* GetVertexData(void) const {
             return this->vertPtr;
         }
 
@@ -308,7 +302,7 @@ public:
          *          is not 'COLDATA_NONE'
          * @param s The stride of the colour data
          */
-        void SetColourData(const void *p, unsigned int s = 0) {
+        void SetColourData(const void* p, unsigned int s = 0) {
             this->colPtr = p;
             this->colStride = s;
         }
@@ -341,7 +335,7 @@ public:
          *          is not 'VERTDATA_NONE'
          * @param s The stride of the vertex data
          */
-        void SetVertexData(const void *p, unsigned int s = 0) {
+        void SetVertexData(const void* p, unsigned int s = 0) {
             this->vertPtr = p;
             this->vertStride = s;
         }
@@ -353,7 +347,7 @@ public:
          *
          * @return A reference to 'this'
          */
-        Particles &operator=(const Particles &rhs);
+        Particles& operator=(const Particles& rhs);
 
         /**
          * Test for equality
@@ -362,12 +356,11 @@ public:
          *
          * @return 'true' if 'this' and 'rhs' are equal.
          */
-        bool operator==(const Particles &rhs) const;
+        bool operator==(const Particles& rhs) const;
 
     private:
-
         /** The colour data pointer */
-        const void *colPtr;
+        const void* colPtr;
 
         /** The colour data stride */
         unsigned int colStride;
@@ -379,11 +372,10 @@ public:
         float maxRad;
 
         /** The vertex data pointer */
-        const void *vertPtr;
+        const void* vertPtr;
 
         /** The vertex data stride */
         unsigned int vertStride;
-
     };
 
     /**
@@ -391,7 +383,6 @@ public:
      */
     class GridCell {
     public:
-
         /**
          * Ctor
          */
@@ -402,7 +393,7 @@ public:
          *
          * @param src The object to clone from
          */
-        GridCell(const GridCell &src);
+        GridCell(const GridCell& src);
 
         /**
          * Dtor
@@ -414,7 +405,7 @@ public:
          *
          * @return A pointer to the list or particle lists
          */
-        inline Particles *AccessParticleLists(void) {
+        inline Particles* AccessParticleLists(void) {
             return this->particles;
         }
 
@@ -423,7 +414,7 @@ public:
          *
          * @return A pointer to the list or particle lists
          */
-        inline const Particles *AccessParticleLists(void) const {
+        inline const Particles* AccessParticleLists(void) const {
             return this->particles;
         }
 
@@ -443,7 +434,7 @@ public:
          *
          * @return The bounding box of this cell
          */
-        inline const vislib::math::Cuboid<float> &GetBoundingBox(void) const {
+        inline const vislib::math::Cuboid<float>& GetBoundingBox(void) const {
             return this->bbox;
         }
 
@@ -452,7 +443,7 @@ public:
          *
          * @param bbox The new bounding box for this cell
          */
-        inline void SetBoundingBox(const vislib::math::Cuboid<float> &bbox) {
+        inline void SetBoundingBox(const vislib::math::Cuboid<float>& bbox) {
             this->bbox = bbox;
         }
 
@@ -465,7 +456,7 @@ public:
          *
          * @return A reference to 'this'
          */
-        GridCell &operator=(const GridCell &rhs);
+        GridCell& operator=(const GridCell& rhs);
 
         /**
          * Test for equality
@@ -476,16 +467,14 @@ public:
          *
          * @return 'true' if 'this' and 'rhs' are equal.
          */
-        bool operator==(const GridCell &rhs) const;
+        bool operator==(const GridCell& rhs) const;
 
     private:
-
         /** the particles of this cell */
-        Particles *particles;
+        Particles* particles;
 
         /** The bouding box of this cell */
         vislib::math::Cuboid<float> bbox;
-
     };
 
     /**
@@ -493,7 +482,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "ParticleGridDataCall";
     }
 
@@ -502,7 +491,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Call to get gridded multi-stream particle sphere data";
     }
 
@@ -522,7 +511,7 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char *FunctionName(unsigned int idx) {
+    static const char* FunctionName(unsigned int idx) {
         return AbstractGetData3DCall::FunctionName(idx);
     }
 
@@ -541,8 +530,7 @@ public:
      *
      * @return The index of the specified cell
      */
-    VISLIB_FORCEINLINE unsigned int CellIndex(unsigned int x,
-        unsigned int y, unsigned int z) const {
+    VISLIB_FORCEINLINE unsigned int CellIndex(unsigned int x, unsigned int y, unsigned int z) const {
         return x + (y + z * this->cntCellsY) * this->cntCellsX;
     }
 
@@ -560,7 +548,7 @@ public:
      *
      * @return A pointer to the cells of the grid
      */
-    inline const GridCell *Cells(void) const {
+    inline const GridCell* Cells(void) const {
         return this->cells;
     }
 
@@ -609,8 +597,7 @@ public:
      * @param grid Pointer to the grid data. The call object will not
      *             take ownership of this memory.
      */
-    inline void SetGridDataRef(unsigned int sizeX, unsigned int sizeY,
-        unsigned int sizeZ, const GridCell *grid) {
+    inline void SetGridDataRef(unsigned int sizeX, unsigned int sizeY, unsigned int sizeZ, const GridCell* grid) {
         this->cntCellsX = sizeX;
         this->cntCellsY = sizeY;
         this->cntCellsZ = sizeZ;
@@ -629,8 +616,7 @@ public:
      * @param types Pointer to the type data. The call object will not
      *              take ownership of this memory.
      */
-    inline void SetTypeDataRef(unsigned int cnt,
-        const ParticleType *types) {
+    inline void SetTypeDataRef(unsigned int cnt, const ParticleType* types) {
         this->cntTypes = cnt;
         if (this->ownTypeMem) {
             delete[] this->types;
@@ -653,7 +639,7 @@ public:
      *
      * @return A pointer to the list of particle types
      */
-    inline const ParticleType *Types(void) const {
+    inline const ParticleType* Types(void) const {
         return this->types;
     }
 
@@ -675,15 +661,14 @@ public:
      *
      * @return A reference to this
      */
-    ParticleGridDataCall &operator=(const ParticleGridDataCall &rhs);
+    ParticleGridDataCall& operator=(const ParticleGridDataCall& rhs);
 
 private:
-
     /** The numbers of cells in the grid */
     unsigned int cntCellsX, cntCellsY, cntCellsZ, cntCells;
 
     /** Pointer to the array of grid cells */
-    const GridCell *cells;
+    const GridCell* cells;
 
     /** Flag if the memory of 'cells' is owned by this call */
     bool ownCellMem;
@@ -692,17 +677,15 @@ private:
     unsigned int cntTypes;
 
     /** Pointer to the array of particle types */
-    const ParticleType *types;
+    const ParticleType* types;
 
     /** Flag if the memory of 'types' is owned by this call */
     bool ownTypeMem;
-
 };
 
 
 /** Description class typedef */
-typedef core::factories::CallAutoDescription<ParticleGridDataCall>
-ParticleGridDataCallDescription;
+typedef core::factories::CallAutoDescription<ParticleGridDataCall> ParticleGridDataCallDescription;
 
 } /* end namespace moldyn */
 } /* end namespace megamol */

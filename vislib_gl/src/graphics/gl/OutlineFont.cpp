@@ -6,11 +6,11 @@
  */
 
 #include "vislib_gl/graphics/gl/OutlineFont.h"
-#include <cfloat>
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/CharTraits.h"
-#include "vislib/memutils.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/memutils.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include <cfloat>
 
 using namespace vislib_gl::graphics::gl;
 
@@ -18,25 +18,28 @@ using namespace vislib_gl::graphics::gl;
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFontInfo& ofi) : AbstractFont(),
-        data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
-}
+OutlineFont::OutlineFont(const OutlineFontInfo& ofi)
+        : AbstractFont()
+        , data(ofi)
+        , renderType(OutlineFont::RENDERTYPE_FILL) {}
 
 
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
-        OutlineFont::RenderType render) : AbstractFont(), data(ofi),
-        renderType(render) {
-}
+OutlineFont::OutlineFont(const OutlineFontInfo& ofi, OutlineFont::RenderType render)
+        : AbstractFont()
+        , data(ofi)
+        , renderType(render) {}
 
 
 /*
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont()
+        , data(ofi)
+        , renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetSize(size);
 }
 
@@ -45,7 +48,9 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont()
+        , data(ofi)
+        , renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetFlipY(flipY);
 }
 
@@ -53,9 +58,10 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, bool flipY)
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
-        OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(ofi), renderType(render) {
+OutlineFont::OutlineFont(const OutlineFontInfo& ofi, OutlineFont::RenderType render, bool flipY)
+        : AbstractFont()
+        , data(ofi)
+        , renderType(render) {
     this->SetFlipY(flipY);
 }
 
@@ -64,7 +70,9 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont()
+        , data(ofi)
+        , renderType(OutlineFont::RENDERTYPE_FILL) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -73,9 +81,10 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, bool flipY)
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
-        OutlineFont::RenderType render) : AbstractFont(), data(ofi),
-        renderType(render) {
+OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, OutlineFont::RenderType render)
+        : AbstractFont()
+        , data(ofi)
+        , renderType(render) {
     this->SetSize(size);
 }
 
@@ -83,9 +92,10 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
-        OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(ofi), renderType(render) {
+OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, OutlineFont::RenderType render, bool flipY)
+        : AbstractFont()
+        , data(ofi)
+        , renderType(render) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -94,8 +104,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size,
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src) : AbstractFont(),
-        data(src.data), renderType(src.renderType) {
+OutlineFont::OutlineFont(const OutlineFont& src) : AbstractFont(), data(src.data), renderType(src.renderType) {
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
 }
@@ -104,9 +113,10 @@ OutlineFont::OutlineFont(const OutlineFont& src) : AbstractFont(),
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src,
-        OutlineFont::RenderType render) : AbstractFont(), data(src.data),
-        renderType(render) {
+OutlineFont::OutlineFont(const OutlineFont& src, OutlineFont::RenderType render)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(render) {
     this->SetSize(src.GetSize());
     this->SetFlipY(src.IsFlipY());
 }
@@ -115,8 +125,10 @@ OutlineFont::OutlineFont(const OutlineFont& src,
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src, float size) : AbstractFont(),
-        data(src.data), renderType(src.renderType) {
+OutlineFont::OutlineFont(const OutlineFont& src, float size)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(src.renderType) {
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
 }
@@ -125,8 +137,10 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size) : AbstractFont(),
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src, bool flipY) : AbstractFont(),
-        data(src.data), renderType(src.renderType) {
+OutlineFont::OutlineFont(const OutlineFont& src, bool flipY)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(src.renderType) {
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
 }
@@ -135,9 +149,10 @@ OutlineFont::OutlineFont(const OutlineFont& src, bool flipY) : AbstractFont(),
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src,
-        OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(src.data), renderType(render) {
+OutlineFont::OutlineFont(const OutlineFont& src, OutlineFont::RenderType render, bool flipY)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(render) {
     this->SetSize(src.GetSize());
     this->SetFlipY(flipY);
 }
@@ -147,7 +162,9 @@ OutlineFont::OutlineFont(const OutlineFont& src,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFont& src, float size, bool flipY)
-        : AbstractFont(), data(src.data), renderType(src.renderType) {
+        : AbstractFont()
+        , data(src.data)
+        , renderType(src.renderType) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -156,9 +173,10 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size, bool flipY)
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src, float size,
-        OutlineFont::RenderType render) : AbstractFont(), data(src.data),
-        renderType(render) {
+OutlineFont::OutlineFont(const OutlineFont& src, float size, OutlineFont::RenderType render)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(render) {
     this->SetSize(size);
     this->SetFlipY(src.IsFlipY());
 }
@@ -167,9 +185,10 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size,
 /*
  * OutlineFont::OutlineFont
  */
-OutlineFont::OutlineFont(const OutlineFont& src, float size,
-        OutlineFont::RenderType render, bool flipY) : AbstractFont(),
-        data(src.data), renderType(render) {
+OutlineFont::OutlineFont(const OutlineFont& src, float size, OutlineFont::RenderType render, bool flipY)
+        : AbstractFont()
+        , data(src.data)
+        , renderType(render) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -186,8 +205,7 @@ OutlineFont::~OutlineFont(void) {
 /*
  * OutlineFont::BlockLines
  */
-unsigned int OutlineFont::BlockLines(float maxWidth, float size,
-        const char *txt) const {
+unsigned int OutlineFont::BlockLines(float maxWidth, float size, const char* txt) const {
     return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
@@ -195,8 +213,7 @@ unsigned int OutlineFont::BlockLines(float maxWidth, float size,
 /*
  * OutlineFont::BlockLines
  */
-unsigned int OutlineFont::BlockLines(float maxWidth, float size,
-        const wchar_t *txt) const {
+unsigned int OutlineFont::BlockLines(float maxWidth, float size, const wchar_t* txt) const {
     return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
@@ -204,28 +221,21 @@ unsigned int OutlineFont::BlockLines(float maxWidth, float size,
 /*
  * OutlineFont::DrawString
  */
-void OutlineFont::DrawString(float x, float y, float size, bool flipY,
-        const char *txt, AbstractFont::Alignment align) const {
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
+void OutlineFont::DrawString(
+    float x, float y, float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
 
-    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE)
-            || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size
-            * (flipY ? 1.0f : -1.0f);
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
 
-    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM)
-            || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size
-            * (flipY ? 1.0f : -1.0f);
-
+    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -236,59 +246,52 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 /*
  * OutlineFont::DrawString
  */
-void OutlineFont::DrawString(float x, float y, float w, float h, float size,
-        bool flipY, const char *txt, AbstractFont::Alignment align) const {
-    int *run = this->buildGlyphRun(txt, w / size);
+void OutlineFont::DrawString(
+    float x, float y, float w, float h, float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
+    int* run = this->buildGlyphRun(txt, w / size);
 
-    if (flipY) y += h;
+    if (flipY)
+        y += h;
 
     switch (align) {
-        case ALIGN_CENTER_BOTTOM:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_CENTER_MIDDLE:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_CENTER_TOP:
-            x += w * 0.5f;
-            break;
-        case ALIGN_LEFT_BOTTOM:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_LEFT_MIDDLE:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_BOTTOM:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_RIGHT_MIDDLE:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_TOP:
-            x += w;
-            break;
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
 #ifndef _WIN32
-        default:
-            break;
+    default:
+        break;
 #endif /* !_WIN32 */
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -299,28 +302,21 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 /*
  * OutlineFont::DrawString
  */
-void OutlineFont::DrawString(float x, float y, float size, bool flipY,
-        const wchar_t *txt, AbstractFont::Alignment align) const {
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
+void OutlineFont::DrawString(
+    float x, float y, float size, bool flipY, const wchar_t* txt, AbstractFont::Alignment align) const {
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
 
-    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE)
-            || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size
-            * (flipY ? 1.0f : -1.0f);
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
 
-    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM)
-            || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size
-            * (flipY ? 1.0f : -1.0f);
-
+    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -331,59 +327,52 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 /*
  * OutlineFont::DrawString
  */
-void OutlineFont::DrawString(float x, float y, float w, float h, float size,
-        bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
-    int *run = this->buildGlyphRun(txt, w / size);
+void OutlineFont::DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt,
+    AbstractFont::Alignment align) const {
+    int* run = this->buildGlyphRun(txt, w / size);
 
-    if (flipY) y += h;
+    if (flipY)
+        y += h;
 
     switch (align) {
-        case ALIGN_CENTER_BOTTOM:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_CENTER_MIDDLE:
-            x += w * 0.5f;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_CENTER_TOP:
-            x += w * 0.5f;
-            break;
-        case ALIGN_LEFT_BOTTOM:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_LEFT_MIDDLE:
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_BOTTOM:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size);
-            break;
-        case ALIGN_RIGHT_MIDDLE:
-            x += w;
-            y += (flipY ? -1.0f : 1.0f)
-                * (h - this->lineCount(run, false) * size) * 0.5f;
-            break;
-        case ALIGN_RIGHT_TOP:
-            x += w;
-            break;
+    case ALIGN_CENTER_BOTTOM:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_CENTER_MIDDLE:
+        x += w * 0.5f;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_CENTER_TOP:
+        x += w * 0.5f;
+        break;
+    case ALIGN_LEFT_BOTTOM:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_LEFT_MIDDLE:
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_BOTTOM:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size);
+        break;
+    case ALIGN_RIGHT_MIDDLE:
+        x += w;
+        y += (flipY ? -1.0f : 1.0f) * (h - this->lineCount(run, false) * size) * 0.5f;
+        break;
+    case ALIGN_RIGHT_TOP:
+        x += w;
+        break;
 #ifndef _WIN32
-        default:
-            break;
+    default:
+        break;
 #endif /* !_WIN32 */
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -391,31 +380,23 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 }
 
 /*
-* OutlineFont::DrawString
-*/
-void vislib_gl::graphics::gl::OutlineFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const
-{
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
+ * OutlineFont::DrawString
+ */
+void vislib_gl::graphics::gl::OutlineFont::DrawString(
+    float x, float y, float z, float size, bool flipY, const char* txt, Alignment align) const {
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
 
-    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE)
-        || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size
-            * (flipY ? 1.0f : -1.0f);
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? 1.0f : -1.0f);
 
-    }
-    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM)
-             || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size
-            * (flipY ? 1.0f : -1.0f);
-
+    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? 1.0f : -1.0f);
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_FILL) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, z, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERTYPE_OUTLINE) || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, z, size, flipY, align);
     }
 
@@ -426,14 +407,15 @@ void vislib_gl::graphics::gl::OutlineFont::DrawString(float x, float y, float z,
 /*
  * OutlineFont::LineWidth
  */
-float OutlineFont::LineWidth(float size, const char *txt) const {
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-    int *i = run;
+float OutlineFont::LineWidth(float size, const char* txt) const {
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
+    int* i = run;
     float len = 0.0f;
     float comlen = 0.0f;
     while (*i != 0) {
         comlen = this->lineWidth(i, true);
-        if (comlen > len) len = comlen;
+        if (comlen > len)
+            len = comlen;
     }
     delete[] run;
     return len * size;
@@ -443,14 +425,15 @@ float OutlineFont::LineWidth(float size, const char *txt) const {
 /*
  * OutlineFont::LineWidth
  */
-float OutlineFont::LineWidth(float size, const wchar_t *txt) const {
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-    int *i = run;
+float OutlineFont::LineWidth(float size, const wchar_t* txt) const {
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
+    int* i = run;
     float len = 0.0f;
     float comlen = 0.0f;
     while (*i != 0) {
         comlen = this->lineWidth(i, true);
-        if (comlen > len) len = comlen;
+        if (comlen > len)
+            len = comlen;
     }
     delete[] run;
     return len * size;
@@ -477,12 +460,11 @@ void OutlineFont::deinitialise(void) {
 /*
  * OutlineFont::buildGlyphRun
  */
-int *OutlineFont::buildGlyphRun(const char *txt, float maxWidth) const {
+int* OutlineFont::buildGlyphRun(const char* txt, float maxWidth) const {
     vislib::StringA txtutf8;
     if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
-        char *t = txtutf8.AllocateBuffer(
-            vislib::CharTraitsA::SafeStringLength(txt));
+        char* t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
         for (; *txt != 0; txt++) {
             if ((*txt & 0x80) == 0) {
                 *t = *txt;
@@ -498,12 +480,11 @@ int *OutlineFont::buildGlyphRun(const char *txt, float maxWidth) const {
 /*
  * OutlineFont::buildGlyphRun
  */
-int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
+int* OutlineFont::buildGlyphRun(const wchar_t* txt, float maxWidth) const {
     vislib::StringA txtutf8;
     if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
-        char *t = txtutf8.AllocateBuffer(
-            vislib::CharTraitsW::SafeStringLength(txt));
+        char* t = txtutf8.AllocateBuffer(vislib::CharTraitsW::SafeStringLength(txt));
         for (; *txt != 0; txt++) {
             if ((*txt & 0x80) == 0) {
                 *t = static_cast<char>(*txt);
@@ -519,11 +500,10 @@ int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
 /*
  * OutlineFont::buildUpGlyphRun
  */
-int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
-    SIZE_T txtlen = static_cast<SIZE_T>(
-        vislib::CharTraitsA::SafeStringLength(txtutf8));
+int* OutlineFont::buildUpGlyphRun(const char* txtutf8, float maxWidth) const {
+    SIZE_T txtlen = static_cast<SIZE_T>(vislib::CharTraitsA::SafeStringLength(txtutf8));
     SIZE_T pos = 0;
-    int *glyphrun = new int[txtlen + 1];
+    int* glyphrun = new int[txtlen + 1];
     bool knowLastWhite = false;
     bool blackspace = true;
     SIZE_T lastWhiteGlyph = 0;
@@ -546,12 +526,15 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
         // select glyph
         idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] % 0x10)];
-        if (idx == 0) continue; // glyph not found
+        if (idx == 0)
+            continue; // glyph not found
         if (idx > 0) {
             // second part of byte
             idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] / 0x10)];
-            if (idx == 0) continue; // glyph not found
-            if (idx > 0) continue; // glyph key not complete
+            if (idx == 0)
+                continue; // glyph not found
+            if (idx > 0)
+                continue; // glyph key not complete
         }
         idx = -idx; // glyph found
 
@@ -592,10 +575,8 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
                     // last word to long
                     glyphrun[pos - 1] = -glyphrun[pos - 1];
                     lineLength = this->data.glyph[idx].width;
-
                 }
             }
-
         }
 
         idx = 0; // start with new glyph search
@@ -608,40 +589,32 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 /*
  * OutlineFont::drawFilled
  */
-void OutlineFont::drawFilled(int *run, float x, float y, float z, float size,
-        bool flipY, Alignment align) const {
+void OutlineFont::drawFilled(int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
     float gx = x;
     float gy = y;
     float sy = flipY ? -size : size;
 
-    if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE)
-            || (align == ALIGN_CENTER_TOP)) {
+    if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
         gx -= this->lineWidth(run, false) * size * 0.5f;
 
-    } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE)
-            || (align == ALIGN_RIGHT_TOP)) {
+    } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
         gx -= this->lineWidth(run, false) * size;
-
     }
 
     ::glEnableClientState(GL_VERTEX_ARRAY);
     ::glDisable(GL_CULL_FACE);
 
     while (*run != 0) {
-        const OutlineGlyphInfo &glyph = this->data.glyph[
-            (*run < 0) ? (-1 - *run) : (*run - 1)];
+        const OutlineGlyphInfo& glyph = this->data.glyph[(*run < 0) ? (-1 - *run) : (*run - 1)];
 
         if (*run < 0) {
             gx = x;
 
-            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE)
-                    || (align == ALIGN_CENTER_TOP)) {
+            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
 
-            } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE)
-                    || (align == ALIGN_RIGHT_TOP)) {
+            } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
                 gx -= this->lineWidth(run, false) * size;
-
             }
 
             gy += sy;
@@ -666,39 +639,31 @@ void OutlineFont::drawFilled(int *run, float x, float y, float z, float size,
 /*
  * OutlineFont::drawOutline
  */
-void OutlineFont::drawOutline(int *run, float x, float y, float z, float size,
-        bool flipY, Alignment align) const {
+void OutlineFont::drawOutline(int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
     float gx = x;
     float gy = y;
     float sy = flipY ? -size : size;
 
-    if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE)
-            || (align == ALIGN_CENTER_TOP)) {
+    if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
         gx -= this->lineWidth(run, false) * size * 0.5f;
 
-    } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE)
-            || (align == ALIGN_RIGHT_TOP)) {
+    } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
         gx -= this->lineWidth(run, false) * size;
-
     }
 
     ::glEnableClientState(GL_VERTEX_ARRAY);
 
     while (*run != 0) {
-        const OutlineGlyphInfo &glyph = this->data.glyph[
-            (*run < 0) ? (-1 - *run) : (*run - 1)];
+        const OutlineGlyphInfo& glyph = this->data.glyph[(*run < 0) ? (-1 - *run) : (*run - 1)];
 
         if (*run < 0) {
             gx = x;
 
-            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE)
-                    || (align == ALIGN_CENTER_TOP)) {
+            if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
 
-            } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE)
-                    || (align == ALIGN_RIGHT_TOP)) {
+            } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
                 gx -= this->lineWidth(run, false) * size;
-
             }
 
             gy += sy;
@@ -724,17 +689,19 @@ void OutlineFont::drawOutline(int *run, float x, float y, float z, float size,
 }
 
 
-
 /*
  * OutlineFont::lineCount
  */
-int OutlineFont::lineCount(int *run, bool deleterun) const {
-    if ((run == NULL) || (run[0] == 0)) return 0;
+int OutlineFont::lineCount(int* run, bool deleterun) const {
+    if ((run == NULL) || (run[0] == 0))
+        return 0;
     int i = 1;
     for (int j = 0; run[j] != 0; j++) {
-        if (run[j] < 0) i++;
+        if (run[j] < 0)
+            i++;
     }
-    if (deleterun) delete[] run;
+    if (deleterun)
+        delete[] run;
     return i;
 }
 
@@ -742,14 +709,16 @@ int OutlineFont::lineCount(int *run, bool deleterun) const {
 /*
  * OutlineFont::lineWidth
  */
-float OutlineFont::lineWidth(int *&run, bool iterate) const {
-    int *i = run;
+float OutlineFont::lineWidth(int*& run, bool iterate) const {
+    int* i = run;
     float len = 0.0f;
     while (*i != 0) {
         len += this->data.glyph[(*i < 0) ? (-1 - *i) : (*i - 1)].width;
         i++;
-        if (*i < 0) break;
+        if (*i < 0)
+            break;
     }
-    if (iterate) run = i;
+    if (iterate)
+        run = i;
     return len;
 }

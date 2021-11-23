@@ -5,15 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "misc/ParticleWorker.h"
-#include <cfloat>
-#include <climits>
 #include "OpenGL_Context.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
+#include "stdafx.h"
 #include "vislib/StringTokeniser.h"
+#include <cfloat>
+#include <climits>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
@@ -33,8 +33,8 @@ ParticleWorker::ParticleWorker(void)
         : inParticlesDataSlot("inPartData", "Input for particle data")
         , outParticlesDataSlot("outPartData", "Output of particle data")
         , glClusterInfos(0)
-//	glParticleList(0),
-//	glPrefixIn(0), glPrefixOut(0)
+// glParticleList(0),
+// glPrefixIn(0), glPrefixOut(0)
 {
 
     this->inParticlesDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
@@ -273,8 +273,8 @@ bool ParticleWorker::getDataCallback(Call& call) {
         } else if (partsIn.GetVertexDataStride() == 3 * sizeof(float) + 4 * sizeof(float)) {
             // highly specific, because we know:
             partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
-            partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                (void*) (NULL + 3 * sizeof(float)), partsIn.GetVertexDataStride());
+            partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, (void*)(NULL + 3 * sizeof(float)),
+                partsIn.GetVertexDataStride());
 
             partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
             glBindVertexArray(vao);
@@ -284,8 +284,8 @@ bool ParticleWorker::getDataCallback(Call& call) {
                 partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
             glEnableClientState(GL_VERTEX_ARRAY);
             glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
-            //			glEnableClientState(GL_COLOR_ARRAY);
-            //		glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+            // glEnableClientState(GL_COLOR_ARRAY);
+            // glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
             glBindVertexArray(0);
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
 

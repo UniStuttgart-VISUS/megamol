@@ -11,159 +11,173 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/Call.h"
 #include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
+#include "vislib/math/Vector.h"
 #include <vector>
 
 namespace megamol {
 namespace protein {
 
+/**
+ * Base class of rendering graph calls and of data interfaces for
+ * molecular data (e.g. protein-solvent-systems).
+ */
+
+class ParticleDataCall : public megamol::core::AbstractGetData3DCall {
+public:
+    /** Index of the 'GetData' function */
+    static const unsigned int CallForGetData;
+
+    /** Index of the 'GetExtent' function */
+    static const unsigned int CallForGetExtent;
+
     /**
-     * Base class of rendering graph calls and of data interfaces for 
-     * molecular data (e.g. protein-solvent-systems).
+     * Answer the name of the objects of this description.
+     *
+     * @return The name of the objects of this description.
      */
+    static const char* ClassName(void) {
+        return "ParticleDataCall";
+    }
 
-    class ParticleDataCall : public megamol::core::AbstractGetData3DCall {
-    public:
+    /**
+     * Gets a human readable description of the module.
+     *
+     * @return A human readable description of the module.
+     */
+    static const char* Description(void) {
+        return "Call to get particle data";
+    }
 
-        /** Index of the 'GetData' function */
-        static const unsigned int CallForGetData;
+    /**
+     * Answer the number of functions used for this call.
+     *
+     * @return The number of functions used for this call.
+     */
+    static unsigned int FunctionCount(void) {
+        return 2;
+    }
 
-        /** Index of the 'GetExtent' function */
-        static const unsigned int CallForGetExtent;
-
-        /**
-         * Answer the name of the objects of this description.
-         *
-         * @return The name of the objects of this description.
-         */
-        static const char *ClassName(void) {
-            return "ParticleDataCall";
+    /**
+     * Answer the name of the function used for this call.
+     *
+     * @param idx The index of the function to return it's name.
+     *
+     * @return The name of the requested function.
+     */
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
+        case 0:
+            return "GetData";
+        case 1:
+            return "GetExtend";
         }
+        return "";
+    }
 
-        /**
-         * Gets a human readable description of the module.
-         *
-         * @return A human readable description of the module.
-         */
-        static const char *Description(void) {
-            return "Call to get particle data";
-        }
+    /** Ctor. */
+    ParticleDataCall(void);
 
-        /**
-         * Answer the number of functions used for this call.
-         *
-         * @return The number of functions used for this call.
-         */
-        static unsigned int FunctionCount(void) {
-            return 2;
-        }
+    /** Dtor. */
+    virtual ~ParticleDataCall(void);
 
-        /**
-         * Answer the name of the function used for this call.
-         *
-         * @param idx The index of the function to return it's name.
-         *
-         * @return The name of the requested function.
-         */
-        static const char * FunctionName(unsigned int idx) {
-            switch( idx) {
-                case 0:
-                    return "GetData";
-                case 1:
-                    return "GetExtend";
-            }
-			return "";
-        }
+    // -------------------- get and set routines --------------------
 
-        /** Ctor. */
-        ParticleDataCall(void);
+    /**
+     * Set the number of particles.
+     *
+     * @param cnt The number of particles.
+     */
+    void SetParticleCount(unsigned int cnt) {
+        this->particleCount = cnt;
+    }
 
-        /** Dtor. */
-        virtual ~ParticleDataCall(void);
+    /**
+     * Get the number of particles.
+     *
+     * @return The number of particles..
+     */
+    unsigned int ParticleCount() const {
+        return this->particleCount;
+    }
 
-        // -------------------- get and set routines --------------------
+    /**
+     * Assign the particle list.
+     *
+     * @params partList The particle list.
+     */
+    void SetParticles(float* partList) {
+        this->particles = partList;
+    }
 
-        /**
-         * Set the number of particles.
-         *
-         * @param cnt The number of particles.
-         */
-        void SetParticleCount(unsigned int cnt) { this->particleCount = cnt; }
+    /**
+     * Access the particle list.
+     *
+     * @return The particle list.
+     */
+    const float* Particles() const {
+        return this->particles;
+    }
 
-        /**
-         * Get the number of particles.
-         *
-         * @return The number of particles..
-         */
-        unsigned int ParticleCount() const { return this->particleCount; }
+    /**
+     * Assign the color list.
+     *
+     * @params col The clor list.
+     */
+    void SetColors(float* col) {
+        this->colors = col;
+    }
 
-        /**
-         * Assign the particle list.
-         *
-         * @params partList The particle list.
-         */
-        void SetParticles(float* partList) { this->particles = partList; }
+    /**
+     * Access the color list.
+     *
+     * @return The color list.
+     */
+    const float* Colors() const {
+        return this->colors;
+    }
 
-        /**
-         * Access the particle list.
-         *
-         * @return The particle list.
-         */
-        const float* Particles() const { return this->particles; }
+    /**
+     * Assign the charges list.
+     *
+     * @params chargesList The clor list.
+     */
+    void SetCharges(float* chargesList) {
+        this->charges = chargesList;
+    }
 
-        /**
-         * Assign the color list.
-         *
-         * @params col The clor list.
-         */
-        void SetColors(float* col) { this->colors = col; }
+    /**
+     * Access the charges list.
+     *
+     * @return The charges list.
+     */
+    const float* Charges() const {
+        return this->charges;
+    }
 
-        /**
-         * Access the color list.
-         *
-         * @return The color list.
-         */
-        const float* Colors() const { return this->colors; }
+private:
+    // -------------------- variables --------------------
 
-        /**
-         * Assign the charges list.
-         *
-         * @params chargesList The clor list.
-         */
-        void SetCharges(float* chargesList) { this->charges = chargesList; }
+    /** stores the number of particles */
+    unsigned int particleCount;
 
-        /**
-         * Access the charges list.
-         *
-         * @return The charges list.
-         */
-        const float* Charges() const { return this->charges; }
+    /** the particle list */
+    float* particles;
 
-    private:
-        // -------------------- variables --------------------
+    /** the color list */
+    float* colors;
 
-        /** stores the number of particles */
-        unsigned int particleCount;
+    /** the charges list */
+    float* charges;
+};
 
-        /** the particle list */
-        float* particles;
-
-        /** the color list */
-        float* colors;
-
-        /** the charges list */
-        float* charges;
-
-    };
-
-    /** Description class typedef */
-    typedef megamol::core::factories::CallAutoDescription<ParticleDataCall> ParticleDataCallDescription;
+/** Description class typedef */
+typedef megamol::core::factories::CallAutoDescription<ParticleDataCall> ParticleDataCallDescription;
 
 
 } /* end namespace protein */

@@ -8,9 +8,9 @@
 #pragma once
 
 #include <atomic>
-#include <thread>
-#include <queue>
 #include <mutex>
+#include <queue>
+#include <thread>
 
 namespace megamol {
 namespace frontend_resources {
@@ -18,9 +18,15 @@ namespace frontend_resources {
 struct ThreadSignaler {
     std::atomic<bool> running = false;
 
-    void start() { running.store(true, std::memory_order_release); }
-    void stop() { running.store(false, std::memory_order_release); }
-    bool is_running() { return running.load(std::memory_order_acquire); }
+    void start() {
+        running.store(true, std::memory_order_release);
+    }
+    void stop() {
+        running.store(false, std::memory_order_release);
+    }
+    bool is_running() {
+        return running.load(std::memory_order_acquire);
+    }
 };
 
 struct ThreadWorker {
@@ -35,7 +41,7 @@ struct ThreadWorker {
 };
 
 
-template <typename Item>
+template<typename Item>
 class threadsafe_queue {
 #define guard std::lock_guard<std::mutex> lock(m_mutex);
 

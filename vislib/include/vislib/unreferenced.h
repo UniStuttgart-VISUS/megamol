@@ -1,7 +1,7 @@
 /*
  * unreferenced.h
  *
- * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart. 
+ * Copyright (C) 2009 by Visualisierungsinstitut der Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -25,7 +25,7 @@
 #ifdef UNREFERENCED_PARAMETER
 #define VL_UNREFERENCED_PARAMETER(p) UNREFERENCED_PARAMETER(p)
 #else /* UNREFERENCED_PARAMETER */
-#define VL_UNREFERENCED_PARAMETER(p) ((void) (p))
+#define VL_UNREFERENCED_PARAMETER(p) ((void)(p))
 #endif /* UNREFERENCED_PARAMETER */
 
 
@@ -52,13 +52,12 @@
 
 
 /**
- * Define the variable 'v' as only referenced in the debug build. Using this 
+ * Define the variable 'v' as only referenced in the debug build. Using this
  * macro prevents compiler warnings.
  *
  * @param v The local that is only referenced in debug builds.
  */
-#define VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(v) \
-    VL_DBGONLY_REFERENCED_PARAMETER(v)
+#define VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(v) VL_DBGONLY_REFERENCED_PARAMETER(v)
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

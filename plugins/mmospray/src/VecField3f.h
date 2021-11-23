@@ -32,28 +32,20 @@ namespace ospray {
 class VecField3f {
 
 public:
-
     class CritPoint {
 
     public:
-
         /// Possible types of critical points
-        enum Type {UNKNOWN=0, SOURCE, SINK, REPELLING_SADDLE,
-            ATTRACTING_SADDLE}; // TODO extend
+        enum Type { UNKNOWN = 0, SOURCE, SINK, REPELLING_SADDLE, ATTRACTING_SADDLE }; // TODO extend
 
         /** CTor */
-        CritPoint() : pos(0.0f, 0.0f, 0.0f), cellId(0, 0, 0), t(UNKNOWN) {
-        }
+        CritPoint() : pos(0.0f, 0.0f, 0.0f), cellId(0, 0, 0), t(UNKNOWN) {}
 
         /** CTor */
-        CritPoint(Vec3f pos,
-                Vec3u cellId,
-                Type t) : pos(pos), cellId(cellId), t(t) {
-        }
+        CritPoint(Vec3f pos, Vec3u cellId, Type t) : pos(pos), cellId(cellId), t(t) {}
 
         /** DTor */
-        ~CritPoint() {
-        }
+        ~CritPoint() {}
 
         /**
          * Answer the null points position in world space.
@@ -89,13 +81,10 @@ public:
          * @return True if the two operands are equal
          */
         bool operator==(const CritPoint& rhs) const {
-            return (this->pos == rhs.pos)
-                && (this->cellId == rhs.cellId)
-                && (this->t == rhs.t);
+            return (this->pos == rhs.pos) && (this->cellId == rhs.cellId) && (this->t == rhs.t);
         }
 
     private:
-
         /// The exact position of the critical point
         Vec3f pos;
 
@@ -107,9 +96,17 @@ public:
     };
 
     /** CTor */
-    VecField3f() : dimX(0), dimY(0), dimZ(0), spacingX(0.0f), spacingY(0.0f),
-        spacingZ(0.0f), orgX(0.0f), orgY(0.0f), orgZ(0.0f), data(NULL) {
-    }
+    VecField3f()
+            : dimX(0)
+            , dimY(0)
+            , dimZ(0)
+            , spacingX(0.0f)
+            , spacingY(0.0f)
+            , spacingZ(0.0f)
+            , orgX(0.0f)
+            , orgY(0.0f)
+            , orgZ(0.0f)
+            , data(NULL) {}
 
     /** DTor */
     ~VecField3f() {
@@ -124,8 +121,7 @@ public:
      * @throws OutOfRangeException, if the given position exceeds the dimensions
      *         of the grid.
      */
-    Vec3f GetAt(unsigned int posX, unsigned int posY,
-            unsigned int posZ);
+    Vec3f GetAt(unsigned int posX, unsigned int posY, unsigned int posZ);
 
     /**
      * Answers the vector at a given grid position. The vector is obtained
@@ -136,7 +132,7 @@ public:
      *                  normalized grid.
      * @return The vector at the given position.
      */
-    Vec3f GetAtTrilin(float posX, float posY, float posZ, bool normalize=false);
+    Vec3f GetAtTrilin(float posX, float posY, float posZ, bool normalize = false);
 
     /**
      * Answers the vector at a given grid position. The vector is obtained
@@ -147,7 +143,7 @@ public:
      *                  normalized grid.
      * @return The vector at the given position.
      */
-    Vec3f GetAtTrilin(Vec3f pos, bool normalize=false) {
+    Vec3f GetAtTrilin(Vec3f pos, bool normalize = false) {
         return this->GetAtTrilin(pos.X(), pos.Y(), pos.Z(), normalize);
     }
 
@@ -159,10 +155,10 @@ public:
      * @return The cell id
      */
     Vec3u GetCellId(Vec3f pos) {
-        float cx,cy,cz;
-        cx = (pos.X() - this->orgX)/this->spacingX;
-        cy = (pos.Y() - this->orgY)/this->spacingY;
-        cz = (pos.Z() - this->orgZ)/this->spacingZ;
+        float cx, cy, cz;
+        cx = (pos.X() - this->orgX) / this->spacingX;
+        cy = (pos.Y() - this->orgY) / this->spacingY;
+        cz = (pos.Z() - this->orgZ) / this->spacingZ;
 
         Vec3u cellId;
         cellId[0] = static_cast<unsigned int>(cx);
@@ -196,8 +192,7 @@ public:
      * @return The dimensions of the grid
      */
     const Vec3u GetDim() const {
-        return Vec3u(this->dimX, this->dimY,
-                this->dimZ);
+        return Vec3u(this->dimX, this->dimY, this->dimZ);
     }
 
     /**
@@ -206,8 +201,7 @@ public:
      * @return The spacing of the grid
      */
     const Vec3f GetSpacing() const {
-        return Vec3f(this->spacingX, this->spacingY,
-                this->spacingZ);
+        return Vec3f(this->spacingX, this->spacingY, this->spacingZ);
     }
 
     /**
@@ -216,9 +210,7 @@ public:
      * @return The origin of the grid
      */
     const Vec3f GetOrg() const {
-        return Vec3f(this->orgX,
-                this->orgY,
-                this->orgZ);
+        return Vec3f(this->orgX, this->orgY, this->orgZ);
     }
 
     /**
@@ -230,8 +222,7 @@ public:
      *                  the jacobian.
      * @return The jacobian
      */
-    Mat3f GetJacobianAt(unsigned int x, unsigned int y, unsigned int z,
-            bool normalize=false);
+    Mat3f GetJacobianAt(unsigned int x, unsigned int y, unsigned int z, bool normalize = false);
 
     /**
      * Check whether a given position lies inside a certain cell.
@@ -240,8 +231,7 @@ public:
      * @param pos The position.
      * @return True, if the position is inside the cell, false otherwise.
      */
-    bool IsPosInCell(Vec3u cellId,
-            Vec3f pos);
+    bool IsPosInCell(Vec3u cellId, Vec3f pos);
 
     /**
      * Check whether a given position is inside the grid boundaries.
@@ -256,7 +246,7 @@ public:
      *
      * @return A pointer to the vector data.
      */
-    const float *PeekBuff() {
+    const float* PeekBuff() {
         return this->data;
     }
 
@@ -270,8 +260,7 @@ public:
      * @param epsNewton     Magnitude at which the vector field is considered
      *                      to be vanishing
      */
-    void SearchCritPoints(unsigned int maxBisections, unsigned int maxItNewton,
-            float stepNewton, float epsNewton);
+    void SearchCritPoints(unsigned int maxBisections, unsigned int maxItNewton, float stepNewton, float epsNewton);
 
 #ifdef WITH_CUDA
     /**
@@ -284,8 +273,7 @@ public:
      * @param epsNewton     Magnitude at which the vector field is considered
      *                      to be vanishing
      */
-    void SearchCritPointsCUDA(unsigned int maxItNewton, float stepNewton,
-            float epsNewton);
+    void SearchCritPointsCUDA(unsigned int maxItNewton, float stepNewton, float epsNewton);
 #endif
 
     /**
@@ -296,12 +284,10 @@ public:
      * @param sx, sy, sz       The spacing of the grid
      * @param orgx, orgy, orgz The origin of the grid (in WS coordinates)
      */
-    void SetData(const float *data, unsigned int dX, unsigned int dY,
-            unsigned int dZ, float sx, float sy, float sz, float orgX,
-            float orgY, float orgZ);
+    void SetData(const float* data, unsigned int dX, unsigned int dY, unsigned int dZ, float sx, float sy, float sz,
+        float orgX, float orgY, float orgZ);
 
 private:
-
     /**
      * Classify a null point according to its Eigenvalues.
      *
@@ -319,9 +305,7 @@ private:
      * @param maxDepth  The maximum number of bisections.
      * @param n         The corner values of the current (sub)cell.
      */
-    bool isFieldVanishingInCellBisectionRec(
-            unsigned int currDepth, unsigned int maxDepth,
-            vislib::Array<Vec3f > n);
+    bool isFieldVanishingInCellBisectionRec(unsigned int currDepth, unsigned int maxDepth, vislib::Array<Vec3f> n);
 
     /**
      * Approximates the point where the field is vanishing in a given cell
@@ -336,11 +320,7 @@ private:
      *                 to be vanishing
      * @return The approximated position of the null point.
      */
-    Vec3f searchNullPointNewton(
-            unsigned int maxIt,
-            Vec3f startPos,
-            Vec3u cellId,
-            float step, float eps);
+    Vec3f searchNullPointNewton(unsigned int maxIt, Vec3f startPos, Vec3u cellId, float step, float eps);
 
     /// Dimensions of the grid
     unsigned int dimX, dimY, dimZ;
@@ -352,13 +332,13 @@ private:
     float orgX, orgY, orgZ;
 
     /// Array containing the data
-    float *data;
+    float* data;
 
     /// Array containing critical points
     vislib::Array<CritPoint> critPoints;
 };
 
-} // end namespace protein_cuda
+} // namespace ospray
 } // end namespace megamol
 
 #endif // MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED

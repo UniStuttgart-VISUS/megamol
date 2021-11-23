@@ -27,7 +27,6 @@ megamol::mesh_gl::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSour
 
     this->m_mesh_slot.SetCompatibleCall<CallGPUMeshDataDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
-
 }
 
 megamol::mesh_gl::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() {

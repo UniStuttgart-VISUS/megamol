@@ -16,79 +16,79 @@
 
 namespace megamol::core::factories {
 
+/**
+ * Abstract base class of rendering graph module descriptions
+ */
+class ModuleDescription : public ObjectDescription {
+public:
+    typedef std::shared_ptr<const ModuleDescription> ptr;
+
+    /** Ctor. */
+    ModuleDescription() = default;
+
+    /** Dtor. */
+    ~ModuleDescription() override = default;
+
     /**
-     * Abstract base class of rendering graph module descriptions
+     * Answer the class name of the module described.
+     *
+     * @return The class name of the module described.
      */
-    class ModuleDescription : public ObjectDescription {
-    public:
-        typedef std::shared_ptr<const ModuleDescription> ptr;
+    const char* ClassName() const override = 0;
 
-        /** Ctor. */
-        ModuleDescription() = default;
+    /**
+     * Gets a human readable description of the module.
+     *
+     * @return A human readable description of the module.
+     */
+    const char* Description() const override = 0;
 
-        /** Dtor. */
-        ~ModuleDescription() override = default;
+    /**
+     * Answers whether this module is available on the current system.
+     * This implementation always returns 'true'.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    virtual bool IsAvailable() const;
 
-        /**
-         * Answer the class name of the module described.
-         *
-         * @return The class name of the module described.
-         */
-        const char* ClassName() const override = 0;
+    /**
+     * Answers whether this description is describing the class of
+     * 'module'.
+     *
+     * @param module The module to test.
+     *
+     * @return 'true' if 'module' is described by this description,
+     *         'false' otherwise.
+     */
+    virtual bool IsDescribing(const Module* module) const = 0;
 
-        /**
-         * Gets a human readable description of the module.
-         *
-         * @return A human readable description of the module.
-         */
-        const char* Description() const override = 0;
+    /**
+     * Answer whether or not this module can be used in a quickstart
+     *
+     * @return 'true' if the module can be used in a quickstart
+     */
+    virtual bool IsVisibleForQuickstart() const = 0;
 
-        /**
-         * Answers whether this module is available on the current system.
-         * This implementation always returns 'true'.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        virtual bool IsAvailable() const;
+    /**
+     * Creates a new module object from this description.
+     *
+     * @param name The name for the module to be created.
+     * @param instance The core instance calling. Must not be 'NULL'.
+     *
+     * @return The newly created module object or 'NULL' in case of an
+     *         error.
+     */
+    Module::ptr_type CreateModule(const std::string& name) const;
 
-        /**
-         * Answers whether this description is describing the class of
-         * 'module'.
-         *
-         * @param module The module to test.
-         *
-         * @return 'true' if 'module' is described by this description,
-         *         'false' otherwise.
-         */
-        virtual bool IsDescribing(const Module* module) const = 0;
-
-        /**
-         * Answer whether or not this module can be used in a quickstart
-         *
-         * @return 'true' if the module can be used in a quickstart
-         */
-        virtual bool IsVisibleForQuickstart() const = 0;
-
-        /**
-         * Creates a new module object from this description.
-         *
-         * @param name The name for the module to be created.
-         * @param instance The core instance calling. Must not be 'NULL'.
-         *
-         * @return The newly created module object or 'NULL' in case of an
-         *         error.
-         */
-        Module::ptr_type CreateModule(const std::string& name) const;
-
-    protected:
-        /**
-         * Creates a new module object from this description.
-         *
-         * @return The newly created module object or 'NULL' in case of an
-         *         error.
-         */
-        virtual Module::ptr_type createModuleImpl() const = 0;
-    };
+protected:
+    /**
+     * Creates a new module object from this description.
+     *
+     * @return The newly created module object or 'NULL' in case of an
+     *         error.
+     */
+    virtual Module::ptr_type createModuleImpl() const = 0;
+};
 
 } // namespace megamol::core::factories
 

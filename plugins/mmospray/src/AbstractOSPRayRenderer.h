@@ -5,39 +5,39 @@
  */
 #pragma once
 
-#include <map>
-#include <stdint.h>
-#include "mmospray/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/light/CallLight.h"
+#include "mmospray/CallOSPRayStructure.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <map>
+#include <stdint.h>
 
 namespace megamol {
 namespace ospray {
 
 template<typename tPair>
-    struct second_t {
-        typename tPair::second_type operator()(const tPair& p) const {
-            return p.second;
-        }
-    };
+struct second_t {
+    typename tPair::second_type operator()(const tPair& p) const {
+        return p.second;
+    }
+};
 
 template<typename tMap>
-    second_t<typename tMap::value_type> second(const tMap& m) {
-        return second_t<typename tMap::value_type>();
-    }
+second_t<typename tMap::value_type> second(const tMap& m) {
+    return second_t<typename tMap::value_type>();
+}
 
 
 inline rkcommon::math::vec2f convertToVec2f(std::array<float, 2> inp) {
-        return rkcommon::math::vec2f(inp[0], inp[1]);
-    }
+    return rkcommon::math::vec2f(inp[0], inp[1]);
+}
 
 inline rkcommon::math::vec3f convertToVec3f(std::array<float, 3> inp) {
-        return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
 }
 
 inline rkcommon::math::vec3f convertToVec3f(std::array<float, 4> inp) {
@@ -92,7 +92,6 @@ struct baseStructureData {
 };
 
 
-
 class AbstractOSPRayRenderer : public core::view::Renderer3DModule {
 protected:
     // Ctor
@@ -132,7 +131,7 @@ protected:
      */
     ::ospray::cpp::Texture TextureFromFile(vislib::TString fileName);
     // helper function to write the rendered image as PPM file
-    void writePPM(std::string fileName, const std::array<int,2>& size, const uint32_t* pixel);
+    void writePPM(std::string fileName, const std::array<int, 2>& size, const uint32_t* pixel);
     void fillMaterialContainer(CallOSPRayStructure* entry_first, const OSPRayStructureContainer& element);
 
     // TODO: Documentation
@@ -195,10 +194,9 @@ protected:
     ::ospray::cpp::Texture _maxDepthTexture;
 
     // structure vectors
-    std::map<CallOSPRayStructure*, baseStructureData>
-        _baseStructures;
+    std::map<CallOSPRayStructure*, baseStructureData> _baseStructures;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::VolumetricModel>> _volumetricModels;
-    std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>>  _geometricModels;
+    std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>> _geometricModels;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>> _clippingModels;
 
     std::map<CallOSPRayStructure*, ::ospray::cpp::Group> _groups;
@@ -211,7 +209,7 @@ protected:
     // extend map
     OSPRayExtendMap _extendMap;
 
-    void fillLightArray(std::array<float,3> eyeDir);
+    void fillLightArray(std::array<float, 3> eyeDir);
 
     long long int _ispcLimit = 1ULL << 30;
     long long int _numCreateGeo;

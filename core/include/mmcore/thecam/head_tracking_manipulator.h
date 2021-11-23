@@ -44,9 +44,7 @@
 
 namespace megamol {
 namespace core {
-namespace thecam {
-
-} /* end namespace thecam */
+namespace thecam {} /* end namespace thecam */
 } /* end namespace core */
 } /* end namespace megamol */
 

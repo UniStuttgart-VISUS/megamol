@@ -7,11 +7,11 @@
 
 #pragma once
 
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "geometry_calls/VolumetricDataCall.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "datatools/table/TableDataCall.h"
@@ -33,13 +33,19 @@ namespace datatools {
 class ParticlesToDensity : public megamol::core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "ParticlesToDensity"; }
+    static const char* ClassName(void) {
+        return "ParticlesToDensity";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Computes a density volume from particles"; }
+    static const char* Description(void) {
+        return "Computes a density volume from particles";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     ParticlesToDensity(void);

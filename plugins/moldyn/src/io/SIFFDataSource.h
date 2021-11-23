@@ -1,7 +1,7 @@
 /*
  * SIFFDataSource.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "geometry_calls/MultiParticleDataCall.h"
-#include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
@@ -24,131 +24,127 @@ namespace moldyn {
 namespace io {
 
 
+/**
+ * Data source for the SImple File Format
+ *
+ * File Format:
+ *  Header (5+ Bytes):
+ *      0..3    char*   Header-ID   "SIFF"
+ *      4       char    Type        "b" for binary, "a" for ascii
+ *    if binary:
+ *      5..8    uint32  Version     100 (version 1.0)
+ *    if ascii:
+ *      x       till-NL Version     1.0 (or equivalent)
+ *
+ *  Body (if binary - 19 Bytes per Sphere):
+ *      0..15   4xfloat Position and radius (X, Y, Z, Rad)
+ *      16..18  3xbyte  Colour (RGB)
+ *
+ *  Body (id ascii - 1 line per sphere):
+ *      x       till-NL Position (3xFloat), Radius (1xFloat), Colour (3xInt[0..255])
+ *
+ *  In version 1.1 (101) only position information (X, Y, Z) is written!
+ */
+class SIFFDataSource : public core::Module {
+public:
     /**
-     * Data source for the SImple File Format
+     * Answer the name of this module.
      *
-     * File Format:
-     *  Header (5+ Bytes):
-     *      0..3    char*   Header-ID   "SIFF"
-     *      4       char    Type        "b" for binary, "a" for ascii
-     *    if binary:
-     *      5..8    uint32  Version     100 (version 1.0)
-     *    if ascii:
-     *      x       till-NL Version     1.0 (or equivalent)
-     *
-     *  Body (if binary - 19 Bytes per Sphere):
-     *      0..15   4xfloat Position and radius (X, Y, Z, Rad)
-     *      16..18  3xbyte  Colour (RGB)
-     *
-     *  Body (id ascii - 1 line per sphere):
-     *      x       till-NL Position (3xFloat), Radius (1xFloat), Colour (3xInt[0..255])
-     *
-     *  In version 1.1 (101) only position information (X, Y, Z) is written!
+     * @return The name of this module.
      */
-    class SIFFDataSource : public core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "SIFFDataSource";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "SIFFDataSource";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "SImple File Format Data source module";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "SImple File Format Data source module";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    SIFFDataSource(void);
 
-        /** Ctor. */
-        SIFFDataSource(void);
+    /** Dtor. */
+    virtual ~SIFFDataSource(void);
 
-        /** Dtor. */
-        virtual ~SIFFDataSource(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Callback receiving the update of the file name parameter.
+     *
+     * @param slot The updated ParamSlot.
+     *
+     * @return Always 'true' to reset the dirty flag.
+     */
+    bool filenameChanged(core::param::ParamSlot& slot);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-    private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-        /**
-         * Callback receiving the update of the file name parameter.
-         *
-         * @param slot The updated ParamSlot.
-         *
-         * @return Always 'true' to reset the dirty flag.
-         */
-        bool filenameChanged(core::param::ParamSlot& slot);
+    /** The file name */
+    core::param::ParamSlot filenameSlot;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
+    /** The radius used when loading a version 1.1 file */
+    core::param::ParamSlot radSlot;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+    /** The slot for requesting data */
+    core::CalleeSlot getDataSlot;
 
-        /** The file name */
-        core::param::ParamSlot filenameSlot;
+    /** The bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-        /** The radius used when loading a version 1.1 file */
-        core::param::ParamSlot radSlot;
+    /** The data */
+    vislib::RawStorage data;
 
-        /** The slot for requesting data */
-        core::CalleeSlot getDataSlot;
+    /** The data hash */
+    SIZE_T datahash;
 
-        /** The bounding box */
-        vislib::math::Cuboid<float> bbox;
+    /* The siff data version */
+    unsigned int verNum;
 
-        /** The data */
-        vislib::RawStorage data;
-
-        /** The data hash */
-        SIZE_T datahash;
-
-        /* The siff data version */
-        unsigned int verNum;
-
-        /** Flag whether or not the data also stores color alpha */
-        bool hasAlpha;
-
-    };
+    /** Flag whether or not the data also stores color alpha */
+    bool hasAlpha;
+};
 
 } /* end namespace io */
 } /* end namespace moldyn */

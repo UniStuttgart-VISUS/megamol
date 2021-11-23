@@ -21,135 +21,141 @@ namespace core_gl {
 namespace view {
 namespace special {
 
-    /**
-    * Call transporting a callback delivering an ostream object for writing data.
-    *
-    * @author Alexander Straub
-    */
-    class MEGAMOLCORE_API CallbackScreenShooterCall : public core::AbstractCallbackCall<std::function<void()>> {
+/**
+ * Call transporting a callback delivering an ostream object for writing data.
+ *
+ * @author Alexander Straub
+ */
+class MEGAMOLCORE_API CallbackScreenShooterCall : public core::AbstractCallbackCall<std::function<void()>> {
 
-    public:
-        typedef core::factories::CallAutoDescription<CallbackScreenShooterCall> CallbackScreenShooterDescription;
-
-        /**
-        * Human-readable class name
-        */
-        static const char* ClassName() { return "CallbackScreenShooterCall"; }
-
-        /**
-        * Human-readable class description
-        */
-        static const char *Description() { return "Call transporting a callback for shooting screenshots"; }
-
-        /**
-        * Number of available functions
-        */
-        static unsigned int FunctionCount() { return 1; }
-
-        /**
-        * Names of available functions
-        */
-        static const char * FunctionName(unsigned int idx) {
-
-            switch (idx)
-            {
-            case 0: return "SetCallback";
-            }
-
-            return nullptr;
-        }
-    };
+public:
+    typedef core::factories::CallAutoDescription<CallbackScreenShooterCall> CallbackScreenShooterDescription;
 
     /**
-     * Class implementing the screen shooter using a callback
-     *
-     * @author Alexander Straub
+     * Human-readable class name
      */
-    class MEGAMOLCORE_API CallbackScreenShooter : public ScreenShooter, protected core::AbstractWriterParams {
+    static const char* ClassName() {
+        return "CallbackScreenShooterCall";
+    }
 
-    public:
-        using FunctionT = std::function<void()>;
+    /**
+     * Human-readable class description
+     */
+    static const char* Description() {
+        return "Call transporting a callback for shooting screenshots";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName() {
-            return "CallbackScreenShooter";
+    /**
+     * Number of available functions
+     */
+    static unsigned int FunctionCount() {
+        return 1;
+    }
+
+    /**
+     * Names of available functions
+     */
+    static const char* FunctionName(unsigned int idx) {
+
+        switch (idx) {
+        case 0:
+            return "SetCallback";
         }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description() {
-            return "A simple tick job module used to create large off-screen renderings";
-        }
+        return nullptr;
+    }
+};
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable() {
-            return true;
-        }
+/**
+ * Class implementing the screen shooter using a callback
+ *
+ * @author Alexander Straub
+ */
+class MEGAMOLCORE_API CallbackScreenShooter : public ScreenShooter, protected core::AbstractWriterParams {
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart() {
-            return false;
-        }
+public:
+    using FunctionT = std::function<void()>;
 
-        /**
-         * Ctor
-         */
-        CallbackScreenShooter();
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName() {
+        return "CallbackScreenShooter";
+    }
 
-        /**
-         * Dtor
-         */
-        virtual ~CallbackScreenShooter();
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description() {
+        return "A simple tick job module used to create large off-screen renderings";
+    }
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create() override;
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable() {
+        return true;
+    }
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release() override;
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart() {
+        return false;
+    }
 
-    private:
-        /**
-         * Starts the job.
-         *
-         * @return true if the job has been successfully started.
-         */
-        bool Run(core::Call&);
+    /**
+     * Ctor
+     */
+    CallbackScreenShooter();
 
-        /*
-         * Create the screenshot.
-         */
-        void CreateScreenshot();
+    /**
+     * Dtor
+     */
+    virtual ~CallbackScreenShooter();
 
-        /** Input slot */
-        core::CallerSlot inputSlot;
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create() override;
 
-        /** Tick slot */
-        core::CalleeSlot tickSlot;
-    };
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release() override;
 
-}
-}
-}
-}
+private:
+    /**
+     * Starts the job.
+     *
+     * @return true if the job has been successfully started.
+     */
+    bool Run(core::Call&);
+
+    /*
+     * Create the screenshot.
+     */
+    void CreateScreenshot();
+
+    /** Input slot */
+    core::CallerSlot inputSlot;
+
+    /** Tick slot */
+    core::CalleeSlot tickSlot;
+};
+
+} // namespace special
+} // namespace view
+} // namespace core_gl
+} // namespace megamol

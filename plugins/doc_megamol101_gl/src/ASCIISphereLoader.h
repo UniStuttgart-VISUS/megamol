@@ -133,6 +133,6 @@ private:
     std::size_t numSpheres;
 };
 
-} // namespace megamol::megamol101
+} // namespace megamol::megamol101_gl
 
 #endif // MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H

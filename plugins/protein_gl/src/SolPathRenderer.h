@@ -22,87 +22,87 @@
 namespace megamol {
 namespace protein_gl {
 
+/**
+ * Renderer for solvent path raw data
+ */
+class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+public:
     /**
-     * Renderer for solvent path raw data
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char* ClassName(void) {
-            return "SolPathRenderer";
-        }
+    static const char* ClassName(void) {
+        return "SolPathRenderer";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char* Description(void) {
-            return "Renderer for solvent path raw data.";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for solvent path raw data.";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+    }
 
-        /** ctor */
-        SolPathRenderer(void);
+    /** ctor */
+    SolPathRenderer(void);
 
-        /** dtor */
-        virtual ~SolPathRenderer(void);
+    /** dtor */
+    virtual ~SolPathRenderer(void);
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(core_gl::view::CallRender3DGL& call);
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
-    private:
-        /** The slot to get the data */
-        core::CallerSlot getdataslot;
+private:
+    /** The slot to get the data */
+    core::CallerSlot getdataslot;
 
-        /** The shader for shading the path lines */
-        vislib_gl::graphics::gl::GLSLShader pathlineShader;
+    /** The shader for shading the path lines */
+    vislib_gl::graphics::gl::GLSLShader pathlineShader;
 
-        /** The shader for shading the dots */
-        vislib_gl::graphics::gl::GLSLShader dotsShader;
-    };
+    /** The shader for shading the dots */
+    vislib_gl::graphics::gl::GLSLShader dotsShader;
+};
 
 } // namespace protein_gl
 } /* end namespace megamol */

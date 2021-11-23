@@ -36,6 +36,7 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
             size_t old_pdd_byte_size = rts->per_draw_data->getByteSize();
             size_t new_dcs_byte_size = old_dcs_byte_size - sizeof(glowl::DrawElementsCommand);
             size_t new_pdd_byte_size = old_pdd_byte_size - rt_meta.per_draw_data_byteSize;
+
             try {
                 auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
                     GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);

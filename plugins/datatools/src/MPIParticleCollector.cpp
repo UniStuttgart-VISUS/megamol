@@ -4,10 +4,10 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MPIParticleCollector.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
 
 using namespace megamol;
 
@@ -16,8 +16,8 @@ using namespace megamol;
  * datatools::MPIParticleCollector::MPIParticleCollector
  */
 datatools::MPIParticleCollector::MPIParticleCollector(void)
-    : AbstractParticleManipulator("outData", "indata")
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.") {
+        : AbstractParticleManipulator("outData", "indata")
+        , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.") {
 
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
@@ -27,7 +27,9 @@ datatools::MPIParticleCollector::MPIParticleCollector(void)
 /*
  * datatools::MPIParticleCollector::~MPIParticleCollector
  */
-datatools::MPIParticleCollector::~MPIParticleCollector(void) { this->Release(); }
+datatools::MPIParticleCollector::~MPIParticleCollector(void) {
+    this->Release();
+}
 
 
 /*
@@ -90,7 +92,8 @@ bool datatools::MPIParticleCollector::manipulateData(
             if (allCount * csize > std::numeric_limits<int>::max() ||
                 allCount * vsize > std::numeric_limits<int>::max()) {
                 // this is so bad there is no way to fix it
-                megamol::core::utility::log::Log::DefaultLog.WriteError("allCount is more powerful than MPI, kill me now. Try subsampling more aggressively", allCount);
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "allCount is more powerful than MPI, kill me now. Try subsampling more aggressively", allCount);
                 abort();
             }
             p.SetCount(allCount);
@@ -104,15 +107,16 @@ bool datatools::MPIParticleCollector::manipulateData(
 
         megamol::core::utility::log::Log::DefaultLog.FlushLog();
 
-#    pragma omp parallel for
+#pragma omp parallel for
         for (long long idx = 0; idx < cnt; ++idx) {
             memcpy(colorData.data() + csize * idx, cd + cds * idx, csize);
             memcpy(vertexData.data() + vsize * idx, vd + vds * idx, vsize);
         }
 
-        MPI_Gatherv(colorData.data(), cnt * csize, MPI_BYTE, allColorData.data(), colSizes.data(), colOffsets.data(), MPI_BYTE, 0, this->comm);
-        MPI_Gatherv(vertexData.data(), cnt * vsize, MPI_BYTE, allVertexData.data(), vertSizes.data(), vertOffsets.data(),
+        MPI_Gatherv(colorData.data(), cnt * csize, MPI_BYTE, allColorData.data(), colSizes.data(), colOffsets.data(),
             MPI_BYTE, 0, this->comm);
+        MPI_Gatherv(vertexData.data(), cnt * vsize, MPI_BYTE, allVertexData.data(), vertSizes.data(),
+            vertOffsets.data(), MPI_BYTE, 0, this->comm);
 
         if (this->mpiRank == 0) {
             p.SetColourData(cdt, allColorData.data(), csize);
@@ -138,19 +142,20 @@ bool datatools::MPIParticleCollector::initMPI() {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
-                                                        _T("retrieve MPI communicator for the MPI-based view ")
-                                                        _T("from the registered provider module."));
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    _T("Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
-                                                   _T("retrieving communicator properties ..."));
+                                                                   _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
-                                                   _T("of %d."),
+                                                                   _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */
     }     /* end if (this->comm == MPI_COMM_NULL) */

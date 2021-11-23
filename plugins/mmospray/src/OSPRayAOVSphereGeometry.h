@@ -5,10 +5,10 @@
  */
 #pragma once
 
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace ospray {
@@ -21,7 +21,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "OSPRayAOVSphereGeometry"; }
+    static const char* ClassName(void) {
+        return "OSPRayAOVSphereGeometry";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -37,7 +39,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Dtor. */
     virtual ~OSPRayAOVSphereGeometry(void);
@@ -92,13 +96,13 @@ private:
 
     size_t time;
 
-    std::array<float,2> valuerange;
+    std::array<float, 2> valuerange;
 
-    std::array<float,3> gridorigin;
+    std::array<float, 3> gridorigin;
 
-    std::array<float,3> gridspacing;
+    std::array<float, 3> gridspacing;
 
-    std::array<int,3> dimensions;
+    std::array<int, 3> dimensions;
 
     long long int ispcLimit = 1ULL << 30;
 };

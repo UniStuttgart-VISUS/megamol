@@ -10,80 +10,77 @@ namespace megamol {
 namespace moldyn_gl {
 namespace misc {
 
+/**
+ * This module shows a table for debugging MultiParticleDataCall.
+ */
+class ParticleInspector : public megamol::core::Module {
+
+public:
     /**
-     * This module shows a table for debugging MultiParticleDataCall.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ParticleInspector : public megamol::core::Module {
+    static inline const char* ClassName(void) {
+        return "ParticleInspector";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Direct inspection of particle values, data is passed through.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void)  {
-            return "ParticleInspector";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "Direct inspection of particle values, data is passed through.";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    ParticleInspector(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~ParticleInspector(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        ParticleInspector(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~ParticleInspector(void);
+    bool getParticleData(core::Call& call);
 
-    protected:
+    bool getParticleExtents(core::Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        bool getParticleData(core::Call& call);
+private:
+    void drawTable(geocalls::MultiParticleDataCall* c);
 
-        bool getParticleExtents(core::Call& call);
+    /** The slot for retrieving the data as multi particle data. */
+    core::CalleeSlot slotParticlesOut;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The data callee slot. */
+    core::CallerSlot slotParticlesIn;
 
-    private:
-
-        void drawTable(geocalls::MultiParticleDataCall *c);
-
-        /** The slot for retrieving the data as multi particle data. */
-        core::CalleeSlot slotParticlesOut;
-
-        /** The data callee slot. */
-        core::CallerSlot slotParticlesIn;
-
-        uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
-    };
+    uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
+};
 
 } /* end namespace misc */
 } /* end namespace moldyn_gl */

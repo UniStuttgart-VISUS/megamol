@@ -12,23 +12,23 @@ varying float sigmaxSqrt2PI;
 
 void main()
 {
-	vec2 size = vec2( textureSize2D( tex, 0));
-	vec2 offset = 1.0 / size; 
+    vec2 size = vec2( textureSize2D( tex, 0));
+    vec2 offset = 1.0 / size; 
 
-	//compute the radius across the kernel
-	int radius = int( floor( 3.0*sigma) - 1.0);
+    //compute the radius across the kernel
+    int radius = int( floor( 3.0*sigma) - 1.0);
 
-	vec4 accum = vec4( 0.0);
+    vec4 accum = vec4( 0.0);
 
-	// separable Gaussian
-	for( int ii = -radius; ii <= radius; ii++ )
-	{
-		float r = float(ii);
-		float factor = pow( 2.71828, -(r*r) / sigmaSqx2 ) / sigmaxSqrt2PI;
-		accum.xyz += factor * texture2D( tex, texCoord + r * direction * offset).xyz;
-	}
-	// preserve the original depth value in w
-	accum.w = texture2D( tex, texCoord).x;
-	
-	gl_FragColor = accum;
+    // separable Gaussian
+    for( int ii = -radius; ii <= radius; ii++ )
+    {
+        float r = float(ii);
+        float factor = pow( 2.71828, -(r*r) / sigmaSqx2 ) / sigmaxSqrt2PI;
+        accum.xyz += factor * texture2D( tex, texCoord + r * direction * offset).xyz;
+    }
+    // preserve the original depth value in w
+    accum.w = texture2D( tex, texCoord).x;
+    
+    gl_FragColor = accum;
 }

@@ -11,13 +11,13 @@
 #include <condition_variable>
 #include <thread>
 
-#include <zmq.hpp>
-#include "mmcore/Module.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
-#include "datatools/table/TableDataCall.h"
+#include <zmq.hpp>
 
 namespace megamol {
 namespace datatools {
@@ -29,13 +29,19 @@ namespace table {
 class TableSelectionTx : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName() { return "TableSelectionTx"; }
+    static const char* ClassName() {
+        return "TableSelectionTx";
+    }
 
     /** Return module class description */
-    static const char* Description() { return "Sends table selection to an other process."; }
+    static const char* Description() {
+        return "Sends table selection to an other process.";
+    }
 
     /** Module is always available */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Ctor */
     TableSelectionTx();

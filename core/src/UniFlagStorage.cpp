@@ -1,6 +1,6 @@
-#include "stdafx.h"
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/UniFlagCalls.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;

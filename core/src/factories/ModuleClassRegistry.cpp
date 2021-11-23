@@ -11,7 +11,7 @@
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 
-#include "../job/TickSwitch.h"
+#include "job/TickSwitch.h"
 #include "mmcore/EventStorage.h"
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/FlagStorage.h"

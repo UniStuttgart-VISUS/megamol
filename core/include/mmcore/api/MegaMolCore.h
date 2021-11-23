@@ -1,7 +1,7 @@
 /*
  * MegaMolCore.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -16,7 +16,7 @@
  * The MegaMolCore API is exported using ansi-c functions only, to allow the
  * usage of the core with non c/c++ frontends.
  *
- * This header specifies the API functions and can be used as reference for 
+ * This header specifies the API functions and can be used as reference for
  * other headers, importing the functions by dynamic loading the library or
  * for headers of other programming languages.
  *
@@ -49,78 +49,70 @@ typedef enum _mmcConfigID : int {
 /** Possible operating systems */
 #ifndef MMCOSYSENUM_DEFINED
 #define MMCOSYSENUM_DEFINED 1
-typedef enum _mmcOSysEnum : int {
-    MMC_OSYSTEM_WINDOWS,
-    MMC_OSYSTEM_LINUX,
-    MMC_OSYSTEM_UNKNOWN
-} mmcOSys;
+typedef enum _mmcOSysEnum : int { MMC_OSYSTEM_WINDOWS, MMC_OSYSTEM_LINUX, MMC_OSYSTEM_UNKNOWN } mmcOSys;
 #endif /* MMCOSYSENUM_DEFINED */
 
 /** Possible hardware architectures */
 #ifndef MMCHARCHENUM_DEFINED
 #define MMCHARCHENUM_DEFINED 1
-typedef enum _mmcHArchEnum : int {
-    MMC_HARCH_I86,
-    MMC_HARCH_X64,
-    MMC_HARCH_UNKNOWN
-} mmcHArch;
+typedef enum _mmcHArchEnum : int { MMC_HARCH_I86, MMC_HARCH_X64, MMC_HARCH_UNKNOWN } mmcHArch;
 #endif /* MMCHARCHENUM_DEFINED */
 
 #ifndef MMCBINARYVERSIONINFO_DEFINED
 #define MMCBINARYVERSIONINFO_DEFINED 1
 typedef struct _mmcBinaryVersionInfo_t {
-    const char *VersionNumber[3];
+    const char* VersionNumber[3];
     mmcOSys SystemType;
     mmcHArch HardwareArchitecture;
     unsigned int Flags;
-    const char *NameStr;
-    const char *CopyrightStr;
-    const char *CommentStr;
+    const char* NameStr;
+    const char* CopyrightStr;
+    const char* CommentStr;
 } mmcBinaryVersionInfo;
 #endif /* MMCBINARYVERSIONINFO_DEFINED */
 
 /** Possible handle types */
 typedef enum _mmcHandleTypeEnum : int {
-    MMC_HTYPE_INVALID, // The handle is invalid or no handle at all.
-                       // which type.
+    MMC_HTYPE_INVALID,      // The handle is invalid or no handle at all.
+                            // which type.
     MMC_HTYPE_COREINSTANCE, // Core Instance handle.
     MMC_HTYPE_VIEWINSTANCE, // View Instance handle.
-    MMC_HTYPE_JOBINSTANCE, // Job Instance handle.
-    MMC_HTYPE_PARAMETER, // A Parameter handle.
-    MMC_HTYPE_UNKNOWN // The handle is a valid handle, but it is unknown of
+    MMC_HTYPE_JOBINSTANCE,  // Job Instance handle.
+    MMC_HTYPE_PARAMETER,    // A Parameter handle.
+    MMC_HTYPE_UNKNOWN       // The handle is a valid handle, but it is unknown of
 } mmcHandleType;
 
 /** Possible error codes */
 typedef enum _mmcErrorCodeEnum : int {
-    MMC_ERR_NO_ERROR = 0, // No Error. This denotes success.
-    MMC_ERR_MEMORY, // Generic memory error.
-    MMC_ERR_HANDLE, // Generic handle error.
-    MMC_ERR_INVALID_HANDLE, // The handle specified was invalid.
+    MMC_ERR_NO_ERROR = 0,    // No Error. This denotes success.
+    MMC_ERR_MEMORY,          // Generic memory error.
+    MMC_ERR_HANDLE,          // Generic handle error.
+    MMC_ERR_INVALID_HANDLE,  // The handle specified was invalid.
     MMC_ERR_NOT_INITIALISED, // The object was not initialised.
-    MMC_ERR_STATE, // The object was in a incompatible state.
-    MMC_ERR_TYPE, // Generic type error (normally incompatible type or cast 
-                  // failed).
+    MMC_ERR_STATE,           // The object was in a incompatible state.
+    MMC_ERR_TYPE,            // Generic type error (normally incompatible type or cast
+                             // failed).
     MMC_ERR_NOT_IMPLEMENTED, // Function not implemented.
-    MMC_ERR_LICENSING, // Requested action not possible due to licensing
-    MMC_ERR_UNKNOWN // Unknown error.
+    MMC_ERR_LICENSING,       // Requested action not possible due to licensing
+    MMC_ERR_UNKNOWN          // Unknown error.
 } mmcErrorCode;
 
 /** Possible value types. */
 typedef enum _mmcValueTypeEnum : int {
-    MMC_TYPE_INT32, // 32 bit signed integer.(Pointer to!)
+    MMC_TYPE_INT32,  // 32 bit signed integer.(Pointer to!)
     MMC_TYPE_UINT32, // 32 bit unsigned integer.(Pointer to!)
-    MMC_TYPE_INT64, // 64 bit signed integer.(Pointer to!)
+    MMC_TYPE_INT64,  // 64 bit signed integer.(Pointer to!)
     MMC_TYPE_UINT64, // 64 bit unsigned integer.(Pointer to!)
-    MMC_TYPE_BYTE, // 8 bit unsigned integer.(Pointer to!)
-    MMC_TYPE_BOOL, // bool (platform specific integer size) (Pointer to!)
-    MMC_TYPE_FLOAT, // 32 bit float (Pointer to!)
-    MMC_TYPE_CSTR, // Ansi string (Pointer or Array of ansi characters).
-    MMC_TYPE_WSTR, // Unicode string (Pointer or Array of wide characters).
+    MMC_TYPE_BYTE,   // 8 bit unsigned integer.(Pointer to!)
+    MMC_TYPE_BOOL,   // bool (platform specific integer size) (Pointer to!)
+    MMC_TYPE_FLOAT,  // 32 bit float (Pointer to!)
+    MMC_TYPE_CSTR,   // Ansi string (Pointer or Array of ansi characters).
+    MMC_TYPE_WSTR,   // Unicode string (Pointer or Array of wide characters).
 #if defined(UNICODE) || defined(_UNICODE)
 #define MMC_TYPE_TSTR MMC_TYPE_WSTR
 #else /* defined(UNICODE) || defined(_UNICODE) */
 #define MMC_TYPE_TSTR MMC_TYPE_CSTR
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+#endif             /* defined(UNICODE) || defined(_UNICODE) */
     MMC_TYPE_VOIDP // Manuel type convertion. Use with care!
 } mmcValueType;
 
@@ -128,14 +120,14 @@ typedef enum _mmcValueTypeEnum : int {
 typedef enum _mmcInitValueEnum : int {
     MMC_INITVAL_CFGFILE, // The configuration file to load.
     MMC_INITVAL_CFGSET, // A configuration set to be added. // TODO: deprecated but retained in case someone is using numbers instead of enum values
-    MMC_INITVAL_LOGFILE, // The log file to use.
-    MMC_INITVAL_LOGLEVEL, // The log level to use.
+    MMC_INITVAL_LOGFILE,      // The log file to use.
+    MMC_INITVAL_LOGLEVEL,     // The log level to use.
     MMC_INITVAL_LOGECHOLEVEL, // The log echo level to use.
-    MMC_INITVAL_INCOMINGLOG, // Connects an incoming log object to the one of 
-                             // the core instance IS NOT DEPRECATED
-    MMC_INITVAL_LOGECHOFUNC, // The log echo function to use.
-    MMC_INITVAL_CORELOG, // Returns the pointer to the core log
-    MMC_INITVAL_CFGOVERRIDE // a config value to override from the command line
+    MMC_INITVAL_INCOMINGLOG,  // Connects an incoming log object to the one of
+                              // the core instance IS NOT DEPRECATED
+    MMC_INITVAL_LOGECHOFUNC,  // The log echo function to use.
+    MMC_INITVAL_CORELOG,      // Returns the pointer to the core log
+    MMC_INITVAL_CFGOVERRIDE   // a config value to override from the command line
 } mmcInitValue;
 
 /**
@@ -174,8 +166,8 @@ typedef int mmcInputButton;
 typedef int mmcInputButtonAction;
 
 /** Library building flags */
-#define MMC_BFLAG_DEBUG     0x00000001  // debug build
-#define MMC_BFLAG_DIRTY     0x00000002  // dirty build (DO NOT RELEASE!)
+#define MMC_BFLAG_DEBUG 0x00000001 // debug build
+#define MMC_BFLAG_DIRTY 0x00000002 // dirty build (DO NOT RELEASE!)
 
 /**
  * Function pointer type for log echo target functions.
@@ -183,8 +175,7 @@ typedef int mmcInputButtonAction;
  * @param level The level of the log message
  * @param message The text of the log message
  */
-typedef void (MEGAMOLCORE_CALLBACK *mmcLogEchoFunction)(unsigned int level,
-    const char* message);
+typedef void(MEGAMOLCORE_CALLBACK* mmcLogEchoFunction)(unsigned int level, const char* message);
 
 /**
  * Function pointer type for string enumeration functions.
@@ -194,8 +185,7 @@ typedef void (MEGAMOLCORE_CALLBACK *mmcLogEchoFunction)(unsigned int level,
  *            memory. The memory is only valid with the function called.
  * @param data The user specified pointer.
  */
-typedef void (MEGAMOLCORE_CALLBACK *mmcEnumStringAFunction)(const char *str,
-    void *data);
+typedef void(MEGAMOLCORE_CALLBACK* mmcEnumStringAFunction)(const char* str, void* data);
 
 /**
  * Function pointer type for string enumeration functions.
@@ -205,15 +195,14 @@ typedef void (MEGAMOLCORE_CALLBACK *mmcEnumStringAFunction)(const char *str,
  *            memory. The memory is only valid with the function called.
  * @param data The user specified pointer.
  */
-typedef void (MEGAMOLCORE_CALLBACK *mmcEnumStringWFunction)(const wchar_t *str,
-    void *data);
+typedef void(MEGAMOLCORE_CALLBACK* mmcEnumStringWFunction)(const wchar_t* str, void* data);
 
 /**
  * Function pointer type for view close requests.
  *
  * @param data The user specified pointer.
  */
-typedef void (MEGAMOLCORE_CALLBACK *mmcViewCloseRequestFunction)(void *data);
+typedef void(MEGAMOLCORE_CALLBACK* mmcViewCloseRequestFunction)(void* data);
 
 #if defined(UNICODE) || defined(_UNICODE)
 #define mmcEnumStringFunction mmcEnumStringWFunction
@@ -226,11 +215,11 @@ typedef void (MEGAMOLCORE_CALLBACK *mmcViewCloseRequestFunction)(void *data);
 
 #define MMC_USING_VERIFY mmcErrorCode __mmc_verify_error__;
 
-#define MMC_VERIFY_THROW(call) \
-    if ((__mmc_verify_error__ = call) != MMC_ERR_NO_ERROR) {\
-        vislib::StringA str; \
+#define MMC_VERIFY_THROW(call)                                    \
+    if ((__mmc_verify_error__ = call) != MMC_ERR_NO_ERROR) {      \
+        vislib::StringA str;                                      \
         str.Format("MegaMolCore Error %d", __mmc_verify_error__); \
-        throw vislib::Exception(str, __FILE__, __LINE__);\
+        throw vislib::Exception(str, __FILE__, __LINE__);         \
     }
 
 
@@ -257,7 +246,7 @@ MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void);
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreeVersionInfo(mmcBinaryVersionInfo* info);
 
 /**
- * Returns the size needed to store a handle. All handles used by the 
+ * Returns the size needed to store a handle. All handles used by the
  * MegaMolCore API have the same size.
  *
  * @return the size in bytes for the a handle
@@ -274,7 +263,7 @@ MEGAMOLCORE_API unsigned int MEGAMOLCORE_CALL mmcGetHandleSize(void);
  *
  * @param hndl The core handle to be disposed.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void* hndl);
 
 /**
  * Checks wether the supplied handle is a valid mega mol handle or not. If you
@@ -286,7 +275,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl);
  *
  * @return 'true' if the handle is a valid mega mol handle, otherwise 'false'.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void *hndl);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void* hndl);
 
 /**
  * Answers the type of the supplied handle.
@@ -295,17 +284,17 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void *hndl);
  *
  * @return The type of the specified handle.
  */
-MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl);
+MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void* hndl);
 
 /**
  * Creates a core instance and places the handle into the specified memory.
  *
  * The caller is responsible that hCore points to an allocated memory block
- * of sufficient size. The size must be determined by calling 
+ * of sufficient size. The size must be determined by calling
  * 'mmcGetHandleSize'. The caller remains owner of the memory and must ensure
  * that the memory is not freed or moved until 'mmcDisposeHandle' has returned.
- * The first byte of the memory block speified by hCore must be set to zero. 
- * If hCore point to a memory block already holding a valid core handle the 
+ * The first byte of the memory block speified by hCore must be set to zero.
+ * If hCore point to a memory block already holding a valid core handle the
  * method fails.
  *
  * Warning: DO NOT CHANGE the data hCore points to, as long as a valid core
@@ -313,10 +302,10 @@ MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl);
  *
  * @param hCore Points to the memory receiving the core instance handle.
  *
- * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the 
+ * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the
  *         function fails.
  */
-MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore);
+MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void* hCore);
 
 /**
  * Sets a initialisation value. The core instance must not be initialised yet.
@@ -327,23 +316,22 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore);
  * @param value The value to set the initialisation value to. The type of the
  *              variable specified depends on 'type'.
  *
- * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the 
+ * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the
  *         function fails.
  */
 MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcSetInitialisationValue(
-    void *hCore, mmcInitValue key, mmcValueType type, const void* value);
+    void* hCore, mmcInitValue key, mmcValueType type, const void* value);
 
 /**
- * Initialises the core instance. A core instance must not be initialised 
+ * Initialises the core instance. A core instance must not be initialised
  * twice!
  *
  * @param hCore The core instance handle.
  *
- * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the 
+ * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if the
  *         function fails.
  */
-MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcInitialiseCoreInstance(
-    void *hCore);
+MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void* hCore);
 
 /**
  * Answer a configuration value of the core instance. The memory the returned
@@ -370,16 +358,15 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcInitialiseCoreInstance(
  * ANSI Implementation of mmcGetConfigurationValue
  * @see mmcGetConfigurationValue
  */
-MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueA(
-    void *hCore, mmcConfigID id, const char *name, mmcValueType *outType);
+MEGAMOLCORE_API const void* MEGAMOLCORE_CALL mmcGetConfigurationValueA(
+    void* hCore, mmcConfigID id, const char* name, mmcValueType* outType);
 
 /**
  * Unicode Implementation of mmcGetConfigurationValue
  * @see mmcGetConfigurationValue
  */
-MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
-    void *hCore, mmcConfigID id, const wchar_t *name,
-    mmcValueType *outType);
+MEGAMOLCORE_API const void* MEGAMOLCORE_CALL mmcGetConfigurationValueW(
+    void* hCore, mmcConfigID id, const wchar_t* name, mmcValueType* outType);
 
 /**
  * Sets a configuration value of the core instance.
@@ -403,21 +390,21 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
  * @see mmcSetConfigurationValue
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
-    void *hCore, mmcConfigID id, const char *name, const char *val);
+    void* hCore, mmcConfigID id, const char* name, const char* val);
 
 /**
  * Unicode Implementation of mmcSetConfigurationValue
  * @see mmcSetConfigurationValue
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
-    void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val);
+    void* hCore, mmcConfigID id, const wchar_t* name, const wchar_t* val);
 
 /**
  * Request all available instances.
  *
  * @param hCore The core instance handle.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void* hCore);
 
 /**
  * Requests the instantiation of a job or a view.
@@ -436,15 +423,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore);
  * ANSI Implementation of mmcRequestInstance
  * @see mmcRequestInstance
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
-    void *hCore, const char *name, const char *id);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(void* hCore, const char* name, const char* id);
 
 /**
  * Unicode Implementation of mmcRequestInstance
  * @see mmcRequestInstance
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
-    void *hCore, const wchar_t *name, const wchar_t *id);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(void* hCore, const wchar_t* name, const wchar_t* id);
 
 /**
  * Answer whether the core has pending requests of instantiations of views.
@@ -454,8 +439,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
  * @return 'true' if there are pending view instantiation requests,
  *         'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
-    void *hCore);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(void* hCore);
 
 /**
  * Answer the name of the next pending view instance
@@ -465,31 +449,30 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
  * @return The name of the next pending view instance. This string will remain
  *         valid until this function is called the next time.
  */
-MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void *hCore);
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void* hCore);
 
 /**
  * Creates a view instance out of the next pending view instantiation request.
  * If there is no such request the functions returns 'false' immediately.
  *
  * The caller is responsible that hView points to an allocated memory block
- * of sufficient size. The size must be determined by calling 
+ * of sufficient size. The size must be determined by calling
  * 'mmcGetHandleSize'. The caller remains owner of the memory and must ensure
  * that the memory is not freed or moved until 'mmcDisposeHandle' has returned.
- * The first byte of the memory block speified by hView must be set to zero. 
- * If hView point to a memory block already holding a valid core handle the 
+ * The first byte of the memory block speified by hView must be set to zero.
+ * If hView point to a memory block already holding a valid core handle the
  * method fails.
  *
  * Warning: DO NOT CHANGE the data hView points to, as long as a valid core
  * handle is placed there.
  *
  * @param hCore The core instance handle.
- * @param hView Pointer to the memory receiving the handle to the new view 
+ * @param hView Pointer to the memory receiving the handle to the new view
  *              instance.
  *
  * @return 'true' if a new view handle has been created, 'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
-    void *hView);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void* hCore, void* hView);
 
 /**
  * Answer whether the core has pending requests of instantiations of jobs.
@@ -499,43 +482,41 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
  * @return 'true' if there are pending job instantiation requests,
  *         'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(
-    void *hCore);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(void* hCore);
 
 /**
  * Creates a job instance out of the next pending job instantiation request.
  * If there is no such request the functions returns 'false' immediately.
  *
  * The caller is responsible that hJob points to an allocated memory block
- * of sufficient size. The size must be determined by calling 
+ * of sufficient size. The size must be determined by calling
  * 'mmcGetHandleSize'. The caller remains owner of the memory and must ensure
  * that the memory is not freed or moved until 'mmcDisposeHandle' has returned.
- * The first byte of the memory block speified by hJob must be set to zero. 
- * If hJob point to a memory block already holding a valid core handle the 
+ * The first byte of the memory block speified by hJob must be set to zero.
+ * If hJob point to a memory block already holding a valid core handle the
  * method fails.
  *
  * Warning: DO NOT CHANGE the data hJob points to, as long as a valid core
  * handle is placed there.
  *
  * @param hCore The core instance handle.
- * @param hView Pointer to the memory receiving the handle to the new job 
+ * @param hView Pointer to the memory receiving the handle to the new job
  *              instance.
  *
  * @return 'true' if a new job handle has been created, 'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
-    void *hJob);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void* hCore, void* hJob);
 
 /**
  * Renders a view into the currently active OpenGL context.
  *
  * @param hView The view instance handle.
- * @param context Context structure to transfer data from and to the view. 
+ * @param context Context structure to transfer data from and to the view.
  *                Please ensure that the 'Size' parameter has been initialised
  *                with sizeof(mmcRenderViewContext) before the call is made.
- * @param frameID the count of rendered frames so far               
+ * @param frameID the count of rendered frames so far
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameID);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void* hView, uint32_t frameID);
 
 /**
  * Registers a view close request function for the view. This function will be
@@ -547,7 +528,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameI
  *             call
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
-    void *hView, mmcViewCloseRequestFunction func, void *data);
+    void* hView, mmcViewCloseRequestFunction func, void* data);
 
 /**
  * Resizes a view.
@@ -556,8 +537,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
  * @param width The new width of the view.
  * @param height The new height of the view.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
-    unsigned int width, unsigned int height);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void* hView, unsigned int width, unsigned int height);
 
 /**
  * Emits a key event.
@@ -569,8 +549,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
  *
  * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
-	mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(
+    void* hView, mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods);
 
 /**
  * Emits a character event.
@@ -580,8 +560,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
  *
  * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void* hView, 
-	unsigned int cp);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void* hView, unsigned int cp);
 
 /**
  * Emits a mouse button event.
@@ -593,8 +572,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void* hView,
  *
  * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
-    mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(
+    void* hView, mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods);
 
 /**
  * Emits a mouse move event.
@@ -605,8 +584,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
  *
  * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
-    float x, float y);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void* hView, float x, float y);
 
 /**
  * Sets the state of a button of the 2d mouse.
@@ -617,8 +595,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
  *
  * @return True if the event was consumed, otherwise false.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
-    float dx, float dy);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void* hView, float dx, float dy);
 
 /**
  * Gets whether or not a given job is running.
@@ -627,7 +604,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
  *
  * @return 'true' if the job is still running, 'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void* hJob);
 
 /**
  * Gets whether or not a given view is running.
@@ -636,7 +613,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob);
  *
  * @return 'true' if the view is still running, 'false' otherwise.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void* hView);
 
 /**
  * Starts a job.
@@ -645,14 +622,14 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView);
  *
  * @return 'true' if the job has been started
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void* hJob);
 
 /**
  * Termiantes a job.
  *
  * @param hJob The job to be terminated.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void* hJob);
 
 /**
  * Sets a parameter to a value.
@@ -670,15 +647,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob);
  * ANSI Implementation of mmcSetParameterValue
  * @see mmcSetParameterValue
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
-    const char *value);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void* hParam, const char* value);
 
 /**
  * Unicode Implementation of mmcSetParameterValue
  * @see mmcSetParameterValue
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
-    const wchar_t *value);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void* hParam, const wchar_t* value);
 
 /**
  * Loads a project into the core.
@@ -696,21 +671,19 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
  * ANSI Implementation of mmcLoadProject
  * @see mmcLoadProject
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void *hCore,
-    const char *filename);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void* hCore, const char* filename);
 
 /**
  * Unicode Implementation of mmcLoadProject
  * @see mmcLoadProject
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
-    const wchar_t *filename);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void* hCore, const wchar_t* filename);
 
 /**
  * Gets the parameter handle for the parameter with the given name.
  *
  * The caller is responsible that 'hParam' points to an allocated memory block
- * of sufficient size. The size must be determined by calling 
+ * of sufficient size. The size must be determined by calling
  * 'mmcGetHandleSize'. The caller remains owner of the memory and must ensure
  * that the memory is not freed or moved until 'mmcDisposeHandle' has returned.
  * The first byte of the memory block speified by 'hParam' must be set to zero.
@@ -736,15 +709,15 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
  * ANSI Implementation of mmcGetParameter
  * @see mmcGetParameter
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
-    const char *name, void *hParam, bool bCreate = false);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(
+    void* hCore, const char* name, void* hParam, bool bCreate = false);
 
 /**
  * Unicode Implementation of mmcGetParameter
  * @see mmcGetParameter
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
-    const wchar_t *name, void *hParam, bool bCreate = false);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(
+    void* hCore, const wchar_t* name, void* hParam, bool bCreate = false);
 
 /**
  * Gets the value of a parameter. The memory of the returned pointer remains
@@ -766,15 +739,13 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
  * ANSI Implementation of mmcGetParameter
  * @see mmcGetParameter
  */
-MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
-    void *hParam);
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetParameterValueA(void* hParam);
 
 /**
  * Unicode Implementation of mmcGetParameter
  * @see mmcGetParameter
  */
-MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
-    void *hParam);
+MEGAMOLCORE_API const wchar_t* MEGAMOLCORE_CALL mmcGetParameterValueW(void* hParam);
 
 
 /**
@@ -796,15 +767,13 @@ MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
  * ANSI Implementation of mmcEnumParameters
  * @see mmcEnumParameters
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void *hCore,
-    mmcEnumStringAFunction func, void *data);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void* hCore, mmcEnumStringAFunction func, void* data);
 
 /**
  * Unicode Implementation of mmcEnumParameters
  * @see mmcEnumParameters
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
-    mmcEnumStringWFunction func, void *data);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void* hCore, mmcEnumStringWFunction func, void* data);
 
 /**
  * Get the instance identifier of a view, job or parameter instance.
@@ -829,15 +798,13 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
  * ANSI Implementation of mmcGetInstanceID
  * @see mmcGetInstanceID
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void *hInst,
-    char *buf, unsigned int *len);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void* hInst, char* buf, unsigned int* len);
 
 /**
  * Unicode Implementation of mmcGetInstanceID
  * @see mmcGetInstanceID
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
-    wchar_t *buf, unsigned int *len);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void* hInst, wchar_t* buf, unsigned int* len);
 
 /**
  * Answers whether a parameter is relevant for the given view or job instance.
@@ -847,8 +814,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
  *
  * @return 'true' if 'param' is relevant for 'hInst', 'false' if not.
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
-    void *hParam);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void* hInst, void* hParam);
 
 /**
  * Gets the type description of a parameter.
@@ -863,7 +829,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
  *            but will only write '*len' bytes at most.
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
-    void *hParam, unsigned char *buf, unsigned int *len);
+    void* hParam, unsigned char* buf, unsigned int* len);
 
 /**
  * Updates global parameter hash and returns it.
@@ -873,25 +839,24 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
  *
  * @return      Updated parameter hash.
  */
-MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void *hCore);
+MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void* hCore);
 
 #ifndef MEGAMOLCORE_EXT_API
 #define MEGAMOLCORE_EXT_API 1
 #define MEGAMOLCORE_EXT_APICALL(A, B) MEGAMOLCORE_API A MEGAMOLCORE_CALL B
 #endif /* MEGAMOLCORE_EXT_API */
 
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void* hCore, const char* outFilename);
 
 /**
  * Perform all queued graph modification requests: delete modules/calls,
  * then create new modules/calls.
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void *hCore);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void* hCore);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
 
 
 #endif /* MEGAMOLCORE_MEGALMOLCORE_H_INCLUDED */

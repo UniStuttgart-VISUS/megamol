@@ -64,7 +64,7 @@ void main(void) {
     if ((!cylPt1Valid && !cylPt2Valid)) { radicand = -1.0; }
 #endif // CLIP
 
-	if( lambdas.x < 0.0 ) discard;
+    if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
     vec3 normal = vec3(0.0, normalize(intersection.yz));
     vec4 nn = inverse(NormalM) * vec4(normal, 0);

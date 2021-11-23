@@ -24,16 +24,16 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "HostArr.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/Module.h"
-#include "vislib/math/Vector.h"
-#include "vislib/String.h"
-#include "vislib/Map.h"
-#include "vislib/math/Cuboid.h"
+#include "mmcore/param/ParamSlot.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VTKImageData.h"
-#include "HostArr.h"
+#include "vislib/Map.h"
+#include "vislib/String.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 
 #include <fstream>
 #include <map>
@@ -45,7 +45,6 @@ namespace protein {
 
 class VMDDXLoader : public megamol::core::Module {
 public:
-
     /** Ctor */
     VMDDXLoader(void);
 
@@ -57,7 +56,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "VMDDXLoader";
     }
 
@@ -66,7 +65,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Loader module for *.dx file format used by the VMD.";
     }
 
@@ -80,7 +79,6 @@ public:
     }
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -124,10 +122,9 @@ protected:
      * @param buffOut The output buffer containing the floats
      * @param sizeOut The size of the output buffer
      */
-    void readDataAscii2Float(char *buffIn, float* buffOut, SIZE_T sizeOut);
+    void readDataAscii2Float(char* buffIn, float* buffOut, SIZE_T sizeOut);
 
 private:
-
     /** TODO */
     void scanFolder();
 
@@ -162,24 +159,23 @@ private:
 
     /* Data set */
 
-    SIZE_T hash;     ///> The data hash
+    SIZE_T hash; ///> The data hash
 
-//    Cubei extent;    ///> The data sets number of elements in each direction
-//    Vec3f origin;    ///> The data sets origin in world space coordinates
-//    Vec3f spacing;   ///> The data sets spacing in each direction
-	protein_calls::VTKImageData imgdata; ///> The image data object
+    //    Cubei extent;    ///> The data sets number of elements in each direction
+    //    Vec3f origin;    ///> The data sets origin in world space coordinates
+    //    Vec3f spacing;   ///> The data sets spacing in each direction
+    protein_calls::VTKImageData imgdata; ///> The image data object
 
     vislib::TString filenamesPrefix; ///> Prefix for the data files
     vislib::TString filenamesSuffix; ///> Suffix for the data files
     uint filenamesDigits;            ///> Number of digits in the data set
 
-    int nFrames;                     ///> The number of frames in the data set
+    int nFrames; ///> The number of frames in the data set
 
-    HostArr<float> data;     ///> Pointer to the data
-    HostArr<float> dataTmp;  ///> Pointer to the temporary data
-//    float min;               ///> Minimum value of the data
-//    float max;               ///> Minimum value of the data
-
+    HostArr<float> data;    ///> Pointer to the data
+    HostArr<float> dataTmp; ///> Pointer to the temporary data
+    //    float min;               ///> Minimum value of the data
+    //    float max;               ///> Minimum value of the data
 };
 
 

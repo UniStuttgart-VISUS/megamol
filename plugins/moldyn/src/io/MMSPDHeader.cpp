@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/MMSPDHeader.h"
+#include "stdafx.h"
 
 using namespace megamol::moldyn::io;
 
@@ -32,10 +32,8 @@ MMSPDHeader::Field::~Field(void) {
 /*
  * MMSPDHeader::Field::operator==
  */
-bool MMSPDHeader::Field::operator==(
-        const MMSPDHeader::Field& rhs) const {
-    return this->name.Equals(rhs.name)
-        && (this->type == rhs.type);
+bool MMSPDHeader::Field::operator==(const MMSPDHeader::Field& rhs) const {
+    return this->name.Equals(rhs.name) && (this->type == rhs.type);
 }
 
 
@@ -60,13 +58,11 @@ MMSPDHeader::ConstField::~ConstField(void) {
 /*
  * MMSPDHeader::ConstField::operator==
  */
-bool MMSPDHeader::ConstField::operator==(
-        const MMSPDHeader::ConstField& rhs) const {
-    return Field::operator==(rhs)
-        && (((this->GetType() == TYPE_BYTE) && (this->data.valByte == rhs.data.valByte))
-        || ((this->GetType() == TYPE_FLOAT) && (this->data.valFloat == rhs.data.valFloat))
-        || ((this->GetType() == TYPE_DOUBLE) && (this->data.valDouble == rhs.data.valDouble))
-        );
+bool MMSPDHeader::ConstField::operator==(const MMSPDHeader::ConstField& rhs) const {
+    return Field::operator==(rhs) &&
+           (((this->GetType() == TYPE_BYTE) && (this->data.valByte == rhs.data.valByte)) ||
+               ((this->GetType() == TYPE_FLOAT) && (this->data.valFloat == rhs.data.valFloat)) ||
+               ((this->GetType() == TYPE_DOUBLE) && (this->data.valDouble == rhs.data.valDouble)));
 }
 
 
@@ -91,8 +87,7 @@ MMSPDHeader::TypeDefinition::~TypeDefinition(void) {
 /*
  * MMSPDHeader::TypeDefinition::operator==
  */
-bool MMSPDHeader::TypeDefinition::operator==(
-        const MMSPDHeader::TypeDefinition& rhs) const {
+bool MMSPDHeader::TypeDefinition::operator==(const MMSPDHeader::TypeDefinition& rhs) const {
     // intentionally empty
     return true;
 }
@@ -103,9 +98,12 @@ bool MMSPDHeader::TypeDefinition::operator==(
 /*
  * MMSPDHeader::MMSPDHeader
  */
-MMSPDHeader::MMSPDHeader(void) : hasIDs(false),
-        bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0), timeCount(1),
-        types(1, TypeDefinition(), 1), particleCount(0) {
+MMSPDHeader::MMSPDHeader(void)
+        : hasIDs(false)
+        , bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
+        , timeCount(1)
+        , types(1, TypeDefinition(), 1)
+        , particleCount(0) {
     // intentionally empty
 }
 

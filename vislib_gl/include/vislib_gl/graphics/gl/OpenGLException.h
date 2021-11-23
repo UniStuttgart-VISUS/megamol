@@ -24,69 +24,65 @@ namespace graphics {
 namespace gl {
 
 
+/**
+ * An exception class that represents an OpenGL error.
+ */
+class OpenGLException : public vislib::Exception {
+
+public:
     /**
-     * An exception class that represents an OpenGL error.
+     * Ctor.
+     *
+     * @param errorCode An OpenGL error code.
+     * @param file      The file the exception was thrown in.
+     * @param line      The line the exception was thrown in.
      */
-    class OpenGLException : public vislib::Exception {
+    OpenGLException(const GLenum errorCode, const char* file, const int line);
 
-    public:
+    /**
+     * Create an exception using the error code returned by ::glGetError().
+     *
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
+     */
+    OpenGLException(const char* file, const int line);
 
-        /**
-         * Ctor.
-         *
-		 * @param errorCode An OpenGL error code.
-         * @param file      The file the exception was thrown in.
-         * @param line      The line the exception was thrown in.
-         */
-        OpenGLException(const GLenum errorCode, const char *file,
-            const int line);
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    OpenGLException(const OpenGLException& rhs);
 
-        /**
-         * Create an exception using the error code returned by ::glGetError().
-         *
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        OpenGLException(const char *file, const int line);
+    /** Dtor. */
+    virtual ~OpenGLException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        OpenGLException(const OpenGLException& rhs);
+    /**
+     * Answer the OpenGL error code.
+     *
+     * @return The error code.
+     */
+    inline GLenum GetErrorCode(void) const {
+        return this->errorCode;
+    }
 
-        /** Dtor. */
-        virtual ~OpenGLException(void);
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    OpenGLException& operator=(const OpenGLException& rhs);
 
-        /**
-         * Answer the OpenGL error code.
-         *
-         * @return The error code.
-         */
-        inline GLenum GetErrorCode(void) const {
-            return this->errorCode;
-        }
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        OpenGLException& operator =(const OpenGLException& rhs);
-
-    private:
-
-        /** The OpenGL error code represented by this exception. */
-        GLenum errorCode;
-
-    };
+private:
+    /** The OpenGL error code represented by this exception. */
+    GLenum errorCode;
+};
 
 } /* end namespace gl */
 } /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib_gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

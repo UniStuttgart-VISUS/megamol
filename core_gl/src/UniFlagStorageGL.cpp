@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "mmcore_gl/UniFlagStorageGL.h"
+#include "stdafx.h"
 
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
@@ -11,7 +11,8 @@ using namespace megamol::core_gl;
 
 
 UniFlagStorageGL::UniFlagStorageGL(void)
-        : core::UniFlagStorage(), readFlagsSlot("readFlags", "Provides flag data to clients.")
+        : core::UniFlagStorage()
+        , readFlagsSlot("readFlags", "Provides flag data to clients.")
         , writeFlagsSlot("writeFlags", "Accepts updated flag data from clients.") {
 
     this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
@@ -23,9 +24,9 @@ UniFlagStorageGL::UniFlagStorageGL(void)
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
         FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &UniFlagStorageGL::writeDataCallback);
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &core::UniFlagStorage::writeMetaDataCallback);
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData),
+        &core::UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeFlagsSlot);
-
 }
 
 

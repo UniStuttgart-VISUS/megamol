@@ -1,7 +1,7 @@
 /*
  * SDFFont.h
  *
- * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  *
  * This implementation is based on "vislib/graphics/OutlinetFont.h"
@@ -17,8 +17,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include <glm/glm.hpp>
 
@@ -27,107 +27,107 @@ namespace megamol {
 namespace core {
 namespace utility {
 
-    /**
-     * -----------------------------------------------------------------------------------------------------------------
-     * 
-     * Implementation of font rendering using signed distance field (SDF) texture and glyph information stored as bitmap font.
-     * 
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> USAGE example (for megamol modules):
-     *
-     *     - Declare:            megamol::core::utility::SDFFont sdfFont;
-     *
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PRESET_EVOLVENTA_SANS, megamol::core::utility::SDFFont::RENDERMODE_FILL);
-     *                           OR: this->sdfFont("filename-of-own-font");
-     *
-     *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
-     *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
-     *
-     *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-     *
-     *     - Render Mode:        this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RENDERMODE_OUTLINE);
-     * 
-     *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
-     * 
-     *     - Billboard Mode:     this->sdfFont.SetBillboard(true);
-     *                           ! Requires use of DrawString(mvm, pm, ...) version providing separate model view and projection matrices!
-     *
-     *     - Batch rendering     this->sdffont.SetBatchDrawMode(true);
-     *                           - Call this->sdfFont.DrawString() arbitrary times ...
-     *                           - Call this->sdfFont.BatchDrawString() as often as needed
-     *                           - Call this->ClearBatchDrawCache() to finally clear stored batch
-     * 
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> Predefined FONTS: (free for commercial use) 
-     *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
-     *
-     *     - EVOLVENTA_SANS       "Evolventa-SansSerif"      Source: https://evolventa.github.io/
-     *     - ROBOTO_SANS          "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
-     *     - UBUNTU_MONO          "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
-     *     - VOLLKORN_SERIF       "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
-     *
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> PATH the fonts are stored: 
-     *
-     *     - <megamol>/share/resources/<fontname>(.fnt/.png)
-     *
-     * -----------------------------------------------------------------------------------------------------------------
-     * >>> SDF font GENERATION using "Hiero":
-     *     https://github.com/libgdx/libgdx/wiki/Hiero
-     *
-     *     Use followings SETTINGS:   
-     *     - Padding - Top,Right,Bottom,Left:   10
-     *     - Padding - X,Y:                    -20
-     *     - Bold,Italic:                       false
-     *     - Rendering:                         java
-     *     - Glyph Cache Page - Width,Height:   1024
-     *     - Glyph set:                         ASCII + ™ + €
-     *     - Size:                             ~90 (glyphs must fit on !one! page)
-     *     - Distance Field - Spread:           10 
-     *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
-     *
-     * -----------------------------------------------------------------------------------------------------------------
-     *
-     * These fonts can render text onto the currently active graphics context
-     * in the object space x-y-plane. The class also contains metric
-     * functions.
-     *
-     * The planes are defined as follows:
-     *  The positive direction of the x-axis is to the right.
-     *  The positive direction of the y-axis is downwards.
-     * However, you can change the direction of the y-axis to upwards by
-     * setting the 'flipY' flag.
-     *
-     * There are two types of 'DrawString' methods, which perform a different
-     * text alignment. When using the methods using a single point for
-     * positioning the text the alignment specifies in which corner of the
-     * text string the position point should be:
-     *
-     *         Left     Center   Right
-     *
-     * Top     A-----+  +--A--+  +-----A
-     *         | str |  | str |  | str |
-     *         +-----+  +-----+  +-----+
-     *
-     * Center  +-----+  +-----+  +-----+
-     *         A str |  | sAr |  | str A
-     *         +-----+  +-----+  +-----+
-     *
-     * Bottom  +-----+  +-----+  +-----+
-     *         | str |  | str |  | str |
-     *         A-----+  +--A--+  +-----A
-     *
-     * When using the methods which use a rectangle to specify the text
-     * position the alignment specifies in which corner of that rectangle the
-     * text should be placed. The positions (x, y) specifies the minimum values
-     * on both axis (regardless 'flipY' flag) and the size (w, h) should always
-     * be positive.
-     * -----------------------------------------------------------------------------------------------------------------
-     */
+/**
+ * -----------------------------------------------------------------------------------------------------------------
+ *
+ * Implementation of font rendering using signed distance field (SDF) texture and glyph information stored as bitmap font.
+ *
+ * -----------------------------------------------------------------------------------------------------------------
+ * >>> USAGE example (for megamol modules):
+ *
+ *     - Declare:            megamol::core::utility::SDFFont sdfFont;
+ *
+ *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PRESET_EVOLVENTA_SANS, megamol::core::utility::SDFFont::RENDERMODE_FILL);
+ *                           OR: this->sdfFont("filename-of-own-font");
+ *
+ *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
+ *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
+ *
+ *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+ *
+ *     - Render Mode:        this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RENDERMODE_OUTLINE);
+ *
+ *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
+ *
+ *     - Billboard Mode:     this->sdfFont.SetBillboard(true);
+ *                           ! Requires use of DrawString(mvm, pm, ...) version providing separate model view and projection matrices!
+ *
+ *     - Batch rendering     this->sdffont.SetBatchDrawMode(true);
+ *                           - Call this->sdfFont.DrawString() arbitrary times ...
+ *                           - Call this->sdfFont.BatchDrawString() as often as needed
+ *                           - Call this->ClearBatchDrawCache() to finally clear stored batch
+ *
+ * -----------------------------------------------------------------------------------------------------------------
+ * >>> Predefined FONTS: (free for commercial use)
+ *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
+ *
+ *     - EVOLVENTA_SANS       "Evolventa-SansSerif"      Source: https://evolventa.github.io/
+ *     - ROBOTO_SANS          "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
+ *     - UBUNTU_MONO          "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
+ *     - VOLLKORN_SERIF       "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
+ *
+ * -----------------------------------------------------------------------------------------------------------------
+ * >>> PATH the fonts are stored:
+ *
+ *     - <megamol>/share/resources/<fontname>(.fnt/.png)
+ *
+ * -----------------------------------------------------------------------------------------------------------------
+ * >>> SDF font GENERATION using "Hiero":
+ *     https://github.com/libgdx/libgdx/wiki/Hiero
+ *
+ *     Use followings SETTINGS:
+ *     - Padding - Top,Right,Bottom,Left:   10
+ *     - Padding - X,Y:                    -20
+ *     - Bold,Italic:                       false
+ *     - Rendering:                         java
+ *     - Glyph Cache Page - Width,Height:   1024
+ *     - Glyph set:                         ASCII + ™ + €
+ *     - Size:                             ~90 (glyphs must fit on !one! page)
+ *     - Distance Field - Spread:           10
+ *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
+ *
+ * -----------------------------------------------------------------------------------------------------------------
+ *
+ * These fonts can render text onto the currently active graphics context
+ * in the object space x-y-plane. The class also contains metric
+ * functions.
+ *
+ * The planes are defined as follows:
+ *  The positive direction of the x-axis is to the right.
+ *  The positive direction of the y-axis is downwards.
+ * However, you can change the direction of the y-axis to upwards by
+ * setting the 'flipY' flag.
+ *
+ * There are two types of 'DrawString' methods, which perform a different
+ * text alignment. When using the methods using a single point for
+ * positioning the text the alignment specifies in which corner of the
+ * text string the position point should be:
+ *
+ *         Left     Center   Right
+ *
+ * Top     A-----+  +--A--+  +-----A
+ *         | str |  | str |  | str |
+ *         +-----+  +-----+  +-----+
+ *
+ * Center  +-----+  +-----+  +-----+
+ *         A str |  | sAr |  | str A
+ *         +-----+  +-----+  +-----+
+ *
+ * Bottom  +-----+  +-----+  +-----+
+ *         | str |  | str |  | str |
+ *         A-----+  +--A--+  +-----A
+ *
+ * When using the methods which use a rectangle to specify the text
+ * position the alignment specifies in which corner of that rectangle the
+ * text should be placed. The positions (x, y) specifies the minimum values
+ * on both axis (regardless 'flipY' flag) and the size (w, h) should always
+ * be positive.
+ * -----------------------------------------------------------------------------------------------------------------
+ */
 
-    class MEGAMOLCORE_API SDFFont {
-    public:
-        // clang-format off
+class MEGAMOLCORE_API SDFFont {
+public:
+    // clang-format off
 
         /** Available predefined fonts. */
         enum PresetFontName : int {

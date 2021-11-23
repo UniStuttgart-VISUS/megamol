@@ -26,101 +26,101 @@ namespace megamol {
 namespace protein_gl {
 
 
-    class UnstructuredGridRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char* ClassName(void) {
-            return "UnstructuredGridRenderer";
-        }
+class UnstructuredGridRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "UnstructuredGridRenderer";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char* Description(void) {
-            return "Offers sphere renderings.";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Offers sphere renderings.";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /** Ctor. */
-        UnstructuredGridRenderer(void);
+    /** Ctor. */
+    UnstructuredGridRenderer(void);
 
-        /** Dtor. */
-        virtual ~UnstructuredGridRenderer(void);
+    /** Dtor. */
+    virtual ~UnstructuredGridRenderer(void);
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Implementation of 'release'.
-         */
-        virtual void release(void);
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-    private:
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+private:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
-        /**
-         * The Open GL Render callback.
-         *
-         * @param call The calling call.
-         * @return The return value of the function.
-         */
-        virtual bool Render(core_gl::view::CallRender3DGL& call);
+    /**
+     * The Open GL Render callback.
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
-        /// The data caller slot
-        megamol::core::CallerSlot dataCallerSlot;
+    /// The data caller slot
+    megamol::core::CallerSlot dataCallerSlot;
 
-        /// Parameter for sphere radius
-        core::param::ParamSlot sphereRadSlot;
+    /// Parameter for sphere radius
+    core::param::ParamSlot sphereRadSlot;
 
-        /// camera information
-        core::view::Camera cameraInfo;
+    /// camera information
+    core::view::Camera cameraInfo;
 
-        /// Shader for the spheres (raycasting view)
-        vislib_gl::graphics::gl::GLSLShader sphereShader;
+    /// Shader for the spheres (raycasting view)
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
 
-        /// Shader for the cylinders (raycasting view)
-        vislib_gl::graphics::gl::GLSLShader cylinderShader;
+    /// Shader for the cylinders (raycasting view)
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
 
-        /// Position attribute location for GLSL-Shader
-        GLint attribLocInParams;
+    /// Position attribute location for GLSL-Shader
+    GLint attribLocInParams;
 
-        /// Orientation attribute location for GLSL-Shader
-        GLint attribLocQuatC;
+    /// Orientation attribute location for GLSL-Shader
+    GLint attribLocQuatC;
 
-        /// Color attribute location for GLSL-Shader
-        GLint attribLocColor1;
+    /// Color attribute location for GLSL-Shader
+    GLint attribLocColor1;
 
-        /// Color attribute location for GLSL-Shader
-        GLint attribLocColor2;
-    };
+    /// Color attribute location for GLSL-Shader
+    GLint attribLocColor2;
+};
 
 
 } // namespace protein_gl

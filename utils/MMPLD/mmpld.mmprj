@@ -12,17 +12,17 @@ in PowerShell:
 
 -->
 
-	<view name="mmpldview" viewmod="GUIView1">
-		<module class="MMPLDDataSource" name="data" confpos="{X=723,Y=92}" />
-		<module class="SphereRenderer" name="SphereRenderer1" confpos="{X=443,Y=92}" />
-		<module class="View3D_2" name="View3D_21" confpos="{X=225,Y=92}" />
-		<module class="GUIView" name="GUIView1" confpos="{X=49,Y=92}" />
-		<module class="DistantLight" name="DistantLight1" confpos="{X=681,Y=19}" />
-		<module class="TransferFunction" name="TransferFunction1" confpos="{X=842,Y=197}" />
-		<call class="MultiParticleDataCall" from="SphereRenderer1::getdata" to="data::getdata" />
-		<call class="CallRender3D_2" from="View3D_21::rendering" to="SphereRenderer1::rendering" />
-		<call class="CallRenderView" from="GUIView1::renderview" to="View3D_21::render" />
-		<call class="CallLight" from="SphereRenderer1::lights" to="DistantLight1::deployLightSlot" />
-		<call class="CallGetTransferFunction" from="SphereRenderer1::gettransferfunction" to="TransferFunction1::gettransferfunction" />
-	</view>
+    <view name="mmpldview" viewmod="GUIView1">
+        <module class="MMPLDDataSource" name="data" confpos="{X=723,Y=92}" />
+        <module class="SphereRenderer" name="SphereRenderer1" confpos="{X=443,Y=92}" />
+        <module class="View3D_2" name="View3D_21" confpos="{X=225,Y=92}" />
+        <module class="GUIView" name="GUIView1" confpos="{X=49,Y=92}" />
+        <module class="DistantLight" name="DistantLight1" confpos="{X=681,Y=19}" />
+        <module class="TransferFunction" name="TransferFunction1" confpos="{X=842,Y=197}" />
+        <call class="MultiParticleDataCall" from="SphereRenderer1::getdata" to="data::getdata" />
+        <call class="CallRender3D_2" from="View3D_21::rendering" to="SphereRenderer1::rendering" />
+        <call class="CallRenderView" from="GUIView1::renderview" to="View3D_21::render" />
+        <call class="CallLight" from="SphereRenderer1::lights" to="DistantLight1::deployLightSlot" />
+        <call class="CallGetTransferFunction" from="SphereRenderer1::gettransferfunction" to="TransferFunction1::gettransferfunction" />
+    </view>
 </MegaMol>

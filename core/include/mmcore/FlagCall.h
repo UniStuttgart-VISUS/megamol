@@ -10,7 +10,7 @@
 #ifndef MEGAMOL_FLAGCALL_H_INCLUDED
 #define MEGAMOL_FLAGCALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "FlagStorage.h"
@@ -34,14 +34,18 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "FlagCall"; }
+    static const char* ClassName(void) {
+        return "FlagCall";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call to get index-synced flag data"; }
+    static const char* Description(void) {
+        return "Call to get index-synced flag data";
+    }
 
     /** Index of the 'GetData' function */
     static const unsigned int CallMapFlags;
@@ -53,7 +57,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 2; }
+    static unsigned int FunctionCount(void) {
+        return 2;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -88,7 +94,9 @@ public:
      * Return the version of the flags contained. Note that uninitialized flags carry
      * version number 0.
      */
-    inline FlagStorage::FlagVersionType GetVersion() const { return this->version; }
+    inline FlagStorage::FlagVersionType GetVersion() const {
+        return this->version;
+    }
 
     /**
      * Returns the pointer to the flags to the call, changing the version, thus indicating that you

@@ -17,35 +17,35 @@ namespace megamol {
 namespace gui {
 
 
-    /** ************************************************************************
-     * String search widget
-     */
-    class StringSearchWidget {
-    public:
-        StringSearchWidget();
-        ~StringSearchWidget() = default;
+/** ************************************************************************
+ * String search widget
+ */
+class StringSearchWidget {
+public:
+    StringSearchWidget();
+    ~StringSearchWidget() = default;
 
-        bool Widget(const std::string& label, const std::string& help, bool omit_focus = false);
+    bool Widget(const std::string& label, const std::string& help, bool omit_focus = false);
 
-        inline void SetSearchFocus() {
-            this->search_focus = 2;
-        }
+    inline void SetSearchFocus() {
+        this->search_focus = 2;
+    }
 
-        inline std::string GetSearchString() const {
-            return this->search_string;
-        }
+    inline std::string GetSearchString() const {
+        return this->search_string;
+    }
 
-        inline void ClearSearchString() {
-            this->search_string.clear();
-        }
+    inline void ClearSearchString() {
+        this->search_string.clear();
+    }
 
-    private:
-        // VARIABLES --------------------------------------------------------------
+private:
+    // VARIABLES --------------------------------------------------------------
 
-        unsigned int search_focus;
-        std::string search_string;
-        HoverToolTip tooltip;
-    };
+    unsigned int search_focus;
+    std::string search_string;
+    HoverToolTip tooltip;
+};
 
 
 } // namespace gui

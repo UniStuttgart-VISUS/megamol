@@ -7,265 +7,256 @@
 
 #pragma once
 
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "ArxelBuffer.h"
 #include "AbstractQuartzModule.h"
+#include "ArxelBuffer.h"
 #include "BufferMTPConnection.h"
 #include "LoopBuffer.h"
-#include "mmcore/param/ParamSlot.h"
-#include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/glfunctions.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "mmcore/utility/sys/RunnableThread.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "PoreMeshProcessor.h"
+#include "PoreNetSliceProcessor.h"
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"
-#include "PoreNetSliceProcessor.h"
-#include "PoreMeshProcessor.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/sys/RunnableThread.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib/sys/File.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
 
 
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * Module for extracting and rendering PoreNetwork
+ */
+class PoreNetExtractor : public core_gl::view::Renderer3DModuleGL, public AbstractQuartzModule {
+public:
     /**
-     * Module for extracting and rendering PoreNetwork
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class PoreNetExtractor : public core_gl::view::Renderer3DModuleGL, public AbstractQuartzModule {
-    public:
+    static const char* ClassName(void) {
+        return "PoreNetExtractor";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "PoreNetExtractor";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module managing and extracting a pore net";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module managing and extracting a pore net";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Ctor
+     */
+    PoreNetExtractor(void);
 
-        /**
-         * Ctor
-         */
-        PoreNetExtractor(void);
+    /**
+     * Dtor
+     */
+    virtual ~PoreNetExtractor(void);
 
-        /**
-         * Dtor
-         */
-        virtual ~PoreNetExtractor(void);
+protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
-    protected:
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(core_gl::view::CallRender3DGL& call);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /** Possible extraction directions */
+    enum ExtractionDir { EXTDIR_X = 0, EXTDIR_Y = 1, EXTDIR_Z = 2 };
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * The extract button was clicked
+     *
+     * @param slot The calling slot
+     *
+     * @return True
+     */
+    bool onExtractBtnClicked(core::param::ParamSlot& slot);
 
-    private:
+    /**
+     * The extract button was clicked
+     *
+     * @param slot The calling slot
+     *
+     * @return True
+     */
+    bool onLoadBtnClicked(core::param::ParamSlot& slot);
 
-        /** Possible extraction directions */
-        enum ExtractionDir {
-            EXTDIR_X = 0,
-            EXTDIR_Y = 1,
-            EXTDIR_Z = 2
-        };
+    /**
+     * The extract button was clicked
+     *
+     * @param slot The calling slot
+     *
+     * @return True
+     */
+    bool onSaveBtnClicked(core::param::ParamSlot& slot);
 
-        /**
-         * The extract button was clicked
-         *
-         * @param slot The calling slot
-         *
-         * @return True
-         */
-        bool onExtractBtnClicked(core::param::ParamSlot& slot);
+    /**
+     * Answer whether or not the extraction process is running
+     *
+     * @return True if the extraction process is running
+     */
+    bool isExtractionRunning(void);
 
-        /**
-         * The extract button was clicked
-         *
-         * @param slot The calling slot
-         *
-         * @return True
-         */
-        bool onLoadBtnClicked(core::param::ParamSlot& slot);
+    /**
+     * Cancels the current extraction process
+     */
+    void abortExtraction(void);
 
-        /**
-         * The extract button was clicked
-         *
-         * @param slot The calling slot
-         *
-         * @return True
-         */
-        bool onSaveBtnClicked(core::param::ParamSlot& slot);
+    /**
+     * Performs one synchrone step of the extraction process
+     */
+    void performExtraction(void);
 
-        /**
-         * Answer whether or not the extraction process is running
-         *
-         * @return True if the extraction process is running
-         */
-        bool isExtractionRunning(void);
+    /**
+     * Writes the file header
+     *
+     * @param file The file to write the file header to
+     */
+    void writeFileHeader(vislib::sys::File& file);
 
-        /**
-         * Cancels the current extraction process
-         */
-        void abortExtraction(void);
+    /**
+     * Finalizes and closes the data file
+     *
+     * @param file The data file written
+     */
+    void closeFile(vislib::sys::File& file);
 
-        /**
-         * Performs one synchrone step of the extraction process
-         */
-        void performExtraction(void);
+    /** Removes all data */
+    void clear(void);
 
-        /**
-         * Writes the file header
-         *
-         * @param file The file to write the file header to
-         */
-        void writeFileHeader(vislib::sys::File& file);
+    /**
+     * Ensures the actuality of the type texture
+     *
+     * @param types The types
+     */
+    void assertTypeTexture(CrystalDataCall& types);
 
-        /**
-         * Finalizes and closes the data file
-         *
-         * @param file The data file written
-         */
-        void closeFile(vislib::sys::File& file);
+    /** Releases the type texture */
+    void releaseTypeTexture(void);
 
-        /** Removes all data */
-        void clear(void);
+    /**
+     * Draws the particles on the clipping plane into the current output
+     * buffer
+     *
+     * @param pgdc The particle data
+     * @param tdc The crystalite data
+     * @param ccp The clipping plane
+     */
+    void drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall* tdc, core::view::CallClipPlane* ccp);
 
-        /**
-         * Ensures the actuality of the type texture
-         *
-         * @param types The types
-         */
-        void assertTypeTexture(CrystalDataCall& types);
+    /** The type texture */
+    unsigned int typeTexture;
 
-        /** Releases the type texture */
-        void releaseTypeTexture(void);
+    /** The data bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-        /**
-         * Draws the particles on the clipping plane into the current output
-         * buffer
-         *
-         * @param pgdc The particle data
-         * @param tdc The crystalite data
-         * @param ccp The clipping plane
-         */
-        void drawParticles(ParticleGridDataCall *pgdc, CrystalDataCall *tdc,
-            core::view::CallClipPlane *ccp);
+    /** The data clipping box */
+    vislib::math::Cuboid<float> cbox;
 
-        /** The type texture */
-        unsigned int typeTexture;
+    /** The file name of the pore network data file */
+    core::param::ParamSlot filenameSlot;
 
-        /** The data bounding box */
-        vislib::math::Cuboid<float> bbox;
+    /** Saves the data to the pore network data file while extracting */
+    core::param::ParamSlot streamSaveSlot;
 
-        /** The data clipping box */
-        vislib::math::Cuboid<float> cbox;
+    /** The extraction direction */
+    core::param::ParamSlot extractDirSlot;
 
-        /** The file name of the pore network data file */
-        core::param::ParamSlot filenameSlot;
+    /** The size of the extraction volume */
+    core::param::ParamSlot extractSizeSlot;
 
-        /** Saves the data to the pore network data file while extracting */
-        core::param::ParamSlot streamSaveSlot;
+    /** The size of a single rendering tile used for extraction */
+    core::param::ParamSlot extractTileSizeSlot;
 
-        /** The extraction direction */
-        core::param::ParamSlot extractDirSlot;
+    /** Saves the pore network data to the data file */
+    core::param::ParamSlot saveBtnSlot;
 
-        /** The size of the extraction volume */
-        core::param::ParamSlot extractSizeSlot;
+    /** Loads the pore network data from the data file */
+    core::param::ParamSlot loadBtnSlot;
 
-        /** The size of a single rendering tile used for extraction */
-        core::param::ParamSlot extractTileSizeSlot;
+    /** Extractes the pore network data from the connected data modules */
+    core::param::ParamSlot extractBtnSlot;
 
-        /** Saves the pore network data to the data file */
-        core::param::ParamSlot saveBtnSlot;
+    /** The size of the extraction volume */
+    unsigned int sizeX, sizeY, sizeZ;
 
-        /** Loads the pore network data from the data file */
-        core::param::ParamSlot loadBtnSlot;
+    /** The extract direction */
+    ExtractionDir edir;
 
-        /** Extractes the pore network data from the connected data modules */
-        core::param::ParamSlot extractBtnSlot;
+    /** The file to be used for stream-saving */
+    vislib::sys::File* saveFile;
 
-        /** The size of the extraction volume */
-        unsigned int sizeX, sizeY, sizeZ;
+    /** The rendering tile */
+    vislib_gl::graphics::gl::FramebufferObject* tile;
 
-        /** The extract direction */
-        ExtractionDir edir;
+    /** The tile buffer */
+    ArxelBuffer::ArxelType* tileBuffer;
 
-        /** The file to be used for stream-saving */
-        vislib::sys::File *saveFile;
+    /** the rendered slices */
+    BufferMTPConnection<ArxelBuffer> slicesBuffers;
 
-        /** The rendering tile */
-        vislib_gl::graphics::gl::FramebufferObject *tile;
+    /** The extracted loops per slice */
+    BufferMTPConnection<LoopBuffer> loopBuffers;
 
-        /** The tile buffer */
-        ArxelBuffer::ArxelType *tileBuffer;
+    /** The number of the slice to render next */
+    unsigned int slice;
 
-        /** the rendered slices */
-        BufferMTPConnection<ArxelBuffer> slicesBuffers;
+    /** The crystalite shader */
+    vislib_gl::graphics::gl::GLSLShader cryShader;
 
-        /** The extracted loops per slice */
-        BufferMTPConnection<LoopBuffer> loopBuffers;
+    /** The pore-net slice processor thread */
+    vislib::sys::RunnableThread<PoreNetSliceProcessor> sliceProcessor;
 
-        /** The number of the slice to render next */
-        unsigned int slice;
+    /** The pore-mesh connector/calculator/thingy thread */
+    vislib::sys::RunnableThread<PoreMeshProcessor> meshProcessor;
 
-        /** The crystalite shader */
-        vislib_gl::graphics::gl::GLSLShader cryShader;
+    /** Ignore me, please */
+    PoreMeshProcessor::SliceLoops debugLoopDataEntryObject;
+};
 
-        /** The pore-net slice processor thread */
-        vislib::sys::RunnableThread<PoreNetSliceProcessor> sliceProcessor;
-
-        /** The pore-mesh connector/calculator/thingy thread */
-        vislib::sys::RunnableThread<PoreMeshProcessor> meshProcessor;
-
-        /** Ignore me, please */
-        PoreMeshProcessor::SliceLoops debugLoopDataEntryObject;
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

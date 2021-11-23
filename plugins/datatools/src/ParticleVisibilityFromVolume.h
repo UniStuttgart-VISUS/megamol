@@ -8,12 +8,12 @@
 #ifndef MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED
 #define MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "datatools/AbstractParticleManipulator.h"
 
 
 namespace megamol {
@@ -29,13 +29,19 @@ namespace datatools {
 class ParticleVisibilityFromVolume : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "ParticleVisibilityFromVolume"; }
+    static const char* ClassName(void) {
+        return "ParticleVisibilityFromVolume";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Module filtering particles based on volumetric data (in the same place in world space)"; }
+    static const char* Description(void) {
+        return "Module filtering particles based on volumetric data (in the same place in world space)";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     ParticleVisibilityFromVolume(void);
@@ -94,6 +100,6 @@ private:
 };
 
 } /* end namespace datatools */
-} // namespace datatools
+} // namespace megamol
 
 #endif /* MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED */

@@ -15,15 +15,15 @@
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
 //#include <glh/glh_genext.h>
-#include "mmcore/job/AbstractJob.h"
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"
 #include "HostArr.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "CUDAQuickSurf.h"
 #include "gridParams.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/job/AbstractJob.h"
+#include "mmcore/param/ParamSlot.h"
+#include "protein_calls/MolecularDataCall.h"
 #include <cmath>
 
 #define USE_DISTANCE_FIELD
@@ -36,22 +36,21 @@ namespace protein_cuda {
 class SurfaceMappingTest : public core::job::AbstractJob, public core::Module {
 
 public:
-
     /// Enum defining the differend heuristics
-    enum Heuristic {RMS_VALUE=0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_HAUSDORFF_DIST, HAUSDORFF_DIST};
+    enum Heuristic { RMS_VALUE = 0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_HAUSDORFF_DIST, HAUSDORFF_DIST };
 
     /// Enum describing different ways of using RMS fitting
-    enum RMSFittingMode {RMS_ALL=0, RMS_BACKBONE, RMS_C_ALPHA};
+    enum RMSFittingMode { RMS_ALL = 0, RMS_BACKBONE, RMS_C_ALPHA };
 
     /// Interpolation mode used when computing external forces based on gradient
-    enum InterpolationMode {INTERP_LINEAR=0, INTERP_CUBIC};
+    enum InterpolationMode { INTERP_LINEAR = 0, INTERP_CUBIC };
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "SurfaceMappingTest";
     }
 
@@ -60,7 +59,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Job module to test the surface mapping routines.";
     }
 
@@ -116,7 +115,6 @@ public:
     virtual bool Terminate(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -130,7 +128,6 @@ protected:
     virtual void release(void);
 
 private:
-
     /**
      * Translate and rotate an array of positions according to the current
      * transformation obtained by RMS fitting (a translation vector and
@@ -148,12 +145,8 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool applyRMSFittingToPosArray(
-            megamol::protein_calls::MolecularDataCall *mol,
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            float rotation[3][3],
-            float translation[3]);
+    bool applyRMSFittingToPosArray(megamol::protein_calls::MolecularDataCall* mol, CudaDevArr<float>& vertexPos_D,
+        uint vertexCnt, float rotation[3][3], float translation[3]);
 
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
@@ -166,10 +159,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(
-            megamol::protein_calls::MolecularDataCall *mol,
-            CUDAQuickSurf *cqs,
-            gridParams &gridDensMap);
+    bool computeDensityMap(megamol::protein_calls::MolecularDataCall* mol, CUDAQuickSurf* cqs, gridParams& gridDensMap);
 
 #if defined(USE_DISTANCE_FIELD)
     /**
@@ -184,10 +174,7 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDistField(
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            CudaDevArr<float> &distField_D,
-            gridParams &gridDistField);
+        CudaDevArr<float>& vertexPos_D, uint vertexCnt, CudaDevArr<float>& distField_D, gridParams& gridDistField);
 #endif // defined(USE_DISTANCE_FIELD)
 
     /**
@@ -211,8 +198,8 @@ private:
      *
      * @return The RMS value of the two variants
      */
-    float getRMS(float *atomPos0, float *atomPos1, unsigned int cnt, bool fit,
-            int flag, float rotation[3][3], float translation[3]);
+    float getRMS(float* atomPos0, float* atomPos1, unsigned int cnt, bool fit, int flag, float rotation[3][3],
+        float translation[3]);
 
     /**
      * Extracts all atom positions from a moleculr data call, that are used to
@@ -225,8 +212,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool getRMSPosArray(megamol::protein_calls::MolecularDataCall *mol, HostArr<float> &posArr,
-            unsigned int &cnt);
+    bool getRMSPosArray(megamol::protein_calls::MolecularDataCall* mol, HostArr<float>& posArr, unsigned int& cnt);
 
     /**
      * Extracts an isosurface from a given volume texture using Marching
@@ -247,18 +233,10 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool isosurfComputeVertices(
-            float *volume_D,
-            CudaDevArr<uint> &cubeMap_D,
-            CudaDevArr<uint> &cubeMapInv_D,
-            CudaDevArr<uint> &vertexMap_D,
-            CudaDevArr<uint> &vertexMapInv_D,
-            CudaDevArr<int> &vertexNeighbours_D,
-            gridParams gridDensMap,
-            uint &activeVertexCount,
-            CudaDevArr<float> &vertexPos_D,
-            uint &triangleCount,
-            CudaDevArr<uint> &triangleIdx_D);
+    bool isosurfComputeVertices(float* volume_D, CudaDevArr<uint>& cubeMap_D, CudaDevArr<uint>& cubeMapInv_D,
+        CudaDevArr<uint>& vertexMap_D, CudaDevArr<uint>& vertexMapInv_D, CudaDevArr<int>& vertexNeighbours_D,
+        gridParams gridDensMap, uint& activeVertexCount, CudaDevArr<float>& vertexPos_D, uint& triangleCount,
+        CudaDevArr<uint>& triangleIdx_D);
 
     /**
      * Maps an isosurface defined by an array of vertex positions with
@@ -290,19 +268,9 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool mapIsosurfaceToVolume(
-            float *volume_D,
-            gridParams gridDensMap,
-            CudaDevArr<float> &vertexPos_D,
-            CudaDevArr<uint> &triangleIdx_D,
-            uint vertexCnt,
-            uint triangleCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
+    bool mapIsosurfaceToVolume(float* volume_D, gridParams gridDensMap, CudaDevArr<float>& vertexPos_D,
+        CudaDevArr<uint>& triangleIdx_D, uint vertexCnt, uint triangleCnt, CudaDevArr<int>& vertexNeighbours_D,
+        uint maxIt, float springStiffness, float forceScl, float externalForcesWeight, InterpolationMode interpMode);
 
     /**
      * TODO
@@ -366,19 +334,11 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool regularizeSurface(
-            float *volume_D,
-            gridParams gridDensMap,
-            CudaDevArr<float> &vertexPos_D,
-            uint vertexCnt,
-            CudaDevArr<int> &vertexNeighbours_D,
-            uint maxIt,
-            float springStiffness,
-            float forceScl,
-            float externalForcesWeight,
-            InterpolationMode interpMode);
+    bool regularizeSurface(float* volume_D, gridParams gridDensMap, CudaDevArr<float>& vertexPos_D, uint vertexCnt,
+        CudaDevArr<int>& vertexNeighbours_D, uint maxIt, float springStiffness, float forceScl,
+        float externalForcesWeight, InterpolationMode interpMode);
 
-    bool initDensMapParams(megamol::protein_calls::MolecularDataCall *mol);
+    bool initDensMapParams(megamol::protein_calls::MolecularDataCall* mol);
 
     /// Flag whether the job is done
     bool jobDone;
@@ -410,16 +370,16 @@ private:
 
     /* RMS fitting */
 
-    HostArr<float> rmsPosVec0;  ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec1;  ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;  ///> Particle weights
-    HostArr<int> rmsMask;       ///> Mask for particles
+    HostArr<float> rmsPosVec0; ///> Position vector #0 for rms fitting
+    HostArr<float> rmsPosVec1; ///> Position vector #1 for rms fitting
+    HostArr<float> rmsWeights; ///> Particle weights
+    HostArr<int> rmsMask;      ///> Mask for particles
 
 
     /* Volume generation */
 
-    void *cudaqsurf0, *cudaqsurf1;   ///> Pointer to CUDAQuickSurf objects
-    HostArr<float> gridDataPos;      ///> Data array for intermediate calculations
+    void *cudaqsurf0, *cudaqsurf1; ///> Pointer to CUDAQuickSurf objects
+    HostArr<float> gridDataPos;    ///> Data array for intermediate calculations
 
     /* Surface mapping */
 
@@ -523,7 +483,6 @@ private:
     CudaDevArr<float3> laplacian_D;
 
 
-
     /* Boolean flags */
 
     CudaDevArr<float> potentialTex0_D;
@@ -533,7 +492,6 @@ private:
     CudaDevArr<float> displLen_D;
 
     RMSFittingMode fittingMode;
-
 };
 
 } // end namespace protein_cuda
