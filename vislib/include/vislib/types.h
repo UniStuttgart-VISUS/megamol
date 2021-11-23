@@ -27,7 +27,7 @@ typedef INT32 VL_INT32;
 #include <stdint.h>
 
 typedef char CHAR;
-typedef CHAR *PCHAR;
+typedef CHAR* PCHAR;
 typedef char INT8;
 typedef unsigned char UCHAR;
 typedef unsigned char UINT8;
@@ -64,7 +64,7 @@ typedef double DOUBLE;
 typedef INT64 INT_PTR;
 typedef UINT64 UINT_PTR;
 typedef UINT64 ULONG_PTR;
-#else /* _LIN64 */
+#else  /* _LIN64 */
 typedef VL_INT32 INT_PTR;
 typedef UINT32 UINT_PTR;
 typedef UINT32 ULONG_PTR;

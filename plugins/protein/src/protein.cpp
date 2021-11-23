@@ -12,7 +12,6 @@
 #include "VTIWriter.h"
 
 
-
 // data sources
 #include "AggregatedDensity.h"
 #include "BindingSiteDataSource.h"
@@ -39,11 +38,11 @@
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
 #include "protein/ParticleDataCall.h"
+#include "protein/RMSF.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/SphereDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "protein/VolumeSliceCall.h"
-#include "protein/RMSF.h"
 
 #include "MoleculeBallifier.h"
 

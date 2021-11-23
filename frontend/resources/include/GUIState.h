@@ -15,13 +15,13 @@ struct GUIState {
     // Request GUI state: true  -> containing updated GUI state, GUI visibility and GUI scale already wrapped into respective lua commands
     //                    false -> containing the GUI state string only
     /// (e.g. ScreenshotService saves project to PNG header using complete LUA GUI state)
-    std::function<std::string(bool)> request_gui_state = [&](bool){ return std::string(); };
+    std::function<std::string(bool)> request_gui_state = [&](bool) { return std::string(); };
 
     // Request GUI visibility
-    std::function<bool(void)> request_gui_visibility = [&](void){ return false; };
+    std::function<bool(void)> request_gui_visibility = [&](void) { return false; };
 
     // Request GUI scale
-    std::function<float(void)> request_gui_scale = [&](void){ return 1.0f; };
+    std::function<float(void)> request_gui_scale = [&](void) { return 1.0f; };
 
     // Provide GUI state as JSON string from argument of lua command
     /// (e.g. Lua_Service_Wrapper loads project providing GUI state via mmSetGUIState)

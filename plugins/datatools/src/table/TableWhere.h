@@ -14,68 +14,63 @@ namespace megamol {
 namespace datatools {
 namespace table {
 
+/**
+ * This module selects rows from a table based on a filter.
+ */
+class TableWhere : public TableProcessorBase {
+
+public:
     /**
-     * This module selects rows from a table based on a filter.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class TableWhere : public TableProcessorBase {
+    static inline const char* ClassName(void) {
+        return "TableWhere";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Selects rows from a data table";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void) {
-            return "TableWhere";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "Selects rows from a data table";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    TableWhere(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~TableWhere(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        TableWhere(void);
+protected:
+    virtual bool create(void);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~TableWhere(void);
+    virtual bool prepareData(TableDataCall& src, const unsigned int frameID) override;
 
-    protected:
+    virtual void release(void);
 
-        virtual bool create(void);
-
-        virtual bool prepareData(TableDataCall& src,
-            const unsigned int frameID) override;
-
-        virtual void release(void);
-
-    private:
-
-        core::param::ParamSlot paramColumn;
-        core::param::ParamSlot paramEpsilon;
-        core::param::ParamSlot paramOperator;
-        core::param::ParamSlot paramReference;
-        core::param::ParamSlot paramUpdateRange;
-
-    };
+private:
+    core::param::ParamSlot paramColumn;
+    core::param::ParamSlot paramEpsilon;
+    core::param::ParamSlot paramOperator;
+    core::param::ParamSlot paramReference;
+    core::param::ParamSlot paramUpdateRange;
+};
 
 } /* end namespace table */
 } /* end namespace datatools */

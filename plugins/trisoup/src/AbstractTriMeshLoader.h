@@ -13,50 +13,46 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
+#include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/CallTriMeshData.h"
 #include "vislib/Array.h"
-#include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
 namespace trisoup {
 
 
+/**
+ * Abstract base class for tri-mesh data source classes
+ */
+class AbstractTriMeshLoader : public AbstractTriMeshDataSource {
+public:
+    /** Ctor */
+    AbstractTriMeshLoader(void);
+
+    /** Dtor */
+    virtual ~AbstractTriMeshLoader(void);
+
+protected:
     /**
-     * Abstract base class for tri-mesh data source classes
+     * Loads the specified file
+     *
+     * @param filename The file to load
+     *
+     * @return True on success
      */
-    class AbstractTriMeshLoader : public AbstractTriMeshDataSource {
-    public:
+    virtual bool load(const vislib::TString& filename) = 0;
 
-        /** Ctor */
-        AbstractTriMeshLoader(void);
+    /** Ensures that the data is loaded */
+    virtual void assertData(void);
 
-        /** Dtor */
-        virtual ~AbstractTriMeshLoader(void);
-
-    protected:
-
-        /**
-         * Loads the specified file
-         *
-         * @param filename The file to load
-         *
-         * @return True on success
-         */
-        virtual bool load(const vislib::TString& filename) = 0;
-
-        /** Ensures that the data is loaded */
-        virtual void assertData(void);
-
-    private:
-
-        /** The file name */
-        core::param::ParamSlot filenameSlot;
-
-    };
+private:
+    /** The file name */
+    core::param::ParamSlot filenameSlot;
+};
 
 } /* end namespace trisoup */
 } /* end namespace megamol */

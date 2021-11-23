@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "SombreroMeshRenderer.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/BoolParam.h"
@@ -12,6 +11,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "mmcore/FlagCall.h"

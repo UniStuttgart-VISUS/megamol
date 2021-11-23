@@ -5,16 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/cluster/CommChannelServer.h"
 #include "mmcore/cluster/NetMessages.h"
-#include "vislib/assert.h"
-#include "vislib/sys/AutoLock.h"
-#include "vislib/net/IPCommEndPoint.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/net/SocketException.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/assert.h"
+#include "vislib/net/IPCommEndPoint.h"
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;
 
@@ -23,8 +23,11 @@ using namespace megamol::core;
  * cluster::CommChannelServer::CommChannelServer
  */
 cluster::CommChannelServer::CommChannelServer(void)
-        : vislib::Listenable<CommChannelServer>(), clientsLock(),
-        clients(), commChannel(), server() {
+        : vislib::Listenable<CommChannelServer>()
+        , clientsLock()
+        , clients()
+        , commChannel()
+        , server() {
     this->server.AddListener(this);
 }
 
@@ -53,8 +56,7 @@ void cluster::CommChannelServer::Start(vislib::net::IPEndPoint& ep) {
     this->Stop();
     if (this->commChannel.IsNull()) {
         this->commChannel = vislib::net::TcpCommChannel::Create(
-            vislib::net::TcpCommChannel::FLAG_NODELAY
-            | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
+            vislib::net::TcpCommChannel::FLAG_NODELAY | vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS);
     }
     vislib::net::CommServer::Configuration cfg(this->commChannel, vislib::net::IPCommEndPoint::Create(ep));
     this->server.Start(&cfg);
@@ -71,12 +73,11 @@ void cluster::CommChannelServer::Stop(void) {
     vislib::sys::AutoLock(this->clientsLock);
     vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
-        cluster::CommChannel &c = iter.Next();
+        cluster::CommChannel& c = iter.Next();
         c.RemoveListener(this);
         try {
             c.Close();
-        } catch(...) {
-        }
+        } catch (...) {}
     }
     this->clients.Clear();
 }
@@ -92,17 +93,16 @@ void cluster::CommChannelServer::MultiSendMessage(const vislib::net::AbstractSim
         cluster::CommChannel& channel = iter.Next();
         try {
             channel.SendMessage(msg);
-        } catch(vislib::net::SocketException skex) {
-            if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
-                    && (static_cast<int>(skex.GetErrorCode()) != 10053)) {
+        } catch (vislib::net::SocketException skex) {
+            if ((static_cast<int>(skex.GetErrorCode()) != 10054) && (static_cast<int>(skex.GetErrorCode()) != 10053)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
                     static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
             }
-        } catch(vislib::Exception ex) {
+        } catch (vislib::Exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
-        } catch(...) {
+        } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to send message to %s", channel.CounterpartName().PeekBuffer());
         }
@@ -115,31 +115,31 @@ void cluster::CommChannelServer::MultiSendMessage(const vislib::net::AbstractSim
 void cluster::CommChannelServer::SingleSendMessage(const vislib::net::AbstractSimpleMessage& msg, unsigned int node) {
     vislib::sys::AutoLock(this->clientsLock);
     vislib::SingleLinkedList<cluster::CommChannel>::Iterator iter = this->clients.GetIterator();
-	
-	unsigned int current = 0;
+
+    unsigned int current = 0;
 
     while (iter.HasNext()) {
         cluster::CommChannel& channel = iter.Next();
-		if ( current == node ) {
-			try {
-				channel.SendMessage(msg);
-			} catch(vislib::net::SocketException skex) {
-				if ((static_cast<int>(skex.GetErrorCode()) != 10054) 
-						&& (static_cast<int>(skex.GetErrorCode()) != 10053)) {
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-						"Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
-						static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
-				}
-			} catch(vislib::Exception ex) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
-			} catch(...) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to send message to %s", channel.CounterpartName().PeekBuffer());
-			}
-			break;
-		} 
-		++ current;
+        if (current == node) {
+            try {
+                channel.SendMessage(msg);
+            } catch (vislib::net::SocketException skex) {
+                if ((static_cast<int>(skex.GetErrorCode()) != 10054) &&
+                    (static_cast<int>(skex.GetErrorCode()) != 10053)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                        "Unable to send message to %s: [%d] %s", channel.CounterpartName().PeekBuffer(),
+                        static_cast<int>(skex.GetErrorCode()), skex.GetMsgA());
+                }
+            } catch (vislib::Exception ex) {
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    "Unable to send message to %s: %s", channel.CounterpartName().PeekBuffer(), ex.GetMsgA());
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    "Unable to send message to %s", channel.CounterpartName().PeekBuffer());
+            }
+            break;
+        }
+        ++current;
     }
 }
 
@@ -159,8 +159,9 @@ void cluster::CommChannelServer::OnCommChannelDisconnect(cluster::CommChannel& s
         sender.RemoveListener(this);
         vislib::Listenable<CommChannelServer>::ListenerIterator iter = this->GetListeners();
         while (iter.HasNext()) {
-            Listener *l = dynamic_cast<Listener*>(iter.Next());
-            if (l == NULL) continue;
+            Listener* l = dynamic_cast<Listener*>(iter.Next());
+            if (l == NULL)
+                continue;
             l->OnCommChannelDisconnect(*this, sender);
         }
         this->clients.RemoveAll(sender);
@@ -171,11 +172,13 @@ void cluster::CommChannelServer::OnCommChannelDisconnect(cluster::CommChannel& s
 /*
  * cluster::CommChannelServer::OnCommChannelMessage
  */
-void cluster::CommChannelServer::OnCommChannelMessage(cluster::CommChannel& sender, const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::CommChannelServer::OnCommChannelMessage(
+    cluster::CommChannel& sender, const vislib::net::AbstractSimpleMessage& msg) {
     vislib::Listenable<CommChannelServer>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener*>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelMessage(*this, sender, msg);
     }
 }
@@ -184,8 +187,10 @@ void cluster::CommChannelServer::OnCommChannelMessage(cluster::CommChannel& send
 /*
  * cluster::CommChannelServer::OnServerError
  */
-bool cluster::CommChannelServer::OnServerError(const vislib::net::CommServer& src, const vislib::Exception& exception) throw() {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Control Channel Server: %s\n", exception.GetMsgA());
+bool cluster::CommChannelServer::OnServerError(
+    const vislib::net::CommServer& src, const vislib::Exception& exception) throw() {
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_WARN, "Control Channel Server: %s\n", exception.GetMsgA());
     return true; // keep server running
 }
 
@@ -193,8 +198,10 @@ bool cluster::CommChannelServer::OnServerError(const vislib::net::CommServer& sr
 /*
  * cluster::CommChannelServer::OnNewConnection
  */
-bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
-    vislib::SmartRef<vislib::net::AbstractCommClientChannel> bidiChannel = channel;//.DynamicCast<vislib::net::AbstractCommChannel>();
+bool cluster::CommChannelServer::OnNewConnection(
+    const vislib::net::CommServer& src, vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel) throw() {
+    vislib::SmartRef<vislib::net::AbstractCommClientChannel> bidiChannel =
+        channel;                   //.DynamicCast<vislib::net::AbstractCommChannel>();
     ASSERT(!bidiChannel.IsNull()); // internal error like problem (should never happen)
     try {
         vislib::sys::AutoLock(this->clientsLock);
@@ -204,8 +211,9 @@ bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& 
 
         vislib::Listenable<CommChannelServer>::ListenerIterator iter = this->GetListeners();
         while (iter.HasNext()) {
-            Listener *l = dynamic_cast<Listener*>(iter.Next());
-            if (l == NULL) continue;
+            Listener* l = dynamic_cast<Listener*>(iter.Next());
+            if (l == NULL)
+                continue;
             l->OnCommChannelConnect(*this, this->clients.Last());
         }
 
@@ -223,12 +231,12 @@ bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& 
         this->clients.Last().SendMessage(simsg);
 
         return true; // connection accepted
-    } catch(vislib::Exception ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Exception on accepting connection: %s\n", ex.GetMsgA());
-    } catch(...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Exception on accepting connection: unexpected exception\n");
+    } catch (vislib::Exception ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Exception on accepting connection: %s\n", ex.GetMsgA());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Exception on accepting connection: unexpected exception\n");
     }
     return false;
 }
@@ -240,15 +248,15 @@ bool cluster::CommChannelServer::OnNewConnection(const vislib::net::CommServer& 
 void cluster::CommChannelServer::OnServerExited(const vislib::net::CommServer& src) throw() {
     vislib::Listenable<CommChannelServer>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener*>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelServerStopped(*this);
     }
     if (!this->commChannel.IsNull()) {
         try {
             this->commChannel->Close();
-        } catch(...) {
-        }
+        } catch (...) {}
         this->commChannel.Release();
     }
 }
@@ -260,8 +268,9 @@ void cluster::CommChannelServer::OnServerExited(const vislib::net::CommServer& s
 void cluster::CommChannelServer::OnServerStarted(const vislib::net::CommServer& src) throw() {
     vislib::Listenable<CommChannelServer>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener*>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelServerStopped(*this);
     }
 }

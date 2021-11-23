@@ -26,21 +26,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "GenerateGlyphs"; }
+    static const char* ClassName(void) {
+        return "GenerateGlyphs";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Creator for GenerateGlyphs."; }
+    static const char* Description(void) {
+        return "Creator for GenerateGlyphs.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Dtor. */
     virtual ~GenerateGlyphs(void);
@@ -53,7 +59,9 @@ public:
     core::CallerSlot _get_probes;
 
 protected:
-    bool create() override { return true; };
+    bool create() override {
+        return true;
+    };
     void release() override{};
 
 private:
@@ -66,7 +74,7 @@ private:
     bool doScalarGlyphGeneration(FloatProbe& probe);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
- 
+
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
 
     uint32_t _version = 0;

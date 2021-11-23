@@ -14,8 +14,8 @@
 #include <GL/glu.h>
 
 #define OGL_ERROR_CHECK // Toggle OpenGL error checking
-#define GLSafeCall( err ) glSafeCall( err, __FILE__, __LINE__ )
-#define CheckForGLError() checkForGLError( __FILE__, __LINE__ )
+#define GLSafeCall(err) glSafeCall(err, __FILE__, __LINE__)
+#define CheckForGLError() checkForGLError(__FILE__, __LINE__)
 
 /**
  * Utility function, that retrieves the last opengl error and prints an
@@ -25,12 +25,13 @@
  * @param line The line at which the failure took place
  * @return 'True' if the last error is GL_NO_ERROR, 'false' otherwise
  */
-inline bool checkForGLError(const char *file, const int line) {
+inline bool checkForGLError(const char* file, const int line) {
 #ifdef OGL_ERROR_CHECK
-    GLenum err; err = glGetError();
-    if(err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "%s(%d) glError: %s", file, line, gluErrorString(err));
+    GLenum err;
+    err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
         return false;
     }
 #endif
@@ -46,11 +47,11 @@ inline bool checkForGLError(const char *file, const int line) {
  * @param line The line at which the failure took place
  * @return 'True' if the last error is GL_NO_ERROR, 'false' otherwise
  */
-inline bool glSafeCall(GLenum err, const char *file, const int line ) {
+inline bool glSafeCall(GLenum err, const char* file, const int line) {
 #ifdef OGL_ERROR_CHECK
-    if(err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "%s(%d) glError: %s", file, line, gluErrorString(err));
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
         return true;
     }
 #endif

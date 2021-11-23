@@ -18,71 +18,68 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Abstract base class of job and view descriptions.
+ */
+class JobInstanceRequest : public InstanceRequest {
+public:
     /**
-     * Abstract base class of job and view descriptions.
+     * Ctor.
      */
-    class JobInstanceRequest : public InstanceRequest {
-    public:
+    JobInstanceRequest(void);
 
-        /**
-         * Ctor.
-         */
-        JobInstanceRequest(void);
+    /**
+     * Copy ctor.
+     *
+     * @param src The object to clone from
+     */
+    JobInstanceRequest(const JobInstanceRequest& src);
 
-        /**
-         * Copy ctor.
-         *
-         * @param src The object to clone from
-         */
-        JobInstanceRequest(const JobInstanceRequest& src);
+    /**
+     * Dtor.
+     */
+    virtual ~JobInstanceRequest(void);
 
-        /**
-         * Dtor.
-         */
-        virtual ~JobInstanceRequest(void);
+    /**
+     * Answer the description of the job to be instantiated.
+     *
+     * @return The description of the job to be instantiated
+     */
+    inline const JobDescription* Description(void) const {
+        return this->desc;
+    }
 
-        /**
-         * Answer the description of the job to be instantiated.
-         *
-         * @return The description of the job to be instantiated
-         */
-        inline const JobDescription* Description(void) const {
-            return this->desc;
-        }
+    /**
+     * Sets the description of the job to be instantiated.
+     *
+     * @param desc The description of the job to be instantiated.
+     */
+    inline void SetDescription(const JobDescription* desc) {
+        this->desc = desc;
+    }
 
-        /**
-         * Sets the description of the job to be instantiated.
-         *
-         * @param desc The description of the job to be instantiated.
-         */
-        inline void SetDescription(const JobDescription* desc) {
-            this->desc = desc;
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return Reference to 'this'
+     */
+    JobInstanceRequest& operator=(const JobInstanceRequest& rhs);
 
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return Reference to 'this'
-         */
-        JobInstanceRequest& operator=(const JobInstanceRequest& rhs);
+    /**
+     * Test for equality
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return 'true' if 'this' is equal to 'rhs'
+     */
+    bool operator==(const JobInstanceRequest& rhs) const;
 
-        /**
-         * Test for equality
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return 'true' if 'this' is equal to 'rhs'
-         */
-        bool operator==(const JobInstanceRequest& rhs) const;
-
-    private:
-
-        /** The job description to be instantiated */
-        const JobDescription* desc;
-
-    };
+private:
+    /** The job description to be instantiated */
+    const JobDescription* desc;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

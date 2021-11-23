@@ -1,12 +1,12 @@
 /*
  * DataSourceModule.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/DataSourceModule.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core;
@@ -15,8 +15,7 @@ using namespace megamol::core;
 /*
  * view::DataSourceModule::DataSourceModule
  */
-view::DataSourceModule::DataSourceModule(void) : Module(), offsetVec(),
-        scale(1.0f) {
+view::DataSourceModule::DataSourceModule(void) : Module(), offsetVec(), scale(1.0f) {
     // intentionally empty
 }
 

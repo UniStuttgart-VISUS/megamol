@@ -8,12 +8,12 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEFLAGFILTER_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEFLAGFILTER_H_INCLUDED
 
-#include "mmcore/Module.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
-#include "datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace datatools {
@@ -25,13 +25,19 @@ namespace table {
 class TableFlagFilter : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName() { return "TableFlagFilter"; }
+    static const char* ClassName() {
+        return "TableFlagFilter";
+    }
 
     /** Return module class description */
-    static const char* Description() { return "Filters rows from a table based on a flag storage."; }
+    static const char* Description() {
+        return "Filters rows from a table based on a flag storage.";
+    }
 
     /** Module is always available */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Ctor */
     TableFlagFilter();
@@ -44,17 +50,14 @@ protected:
 
     void release() override;
 
-    bool getData(core::Call &call);
+    bool getData(core::Call& call);
 
-    bool getHash(core::Call &call);
+    bool getHash(core::Call& call);
 
-    bool handleCall(core::Call &call);
+    bool handleCall(core::Call& call);
 
 private:
-    enum FilterMode {
-        FILTERED = 0,
-        SELECTED = 1
-    };
+    enum FilterMode { FILTERED = 0, SELECTED = 1 };
 
     core::CallerSlot tableInSlot;
     core::CallerSlot flagStorageInSlot;

@@ -5,38 +5,34 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "CSVDataSource.h"
+#include "stdafx.h"
 
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringTokeniser.h"
+#include <limits>
+#include <list>
+#include <map>
+#include <omp.h>
+#include <random>
 #include <sstream>
 #include <vector>
-#include <list>
-#include <random>
-#include <map>
-#include <limits>
-#include <omp.h>
 
 using namespace megamol::datatools;
 using namespace megamol::datatools::table;
 using namespace megamol;
 
-enum class DecimalSeparator : int {
-    Unknown = 0,
-    US = 1,
-    DE = 2
-};
+enum class DecimalSeparator : int { Unknown = 0, US = 1, DE = 2 };
 
-template <char C>
+template<char C>
 std::istream& expect(std::istream& is) {
     if ((is >> std::ws).peek() == C) {
         is.ignore();
@@ -71,7 +67,7 @@ double parseValue(const char* tokenStart, const char* tokenEnd) {
     // Try to parse as timestamp (HH:mm:ss)
     iss >> fractions[0] >> expect<':'> >> fractions[1] >> expect<':'> >> fractions[2];
     if (!iss.fail() && iss.eof()) {
-        return  fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000;
+        return fractions[0] * (60 * 60 * 1000) + fractions[1] * (60 * 1000) + fractions[2] * 1000;
     }
 
     // Try to parse as timestamp (HH:mm:ss.SSS)
@@ -84,18 +80,21 @@ double parseValue(const char* tokenStart, const char* tokenEnd) {
     return NAN;
 }
 
-CSVDataSource::CSVDataSource(void) : core::Module(),
-filenameSlot("filename", "Filename to read from"),
-skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing"),
-headerNamesSlot("headerNames", "Interpret the first data row as column names"),
-headerTypesSlot("headerTypes", "Interpret the second data row as column types (quantitative or categorical)"),
-commentPrefixSlot("commentPrefix", "Prefix that indicates a line-comment"),
-clearSlot("clear", "Clears the data"),
-colSepSlot("colSep", "The column separator (detected if empty)"),
-decSepSlot("decSep", "The decimal point parser format type"),
-shuffleSlot("shuffle", "Shuffle data points"),
-getDataSlot("getData", "Slot providing the data"),
-dataHash(0), columns(), values() {
+CSVDataSource::CSVDataSource(void)
+        : core::Module()
+        , filenameSlot("filename", "Filename to read from")
+        , skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing")
+        , headerNamesSlot("headerNames", "Interpret the first data row as column names")
+        , headerTypesSlot("headerTypes", "Interpret the second data row as column types (quantitative or categorical)")
+        , commentPrefixSlot("commentPrefix", "Prefix that indicates a line-comment")
+        , clearSlot("clear", "Clears the data")
+        , colSepSlot("colSep", "The column separator (detected if empty)")
+        , decSepSlot("decSep", "The decimal point parser format type")
+        , shuffleSlot("shuffle", "Shuffle data points")
+        , getDataSlot("getData", "Slot providing the data")
+        , dataHash(0)
+        , columns()
+        , values() {
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
@@ -118,7 +117,7 @@ dataHash(0), columns(), values() {
     this->colSepSlot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->colSepSlot);
 
-    core::param::EnumParam *ep = new core::param::EnumParam(0);
+    core::param::EnumParam* ep = new core::param::EnumParam(0);
     ep->SetTypePair(static_cast<int>(DecimalSeparator::Unknown), "Auto");
     ep->SetTypePair(static_cast<int>(DecimalSeparator::US), "US (3.141)");
     ep->SetTypePair(static_cast<int>(DecimalSeparator::DE), "DE (3,141)");
@@ -148,13 +147,9 @@ void CSVDataSource::release(void) {
 }
 
 void CSVDataSource::assertData(void) {
-    if (!this->filenameSlot.IsDirty()
-        && !this->skipPrefaceSlot.IsDirty()
-        && !this->headerNamesSlot.IsDirty()
-        && !this->headerTypesSlot.IsDirty()
-        && !this->commentPrefixSlot.IsDirty()
-        && !this->colSepSlot.IsDirty()
-        && !this->decSepSlot.IsDirty()) {
+    if (!this->filenameSlot.IsDirty() && !this->skipPrefaceSlot.IsDirty() && !this->headerNamesSlot.IsDirty() &&
+        !this->headerTypesSlot.IsDirty() && !this->commentPrefixSlot.IsDirty() && !this->colSepSlot.IsDirty() &&
+        !this->decSepSlot.IsDirty()) {
         if (this->shuffleSlot.IsDirty()) {
             shuffleData();
             this->shuffleSlot.ResetDirty();
@@ -175,7 +170,7 @@ void CSVDataSource::assertData(void) {
     this->columns.clear();
     this->values.clear();
 
-	auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+    auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
 
     try {
         vislib::sys::ASCIIFileBuffer file;
@@ -184,18 +179,21 @@ void CSVDataSource::assertData(void) {
         //////////////////////////////////////////////////////////////////////
         if (!file.LoadFile(filename.native().c_str(), vislib::sys::ASCIIFileBuffer::PARSING_LINES))
             throw vislib::Exception(__FILE__, __LINE__);
-        if (file.Count() < 2) throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
+        if (file.Count() < 2)
+            throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
 
         // 2. Determine the first row, column separator, and decimal point
         //////////////////////////////////////////////////////////////////////
         int firstHeaRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
         int firstDatRow = this->skipPrefaceSlot.Param<core::param::IntParam>()->Value();
-        if (headerNamesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
-        if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
+        if (headerNamesSlot.Param<core::param::BoolParam>()->Value())
+            firstDatRow++;
+        if (headerTypesSlot.Param<core::param::BoolParam>()->Value())
+            firstDatRow++;
 
         auto comment = vislib::StringA(this->commentPrefixSlot.Param<core::param::StringParam>()->Value().c_str());
         if (!comment.IsEmpty()) {
-                // Skip comments at the beginning of the file.
+            // Skip comments at the beginning of the file.
             while (firstHeaRow < file.Count()) {
                 if (!vislib::StringA(file[firstHeaRow]).StartsWith(comment)) {
                     break;
@@ -208,7 +206,7 @@ void CSVDataSource::assertData(void) {
         vislib::StringA colSep(this->colSepSlot.Param<core::param::StringParam>()->Value().c_str());
         if (colSep.IsEmpty()) {
             // Detect column separator
-            const char ColSepCanidates[] = { '\t', ';', ',', '|' };
+            const char ColSepCanidates[] = {'\t', ';', ',', '|'};
             vislib::StringA l1(file[firstHeaRow]);
             vislib::StringA l2(file[firstHeaRow]);
             for (int i = 0; i < sizeof(ColSepCanidates) / sizeof(char); ++i) {
@@ -223,7 +221,8 @@ void CSVDataSource::assertData(void) {
             }
         }
 
-        DecimalSeparator decType = static_cast<DecimalSeparator>(this->decSepSlot.Param<core::param::EnumParam>()->Value());
+        DecimalSeparator decType =
+            static_cast<DecimalSeparator>(this->decSepSlot.Param<core::param::EnumParam>()->Value());
         if (decType == DecimalSeparator::Unknown) {
             // Detect decimal type
             vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(file[firstDatRow], colSep, false));
@@ -239,7 +238,7 @@ void CSVDataSource::assertData(void) {
                 }
             }
             if (decType == DecimalSeparator::Unknown) {
-                                // Assume US format if detection failed.
+                // Assume US format if detection failed.
                 decType = DecimalSeparator::US;
             }
         }
@@ -268,14 +267,16 @@ void CSVDataSource::assertData(void) {
                     type = TableDataCall::ColumnType::CATEGORICAL;
                     hasCatDims = true;
                 }
-                this->columns[i].SetName(dimNames[i].PeekBuffer())
+                this->columns[i]
+                    .SetName(dimNames[i].PeekBuffer())
                     .SetType(type)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
             }
         } else {
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
-                this->columns[i].SetName(dimNames[i].PeekBuffer())
+                this->columns[i]
+                    .SetName(dimNames[i].PeekBuffer())
                     .SetType(TableDataCall::ColumnType::QUANTITATIVE)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
@@ -290,18 +291,22 @@ void CSVDataSource::assertData(void) {
 
         // Test for empty lines at the end
         for (; rowCnt > 0; --rowCnt) {
-            const char *start = file[firstDatRow + rowCnt - 1];
-            const char *end = start;
+            const char* start = file[firstDatRow + rowCnt - 1];
+            const char* end = start;
             size_t col = 0;
             while ((*end != '\0') && (col < colCnt)) {
                 int colSepPos = 0;
                 while ((*end != '\0') && ((*end != colSep[colSepEnd]) || (colSepEnd != colSepPos))) {
-                    if (*end == colSep[colSepPos]) colSepPos++; else colSepPos = 0;
+                    if (*end == colSep[colSepPos])
+                        colSepPos++;
+                    else
+                        colSepPos = 0;
                     ++end;
                 }
                 col++;
             }
-            if (col >= colCnt) break; // we found the last line containing a full data set
+            if (col >= colCnt)
+                break; // we found the last line containing a full data set
         }
 
         // Parse in parallel, assuming all lines will work
@@ -314,20 +319,25 @@ void CSVDataSource::assertData(void) {
 #pragma omp parallel for
         for (long long idx = 0; idx < static_cast<long long>(rowCnt); ++idx) {
             int thId = omp_get_thread_num();
-            const char *start = file[static_cast<size_t>(firstDatRow + idx)];
-            const char *end = start;
+            const char* start = file[static_cast<size_t>(firstDatRow + idx)];
+            const char* end = start;
             size_t col = 0;
             while ((*end != '\0') && (col < colCnt)) {
-                std::map<std::string, float> &catMap = catMaps[thId + col * thCnt];
+                std::map<std::string, float>& catMap = catMaps[thId + col * thCnt];
                 int colSepPos = 0;
                 while ((*end != '\0') && ((*end != colSep[colSepEnd]) || (colSepEnd != colSepPos))) {
-                    if (*end == colSep[colSepPos]) colSepPos++; else colSepPos = 0;
+                    if (*end == colSep[colSepPos])
+                        colSepPos++;
+                    else
+                        colSepPos = 0;
                     ++end;
                 }
 
                 if (this->columns[col].Type() == TableDataCall::ColumnType::QUANTITATIVE) {
                     if (decType == DecimalSeparator::DE) {
-                        for (char *ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
+                        for (char* ez = const_cast<char*>(start); ez != end; ++ez)
+                            if (*ez == ',')
+                                *ez = '.';
                     }
                     double value = parseValue(start, end);
                     values[static_cast<size_t>(idx * colCnt + col)] = static_cast<float>(value);
@@ -338,7 +348,10 @@ void CSVDataSource::assertData(void) {
                     assert(hasCatDims);
                     std::map<std::string, float>::iterator cmi = catMap.find(start);
                     if (cmi == catMap.end()) {
-                        cmi = catMap.insert(std::pair<std::string, float>(start, static_cast<float>(thId + thCnt * catMap.size()))).first;
+                        cmi = catMap
+                                  .insert(std::pair<std::string, float>(
+                                      start, static_cast<float>(thId + thCnt * catMap.size())))
+                                  .first;
                     }
                     values[static_cast<size_t>(idx * colCnt + col)] = cmi->second;
                 } else {
@@ -376,7 +389,8 @@ void CSVDataSource::assertData(void) {
                 if (invalidColumn) {
                     megamol::core::utility::log::Log::DefaultLog.WriteWarn("  lines in column %d: all", 1 + c);
                 } else if (!lines.empty()) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("  lines in column %d: %s", 1 + c, lines.c_str());
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "  lines in column %d: %s", 1 + c, lines.c_str());
                 }
             }
         }
@@ -384,7 +398,8 @@ void CSVDataSource::assertData(void) {
         // Merge categorical data so that all `value indices` map to one `string key`
         if (hasCatDims) {
             for (size_t c = 0; c < colCnt; ++c) {
-                if (columns[c].Type() != TableDataCall::ColumnType::CATEGORICAL) continue;
+                if (columns[c].Type() != TableDataCall::ColumnType::CATEGORICAL)
+                    continue;
                 std::map<int, int> catRemap;
                 std::map<std::string, int> catMap;
                 for (int ci = static_cast<int>(c) * thCnt; ci < static_cast<int>(c + 1) * thCnt; ++ci) {
@@ -414,8 +429,10 @@ void CSVDataSource::assertData(void) {
         for (size_t r = 0; r < rowCnt; ++r) {
             for (size_t c = 0; c < colCnt; ++c) {
                 float f = values[r * colCnt + c];
-                if (f < minVals[c]) minVals[c] = f;
-                if (f > maxVals[c]) maxVals[c] = f;
+                if (f < minVals[c])
+                    minVals[c] = f;
+                if (f > maxVals[c])
+                    maxVals[c] = f;
             }
         }
         for (size_t c = 0; c < colCnt; ++c) {
@@ -444,7 +461,7 @@ void CSVDataSource::assertData(void) {
 
 void CSVDataSource::shuffleData() {
     if (!this->shuffleSlot.Param<core::param::BoolParam>()->Value()) {
-                // Do not shuffle, unless requested
+        // Do not shuffle, unless requested
         return;
     }
 
@@ -461,8 +478,9 @@ void CSVDataSource::shuffleData() {
 }
 
 bool CSVDataSource::getDataCallback(core::Call& caller) {
-    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
-    if (tfd == nullptr) return false;
+    TableDataCall* tfd = dynamic_cast<TableDataCall*>(&caller);
+    if (tfd == nullptr)
+        return false;
 
     this->assertData();
 
@@ -479,8 +497,9 @@ bool CSVDataSource::getDataCallback(core::Call& caller) {
 }
 
 bool CSVDataSource::getHashCallback(core::Call& caller) {
-    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
-    if (tfd == nullptr) return false;
+    TableDataCall* tfd = dynamic_cast<TableDataCall*>(&caller);
+    if (tfd == nullptr)
+        return false;
 
     this->assertData();
 

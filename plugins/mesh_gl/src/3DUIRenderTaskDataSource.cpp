@@ -3,8 +3,8 @@
 #include "3DUIRenderTaskDataSource.h"
 
 #include "tiny_gltf.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 
@@ -17,10 +17,10 @@ megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRend
               "getInteraction", "The slot publishing available interactions and receiving pending manipulations")
         , m_3DInteraction_callerSlot("", "")
         , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
-    this->m_3DInteraction_calleeSlot.SetCallback(
-        mesh::Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
-    this->m_3DInteraction_calleeSlot.SetCallback(
-        mesh::Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(mesh::Call3DInteraction::ClassName(), "GetData",
+        &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(mesh::Call3DInteraction::ClassName(), "GetMetaData",
+        &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->MakeSlotAvailable(&this->m_3DInteraction_calleeSlot);
 
     this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
@@ -158,8 +158,9 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
 
             m_scene.back().first = m_rendertask_collection.second.back();
 
-            m_interaction_collection->addInteractionObject(1,
-                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+            m_interaction_collection->addInteractionObject(
+                1, {mesh::ThreeDimensionalInteraction{
+                       mesh::InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -176,8 +177,9 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
 
             m_scene.back().first = m_rendertask_collection.second.back();
 
-            m_interaction_collection->addInteractionObject(2,
-                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
+            m_interaction_collection->addInteractionObject(
+                2, {mesh::ThreeDimensionalInteraction{
+                       mesh::InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -194,8 +196,9 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
 
             m_scene.back().first = m_rendertask_collection.second.back();
 
-            m_interaction_collection->addInteractionObject(3,
-                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+            m_interaction_collection->addInteractionObject(
+                3, {mesh::ThreeDimensionalInteraction{
+                       mesh::InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -212,8 +215,9 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
 
             m_scene.back().first = m_rendertask_collection.second.back();
 
-            m_interaction_collection->addInteractionObject(4,
-                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+            m_interaction_collection->addInteractionObject(
+                4, {mesh::ThreeDimensionalInteraction{
+                       mesh::InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
 
 

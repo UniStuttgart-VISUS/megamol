@@ -4,14 +4,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/DistantLight.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -23,10 +23,10 @@ void megamol::core::view::light::DistantLight::addLight(LightCollection& light_c
  * megamol::core::view::light::DistantLight::DistantLight
  */
 DistantLight::DistantLight(void)
-    : AbstractLight()
-    , direction("Direction", "Direction of the Light")
-    , angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
-    , eye_direction("EyeDirection", "Sets the light direction as view direction") {
+        : AbstractLight()
+        , direction("Direction", "Direction of the Light")
+        , angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
+        , eye_direction("EyeDirection", "Sets the light direction as view direction") {
 
     // distant light
     lightsource = std::make_shared<DistantLightType>();
@@ -44,7 +44,9 @@ DistantLight::DistantLight(void)
 /*
  * megamol::core::view::light::DistantLight::~DistantLight
  */
-DistantLight::~DistantLight(void) { this->Release(); }
+DistantLight::~DistantLight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::DistantLight::readParams
@@ -56,7 +58,9 @@ void DistantLight::readParams() {
     light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     light->eye_direction = this->eye_direction.Param<core::param::BoolParam>()->Value();
-    if (light->eye_direction) { ++version; } // force update every frame is eye direction is used
+    if (light->eye_direction) {
+        ++version;
+    } // force update every frame is eye direction is used
     auto& dl_dir = this->direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 dl_dir_normalized(dl_dir.X(), dl_dir.Y(), dl_dir.Z());
     dl_dir_normalized = glm::normalize(dl_dir_normalized);

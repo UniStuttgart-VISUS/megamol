@@ -4,27 +4,30 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "IColSelectClassify.h"
 #include "datatools/MultiParticleDataAdaptor.h"
-#include <algorithm>
 #include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 
-IColSelectClassify::IColSelectClassify() : datatools::AbstractParticleManipulator("outData", "inData"),
-        valueSlot("value", "The selected value of the input ICol data"),
-        epsilonSlot("epsilon", "The (input) ICol value comparison epsilon"),
-        inHash(0), outHash(0), frameID(0), colors() {
+IColSelectClassify::IColSelectClassify()
+        : datatools::AbstractParticleManipulator("outData", "inData")
+        , valueSlot("value", "The selected value of the input ICol data")
+        , epsilonSlot("epsilon", "The (input) ICol value comparison epsilon")
+        , inHash(0)
+        , outHash(0)
+        , frameID(0)
+        , colors() {
 
     valueSlot.SetParameter(new core::param::FloatParam(1.0f));
     MakeSlotAvailable(&valueSlot);
 
     epsilonSlot.SetParameter(new core::param::FloatParam(0.001f, 0.0f));
     MakeSlotAvailable(&epsilonSlot);
-
 }
 
 IColSelectClassify::~IColSelectClassify() {
@@ -32,13 +35,10 @@ IColSelectClassify::~IColSelectClassify() {
 }
 
 bool IColSelectClassify::manipulateData(
-        geocalls::MultiParticleDataCall& outData,
-        geocalls::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
-    if ( (inHash != inData.DataHash()) || (inData.DataHash() == 0)
-            || (frameID != inData.FrameID())
-            || valueSlot.IsDirty()
-            || epsilonSlot.IsDirty()) {
+    if ((inHash != inData.DataHash()) || (inData.DataHash() == 0) || (frameID != inData.FrameID()) ||
+        valueSlot.IsDirty() || epsilonSlot.IsDirty()) {
         // Update data
         inHash = inData.DataHash();
         outHash++;
@@ -65,9 +65,9 @@ bool IColSelectClassify::manipulateData(
     outData.SetFrameID(frameID);
     inData.SetUnlocker(nullptr, false);
 
-    const float *data = colors.data();
+    const float* data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
-        auto &plist = outData.AccessParticles(list);
+        auto& plist = outData.AccessParticles(list);
         plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(0.0f, 1.0f);
         data += plist.GetCount();

@@ -6,11 +6,11 @@
 #ifndef MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
 #define MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <vector>
 #include "mmcore/AbstractGetData3DCall.h"
+#include <vector>
 
 namespace megamol {
 namespace protein_calls {
@@ -48,7 +48,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "TunnelResidueDataCall"; }
+    static const char* ClassName(void) {
+        return "TunnelResidueDataCall";
+    }
 
     /**
      * Gets a human readable description of the module.
@@ -64,7 +66,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return AbstractGetData3DCall::FunctionCount(); }
+    static unsigned int FunctionCount(void) {
+        return AbstractGetData3DCall::FunctionCount();
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -73,7 +77,9 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return AbstractGetData3DCall::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) {
+        return AbstractGetData3DCall::FunctionName(idx);
+    }
 
     /** Ctor. */
     TunnelResidueDataCall(void);
@@ -86,28 +92,36 @@ public:
      *
      * @return The number of tunnels.
      */
-    int getTunnelNumber(void) const { return this->numTunnels; }
+    int getTunnelNumber(void) const {
+        return this->numTunnels;
+    }
 
     /**
      * Sets the number of tunnels
      *
      * @param numTunnels The new number of tunnels
      */
-    void setTunnelNumber(const int numTunnels) { this->numTunnels = numTunnels; }
+    void setTunnelNumber(const int numTunnels) {
+        this->numTunnels = numTunnels;
+    }
 
     /**
      * Returns the tunnel descriptions
      *
      * @param return The tunnel descriptions
      */
-    const Tunnel* getTunnelDescriptions(void) const { return this->tunnels; }
+    const Tunnel* getTunnelDescriptions(void) const {
+        return this->tunnels;
+    }
 
     /**
      * Sets the new tunnel description pointer
      *
      * @param tunnels The pointer to the tunnel descriptions
      */
-    void setTunnelDescriptions(Tunnel* tunnels) { this->tunnels = tunnels; }
+    void setTunnelDescriptions(Tunnel* tunnels) {
+        this->tunnels = tunnels;
+    }
 
 private:
     /** array containing all tunnels */

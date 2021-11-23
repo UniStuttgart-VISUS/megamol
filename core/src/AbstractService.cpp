@@ -4,8 +4,8 @@
  * Copyright (C) 2016 by MegaMol Team (S. Grottel)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/AbstractService.h"
+#include "stdafx.h"
 
 using namespace megamol;
 

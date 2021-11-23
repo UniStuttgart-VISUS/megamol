@@ -20,99 +20,95 @@ namespace net {
 namespace cluster {
 
 
+/**
+ * This class implements a unique identifier for a cluster node or
+ * process.
+ */
+class NodeIdentifier {
+
+public:
     /**
-     * This class implements a unique identifier for a cluster node or
-     * process.
+     * Create a new, undeterminate identifier.
      */
-    class NodeIdentifier {
+    NodeIdentifier(void);
 
-    public:
+    /**
+     * Clone 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    inline NodeIdentifier(const NodeIdentifier& rhs) {
+        *this = rhs;
+    }
 
-        /**
-         * Create a new, undeterminate identifier.
-         */
-        NodeIdentifier(void);
+    /**
+     * Dtor.
+     */
+    ~NodeIdentifier(void);
 
-        /**
-         * Clone 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        inline NodeIdentifier(const NodeIdentifier& rhs) {
-            *this = rhs;
-        }
+    /**
+     * Answer whether the identifier is undeterminate, i. e. does not
+     * represent a node.
+     *
+     * @return true if the identifier is undeterminate, false otherwise.
+     */
+    inline bool IsNull(void) const {
+        return (this->id.GetIPAddress().IsAny() && (this->id.GetPort() == 0));
+    }
 
-        /**
-         * Dtor.
-         */
-        ~NodeIdentifier(void);
+    /**
+     * Create a string representation of the ID.
+     *
+     * @return A string representation of the ID.
+     */
+    StringA ToStringA(void) const {
+        return this->id.ToStringA();
+    }
 
-        /**
-         * Answer whether the identifier is undeterminate, i. e. does not 
-         * represent a node.
-         *
-         * @return true if the identifier is undeterminate, false otherwise.
-         */
-        inline bool IsNull(void) const {
-            return (this->id.GetIPAddress().IsAny() 
-                && (this->id.GetPort() == 0));
-        }
+    /**
+     * Create a string representation of the ID.
+     *
+     * @return A string representation of the ID.
+     */
+    StringW ToStringW(void) const {
+        return this->id.ToStringW();
+    }
 
-        /**
-         * Create a string representation of the ID.
-         *
-         * @return A string representation of the ID.
-         */
-        StringA ToStringA(void) const {
-            return this->id.ToStringA();
-        }
+    /**
+     * Test for equality.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return true if this object and 'rhs' are equal, false otherwise.
+     */
+    inline bool operator==(const NodeIdentifier& rhs) const {
+        return (this->id == rhs.id);
+    }
 
-        /**
-         * Create a string representation of the ID.
-         *
-         * @return A string representation of the ID.
-         */
-        StringW ToStringW(void) const {
-            return this->id.ToStringW();
-        }
+    /**
+     * Test for inequality.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return true if this object and 'rhs' are not equal, false otherwise.
+     */
+    inline bool operator!=(const NodeIdentifier& rhs) const {
+        return (this->id != rhs.id);
+    }
 
-        /**
-         * Test for equality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true if this object and 'rhs' are equal, false otherwise.
-         */
-        inline bool operator ==(const NodeIdentifier& rhs) const {
-            return (this->id == rhs.id);
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    NodeIdentifier& operator=(const NodeIdentifier& rhs);
 
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true if this object and 'rhs' are not equal, false otherwise.
-         */
-        inline bool operator !=(const NodeIdentifier& rhs) const {
-            return (this->id != rhs.id);
-        }
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        NodeIdentifier& operator =(const NodeIdentifier& rhs);
-
-    private:
-
-        /** The IP end point address is the unique identifier. */
-        IPEndPoint id;
-
-    };
+private:
+    /** The IP end point address is the unique identifier. */
+    IPEndPoint id;
+};
 
 } /* end namespace cluster */
 } /* end namespace net */

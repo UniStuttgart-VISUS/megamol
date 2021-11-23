@@ -4,8 +4,8 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/special/StubModule.h"
+#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -14,11 +14,10 @@ using namespace megamol;
 using namespace megamol::core;
 
 
-special::StubModule::StubModule(void) : Module(),
-inSlot("inSlot", "Inbound call"),
-outSlot("outSlot", "Outbound call") {
-
-}
+special::StubModule::StubModule(void)
+        : Module()
+        , inSlot("inSlot", "Inbound call")
+        , outSlot("outSlot", "Outbound call") {}
 
 
 special::StubModule::~StubModule(void) {
@@ -41,9 +40,7 @@ bool special::StubModule::create(void) {
 }
 
 
-void special::StubModule::release(void) {
-
-}
+void special::StubModule::release(void) {}
 
 
 bool megamol::core::special::StubModule::stub(Call& c) {
@@ -53,9 +50,7 @@ bool megamol::core::special::StubModule::stub(Call& c) {
             for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
                 try {
                     this->inSlot.Call(idx);
-                } catch (...) {
-                    return false;
-                }
+                } catch (...) { return false; }
             }
         }
     }

@@ -6,12 +6,12 @@
 #pragma once
 
 #include "concave_hull.h"
-#include "poisson.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mesh/MeshCalls.h"
+#include "poisson.h"
 #include <cstdlib>
 
 namespace megamol {
@@ -24,21 +24,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ExtractCenterline"; }
+    static const char* ClassName(void) {
+        return "ExtractCenterline";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Extracts a centerline from mesh data."; }
+    static const char* Description(void) {
+        return "Extracts a centerline from mesh data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ExtractCenterline(void);
@@ -53,8 +59,6 @@ protected:
 
     core::CallerSlot _getDataCall;
     core::CalleeSlot _deployLineCall;
-
-
 
 
 private:
@@ -80,7 +84,6 @@ private:
     std::vector<uint32_t> _cl_indices;
 
     size_t _old_datahash = 0;
-
 };
 
 } // namespace probe

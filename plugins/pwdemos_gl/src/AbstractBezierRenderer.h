@@ -8,92 +8,89 @@
 #pragma once
 
 
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * Raycasting-based renderer for bézier curve tubes
+ */
+class AbstractBezierRenderer : public core_gl::view::Renderer3DModuleGL {
+public:
+protected:
+    /** Ctor. */
+    AbstractBezierRenderer(void);
+
+    /** Dtor. */
+    virtual ~AbstractBezierRenderer(void);
+
     /**
-     * Raycasting-based renderer for bézier curve tubes
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
      */
-    class AbstractBezierRenderer : public core_gl::view::Renderer3DModuleGL {
-    public:
+    virtual bool create(void);
 
-    protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
-        /** Ctor. */
-        AbstractBezierRenderer(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /** Dtor. */
-        virtual ~AbstractBezierRenderer(void);
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * The implementation of the render callback
+     *
+     * @param call The calling rendering call
+     *
+     * @return The return value of the function
+     */
+    virtual bool render(core_gl::view::CallRender3DGL& call) = 0;
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    /**
+     * Informs the class if the shader is required
+     *
+     * @return True if the shader is required
+     */
+    virtual bool shader_required(void) const {
+        // TODO: This is not cool at all
+        return true;
+    }
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The call for data */
+    core::CallerSlot getDataSlot;
 
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(core_gl::view::CallRender3DGL& call);
+    /** The data hash of the objects stored in the list */
+    SIZE_T objsHash;
 
-        /**
-         * The implementation of the render callback
-         *
-         * @param call The calling rendering call
-         *
-         * @return The return value of the function
-         */
-        virtual bool render(core_gl::view::CallRender3DGL& call) = 0;
+    /** The selected shader */
+    vislib_gl::graphics::gl::GLSLShader* shader;
 
-        /**
-         * Informs the class if the shader is required
-         *
-         * @return True if the shader is required
-         */
-        virtual bool shader_required(void) const {
-            // TODO: This is not cool at all
-            return true;
-        }
+private:
+};
 
-        /** The call for data */
-        core::CallerSlot getDataSlot;
-
-        /** The data hash of the objects stored in the list */
-        SIZE_T objsHash;
-
-        /** The selected shader */
-        vislib_gl::graphics::gl::GLSLShader *shader;
-
-    private:
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

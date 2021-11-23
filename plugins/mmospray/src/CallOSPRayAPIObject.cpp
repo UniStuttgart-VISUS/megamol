@@ -1,29 +1,33 @@
 /*
-* CallOSPRayAPIObject.cpp
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
-* Alle Rechte vorbehalten.
-*/
+ * CallOSPRayAPIObject.cpp
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmospray/CallOSPRayAPIObject.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
 
 /*
-* megamol::ospray::CallOSPRayAPIObject::CallOSPRayAPIObject
-*/
-CallOSPRayAPIObject::CallOSPRayAPIObject() : 
-    datahash(0), unlocker(NULL),
-    forceFrame(false), frameCnt(0), frameID(0), bboxs() {
-// intentionally empty
+ * megamol::ospray::CallOSPRayAPIObject::CallOSPRayAPIObject
+ */
+CallOSPRayAPIObject::CallOSPRayAPIObject()
+        : datahash(0)
+        , unlocker(NULL)
+        , forceFrame(false)
+        , frameCnt(0)
+        , frameID(0)
+        , bboxs() {
+    // intentionally empty
 }
 
 
 /*
-* megamol::ospray::CallOSPRayAPIObject::~CallOSPRayAPIObject
-*/
+ * megamol::ospray::CallOSPRayAPIObject::~CallOSPRayAPIObject
+ */
 CallOSPRayAPIObject::~CallOSPRayAPIObject(void) {
     this->Unlock();
 }
@@ -58,11 +62,11 @@ bool megamol::ospray::CallOSPRayAPIObject::isDirty() {
 }
 
 /*
-* CallOSPRayAPIObject::operator=
-*/
+ * CallOSPRayAPIObject::operator=
+ */
 megamol::ospray::CallOSPRayAPIObject& megamol::ospray::CallOSPRayAPIObject::operator=(
     const megamol::ospray::CallOSPRayAPIObject& rhs) {
-    megamol::ospray::CallOSPRayAPIObject::operator =(rhs);
+    megamol::ospray::CallOSPRayAPIObject::operator=(rhs);
     this->forceFrame = rhs.forceFrame;
     this->frameCnt = rhs.frameCnt;
     this->frameID = rhs.frameID;

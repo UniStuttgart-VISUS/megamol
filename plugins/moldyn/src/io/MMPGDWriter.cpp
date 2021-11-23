@@ -5,16 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MMPGDWriter.h"
-#include "mmcore/BoundingBoxes.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/BoundingBoxes.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol::moldyn::io;
 using namespace megamol::moldyn;
@@ -23,9 +23,10 @@ using namespace megamol::core;
 /*
  * MMPGDWriter::MMPGDWriter
  */
-MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
-        filenameSlot("filename", "The path to the MMPGD file to be written"),
-        dataSlot("data", "The slot requesting the data to be written") {
+MMPGDWriter::MMPGDWriter(void)
+        : AbstractDataWriter()
+        , filenameSlot("filename", "The path to the MMPGD file to be written")
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot << new core::param::FilePathParam(
         "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmpgd"});
@@ -55,8 +56,7 @@ bool MMPGDWriter::create(void) {
 /*
  * MMPGDWriter::release
  */
-void MMPGDWriter::release(void) {
-}
+void MMPGDWriter::release(void) {}
 
 
 /*
@@ -66,22 +66,19 @@ bool MMPGDWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "No file name specified. Abort.");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;
     }
 
-    ParticleGridDataCall *pgdc = this->dataSlot.CallAs<ParticleGridDataCall>();
+    ParticleGridDataCall* pgdc = this->dataSlot.CallAs<ParticleGridDataCall>();
     if (pgdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "No data source connected. Abort.");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-            "File %s already exists and will be overwritten.",
-            filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     vislib::math::Cuboid<float> bbox;
@@ -92,8 +89,8 @@ bool MMPGDWriter::run(void) {
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
-        if (pgdc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
-                || pgdc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
+        if (pgdc->AccessBoundingBoxes().IsObjectSpaceBBoxValid() ||
+            pgdc->AccessBoundingBoxes().IsObjectSpaceClipBoxValid()) {
             if (pgdc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
                 bbox = pgdc->AccessBoundingBoxes().ObjectSpaceBBox();
             } else {
@@ -111,8 +108,7 @@ bool MMPGDWriter::run(void) {
         }
         frameCnt = pgdc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Data source counts zero frames. Abort.");
             return false;
         }
     }
@@ -120,16 +116,16 @@ bool MMPGDWriter::run(void) {
     vislib::sys::FastFile file;
     if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to create output file \"%s\". Abort.",
-            filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
 
-#define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
+#define ASSERT_WRITEOUT(A, S)                                                   \
+    if (file.Write((A), (S)) != (S)) {                                          \
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
-        file.Close(); \
-        return false; \
+        file.Close();                                                           \
+        return false;                                                           \
     }
 
     vislib::StringA magicID("MMPGD");
@@ -164,13 +160,13 @@ bool MMPGDWriter::run(void) {
             }
             if (pgdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-                        "Frame %u returned on request for frame %u\n", pgdc->FrameID(), i);
+                    Log::DefaultLog.WriteMsg(
+                        Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", pgdc->FrameID(), i);
                 }
                 missCnt++;
                 vislib::sys::Thread::Sleep(missCnt * 100);
             }
-        } while(pgdc->FrameID() != i);
+        } while (pgdc->FrameID() != i);
 
         if (!this->writeFrame(file, *pgdc)) {
             pgdc->Unlock();
@@ -224,24 +220,48 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
     ASSERT_WRITEOUT(&gridZ, 4);
 
     for (UINT32 i = 0; i < typeCnt; i++) {
-        const ParticleGridDataCall::ParticleType &type = data.Types()[i];
+        const ParticleGridDataCall::ParticleType& type = data.Types()[i];
         UINT8 vt = 0, ct = 0;
-        switch(type.GetVertexDataType()) {
-            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; break;
-            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; break;
-            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; break;
-            case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; break;
-            default: vt = 0; break;
+        switch (type.GetVertexDataType()) {
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+            vt = 0;
+            break;
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            vt = 1;
+            break;
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            vt = 2;
+            break;
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            vt = 3;
+            break;
+        default:
+            vt = 0;
+            break;
         }
         if (vt != 0) {
-            switch(type.GetColourDataType()) {
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; break;
-                default: ct = 0; break;
+            switch (type.GetColourDataType()) {
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
+                ct = 0;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                ct = 1;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                ct = 2;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                ct = 3;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                ct = 4;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                ct = 5;
+                break;
+            default:
+                ct = 0;
+                break;
             }
         } else {
             ct = 0;
@@ -254,7 +274,7 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
             ASSERT_WRITEOUT(&f, 4);
         }
         if (ct == 0) {
-            const unsigned char *col = type.GetGlobalColour();
+            const unsigned char* col = type.GetGlobalColour();
             ASSERT_WRITEOUT(col, 4);
         } else if (ct == 3) {
             float f = type.GetMinColourIndexValue();
@@ -265,30 +285,66 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
     }
 
     for (UINT32 i = 0; i < gridX * gridY * gridZ; i++) {
-        const ParticleGridDataCall::GridCell &cell = data.Cells()[i];
+        const ParticleGridDataCall::GridCell& cell = data.Cells()[i];
         ASSERT_WRITEOUT(cell.GetBoundingBox().PeekBounds(), 4 * 6);
         for (UINT32 t = 0; t < typeCnt; t++) {
-            const ParticleGridDataCall::ParticleType &type = data.Types()[t];
-            const ParticleGridDataCall::Particles &points = cell.AccessParticleLists()[t];
+            const ParticleGridDataCall::ParticleType& type = data.Types()[t];
+            const ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
 
             UINT8 vt = 0, ct = 0;
             unsigned int vs = 0, vo = 0, cs = 0, co = 0;
-            switch(type.GetVertexDataType()) {
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; vs = 0; break;
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; vs = 12; break;
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; vs = 16; break;
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; vs = 6; break;
-                default: vt = 0; vs = 0; break;
+            switch (type.GetVertexDataType()) {
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                vt = 0;
+                vs = 0;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                vt = 1;
+                vs = 12;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                vt = 2;
+                vs = 16;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                vt = 3;
+                vs = 6;
+                break;
+            default:
+                vt = 0;
+                vs = 0;
+                break;
             }
             if (vt != 0) {
-                switch(type.GetColourDataType()) {
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; cs = 0; break;
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; cs = 3; break;
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; cs = 4; break;
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; cs = 4; break;
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; cs = 12; break;
-                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; cs = 16; break;
-                    default: ct = 0; cs = 0; break;
+                switch (type.GetColourDataType()) {
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
+                    ct = 0;
+                    cs = 0;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    ct = 1;
+                    cs = 3;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    ct = 2;
+                    cs = 4;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    ct = 3;
+                    cs = 4;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    ct = 4;
+                    cs = 12;
+                    break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    ct = 5;
+                    cs = 16;
+                    break;
+                default:
+                    ct = 0;
+                    cs = 0;
+                    break;
                 }
             } else {
                 ct = 0;
@@ -306,13 +362,15 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
             }
 
             UINT64 cnt = points.GetCount();
-            if (vt == 0) cnt = 0;
+            if (vt == 0)
+                cnt = 0;
             ASSERT_WRITEOUT(&cnt, 8);
             float maxRad = points.GetMaxRadius();
             ASSERT_WRITEOUT(&maxRad, 4);
-            if (vt == 0) continue;
-            const unsigned char *vp = static_cast<const unsigned char *>(points.GetVertexData());
-            const unsigned char *cp = static_cast<const unsigned char *>(points.GetColourData());
+            if (vt == 0)
+                continue;
+            const unsigned char* vp = static_cast<const unsigned char*>(points.GetVertexData());
+            const unsigned char* cp = static_cast<const unsigned char*>(points.GetColourData());
             for (UINT64 i = 0; i < cnt; i++) {
                 ASSERT_WRITEOUT(vp, vs);
                 vp += vo;

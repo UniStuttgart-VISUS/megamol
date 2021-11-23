@@ -1,7 +1,7 @@
 /*
  * PhantomDeviceWrapper.h
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2011 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -16,44 +16,43 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "vislib/Delegate.h"
+#include "vislib/graphics/AbsoluteCursor3D.h"
+#include "vislib/math/Vector.h"
 #include <HL/hl.h>
 #include <HLU/hlu.h>
-#include "vislib/math/Vector.h"
-#include "vislib/graphics/AbsoluteCursor3D.h"
-#include "vislib/Delegate.h"
 
 
 /**
-* This class serves as a wrapper class for a Phantom pen device.
-* The class handles initialization and deinitialization of the
-* device and provides simple Get/Set routines to perform cursor
-* position/orientation input and force feedback output.
-*/
+ * This class serves as a wrapper class for a Phantom pen device.
+ * The class handles initialization and deinitialization of the
+ * device and provides simple Get/Set routines to perform cursor
+ * position/orientation input and force feedback output.
+ */
 
 // function pointer class for callback function. First param is button click state
 // Second param is whether or not the cursor is touching an object according to the device.
 // Return value is object id that was clicked (-1 for no object)
-typedef vislib::Delegate<unsigned int, bool, bool> PhantomButtonDelegate; 
+typedef vislib::Delegate<unsigned int, bool, bool> PhantomButtonDelegate;
 
 class PhantomDeviceWrapper {
 public:
-
-    /** 
+    /**
      * Struct containing a mapping of shape ids (provided by the haptic rendering
      * service) and shape locations for use in relocating spring attach point while
      * moving objects.
      */
     struct ObjectPositionData {
-        int offset; // array offset to reach first shape id (equivalently, first id in range)
+        int offset;     // array offset to reach first shape id (equivalently, first id in range)
         int numObjects; // number of objects in array
-        /** 
+        /**
          * Pointer to array of object positions. Object positions should be stored as
          * x0, y0, z0, x1, y1, z1, etc. Array will be 3*numObjects in length.
          */
         float* positions;
     };
 
-    /** 
+    /**
      * Ctor
      */
     PhantomDeviceWrapper(void);
@@ -106,7 +105,7 @@ public:
     void StartSpringForce(vislib::math::Point<double, 3> force);
 
 
-    /** 
+    /**
      * Stops the spring force.
      */
     void StopSpringForce(void);
@@ -123,7 +122,7 @@ public:
 
     /**
      * Starts a constant force or updates an already existing constant force to a new
-     * magnitude and/or direction. 
+     * magnitude and/or direction.
      * Force is specified by a vector of doubles whose magnitude is the magnitude of
      * the force. The vector should be stated in device coordinates (positive x is
      * right, positive y is up, positive z is out of the screen).
@@ -137,7 +136,7 @@ public:
     void StartConstantForce(vislib::math::Vector<double, 3> force);
 
 
-    /** 
+    /**
      * Stops a constant force.
      */
     void StopConstantForce(void);
@@ -153,8 +152,7 @@ public:
      * @param viewport Array of 4 ints representing the viewport.
      * @return Double scaling factor for cursor size.
      */
-    double PhantomDeviceWrapper::GetCursorScale (double* modelMatrix,
-        double* projMatrix, int* viewport);
+    double PhantomDeviceWrapper::GetCursorScale(double* modelMatrix, double* projMatrix, int* viewport);
 
 
     /**
@@ -249,7 +247,7 @@ public:
      *
      * @param cursor3d Absolute 3D cursor object to be set.
      */
-    void SetCursor(vislib::graphics::AbsoluteCursor3D *cursor3d);
+    void SetCursor(vislib::graphics::AbsoluteCursor3D* cursor3d);
 
     /**
      * Sets the minimum distance (in millimeters) the device must travel to trigger
@@ -259,7 +257,7 @@ public:
      */
     void SetLinearMotionTolerance(double distance);
 
-    
+
     /**
      * Sets the minimum rotation (in radians) the device must travel to trigger
      * a motion event. (default is 0.02 radians)
@@ -269,7 +267,7 @@ public:
     void SetAngularMotionTolerance(double angle);
 
 
-    /** 
+    /**
      * Sets the associated object position data struct.
      *
      * @param data Pointer to object position data struct.
@@ -309,11 +307,11 @@ public:
      *
      * @param modelview A 16 value array of doubles representing the matrix in column major form.
      */
-    inline void SetModelviewMatrix(double *modelview) {
+    inline void SetModelviewMatrix(double* modelview) {
         this->modelviewMatrix = modelview;
     }
 
-    
+
     /**
      * Gets the current spring anchor point. Useful for computing the force being
      * applied to an object. Returns the spring point as a vislib point of floats.
@@ -324,14 +322,14 @@ public:
         return this->springPoint;
     }
 
-    
+
     /**
      * Enables motion interrupts setting cursor location. Motion interrupts
      * cannot be enabled if there is no associated 3d cursor. Motion interrupts will automatically
      * set cursor location in the 3d cursor.
      */
     void EnableMotionInterrupts(void);
-    
+
 
     /**
      * Disables motion interrupts setting cursor location. Program will have to poll device and
@@ -340,10 +338,10 @@ public:
     void DisableMotionInterrupts(void);
 
     /**
-    * Sets the function that is called on a button click or release.
-    * 
-    * @param Delegate of the function to be called. 
-    */
+     * Sets the function that is called on a button click or release.
+     *
+     * @param Delegate of the function to be called.
+     */
     void SetButtonFunction(PhantomButtonDelegate& function);
 
     /**
@@ -356,7 +354,6 @@ public:
     vislib::math::Point<double, 3> ModelToWorkspaceTransform(vislib::math::Point<double, 3> position);
 
 private:
-
     /**
      * Frees the phantom device and associated memory.
      * Called in destructor.
@@ -364,16 +361,13 @@ private:
     void Deinitialize(void);
 
     /** Callback function for on object touch */
-    static void HLCALLBACK onTouch(HLenum event,
-        HLuint object, HLenum thread, HLcache *cache, void *userdata);
+    static void HLCALLBACK onTouch(HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata);
 
     /** Callback function for device motion */
-    static void HLCALLBACK onMotion(HLenum event, HLuint object,
-        HLenum thread, HLcache *cache, void *userdata);
+    static void HLCALLBACK onMotion(HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata);
 
     /** Callback function for device button click */
-    static void HLCALLBACK onButton(HLenum event, HLuint object,
-        HLenum thread, HLcache *cache, void *userdata);
+    static void HLCALLBACK onButton(HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata);
 
     // Private variables //
 
@@ -393,7 +387,7 @@ private:
     double springGain;
 
     /** Associated absolute cursor 3D */
-    vislib::graphics::AbsoluteCursor3D *cursor;
+    vislib::graphics::AbsoluteCursor3D* cursor;
     bool hasCursor; // true if the phantom wrapper has an associated cursor
 
     /** Associated object position data for hanging on to objects */
@@ -409,15 +403,14 @@ private:
     vislib::math::Matrix<double, 4, vislib::math::COLUMN_MAJOR> modelviewMatrix;
 
     /** Object grabbing variables */
-    bool touch; // is touch currently active
-    bool dragging; // is drag currently active
-    bool objectPosSet; // has a single object position been set 
-    unsigned int dragObject; // object currently being dragged
-    unsigned int touchObject; // which object is being touched
-    vislib::math::Point<float, 3> clickPosition; // point in space where click occurred
+    bool touch;                                   // is touch currently active
+    bool dragging;                                // is drag currently active
+    bool objectPosSet;                            // has a single object position been set
+    unsigned int dragObject;                      // object currently being dragged
+    unsigned int touchObject;                     // which object is being touched
+    vislib::math::Point<float, 3> clickPosition;  // point in space where click occurred
     vislib::math::Vector<float, 3> objectToTouch; // vector pointing from object "position" to clickPosition
-    vislib::math::Point<float, 3> springPoint; // anchor point of spring
-
+    vislib::math::Point<float, 3> springPoint;    // anchor point of spring
 };
 
 

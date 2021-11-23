@@ -1,19 +1,19 @@
-#include "stdafx.h"
 #include "TableObserverPlane.h"
+#include "stdafx.h"
 
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallClipPlane.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/PerformanceCounter.h"
 #include "vislib/Trace.h"
+#include "vislib/math/Matrix4.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/ShallowPoint.h"
-#include "vislib/math/Matrix4.h"
+#include "vislib/sys/PerformanceCounter.h"
 #include <cmath>
 
 using namespace megamol::datatools;
@@ -23,25 +23,31 @@ using namespace megamol;
 /*
  * TableToParticles::TableObserverPlane
  */
-TableObserverPlane::TableObserverPlane(void) : Module(),
-        slotCallInputTable("table", "table input call"),
-        slotCallClipPlane("clipplabe", "clip plane input call"),
-        slotCallObservedTable("observation", "resulting table"),
-        slotColumnX("xcolumnname", "The name of the column holding the x-coordinate."),
-        slotColumnY("ycolumnname", "The name of the column holding the y-coordinate."),
-        slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate."),
-        slotColumnRadius("radiuscolumnname", "The name of the column holding the particle radius."),
-        slotGlobalRadius("radius", "Constant sphere radius."),
-        slotRadiusMode("radiusmode", "pass on global or per-particle radius."),
-        slotObservationStrategy("strategy", "The way of choosing particles."),
-        slotStartTime("startTime", "when to start observing data"),
-        slotEndTime("endTime", "when to stop observing data"),
+TableObserverPlane::TableObserverPlane(void)
+        : Module()
+        , slotCallInputTable("table", "table input call")
+        , slotCallClipPlane("clipplabe", "clip plane input call")
+        , slotCallObservedTable("observation", "resulting table")
+        , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
+        , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
+        , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
+        , slotColumnRadius("radiuscolumnname", "The name of the column holding the particle radius.")
+        , slotGlobalRadius("radius", "Constant sphere radius.")
+        , slotRadiusMode("radiusmode", "pass on global or per-particle radius.")
+        , slotObservationStrategy("strategy", "The way of choosing particles.")
+        , slotStartTime("startTime", "when to start observing data")
+        , slotEndTime("endTime", "when to stop observing data")
+        ,
         //slotTimeIncrement("timeIncrement", "time step"),
-        slotSliceOffset("sliceOffset", "offset between observations in resulting stack"),
-        inputHash(0), myHash(0), columnIndex(), frameID(-1), everything() {
+        slotSliceOffset("sliceOffset", "offset between observations in resulting stack")
+        , inputHash(0)
+        , myHash(0)
+        , columnIndex()
+        , frameID(-1)
+        , everything() {
 
     /* Register parameters. */
-    core::param::EnumParam *ep = new core::param::EnumParam(0);
+    core::param::EnumParam* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "intersection");
     ep->SetTypePair(1, "interpolation");
     this->slotObservationStrategy << ep;
@@ -74,7 +80,7 @@ TableObserverPlane::TableObserverPlane(void) : Module(),
     this->slotGlobalRadius << new megamol::core::param::FloatParam(0.001f);
     this->MakeSlotAvailable(&this->slotGlobalRadius);
 
-    core::param::EnumParam *ep2 = new core::param::EnumParam(0);
+    core::param::EnumParam* ep2 = new core::param::EnumParam(0);
     ep2->SetTypePair(0, "per particle");
     ep2->SetTypePair(1, "global");
     this->slotRadiusMode << ep2;
@@ -82,13 +88,9 @@ TableObserverPlane::TableObserverPlane(void) : Module(),
 
     /* Register calls. */
     this->slotCallObservedTable.SetCallback(
-        datatools::table::TableDataCall::ClassName(),
-        "GetData",
-        &TableObserverPlane::getObservedData);
+        datatools::table::TableDataCall::ClassName(), "GetData", &TableObserverPlane::getObservedData);
     this->slotCallObservedTable.SetCallback(
-        datatools::table::TableDataCall::ClassName(),
-        "GetHash",
-        &TableObserverPlane::getHash);
+        datatools::table::TableDataCall::ClassName(), "GetHash", &TableObserverPlane::getHash);
     this->MakeSlotAvailable(&this->slotCallObservedTable);
 
     this->slotCallInputTable.SetCompatibleCall<table::TableDataCallDescription>();
@@ -115,17 +117,12 @@ bool TableObserverPlane::create(void) {
 }
 
 bool TableObserverPlane::anythingDirty() {
-    return this->slotColumnX.IsDirty()
-        || this->slotColumnY.IsDirty()
-        || this->slotColumnZ.IsDirty()
-        || this->slotColumnRadius.IsDirty()
-        || this->slotGlobalRadius.IsDirty()
-        || this->slotRadiusMode.IsDirty()
-        || this->slotObservationStrategy.IsDirty()
-        || this->slotStartTime.IsDirty()
-        || this->slotEndTime.IsDirty()
-        //|| this->slotTimeIncrement.IsDirty()
-        || this->slotSliceOffset.IsDirty();
+    return this->slotColumnX.IsDirty() || this->slotColumnY.IsDirty() || this->slotColumnZ.IsDirty() ||
+           this->slotColumnRadius.IsDirty() || this->slotGlobalRadius.IsDirty() || this->slotRadiusMode.IsDirty() ||
+           this->slotObservationStrategy.IsDirty() || this->slotStartTime.IsDirty() ||
+           this->slotEndTime.IsDirty()
+           //|| this->slotTimeIncrement.IsDirty()
+           || this->slotSliceOffset.IsDirty();
 }
 
 void TableObserverPlane::resetAllDirty() {
@@ -173,8 +170,10 @@ bool TableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const vislib
     }
 }
 
-bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::view::CallClipPlane *cp, table::TableDataCall& out) {
-    if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
+bool TableObserverPlane::assertData(
+    table::TableDataCall* ft, megamol::core::view::CallClipPlane* cp, table::TableDataCall& out) {
+    if (this->inputHash == ft->DataHash() && !anythingDirty())
+        return true;
     (*ft)();
     if (this->inputHash != ft->DataHash()) {
         this->columnIndex.clear();
@@ -197,11 +196,13 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
     int zcol = this->getColumnIndex(this->slotColumnZ.Param<core::param::StringParam>()->Value().c_str());
     int strat = this->slotObservationStrategy.Param<core::param::EnumParam>()->Value();
 
-    if (xcol == -1 || ycol == -1 || zcol == -1) return false;
+    if (xcol == -1 || ycol == -1 || zcol == -1)
+        return false;
 
     int rcol = this->getColumnIndex(this->slotColumnRadius.Param<core::param::StringParam>()->Value().c_str());
     bool useGlobRad = this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 1;
-    if (!useGlobRad && rcol == -1) return false;
+    if (!useGlobRad && rcol == -1)
+        return false;
     float globalRad = this->slotGlobalRadius.Param<core::param::FloatParam>()->Value();
 
     size_t rows = ft->GetRowsCount();
@@ -222,7 +223,7 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
     vislib::math::Vector<float, 4> pt;
     vislib::math::Vector<float, 4> resPt;
     vislib::math::ShallowPoint<float, 3> spt(pt.PeekComponents());
-    vislib::math::Point<float, 3 > planeCenter;
+    vislib::math::Point<float, 3> planeCenter;
     vislib::math::Point<float, 3> origin(0.0f, 0.0f, 0.0f);
     vislib::math::Vector<float, 3> longNormal(p.Normal());
     longNormal.ScaleToLength(p.D() * 2.0f);
@@ -235,13 +236,13 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
     vislib::math::Vector<float, 3> u = up.Cross(reversedNormal);
     vislib::math::Vector<float, 3> v = reversedNormal.Cross(u);
     vislib::math::Vector<float, 3> w = p.Normal();
-    u.Normalise(); v.Normalise(); w.Normalise();
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mPlaneCoords(u.X(), v.X(), w.X(), 0.0f,
-        u.Y(), v.Y(), w.Y(), 0.0f,
-        u.Z(), v.Z(), w.Z(), 0.0f,
-        -planeCenter.X(), -planeCenter.Y(), -planeCenter.Z(), 1.0f);
+    u.Normalise();
+    v.Normalise();
+    w.Normalise();
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mPlaneCoords(u.X(), v.X(), w.X(), 0.0f, u.Y(), v.Y(),
+        w.Y(), 0.0f, u.Z(), v.Z(), w.Z(), 0.0f, -planeCenter.X(), -planeCenter.Y(), -planeCenter.Z(), 1.0f);
 
-    const float *ftData = ft->GetData();
+    const float* ftData = ft->GetData();
     float r = globalRad;
     everything.clear();
     everything.reserve(rows * cols);
@@ -256,10 +257,12 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
         }
         rows = ft->GetRowsCount();
         localRows = 0;
-        if (rows == 0) continue;
+        if (rows == 0)
+            continue;
 
         if (ft->GetColumnsCount() != cols) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane cannot cope with changing column count!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "TableObserverPlane cannot cope with changing column count!");
             return false;
         }
         // check whether the headers are the same
@@ -267,7 +270,8 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
         for (size_t i = 0; i < ft->GetColumnsCount(); i++) {
             std::string n = this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name());
             if (columnIndex.find(n) == columnIndex.end() || columnIndex[n] != i) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane does not trust reordered columns!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "TableObserverPlane does not trust reordered columns!");
                 return false;
             }
         }
@@ -280,30 +284,31 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
                 r = ftData[cols * row + rcol];
             }
             switch (strat) {
-                case 0: // intersection
-                    dist = p.Distance(spt);
-                    if (std::abs(dist) <= r) {
-                        resPt = mPlaneCoords * pt;
-                        resPt.SetZ(resPt.Z() + sliceOff * static_cast<float>(frm));
-                        for (size_t col = 0; col < cols; col++) {
-                            if (col == xcol) {
-                                val = resPt.X();
-                            } else if (col == ycol) {
-                                val = resPt.Y();
-                            } else if (col == zcol) {
-                                val = resPt.Z();
-                            } else {
-                                val = ftData[cols * row + col];
-                            }
-                            everything.push_back(val);
+            case 0: // intersection
+                dist = p.Distance(spt);
+                if (std::abs(dist) <= r) {
+                    resPt = mPlaneCoords * pt;
+                    resPt.SetZ(resPt.Z() + sliceOff * static_cast<float>(frm));
+                    for (size_t col = 0; col < cols; col++) {
+                        if (col == xcol) {
+                            val = resPt.X();
+                        } else if (col == ycol) {
+                            val = resPt.Y();
+                        } else if (col == zcol) {
+                            val = resPt.Z();
+                        } else {
+                            val = ftData[cols * row + col];
                         }
-                        localRows++;
+                        everything.push_back(val);
                     }
-                    break;
-                case 1: // interpolation
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("TableObserverPlane has no implementation for interpolation yet!");
-                    return false;
-                    break;
+                    localRows++;
+                }
+                break;
+            case 1: // interpolation
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "TableObserverPlane has no implementation for interpolation yet!");
+                return false;
+                break;
             }
         }
         totalRows += localRows;
@@ -322,14 +327,16 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
  */
 bool TableObserverPlane::getObservedData(core::Call& call) {
     try {
-        table::TableDataCall& out = dynamic_cast<
-            table::TableDataCall&>(call);
-        table::TableDataCall *ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
-        if (ft == NULL) return false;
-        megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
-        if (cp == NULL) return false;
+        table::TableDataCall& out = dynamic_cast<table::TableDataCall&>(call);
+        table::TableDataCall* ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
+        if (ft == NULL)
+            return false;
+        megamol::core::view::CallClipPlane* cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
+        if (cp == NULL)
+            return false;
 
-        if (!assertData(ft, cp, out)) return false;
+        if (!assertData(ft, cp, out))
+            return false;
 
         //c.SetFrameID(0);
         out.SetDataHash(this->myHash);
@@ -342,7 +349,7 @@ bool TableObserverPlane::getObservedData(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-            _T("in callback getObservedData."));
+                                                                   _T("in callback getObservedData."));
         return false;
     }
 }
@@ -353,14 +360,16 @@ bool TableObserverPlane::getObservedData(core::Call& call) {
  */
 bool TableObserverPlane::getHash(core::Call& call) {
     try {
-        table::TableDataCall& out = dynamic_cast<
-            table::TableDataCall&>(call);
-        table::TableDataCall *ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
-        if (ft == NULL) return false;
-        megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
-        if (cp == NULL) return false;
+        table::TableDataCall& out = dynamic_cast<table::TableDataCall&>(call);
+        table::TableDataCall* ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
+        if (ft == NULL)
+            return false;
+        megamol::core::view::CallClipPlane* cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
+        if (cp == NULL)
+            return false;
 
-        if (!assertData(ft, cp, out)) return false;
+        if (!assertData(ft, cp, out))
+            return false;
 
         out.SetDataHash(this->myHash);
 
@@ -371,7 +380,7 @@ bool TableObserverPlane::getHash(core::Call& call) {
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-            _T("in callback getMultiparticleExtent."));
+                                                                   _T("in callback getMultiparticleExtent."));
         return false;
     }
 }
@@ -380,5 +389,4 @@ bool TableObserverPlane::getHash(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableObserverPlane::release(void) {
-}
+void TableObserverPlane::release(void) {}

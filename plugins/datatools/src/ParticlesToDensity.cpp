@@ -4,16 +4,16 @@
  * Copyright (C) 2018 by MegaMol team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticlesToDensity.h"
+#include "stdafx.h"
 
 #define _USE_MATH_DEFINES
 
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "datatools/table/TableDataCall.h"
 
@@ -26,8 +26,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -40,7 +40,9 @@ using namespace megamol;
 /*
  * datatools::ParticlesToDensity::create
  */
-bool datatools::ParticlesToDensity::create(void) { return true; }
+bool datatools::ParticlesToDensity::create(void) {
+    return true;
+}
 
 
 /*
@@ -59,23 +61,23 @@ void datatools::ParticlesToDensity::release(void) {
  * datatools::ParticlesToDensity::ParticlesToDensity
  */
 datatools::ParticlesToDensity::ParticlesToDensity(void)
-    : aggregatorSlot("aggregator", "algorithm for the aggregation")
-    , xResSlot("sizex", "The size of the volume in numbers of voxels")
-    , yResSlot("sizey", "The size of the volume in numbers of voxels")
-    , zResSlot("sizez", "The size of the volume in numbers of voxels")
-    , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
-    , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
-    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
-    , normalizeSlot("normalize", "Normalize the output volume")
-    , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
-    , surfaceSlot("forSurfaceReconstruction", "Set true if this volume is used for surface reconstruction")
-    , datahash(0)
-    , time(std::numeric_limits<unsigned int>::max())
-    , has_data(false)
-    , outDataSlot("outData", "Provides a density volume for the particles")
-    , outParticlesSlot("outParticles", "Provides particles forming a regular grid with the sampled values")
-    , outInfoSlot("outInfo", "Provides information which can be used for visualization and filtering")
-    , inDataSlot("inData", "Takes the particle data") {
+        : aggregatorSlot("aggregator", "algorithm for the aggregation")
+        , xResSlot("sizex", "The size of the volume in numbers of voxels")
+        , yResSlot("sizey", "The size of the volume in numbers of voxels")
+        , zResSlot("sizez", "The size of the volume in numbers of voxels")
+        , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+        , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+        , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+        , normalizeSlot("normalize", "Normalize the output volume")
+        , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
+        , surfaceSlot("forSurfaceReconstruction", "Set true if this volume is used for surface reconstruction")
+        , datahash(0)
+        , time(std::numeric_limits<unsigned int>::max())
+        , has_data(false)
+        , outDataSlot("outData", "Provides a density volume for the particles")
+        , outParticlesSlot("outParticles", "Provides particles forming a regular grid with the sampled values")
+        , outInfoSlot("outInfo", "Provides information which can be used for visualization and filtering")
+        , inDataSlot("inData", "Takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
@@ -157,7 +159,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
 /*
  * datatools::ParticlesToDensity::~ParticlesToDensity
  */
-datatools::ParticlesToDensity::~ParticlesToDensity(void) { this->Release(); }
+datatools::ParticlesToDensity::~ParticlesToDensity(void) {
+    this->Release();
+}
 
 
 bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
@@ -168,7 +172,8 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
     auto* outInfo = dynamic_cast<datatools::table::TableDataCall*>(&c);
 
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inMpdc == nullptr) return false;
+    if (inMpdc == nullptr)
+        return false;
 
     auto frameID = out != nullptr ? out->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
     //vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity requests frame %u.", frameID);
@@ -209,7 +214,8 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
 bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     auto* inMpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (inMpdc == nullptr) return false;
+    if (inMpdc == nullptr)
+        return false;
 
     auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
     auto* outGrid = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
@@ -229,8 +235,10 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
             }
         } while (inMpdc->FrameID() != frameID);
         if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
-            if (this->surfaceSlot.Param<core::param::BoolParam>()->Value()) modifyBBox(inMpdc);
-            if (!this->createVolumeCPU(inMpdc)) return false;
+            if (this->surfaceSlot.Param<core::param::BoolParam>()->Value())
+                modifyBBox(inMpdc);
+            if (!this->createVolumeCPU(inMpdc))
+                return false;
             this->time = inMpdc->FrameID();
             this->in_datahash = inMpdc->DataHash();
             ++this->datahash;
@@ -254,12 +262,16 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         metadata.ScalarLength = sizeof(float);
         metadata.MinValues = new double[is_vector ? 3 : 1];
         metadata.MinValues[0] = this->minDens;
-        if (is_vector) metadata.MinValues[1] = this->minDens;
-        if (is_vector) metadata.MinValues[2] = this->minDens;
+        if (is_vector)
+            metadata.MinValues[1] = this->minDens;
+        if (is_vector)
+            metadata.MinValues[2] = this->minDens;
         metadata.MaxValues = new double[is_vector ? 3 : 1];
         metadata.MaxValues[0] = this->maxDens;
-        if (is_vector) metadata.MaxValues[1] = this->maxDens;
-        if (is_vector) metadata.MaxValues[2] = this->maxDens;
+        if (is_vector)
+            metadata.MaxValues[1] = this->maxDens;
+        if (is_vector)
+            metadata.MaxValues[2] = this->maxDens;
         auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
         metadata.Extents[0] = bbox.Width();
         metadata.Extents[1] = bbox.Height();
@@ -306,8 +318,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
         if (p.GetCount() > 0) {
             p.SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
-            p.SetDirData(
-                geocalls::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            p.SetDirData(geocalls::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
             p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
 
             p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
@@ -452,8 +463,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         geocalls::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
         const bool useGlobRad =
-            (parts.GetVertexDataType() ==
-                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
+            (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
             (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ);
         if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
@@ -464,7 +474,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         // Implements the Bump Function from
         // https://en.wikipedia.org/wiki/Radial_basis_function
         auto rbf = [](float const dist, float const epsilon) -> float {
-            if (dist >= epsilon) return 0.0f;
+            if (dist >= epsilon)
+                return 0.0f;
             return std::exp(-1.0f / (1.0f - std::pow((1.0f / epsilon) * dist, 2.0f)));
         };
 
@@ -483,9 +494,10 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         std::function<void(int, int, int, int, float, float)> volOp;
         switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
         case 2: {
-            volOp = [this, &rbf, &weights, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x,
-                        int const y, int const z, float const dis, float const rad) -> void {
-                if (rad == 0.0f) return;
+            volOp = [this, &rbf, &weights, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x, int const y,
+                        int const z, float const dis, float const rad) -> void {
+                if (rad == 0.0f)
+                    return;
 
                 auto const val_x = dxAcc->Get_f(pidx);
                 auto const val_y = dyAcc->Get_f(pidx);
@@ -501,7 +513,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         case 1: {
             volOp = [this, &rbf, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
-                if (rad == 0.0f) return;
+                if (rad == 0.0f)
+                    return;
 
                 auto const val = iAcc->Get_f(pidx);
                 vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad) * val;
@@ -509,9 +522,10 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         } break;
         default:
         case 0: {
-            volOp = [this, &rbf, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
-                        float const dis, float const rad) -> void {
-                if (rad == 0.0f) return;
+            volOp = [this, &rbf, sx, sy, sigma](int const pidx, int const x, int const y, int const z, float const dis,
+                        float const rad) -> void {
+                if (rad == 0.0f)
+                    return;
 
                 vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad);
             };
@@ -519,7 +533,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         }
 
 #if 0
-#    pragma omp parallel for collapse(4)
+#pragma omp parallel for collapse(4)
         for (int z = 0; z < sz; ++z) {
             for (int y = 0; y < sy; ++y) {
                 for (int x = 0; x < sx; ++x) {
@@ -557,7 +571,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
             auto const z_base = zAcc->Get_f(j);
             auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
             auto rad = globRad;
-            if (!useGlobRad) rad = rAcc->Get_f(j);
+            if (!useGlobRad)
+                rad = rAcc->Get_f(j);
 
             int const filterSizeX = static_cast<int>(std::ceil(rad / sliceDistX));
             int const filterSizeY = static_cast<int>(std::ceil(rad / sliceDistY));
@@ -659,7 +674,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticl
         minDens = *std::min_element(vol[0].begin(), vol[0].end());
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
         auto const rcpValRange = 1.0f / (maxDens - minDens);
@@ -747,15 +763,15 @@ void datatools::ParticlesToDensity::modifyBBox(geocalls::MultiParticleDataCall* 
     float general_box_scaling = 1.1;
 
     // extend deph
-    auto spacing = (rangeOSz * general_box_scaling) /sz;
+    auto spacing = (rangeOSz * general_box_scaling) / sz;
     auto newDepth = (rangeOSz * general_box_scaling) + 2 * spacing;
     spacing = newDepth / sz;
 
     // ensure cubic voxels
-    auto newWidth = (rangeOSx * general_box_scaling) + 2*spacing;
-    int resolutionX = newWidth/spacing;
+    auto newWidth = (rangeOSx * general_box_scaling) + 2 * spacing;
+    int resolutionX = newWidth / spacing;
     auto rest = newWidth / spacing - static_cast<float>(resolutionX);
-    newWidth += (1-rest)*spacing;
+    newWidth += (1 - rest) * spacing;
     resolutionX += 1;
     this->xResSlot.Param<core::param::IntParam>()->SetValue(resolutionX);
 
@@ -787,4 +803,6 @@ void datatools::ParticlesToDensity::modifyBBox(geocalls::MultiParticleDataCall* 
 }
 
 
-bool datatools::ParticlesToDensity::dummyCallback(megamol::core::Call& c) { return true; }
+bool datatools::ParticlesToDensity::dummyCallback(megamol::core::Call& c) {
+    return true;
+}

@@ -1,21 +1,18 @@
 /**
  * Keyframe.cpp
-*
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*/
+ *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "cinematic/Keyframe.h"
+#include "stdafx.h"
 
 
 using namespace megamol::cinematic;
 
 
-Keyframe::Keyframe(void)
-    : anim_time(0.0f)
-    , sim_time(0.0f)
-    , camera_state() {
+Keyframe::Keyframe(void) : anim_time(0.0f), sim_time(0.0f), camera_state() {
 
     // Default intrinsics
     auto intrinsics = core::view::Camera::PerspectiveParameters();
@@ -29,23 +26,21 @@ Keyframe::Keyframe(void)
 
 
 Keyframe::Keyframe(float anim_time, float sim_time, core::view::Camera cam_state)
-    : anim_time(anim_time)
-    , sim_time(sim_time)
-    , camera_state(cam_state) {
-}
+        : anim_time(anim_time)
+        , sim_time(sim_time)
+        , camera_state(cam_state) {}
 
 
-Keyframe::~Keyframe(void) {
-}
+Keyframe::~Keyframe(void) {}
 
 
 bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
     // Append to given json
-    inout_json["keyframes"][index]["animation_time"]                              = this->anim_time;
-    inout_json["keyframes"][index]["simulation_time"]                             = this->sim_time;
+    inout_json["keyframes"][index]["animation_time"] = this->anim_time;
+    inout_json["keyframes"][index]["simulation_time"] = this->sim_time;
 
-     // Identify projection type and serialize accordingly
+    // Identify projection type and serialize accordingly
     auto cam_type = camera_state.get<core::view::Camera::ProjectionType>();
 
     inout_json["keyframes"][index]["camera_state"]["projection_type"] = cam_type;
@@ -54,10 +49,14 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
     if (cam_type == core::view::Camera::PERSPECTIVE || cam_type == core::view::Camera::ORTHOGRAPHIC) {
         // Serialize pose
         auto cam_pose = camera_state.get<core::view::Camera::Pose>();
-        inout_json["keyframes"][index]["camera_state"]["position"] = std::array<float, 3>{cam_pose.position.x, cam_pose.position.y, cam_pose.position.z};
-        inout_json["keyframes"][index]["camera_state"]["direction"] = std::array<float, 3>{cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z};
-        inout_json["keyframes"][index]["camera_state"]["up"] = std::array<float, 3>{cam_pose.up.x, cam_pose.up.y, cam_pose.up.z};
-        inout_json["keyframes"][index]["camera_state"]["right"] = std::array<float, 3>{cam_pose.right.x, cam_pose.right.y, cam_pose.right.z};
+        inout_json["keyframes"][index]["camera_state"]["position"] =
+            std::array<float, 3>{cam_pose.position.x, cam_pose.position.y, cam_pose.position.z};
+        inout_json["keyframes"][index]["camera_state"]["direction"] =
+            std::array<float, 3>{cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z};
+        inout_json["keyframes"][index]["camera_state"]["up"] =
+            std::array<float, 3>{cam_pose.up.x, cam_pose.up.y, cam_pose.up.z};
+        inout_json["keyframes"][index]["camera_state"]["right"] =
+            std::array<float, 3>{cam_pose.right.x, cam_pose.right.y, cam_pose.right.z};
 
         // Serialize intrinsics
         if (cam_type == core::view::Camera::PERSPECTIVE) {
@@ -87,7 +86,8 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
     } else { // Camera::UNKNOWN
         auto view_mx = camera_state.getViewMatrix();
         auto proj_mx = camera_state.getProjectionMatrix();
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return true;
@@ -97,9 +97,9 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
     bool valid = true;
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
-    
+    valid &= megamol::core::utility::get_json_value<float>(in_json, {"animation_time"}, &this->anim_time);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, {"simulation_time"}, &this->sim_time);
+
     int cam_type_tmp = 0;
     valid &= megamol::core::utility::get_json_value<int>(in_json, {"camera_state", "projection_type"}, &cam_type_tmp);
     core::view::Camera::ProjectionType cam_type = static_cast<core::view::Camera::ProjectionType>(cam_type_tmp);
@@ -117,11 +117,10 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
             in_json, {"camera_state", "position"}, position.data(), position.size());
         valid &= megamol::core::utility::get_json_value<float>(
             in_json, {"camera_state", "direction"}, direction.data(), direction.size());
-        valid &= megamol::core::utility::get_json_value<float>(
-            in_json, {"camera_state", "up"}, up.data(), up.size());
+        valid &= megamol::core::utility::get_json_value<float>(in_json, {"camera_state", "up"}, up.data(), up.size());
         valid &= megamol::core::utility::get_json_value<float>(
             in_json, {"camera_state", "right"}, right.data(), right.size());
-        
+
         cam_pose.position = glm::vec3(std::get<0>(position), std::get<1>(position), std::get<2>(position));
         cam_pose.direction = glm::vec3(std::get<0>(direction), std::get<1>(direction), std::get<2>(direction));
         cam_pose.up = glm::vec3(std::get<0>(up), std::get<1>(up), std::get<2>(up));

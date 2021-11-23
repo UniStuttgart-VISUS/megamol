@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "SphereDataUnifier.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "stdafx.h"
 #include "vislib/RawStorage.h"
 
 using namespace megamol;
@@ -16,10 +16,15 @@ using namespace megamol;
 /*
  * datatools::SphereDataUnifier::SphereDataUnifier
  */
-datatools::SphereDataUnifier::SphereDataUnifier(void) : Module(),
-        putDataSlot("putdata", "Connects from the data consumer"),
-        getDataSlot("getdata", "Connects to the data source"),
-        inDataHash(0), outDataHash(0), data(), bbox(), cbox() {
+datatools::SphereDataUnifier::SphereDataUnifier(void)
+        : Module()
+        , putDataSlot("putdata", "Connects from the data consumer")
+        , getDataSlot("getdata", "Connects to the data source")
+        , inDataHash(0)
+        , outDataHash(0)
+        , data()
+        , bbox()
+        , cbox() {
 
     this->putDataSlot.SetCallback("MultiParticleDataCall", "GetData", &SphereDataUnifier::getDataCallback);
     this->putDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &SphereDataUnifier::getExtentCallback);
@@ -27,7 +32,6 @@ datatools::SphereDataUnifier::SphereDataUnifier(void) : Module(),
 
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
-
 }
 
 
@@ -60,11 +64,13 @@ void datatools::SphereDataUnifier::release(void) {
  */
 bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
     using geocalls::MultiParticleDataCall;
-    MultiParticleDataCall*inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (inCall == NULL) return false;
+    MultiParticleDataCall* inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
+    if (inCall == NULL)
+        return false;
 
-    MultiParticleDataCall*outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    if (outCall == NULL) return false;
+    MultiParticleDataCall* outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    if (outCall == NULL)
+        return false;
 
     *outCall = *inCall;
 
@@ -81,7 +87,7 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
             bool first = true;
 
             for (unsigned int li = 0; li < listCnt; li++) {
-                MultiParticleDataCall::Particles &outP = outCall->AccessParticles(li);
+                MultiParticleDataCall::Particles& outP = outCall->AccessParticles(li);
                 UINT64 pCnt = outP.GetCount();
 
                 SIZE_T deS = 0;
@@ -91,10 +97,10 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
                     datPos += sizeof(float);
                     deS = sizeof(float) * 3;
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const float *vDf = reinterpret_cast<const float*>(vD);
+                            const float* vDf = reinterpret_cast<const float*>(vD);
                             this->accumExt(first, vDf[0], vDf[1], vDf[2], outP.GetGlobalRadius());
                         }
                     }
@@ -102,10 +108,10 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     deS = sizeof(float) * 4;
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(4 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const float *vDf = reinterpret_cast<const float*>(vD);
+                            const float* vDf = reinterpret_cast<const float*>(vD);
                             this->accumExt(first, vDf[0], vDf[1], vDf[2], vDf[3]);
                         }
                     }
@@ -117,12 +123,11 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
                     datPos += sizeof(float);
                     deS = sizeof(float) * 3; // is most probably bullshit anyway
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const signed short *vDf = reinterpret_cast<const signed short*>(vD);
-                            this->accumExt(first, static_cast<float>(vDf[0]),
-                                static_cast<float>(vDf[1]),
+                            const signed short* vDf = reinterpret_cast<const signed short*>(vD);
+                            this->accumExt(first, static_cast<float>(vDf[0]), static_cast<float>(vDf[1]),
                                 static_cast<float>(vDf[2]), outP.GetGlobalRadius());
                         }
                     }
@@ -157,7 +162,7 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
             this->cbox *= scale;
 
             for (unsigned int li = 0; li < listCnt; li++) {
-                MultiParticleDataCall::Particles &outP = outCall->AccessParticles(li);
+                MultiParticleDataCall::Particles& outP = outCall->AccessParticles(li);
                 UINT64 pCnt = outP.GetCount();
 
                 SIZE_T deS = 0;
@@ -168,27 +173,34 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
                     datPos += sizeof(float);
                     deS = sizeof(float) * 3;
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const float *vDf = reinterpret_cast<const float*>(vD);
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (vDf[0] + xOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (vDf[1] + yOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (vDf[2] + zOff) * scale;
+                            const float* vDf = reinterpret_cast<const float*>(vD);
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) =
+                                (vDf[0] + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) =
+                                (vDf[1] + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) =
+                                (vDf[2] + zOff) * scale;
                         }
                     }
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     deS = sizeof(float) * 4;
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(4 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const float *vDf = reinterpret_cast<const float*>(vD);
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (vDf[0] + xOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (vDf[1] + yOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (vDf[2] + zOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 3 * sizeof(float))) = vDf[3] * scale;
+                            const float* vDf = reinterpret_cast<const float*>(vD);
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) =
+                                (vDf[0] + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) =
+                                (vDf[1] + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) =
+                                (vDf[2] + zOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 3 * sizeof(float))) =
+                                vDf[3] * scale;
                         }
                     }
                     break;
@@ -200,13 +212,16 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
                     datPos += sizeof(float);
                     deS = sizeof(float) * 3; // is most probably bullshit anyway
                     {
-                        const char *vD = static_cast<const char*>(outP.GetVertexData());
+                        const char* vD = static_cast<const char*>(outP.GetVertexData());
                         SIZE_T vDs = vislib::math::Max<SIZE_T>(3 * sizeof(float), outP.GetVertexDataStride());
                         for (UINT64 pi = 0; pi < pCnt; pi++, vD += vDs) {
-                            const signed short *vDf = reinterpret_cast<const signed short*>(vD);
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) = (static_cast<float>(vDf[0]) + xOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) = (static_cast<float>(vDf[1]) + yOff) * scale;
-                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) = (static_cast<float>(vDf[2]) + zOff) * scale;
+                            const signed short* vDf = reinterpret_cast<const signed short*>(vD);
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 0 * sizeof(float))) =
+                                (static_cast<float>(vDf[0]) + xOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 1 * sizeof(float))) =
+                                (static_cast<float>(vDf[1]) + yOff) * scale;
+                            *this->data.AsAt<float>(static_cast<SIZE_T>(datPos + pi * deS + 2 * sizeof(float))) =
+                                (static_cast<float>(vDf[2]) + zOff) * scale;
                         }
                     }
                     break;
@@ -233,14 +248,15 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
         outCall->SetUnlocker(NULL, false);
 
         for (unsigned int li = 0; li < listCnt; li++) {
-            MultiParticleDataCall::Particles &outP = outCall->AccessParticles(li);
-            MultiParticleDataCall::Particles &inP = inCall->AccessParticles(li);
+            MultiParticleDataCall::Particles& outP = outCall->AccessParticles(li);
+            MultiParticleDataCall::Particles& inP = inCall->AccessParticles(li);
 
             UINT64 pCnt = outP.GetCount();
             inP.SetCount(pCnt);
             inP.SetColourData(outP.GetColourDataType(), outP.GetColourData(), outP.GetColourDataStride());
             inP.SetColourMapIndexValues(outP.GetMinColourIndexValue(), outP.GetMaxColourIndexValue());
-            inP.SetGlobalColour(outP.GetGlobalColour()[0], outP.GetGlobalColour()[1], outP.GetGlobalColour()[2], outP.GetGlobalColour()[3]);
+            inP.SetGlobalColour(outP.GetGlobalColour()[0], outP.GetGlobalColour()[1], outP.GetGlobalColour()[2],
+                outP.GetGlobalColour()[3]);
 
             SIZE_T deS = 0;
             MultiParticleDataCall::Particles::VertexDataType vdt = outP.GetVertexDataType();
@@ -272,10 +288,8 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
             if (pCnt * deS == 0) {
                 inP.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_NONE, NULL, 0);
             } else {
-                inP.SetVertexData(
-                    (deS == sizeof(float) * 3)
-                    ? MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
-                    : MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                inP.SetVertexData((deS == sizeof(float) * 3) ? MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
+                                                             : MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                     this->data.AsAt<float>(datPos), 0);
                 datPos += static_cast<SIZE_T>(deS * pCnt);
             }
@@ -293,11 +307,13 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
  */
 bool datatools::SphereDataUnifier::getExtentCallback(core::Call& caller) {
     using geocalls::MultiParticleDataCall;
-    MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (inCall == NULL) return false;
+    MultiParticleDataCall* inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
+    if (inCall == NULL)
+        return false;
 
-    MultiParticleDataCall *outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    if (outCall == NULL) return false;
+    MultiParticleDataCall* outCall = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    if (outCall == NULL)
+        return false;
 
     *outCall = *inCall;
 
@@ -333,5 +349,4 @@ void datatools::SphereDataUnifier::accumExt(bool& first, float x, float y, float
         this->bbox.GrowToPoint(p);
         this->cbox.Union(b);
     }
-
 }

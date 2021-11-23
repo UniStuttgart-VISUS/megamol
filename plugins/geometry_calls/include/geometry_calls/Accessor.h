@@ -1,25 +1,28 @@
 #pragma once
 
-#include <type_traits>
 #include <limits>
+#include <type_traits>
 
 #if !defined(_MSC_VER)
-#    if (__cplusplus < 201703L)
+#if (__cplusplus < 201703L)
 namespace std {
-template <class T, class U> constexpr bool is_same_v = is_same<T, U>::value;
+template<class T, class U>
+constexpr bool is_same_v = is_same<T, U>::value;
 }
-#    endif
-#    if (__cplusplus < 201402L)
+#endif
+#if (__cplusplus < 201402L)
 namespace std {
-template <bool B, class T = void> using enable_if_t = typename enable_if<B, T>::type;
+template<bool B, class T = void>
+using enable_if_t = typename enable_if<B, T>::type;
 }
-#    endif
+#endif
 #endif
 
 namespace megamol::geocalls {
 
 
-template <class T> T const* access(char const* ptr, size_t idx, size_t stride) {
+template<class T>
+T const* access(char const* ptr, size_t idx, size_t stride) {
     return reinterpret_cast<T const*>(ptr + idx * stride);
 }
 
@@ -47,7 +50,8 @@ public:
 /**
  * Implementation of an accessor into a strided array.
  */
-template <class T> class Accessor_Impl : public Accessor {
+template<class T>
+class Accessor_Impl : public Accessor {
 public:
     Accessor_Impl(char const* ptr, size_t stride) : ptr_{ptr}, stride_{stride} {}
 
@@ -71,25 +75,39 @@ public:
         return *this;
     }
 
-    template <class R> std::enable_if_t<std::is_same_v<T, R>, R> Get(size_t const idx) const {
+    template<class R>
+    std::enable_if_t<std::is_same_v<T, R>, R> Get(size_t const idx) const {
         return *access<T>(ptr_, idx, stride_);
     }
 
-    template <class R> std::enable_if_t<!std::is_same_v<T, R>, R> Get(size_t const idx) const {
+    template<class R>
+    std::enable_if_t<!std::is_same_v<T, R>, R> Get(size_t const idx) const {
         return static_cast<R>(Get<T>(idx));
     }
 
-    float Get_f(size_t idx) const override { return Get<float>(idx); }
+    float Get_f(size_t idx) const override {
+        return Get<float>(idx);
+    }
 
-    double Get_d(size_t idx) const override { return Get<double>(idx); }
+    double Get_d(size_t idx) const override {
+        return Get<double>(idx);
+    }
 
-    uint64_t Get_u64(size_t idx) const override { return Get<uint64_t>(idx); }
+    uint64_t Get_u64(size_t idx) const override {
+        return Get<uint64_t>(idx);
+    }
 
-    unsigned int Get_u32(size_t idx) const override { return Get<unsigned int>(idx); }
+    unsigned int Get_u32(size_t idx) const override {
+        return Get<unsigned int>(idx);
+    }
 
-    unsigned short Get_u16(size_t idx) const override { return Get<unsigned short>(idx); }
+    unsigned short Get_u16(size_t idx) const override {
+        return Get<unsigned short>(idx);
+    }
 
-    unsigned char Get_u8(size_t idx) const override { return Get<unsigned char>(idx); }
+    unsigned char Get_u8(size_t idx) const override {
+        return Get<unsigned char>(idx);
+    }
 
     virtual ~Accessor_Impl() = default;
 
@@ -102,7 +120,7 @@ private:
 /**
  * Accessor class reporting const values, for instance globals.
  */
-template <class T, bool Norm>
+template<class T, bool Norm>
 class Accessor_Val : public Accessor {
 public:
     Accessor_Val(T const val) : val_(val) {}
@@ -125,17 +143,29 @@ public:
         return static_cast<R>(this->val_) / static_cast<R>(std::numeric_limits<T>::max());
     }
 
-    float Get_f(size_t idx) const override { return Get<float>(); }
+    float Get_f(size_t idx) const override {
+        return Get<float>();
+    }
 
-    double Get_d(size_t idx) const override { return Get<double>(); }
+    double Get_d(size_t idx) const override {
+        return Get<double>();
+    }
 
-    uint64_t Get_u64(size_t idx) const override { return Get<uint64_t>(); }
+    uint64_t Get_u64(size_t idx) const override {
+        return Get<uint64_t>();
+    }
 
-    unsigned int Get_u32(size_t idx) const override { return Get<unsigned int>(); }
+    unsigned int Get_u32(size_t idx) const override {
+        return Get<unsigned int>();
+    }
 
-    unsigned short Get_u16(size_t idx) const override { return Get<unsigned short>(); }
+    unsigned short Get_u16(size_t idx) const override {
+        return Get<unsigned short>();
+    }
 
-    unsigned char Get_u8(size_t idx) const override { return Get<unsigned char>(); }
+    unsigned char Get_u8(size_t idx) const override {
+        return Get<unsigned char>();
+    }
 
     virtual ~Accessor_Val() = default;
 
@@ -159,17 +189,29 @@ public:
 
     Accessor_0& operator=(Accessor_0&& rhs) = default;
 
-    float Get_f(size_t idx) const override { return static_cast<float>(0); }
+    float Get_f(size_t idx) const override {
+        return static_cast<float>(0);
+    }
 
-    double Get_d(size_t idx) const override { return static_cast<double>(0); }
+    double Get_d(size_t idx) const override {
+        return static_cast<double>(0);
+    }
 
-    uint64_t Get_u64(size_t idx) const override { return static_cast<uint64_t>(0); }
+    uint64_t Get_u64(size_t idx) const override {
+        return static_cast<uint64_t>(0);
+    }
 
-    unsigned int Get_u32(size_t idx) const override { return static_cast<unsigned int>(0); }
+    unsigned int Get_u32(size_t idx) const override {
+        return static_cast<unsigned int>(0);
+    }
 
-    unsigned short Get_u16(size_t idx) const override { return static_cast<unsigned short>(0); }
+    unsigned short Get_u16(size_t idx) const override {
+        return static_cast<unsigned short>(0);
+    }
 
-    unsigned char Get_u8(size_t idx) const override { return static_cast<unsigned char>(0); }
+    unsigned char Get_u8(size_t idx) const override {
+        return static_cast<unsigned char>(0);
+    }
 
     virtual ~Accessor_0() = default;
 

@@ -15,16 +15,16 @@
 #include <cstdio>
 #include <ctime>
 #include <fcntl.h>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 #ifdef _WIN32
 #include <io.h>
 #include <share.h>
 #include <sys/stat.h>
 #endif /* _WIN32 */
 
-#include "mmcore/utility/log/OfflineTarget.h"
 #include "mmcore/utility/log/FileTarget.h"
+#include "mmcore/utility/log/OfflineTarget.h"
 
 #include "spdlog/details/os.h"
 #include "spdlog/spdlog.h"
@@ -121,18 +121,21 @@ megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::Cur
  * megamol::core::utility::log::Log::Log
  */
 megamol::core::utility::log::Log::Log(UINT level, unsigned int msgbufsize)
-    : mainTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
-    , echoTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
-    , fileTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
-    , autoflush(true) {
+        : mainTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
+        , echoTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
+        , fileTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
+        , autoflush(true) {
     // Intentionally empty
 }
 
 /*
  * megamol::core::utility::log::Log::Log
  */
-megamol::core::utility::log::Log::Log(UINT level, const char *filename, bool addSuffix)
-        : mainTarget(nullptr), echoTarget(nullptr), fileTarget(nullptr), autoflush(true) {
+megamol::core::utility::log::Log::Log(UINT level, const char* filename, bool addSuffix)
+        : mainTarget(nullptr)
+        , echoTarget(nullptr)
+        , fileTarget(nullptr)
+        , autoflush(true) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -140,8 +143,11 @@ megamol::core::utility::log::Log::Log(UINT level, const char *filename, bool add
 /*
  * megamol::core::utility::log::Log::Log
  */
-megamol::core::utility::log::Log::Log(const Log& source) : mainTarget(nullptr),
-        echoTarget(nullptr), fileTarget(nullptr), autoflush(true) {
+megamol::core::utility::log::Log::Log(const Log& source)
+        : mainTarget(nullptr)
+        , echoTarget(nullptr)
+        , fileTarget(nullptr)
+        , autoflush(true) {
     *this = source;
 }
 
@@ -260,8 +266,7 @@ void megamol::core::utility::log::Log::SetEchoLevel(UINT level) {
 /*
  * megamol::core::utility::log::Log::SetEchoTarget
  */
-void megamol::core::utility::log::Log::SetEchoTarget(
-        std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
+void megamol::core::utility::log::Log::SetEchoTarget(std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
     std::shared_ptr<Target> oet = this->echoTarget;
     std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(oet);
 
@@ -297,11 +302,10 @@ void megamol::core::utility::log::Log::SetFileLevel(UINT level) {
 }
 
 
-
 /*
  * megamol::core::utility::log::Log::SetLogFileName
  */
-bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool addSuffix) {
+bool megamol::core::utility::log::Log::SetLogFileName(const char* filename, bool addSuffix) {
     std::shared_ptr<Target> oft = this->fileTarget;
     std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(oft);
 
@@ -324,8 +328,7 @@ bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool
 /*
  * megamol::core::utility::log::Log::SetMainTarget
  */
-void megamol::core::utility::log::Log::SetMainTarget(
-        std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
+void megamol::core::utility::log::Log::SetMainTarget(std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
     std::shared_ptr<Target> omt = this->mainTarget;
     std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(omt);
 
@@ -370,11 +373,10 @@ void megamol::core::utility::log::Log::ShareTargetStorage(const megamol::core::u
 /*
  * megamol::core::utility::log::Log::WriteError
  */
-void megamol::core::utility::log::Log::WriteError(const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(LEVEL_ERROR, Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->WriteMessageVaA(LEVEL_ERROR, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
 
@@ -382,23 +384,10 @@ void megamol::core::utility::log::Log::WriteError(const char *fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteError
  */
-void megamol::core::utility::log::Log::WriteError(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(
-        static_cast<UINT>(static_cast<int>(LEVEL_ERROR) + lvlOff),
-        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
-    va_end(argptr);
-}
-
-
-/*
- * megamol::core::utility::log::Log::WriteInfo
- */
-void megamol::core::utility::log::Log::WriteInfo(const char *fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->WriteMessageVaA(LEVEL_INFO, Log::CurrentTimeStamp(),
+    this->WriteMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_ERROR) + lvlOff), Log::CurrentTimeStamp(),
         Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
@@ -407,12 +396,22 @@ void megamol::core::utility::log::Log::WriteInfo(const char *fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteInfo
  */
-void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(
-        static_cast<UINT>(static_cast<int>(LEVEL_INFO) + lvlOff),
-        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->WriteMessageVaA(LEVEL_INFO, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    va_end(argptr);
+}
+
+
+/*
+ * megamol::core::utility::log::Log::WriteInfo
+ */
+void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ...) {
+    va_list argptr;
+    va_start(argptr, fmt);
+    this->WriteMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_INFO) + lvlOff), Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
 
@@ -420,13 +419,13 @@ void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char *fmt, ..
 /*
  * megamol::core::utility::log::Log::WriteMessage
  */
-void megamol::core::utility::log::Log::WriteMessage(UINT level,
-        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
-        const std::string& msg) {
-    if (msg.empty()) return;
+void megamol::core::utility::log::Log::WriteMessage(UINT level, megamol::core::utility::log::Log::TimeStamp time,
+    megamol::core::utility::log::Log::SourceID sid, const std::string& msg) {
+    if (msg.empty())
+        return;
     // remove newline at end because spdlog and other log targets already add newlines
     if (msg.back() == '\n') {
-        this->WriteMessage(level, time, sid, msg.substr(0, msg.size()-1));
+        this->WriteMessage(level, time, sid, msg.substr(0, msg.size() - 1));
         return;
     }
     if (this->mainTarget != nullptr) {
@@ -453,9 +452,8 @@ void megamol::core::utility::log::Log::WriteMessage(UINT level,
 /*
  * megamol::core::utility::log::Log::WriteMessage
  */
-void megamol::core::utility::log::Log::WriteMessageVaA(UINT level,
-        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
-        const char *fmt, va_list argptr) {
+void megamol::core::utility::log::Log::WriteMessageVaA(UINT level, megamol::core::utility::log::Log::TimeStamp time,
+    megamol::core::utility::log::Log::SourceID sid, const char* fmt, va_list argptr) {
     std::string msg;
     if (fmt != nullptr) {
         va_list tmp;
@@ -474,11 +472,10 @@ void megamol::core::utility::log::Log::WriteMessageVaA(UINT level,
 /*
  * megamol::core::utility::log::Log::WriteMsg
  */
-void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(level, Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->WriteMessageVaA(level, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
 
@@ -486,11 +483,10 @@ void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char *fm
 /*
  * megamol::core::utility::log::Log::WriteWarn
  */
-void megamol::core::utility::log::Log::WriteWarn(const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(LEVEL_WARN, Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->WriteMessageVaA(LEVEL_WARN, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
 
@@ -498,12 +494,11 @@ void megamol::core::utility::log::Log::WriteWarn(const char *fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteWarn
  */
-void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char *fmt, ...) {
+void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->WriteMessageVaA(
-        static_cast<UINT>(static_cast<int>(LEVEL_WARN) + lvlOff),
-        Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->WriteMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_WARN) + lvlOff), Log::CurrentTimeStamp(),
+        Log::CurrentSourceID(), fmt, argptr);
     va_end(argptr);
 }
 
@@ -525,7 +520,7 @@ megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(co
  */
 std::string megamol::core::utility::log::Log::getFileNameSuffix(void) {
     TimeStamp timestamp = megamol::core::utility::log::Log::CurrentTimeStamp();
-    struct tm *t;
+    struct tm* t;
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
     struct tm __tS;
@@ -534,10 +529,10 @@ std::string megamol::core::utility::log::Log::getFileNameSuffix(void) {
         // timestamp error *** argh ***
         __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
     }
-#else /* (_MSC_VER >= 1400) */
+#else  /* (_MSC_VER >= 1400) */
     t = localtime(&timestamp);
 #endif /* (_MSC_VER >= 1400) */
-#else /* _WIN32 */
+#else  /* _WIN32 */
     t = localtime(&timestamp);
 #endif /* _WIN32 */
 
@@ -564,32 +559,23 @@ UINT megamol::core::utility::log::Log::ParseLevelAttribute(const std::string att
     UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {
         retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-    }
-    else if (iequals(attr, "warn")) {
+    } else if (iequals(attr, "warn")) {
         retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    }
-    else if (iequals(attr, "warning")) {
+    } else if (iequals(attr, "warning")) {
         retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    }
-    else if (iequals(attr, "info")) {
+    } else if (iequals(attr, "info")) {
         retval = megamol::core::utility::log::Log::LEVEL_INFO;
-    }
-    else if (iequals(attr, "none")) {
+    } else if (iequals(attr, "none")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "null")) {
+    } else if (iequals(attr, "null")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "zero")) {
+    } else if (iequals(attr, "zero")) {
         retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "all")) {
+    } else if (iequals(attr, "all")) {
         retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    }
-    else if (iequals(attr, "*")) {
+    } else if (iequals(attr, "*")) {
         retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    }
-    else {
+    } else {
         retval = std::stoi(attr);
         // dont catch stoi exceptions
         // let exception be handled by the one who called me

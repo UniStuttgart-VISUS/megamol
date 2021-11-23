@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "vislib/assert.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "stdafx.h"
+#include "vislib/assert.h"
 #include <chrono>
 
 using namespace megamol::core;
@@ -20,9 +20,14 @@ using namespace megamol::core;
 /*
  * view::AnimDataModule::AnimDataModule
  */
-view::AnimDataModule::AnimDataModule(void) : Module(), frameCnt(0),
-        loader(loaderFunction), frameCache(NULL), cacheSize(0),
-        stateLock(), lastRequested(0) {
+view::AnimDataModule::AnimDataModule(void)
+        : Module()
+        , frameCnt(0)
+        , loader(loaderFunction)
+        , frameCache(NULL)
+        , cacheSize(0)
+        , stateLock()
+        , lastRequested(0) {
     this->isRunning.store(false);
 }
 
@@ -33,8 +38,8 @@ view::AnimDataModule::AnimDataModule(void) : Module(), frameCnt(0),
 view::AnimDataModule::~AnimDataModule(void) {
     this->Release();
 
-    Frame ** frames = this->frameCache;
-//    this->frameCache = NULL;
+    Frame** frames = this->frameCache;
+    //    this->frameCache = NULL;
     this->isRunning.store(false);
     if (this->loader.IsRunning()) {
         this->loader.Join();
@@ -46,7 +51,6 @@ view::AnimDataModule::~AnimDataModule(void) {
         }
         delete[] frames;
     }
-
 }
 
 
@@ -92,7 +96,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
         this->loader.Start(this);
         // XXX Is there a race condition that requires higher sleep time (value originally was 250)?
         // XXX Reduced for faster module creation, because called in ctor.
-        vislib::sys::Thread::Sleep(10); 
+        vislib::sys::Thread::Sleep(10);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");
@@ -103,16 +107,16 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
 /*
  * view::AnimDataModule::requestFrame
  */
-view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned int idx) {
-    Frame *retval = NULL;
+view::AnimDataModule::Frame* view::AnimDataModule::requestLockedFrame(unsigned int idx) {
+    Frame* retval = NULL;
     int dist, minDist = this->frameCnt;
     static bool deadlockwarning = true;
 
     this->stateLock.Lock();
     this->lastRequested = idx; // TODO: choose better caching strategy!!!
     for (unsigned int i = 0; i < this->cacheSize; i++) {
-        if ((this->frameCache[i]->state == Frame::STATE_AVAILABLE)
-                || (this->frameCache[i]->state == Frame::STATE_INUSE)) {
+        if ((this->frameCache[i]->state == Frame::STATE_AVAILABLE) ||
+            (this->frameCache[i]->state == Frame::STATE_INUSE)) {
             // note: do not wrap distance around!
             dist = labs(this->frameCache[i]->frame - idx);
             if (dist == 0) {
@@ -131,10 +135,10 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
 
     if (deadlockwarning
 #if !(defined(DEBUG) || defined(_DEBUG))
-            && (this->cacheSize < this->frameCnt)
-            // streaming is required to handle this data set
+        && (this->cacheSize < this->frameCnt)
+    // streaming is required to handle this data set
 #endif /* !(defined(DEBUG) || defined(_DEBUG)) */
-            ) {
+    ) {
         unsigned int clcf = 0;
         for (unsigned int i = 0; i < this->cacheSize; i++) {
             if (this->frameCache[i]->state == Frame::STATE_INUSE) {
@@ -145,8 +149,8 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
         //printf("======== %u frames locked\n", clcf);
 
         if ((clcf == this->cacheSize) && (this->cacheSize > 2)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Possible data frame cache deadlock detected!");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Possible data frame cache deadlock detected!");
             deadlockwarning = false;
         }
     }
@@ -158,9 +162,10 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
 /*
  * view::AnimDataModule::requestLockedFrame
  */
-view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned int idx, bool forceIdx) {
-    Frame *f = this->requestLockedFrame(idx);
-    if ((f->FrameNumber() == idx) || (!forceIdx)) return f;
+view::AnimDataModule::Frame* view::AnimDataModule::requestLockedFrame(unsigned int idx, bool forceIdx) {
+    Frame* f = this->requestLockedFrame(idx);
+    if ((f->FrameNumber() == idx) || (!forceIdx))
+        return f;
     // wrong frame number and frame is forced
 
     // clamp idx
@@ -188,8 +193,8 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
  * view::AnimDataModule::resetFrameCache
  */
 void view::AnimDataModule::resetFrameCache(void) {
-    Frame ** frames = this->frameCache;
-//    this->frameCache = NULL;
+    Frame** frames = this->frameCache;
+    //    this->frameCache = NULL;
     this->isRunning.store(false);
     if (this->loader.IsRunning()) {
         this->loader.Join();
@@ -220,14 +225,14 @@ void view::AnimDataModule::setFrameCount(unsigned int cnt) {
 /*
  * view::AnimDataModule::loaderFunction
  */
-DWORD view::AnimDataModule::loaderFunction(void *userData) {
-    AnimDataModule *This = static_cast<AnimDataModule*>(userData);
+DWORD view::AnimDataModule::loaderFunction(void* userData) {
+    AnimDataModule* This = static_cast<AnimDataModule*>(userData);
     ASSERT(This != NULL);
     unsigned int index, i, j, req;
 #ifdef _LOADING_REPORTING
     unsigned int l;
 #endif /* _LOADING_REPORTING */
-    Frame *frame;
+    Frame* frame;
     vislib::StringA fullName(This->FullName());
 
     std::chrono::high_resolution_clock::duration accumDuration = std::chrono::seconds(0);
@@ -238,7 +243,8 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
     while (This->isRunning.load()) {
         // sleep to enforce thread changes
         vislib::sys::Thread::Sleep(1);
-        if (!This->isRunning.load()) break;
+        if (!This->isRunning.load())
+            break;
 
         // idea:
         //  1. search for the most important frame to be loaded.
@@ -252,20 +258,23 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         index = req = This->lastRequested;
         for (j = 0; j < This->cacheSize; j++) {
             for (i = 0; i < This->cacheSize; i++) {
-                if (!This->isRunning.load()) break;
-                if (((This->frameCache[i]->state == Frame::STATE_AVAILABLE)
-                        || (This->frameCache[i]->state == Frame::STATE_INUSE)) 
-                        && (This->frameCache[i]->frame == index)) {
+                if (!This->isRunning.load())
+                    break;
+                if (((This->frameCache[i]->state == Frame::STATE_AVAILABLE) ||
+                        (This->frameCache[i]->state == Frame::STATE_INUSE)) &&
+                    (This->frameCache[i]->frame == index)) {
                     break;
                 }
             }
-            if (!This->isRunning.load()) break;
+            if (!This->isRunning.load())
+                break;
             if (i >= This->cacheSize) {
                 break;
             }
             index = (index + 1) % This->frameCnt;
         }
-        if (!This->isRunning.load()) break;
+        if (!This->isRunning.load())
+            break;
         if (j >= This->cacheSize) {
             if (j >= This->frameCnt) {
                 ASSERT(This->frameCnt == This->cacheSize);
@@ -277,12 +286,12 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         }
 
         // 2.
-        // Note: We now need to lock, because we must synchronise against 
+        // Note: We now need to lock, because we must synchronise against
         // frames changing from 'STATE_AVAILABLE' to 'STATE_INUSE'.
         This->stateLock.Lock();
         // core idea: search for the frame with the largest distance to the requested frame
         frame = NULL; // the frame to be overwritten
-        j = 0; // the distance to the found frame to be overwritten
+        j = 0;        // the distance to the found frame to be overwritten
         for (i = 0; i < This->cacheSize; i++) {
             if (This->frameCache[i]->state == Frame::STATE_INVALID) {
                 frame = This->frameCache[i];
@@ -297,7 +306,8 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
                 if (ld < 0) {
                     if (ld < (static_cast<long>(This->frameCnt)) / 10) {
                         ld += static_cast<long>(This->frameCnt);
-                        if (ld < 0) ld = 0; // should never happen
+                        if (ld < 0)
+                            ld = 0; // should never happen
                     } else {
                         ld = -10 * ld;
                     }
@@ -311,7 +321,8 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 #endif /* _LOADING_REPORTING */
                 }
             }
-            if (!This->isRunning.load()) break;
+            if (!This->isRunning.load())
+                break;
         }
 
         // 3.
@@ -319,7 +330,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
             frame->state = Frame::STATE_LOADING;
         }
         // if frame is NULL no suitable cache buffer found for loading. This is
-        // mostly the case if the cache is too small or if the data source 
+        // mostly the case if the cache is too small or if the data source
         // locks too much frames.
         This->stateLock.Unlock();
 
@@ -342,14 +353,14 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
                 if (accumCount > 0) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
                         fullName.PeekBuffer(),
-                        1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
-                        static_cast<unsigned int>(accumCount)
-                        );
+                        1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() /
+                            static_cast<double>(accumCount),
+                        static_cast<unsigned int>(accumCount));
                 }
             }
 
-            // we no not need to lock here, because this transition from 
-            // 'STATE_LOADING' to 'STATE_AVAILABLE' is safe for the using 
+            // we no not need to lock here, because this transition from
+            // 'STATE_LOADING' to 'STATE_AVAILABLE' is safe for the using
             // thread.
             frame->state = Frame::STATE_AVAILABLE;
         }
@@ -358,9 +369,9 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
     if (accumCount > 0) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
             fullName.PeekBuffer(),
-            1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
-            static_cast<unsigned int>(accumCount)
-            );
+            1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() /
+                static_cast<double>(accumCount),
+            static_cast<unsigned int>(accumCount));
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("The loader thread is exiting.");
@@ -371,7 +382,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 /*
  * view::AnimDataModule::unlock
  */
-void view::AnimDataModule::unlock(view::AnimDataModule::Frame *frame) {
+void view::AnimDataModule::unlock(view::AnimDataModule::Frame* frame) {
     ASSERT(&frame->owner == this);
     ASSERT(frame->state == Frame::STATE_INUSE);
     this->stateLock.Lock();

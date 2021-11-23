@@ -20,7 +20,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProbeRenderTasks"; }
+    static const char* ClassName(void) {
+        return "ProbeRenderTasks";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -36,7 +38,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     ProbeRenderTasks();
     ~ProbeRenderTasks();
@@ -64,7 +68,7 @@ private:
     core::CallerSlot m_probe_manipulation_slot;
 };
 
-} // namespace mesh
+} // namespace probe_gl
 } // namespace megamol
 
 

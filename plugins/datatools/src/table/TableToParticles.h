@@ -8,176 +8,172 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/param/ParamSlot.h"
 #include "datatools/table/TableDataCall.h"
-#include <map>
+#include "mmcore/param/ParamSlot.h"
 #include <array>
+#include <map>
 
 namespace megamol {
 namespace datatools {
 
+/**
+ * This module converts from a generic table to the MultiParticleDataCall.
+ */
+class TableToParticles : public megamol::core::Module {
+
+public:
     /**
-     * This module converts from a generic table to the MultiParticleDataCall.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class TableToParticles : public megamol::core::Module {
+    static inline const char* ClassName(void) {
+        return "TableToParticles";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Converts generic tables to Particles.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void)  {
-            return "TableToParticles";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "Converts generic tables to Particles.";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    TableToParticles(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~TableToParticles(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        TableToParticles(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~TableToParticles(void);
+    bool getMultiParticleData(core::Call& call);
 
-    protected:
+    bool getMultiparticleExtent(core::Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        bool getMultiParticleData(core::Call& call);
+private:
+    bool assertData(table::TableDataCall* ft, unsigned int frameID = 0);
 
-        bool getMultiparticleExtent(core::Call& call);
+    bool anythingDirty();
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    void resetAllDirty();
 
-    private:
+    std::string cleanUpColumnHeader(const std::string& header) const;
+    std::string cleanUpColumnHeader(const vislib::TString& header) const;
 
-		bool assertData(table::TableDataCall *ft, unsigned int frameID = 0);
+    bool pushColumnIndex(std::vector<uint32_t>& cols, const vislib::TString& colName);
 
-		bool anythingDirty();
+    /** Minimum coordinates of the bounding box. */
+    float bboxMin[3];
 
-		void resetAllDirty();
+    /** Maximum coordinates of the bounding box. */
+    float bboxMax[3];
 
-		std::string cleanUpColumnHeader(const std::string& header) const;
-		std::string cleanUpColumnHeader(const vislib::TString& header) const;
+    float iMin, iMax;
 
-		bool pushColumnIndex(std::vector<uint32_t>& cols, const vislib::TString& colName);
+    /** The slot for retrieving the data as multi particle data. */
+    core::CalleeSlot slotCallMultiPart;
 
-        /** Minimum coordinates of the bounding box. */
-        float bboxMin[3];
+    /** The data callee slot. */
+    core::CallerSlot slotCallTable;
 
-        /** Maximum coordinates of the bounding box. */
-        float bboxMax[3];
+    /** The name of the float column holding the red colour channel. */
+    core::param::ParamSlot slotColumnB;
 
-		float iMin, iMax;
-        
-        /** The slot for retrieving the data as multi particle data. */
-        core::CalleeSlot slotCallMultiPart;
+    /** The name of the float column holding the green colour channel. */
+    core::param::ParamSlot slotColumnG;
 
-        /** The data callee slot. */
-        core::CallerSlot slotCallTable;
+    /** The name of the float column holding the blue colour channel. */
+    core::param::ParamSlot slotColumnR;
 
-        /** The name of the float column holding the red colour channel. */
-        core::param::ParamSlot slotColumnB;
+    /** The name of the float column holding the intensity channel. */
+    core::param::ParamSlot slotColumnI;
 
-        /** The name of the float column holding the green colour channel. */
-        core::param::ParamSlot slotColumnG;
+    /**
+     * The constant color of spheres if the data set does not provide
+     * one.
+     */
+    core::param::ParamSlot slotGlobalColor;
 
-        /** The name of the float column holding the blue colour channel. */
-        core::param::ParamSlot slotColumnR;
-        	
-        /** The name of the float column holding the intensity channel. */
-        core::param::ParamSlot slotColumnI;
-        
-		/**
-		* The constant color of spheres if the data set does not provide
-		* one.
-		*/
-		core::param::ParamSlot slotGlobalColor;
+    /** The color mode: explicit rgb, intensity or constant */
+    core::param::ParamSlot slotColorMode;
 
-		/** The color mode: explicit rgb, intensity or constant */
-        core::param::ParamSlot slotColorMode;
+    /** The name of the float column holding the particle radius. */
+    core::param::ParamSlot slotColumnRadius;
 
-        /** The name of the float column holding the particle radius. */
-        core::param::ParamSlot slotColumnRadius;
+    /**
+     * The constant radius of spheres if the data set does not provide
+     * one.
+     */
+    core::param::ParamSlot slotGlobalRadius;
 
-		/**
-		* The constant radius of spheres if the data set does not provide
-		* one.
-		*/
-		core::param::ParamSlot slotGlobalRadius;
+    /** The color mode: explicit rgb, intensity or constant */
+    core::param::ParamSlot slotRadiusMode;
 
-		/** The color mode: explicit rgb, intensity or constant */
-		core::param::ParamSlot slotRadiusMode;
+    /** The name of the float column holding the x-coordinate. */
+    core::param::ParamSlot slotColumnX;
 
-		/** The name of the float column holding the x-coordinate. */
-        core::param::ParamSlot slotColumnX;
+    /** The name of the float column holding the y-coordinate. */
+    core::param::ParamSlot slotColumnY;
 
-        /** The name of the float column holding the y-coordinate. */
-        core::param::ParamSlot slotColumnY;
+    /** The name of the float column holding the z-coordinate. */
+    core::param::ParamSlot slotColumnZ;
 
-        /** The name of the float column holding the z-coordinate. */
-        core::param::ParamSlot slotColumnZ;
+    /** The name of the float column holding the vx-coordinate. */
+    core::param::ParamSlot slotColumnVX;
 
-		/** The name of the float column holding the vx-coordinate. */
-        core::param::ParamSlot slotColumnVX;
+    /** The name of the float column holding the vy-coordinate. */
+    core::param::ParamSlot slotColumnVY;
 
-        /** The name of the float column holding the vy-coordinate. */
-        core::param::ParamSlot slotColumnVY;
+    /** The name of the float column holding the vz-coordinate. */
+    core::param::ParamSlot slotColumnVZ;
 
-        /** The name of the float column holding the vz-coordinate. */
-        core::param::ParamSlot slotColumnVZ;
+    /** given a tensor interpretable as an orthonormal coordinate system {X,Y,Z}^T, its 9 values {xx, xy, xz, ...} */
+    std::array<core::param::ParamSlot, 9> slotTensorColumn;
 
-        /** given a tensor interpretable as an orthonormal coordinate system {X,Y,Z}^T, its 9 values {xx, xy, xz, ...} */
-        std::array<core::param::ParamSlot, 9> slotTensorColumn;
+    /** if the tensor contains normalized vectors, you can also supply a magnitude */
+    std::array<core::param::ParamSlot, 3> slotTensorMagnitudeColumn;
 
-        /** if the tensor contains normalized vectors, you can also supply a magnitude */
-        std::array<core::param::ParamSlot, 3> slotTensorMagnitudeColumn;
+    /** The lastly calculated time step */
+    unsigned int lastTimeStep;
 
-        /** The lastly calculated time step */
-        unsigned int lastTimeStep;
+    std::vector<float> everything;
 
-		std::vector<float> everything;
+    bool haveVelocities = false;
+    bool haveTensor = false;
+    bool haveTensorMagnitudes = false;
 
-        bool haveVelocities = false;
-        bool haveTensor = false;
-        bool haveTensorMagnitudes = false;
-
-		SIZE_T inputHash;
-		SIZE_T myHash;
-        SIZE_T myTime = -1;
-		std::map<std::string, uint32_t> columnIndex;
-		uint32_t stride;
-
-    };
+    SIZE_T inputHash;
+    SIZE_T myHash;
+    SIZE_T myTime = -1;
+    std::map<std::string, uint32_t> columnIndex;
+    uint32_t stride;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

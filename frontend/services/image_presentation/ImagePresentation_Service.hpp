@@ -11,8 +11,8 @@
 
 #include "EntryPoint.h"
 #include "ImagePresentationEntryPoints.h"
-#include "ImageWrapper.h"
 #include "ImagePresentationSink.h"
+#include "ImageWrapper.h"
 
 #include "FrontendResourcesLookup.h"
 
@@ -46,7 +46,9 @@ public:
         std::optional<UintPair> local_framebuffer_resolution = std::nullopt;
     };
 
-    std::string serviceName() const override { return "ImagePresentation_Service"; }
+    std::string serviceName() const override {
+        return "ImagePresentation_Service";
+    }
 
     ImagePresentation_Service();
     ~ImagePresentation_Service();
@@ -83,7 +85,6 @@ public:
     using EntryPointRenderFunctions = frontend_resources::EntryPointRenderFunctions;
 
 private:
-
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
@@ -94,7 +95,8 @@ private:
     // the ImagePresentation Service makes sure that the (lifetime and rendering) resources/dependencies requested by the module
     // are satisfied, which means that the execute() callback for the entry point is provided the requested
     // dependencies/resources for rendering
-    megamol::frontend_resources::ImagePresentationEntryPoints m_entry_points_registry_resource; // resorce to add/remove entry points
+    megamol::frontend_resources::ImagePresentationEntryPoints
+        m_entry_points_registry_resource; // resorce to add/remove entry points
 
     using EntryPoint = frontend_resources::EntryPoint;
     std::list<EntryPoint> m_entry_points;
@@ -109,11 +111,10 @@ private:
     void add_glfw_sink();
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
-    std::tuple<
-        bool, // success
-        std::vector<FrontendResource>, // resources
+    std::tuple<bool,                                            // success
+        std::vector<FrontendResource>,                          // resources
         std::unique_ptr<frontend_resources::RenderInputsUpdate> // unique_data for entry point
-    >
+        >
     map_resources(std::vector<std::string> const& requests);
     megamol::frontend_resources::FrontendResourcesLookup m_frontend_resources_lookup;
 

@@ -21,15 +21,13 @@ vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
 /*
  * vislib::net::cluster::NodeIdentifier::~NodeIdentifier
  */
-vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {
-}
+vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {}
 
 
 /*
  * vislib::net::cluster::NodeIdentifier::operator =
  */
-vislib::net::cluster::NodeIdentifier& 
-vislib::net::cluster::NodeIdentifier::operator =(const NodeIdentifier& rhs) {
+vislib::net::cluster::NodeIdentifier& vislib::net::cluster::NodeIdentifier::operator=(const NodeIdentifier& rhs) {
     if (this != &rhs) {
         this->id = rhs.id;
     }

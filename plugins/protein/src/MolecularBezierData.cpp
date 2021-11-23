@@ -4,21 +4,21 @@
  * Copyright (C) 2013 by TU Dresden
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MolecularBezierData.h"
+#include "stdafx.h"
 
-#include <vector>
-#include "protein/Color.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "geometry_calls/BezierCurvesListDataCall.h"
+#include "protein/Color.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/graphics/NamedColours.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
+#include <vector>
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -163,7 +163,6 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
                 this->data.Clear();
                 this->data.SetGlobalColour(127, 127, 127);
                 this->data.SetGlobalRadius(0.1f);
-
             }
         }
     }
@@ -181,8 +180,9 @@ bool MolecularBezierData::getDataCallback(core::Call& caller) {
  * MolecularBezierData::getExtentCallback
  */
 bool MolecularBezierData::getExtentCallback(core::Call& caller) {
-    geocalls::BezierCurvesListDataCall *bcldc = dynamic_cast<geocalls::BezierCurvesListDataCall *>(&caller);
-    if (bcldc == nullptr) return false;
+    geocalls::BezierCurvesListDataCall* bcldc = dynamic_cast<geocalls::BezierCurvesListDataCall*>(&caller);
+    if (bcldc == nullptr)
+        return false;
 
     core::AbstractGetData3DCall* agd3dc = this->inDataSlot.CallAs<core::AbstractGetData3DCall>();
     if (agd3dc == nullptr)
@@ -407,7 +407,6 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
             idx.Write(static_cast<unsigned int>(cnt));
             cnt++;
         }
-
     }
 
     if (pt.Position() > 0) {
@@ -416,7 +415,8 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
         unsigned int* idx_dat = new unsigned int[idx.Position() / sizeof(unsigned int)];
         ::memcpy(idx_dat, idx_blob, idx.Position());
 
-        this->data.Set(geocalls::BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B, pt_dat, cnt, true, idx_dat, idx.Position() / sizeof(unsigned int), true, 0.5f, 127, 127, 127);
+        this->data.Set(geocalls::BezierCurvesListDataCall::DATALAYOUT_XYZR_F_RGB_B, pt_dat, cnt, true, idx_dat,
+            idx.Position() / sizeof(unsigned int), true, 0.5f, 127, 127, 127);
     } else {
         this->data.Set(geocalls::BezierCurvesListDataCall::DATALAYOUT_NONE, nullptr, 0, nullptr, 0);
     }

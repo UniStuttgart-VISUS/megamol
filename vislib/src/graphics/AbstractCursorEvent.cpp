@@ -12,9 +12,12 @@
 /*
  * vislib::graphics::AbstractCursorEvent::AbstractCursorEvent
  */
-vislib::graphics::AbstractCursorEvent::AbstractCursorEvent(void) 
-        : button(0), countModTests(0), modifiers(NULL), modifierValues(NULL), testButton(false) {
-}
+vislib::graphics::AbstractCursorEvent::AbstractCursorEvent(void)
+        : button(0)
+        , countModTests(0)
+        , modifiers(NULL)
+        , modifierValues(NULL)
+        , testButton(false) {}
 
 
 /*
@@ -44,7 +47,7 @@ void vislib::graphics::AbstractCursorEvent::SetModifierTestCount(unsigned int mo
  * vislib::graphics::AbstractCursorEvent::SetModifierTest
  */
 void vislib::graphics::AbstractCursorEvent::SetModifierTest(
-        unsigned int i, InputModifiers::Modifier modifier, bool value) {
+    unsigned int i, InputModifiers::Modifier modifier, bool value) {
     if (i >= this->countModTests) {
         throw IllegalParamException("i", __FILE__, __LINE__);
     }

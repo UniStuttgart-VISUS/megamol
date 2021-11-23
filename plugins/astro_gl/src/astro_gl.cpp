@@ -11,22 +11,22 @@
 
 
 namespace megamol::astro_gl {
-    class AstroGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class AstroGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(AstroGLPluginInstance)
 
-    public:
-        AstroGLPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("astro_gl", "The astro plugin."){};
+public:
+    AstroGLPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("astro_gl", "The astro plugin."){};
 
-        ~AstroGLPluginInstance() override = default;
+    ~AstroGLPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::astro_gl::SurfaceLICRenderer>();
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::astro_gl::SurfaceLICRenderer>();
 
-            // register calls
-
-        }
-    };
-} // namespace megamol::astro
+        // register calls
+    }
+};
+} // namespace megamol::astro_gl

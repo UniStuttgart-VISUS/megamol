@@ -13,7 +13,7 @@
  * vislib::UnsupportedOperationException::UnsupportedOperationException
  */
 vislib::UnsupportedOperationException::UnsupportedOperationException(
-		const char *funcName, const char *file, const int line) 
+    const char* funcName, const char* file, const int line)
         : Exception(file, line) {
     Exception::formatMsg("'%s' is an unsupported operation.", funcName);
 }
@@ -23,7 +23,7 @@ vislib::UnsupportedOperationException::UnsupportedOperationException(
  * vislib::UnsupportedOperationException::UnsupportedOperationException
  */
 vislib::UnsupportedOperationException::UnsupportedOperationException(
-		const wchar_t *funcName, const char *file, const int line) 
+    const wchar_t* funcName, const char* file, const int line)
         : Exception(file, line) {
     Exception::formatMsg(L"'%s' is an unsupported operation.", funcName);
 }
@@ -32,26 +32,21 @@ vislib::UnsupportedOperationException::UnsupportedOperationException(
 /*
  * vislib::UnsupportedOperationException::UnsupportedOperationException
  */
-vislib::UnsupportedOperationException::UnsupportedOperationException(
-		const UnsupportedOperationException& rhs) 
-		: Exception(rhs) {
-}
+vislib::UnsupportedOperationException::UnsupportedOperationException(const UnsupportedOperationException& rhs)
+        : Exception(rhs) {}
 
 
 /*
  * vislib::UnsupportedOperationException::~UnsupportedOperationException
  */
-vislib::UnsupportedOperationException::~UnsupportedOperationException(void) {
-}
+vislib::UnsupportedOperationException::~UnsupportedOperationException(void) {}
 
 
 /*
  * vislib::UnsupportedOperationException::operator =
  */
-vislib::UnsupportedOperationException& 
-		vislib::UnsupportedOperationException::operator =(
-		const UnsupportedOperationException& rhs) {
-	Exception::operator =(rhs);
-	return *this;
+vislib::UnsupportedOperationException& vislib::UnsupportedOperationException::operator=(
+    const UnsupportedOperationException& rhs) {
+    Exception::operator=(rhs);
+    return *this;
 }
-
