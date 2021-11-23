@@ -227,15 +227,16 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
         auto rig_ep = [&](auto& original_execute, auto& result_gl_copy) {
             auto old_execute = original_execute;
 
-            auto new_execute = std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, megamol::frontend_resources::ImageWrapper&)>{
-                [&,old_execute](void* module_ptr, auto& resources, auto& result_image) -> bool {
-                        bool success = old_execute(module_ptr, resources, result_image);
+            auto new_execute = std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&,
+                megamol::frontend_resources::ImageWrapper&)>{
+                [&, old_execute](void* module_ptr, auto& resources, auto& result_image) -> bool {
+                    bool success = old_execute(module_ptr, resources, result_image);
 
-                        frontend_resources::gl_texture tmp_tex{result_image}; // no copy
-                        result_gl_copy = tmp_tex; // copy GL texture
+                    frontend_resources::gl_texture tmp_tex{result_image}; // no copy
+                    result_gl_copy = tmp_tex;                             // copy GL texture
 
-                        return success;
-            }};
+                    return success;
+                }};
             original_execute = new_execute;
         };
 
@@ -294,7 +295,8 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     pimpl.left_texturesender.sendTexture(left.as_gl_handle(), left.size.width, left.size.height);
     pimpl.right_texturesender.sendTexture(right.as_gl_handle(), right.size.width, right.size.height);
 
-    pimpl.singlestereo_texturesender.sendTexturePackage(left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
+    pimpl.singlestereo_texturesender.sendTexturePackage(
+        left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
 
     if (!pimpl.has_bbox) {
         auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();

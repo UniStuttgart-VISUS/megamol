@@ -10,9 +10,9 @@
 #include "EntryPoint.h"
 #include "FrontendResource.h"
 
+#include <any>
 #include <functional>
 #include <vector>
-#include <any>
 
 namespace megamol {
 namespace frontend_resources {
@@ -31,17 +31,13 @@ struct ImagePresentationEntryPoints {
     std::function<bool(std::string const&, std::string const&)> rename_entry_point;
     std::function<void()> clear_entry_points;
 
-    enum class SubscriptionEvent {
-        Add, Remove, Rename, Clear
-    };
+    enum class SubscriptionEvent { Add, Remove, Rename, Clear };
 
-    using SubscriberFunction = std::function<
-        void(
-            frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const&,
-            std::vector<std::any> const& /*args*/)
-    >;
+    using SubscriberFunction =
+        std::function<void(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const&,
+            std::vector<std::any> const& /*args*/)>;
 
-    std::function<void( SubscriberFunction const& )> subscribe_to_entry_point_changes;
+    std::function<void(SubscriberFunction const&)> subscribe_to_entry_point_changes;
     std::function<optional<EntryPoint>(std::string const&)> get_entry_point;
 };
 

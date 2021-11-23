@@ -106,8 +106,10 @@ private:
     bool rename_entry_point(std::string const& oldName, std::string const& newName);
     bool clear_entry_points();
 
-    void subscribe_to_entry_point_changes(frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber);
-    bool tell_subscribers(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event, std::vector<std::any> const& args);
+    void subscribe_to_entry_point_changes(
+        frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber);
+    bool tell_subscribers(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event,
+        std::vector<std::any> const& args);
     std::list<frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> m_entry_point_subscribers;
 
     frontend_resources::optional<EntryPoint> get_entry_point(std::string const& name);

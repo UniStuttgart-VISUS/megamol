@@ -114,9 +114,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
 
         auto& in_pose = proj_parameters.pose;
         auto cam_pose = Camera::Pose{
-            in_pose.position,
-            in_pose.direction,
-            in_pose.up,
+            in_pose.position, in_pose.direction, in_pose.up,
             glm::cross(in_pose.direction, in_pose.up) // right, as computed by Camrea
         };
 
@@ -129,18 +127,19 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
                     in_proj.aspect,     // AspectRatio aspect;   //< aspect ratio of the camera frustrum
                     in_proj.near_plane, // NearPlane near_plane; //< near clipping plane
                     in_proj.far_plane,  // FarPlane far_plane;   //< far clipping plane
-                    tile                // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
-            }};
+                    tile // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
+                }};
             break;
         case RenderInput::CameraViewProjectionParameters::ProjectionType::ORTHOGRAPHIC:
             camera = Camera{cam_pose,
                 Camera::OrthographicParameters{
-                    in_proj.fovy,       // FrustrumHeight frustrum_height; //< vertical size of the orthographic frustrum in world space
-                    in_proj.aspect ,    // AspectRatio aspect;             //< aspect ratio of the camera frustrum
+                    in_proj
+                        .fovy, // FrustrumHeight frustrum_height; //< vertical size of the orthographic frustrum in world space
+                    in_proj.aspect,     // AspectRatio aspect;             //< aspect ratio of the camera frustrum
                     in_proj.near_plane, // NearPlane near_plane;           //< near clipping plane
                     in_proj.far_plane,  // FarPlane far_plane;             //< far clipping plane
-                    tile                // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
-            }};
+                    tile // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
+                }};
             break;
         }
 
