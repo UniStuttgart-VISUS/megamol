@@ -612,6 +612,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
     using megamol::frontend_resources::LuaCallbacksCollection;
     using Error = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
     using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
 
 #define sane(s)                                                  \
     if (s.empty() || s.find_first_of(" =") != std::string::npos) \
@@ -701,6 +702,10 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
 #undef sane
 #undef file_exists
 #undef add_cli
+
+    lua_config_callbacks.add<StringResult>("mmGetMegaMolExecutableDirectory",
+        "()\n\tReturns the directory of the running MegaMol executable.",
+        {[&]() { return StringResult{config.megamol_executable_directory}; }});
 
     lua_config_callbacks.add<VoidResult, std::string>("mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",
