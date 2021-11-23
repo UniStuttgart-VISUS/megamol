@@ -20,6 +20,8 @@ flat out vec3 oc_pos;
 #include "srtest_ssbo.glsl"
 #endif
 
+#include "srtest_frustum.glsl"
+
 void main() {
     int base_idx = gl_VertexID / 4;
     int inv_idx = gl_VertexID % 4;
@@ -48,4 +50,11 @@ void main() {
     projPos = projPos / projPos.w;
 
     gl_Position = vec4(pos.xy, projPos.z, 1.0f);
+
+    /*if (dot(v[inv_idx].xyz - camPos, v[inv_idx].xyz - camPos) < clip_dist) {
+        gl_ClipDistance[0] = -1.0f;
+    }*/
+    if (isOutside(oc_pos, rad)) {
+        gl_ClipDistance[0] = -1.0f;
+    }
 }

@@ -3,6 +3,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore/view/light/DistantLight.h"
 
@@ -10,7 +11,8 @@
 megamol::moldyn_gl::rendering::SRTest::SRTest()
         : data_in_slot_("inData", "")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
-        , method_slot_("method", "") {
+        , method_slot_("method", "")
+        , clip_thres_slot_("clip distance", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
@@ -28,6 +30,9 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_ALTN), "MESH_GEO_ALTN");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
+
+    clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
+    MakeSlotAvailable(&clip_thres_slot_);
 }
 
 
@@ -188,10 +193,24 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         ubo_st.p2_z = proj[2].z;
         ubo_st.p3_z = proj[3].z;
 
+        auto const y_angle = static_cast<float>(cam.get<core::view::Camera::FieldOfViewY>());
+        auto const ratio = static_cast<float>(cam.get<core::view::Camera::AspectRatio>());
+        auto const x_angle = y_angle * ratio;
+
+        /*core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] x_angle %f y_angle %f ratio %f",
+            static_cast<float>(x_angle), static_cast<float>(y_angle), static_cast<float>(ratio));*/
+
+        ubo_st.frustum_ratio_x = 1.0f / std::cosf(x_angle);
+        ubo_st.frustum_ratio_y = 1.0f / std::cosf(y_angle);
+        ubo_st.frustum_ratio_w = std::tanf(x_angle);
+        ubo_st.frustum_ratio_h = std::tanf(y_angle);
+
         glNamedBufferSubData(ubo_, 0, sizeof(ubo_params_t), &ubo_st);
 
         old_cam_ = cam;
     }
+
+    // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
 
     cr_fbo->bind();
 
@@ -200,7 +219,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glGenQueries(3, queryID);
 
     glQueryCounter(queryID[0], GL_TIMESTAMP);*/
-    if (new_data) {
+    if (new_data || clip_thres_slot_.IsDirty()) {
 #ifdef PROFILING
         pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
 #endif
@@ -212,6 +231,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 #endif
 
         new_data = false;
+        clip_thres_slot_.ResetDirty();
     }
 
 #ifdef PROFILING
@@ -281,6 +301,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
     data_.pl_data.global_color.resize(pl_count);
     data_.pl_data.use_global_radii.resize(pl_count);
     data_.pl_data.use_global_color.resize(pl_count);
+    // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
 
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = in_data.AccessParticles(pl_idx);
@@ -619,6 +640,7 @@ megamol::moldyn_gl::rendering::mesh_geo_rt::mesh_geo_rt(msf::ShaderFactoryOption
 
 
 bool megamol::moldyn_gl::rendering::mesh_geo_rt::render(GLuint ubo) {
+    glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
     program->use();
@@ -646,6 +668,7 @@ bool megamol::moldyn_gl::rendering::mesh_geo_rt::render(GLuint ubo) {
 
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
 
     return true;
 }
@@ -822,6 +845,7 @@ megamol::moldyn_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(msf::ShaderFactoryOpti
 
 
 bool megamol::moldyn_gl::rendering::ssbo_vert_rt::render(GLuint ubo) {
+    glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
     program->use();
@@ -837,6 +861,7 @@ bool megamol::moldyn_gl::rendering::ssbo_vert_rt::render(GLuint ubo) {
         program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
         program->setUniform("globalCol", pl_data_.global_color[i]);
         program->setUniform("globalRad", pl_data_.global_radii[i]);
+        // program->setUniform("clip_dist", pl_data_.clip_distance);
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);
@@ -848,6 +873,7 @@ bool megamol::moldyn_gl::rendering::ssbo_vert_rt::render(GLuint ubo) {
 
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
 
     return true;
 }

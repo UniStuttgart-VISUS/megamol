@@ -8,4 +8,8 @@ layout(std140, binding = 1) uniform SceneVars {
     float far;
     float p2_z;
     float p3_z;
+    float frustum_ratio_x;
+    float frustum_ratio_y;
+    float frustum_ratio_w;
+    float frustum_ratio_h;
 };

@@ -39,6 +39,10 @@ struct ubo_params {
     alignas(4) float far_;
     alignas(4) float p2_z;
     alignas(4) float p3_z;
+    alignas(4) float frustum_ratio_x;
+    alignas(4) float frustum_ratio_y;
+    alignas(4) float frustum_ratio_w;
+    alignas(4) float frustum_ratio_h;
 };
 
 using ubo_params_t = ubo_params;
@@ -282,6 +286,8 @@ private:
     core::CallerSlot getLightsSlot;
 
     core::param::ParamSlot method_slot_;
+
+    core::param::ParamSlot clip_thres_slot_;
 
     std::unordered_map<method_e, std::unique_ptr<rendering_task>> rendering_tasks_;
 
