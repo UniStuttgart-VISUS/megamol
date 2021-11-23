@@ -47,14 +47,12 @@ void main() {
     pos /= pos.w;
 
     vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
-    projPos = projPos / projPos.w;
+    
+    pos.z = projPos.z / projPos.w;
 
-    gl_Position = vec4(pos.xy, projPos.z, 1.0f);
-
-    /*if (dot(v[inv_idx].xyz - camPos, v[inv_idx].xyz - camPos) < clip_dist) {
-        gl_ClipDistance[0] = -1.0f;
-    }*/
     if (isOutside(oc_pos, rad)) {
-        gl_ClipDistance[0] = -1.0f;
+        pos.xyz = vec3(0);
     }
+
+    gl_Position = vec4(pos.xyz, 1.0f);
 }

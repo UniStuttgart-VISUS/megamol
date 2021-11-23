@@ -24,6 +24,8 @@ uniform bool useGlobalRad;
 
 #include "srtest_touchplane.glsl"
 
+#include "srtest_frustum.glsl"
+
 out Point {
     flat vec4 pointColor;
     flat vec3 objPos;
@@ -61,11 +63,21 @@ void main() {
         v[2] = vec4(objPos + vr + vu, 1.0f);
         v[3] = vec4(objPos - vr + vu, 1.0f);
 
+        v[0] = MVP * v[0];
+        v[1] = MVP * v[1];
+        v[2] = MVP * v[2];
+        v[3] = MVP * v[3];
+
         vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
         projPos = projPos / projPos.w;
 
+        vec3 fac = vec3(1.0f);
+        if (isOutsideP(v[0], v[1], v[2], v[3], rad)) {
+            fac = vec3(0.0f);
+        }
+
         for (int i = 0; i < NUM_V; ++i) {
-            v[i] = MVP * v[i];
+            //v[i] = MVP * v[i];
             v[i] /= v[i].w;
 
             pp[l_idx * NUM_V + i].pointColor = pointColor;
@@ -77,7 +89,7 @@ void main() {
             pp[l_idx * NUM_V + i].sqrRad = sqrRad;
 
 
-            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy, projPos.z, 1.0f);
+            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy * fac.xy, projPos.z * fac.z, 1.0f);
         }
 
         gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 1;
