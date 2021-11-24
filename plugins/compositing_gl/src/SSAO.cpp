@@ -322,27 +322,28 @@ bool megamol::compositing::SSAO::create() {
             vislib::graphics::gl::ShaderSource csNaiveSSAO;
             vislib::graphics::gl::ShaderSource csNaiveSSAOBlur;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepths");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepths");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSPrepareDepths", csPrepareDepths))
+                    "Compositing::assao::CSPrepareDepths", csPrepareDepths))
                 return false;
             if (!m_prepareDepthsPrgm->Compile(csPrepareDepths.Code(), csPrepareDepths.Count()))
                 return false;
             if (!m_prepareDepthsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsHalf");
+            // TODO: fix namespace from Compositing::SSAO to Compositing::assao
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSPrepareDepthsHalf", csPrepareDepthsHalf))
+                    "Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Compile(csPrepareDepthsHalf.Code(), csPrepareDepthsHalf.Count()))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsAndNormals");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormals");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
+                    "Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
                 return false;
             if (!m_prepareDepthsAndNormalsPrgm->Compile(
                     csPrepareDepthsAndNormals.Code(), csPrepareDepthsAndNormals.Count()))
@@ -350,9 +351,9 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsAndNormalsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsAndNormalsHalf");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
+                    "Compositing::assao::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
                 return false;
             if (!m_prepareDepthsAndNormalsHalfPrgm->Compile(
                     csPrepareDepthsAndNormalsHalf.Code(), csPrepareDepthsAndNormalsHalf.Count()))
@@ -361,8 +362,8 @@ bool megamol::compositing::SSAO::create() {
                 return false;
 
             for (int i = 0; i < SSAODepth_MIP_LEVELS - 1; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthMip%i", i+1);
-                std::string identifier = "Compositing::SSAO::CSPrepareDepthMip" + std::to_string(i + 1);
+                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i+1);
+                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(
                         identifier.c_str(), csPrepareDepthMip[i]))
                     return false;
@@ -375,10 +376,10 @@ bool megamol::compositing::SSAO::create() {
 
             // one less than cs_generate.size() because the adaptive quality level is not implemented (yet)
             for (int i = 0; i < 4; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSGenerateQ%i", i);
-                std::string identifier = "Compositing::SSAO::CSGenerateQ" + std::to_string(i);
+                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSGenerateQ%i", i);
+                std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
                 if (i >= 4)
-                    identifier = "Compositing::SSAO::CSGenerateQ3Base";
+                    identifier = "Compositing::assao::CSGenerateQ3Base";
 
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(identifier.c_str(), csGenerate[i]))
                     return false;
@@ -388,52 +389,52 @@ bool megamol::compositing::SSAO::create() {
                     return false;
             }
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSSmartBlur");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::SSAO::CSSmartBlur", csSmartBlur))
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlur");
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
                 return false;
             if (!m_smartBlurPrgm->Compile(csSmartBlur.Code(), csSmartBlur.Count()))
                 return false;
             if (!m_smartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSSmartBlurWide");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlurWide");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSSmartBlurWide", csSmartBlur_wide))
+                    "Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
                 return false;
             if (!m_smartBlurWidePrgm->Compile(csSmartBlur_wide.Code(), csSmartBlur_wide.Count()))
                 return false;
             if (!m_smartBlurWidePrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartBlur");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartBlur");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSNonSmartBlur", csNonSmartBlur))
+                    "Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
                 return false;
             if (!m_nonSmartBlurPrgm->Compile(csNonSmartBlur.Code(), csNonSmartBlur.Count()))
                 return false;
             if (!m_nonSmartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSApply");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::SSAO::CSApply", csApply))
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSApply");
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSApply", csApply))
                 return false;
             if (!m_applyPrgm->Compile(csApply.Code(), csApply.Count()))
                 return false;
             if (!m_applyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartApply");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartApply");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSNonSmartApply", csNonSmartApply))
+                    "Compositing::assao::CSNonSmartApply", csNonSmartApply))
                 return false;
             if (!m_nonSmartApplyPrgm->Compile(csNonSmartApply.Code(), csNonSmartApply.Count()))
                 return false;
             if (!m_nonSmartApplyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartHalfApply");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartHalfApply");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::SSAO::CSNonSmartHalfApply", csNonSmartHalfApply))
+                    "Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
                 return false;
             if (!m_nonSmartHalfApplyPrgm->Compile(csNonSmartHalfApply.Code(), csNonSmartHalfApply.Count()))
                 return false;
