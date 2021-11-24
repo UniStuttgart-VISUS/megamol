@@ -34,6 +34,11 @@ void glfw_window_blit::set_framebuffer_active() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
+void glfw_window_blit::set_framebuffer_size(unsigned int width, unsigned int height) {
+    fbo_width = width;
+    fbo_height = height;
+}
+
 void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height) {
     // credit goes to: https://stackoverflow.com/questions/31482816/opengl-is-there-an-easier-way-to-fill-window-with-a-texture-instead-using-vbo
 

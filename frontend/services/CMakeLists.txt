@@ -158,10 +158,10 @@ if(BUILD_FRONTEND_SERVICES)
 
   if (ENABLE_GL)
     require_external(glad)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core_gl glad glm imgui implot imguizmoquat)
-  else ()
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
+    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
   endif()
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
 
 
   # Install gui resources

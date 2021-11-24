@@ -9,18 +9,14 @@
 #define MEGAMOL_GUI_PICKING_INCLUDED
 #pragma once
 
-#define NON_GL_TRUE ;
-#define NON_GL_EMPTY ;
-#ifndef WITH_GL
-#define NON_GL_TRUE {return true;}
-#define NON_GL_EMPTY {}
-#else
+#include "GL_STUB.h"
+
 // forward declaration
 namespace glowl {
 class FramebufferObject;
 class GLSLProgram;
 }
-#endif
+
 #define PICKING_INTERACTION_TUPLE_INIT \
     { false, -1, FLT_MAX }
 #include <map>
@@ -75,13 +71,13 @@ namespace utility {
     public:
 
         PickingBuffer();
-        ~PickingBuffer() NON_GL_EMPTY
+        ~PickingBuffer() GL_STUB();
 
         // Call only once per frame
-        bool EnableInteraction(glm::vec2 vp_dim) NON_GL_TRUE
+        bool EnableInteraction(glm::vec2 vp_dim) GL_STUB(true);
 
         // Call only once per frame
-        bool DisableInteraction() NON_GL_TRUE
+        bool DisableInteraction() GL_STUB(true);
 
         bool ProcessMouseMove(double x, double y);
 

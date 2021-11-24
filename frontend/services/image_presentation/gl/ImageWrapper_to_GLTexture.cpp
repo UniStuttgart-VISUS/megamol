@@ -6,12 +6,16 @@
  */
 
 #include "ImageWrapper_to_GLTexture.hpp"
-#include "ImageWrapper_to_ByteArray.hpp"
+#include "ImageWrapper_Conversion_Helpers.hpp"
+
 #include "glad/gl.h"
+
+#include <tuple>
 
 using namespace megamol::frontend_resources;
 
 namespace gl_wrapper_impl {
+
     void gl_init_texture(unsigned int& handle) {
         glCreateTextures(GL_TEXTURE_2D, 1, &handle);
     }
@@ -79,7 +83,6 @@ gl_texture::~gl_texture() {
     this->clear();
 }
 
-
 void gl_texture::from_image(ImageWrapper const& image) {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
     this->size = image.size;
@@ -90,7 +93,7 @@ void gl_texture::from_image(ImageWrapper const& image) {
         this->texture_reference = this->texture;
         break;
     case WrappedImageType::GLTexureHandle:
-        this->texture_reference = to_uint(image.referenced_image_handle);
+        this->texture_reference = conversion::to_uint(image.referenced_image_handle);
         break;
     }
 }

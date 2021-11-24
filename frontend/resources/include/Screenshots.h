@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "GL_STUB.h"
+
 #include <filesystem>
 #include <vector>
 
@@ -82,15 +84,9 @@ class GLScreenshotSource : public IScreenshotSource {
 public:
     enum ReadBuffer { FRONT, BACK, COLOR_ATT0, COLOR_ATT1, COLOR_ATT2, COLOR_ATT3};
 
-#ifdef WITH_GL
-    void set_read_buffer(ReadBuffer buffer);
-    ScreenshotImageData const& take_screenshot() const override;
-#else
-    void set_read_buffer(ReadBuffer buffer) {}
-    ScreenshotImageData const& take_screenshot() const override {
-        return ScreenshotImageData();
-    }
-#endif
+    void set_read_buffer(ReadBuffer buffer) GL_STUB();
+
+    ScreenshotImageData const& take_screenshot() const override GL_STUB({});
 
 private:
     ReadBuffer m_read_buffer = FRONT;
