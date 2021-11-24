@@ -28,6 +28,6 @@ name=FindNextFileW stuff
 KERNELBASE.dll!FindNextFileW
 
 UNINITIALIZED READ
-name=dir iterator crap
+name=dir iterator stuff
 ...
 megamol.exe!std::filesystem::recursive_directory_iterator::operator++
