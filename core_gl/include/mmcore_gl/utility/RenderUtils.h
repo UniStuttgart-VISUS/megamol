@@ -18,8 +18,7 @@
 #include <glowl/BufferObject.hpp>
 #include <glowl/Texture2D.hpp>
 #include <glowl/GLSLProgram.hpp>
-
-#include "glowl/FramebufferObject.hpp"
+#include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/misc/PngBitmapCodec.h"

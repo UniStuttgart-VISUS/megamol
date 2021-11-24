@@ -7,6 +7,12 @@
 
 #pragma once
 
+#define NON_GL_TRUE ;
+#define NON_GL_EMPTY ;
+#ifndef WITH_GL
+#define NON_GL_TRUE {return true;}
+#define NON_GL_EMPTY {}
+#endif
 #include "AbstractFrontendService.hpp"
 
 #include "KeyboardMouse_Events.h"
@@ -75,83 +81,44 @@ public:
         return m_requestedResourcesNames;
         }
 
-#ifdef WITH_GL
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-    bool init(const Config& config);
-    bool init(void* configPtr) override;
-    void close() override;
+    bool init(const Config& config) NON_GL_TRUE
+    bool init(void* configPtr) override NON_GL_TRUE
+    void close() override NON_GL_EMPTY
 
-    void updateProvidedResources() override;
-    void digestChangedRequestedResources() override;
-    void setRequestedResources(std::vector<FrontendResource> resources) override;
+    void updateProvidedResources() override NON_GL_EMPTY
+    void digestChangedRequestedResources() override NON_GL_EMPTY
+    void setRequestedResources(std::vector<FrontendResource> resources) override NON_GL_EMPTY
 
     // GLFW event callbacks need to be public for technical reasons.
     // keyboard events
-    void glfw_onKey_func(const int key, const int scancode, const int action, const int mods);
-    void glfw_onChar_func(const unsigned int codepoint);
+    void glfw_onKey_func(const int key, const int scancode, const int action, const int mods) NON_GL_EMPTY
+    void glfw_onChar_func(const unsigned int codepoint) NON_GL_EMPTY
 
     // mouse events
-    void glfw_onMouseButton_func(const int button, const int action, const int mods);
-    void glfw_onMouseCursorPosition_func(const double xpos, const double ypos);
-    void glfw_onMouseCursorEnter_func(const bool entered);
-    void glfw_onMouseScroll_func(const double xoffset, const double yoffset);
+    void glfw_onMouseButton_func(const int button, const int action, const int mods) NON_GL_EMPTY
+    void glfw_onMouseCursorPosition_func(const double xpos, const double ypos) NON_GL_EMPTY
+    void glfw_onMouseCursorEnter_func(const bool entered) NON_GL_EMPTY
+    void glfw_onMouseScroll_func(const double xoffset, const double yoffset) NON_GL_EMPTY
 
     // window events
-    void glfw_onWindowSize_func(const int width /* in screen coordinates, of the window */, const int height);
-    void glfw_onWindowFocus_func(const bool focused);
-    void glfw_onWindowShouldClose_func(const bool shouldclose);
-    void glfw_onWindowIconified_func(const bool iconified);
-    void glfw_onWindowContentScale_func(const float xscale, const float yscale);
-    void glfw_onPathDrop_func(const int path_count, const char* paths[]);
+    void glfw_onWindowSize_func(const int width /* in screen coordinates, of the window */, const int height) NON_GL_EMPTY
+    void glfw_onWindowFocus_func(const bool focused) NON_GL_EMPTY
+    void glfw_onWindowShouldClose_func(const bool shouldclose) NON_GL_EMPTY
+    void glfw_onWindowIconified_func(const bool iconified) NON_GL_EMPTY
+    void glfw_onWindowContentScale_func(const float xscale, const float yscale) NON_GL_EMPTY
+    void glfw_onPathDrop_func(const int path_count, const char* paths[]) NON_GL_EMPTY
 
     // framebuffer events
-    void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
+    void glfw_onFramebufferSize_func(const int widthpx, const int heightpx) NON_GL_EMPTY
 
 private:
-    void register_glfw_callbacks();
-    void do_every_second();
+    void register_glfw_callbacks() NON_GL_EMPTY
+    void do_every_second() NON_GL_EMPTY
 
-    void create_glfw_mouse_cursors();
-    void update_glfw_mouse_cursors(const int cursor_id);
-#else
-        // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-        bool init(const Config& config) {return 1;}
-        bool init(void* configPtr) override {return 1;}
-        void close() override {}
+    void create_glfw_mouse_cursors() NON_GL_EMPTY
+    void update_glfw_mouse_cursors(const int cursor_id) NON_GL_EMPTY
 
-        void updateProvidedResources() override {}
-        void digestChangedRequestedResources() override {}
-        void setRequestedResources(std::vector<FrontendResource> resources) override {}
-
-        // GLFW event callbacks need to be public for technical reasons.
-        // keyboard events
-        void glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {}
-        void glfw_onChar_func(const unsigned int codepoint) {}
-
-        // mouse events
-        void glfw_onMouseButton_func(const int button, const int action, const int mods) {}
-        void glfw_onMouseCursorPosition_func(const double xpos, const double ypos) {}
-        void glfw_onMouseCursorEnter_func(const bool entered) {}
-        void glfw_onMouseScroll_func(const double xoffset, const double yoffset) {}
-
-        // window events
-        void glfw_onWindowSize_func(const int width, const int height) {}
-        void glfw_onWindowFocus_func(const bool focused) {}
-        void glfw_onWindowShouldClose_func(const bool shouldclose) {}
-        void glfw_onWindowIconified_func(const bool iconified) {}
-        void glfw_onWindowContentScale_func(const float xscale, const float yscale) {}
-        void glfw_onPathDrop_func(const int path_count, const char* paths[]) {}
-
-        // framebuffer events
-        void glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {}
-
-    private:
-        void register_glfw_callbacks() {}
-        void do_every_second() {}
-
-        void create_glfw_mouse_cursors() {}
-        void update_glfw_mouse_cursors(const int cursor_id) {}
-#endif
 
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;

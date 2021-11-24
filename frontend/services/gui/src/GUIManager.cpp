@@ -7,9 +7,9 @@
 
 
 #include "GUIManager.h"
-#include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 #include "mmcore/versioninfo.h"
+#include "mmcore/utility/FileUtils.h"
 #include "widgets/ButtonWidgets.h"
 #include "widgets/CorporateGreyStyle.h"
 #include "widgets/CorporateWhiteStyle.h"
@@ -106,6 +106,7 @@ bool GUIManager::CreateContext(ImGuiRenderBackend imgui_rbnd) {
     // Check prerequisities for requested API
     switch (imgui_rbnd) {
     case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
         bool prerequisities_given = true;
 #ifdef _WIN32 // Windows
         HDC ogl_current_display = ::wglGetCurrentDC();
@@ -143,6 +144,7 @@ bool GUIManager::CreateContext(ImGuiRenderBackend imgui_rbnd) {
                 __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+#endif
     } break;
     case (ImGuiRenderBackend::CPU): {
         /// TODO
@@ -162,6 +164,7 @@ bool GUIManager::CreateContext(ImGuiRenderBackend imgui_rbnd) {
         if (!other_context_exists) {
             switch (imgui_rbnd) {
             case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
                 // Init OpenGL for ImGui
                 if (ImGui_ImplOpenGL3_Init(nullptr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
@@ -172,7 +175,7 @@ bool GUIManager::CreateContext(ImGuiRenderBackend imgui_rbnd) {
                         __LINE__);
                     return false;
                 }
-
+#endif
             } break;
             case (ImGuiRenderBackend::CPU): {
                 /// TODO
@@ -305,7 +308,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Start new ImGui frame --------------------------------------------------
     switch (this->imgui_initialized_rbnd) {
     case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
         ImGui_ImplOpenGL3_NewFrame();
+#endif
     } break;
     case (ImGuiRenderBackend::CPU): {
         /// TODO
@@ -361,8 +366,8 @@ bool GUIManager::PostDraw() {
         ImGuiStyle& style = ImGui::GetStyle();
 
         // Enable backend rendering
-        auto width = static_cast<GLsizei>(io.DisplaySize.x);
-        auto height = static_cast<GLsizei>(io.DisplaySize.y);
+        auto width = static_cast<size_t>(io.DisplaySize.x);
+        auto height = static_cast<size_t>(io.DisplaySize.y);
         bool create_fbo = false;
         if (this->fbo == nullptr) {
             create_fbo = true;
@@ -372,6 +377,7 @@ bool GUIManager::PostDraw() {
         }
         switch (this->imgui_initialized_rbnd) {
         case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
             if (create_fbo) {
                 try {
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -393,6 +399,7 @@ bool GUIManager::PostDraw() {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, width, height);
             glEnable(GL_DEPTH_TEST);
+#endif
         } break;
         case (ImGuiRenderBackend::CPU): {
             /// TODO
@@ -444,8 +451,10 @@ bool GUIManager::PostDraw() {
         // Actual backend rendering
         switch (this->imgui_initialized_rbnd) {
         case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
             ImGui_ImplOpenGL3_RenderDrawData(draw_data);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
         } break;
         case (ImGuiRenderBackend::CPU): {
             /// TODO
@@ -476,7 +485,9 @@ bool GUIManager::PostDraw() {
                     bool font_api_load_success = false;
                     switch (this->imgui_initialized_rbnd) {
                     case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
                         font_api_load_success = ImGui_ImplOpenGL3_CreateFontsTexture();
+#endif
                     } break;
                     case (ImGuiRenderBackend::CPU): {
                         /// TODO
@@ -1139,7 +1150,9 @@ bool GUIManager::destroy_context() {
                 // Shutdown API only if only one context is left
                 switch (this->imgui_initialized_rbnd) {
                 case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
                     ImGui_ImplOpenGL3_Shutdown();
+#endif
                 } break;
                 case (ImGuiRenderBackend::CPU): {
                     /// TODO
@@ -1238,7 +1251,9 @@ void megamol::gui::GUIManager::load_default_fonts() {
             __LINE__);
     } break;
     case (ImGuiRenderBackend::OPEN_GL): {
+#ifdef WITH_GL
         ImGui_ImplOpenGL3_CreateFontsTexture();
+#endif
     } break;
     case (ImGuiRenderBackend::CPU): {
         /// TODO

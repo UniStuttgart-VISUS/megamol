@@ -33,7 +33,6 @@ if(BUILD_FRONTEND_SERVICES)
     "profiling_service/*.hpp"
 #   "service_template/*.hpp"
     )
-  file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
 
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "command/*.cpp"
@@ -67,16 +66,29 @@ if(BUILD_FRONTEND_SERVICES)
     endforeach()
   endif()
 
-
+  file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
   file(GLOB_RECURSE gui_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.cpp")
+  # Remove files in gl subdirectories from source list if GL ist not enabled
+  if (NOT ENABLE_GL)
+    foreach(src_file ${gui_source_files})
+      string(FIND "${src_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${src_file}")
+        list(REMOVE_ITEM gui_source_files ${src_file})
+      endif()
+    endforeach()
+    foreach(header_file ${gui_header_files})
+      string(FIND "${header_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${header_file}")
+        list(REMOVE_ITEM gui_header_files ${header_file})
+      endif()
+    endforeach()
+  endif()
+
 
   # Add target
-  if (ENABLE_GL)
-    add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
-    set(GUI_INCLUDE "gui/src")
-  else ()
-    add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
-  endif()
+  add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC
     "include"
@@ -91,7 +103,7 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation"
     "remote_service"
     "profiling_service"
-    ${GUI_INCLUDE}
+    "gui/src"
    # "service_template"
   )
 

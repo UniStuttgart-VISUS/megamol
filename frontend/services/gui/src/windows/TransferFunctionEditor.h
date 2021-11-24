@@ -13,8 +13,7 @@
 #include "AbstractWindow.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget_gl.h"
-
+#include "widgets/ImageWidget.h"
 
 using namespace megamol::core::param;
 

@@ -63,6 +63,13 @@ ImageWrapper megamol::frontend_resources::wrap_image(
     return wrap_image<WrappedImageType::ByteArray>(size, &byte_texture, channels);
 }
 
+ImageWrapper megamol::frontend_resources::wrap_image(
+    ImageWrapper::ImageSize size,
+    std::vector<uint32_t> const& byte_texture,
+    ImageWrapper::DataChannels channels) {
+    return wrap_image<WrappedImageType::ByteArray>(size, &byte_texture, channels);
+}
+
 size_t megamol::frontend_resources::channels_count(ImageWrapper::DataChannels channels) {
     switch (channels) {
     case ImageWrapper::DataChannels::RGB8:

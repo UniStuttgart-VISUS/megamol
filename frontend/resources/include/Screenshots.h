@@ -87,7 +87,9 @@ public:
     ScreenshotImageData const& take_screenshot() const override;
 #else
     void set_read_buffer(ReadBuffer buffer) {}
-    ScreenshotImageData const& take_screenshot() const override {}
+    ScreenshotImageData const& take_screenshot() const override {
+        return ScreenshotImageData();
+    }
 #endif
 
 private:

@@ -7,6 +7,12 @@
 
 #pragma once
 
+#define NON_GL_DEFAULT ;
+#define NON_GL_EMPTY ;
+#ifndef WITH_GL
+#define NON_GL_DEFAULT = default;
+#define NON_GL_EMPTY {}
+#endif
 #include "ImageWrapper.h"
 
 namespace megamol {
@@ -31,18 +37,11 @@ namespace frontend_resources {
 
         unsigned int as_gl_handle();
 
+        ~gl_texture() NON_GL_DEFAULT
+    private:
+        void assign(gl_texture const& other, bool take_ownership) NON_GL_EMPTY
+        void from_image(ImageWrapper const& image) NON_GL_EMPTY
 
-#ifdef WITH_GL
-        ~gl_texture(); // frees texture if owned
-    private:
-        void assign(gl_texture const& other, bool take_ownership);
-        void from_image(ImageWrapper const& image);
-#else
-        ~gl_texture() = default;
-    private:
-        void assign(gl_texture const& other, bool take_ownership) {}
-        void from_image(ImageWrapper const& image) {}
-#endif
         void clear() {
             this->image_wrapper_ptr = nullptr;
             this->texture_reference = 0;

@@ -6,7 +6,7 @@
 #include "mmcore/CallerSlot.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/CallTriMeshData.h"
+#include "mesh/MeshCalls.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include <map>
 
@@ -73,10 +73,11 @@ private:
     std::map<std::string, std::array<float,6>> lineMap;
     
     
-    geocalls::CallTriMeshData::Mesh mesh;
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
     std::vector<float> allVerts;
     std::vector<float> allCols;
     std::vector<unsigned int> allIdx;
+    uint32_t mesh_version = 0;
 
     };
 

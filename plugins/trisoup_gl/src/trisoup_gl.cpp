@@ -10,6 +10,12 @@
 #include "ModernTrisoupRenderer.h"
 #include "TriSoupRenderer.h"
 #include "vislib/Trace.h"
+#include "BlockVolumeMesh.h"
+#include "CoordSysMarker.h"
+#include "TriSoupDataSource.h"
+#include "WavefrontObjDataSource.h"
+#include "volumetrics/IsoSurface.h"
+#include "volumetrics/VoluMetricJob.h"
 
 namespace megamol::trisoup_gl {
 class TrisoupGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -30,6 +36,12 @@ public:
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::TriSoupRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::ModernTrisoupRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::TriSoupDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::WavefrontObjDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::BlockVolumeMesh>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::volumetrics::VoluMetricJob>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::CoordSysMarker>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::volumetrics::IsoSurface>();
     }
 };
 } // namespace megamol::trisoup_gl

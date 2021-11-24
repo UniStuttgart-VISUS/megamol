@@ -6,6 +6,13 @@
  */
 #pragma once
 #include "ImageWrapper.h"
+#define NON_GL_DEFAULT ;
+#define NON_GL_EMPTY ;
+#ifndef WITH_GL
+#define NON_GL_DEFAULT = default;
+#define NON_GL_EMPTY {}
+#endif
+
 
 namespace megamol::frontend {
 
@@ -17,19 +24,14 @@ namespace megamol::frontend {
         fbo_width = width;
         fbo_height = height;
     }
-#ifdef WITH_GL
-    glfw_window_blit();
-    ~glfw_window_blit();
 
-    void set_framebuffer_active();
-    void blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height);
-#else
-    glfw_window_blit() = default;
-    ~glfw_window_blit() = default;
+    glfw_window_blit() NON_GL_DEFAULT
+    ~glfw_window_blit() NON_GL_DEFAULT
 
-    void set_framebuffer_active() {}
-    void blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height) {}
-#endif
+    void set_framebuffer_active() NON_GL_EMPTY
+    void blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height) NON_GL_EMPTY
+
+
     };
 }
 

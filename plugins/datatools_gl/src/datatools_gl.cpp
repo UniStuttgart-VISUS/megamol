@@ -14,6 +14,11 @@
 #include "misc/ParticleInspector.h"
 #include "misc/ParticleWorker.h"
 #include "misc/AddClusterColours.h"
+#include "MeshTranslateRotateScale.h"
+#include "io/PLYDataSource.h"
+#include "io/PlyWriter.h"
+#include "io/STLDataSource.h"
+#include "io/TriMeshSTLWriter.h"
 
 
 namespace megamol::datatools_gl {
@@ -39,6 +44,12 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleListMergeModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleWorker>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::AddClusterColours>();
+
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::io::PlyWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::io::STLDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::io::TriMeshSTLWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::io::PLYDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::MeshTranslateRotateScale>();
 
     }
 };

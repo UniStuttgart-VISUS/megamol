@@ -9,7 +9,7 @@
 
 #include "OSPRayRenderer.h"
 
-#include "CallOSPRayTransformation.h"
+#include "mmospray/CallOSPRayTransformation.h"
 #include "OSPRayAOVSphereGeometry.h"
 #include "OSPRayAPIStructure.h"
 #include "OSPRayGeometryTest.h"

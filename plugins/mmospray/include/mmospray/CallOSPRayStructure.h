@@ -13,7 +13,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mesh/MeshCalls.h"
-#include "CallOSPRayTransformation.h"
+#include "mmospray/CallOSPRayTransformation.h"
 #include "ParticleDataAccessCollection.h"
 
 namespace megamol {

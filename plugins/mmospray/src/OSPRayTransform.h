@@ -8,7 +8,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/Module.h"
-#include "CallOSPRayTransformation.h"
+#include "mmospray/CallOSPRayTransformation.h"
 
 
 namespace megamol {

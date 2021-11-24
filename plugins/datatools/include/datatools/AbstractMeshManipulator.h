@@ -6,13 +6,13 @@
  */
 #pragma once
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_GL/CallTriMeshDataGL.h"
 #include "AbstractManipulator.h"
 
 namespace megamol {
 namespace datatools {
 
-using AbstractMeshManipulator = AbstractManipulator<geocalls::CallTriMeshData>;
+using AbstractMeshManipulator = AbstractManipulator<geocalls_gl::CallTriMeshDataGL>;
 
 } /* end namespace datatools */
 } /* end namespace megamol */

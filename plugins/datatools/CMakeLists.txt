@@ -7,8 +7,8 @@ megamol_plugin(datatools
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
     geometry_calls
+    mesh
   DEPENDS_EXTERNALS
-    tinyply
     Eigen
     nanoflann
     sim_sort

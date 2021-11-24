@@ -79,10 +79,14 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 }
 
 
-megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
-
+megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), animation_group(), group_widgets()
+#ifdef WITH_GL
+, cube_widget_group() {
     // Create/register available group widgets
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));
+#else
+{
+#endif
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->animation_group));
 }
 
@@ -90,7 +94,7 @@ megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
     bool in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
     std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
-    megamol::core_gl::utility::PickingBuffer* inout_picking_buffer) {
+    megamol::core::utility::PickingBuffer* inout_picking_buffer) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 

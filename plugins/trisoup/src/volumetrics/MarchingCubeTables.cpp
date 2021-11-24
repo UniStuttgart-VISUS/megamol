@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "MarchingCubeTables.h"
+#include "trisoup/volumetrics/MarchingCubeTables.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;

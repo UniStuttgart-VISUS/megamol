@@ -30,7 +30,6 @@
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
-#include "MeshTranslateRotateScale.h"
 #include "ModColIRange.h"
 #include "MultiParticleRelister.h"
 #include "NullParticleWriter.h"
@@ -66,10 +65,6 @@
 #include "io/CPERAWDataSource.h"
 #include "io/MMGDDDataSource.h"
 #include "io/MMGDDWriter.h"
-#include "io/PLYDataSource.h"
-#include "io/PlyWriter.h"
-#include "io/STLDataSource.h"
-#include "io/TriMeshSTLWriter.h"
 #include "datatools/GraphDataCall.h"
 #include "datatools/MultiIndexListDataCall.h"
 #include "datatools/ParticleFilterMapDataCall.h"
@@ -162,17 +157,11 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThermodyn>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PlyWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIParticleCollector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIVolumeAggregator>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCListsConcatenate>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::STLDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::TriMeshSTLWriter>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::ParticleTranslateRotateScale>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PLYDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MeshTranslateRotateScale>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleTranslateRotateScale>();
         this->module_descriptions
             .RegisterAutoDescription<megamol::datatools::ParticleVisibilityFromVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVFileSequence>();

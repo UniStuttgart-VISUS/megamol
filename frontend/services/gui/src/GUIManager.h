@@ -14,12 +14,16 @@
 #include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore_gl/utility/Picking_gl.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
+#include "mmcore/view/CPUFramebuffer.h"
+#include "mmcore/utility/Picking.h"
+#ifdef WITH_GL
+#include "imgui_impl_opengl3.h"
+#endif
 
 
 namespace megamol {
@@ -166,8 +170,8 @@ namespace gui {
             return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
         }
 
-
-        inline void GetFBOData(
+#ifdef WITH_GL
+        inline void GetFBODataGL(
             unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
             if (this->fbo == nullptr)
                 return;
@@ -176,6 +180,12 @@ namespace gui {
             out_fbo_width = this->fbo->getWidth();
             out_fbo_height = this->fbo->getHeight();
         }
+#else
+        inline std::shared_ptr<core::view::CPUFramebuffer> getFBOHandle() {
+            return this->fbo;
+        }
+
+#endif
 
         ///////// SET ///////////
 
@@ -345,10 +355,15 @@ namespace gui {
         // Widgets
         FileBrowserWidget file_browser;
         HoverToolTip tooltip;
-        megamol::core_gl::utility::PickingBuffer picking_buffer;
+        megamol::core::utility::PickingBuffer picking_buffer;
 
         // FBO
+#ifdef WITH_GL
         std::shared_ptr<glowl::FramebufferObject> fbo;
+#else
+        // FBO
+        std::shared_ptr<core::view::CPUFramebuffer> fbo;
+#endif
 
         // FUNCTIONS --------------------------------------------------------------
 

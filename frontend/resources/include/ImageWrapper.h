@@ -71,6 +71,8 @@ ImageWrapper wrap_image(ImageWrapper::ImageSize size, unsigned int gl_texture_ha
 
 ImageWrapper wrap_image(ImageWrapper::ImageSize size, std::vector<unsigned char> const& byte_texture, ImageWrapper::DataChannels channels);
 
+ImageWrapper wrap_image(ImageWrapper::ImageSize size, std::vector<uint32_t> const& byte_texture, ImageWrapper::DataChannels channels);
+
 size_t channels_count(ImageWrapper::DataChannels channels);
 
 } /* end namespace frontend_resources */

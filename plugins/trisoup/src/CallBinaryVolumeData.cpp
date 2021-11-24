@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "CallBinaryVolumeData.h"
+#include "trisoup/CallBinaryVolumeData.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;

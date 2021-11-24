@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "TagVolume.h"
+#include "trisoup/volumetrics/TagVolume.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
