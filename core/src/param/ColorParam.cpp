@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/ColourParser.h"
 
@@ -25,7 +25,7 @@ ColorParam::ColorParam(float initR, float initG, float initB, float initA) : Abs
     this->SetValue({initR, initG, initB, initA});
 }
 
-ColorParam::ColorParam(const vislib::TString& initVal) : AbstractParam(), val() { 
+ColorParam::ColorParam(const vislib::TString& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::COLOR);
     this->ParseValue(initVal.PeekBuffer());
 }
@@ -43,12 +43,11 @@ bool ColorParam::ParseValue(std::string const& v) {
     try {
         float vParsed[4];
         if (core::utility::ColourParser::FromString(v.c_str(), 4, vParsed)) {
-            ColorType vConverted = { vParsed[0], vParsed[1], vParsed[2], vParsed[3] };
+            ColorType vConverted = {vParsed[0], vParsed[1], vParsed[2], vParsed[3]};
             this->SetValue(vConverted);
             return true;
         }
-    } catch (...) {
-    }
+    } catch (...) {}
 
     return false;
 }
@@ -61,6 +60,7 @@ void ColorParam::SetValue(const ColorType& v, bool setDirty) {
     if (v != this->val) {
         this->val = v;
         this->indicateChange();
-        if (setDirty) this->setDirty();
+        if (setDirty)
+            this->setDirty();
     }
 }

@@ -9,9 +9,9 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include <string>
 #include <iomanip>
 #include <sstream>
+#include <string>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -21,11 +21,11 @@ using namespace megamol::volume;
  * DatRawWriter::DatRawWriter
  */
 DatRawWriter::DatRawWriter(void)
-    : AbstractDataWriter()
-    , filenameSlot("filepathPrefix", "The path prefix of the folder and file the files will be written to. To this "
-                                     "path the ending .dat and .raw will be added")
-    , frameIDSlot("frameID", "The id of the data frame that will be written")
-    , dataSlot("data", "The slot requesting the data to be written") {
+        : AbstractDataWriter()
+        , filenameSlot("filepathPrefix", "The path prefix of the folder and file the files will be written to. To this "
+                                         "path the ending .dat and .raw will be added")
+        , frameIDSlot("frameID", "The id of the data frame that will be written")
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot.SetParameter(
         new param::FilePathParam("", megamol::core::param::FilePathParam::Flag_File_ToBeCreated));
@@ -41,12 +41,16 @@ DatRawWriter::DatRawWriter(void)
 /*
  * DatRawWriter::~DatRawWriter
  */
-DatRawWriter::~DatRawWriter(void) { this->Release(); }
+DatRawWriter::~DatRawWriter(void) {
+    this->Release();
+}
 
 /*
  * DatRawWriter::create
  */
-bool DatRawWriter::create(void) { return true; }
+bool DatRawWriter::create(void) {
+    return true;
+}
 
 /*
  * DatRawWriter::release
@@ -95,7 +99,7 @@ bool DatRawWriter::run(void) {
     }
 
     std::stringstream datpath;
-    datpath << filepath << std::setw(4) << std::setfill('0') <<  std::to_string(frame) << ".dat";
+    datpath << filepath << std::setw(4) << std::setfill('0') << std::to_string(frame) << ".dat";
     std::stringstream rawpath;
     rawpath << filepath << std::setw(4) << std::setfill('0') << std::to_string(frame) << ".raw";
     return writeFrame(datpath.str(), rawpath.str(), *vdc);

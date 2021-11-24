@@ -19,22 +19,22 @@
 namespace vislib {
 namespace sys {
 
-    /**
-     * The FastFile typedef selects the best file implementation for the
-     * operating system.
-     *
-     * On Windows the MemmappedFile is 1-2x faster than the BufferedFile.
-     *
-     * On Linux the BufferedFile is ~20x faster than the MemmappedFile.
-     */
+/**
+ * The FastFile typedef selects the best file implementation for the
+ * operating system.
+ *
+ * On Windows the MemmappedFile is 1-2x faster than the BufferedFile.
+ *
+ * On Linux the BufferedFile is ~20x faster than the MemmappedFile.
+ */
 #ifdef _WIN32
-    typedef MemmappedFile FastFile;
+typedef MemmappedFile FastFile;
 #else
-    typedef BufferedFile FastFile;
+typedef BufferedFile FastFile;
 #endif
 
-}
-}
+} // namespace sys
+} // namespace vislib
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

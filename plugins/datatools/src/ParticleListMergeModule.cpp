@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ParticleListMergeModule.h"
+#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;
@@ -16,8 +16,12 @@ using namespace megamol;
  * datatools::ParticleListMergeModule::ParticleListMergeModule
  */
 datatools::ParticleListMergeModule::ParticleListMergeModule(void)
-        : AbstractParticleManipulator("outData", "inData"), tfq(),
-        dataHash(0), frameId(0), parts(), data() {
+        : AbstractParticleManipulator("outData", "inData")
+        , tfq()
+        , dataHash(0)
+        , frameId(0)
+        , parts()
+        , data() {
     this->MakeSlotAvailable(this->tfq.GetSlot());
 }
 
@@ -72,8 +76,10 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
     uint64_t partCnt = 0;
     for (unsigned int li = 0; li < inDat.GetParticleListCount(); li++) {
         geocalls::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
-        if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE) continue;
-        if (p.GetCount() == 0) continue;
+        if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE)
+            continue;
+        if (p.GetCount() == 0)
+            continue;
 
         if (first) {
             first = false;
@@ -93,8 +99,8 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
                         vdType = SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
                     }
-                } else if ((vdType == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-                        || (vdType == SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) {
+                } else if ((vdType == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ) ||
+                           (vdType == SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) {
                     if (!vislib::math::IsEqual(gr, p.GetGlobalRadius(), my_eps)) {
                         gr = 0.0f;
                         vdType = SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
@@ -109,11 +115,19 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     case SimpleSphericalParticles::COLDATA_UINT8_RGB:
                         switch (cdType) {
                         //case SimpleSphericalParticles::COLDATA_UINT8_RGB: break; // cannot happen
-                        case SimpleSphericalParticles::COLDATA_NONE: cdType = SimpleSphericalParticles::COLDATA_UINT8_RGB; break;
-                        case SimpleSphericalParticles::COLDATA_UINT8_RGBA: cdType = SimpleSphericalParticles::COLDATA_UINT8_RGBA; break;
-                        case SimpleSphericalParticles::COLDATA_FLOAT_RGB: cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGB; break;
+                        case SimpleSphericalParticles::COLDATA_NONE:
+                            cdType = SimpleSphericalParticles::COLDATA_UINT8_RGB;
+                            break;
+                        case SimpleSphericalParticles::COLDATA_UINT8_RGBA:
+                            cdType = SimpleSphericalParticles::COLDATA_UINT8_RGBA;
+                            break;
+                        case SimpleSphericalParticles::COLDATA_FLOAT_RGB:
+                            cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGB;
+                            break;
                         case SimpleSphericalParticles::COLDATA_FLOAT_I: // fall through
-                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA; break;
+                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+                            cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+                            break;
                         }
                         break;
                     case SimpleSphericalParticles::COLDATA_NONE: //< use global colour
@@ -122,24 +136,33 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     case SimpleSphericalParticles::COLDATA_UINT8_RGBA:
                         switch (cdType) {
                         case SimpleSphericalParticles::COLDATA_NONE: // fall through
-                        case SimpleSphericalParticles::COLDATA_UINT8_RGB: cdType = SimpleSphericalParticles::COLDATA_UINT8_RGBA; break;
+                        case SimpleSphericalParticles::COLDATA_UINT8_RGB:
+                            cdType = SimpleSphericalParticles::COLDATA_UINT8_RGBA;
+                            break;
                         //case SimpleSphericalParticles::COLDATA_UINT8_RGBA: // cannot happen
                         case SimpleSphericalParticles::COLDATA_FLOAT_RGB: // fall through
-                        case SimpleSphericalParticles::COLDATA_FLOAT_I: // fall through
-                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA; break;
+                        case SimpleSphericalParticles::COLDATA_FLOAT_I:   // fall through
+                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+                            cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+                            break;
                         }
                         break;
                     case SimpleSphericalParticles::COLDATA_FLOAT_RGB:
                         switch (cdType) {
                         case SimpleSphericalParticles::COLDATA_NONE: // fall through
-                        case SimpleSphericalParticles::COLDATA_UINT8_RGB: cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGB; break;
+                        case SimpleSphericalParticles::COLDATA_UINT8_RGB:
+                            cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGB;
+                            break;
                         case SimpleSphericalParticles::COLDATA_UINT8_RGBA: // fall through
                         //case SimpleSphericalParticles::COLDATA_FLOAT_RGB: // cannot happen
                         case SimpleSphericalParticles::COLDATA_FLOAT_I: // fall through
-                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA; break;
+                        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+                            cdType = SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+                            break;
                         }
                         break;
-                    case SimpleSphericalParticles::COLDATA_FLOAT_I: //< single float value to be mapped by a transfer function
+                    case SimpleSphericalParticles::
+                        COLDATA_FLOAT_I: //< single float value to be mapped by a transfer function
                         // transfer function color is FLOAT_RGBA
                         // falls through
                     case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
@@ -157,8 +180,8 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                             }
                         }
                     } else if (cdType == SimpleSphericalParticles::COLDATA_FLOAT_I) {
-                        if (!vislib::math::IsEqual(gcimin, p.GetMinColourIndexValue(), my_eps)
-                                || !vislib::math::IsEqual(gcimax, p.GetMaxColourIndexValue(), my_eps)) {
+                        if (!vislib::math::IsEqual(gcimin, p.GetMinColourIndexValue(), my_eps) ||
+                            !vislib::math::IsEqual(gcimax, p.GetMaxColourIndexValue(), my_eps)) {
                             // I will be rescaled for each list
                             gcimin = 0.0f;
                             gcimax = 1.0f;
@@ -199,19 +222,37 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
 
     unsigned int bpp = 0;
     switch (vdType) {
-    case SimpleSphericalParticles::VERTDATA_NONE: throw std::exception();
-    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: bpp = 12; break;
-    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: bpp = 16; break;
-    case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: bpp = 6; break;
+    case SimpleSphericalParticles::VERTDATA_NONE:
+        throw std::exception();
+    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        bpp = 12;
+        break;
+    case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        bpp = 16;
+        break;
+    case SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
+        bpp = 6;
+        break;
     }
     unsigned int cdoff = bpp;
     switch (cdType) {
-    case SimpleSphericalParticles::COLDATA_NONE: break;
-    case SimpleSphericalParticles::COLDATA_UINT8_RGB: bpp += 3; break;
-    case SimpleSphericalParticles::COLDATA_UINT8_RGBA: bpp += 4; break;
-    case SimpleSphericalParticles::COLDATA_FLOAT_RGB: bpp += 12; break;
-    case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: bpp += 16; break;
-    case SimpleSphericalParticles::COLDATA_FLOAT_I: bpp += 4; break;
+    case SimpleSphericalParticles::COLDATA_NONE:
+        break;
+    case SimpleSphericalParticles::COLDATA_UINT8_RGB:
+        bpp += 3;
+        break;
+    case SimpleSphericalParticles::COLDATA_UINT8_RGBA:
+        bpp += 4;
+        break;
+    case SimpleSphericalParticles::COLDATA_FLOAT_RGB:
+        bpp += 12;
+        break;
+    case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+        bpp += 16;
+        break;
+    case SimpleSphericalParticles::COLDATA_FLOAT_I:
+        bpp += 4;
+        break;
     }
 
     this->data.AssertSize(static_cast<SIZE_T>(partCnt * bpp));
@@ -221,30 +262,50 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
     partCnt = 0;
     for (unsigned int li = 0; li < inDat.GetParticleListCount(); li++) {
         geocalls::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
-        if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE) continue;
-        if (p.GetCount() == 0) continue;
+        if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE)
+            continue;
+        if (p.GetCount() == 0)
+            continue;
 
-        const uint8_t *pvd = static_cast<const uint8_t*>(p.GetVertexData());
+        const uint8_t* pvd = static_cast<const uint8_t*>(p.GetVertexData());
         size_t pvds = p.GetVertexDataStride();
         switch (p.GetVertexDataType()) {
-            case SimpleSphericalParticles::VERTDATA_NONE: throw std::exception();
-            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: pvds = std::max<size_t>(pvds, 12); break;
-            case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: pvds = std::max<size_t>(pvds, 16); break;
-            case SimpleSphericalParticles::VERTDATA_SHORT_XYZ: pvds = std::max<size_t>(pvds, 6); break;
+        case SimpleSphericalParticles::VERTDATA_NONE:
+            throw std::exception();
+        case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+            pvds = std::max<size_t>(pvds, 12);
+            break;
+        case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+            pvds = std::max<size_t>(pvds, 16);
+            break;
+        case SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
+            pvds = std::max<size_t>(pvds, 6);
+            break;
         }
         const float pgr = p.GetGlobalRadius();
 
-        const uint8_t * pcd = static_cast<const uint8_t*>(p.GetColourData());
+        const uint8_t* pcd = static_cast<const uint8_t*>(p.GetColourData());
         size_t pcds = p.GetColourDataStride();
         switch (p.GetColourDataType()) {
-        case SimpleSphericalParticles::COLDATA_NONE: break;
-        case SimpleSphericalParticles::COLDATA_UINT8_RGB: pcds = std::max<size_t>(pcds, 3); break;
-        case SimpleSphericalParticles::COLDATA_UINT8_RGBA: pcds = std::max<size_t>(pcds, 4); break;
-        case SimpleSphericalParticles::COLDATA_FLOAT_RGB: pcds = std::max<size_t>(pcds, 12); break;
-        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: pcds = std::max<size_t>(pcds, 16); break;
-        case SimpleSphericalParticles::COLDATA_FLOAT_I: pcds = std::max<size_t>(pcds, 4); break;
+        case SimpleSphericalParticles::COLDATA_NONE:
+            break;
+        case SimpleSphericalParticles::COLDATA_UINT8_RGB:
+            pcds = std::max<size_t>(pcds, 3);
+            break;
+        case SimpleSphericalParticles::COLDATA_UINT8_RGBA:
+            pcds = std::max<size_t>(pcds, 4);
+            break;
+        case SimpleSphericalParticles::COLDATA_FLOAT_RGB:
+            pcds = std::max<size_t>(pcds, 12);
+            break;
+        case SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+            pcds = std::max<size_t>(pcds, 16);
+            break;
+        case SimpleSphericalParticles::COLDATA_FLOAT_I:
+            pcds = std::max<size_t>(pcds, 4);
+            break;
         }
-        const uint8_t * const pgc = p.GetGlobalColour();
+        const uint8_t* const pgc = p.GetGlobalColour();
         const float pgcimin = p.GetMinColourIndexValue();
         const float pgcimax = p.GetMaxColourIndexValue();
 
@@ -254,10 +315,10 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                 ASSERT(p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_SHORT_XYZ);
                 ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp)), pvd, 6);
             } else {
-                float *v = this->data.AsAt<float>(static_cast<SIZE_T>(partCnt * bpp));
-                const float *pv = reinterpret_cast<const float*>(pvd);
+                float* v = this->data.AsAt<float>(static_cast<SIZE_T>(partCnt * bpp));
+                const float* pv = reinterpret_cast<const float*>(pvd);
                 if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_SHORT_XYZ) {
-                    const uint16_t *pv = reinterpret_cast<const uint16_t*>(pvd);
+                    const uint16_t* pv = reinterpret_cast<const uint16_t*>(pvd);
                     v[0] = static_cast<float>(pv[0]);
                     v[1] = static_cast<float>(pv[1]);
                     v[2] = static_cast<float>(pv[2]);
@@ -272,13 +333,14 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                 }
             }
             // color data
-            if (cdType == SimpleSphericalParticles::COLDATA_NONE) continue;
+            if (cdType == SimpleSphericalParticles::COLDATA_NONE)
+                continue;
 
-            if ((cdType == SimpleSphericalParticles::COLDATA_UINT8_RGB)
-                    || (cdType == SimpleSphericalParticles::COLDATA_UINT8_RGBA)) {
-                ASSERT((p.GetColourDataType() == SimpleSphericalParticles::COLDATA_NONE)
-                    || (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGB)
-                    || (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGBA));
+            if ((cdType == SimpleSphericalParticles::COLDATA_UINT8_RGB) ||
+                (cdType == SimpleSphericalParticles::COLDATA_UINT8_RGBA)) {
+                ASSERT((p.GetColourDataType() == SimpleSphericalParticles::COLDATA_NONE) ||
+                       (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGB) ||
+                       (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGBA));
                 uint8_t col[4];
                 if (p.GetColourDataType() != SimpleSphericalParticles::COLDATA_NONE) {
                     ::memcpy(col, pcd, (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGB) ? 3 : 4);
@@ -288,8 +350,8 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     ((cdType == SimpleSphericalParticles::COLDATA_UINT8_RGBA) ? 4 : 3));
             }
 
-            if ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGB)
-                    || (cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA)) {
+            if ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGB) ||
+                (cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA)) {
                 // p.GetColourDataType() could be anything!
                 float col[4];
                 switch (p.GetColourDataType()) {
@@ -299,10 +361,10 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     col[2] = static_cast<float>(pgc[2]) / 255.0f;
                     col[3] = static_cast<float>(pgc[3]) / 255.0f;
                     break;
-                case SimpleSphericalParticles::COLDATA_UINT8_RGBA: 
+                case SimpleSphericalParticles::COLDATA_UINT8_RGBA:
                     col[3] = static_cast<float>(reinterpret_cast<const uint8_t*>(pcd)[3]) / 255.0f;
                     // fall through
-                case SimpleSphericalParticles::COLDATA_UINT8_RGB: 
+                case SimpleSphericalParticles::COLDATA_UINT8_RGB:
                     col[2] = static_cast<float>(reinterpret_cast<const uint8_t*>(pcd)[2]) / 255.0f;
                     col[1] = static_cast<float>(reinterpret_cast<const uint8_t*>(pcd)[1]) / 255.0f;
                     col[0] = static_cast<float>(reinterpret_cast<const uint8_t*>(pcd)[0]) / 255.0f;
@@ -321,7 +383,8 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
                     this->tfq.Query(col, colI);
                 } break;
                 }
-                ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp + cdoff)), col, sizeof(float) * ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA) ? 4 : 3));
+                ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp + cdoff)), col,
+                    sizeof(float) * ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA) ? 4 : 3));
             }
 
             if (cdType == SimpleSphericalParticles::COLDATA_FLOAT_I) {
@@ -334,5 +397,4 @@ void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall
             }
         }
     }
-
 }

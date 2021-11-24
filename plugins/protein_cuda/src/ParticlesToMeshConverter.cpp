@@ -1,8 +1,8 @@
 /*
- *	ParticlesToMeshConverter.cpp
+ * ParticlesToMeshConverter.cpp
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #include "stdafx.h"
@@ -10,13 +10,13 @@
 //#define _USE_MATH_DEFINES 1
 
 #include "ParticlesToMeshConverter.h"
-#include "mmcore/CoreInstance.h"
-#include <GL/glu.h>
 #include "geometry_calls/CallTriMeshData.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/StringParam.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include <GL/glu.h>
 
 #include "vislib/StringTokeniser.h"
 
@@ -77,26 +77,31 @@ VISLIB_FORCEINLINE void copyCol_UINT8_RGBA(const void* source, float* dest) {
     *(d + 3) = static_cast<float>(*(s + 3)) / 255.0f;
 }
 
-typedef void(*copyColFunc)(const void*, float*);
+typedef void (*copyColFunc)(const void*, float*);
 
 /*
- *	ParticlesToMeshConverter::ParticlesToMeshConverter
+ * ParticlesToMeshConverter::ParticlesToMeshConverter
  */
-ParticlesToMeshConverter::ParticlesToMeshConverter(void) : Module(),
-    particleDataSlot("getData", "Connects the converter with the particle data storage"),
-    meshDataSlot("dataOut", "Connects the converter with the mesh consumer"),
-    qualityParam("quicksurf::quality", "Quality"),
-    radscaleParam("quicksurf::radscale", "Radius scale"),
-    gridspacingParam("quicksurf::gridspacing", "Grid spacing"),
-    isovalParam("quicksurf::isoval", "Isovalue"),
-    scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
-    concFactorParam("quicksurf::concentrationFactor", "Scaling factor for particle radii based on their concentration"),
-    maxRadius("quicksurf::maxRadius", "The maximal particle influence radius the quicksurf algorithm uses"),
-    setCUDAGLDevice(true),
-    firstTransfer(true),
-    recomputeVolume(true),
-    particlesSize(0), lastMDCHash(0), lastMPDCHash(0), lastVDCHash(0), lastFrameID(0)
-{
+ParticlesToMeshConverter::ParticlesToMeshConverter(void)
+        : Module()
+        , particleDataSlot("getData", "Connects the converter with the particle data storage")
+        , meshDataSlot("dataOut", "Connects the converter with the mesh consumer")
+        , qualityParam("quicksurf::quality", "Quality")
+        , radscaleParam("quicksurf::radscale", "Radius scale")
+        , gridspacingParam("quicksurf::gridspacing", "Grid spacing")
+        , isovalParam("quicksurf::isoval", "Isovalue")
+        , scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii")
+        , concFactorParam(
+              "quicksurf::concentrationFactor", "Scaling factor for particle radii based on their concentration")
+        , maxRadius("quicksurf::maxRadius", "The maximal particle influence radius the quicksurf algorithm uses")
+        , setCUDAGLDevice(true)
+        , firstTransfer(true)
+        , recomputeVolume(true)
+        , particlesSize(0)
+        , lastMDCHash(0)
+        , lastMPDCHash(0)
+        , lastVDCHash(0)
+        , lastFrameID(0) {
     this->particleDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->particleDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->particleDataSlot.SetCompatibleCall<VolumetricDataCallDescription>();
@@ -140,11 +145,11 @@ ParticlesToMeshConverter::ParticlesToMeshConverter(void) : Module(),
 }
 
 /*
- *	QuickSurfRaycaster::~QuickSurfRaycaster
+ * QuickSurfRaycaster::~QuickSurfRaycaster
  */
 ParticlesToMeshConverter::~ParticlesToMeshConverter(void) {
     if (cudaqsurf) {
-        CUDAQuickSurfAlternative *cqs = (CUDAQuickSurfAlternative *)cudaqsurf;
+        CUDAQuickSurfAlternative* cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
         delete cqs;
         cqs = nullptr;
         cudaqsurf = nullptr;
@@ -164,19 +169,17 @@ ParticlesToMeshConverter::~ParticlesToMeshConverter(void) {
         cudaFree(mcColors_d);
         mcColors_d = NULL;
     }
-    
+
     this->Release();
 }
 
 /*
- *	QuickSurfRaycaster::release
+ * QuickSurfRaycaster::release
  */
-void ParticlesToMeshConverter::release(void) {
+void ParticlesToMeshConverter::release(void) {}
 
-}
-
-bool ParticlesToMeshConverter::calcVolume(float3 bbMin, float3 bbMax, float* positions, int quality, float radscale, float gridspacing,
-    float isoval, float minConcentration, float maxConcentration, bool useCol, int timestep) {
+bool ParticlesToMeshConverter::calcVolume(float3 bbMin, float3 bbMax, float* positions, int quality, float radscale,
+    float gridspacing, float isoval, float minConcentration, float maxConcentration, bool useCol, int timestep) {
 
     float x = bbMax.x - bbMin.x;
     float y = bbMax.y - bbMin.y;
@@ -198,25 +201,32 @@ bool ParticlesToMeshConverter::calcVolume(float3 bbMin, float3 bbMax, float* pos
 
     float gausslim = 2.0f;
     switch (quality) { // TODO adjust values
-    case 3: gausslim = 4.0f; break;
-    case 2: gausslim = 3.0f; break;
-    case 1: gausslim = 2.5f; break;
+    case 3:
+        gausslim = 4.0f;
+        break;
+    case 2:
+        gausslim = 3.0f;
+        break;
+    case 1:
+        gausslim = 2.5f;
+        break;
     case 0:
-    default: gausslim = 2.0f; break;
+    default:
+        gausslim = 2.0f;
+        break;
     }
 
-    float origin[3] = { bbMin.x, bbMin.y, bbMin.z };
+    float origin[3] = {bbMin.x, bbMin.y, bbMin.z};
 
     if (cudaqsurf == NULL) {
         cudaqsurf = new CUDAQuickSurfAlternative();
     }
 
-    CUDAQuickSurfAlternative *cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
+    CUDAQuickSurfAlternative* cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
 
     int result = -1;
-    result = cqs->calc_map((long)particleCnt, positions, colorTable.data(), 1, 
-        origin, numVoxels, maxConcentration, radscale, gridspacing, 
-        isoval, gausslim, false, timestep, 20);
+    result = cqs->calc_map((long)particleCnt, positions, colorTable.data(), 1, origin, numVoxels, maxConcentration,
+        radscale, gridspacing, isoval, gausslim, false, timestep, 20);
 
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -230,21 +240,23 @@ bool ParticlesToMeshConverter::calcVolume(float3 bbMin, float3 bbMax, float* pos
 }
 
 /*
- *	QuickSurfRaycaster::create
+ * QuickSurfRaycaster::create
  */
 bool ParticlesToMeshConverter::create(void) {
     return true; // initOpenGL();
 }
 
 /*
- *	QuickSurfRaycaster::convertToMesh
+ * QuickSurfRaycaster::convertToMesh
  */
-void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
+void ParticlesToMeshConverter::makeMesh(
+    float* volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
 
-	uint3 extents = make_uint3(static_cast<unsigned int>(volSize.width), static_cast<unsigned int>(volSize.height), static_cast<unsigned int>(volSize.depth));
+    uint3 extents = make_uint3(static_cast<unsigned int>(volSize.width), static_cast<unsigned int>(volSize.height),
+        static_cast<unsigned int>(volSize.depth));
     unsigned int chunkmaxverts = 3 * extents.x * extents.y * extents.z;
 
-    float * data = volumeData;
+    float* data = volumeData;
 
 #define DOWNSAMPLE
 #ifdef DOWNSAMPLE
@@ -256,24 +268,26 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
     float newMin = std::numeric_limits<float>::max();
     float newMax = std::numeric_limits<float>::min();
 
-	for (int index = 0; index < static_cast<int>(chunkmaxverts / 3); index++) {
+    for (int index = 0; index < static_cast<int>(chunkmaxverts / 3); index++) {
         int i = (index % (extents.x * extents.y)) % extents.x;
         int j = (index % (extents.x * extents.y)) / extents.x;
         int k = index / (extents.x * extents.y);
 
         float val = 0.0f;
-        val += volumeData[(2*k)   * extents.x * extents.y + (2*j)   * extents.x + (2*i)];
-        val += volumeData[(2*k)   * extents.x * extents.y + (2*j)   * extents.x + (2*i+1)];
-        val += volumeData[(2*k)   * extents.x * extents.y + (2*j+1) * extents.x + (2*i)];
-        val += volumeData[(2*k)   * extents.x * extents.y + (2*j+1) * extents.x + (2*i+1)];
-        val += volumeData[(2*k+1) * extents.x * extents.y + (2*j)   * extents.x + (2*i)];
-        val += volumeData[(2*k+1) * extents.x * extents.y + (2*j)   * extents.x + (2*i+1)];
-        val += volumeData[(2*k+1) * extents.x * extents.y + (2*j+1) * extents.x + (2*i)];
-        val += volumeData[(2*k+1) * extents.x * extents.y + (2*j+1) * extents.x + (2*i+1)];
+        val += volumeData[(2 * k) * extents.x * extents.y + (2 * j) * extents.x + (2 * i)];
+        val += volumeData[(2 * k) * extents.x * extents.y + (2 * j) * extents.x + (2 * i + 1)];
+        val += volumeData[(2 * k) * extents.x * extents.y + (2 * j + 1) * extents.x + (2 * i)];
+        val += volumeData[(2 * k) * extents.x * extents.y + (2 * j + 1) * extents.x + (2 * i + 1)];
+        val += volumeData[(2 * k + 1) * extents.x * extents.y + (2 * j) * extents.x + (2 * i)];
+        val += volumeData[(2 * k + 1) * extents.x * extents.y + (2 * j) * extents.x + (2 * i + 1)];
+        val += volumeData[(2 * k + 1) * extents.x * extents.y + (2 * j + 1) * extents.x + (2 * i)];
+        val += volumeData[(2 * k + 1) * extents.x * extents.y + (2 * j + 1) * extents.x + (2 * i + 1)];
         data[k * extents.x * extents.y + j * extents.x + i] = val / 8.0f;
 
-        if (val / 8.0f < newMin) newMin = val / 8.0f;
-        if (val / 8.0f > newMax) newMax = val / 8.0f;
+        if (val / 8.0f < newMin)
+            newMin = val / 8.0f;
+        if (val / 8.0f > newMax)
+            newMax = val / 8.0f;
     }
 #else
     float newMin = concMin;
@@ -282,7 +296,7 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 
 #define NORMALIZE
 #ifdef NORMALIZE
-	for (int i = 0; i < static_cast<int>(chunkmaxverts / 3); i++) {
+    for (int i = 0; i < static_cast<int>(chunkmaxverts / 3); i++) {
         data[i] = (data[i] - newMin) / (newMax - newMin);
     }
 #endif
@@ -292,9 +306,9 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
         ((CUDAMarchingCubes*)cudaMarching)->Initialize(extents);
     }
 
-    CUDAMarchingCubes * cmc = (CUDAMarchingCubes*)cudaMarching;
+    CUDAMarchingCubes* cmc = (CUDAMarchingCubes*)cudaMarching;
     uint3 oldExtents = cmc->GetMaxGridSize();
-    
+
     if (extents.x > oldExtents.x || extents.y > oldExtents.y || extents.z > oldExtents.z) {
         cmc->Initialize(extents);
     }
@@ -339,8 +353,8 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 
     int64_t count = cmc->GetVertexCount();
 
-    float *mcVertices_h = new float[count * 3 * sizeof(float)];
-    float *mcNormals_h = new float[count * 3 * sizeof(float)];
+    float* mcVertices_h = new float[count * 3 * sizeof(float)];
+    float* mcNormals_h = new float[count * 3 * sizeof(float)];
 
     checkCudaErrors(cudaMemcpy(mcVertices_h, mcVertices_d, count * 3 * sizeof(float), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(mcNormals_h, mcNormals_d, count * 3 * sizeof(float), cudaMemcpyDeviceToHost));
@@ -349,11 +363,13 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 
     std::ofstream file("mesh.obj");
     for (int i = 0; i < count; i++) { // vertices
-        file << "v " << std::to_string(mcVertices_h[i * 3 + 0]) << " " << std::to_string(mcVertices_h[i * 3 + 1]) << " " << std::to_string(mcVertices_h[i * 3 + 2]) << std::endl;
+        file << "v " << std::to_string(mcVertices_h[i * 3 + 0]) << " " << std::to_string(mcVertices_h[i * 3 + 1]) << " "
+             << std::to_string(mcVertices_h[i * 3 + 2]) << std::endl;
     }
     file << std::endl;
     for (int i = 0; i < count; i++) { // normals
-        file << "vn " << std::to_string(mcNormals_h[i * 3 + 0]) << " " << std::to_string(mcNormals_h[i * 3 + 1]) << " " << std::to_string(mcNormals_h[i * 3 + 2]) << std::endl;
+        file << "vn " << std::to_string(mcNormals_h[i * 3 + 0]) << " " << std::to_string(mcNormals_h[i * 3 + 1]) << " "
+             << std::to_string(mcNormals_h[i * 3 + 2]) << std::endl;
     }
     file << std::endl;
     for (int i = 0; i < count / 3; i++) { // triangles
@@ -378,27 +394,29 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 }
 
 /*
- *	ParticlesToMeshConverter::GetExtents
+ * ParticlesToMeshConverter::GetExtents
  */
 bool ParticlesToMeshConverter::GetExtents(Call& call) {
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL) return false;
+    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
+    if (cr3d == NULL)
+        return false;
 
-    MultiParticleDataCall *mpdc = this->particleDataSlot.CallAs<MultiParticleDataCall>();
-    MolecularDataCall *mdc = this->particleDataSlot.CallAs<MolecularDataCall>();
-    VolumetricDataCall *vdc = this->particleDataSlot.CallAs<VolumetricDataCall>();
+    MultiParticleDataCall* mpdc = this->particleDataSlot.CallAs<MultiParticleDataCall>();
+    MolecularDataCall* mdc = this->particleDataSlot.CallAs<MolecularDataCall>();
+    VolumetricDataCall* vdc = this->particleDataSlot.CallAs<VolumetricDataCall>();
 
-    if (mpdc == NULL && mdc == NULL && vdc == NULL) return false;
+    if (mpdc == NULL && mdc == NULL && vdc == NULL)
+        return false;
 
     // MultiParticleDataCall in use
     if (mpdc != NULL) {
-        if (!(*mpdc)(1)) return false;
+        if (!(*mpdc)(1))
+            return false;
 
         float scale;
         if (!vislib::math::IsEqual(mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
             scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        }
-        else {
+        } else {
             scale = 1.0f;
         }
         cr3d->AccessBoundingBoxes() = mpdc->AccessBoundingBoxes();
@@ -406,27 +424,26 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
         cr3d->SetTimeFramesCount(mpdc->FrameCount());
     } // MolecularDataCall in use
     else if (mdc != NULL) {
-        if (!(*mdc)(1)) return false;
+        if (!(*mdc)(1))
+            return false;
 
         float scale;
         if (!vislib::math::IsEqual(mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
             scale = 2.0f / mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        }
-        else {
+        } else {
             scale = 1.0f;
         }
         cr3d->AccessBoundingBoxes() = mdc->AccessBoundingBoxes();
         cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
         cr3d->SetTimeFramesCount(mdc->FrameCount());
-    }
-    else if (vdc != NULL) {
-        if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
+    } else if (vdc != NULL) {
+        if (!(*vdc)(vdc->IDX_GET_EXTENTS))
+            return false;
 
         float scale;
         if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
             scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        }
-        else {
+        } else {
             scale = 1.0f;
         }
 
@@ -440,19 +457,19 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
 
 
 /*
- *	QuickSurfRaycaster::GetData
+ * QuickSurfRaycaster::GetData
  */
 bool ParticlesToMeshConverter::GetData(Call& call) {
-    geocalls::CallTriMeshData *cmesh = dynamic_cast<geocalls::CallTriMeshData * > (&call);
-    if (cmesh == NULL) return false;
+    geocalls::CallTriMeshData* cmesh = dynamic_cast<geocalls::CallTriMeshData*>(&call);
+    if (cmesh == NULL)
+        return false;
 
-    if (concFactorParam.IsDirty() || gridspacingParam.IsDirty() 
-        || isovalParam.IsDirty() || qualityParam.IsDirty() 
-        || radscaleParam.IsDirty() || scalingFactor.IsDirty()) {
+    if (concFactorParam.IsDirty() || gridspacingParam.IsDirty() || isovalParam.IsDirty() || qualityParam.IsDirty() ||
+        radscaleParam.IsDirty() || scalingFactor.IsDirty()) {
 
         concFactorParam.ResetDirty();
         gridspacingParam.ResetDirty();
-        isovalParam.ResetDirty(); 
+        isovalParam.ResetDirty();
         qualityParam.ResetDirty();
         radscaleParam.ResetDirty();
         scalingFactor.ResetDirty();
@@ -464,9 +481,9 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
         recomputeVolume = true;
     }
 
-    MultiParticleDataCall * mpdc = particleDataSlot.CallAs<MultiParticleDataCall>();
-    MolecularDataCall * mdc = particleDataSlot.CallAs<MolecularDataCall>();
-    VolumetricDataCall * vdc = particleDataSlot.CallAs<VolumetricDataCall>();
+    MultiParticleDataCall* mpdc = particleDataSlot.CallAs<MultiParticleDataCall>();
+    MolecularDataCall* mdc = particleDataSlot.CallAs<MolecularDataCall>();
+    VolumetricDataCall* vdc = particleDataSlot.CallAs<VolumetricDataCall>();
 
     float3 bbMin;
     float3 bbMax;
@@ -476,13 +493,16 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
 
     bool onlyVolumetric = false;
 
-    if (mpdc == NULL && mdc == NULL && vdc == NULL) return false;
+    if (mpdc == NULL && mdc == NULL && vdc == NULL)
+        return false;
 
     if (mpdc != NULL && mpdc->DataHash() != lastMPDCHash) {
 
         mpdc->SetFrameID(cmesh->FrameID());
-        if (!(*mpdc)(1)) return false;
-        if (!(*mpdc)(0)) return false;
+        if (!(*mpdc)(1))
+            return false;
+        if (!(*mpdc)(0))
+            return false;
 
         auto bb = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
         bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
@@ -523,87 +543,105 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
             copyColFunc copier = nullptr;
 
             for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-                MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
-                const float *pos = static_cast<const float*>(parts.GetVertexData());
-                const float *colorPos = static_cast<const float*>(parts.GetColourData());
+                MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                const float* pos = static_cast<const float*>(parts.GetVertexData());
+                const float* colorPos = static_cast<const float*>(parts.GetColourData());
                 unsigned int posStride = parts.GetVertexDataStride();
                 unsigned int colStride = parts.GetColourDataStride();
                 float globalRadius = parts.GetGlobalRadius();
-                bool useGlobRad = (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                bool useGlobRad = (parts.GetVertexDataType() ==
+                                   megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
                 int numColors = 0;
 
                 switch (parts.GetColourDataType()) {
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: numColors = 1; copier = copyCol_FLOAT_I; break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: numColors = 3; copier = copyCol_FLOAT_RGB; break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: numColors = 4; copier = copyCol_FLOAT_RGBA; break;
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: numColors = 0; copier = copyCol_UINT8_RGB; break; // TODO
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: numColors = 0; copier = copyCol_UINT8_RGBA; break; // TODO
+                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    numColors = 1;
+                    copier = copyCol_FLOAT_I;
+                    break;
+                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    numColors = 3;
+                    copier = copyCol_FLOAT_RGB;
+                    break;
+                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    numColors = 4;
+                    copier = copyCol_FLOAT_RGBA;
+                    break;
+                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    numColors = 0;
+                    copier = copyCol_UINT8_RGB;
+                    break; // TODO
+                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    numColors = 0;
+                    copier = copyCol_UINT8_RGBA;
+                    break; // TODO
                 }
 
                 // if the vertices have no type, take the next list
-                if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                if (parts.GetVertexDataType() ==
+                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) { // TODO is this correct?
-                    if (posStride < 12) posStride = 12;
+                    if (posStride < 12)
+                        posStride = 12;
+                } else {
+                    if (posStride < 16)
+                        posStride = 16;
                 }
-                else {
-                    if (posStride < 16) posStride = 16;
-                }
 
-                for (UINT64 j = 0; j < parts.GetCount(); j++, pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos)+posStride),
-                    colorPos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos)+colStride)) {
-                        particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
-                        particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
-                        particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
-                        if (useGlobRad) {
-                            particles[particleCnt * 4 + 3] = globalRadius;
-                        }
-                        else {
-                            particles[particleCnt * 4 + 3] = pos[3];
-                        }
+                for (UINT64 j = 0; j < parts.GetCount(); j++,
+                            pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride),
+                            colorPos =
+                                reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos) + colStride)) {
+                    particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
+                    particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
+                    particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
+                    if (useGlobRad) {
+                        particles[particleCnt * 4 + 3] = globalRadius;
+                    } else {
+                        particles[particleCnt * 4 + 3] = pos[3];
+                    }
 
-                        /*---------------------------------choose-one---------------------------------------------------------*/
+                    /*---------------------------------choose-one---------------------------------------------------------*/
 
-                        copier(colorPos, &this->colorTable[particleCnt * 4]);
-//#define ALWAYS4COLORS
-//#ifndef ALWAYS4COLORS
-//						// 1. copy all available values into the color, the rest gets filled up with the last available value
-//						for (int k = 0; k < numColors; k++) {
-//							for (int l = 0; l < 3 - k; l++) {
-//								this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
-//							}
-//						}
-//#else
-//						for (int k = 0; k < 4; k++) {
-//							this->colorTable[particleCnt * 4 + k] = colorPos[k];
-//						}
-//#endif
-//
-//						// normalization of the values happens later
-//						this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
-//
-//						// 2. fill r,g & b with the last available color value (should be density)
-//						/*for (int k = 0; k < 3; k++) {
-//							this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
-//							}*/
-//
-//						/*---------------------------------------------------------------------------------------------------*/
+                    copier(colorPos, &this->colorTable[particleCnt * 4]);
+                    //#define ALWAYS4COLORS
+                    //#ifndef ALWAYS4COLORS
+                    //                        // 1. copy all available values into the color, the rest gets filled up with the last available value
+                    //                        for (int k = 0; k < numColors; k++) {
+                    //                            for (int l = 0; l < 3 - k; l++) {
+                    //                                this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
+                    //                            }
+                    //                        }
+                    //#else
+                    //                        for (int k = 0; k < 4; k++) {
+                    //                            this->colorTable[particleCnt * 4 + k] = colorPos[k];
+                    //                        }
+                    //#endif
+                    //
+                    //                        // normalization of the values happens later
+                    //                        this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
+                    //
+                    //                        // 2. fill r,g & b with the last available color value (should be density)
+                    //                        /*for (int k = 0; k < 3; k++) {
+                    //                            this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
+                    //                            }*/
+                    //
+                    //                        /*---------------------------------------------------------------------------------------------------*/
 
-                        particleCnt++;
+                    particleCnt++;
                 }
             }
 
             if (particleCnt == 0) {
                 return true;
             }
-
         }
 
         //glPushMatrix();
         //float scale = 1.0f;
         //if (!vislib::math::IsEqual(mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        //	scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        //    scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         //}
         //glScalef(scale, scale, scale);
 
@@ -622,14 +660,17 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
     } else if (vdc != NULL && vdc->DataHash() != lastVDCHash) {
 
         vdc->SetFrameID(cmesh->FrameID());
-        if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
-        if (!(*vdc)(vdc->IDX_GET_METADATA)) return false;
-        if (!(*vdc)(vdc->IDX_GET_DATA)) return false;
-        
+        if (!(*vdc)(vdc->IDX_GET_EXTENTS))
+            return false;
+        if (!(*vdc)(vdc->IDX_GET_METADATA))
+            return false;
+        if (!(*vdc)(vdc->IDX_GET_DATA))
+            return false;
+
         //glPushMatrix();
         //float scale = 1.0f;
         //if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        //	scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        //    scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         //}
         //glScalef(scale, scale, scale);
         onlyVolumetric = true;
@@ -653,25 +694,23 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
             cudaqsurf = new CUDAQuickSurfAlternative();
         }
 
-        bool suc = this->calcVolume(bbMin, bbMax, particles,
-            this->qualityParam.Param<param::IntParam>()->Value(),
+        bool suc = this->calcVolume(bbMin, bbMax, particles, this->qualityParam.Param<param::IntParam>()->Value(),
             this->radscaleParam.Param<param::FloatParam>()->Value(),
             this->gridspacingParam.Param<param::FloatParam>()->Value(),
             1.0f, // necessary to switch off velocity scaling
-            0.0f, this->maxRadius.Param<param::FloatParam>()->Value(), true,
-            cmesh->FrameID());
-    
+            0.0f, this->maxRadius.Param<param::FloatParam>()->Value(), true, cmesh->FrameID());
+
         //if (!suc) return false;
     }
 
     if (recomputeVolume && !onlyVolumetric) {
-        CUDAQuickSurfAlternative * cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
+        CUDAQuickSurfAlternative* cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
         map = cqs->getMap();
     }
 
     // TODO: now use map (device) OR vdc->GetData() (host) as marching cubes stuff!
 
-        //transferNewVolume(map, volumeExtent);
+    //transferNewVolume(map, volumeExtent);
 
 #if 0
     if (!onlyVolumetric) { // quicksurfed data

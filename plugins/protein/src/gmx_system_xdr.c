@@ -308,8 +308,8 @@ xdr_u_char (XDR *xdrs, unsigned char *cp)
 bool_t
 xdr_bool (XDR *xdrs, int *bp)
 {
-#define XDR_FALSE	((xdr_int32_t) 0)
-#define XDR_TRUE	((xdr_int32_t) 1)
+#define XDR_FALSE ((xdr_int32_t) 0)
+#define XDR_TRUE  ((xdr_int32_t) 1)
 
   xdr_int32_t lb;
 
@@ -404,7 +404,7 @@ xdr_string (xdrs, cpp, maxsize)
      char **cpp;
      unsigned int maxsize;
 {
-  char *sp = *cpp;	/* sp is the actual string pointer */
+  char *sp = *cpp; /* sp is the actual string pointer */
   unsigned int size = 0;
   unsigned int nodesize = 0;
 
@@ -416,7 +416,7 @@ xdr_string (xdrs, cpp, maxsize)
     case XDR_FREE:
       if (sp == NULL)
     {
-      return TRUE;		/* already free */
+      return TRUE; /* already free */
     }
       /* fall through... */
     case XDR_ENCODE:
@@ -600,7 +600,7 @@ xdr_vector (xdrs, basep, nelem, elemsize, xdr_elem)
      unsigned int elemsize;
      xdrproc_t xdr_elem;
 {
-#define LASTUNSIGNED	((unsigned int)0-1)
+#define LASTUNSIGNED ((unsigned int)0-1)
   unsigned int i;
   char *elptr;
 
@@ -636,16 +636,16 @@ static bool_t xdrstdio_putuint32 (XDR *, xdr_uint32_t *);
  */
 static const struct xdr_ops xdrstdio_ops =
 {
-  xdrstdio_getbytes,       	/* deserialize counted bytes */
-  xdrstdio_putbytes,     	/* serialize counted bytes */
-  xdrstdio_getpos,		/* get offset in the stream */
-  xdrstdio_setpos,		/* set offset in the stream */
-  xdrstdio_inline,		/* prime stream for inline macros */
-  xdrstdio_destroy,		/* destroy stream */
-  xdrstdio_getint32,	/* deserialize a int */
-  xdrstdio_putint32,	/* serialize a int */
-  xdrstdio_getuint32,	/* deserialize a int */
-  xdrstdio_putuint32		/* serialize a int */
+  xdrstdio_getbytes,    /* deserialize counted bytes */
+  xdrstdio_putbytes,    /* serialize counted bytes */
+  xdrstdio_getpos,      /* get offset in the stream */
+  xdrstdio_setpos,      /* set offset in the stream */
+  xdrstdio_inline,      /* prime stream for inline macros */
+  xdrstdio_destroy,     /* destroy stream */
+  xdrstdio_getint32,    /* deserialize a int */
+  xdrstdio_putint32,    /* serialize a int */
+  xdrstdio_getuint32,   /* deserialize a int */
+  xdrstdio_putuint32    /* serialize a int */
 };
 
 /*

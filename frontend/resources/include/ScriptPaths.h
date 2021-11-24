@@ -16,7 +16,6 @@ namespace frontend_resources {
 struct ScriptPaths {
 
     std::vector<std::string> lua_script_paths;
-
 };
 
 } /* end namespace frontend_resources */

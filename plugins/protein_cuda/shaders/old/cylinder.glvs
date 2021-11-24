@@ -53,20 +53,20 @@ void main(void) {
 
     // orientation quaternion to inverse rotation matrix conversion
     // Begin: Holy code!
-    tmp = quatC.xzyw * quatC.yxzw;				        // tmp <- (xy, xz, yz, ww)
-    tmp1 = quatC * quatC.w;					            // tmp1 <- (xw, yw, zw, %)
-    tmp1.w = -quatConst.z;				                // tmp1 <- (xw, yw, zw, -0.5)
+    tmp = quatC.xzyw * quatC.yxzw;                      // tmp <- (xy, xz, yz, ww)
+    tmp1 = quatC * quatC.w;                             // tmp1 <- (xw, yw, zw, %)
+    tmp1.w = -quatConst.z;                              // tmp1 <- (xw, yw, zw, -0.5)
 
-    rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;	// matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
-    rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;		// matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+    rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;  // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+    rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;        // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
     rotMatT0 = rotMatT0 + rotMatT0;                     // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
-    rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz; 	// matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
-    rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;     	// matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+    rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz;  // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+    rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;        // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
     rotMatT1 = rotMatT1 + rotMatT1;                     // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
-    rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw; 	// matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
-    rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;     	// matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+    rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw;  // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+    rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;        // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
     rotMatT2 = rotMatT2 + rotMatT2;                     // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
     // End: Holy code!
 
@@ -256,14 +256,14 @@ void main(void) {
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;
 #endif // RETICLE
-	
-	// set colors
-	gl_FrontColor.r = color1.r;
-	gl_FrontColor.g = color1.g;
-	gl_FrontColor.b = color1.b;
+    
+    // set colors
+    gl_FrontColor.r = color1.r;
+    gl_FrontColor.g = color1.g;
+    gl_FrontColor.b = color1.b;
 
-	gl_FrontSecondaryColor.r = color2.r;
-	gl_FrontSecondaryColor.g = color2.g;
-	gl_FrontSecondaryColor.b = color2.b;
-	
+    gl_FrontSecondaryColor.r = color2.r;
+    gl_FrontSecondaryColor.g = color2.g;
+    gl_FrontSecondaryColor.b = color2.b;
+    
 }

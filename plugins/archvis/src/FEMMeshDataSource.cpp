@@ -7,7 +7,8 @@
 #include "ArchVisCalls.h"
 
 megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
-    : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_version(0) {
+        : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data")
+        , m_version(0) {
     this->m_fem_callerSlot.SetCompatibleCall<FEMModelCallDescription>();
     this->MakeSlotAvailable(&this->m_fem_callerSlot);
 }
@@ -120,8 +121,7 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
 
         try {
             m_mesh_collection.first->addMesh(identifier, vb_layouts, vb_iterators, ib_iterators, GL_UNSIGNED_INT,
-                GL_STATIC_DRAW, GL_TRIANGLES,
-                true);
+                GL_STATIC_DRAW, GL_TRIANGLES, true);
             m_mesh_collection.second.push_back(identifier);
         } catch (glowl::MeshException const& exc) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -133,12 +133,13 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
                 "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
                 __FUNCTION__, __LINE__);
         }
-
     }
 
-    lhs_mesh_call->setData(gpu_mesh_collection,m_version);
+    lhs_mesh_call->setData(gpu_mesh_collection, m_version);
 
     return true;
 }
 
-bool megamol::archvis::FEMMeshDataSource::getMetaDataCallback(core::Call& caller) { return false; }
+bool megamol::archvis::FEMMeshDataSource::getMetaDataCallback(core::Call& caller) {
+    return false;
+}

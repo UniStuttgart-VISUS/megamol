@@ -18,48 +18,44 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Abstract base class of job and view instantiation requests.
+ */
+class InstanceRequest : public ParamValueSetRequest {
+public:
     /**
-     * Abstract base class of job and view instantiation requests.
+     * Answer the name for the instance to be instantiated.
+     *
+     * @return The name
      */
-    class InstanceRequest : public ParamValueSetRequest {
-    public:
+    inline const vislib::StringA& Name(void) const {
+        return this->name;
+    }
 
-        /**
-         * Answer the name for the instance to be instantiated.
-         *
-         * @return The name
-         */
-        inline const vislib::StringA& Name(void) const {
-            return this->name;
-        }
+    /**
+     * Sets the name for the instance to be instantiated.
+     *
+     * @param name The new name
+     */
+    inline void SetName(const vislib::StringA& name) {
+        this->name = name;
+    }
 
-        /**
-         * Sets the name for the instance to be instantiated.
-         *
-         * @param name The new name
-         */
-        inline void SetName(const vislib::StringA& name) {
-            this->name = name;
-        }
+protected:
+    /**
+     * Ctor.
+     */
+    InstanceRequest(void);
 
-    protected:
+    /**
+     * Dtor.
+     */
+    virtual ~InstanceRequest(void);
 
-        /**
-         * Ctor.
-         */
-        InstanceRequest(void);
-
-        /**
-         * Dtor.
-         */
-        virtual ~InstanceRequest(void);
-
-    private:
-
-        /** The name of the instance requested. */
-        vislib::StringA name;
-
-    };
+private:
+    /** The name of the instance requested. */
+    vislib::StringA name;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

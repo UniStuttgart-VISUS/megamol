@@ -1,7 +1,7 @@
 /*
  * stdafx.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -27,7 +27,7 @@
 #include <memory.h>
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
 #endif /* _WIN32 */

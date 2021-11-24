@@ -37,32 +37,32 @@ float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal);
 
 void main()
 {
-	ivec2 texelCoord = ivec2(gl_FragCoord.xy);
-	
-	float depth = texelFetch(inDepthTex, texelCoord, 0).r;
+    ivec2 texelCoord = ivec2(gl_FragCoord.xy);
+    
+    float depth = texelFetch(inDepthTex, texelCoord, 0).r;
 
-	if (depth == 1.0) {
-		discard;
-		return;
-	}
+    if (depth == 1.0) {
+        discard;
+        return;
+    }
 
-	// Reconstruct object coordinates
-	vec4 objPos = MVPinv * (vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), depth, 1.0) * 2.0 - 1.0);
-	objPos /= objPos.w;
+    // Reconstruct object coordinates
+    vec4 objPos = MVPinv * (vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), depth, 1.0) * 2.0 - 1.0);
+    objPos /= objPos.w;
 
-	vec3 color = texelFetch(inColorTex, texelCoord, 0).xyz;
-	vec4 normal = texelFetch(inNormalsTex, texelCoord, 0);
-	
-	if (!inUseHighPrecision)
-		normal = normal * 2.0 - 1.0;
+    vec3 color = texelFetch(inColorTex, texelCoord, 0).xyz;
+    vec4 normal = texelFetch(inNormalsTex, texelCoord, 0);
+    
+    if (!inUseHighPrecision)
+        normal = normal * 2.0 - 1.0;
 
-	vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
-	vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
+    vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
+    vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
 
-	if (normal.w < 1.0)
-		lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
-	
-	outColor = vec4(lightCol, 1.0);
-	
-	gl_FragDepth = depth;
+    if (normal.w < 1.0)
+        lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
+    
+    outColor = vec4(lightCol, 1.0);
+    
+    gl_FragDepth = depth;
 }

@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/CallRenderView.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core;
@@ -16,12 +16,11 @@ using namespace megamol::core::view;
 /*
  * View3D::View3D
  */
-View3D::View3D(void) : view::BaseView<CallRenderView, Camera3DController>() {
+View3D::View3D(void) {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
-
 }
 
 /*
@@ -40,13 +39,13 @@ ImageWrapper View3D::Render(double time, double instanceTime) {
 
     if (cr3d != NULL) {
         cr3d->SetFramebuffer(_fbo);
-    
+
         BaseView::beforeRender(time, instanceTime);
 
         cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr3d->SetCamera(this->_camera);
         (*cr3d)(view::CallRender3D::FnRender);
-    
+
         BaseView::afterRender();
     }
 
@@ -66,7 +65,7 @@ ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
 void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {
     BaseView::Resize(width, height);
 
-    _fbo->colorBuffer = std::vector<uint32_t>(width*height);
+    _fbo->colorBuffer = std::vector<uint32_t>(width * height);
     _fbo->depthBuffer = std::vector<float>(width * height);
     _fbo->width = width;
     _fbo->height = height;

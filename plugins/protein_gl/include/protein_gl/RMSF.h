@@ -11,15 +11,15 @@
 namespace megamol {
 namespace protein_gl {
 
-	/**
-	 * Computes the RMSF for all atoms stored in mol.
-	 * Will store the RMSF values as B-factor in mol.
-	 *
-	 * @param mol The molecular data call
-	 * @return 'false' if no data is available or if the molecule just one time step; 'true' on success.
-	 */
-	bool computeRMSF(protein_calls::MolecularDataCall *mol);
-}
-}
+/**
+ * Computes the RMSF for all atoms stored in mol.
+ * Will store the RMSF values as B-factor in mol.
+ *
+ * @param mol The molecular data call
+ * @return 'false' if no data is available or if the molecule just one time step; 'true' on success.
+ */
+bool computeRMSF(protein_calls::MolecularDataCall* mol);
+} // namespace protein_gl
+} // namespace megamol
 
 #endif // MMPROTEIN_RMSF_H_INCLUDED

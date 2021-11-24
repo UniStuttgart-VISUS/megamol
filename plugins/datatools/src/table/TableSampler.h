@@ -8,11 +8,11 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED
 
-#include "mmcore/Module.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "datatools/table/TableDataCall.h"
 
 // Fix annoying wingdi.h defines
 #undef ABSOLUTE
@@ -28,13 +28,19 @@ namespace table {
 class TableSampler : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName() { return "TableSampler"; }
+    static const char* ClassName() {
+        return "TableSampler";
+    }
 
     /** Return module class description */
-    static const char* Description() { return "Randomly samples a float table."; }
+    static const char* Description() {
+        return "Randomly samples a float table.";
+    }
 
     /** Module is always available */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Ctor */
     TableSampler();
@@ -47,21 +53,18 @@ protected:
 
     void release() override;
 
-    bool getData(core::Call &call);
+    bool getData(core::Call& call);
 
-    bool getHash(core::Call &call);
+    bool getHash(core::Call& call);
 
-    bool handleCall(core::Call &call);
+    bool handleCall(core::Call& call);
 
     bool numberModeCallback(core::param::ParamSlot& caller);
 
     bool resampleCallback(core::param::ParamSlot& caller);
 
 private:
-    enum SampleNumberMode {
-        ABSOLUTE = 0,
-        RELATIVE = 1
-    };
+    enum SampleNumberMode { ABSOLUTE = 0, RELATIVE = 1 };
 
     core::CallerSlot tableInSlot;
     core::CalleeSlot tableOutSlot;

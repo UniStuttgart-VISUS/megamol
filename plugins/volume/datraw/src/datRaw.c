@@ -87,7 +87,7 @@ datRawDataFormats[] = {
 
 static struct {
     char *tag;
-    unsigned int value;	
+    unsigned int value;
 }
 datRawGridTypes[] = {
     {"EQUIDISTANT", DR_GRID_CARTESIAN},
@@ -188,7 +188,7 @@ static void swapByteOrder(void *data, size_t size, int type)
     switch (type) {
         case DR_FORMAT_CHAR:
         case DR_FORMAT_UCHAR:
-            break;	
+            break;
         case DR_FORMAT_SHORT:
         case DR_FORMAT_USHORT:
         case DR_FORMAT_HALF:
@@ -205,11 +205,11 @@ static void swapByteOrder(void *data, size_t size, int type)
         default:
             datRaw_logError("Unknow data type specified\n");
             break;
-    }	
+    }
 }
 
 int datRaw_getFormatSize(int format)
-{	
+{
     int i;
     for (i = 0; i < sizeof(datRawDataFormats)/sizeof(datRawDataFormats[0]); i++) {
         if (datRawDataFormats[i].value == format) {
@@ -221,7 +221,7 @@ int datRaw_getFormatSize(int format)
 }
 
 static const char* datRaw_getFormatString(int format)
-{	
+{
     int i;
     for (i = 0; i < sizeof(datRawDataFormats)/sizeof(datRawDataFormats[0]); i++) {
         if (datRawDataFormats[i].value == format) {
@@ -311,7 +311,7 @@ static char *parseMultifileDescription(const char *filename, int *width,
                     "one varying\n");
                 return NULL;
             } else {
-                s = q;	
+                s = q;
             }
         }
         q++;
@@ -321,7 +321,7 @@ static char *parseMultifileDescription(const char *filename, int *width,
     if (!s || *s == '\0') {
         datRaw_logError("DatRaw: Strange input dataFileName: %s\n",
             filename);
-        free(p);	
+        free(p);
         return NULL;
     }
 
@@ -402,7 +402,7 @@ char *getMultifileFilename(DatRawFileInfo *info, int timeStep)
     free(filenameTemplate);
 
     return filename;
-}		
+}
 
 static int datRaw_parseHeaderFile(
                                   const char *datfile,
@@ -416,7 +416,7 @@ static int datRaw_parseHeaderFile(
     char *input, *sep, *s1, *s2, *p;
     char *endPos, endChar;
     char *resolutionLine = NULL;
-	char *originLine = NULL;
+    char *originLine = NULL;
     int lineCount = 0;
     int error  = 0;
     int i;
@@ -439,7 +439,7 @@ static int datRaw_parseHeaderFile(
 
     if (!(info->descFileName = dupstr(datfile))) {
         datRaw_logError("DatRaw: Failed to allocate memory for description record!\n");
-        return 0;	
+        return 0;
     }
 
 #ifdef _WIN32
@@ -652,16 +652,16 @@ static int datRaw_parseHeaderFile(
             }
         } else if (strstr(inputLine, "SLICETHICKNESS")) {
         } else if (strstr(inputLine, "ORIGIN")) {
-			/*
+            /*
              * Remember the origin line, because we need to know it before
              * we can allocate sliceDist in case of a rectilinear grid.
              */
-			if (originLine == NULL) {
-				originLine = sep + 1;
-			} else {
-				datRaw_logError("DatRaw Error: Multiple origin lines given\n");
-				error = 1;
-			}
+            if (originLine == NULL) {
+                originLine = sep + 1;
+            } else {
+                datRaw_logError("DatRaw Error: Multiple origin lines given\n");
+                error = 1;
+            }
         } else {
             datRaw_logInfo("DatRaw: Datfile - line %d ignored: %s...\n", lineCount, inputLine);
         }
@@ -764,49 +764,49 @@ static int datRaw_parseHeaderFile(
         free(p);
     }
 
-	/*
-	 * Allocate origin
-	 */
-	if (!(info->origin = (float*)malloc(info->dimensions * sizeof(int)))) {
-		datRaw_logError("DatRaw: Failed to allocate memory for description record!\n");
-		return 0;
-	}
-	for (i = 0; i < info->dimensions; i++) {
-		info->origin[i] = 0.0f;
-	}
+    /*
+     * Allocate origin
+     */
+    if (!(info->origin = (float*)malloc(info->dimensions * sizeof(int)))) {
+        datRaw_logError("DatRaw: Failed to allocate memory for description record!\n");
+        return 0;
+    }
+    for (i = 0; i < info->dimensions; i++) {
+        info->origin[i] = 0.0f;
+    }
 
-	if (originLine != NULL) {
-		endPos = originLine;
-		while ((*endPos != 0) && (*endPos != '\r') && (*endPos != '\n')) {
-			++endPos;
-		}
-		endChar = *endPos;
-		*endPos = 0;
-		i = 0;
-		p = s1 = dupstr(originLine);
-		*endPos = endChar;
-		if (!p) {
-			datRaw_logError("DatRaw: Error parsing dat-file - Failed to allocate temp. storage!\n");
-			return 0;
-		}
-		/*while ((s2 = strsep(&s1," \t\n"))) {*/ /* not ansi :-( */
-		while ((s2 = strtok(s1, " ,\t\n"))) {
-			if (*s2 == '\0') {
-				continue;
-			}
-			if (i >= info->dimensions) {
-				error = 1;
-				break;
-			}
-			if (sscanf(s2, "%f", &info->origin[i]) != 1) {
-				error = 1;
-				break;
-			}
-			i++;
-			s1 = NULL;
-		}
-		free(p);
-	}
+    if (originLine != NULL) {
+        endPos = originLine;
+        while ((*endPos != 0) && (*endPos != '\r') && (*endPos != '\n')) {
+            ++endPos;
+        }
+        endChar = *endPos;
+        *endPos = 0;
+        i = 0;
+        p = s1 = dupstr(originLine);
+        *endPos = endChar;
+        if (!p) {
+            datRaw_logError("DatRaw: Error parsing dat-file - Failed to allocate temp. storage!\n");
+            return 0;
+        }
+        /*while ((s2 = strsep(&s1," \t\n"))) {*/ /* not ansi :-( */
+        while ((s2 = strtok(s1, " ,\t\n"))) {
+            if (*s2 == '\0') {
+                continue;
+            }
+            if (i >= info->dimensions) {
+                error = 1;
+                break;
+            }
+            if (sscanf(s2, "%f", &info->origin[i]) != 1) {
+                error = 1;
+                break;
+            }
+            i++;
+            s1 = NULL;
+        }
+        free(p);
+    }
 
     if (info->gridType == DR_GRID_RECTILINEAR) {
         if (resolutionLine == NULL) {
@@ -1090,7 +1090,7 @@ void datRaw_initHeader(DatRawFileInfo *info) {
         /* only for cartesian and rectilinear grids */
         info->resolution = NULL;
         info->sliceDist = NULL;
-		info->origin = NULL;
+        info->origin = NULL;
         /* only for tetrahedral grids */
         info->numVertices = -1;
         info->numTetrahedra = -1;
@@ -1133,7 +1133,7 @@ void datRaw_printInfo(const DatRawFileInfo *info)
         "Steps      : %d\n"
         "Components : %d\n"
         "Format     : %s\n",
-        info->descFileName,	
+        info->descFileName,
         info->dataFileName,
         info->multiDataFiles ? "yes" : "no",
         grid,
@@ -1289,7 +1289,7 @@ size_t datRaw_getRecordSize(const DatRawFileInfo *info, int format)
 
         if (format == DR_FORMAT_RAW) {
             dataRecSize *= datRaw_getFormatSize(info->dataFormat);
-        } else {	
+        } else {
             dataRecSize *= datRaw_getFormatSize(format);
         }
 
@@ -1303,7 +1303,7 @@ size_t datRaw_getRecordSize(const DatRawFileInfo *info, int format)
             return 0;
         }
 
-        return dataRecSize;	
+        return dataRecSize;
     }
     return 0;
 }
@@ -1363,13 +1363,13 @@ int datRaw_load(const char *datfile,
                 int format)
 {
     size_t memSize;
-    size_t storageSize;	
+    size_t storageSize;
     int i, offset, stride, allocateMem;
     void *tmpBuffer = NULL;
     void *buf = NULL;
     char *filename = NULL, *filenameTemplate = NULL;
 
-    /* read header */		
+    /* read header */
     if(!datRaw_parseHeaderFile(datfile, info, optionalFields)) {
         return 0;
     };
@@ -1432,7 +1432,7 @@ int datRaw_load(const char *datfile,
 
     if (format == info->dataFormat || format == DR_FORMAT_RAW) {
         buf = *buffer;
-    } else {	
+    } else {
         if (!(tmpBuffer = malloc(storageSize))) {
             datRaw_logError("DatRaw Error: Could not allocate tmp. buffer memory (%ld byte)\n", storageSize);
             if (!info->multiDataFiles) {
@@ -1504,7 +1504,7 @@ int datRaw_load(const char *datfile,
             swapByteOrder(buf, 
                 datRaw_getElementCount(info)*info->numComponents,
                 info->dataFormat);
-        }	
+        }
         if (format != info->dataFormat && format != DR_FORMAT_RAW) {
             datRaw_convertBlock(buf, info->dataFormat, (DR_UCHAR*)*buffer + i*memSize,
                 format, datRaw_getElementCount(info)*info->numComponents);
@@ -1570,7 +1570,7 @@ int datRaw_getNext(DatRawFileInfo *info, void **buffer, int format)
                     info->fd_dataFile = NULL;
                     return 0;
             }
-        }	
+        }
     } else {
         int maxFilename, minWidth, offset, stride;
         char *filenameTemplate, *filename;
@@ -1623,7 +1623,7 @@ int datRaw_getNext(DatRawFileInfo *info, void **buffer, int format)
 
     if (format == info->dataFormat || format == DR_FORMAT_RAW) {
         buf = *buffer;
-    } else {	
+    } else {
         if (!(buf = malloc(storageSize))) {
             datRaw_logError("DatRaw Error: Could not allocate tmp. buffer memory (%ld byte)\n", storageSize);
             if (info->multiDataFiles) {
@@ -1652,7 +1652,7 @@ int datRaw_getNext(DatRawFileInfo *info, void **buffer, int format)
         gzclearerr(info->fd_dataFile);
         if (format != info->dataFormat && format != DR_FORMAT_RAW) {
             free(buf);
-        }	
+        }
         if (info->multiDataFiles) {
             gzclose(info->fd_dataFile);
             info->fd_dataFile = NULL;
@@ -1679,7 +1679,7 @@ int datRaw_getNext(DatRawFileInfo *info, void **buffer, int format)
 
     if (info->multiDataFiles) {
         gzclose(info->fd_dataFile);
-        info->fd_dataFile = NULL;	
+        info->fd_dataFile = NULL;
     }
 
     return 1;
@@ -1813,7 +1813,7 @@ int datRaw_getPrevious(DatRawFileInfo *info, void **buffer, int format)
         gzclearerr(info->fd_dataFile);
         if (format != info->dataFormat && format != DR_FORMAT_RAW) {
             free(buf);
-        }	
+        }
         if (info->multiDataFiles) {
             gzclose(info->fd_dataFile);
             info->fd_dataFile = NULL;
@@ -1839,7 +1839,7 @@ int datRaw_getPrevious(DatRawFileInfo *info, void **buffer, int format)
 
     if (info->multiDataFiles) {
         gzclose(info->fd_dataFile);
-        info->fd_dataFile = NULL;	
+        info->fd_dataFile = NULL;
     }
     return 1;
 }
@@ -1888,7 +1888,7 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
                 } else {
                     datRaw_logError("DatRaw: Error seeking in data (too few bytes in file?)\n");
                 }
-            }	
+            }
             gzclearerr(info->fd_dataFile);
             return 0;
         }
@@ -1943,7 +1943,7 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
 
     if (format == info->dataFormat || format == DR_FORMAT_RAW) {
         buf = *buffer;
-    } else {	
+    } else {
         if (!(buf = malloc(storageSize))) {
             datRaw_logError("DatRaw Error: Could not allocate tmp. buffer memory (%ld byte)\n", storageSize);
             if (info->multiDataFiles) {
@@ -1973,7 +1973,7 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
         gzclearerr(info->fd_dataFile);
         if (format != info->dataFormat && format != DR_FORMAT_RAW) {
             free(buf);
-        }	
+        }
         if (info->multiDataFiles) {
             gzclose(info->fd_dataFile);
             info->fd_dataFile = NULL;
@@ -1999,7 +1999,7 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
 
     if (info->multiDataFiles) {
         gzclose(info->fd_dataFile);
-        info->fd_dataFile = NULL;	
+        info->fd_dataFile = NULL;
     }
     info->currentStep = n;
     return 1;
@@ -2009,7 +2009,7 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
 void datRaw_close(DatRawFileInfo *info)
 {
     if (info->fd_dataFile) {
-        gzclose(info->fd_dataFile);	
+        gzclose(info->fd_dataFile);
         info->fd_dataFile = NULL;
         info->currentStep = -1;
     }
@@ -2069,7 +2069,7 @@ static int checkFileInfo(const DatRawFileInfo *info)
         break;
     default:
         result = 0;
-        break;					
+        break;
     }
 
     return result;
@@ -2227,7 +2227,7 @@ int datRaw_writeHeaderFile(
 
     fclose(hf);
 
-    return 1;	
+    return 1;
 }
 
 static FILE *wfopen(const char *path, const char *mode, int compress)
@@ -2396,7 +2396,7 @@ static int datRaw_writeRawFileMulti(const DatRawFileInfo *info, void *buffer,
                 free(buf);
                 return 0;
             }
-        }	 
+        }
         wfclose(rf, compress);
     }
 
@@ -2423,7 +2423,7 @@ int datRaw_write(
     }
     else {
         return datRaw_writeRawFileSingle(info, buffer, bufferFormat, compress);
-    }	
+    }
 }
 
 /*
@@ -2466,7 +2466,7 @@ int datRaw_writeTimestep(const DatRawFileInfo *info, void *buffer,
     } else {
         if (timeStep == 0) {
             rf = wfopen(info->dataFileName, "wb", compress);
-        } else {	
+        } else {
             rf = wfopen(info->dataFileName, "ab", compress);
         }
         if (!rf) {
@@ -2511,7 +2511,7 @@ int datRaw_writeTimestep(const DatRawFileInfo *info, void *buffer,
         }
 
         free(buf);
-    }	 
+    }
     wfclose(rf, compress);
     return 1;
 }
@@ -2644,7 +2644,7 @@ int datRaw_checkInfo(const DatRawFileInfo *info,
 
     /* initialize save values */
     if (descFileName && strcmp(info->descFileName, descFileName)) {
-        return 0;	
+        return 0;
     } 
     if (dataFileName && strcmp(info->dataFileName, dataFileName)) {
         return 0;

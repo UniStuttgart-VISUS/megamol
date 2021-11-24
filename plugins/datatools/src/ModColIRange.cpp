@@ -4,18 +4,24 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ModColIRange.h"
-#include "mmcore/param/FloatParam.h"
 #include "datatools/MultiParticleDataAdaptor.h"
+#include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 
-ModColIRange::ModColIRange() : datatools::AbstractParticleManipulator("outData", "inData"),
-        rangeSlot("maxVal", "Specifies the color range from [0..r["),
-        inDataHash(0), outDataHash(0), frameID(0), colors(), minCol(0), maxCol(1) {
+ModColIRange::ModColIRange()
+        : datatools::AbstractParticleManipulator("outData", "inData")
+        , rangeSlot("maxVal", "Specifies the color range from [0..r[")
+        , inDataHash(0)
+        , outDataHash(0)
+        , frameID(0)
+        , colors()
+        , minCol(0)
+        , maxCol(1) {
 
     rangeSlot.SetParameter(new core::param::FloatParam(1.0f, 1.0f));
     MakeSlotAvailable(&rangeSlot);
@@ -25,11 +31,10 @@ ModColIRange::~ModColIRange() {
     Release();
 }
 
-bool ModColIRange::manipulateData(
-    geocalls::MultiParticleDataCall& outData,
-    geocalls::MultiParticleDataCall& inData) {
+bool ModColIRange::manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
-    if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID) || (inData.DataHash() == 0) || rangeSlot.IsDirty()) {
+    if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID) || (inData.DataHash() == 0) ||
+        rangeSlot.IsDirty()) {
         inDataHash = inData.DataHash();
         outDataHash++;
         frameID = inData.FrameID();
@@ -58,9 +63,9 @@ bool ModColIRange::manipulateData(
     inData.SetUnlocker(nullptr, false);
     outData.SetFrameID(frameID);
     outData.SetDataHash(outDataHash);
-    const float *data = colors.data();
+    const float* data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
-        auto &plist = outData.AccessParticles(list);
+        auto& plist = outData.AccessParticles(list);
         plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         data += plist.GetCount();
         plist.SetColourMapIndexValues(minCol, maxCol);

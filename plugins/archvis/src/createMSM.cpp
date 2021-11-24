@@ -5,45 +5,40 @@
 #include "ArchVisCalls.h"
 #include "ScaleModel.h"
 
-megamol::archvis::CreateMSM::CreateMSM() : Module()
-    , m_MSM(nullptr)
-    , m_getData_slot("msmmodel", "Provides the MSM Model.")
-    , m_node_floatTable_slot("nodes", "Node float table input call.")
-    , m_element_floatTable_slot("elements", "Element float table input call.")
-    , m_inputElement_floatTable_slot("inputElements", "Input element float table input call.")
-    , m_displacement_floatTable_slot("displacements", "Displacement float table input call.")
-    , m_node_input_hash(0)
-    , m_element_input_hash(0)
-    , m_inputElement_input_hash(0)
-    , m_displacement_input_hash(0)
-    , m_version(0)
-{
+megamol::archvis::CreateMSM::CreateMSM()
+        : Module()
+        , m_MSM(nullptr)
+        , m_getData_slot("msmmodel", "Provides the MSM Model.")
+        , m_node_floatTable_slot("nodes", "Node float table input call.")
+        , m_element_floatTable_slot("elements", "Element float table input call.")
+        , m_inputElement_floatTable_slot("inputElements", "Input element float table input call.")
+        , m_displacement_floatTable_slot("displacements", "Displacement float table input call.")
+        , m_node_input_hash(0)
+        , m_element_input_hash(0)
+        , m_inputElement_input_hash(0)
+        , m_displacement_input_hash(0)
+        , m_version(0) {
     this->m_getData_slot.SetCallback(CallScaleModel::ClassName(), "GetData", &CreateMSM::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     // TODO GetExtents?
 
-    this->m_node_floatTable_slot
-        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
+    this->m_node_floatTable_slot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_node_floatTable_slot);
 
-    this->m_element_floatTable_slot
-        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
+    this->m_element_floatTable_slot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_element_floatTable_slot);
 
-    this->m_inputElement_floatTable_slot
-        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
+    this->m_inputElement_floatTable_slot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_inputElement_floatTable_slot);
 
-    this->m_displacement_floatTable_slot
-        .SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
+    this->m_displacement_floatTable_slot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_displacement_floatTable_slot);
 }
 
-megamol::archvis::CreateMSM::~CreateMSM() {
-}
+megamol::archvis::CreateMSM::~CreateMSM() {}
 
-bool megamol::archvis::CreateMSM::create(void) { 
+bool megamol::archvis::CreateMSM::create(void) {
     return true;
 }
 
@@ -56,10 +51,8 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
 
     auto node_ft = this->m_node_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
     auto element_ft = this->m_element_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
-    auto inputElement_ft =
-        this->m_inputElement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
-    auto displacement_ft =
-        this->m_displacement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
+    auto inputElement_ft = this->m_inputElement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
+    auto displacement_ft = this->m_displacement_floatTable_slot.CallAs<megamol::datatools::table::TableDataCall>();
 
     // node and element data are mandatory, return false is either is not available
     if (node_ft == NULL || element_ft == NULL || inputElement_ft == NULL || displacement_ft == NULL) {
@@ -71,11 +64,9 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     (*inputElement_ft)();
     (*displacement_ft)();
 
-    if (this->m_node_input_hash != node_ft->DataHash() ||
-        this->m_element_input_hash != element_ft->DataHash() ||
+    if (this->m_node_input_hash != node_ft->DataHash() || this->m_element_input_hash != element_ft->DataHash() ||
         this->m_inputElement_input_hash != inputElement_ft->DataHash() ||
-        this->m_displacement_input_hash != displacement_ft->DataHash())
-    {
+        this->m_displacement_input_hash != displacement_ft->DataHash()) {
         this->m_node_input_hash = node_ft->DataHash();
         this->m_element_input_hash = element_ft->DataHash();
         this->m_displacement_input_hash = displacement_ft->DataHash();
@@ -147,11 +138,10 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
 
         m_MSM = std::make_shared<ScaleModel>(nodes, elements, inputElements);
         m_MSM->updateNodeDisplacements(deformations);
-        
     }
 
     if (m_MSM != nullptr) {
-        msm_call->setData(m_MSM,m_version);
+        msm_call->setData(m_MSM, m_version);
     }
 
     return true;

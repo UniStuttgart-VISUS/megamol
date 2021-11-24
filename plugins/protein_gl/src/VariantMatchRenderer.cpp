@@ -8,12 +8,11 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "VariantMatchRenderer.h"
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
+#include "stdafx.h"
 
-#include <algorithm>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -21,6 +20,7 @@
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -195,15 +195,15 @@ bool VariantMatchRenderer::Render(megamol::core_gl::view::CallRender2DGL& call) 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, vmc->GetVariantCnt(), vmc->GetVariantCnt(), 0, GL_ALPHA, GL_FLOAT,
         vmc->GetMatch());
 
-    //	// DEBUG Print matrix values
-    //	printf("Variant count %u\n", vmc->GetVariantCnt());
-    //	for (size_t i = 0; i < vmc->GetVariantCnt(); ++i) {
-    //		for (size_t j = 0; j < vmc->GetVariantCnt(); ++j) {
-    //			printf("%.2f ", vmc->GetMatch()[j * vmc->GetVariantCnt() + i]);
-    //		}
-    //		printf("\n");
-    //	}
-    //	// END DEBUG
+    // // DEBUG Print matrix values
+    // printf("Variant count %u\n", vmc->GetVariantCnt());
+    // for (size_t i = 0; i < vmc->GetVariantCnt(); ++i) {
+    //     for (size_t j = 0; j < vmc->GetVariantCnt(); ++j) {
+    //         printf("%.2f ", vmc->GetMatch()[j * vmc->GetVariantCnt() + i]);
+    //     }
+    //     printf("\n");
+    // }
+    // // END DEBUG
 
     //    ::glMatrixMode(GL_PROJECTION);
     //    ::glPushMatrix();

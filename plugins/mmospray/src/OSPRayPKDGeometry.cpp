@@ -4,30 +4,30 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "OSPRayPKDGeometry.h"
-#include "mmcore/Call.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/Call.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "vislib/forceinline.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/forceinline.h"
 
-#include "ospray/ospray_cpp.h"
-#include "mmospray/CallOSPRayAPIObject.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmospray/CallOSPRayAPIObject.h"
+#include "ospray/ospray_cpp.h"
 
 namespace megamol {
 namespace ospray {
 
 
 OSPRayPKDGeometry::OSPRayPKDGeometry(void)
-    : getDataSlot("getdata", "Connects to the data source")
-    , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure")
-    , colorTypeSlot("colorType", "Set the type of encoded color") {
+        : getDataSlot("getdata", "Connects to the data source")
+        , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure")
+        , colorTypeSlot("colorType", "Set the type of encoded color") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -56,10 +56,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    megamol::geocalls::MultiParticleDataCall* cd =
-        this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
+    megamol::geocalls::MultiParticleDataCall* cd = this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
 
-    
 
     //auto const minFrameCount = cd->FrameCount();
 
@@ -75,7 +73,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
     //    frameTime = os->FrameID();
     //}
     cd->SetFrameID(os->FrameID(), true);
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(1))
+        return false;
 
     if (this->datahash != cd->DataHash() || this->time != cd->FrameID() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
@@ -84,7 +83,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         return true;
     }
 
-    if (!(*cd)(0)) return false;
+    if (!(*cd)(0))
+        return false;
 
     size_t listCount = cd->GetParticleListCount();
     std::vector<::ospray::cpp::Geometry> geo;
@@ -101,7 +101,7 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         vertexData.commit();
 
         // set bbox
-        auto bboxData = ::ospray::cpp::CopiedData(parts.GetBBox().PeekBounds(),OSP_FLOAT, 6);
+        auto bboxData = ::ospray::cpp::CopiedData(parts.GetBBox().PeekBounds(), OSP_FLOAT, 6);
         bboxData.commit();
 
         geo.back().setParam("radius", parts.GetGlobalRadius());
@@ -138,7 +138,9 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 }
 
 
-OSPRayPKDGeometry::~OSPRayPKDGeometry() { this->Release(); }
+OSPRayPKDGeometry::~OSPRayPKDGeometry() {
+    this->Release();
+}
 
 bool OSPRayPKDGeometry::create() {
     auto error = ospLoadModule("pkd");
@@ -163,14 +165,17 @@ bool OSPRayPKDGeometry::InterfaceIsDirty() {
     }
 }
 
-bool OSPRayPKDGeometry::InterfaceIsDirtyNoReset() const { return this->colorTypeSlot.IsDirty(); }
+bool OSPRayPKDGeometry::InterfaceIsDirtyNoReset() const {
+    return this->colorTypeSlot.IsDirty();
+}
 
 
 bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     geocalls::MultiParticleDataCall* cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
-    if (cd == NULL) return false;
+    if (cd == NULL)
+        return false;
     cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
     // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
@@ -187,7 +192,8 @@ bool OSPRayPKDGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
 
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
     if (this->InterfaceIsDirtyNoReset()) {
         os->setDirty();
     }

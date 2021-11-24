@@ -1,9 +1,11 @@
-#include "stdafx.h"
 #include "GPUMeshes.h"
+#include "stdafx.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::mesh_gl::GPUMeshes::GPUMeshes() : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
+megamol::mesh_gl::GPUMeshes::GPUMeshes()
+        : m_version(0)
+        , m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
     this->m_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
@@ -92,7 +94,7 @@ bool megamol::mesh_gl::GPUMeshes::getDataCallback(core::Call& caller) {
                     // for each set of attribute indices, create a vertex buffer layout and set data pointers
                     // using the first attribute (could be any from the set, data pointer and stride should be equal)
                     auto first_attrib = mesh.second.attributes[vb_attribs.front()];
-                    vb_layouts.push_back(glowl::VertexLayout(first_attrib.stride, {} ));
+                    vb_layouts.push_back(glowl::VertexLayout(first_attrib.stride, {}));
                     vb_iterators.push_back({first_attrib.data, first_attrib.data + first_attrib.byte_size});
 
                     // for each attribute in the set, add it to the attributes of the vertex buffer layout
@@ -123,11 +125,10 @@ bool megamol::mesh_gl::GPUMeshes::getDataCallback(core::Call& caller) {
                         "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", mesh.first.c_str(), exc.what(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
-
             }
         }
 
-         auto lhs_meta_data = lhs_mesh_call->getMetaData();
+        auto lhs_meta_data = lhs_mesh_call->getMetaData();
         core::Spatial3DMetaData rhs_meta_data;
         auto src_meta_data = mc->getMetaData();
 

@@ -8,16 +8,16 @@
 #pragma once
 
 #include <array>
-#include <vector>
-#include <string>
-#include <stdexcept>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <sys/stat.h>
+#include <vector>
 
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -32,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "CPERAWDataSource";
     }
 
@@ -41,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Data reader module for cpelib dumps.";
     }
 
@@ -74,7 +74,6 @@ protected:
     virtual void release(void);
 
 private:
-
     /**
      * Reads and decompressed PBS file
      *

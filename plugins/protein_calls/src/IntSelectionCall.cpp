@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "protein_calls/IntSelectionCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::protein_calls;
@@ -16,13 +16,12 @@ const unsigned int IntSelectionCall::CallForGetSelection = 0;
 const unsigned int IntSelectionCall::CallForSetSelection = 1;
 
 /*
- *	IntSelectionCall:IntSelectionCall
+ * IntSelectionCall:IntSelectionCall
  */
-IntSelectionCall::IntSelectionCall(void) : selection(NULL) {
-}
+IntSelectionCall::IntSelectionCall(void) : selection(NULL) {}
 
 /*
- *	IntSelectionCall::~IntSelectionCall
+ * IntSelectionCall::~IntSelectionCall
  */
 IntSelectionCall::~IntSelectionCall(void) {
     selection = NULL;

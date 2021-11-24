@@ -1,7 +1,7 @@
 /*
  * LamportClock.h
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -24,115 +24,112 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * This class implements a Lamport clock (Leslie Lamport (1978): "Time,
+ * clocks, and the ordering of events in a distributed system") which can
+ * be used to implement a happened-before ordering.
+ *
+ * The class implements a monotonically incrementing counter that has to
+ * be incremented for local operations. On receiving a remote message, the
+ * maximum of the local value and the message timestamp plus one is used as
+ * new value. It is up to the user to increment the counter, especially when
+ * a message is sent.
+ *
+ * The counter used is a 64 bit unsigned integer. No measures against an
+ * arithmetic overflow are taken.
+ *
+ * The class is thread-safe.
+ */
+class LamportClock {
+
+public:
+    /** Ctor. */
+    LamportClock(void);
+
+    /** Dtor. */
+    ~LamportClock(void);
+
     /**
-     * This class implements a Lamport clock (Leslie Lamport (1978): "Time, 
-     * clocks, and the ordering of events in a distributed system") which can 
-     * be used to implement a happened-before ordering. 
+     * Answer the current value of the counter.
      *
-     * The class implements a monotonically incrementing counter that has to
-     * be incremented for local operations. On receiving a remote message, the 
-     * maximum of the local value and the message timestamp plus one is used as
-     * new value. It is up to the user to increment the counter, especially when
-     * a message is sent.
-     *
-     * The counter used is a 64 bit unsigned integer. No measures against an
-     * arithmetic overflow are taken.
-     *
-     * The class is thread-safe.
+     * @return The current value of the counter.
      */
-    class LamportClock {
+    inline UINT64 GetValue(void) const {
+        AutoLock l(this->lock);
+        return this->value;
+    }
 
-    public:
+    /**
+     * Tells the clock to make a local step, i. e. increment the counter
+     * by 1.
+     *
+     * @return The new value of the counter.
+     */
+    UINT64 StepLocal(void);
 
-        /** Ctor. */
-        LamportClock(void);
+    /**
+     * Tells the clock that a message with timestamp 'timestamp' was
+     * received. The counter is adjusted appropriately.
+     *
+     * @param timestamp The timestamp of the message received.
+     *
+     * @return The new value of the counter.
+     */
+    UINT64 StepReceive(UINT64 timestamp);
 
-        /** Dtor. */
-        ~LamportClock(void);
+    /**
+     * Tells the clock to make a local step, i. e. increment the counter
+     * by 1, but return the old value of the counter.
+     *
+     * @return The old value of the counter.
+     */
+    UINT64 operator++(int);
 
-        /**
-         * Answer the current value of the counter.
-         *
-         * @return The current value of the counter.
-         */
-        inline UINT64 GetValue(void) const {
-            AutoLock l(this->lock);
-            return this->value;
-        }
+    /**
+     * Tells the clock to make a local step, i. e. increment the counter
+     * by 1.
+     *
+     * @return The new value of the counter.
+     */
+    inline UINT64 operator++(void) {
+        return this->StepLocal();
+    }
 
-        /**
-         * Tells the clock to make a local step, i. e. increment the counter 
-         * by 1.
-         *
-         * @return The new value of the counter.
-         */
-        UINT64 StepLocal(void);
+    /**
+     * Answer the current value of the counter.
+     *
+     * @return The current value of the counter.
+     */
+    UINT64 operator*(void) const {
+        return this->GetValue();
+    }
 
-        /**
-         * Tells the clock that a message with timestamp 'timestamp' was 
-         * received. The counter is adjusted appropriately.
-         *
-         * @param timestamp The timestamp of the message received.
-         *
-         * @return The new value of the counter.
-         */
-        UINT64 StepReceive(UINT64 timestamp);
+private:
+    /**
+     * Forbidden copy ctor.
+     *
+     * @param rhs The object to be cloned.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
+    LamportClock(const LamportClock& rhs);
 
-        /**
-         * Tells the clock to make a local step, i. e. increment the counter
-         * by 1, but return the old value of the counter.
-         *
-         * @return The old value of the counter.
-         */
-        UINT64 operator ++(int);
+    /**
+     * Forbidden assignment.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @throws IllegalParamException if &rhs != this.
+     */
+    LamportClock& operator=(const LamportClock& rhs);
 
-        /**
-         * Tells the clock to make a local step, i. e. increment the counter 
-         * by 1.
-         *
-         * @return The new value of the counter.
-         */
-        inline UINT64 operator ++(void) {
-            return this->StepLocal();
-        }
+    /** The critical section protecting the counter. */
+    mutable CriticalSection lock;
 
-        /**
-         * Answer the current value of the counter.
-         *
-         * @return The current value of the counter.
-         */
-        UINT64 operator *(void) const {
-            return this->GetValue();
-        }
+    /** The value of counter. */
+    UINT64 value;
+};
 
-    private:
-
-        /**
-         * Forbidden copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Always.
-         */
-        LamportClock(const LamportClock& rhs);
-
-        /**
-         * Forbidden assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @throws IllegalParamException if &rhs != this.
-         */
-        LamportClock& operator =(const LamportClock& rhs);
-
-        /** The critical section protecting the counter. */
-        mutable CriticalSection lock;
-
-        /** The value of counter. */
-        UINT64 value;
-
-    };
-    
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -140,4 +137,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_LAMPORTCLOCK_H_INCLUDED */
-

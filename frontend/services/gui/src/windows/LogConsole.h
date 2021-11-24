@@ -20,68 +20,68 @@ namespace megamol {
 namespace gui {
 
 
-    /* ************************************************************************
-     * The log buffer collecting all the messages
-     */
-    class LogBuffer : public std::stringbuf {
-    public:
-        LogBuffer() = default;
-        ~LogBuffer() override = default;
+/* ************************************************************************
+ * The log buffer collecting all the messages
+ */
+class LogBuffer : public std::stringbuf {
+public:
+    LogBuffer() = default;
+    ~LogBuffer() override = default;
 
-        struct LogEntry {
-            unsigned int level;
-            std::string message;
-        };
-
-        int sync() override;
-
-        inline const std::vector<LogEntry>& log() const {
-            return this->messages;
-        }
-
-    private:
-        std::vector<LogEntry> messages;
+    struct LogEntry {
+        unsigned int level;
+        std::string message;
     };
 
+    int sync() override;
 
-    /* ************************************************************************
-     * The content of the log console GUI window
-     */
-    class LogConsole : public AbstractWindow {
-    public:
-        explicit LogConsole(const std::string& window_name);
-        ~LogConsole();
+    inline const std::vector<LogEntry>& log() const {
+        return this->messages;
+    }
 
-        bool Update() override;
-        bool Draw() override;
+private:
+    std::vector<LogEntry> messages;
+};
 
-        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
-        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
-    private:
-        // VARIABLES --------------------------------------------------------------
+/* ************************************************************************
+ * The content of the log console GUI window
+ */
+class LogConsole : public AbstractWindow {
+public:
+    explicit LogConsole(const std::string& window_name);
+    ~LogConsole();
 
-        LogBuffer echo_log_buffer;
-        std::ostream echo_log_stream;
-        std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
+    bool Update() override;
+    bool Draw() override;
 
-        size_t log_msg_count;
-        unsigned int scroll_down;
-        unsigned int scroll_up;
-        float last_window_height;
+    void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+    void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
-        unsigned int win_log_level; // [SAVED] Log level used in log window
-        bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
+private:
+    // VARIABLES --------------------------------------------------------------
 
-        // Widgets
-        HoverToolTip tooltip;
+    LogBuffer echo_log_buffer;
+    std::ostream echo_log_stream;
+    std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
 
-        // FUNCTIONS --------------------------------------------------------------
+    size_t log_msg_count;
+    unsigned int scroll_down;
+    unsigned int scroll_up;
+    float last_window_height;
 
-        bool connect_log();
+    unsigned int win_log_level; // [SAVED] Log level used in log window
+    bool win_log_force_open;    // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
-        void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
-    };
+    // Widgets
+    HoverToolTip tooltip;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    bool connect_log();
+
+    void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
+};
 
 
 } // namespace gui

@@ -13,4 +13,4 @@ namespace megamol::core_gl::view {
 using core::utility::log::Log;
 
 
-} // namespace megamol::core::view
+} // namespace megamol::core_gl::view

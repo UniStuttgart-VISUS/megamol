@@ -1,15 +1,18 @@
-#include "stdafx.h"
 #include "mmcore_gl/UniFlagStorageGL.h"
+#include "stdafx.h"
 
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
+
+#include "OpenGL_Context.h"
 
 using namespace megamol;
 using namespace megamol::core_gl;
 
 
 UniFlagStorageGL::UniFlagStorageGL(void)
-        : core::UniFlagStorage(), readFlagsSlot("readFlags", "Provides flag data to clients.")
+        : core::UniFlagStorage()
+        , readFlagsSlot("readFlags", "Provides flag data to clients.")
         , writeFlagsSlot("writeFlags", "Accepts updated flag data from clients.") {
 
     this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
@@ -21,9 +24,9 @@ UniFlagStorageGL::UniFlagStorageGL(void)
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
         FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &UniFlagStorageGL::writeDataCallback);
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &core::UniFlagStorage::writeMetaDataCallback);
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData),
+        &core::UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeFlagsSlot);
-
 }
 
 
@@ -33,6 +36,10 @@ UniFlagStorageGL::~UniFlagStorageGL(void) {
 
 
 bool UniFlagStorageGL::create(void) {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3))
+        return false;
+
     this->theData = std::make_shared<FlagCollection_GL>();
     const int num = 10;
     std::vector<uint32_t> temp_data(num, core::FlagStorage::ENABLED);

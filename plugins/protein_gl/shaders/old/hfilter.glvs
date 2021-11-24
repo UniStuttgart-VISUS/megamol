@@ -6,11 +6,11 @@ varying float sigmaxSqrt2PI;
 
 void main()
 {
-	gl_Position.xy = gl_Vertex.xy * 2.0 - 1.0;
-	gl_Position.zw = vec2( -1.0, 1.0);
+    gl_Position.xy = gl_Vertex.xy * 2.0 - 1.0;
+    gl_Position.zw = vec2( -1.0, 1.0);
 
-	texCoord = gl_Vertex.xy;
-	//precompute factors used every iteration
-	sigmaSqx2 = sigma * sigma * 2.0;
-	sigmaxSqrt2PI = 2.50662827 * sigma;	// = sqrt( 2.0 * 3.1415926) * sigma;
+    texCoord = gl_Vertex.xy;
+    //precompute factors used every iteration
+    sigmaSqx2 = sigma * sigma * 2.0;
+    sigmaxSqrt2PI = 2.50662827 * sigma; // = sqrt( 2.0 * 3.1415926) * sigma;
 }

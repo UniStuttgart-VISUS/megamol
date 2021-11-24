@@ -3,22 +3,22 @@
  * Copyright (C) 2006-2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MSMSCavityFinder.h"
+#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
+#include "geometry_calls/CallTriMeshData.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/TunnelResidueDataCall.h"
 #include <cfloat>
 #include <chrono>
 #include <climits>
 #include <iostream>
 #include <set>
-#include "geometry_calls/CallTriMeshData.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/TunnelResidueDataCall.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
@@ -36,7 +36,8 @@ using namespace megamol::protein_calls;
  * THIS IS THE APEX OF SHIT and a non-quality copy from nanoflann/examples/utils.h
  * TODO: Replace it with a proper adapter instead of creating a copy to index data!
  */
-template <typename T> struct PointCloud {
+template<typename T>
+struct PointCloud {
     struct Point {
         T x, y, z;
     };
@@ -44,7 +45,9 @@ template <typename T> struct PointCloud {
     std::vector<Point> pts;
 
     // Must return the number of data points
-    inline size_t kdtree_get_point_count() const { return pts.size(); }
+    inline size_t kdtree_get_point_count() const {
+        return pts.size();
+    }
 
     // Returns the dim'th component of the idx'th point in the class:
     // Since this is inlined and the "dim" argument is typically an immediate value, the
@@ -61,23 +64,26 @@ template <typename T> struct PointCloud {
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.
     //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
     //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX> bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+    template<class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const {
+        return false;
+    }
 };
 
 /*
  * MSMSCavityFinder::MSMSCavityFinder
  */
 MSMSCavityFinder::MSMSCavityFinder(void)
-    : Module()
-    , innerMeshInSlot("innerDataIn", "Receives the inner input mesh")
-    , outerMeshInSlot("outerDataIn", "Receives the outer input mesh")
-    , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
-    , distanceParam("distance", "Mesh-mesh distance threshold for cavity detection")
-    , areaParam("min area", "Minimum area of a cavity mesh")
-    , dataHash(0)
-    , lastFrame(-1)
-    , lastHashInner(0)
-    , lastHashOuter(0) {
+        : Module()
+        , innerMeshInSlot("innerDataIn", "Receives the inner input mesh")
+        , outerMeshInSlot("outerDataIn", "Receives the outer input mesh")
+        , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+        , distanceParam("distance", "Mesh-mesh distance threshold for cavity detection")
+        , areaParam("min area", "Minimum area of a cavity mesh")
+        , dataHash(0)
+        , lastFrame(-1)
+        , lastHashInner(0)
+        , lastHashOuter(0) {
 
     // Callee slot
     this->cutMeshOutSlot.SetCallback(
@@ -104,12 +110,16 @@ MSMSCavityFinder::MSMSCavityFinder(void)
 /*
  * MSMSCavityFinder::~MSMSCavityFinder
  */
-MSMSCavityFinder::~MSMSCavityFinder(void) { this->Release(); }
+MSMSCavityFinder::~MSMSCavityFinder(void) {
+    this->Release();
+}
 
 /*
  * MSMSCavityFinder::create
  */
-bool MSMSCavityFinder::create(void) { return true; }
+bool MSMSCavityFinder::create(void) {
+    return true;
+}
 
 /*
  * MSMSCavityFinder::release
@@ -121,23 +131,28 @@ void MSMSCavityFinder::release(void) {}
  */
 bool MSMSCavityFinder::getData(Call& call) {
     CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
 #ifdef SOMBRERO_TIMING
     auto timebegin = std::chrono::steady_clock::now();
 #endif
 
     CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
-    if (inInnerCall == nullptr) return false;
+    if (inInnerCall == nullptr)
+        return false;
 
     CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
-    if (inOuterCall == nullptr) return false;
+    if (inOuterCall == nullptr)
+        return false;
 
     inInnerCall->SetFrameID(outCall->FrameID());
-    if (!(*inInnerCall)(0)) return false;
+    if (!(*inInnerCall)(0))
+        return false;
 
     inOuterCall->SetFrameID(outCall->FrameID());
-    if (!(*inOuterCall)(0)) return false;
+    if (!(*inOuterCall)(0))
+        return false;
 
     // squared distance threshold to outer mesh (for cavity detection)
     float sqDist = distanceParam.Param<param::FloatParam>()->Value();
@@ -145,10 +160,12 @@ bool MSMSCavityFinder::getData(Call& call) {
 
     // make sure that there is at least one mesh available and vertice are stored as float
     // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
-    if (inInnerCall->Count() == 0) return false;
+    if (inInnerCall->Count() == 0)
+        return false;
     auto innerObj = &inInnerCall->Objects()[0];
     // TODO implement branches for other data types
-    if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
+    if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+        return false;
 
     // only recompute vertex distances if something has changed
     if (this->lastFrame != outCall->FrameID() || this->lastHashInner != inInnerCall->DataHash() ||
@@ -170,10 +187,12 @@ bool MSMSCavityFinder::getData(Call& call) {
 
         // insert all vertices of the outer mesh into the point cloud
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
-        if (inOuterCall->Count() == 0) return false;
+        if (inOuterCall->Count() == 0)
+            return false;
         auto outerObj = &inOuterCall->Objects()[0];
         // TODO implement branches for other data types
-        if (outerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
+        if (outerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+            return false;
         PointCloud<float> pointCloud;
         pointCloud.pts.resize(outerObj->GetVertexCount());
         for (unsigned int i = 0; i < outerObj->GetVertexCount(); i++) {
@@ -195,7 +214,8 @@ bool MSMSCavityFinder::getData(Call& call) {
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
         innerObj = &inInnerCall->Objects()[0];
         // TODO implement branches for other data types
-        if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT) return false;
+        if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+            return false;
         this->vertexIndex.clear();
         this->vertexIndex.resize(innerObj->GetVertexCount());
         this->distanceToMesh.clear();
@@ -219,7 +239,8 @@ bool MSMSCavityFinder::getData(Call& call) {
         this->cavityMesh = *innerObj;
         unsigned int triaCnt = this->cavityMesh.GetTriCount();
         // TODO implement branches for other data types
-        if (this->cavityMesh.GetTriDataType() != CallTriMeshData::Mesh::DT_UINT32) return false;
+        if (this->cavityMesh.GetTriDataType() != CallTriMeshData::Mesh::DT_UINT32)
+            return false;
         triaIndices.SetCount(0);
         triaIndices.AssertCapacity(triaCnt * 3);
         // check all triangle edges for distance to the outer mesh
@@ -396,19 +417,24 @@ bool MSMSCavityFinder::getData(Call& call) {
  */
 bool MSMSCavityFinder::getExtent(Call& call) {
     CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
-    if (inInnerCall == nullptr) return false;
+    if (inInnerCall == nullptr)
+        return false;
 
     CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
-    if (inOuterCall == nullptr) return false;
+    if (inOuterCall == nullptr)
+        return false;
 
     inInnerCall->SetFrameID(outCall->FrameID());
-    if (!(*inInnerCall)(1)) return false;
+    if (!(*inInnerCall)(1))
+        return false;
 
     inOuterCall->SetFrameID(outCall->FrameID());
-    if (!(*inOuterCall)(1)) return false;
+    if (!(*inOuterCall)(1))
+        return false;
 
     outCall->SetDataHash(inInnerCall->DataHash()); // +this->hashOffset);
     outCall->SetFrameCount(inInnerCall->FrameCount());

@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/MMSPDFrameData.h"
+#include "stdafx.h"
 
 using namespace megamol::moldyn::io;
 
@@ -34,9 +34,8 @@ MMSPDFrameData::Particles::~Particles(void) {
  * MMSPDFrameData::Particles::operator==
  */
 bool MMSPDFrameData::Particles::operator==(const MMSPDFrameData::Particles& rhs) {
-    return (this->count == rhs.count)
-        && (&this->data == &rhs.data) // sufficient
-        && (this->fieldMap == rhs.fieldMap); // sufficient
+    return (this->count == rhs.count) && (&this->data == &rhs.data) // sufficient
+           && (this->fieldMap == rhs.fieldMap);                     // sufficient
 }
 
 

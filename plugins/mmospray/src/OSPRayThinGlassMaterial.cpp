@@ -1,23 +1,24 @@
 /*
-* OSPRayThinGlassMaterial.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayThinGlassMaterial.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "OSPRayThinGlassMaterial.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 
 
-OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void) :
-    AbstractOSPRayMaterial(),
-    // THINGLASS
-    thinglassTransmission("Transmission", ""),
-    thinglassEta("Eta", ""),
-    thinglassThickness("Thickness", "") {
+OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void)
+        : AbstractOSPRayMaterial()
+        ,
+        // THINGLASS
+        thinglassTransmission("Transmission", "")
+        , thinglassEta("Eta", "")
+        , thinglassThickness("Thickness", "") {
 
     this->thinglassTransmission << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->thinglassEta << new core::param::FloatParam(1.5f);
@@ -39,21 +40,15 @@ void OSPRayThinGlassMaterial::readParams() {
     auto transmission = this->thinglassTransmission.Param<core::param::Vector3fParam>();
     tgm.thinglassTransmission = transmission->getArray();
 
-    tgm.thinglassEta =
-        this->thinglassEta.Param<core::param::FloatParam>()->Value();
+    tgm.thinglassEta = this->thinglassEta.Param<core::param::FloatParam>()->Value();
 
-    tgm.thinglassThickness =
-        this->thinglassThickness.Param<core::param::FloatParam>()->Value();
+    tgm.thinglassThickness = this->thinglassThickness.Param<core::param::FloatParam>()->Value();
 
     materialContainer.material = tgm;
 }
 
 bool OSPRayThinGlassMaterial::InterfaceIsDirty() {
-    if (
-        this->thinglassEta.IsDirty() ||
-        this->thinglassThickness.IsDirty() ||
-        this->thinglassTransmission.IsDirty()
-        ) {
+    if (this->thinglassEta.IsDirty() || this->thinglassThickness.IsDirty() || this->thinglassTransmission.IsDirty()) {
         this->thinglassEta.ResetDirty();
         this->thinglassThickness.ResetDirty();
         this->thinglassTransmission.ResetDirty();
