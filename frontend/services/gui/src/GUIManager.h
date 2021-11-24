@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include <windows/LogConsole.h>
 #include "CommandRegistry.h"
 #include "implot.h"
 #include "mmcore/CoreInstance.h"
@@ -255,6 +256,13 @@ namespace gui {
          */
         void RegisterHotkeys(
             megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
+
+        void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
+            auto cons = win_collection.GetWindow<LogConsole>();
+            if (cons) {
+                cons->SetLuaFunc(lua_func);
+            }
+        }
 
 #ifdef PROFILING
         void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {

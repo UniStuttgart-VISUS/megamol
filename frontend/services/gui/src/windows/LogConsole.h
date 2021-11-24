@@ -11,6 +11,7 @@
 
 
 #include "AbstractWindow.h"
+#include "CommonTypes.h"
 #include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -49,6 +50,7 @@ namespace gui {
      */
     class LogConsole : public AbstractWindow {
     public:
+        using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
         explicit LogConsole(const std::string& window_name);
         ~LogConsole();
 
@@ -57,6 +59,10 @@ namespace gui {
 
         void SpecificStateFromJSON(const nlohmann::json& in_json) override;
         void SpecificStateToJSON(nlohmann::json& inout_json) override;
+
+        void SetLuaFunc(lua_func_type* func) {
+            lua_func = func;
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -81,6 +87,10 @@ namespace gui {
         bool connect_log();
 
         void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
+
+        std::array<char, 512> input_buffer;
+        // where would I get this from? and the autocomplete stuff?
+        lua_func_type* lua_func;
     };
 
 
