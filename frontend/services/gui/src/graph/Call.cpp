@@ -12,9 +12,9 @@
 
 #ifdef PROFILING
 
-#define PROFILING_PLOT_HEIGHT (7.0f)
-#define PROFILING_CHILD_WIDTH (15.0f)
-#define PROFILING_CHILD_HEIGHT (9.0f + 2.0f * PROFILING_PLOT_HEIGHT)
+#define CALL_PROFILING_PLOT_HEIGHT (7.0f)
+#define CALL_PROFILING_CHILD_WIDTH (15.0f)
+#define CALL_PROFILING_CHILD_HEIGHT (9.0f + 2.0f * CALL_PROFILING_PLOT_HEIGHT)
 #include "implot.h"
 
 #endif
@@ -241,16 +241,17 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         rect_size.y += (ImGui::GetFontSize() + style.ItemSpacing.y);
                     }
 #ifdef PROFILING
-                    rect_size.x += ImGui::GetFrameHeightWithSpacing();
+                    rect_size.x += 2.0f * ImGui::GetFrameHeightWithSpacing();
                     rect_size.y = std::max(rect_size.y, ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y);
 #endif
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
 #ifdef PROFILING
                     if (this->show_profiling_data) {
-                        rect_size =
-                            ImVec2(((ImGui::GetFrameHeight() * PROFILING_CHILD_WIDTH) + style.ItemSpacing.x * 2.0f),
-                                (ImGui::GetFrameHeight() * (PROFILING_CHILD_HEIGHT + 1.0f) + style.ItemSpacing.x));
+                        rect_size = ImVec2(
+                            ((ImGui::GetFrameHeight() * CALL_PROFILING_CHILD_WIDTH) + style.ItemSpacing.x * 2.0f),
+                            (ImGui::GetFrameHeight() * (CALL_PROFILING_CHILD_HEIGHT) + style.ItemSpacing.y * 2.0f +
+                                rect_size.y));
                     }
 #endif
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
@@ -344,16 +345,14 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         draw_list->AddRect(
                             call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
-                        // Draw Text
-                        ImVec2 text_pos_left_upper =
-                            (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
 #ifdef PROFILING
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {
                             this->gui_profiling_button.LoadTextureFromFile(GUI_PROFILING_BUTTON);
                         }
-                        text_pos_left_upper = call_rect_min + style.ItemSpacing;
-                        ImGui::SetCursorScreenPos(text_pos_left_upper);
+                        ImVec2 profiling_button_pos = ImVec2(
+                            call_rect_min.x + style.ItemSpacing.x, call_center.y - (ImGui::GetFrameHeight() / 2.0f));
+                        ImGui::SetCursorScreenPos(profiling_button_pos);
 
                         auto button_size = ImGui::GetFrameHeight() - style.ItemSpacing.y;
                         ImGui::PushFont(state.canvas.gui_font_ptr);
@@ -365,16 +364,14 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         ImGui::PopFont();
 
                         if (this->show_profiling_data) {
-                            text_pos_left_upper.y += ImGui::GetFrameHeight();
-                            ImGui::SetCursorScreenPos(text_pos_left_upper);
+                            ImGui::SetCursorScreenPos(ImVec2(call_rect_min.x + style.ItemSpacing.x,
+                                call_center.y + (call_center.y - call_rect_min.y)));
                             this->draw_profiling_data();
                         }
-                        text_pos_left_upper.x += ImGui::GetFrameHeightWithSpacing();
-                        text_pos_left_upper.y += (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
-                        if (this->show_profiling_data) {
-                            text_pos_left_upper.y -= ImGui::GetFontSize();
-                        }
 #endif
+                        // Draw Text
+                        ImVec2 text_pos_left_upper =
+                            (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                         if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                             text_pos_left_upper.y -= (0.5f * ImGui::GetFontSize());
                         }
@@ -382,6 +379,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             draw_list->AddText(text_pos_left_upper,
                                 ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), this->class_name.c_str());
                         }
+
                         text_pos_left_upper =
                             (call_center + ImVec2(-(slots_label_width / 2.0f), -0.5f * ImGui::GetFontSize()));
                         if (state.interact.call_show_label && state.interact.call_show_slots_label) {
@@ -438,8 +436,9 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
 void megamol::gui::Call::draw_profiling_data() {
 
     ImGui::BeginChild("call_profiling_info",
-        ImVec2((ImGui ::GetFrameHeight() * PROFILING_CHILD_WIDTH), (ImGui::GetFrameHeight() * PROFILING_CHILD_HEIGHT)),
-        false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
+        ImVec2((ImGui ::GetFrameHeight() * CALL_PROFILING_CHILD_WIDTH),
+            (ImGui::GetFrameHeight() * CALL_PROFILING_CHILD_HEIGHT)),
+        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -499,7 +498,7 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::EndCombo();
             }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
@@ -543,7 +542,7 @@ void megamol::gui::Call::draw_profiling_data() {
             }
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###glminmax", xbuf.data(),

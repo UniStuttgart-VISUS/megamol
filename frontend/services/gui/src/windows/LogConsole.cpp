@@ -103,6 +103,7 @@ int TextEditCallback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
+
 int megamol::gui::LogBuffer::sync() {
     try {
         auto message_str = this->str();
@@ -276,10 +277,29 @@ bool megamol::gui::LogConsole::Draw() {
 
 
     // Print messages ---------------------------------------------------------
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::BeginChild("log_messages",
+        ImVec2(0.0f,
+            ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
+        true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
     for (auto& entry : this->echo_log_buffer.log()) {
         this->print_message(entry, this->win_log_level);
     }
 
+    // Scroll - Requires 3 frames for being applied!
+    if (this->scroll_down > 0) {
+        ImGui::SetScrollY(ImGui::GetScrollMaxY());
+        this->scroll_down--;
+    }
+    if (this->scroll_up > 0) {
+        ImGui::SetScrollY(0.0f);
+        this->scroll_up--;
+    }
+
+    ImGui::EndChild();
+
+    // Console Input ----------------------------------------------------------
     bool reclaim_focus = false;
     static int selected_command = -1;
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
@@ -301,9 +321,13 @@ bool megamol::gui::LogConsole::Draw() {
         ImGui::SetKeyboardFocusHere();
         reclaim_focus = false;
     }
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted("Input");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();
     if (ImGui::InputText(
-            "Input", input_buffer.data(), input_buffer.size(), input_text_flags, TextEditCallback, (void*) this)) {
+            "###input", input_buffer.data(), input_buffer.size(), input_text_flags, TextEditCallback, (void*) this)) {
         std::string command = "return " + std::string(input_buffer.data());
         auto result = (*lua_func)(command.c_str());
         if (std::get<0>(result)) {
@@ -316,6 +340,7 @@ bool megamol::gui::LogConsole::Draw() {
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
     }
+    ImGui::PopItemWidth();
     ImGui::SetItemDefaultFocus();
     if (autocomplete_candidates.size() > 1) {
         ImGui::OpenPopup("autocomplete_selector");
@@ -336,16 +361,6 @@ bool megamol::gui::LogConsole::Draw() {
                 ImGui::SetKeyboardFocusHere(-1);
             }
         ImGui::EndPopup();
-    }
-
-    // Scroll - Requires 3 frames for being applied!
-    if (this->scroll_down > 0) {
-        ImGui::SetScrollY(ImGui::GetScrollMaxY());
-        this->scroll_down--;
-    }
-    if (this->scroll_up > 0) {
-        ImGui::SetScrollY(0.0f);
-        this->scroll_up--;
     }
 
     return true;

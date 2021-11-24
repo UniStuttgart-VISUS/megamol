@@ -533,6 +533,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
         };
         std::vector<CallData> call_data;
 
+        bool gui_graph_error = false;
         bool gui_graph_changed = false;
 
         // ADD new modules to GUI graph -------------------------------------------------
@@ -621,8 +622,9 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
 #endif
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to get created module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
-                    __FUNCTION__, __LINE__);
+                    "[GUI] Unable to create module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
+                    __LINE__);
+                gui_graph_error = true;
                 continue;
             }
 
@@ -828,14 +830,24 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
                 //    cd.core_call.get()->GetDescriptiveText().c_str());
                 call_to_call[cd.core_call.get()] = gui_call_ptr;
 #endif
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to create call. [%s, %s, line %d]\n", cd.call_class_name.c_str(), __FILE__,
+                    __FUNCTION__, __LINE__);
+                gui_graph_error = true;
             }
         }
 
-        if (gui_graph_changed) {
+        if (gui_graph_changed && !gui_graph_error) {
             graph_ptr->ClearSyncQueue();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->Name().c_str());
         }
+        if (gui_graph_error) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Failed to load/update project '%s' from running MegaMol.\n", graph_ptr->Name().c_str());
+        }
+
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

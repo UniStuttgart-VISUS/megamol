@@ -12,9 +12,9 @@
 #include "InterfaceSlot.h"
 
 
-#define PROFILING_PLOT_HEIGHT (7.0f)
-#define PROFILING_CHILD_WIDTH (15.0f)
-#define PROFILING_CHILD_HEIGHT (9.0f + 2.0f * PROFILING_PLOT_HEIGHT)
+#define MODULE_PROFILING_PLOT_HEIGHT (7.0f)
+#define MODULE_PROFILING_CHILD_WIDTH (15.0f)
+#define MODULE_PROFILING_CHILD_HEIGHT (9.0f + 2.0f * MODULE_PROFILING_PLOT_HEIGHT)
 #include "implot.h"
 
 
@@ -439,12 +439,18 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     text_width = ImGui::CalcTextSize(this->name.c_str()).x;
                     text_pos_left_upper = module_center - ImVec2((text_width / 2.0f),
                                                               ((button_count > 0) ? (line_height * 0.6f) : (0.0f)));
+#ifdef PROFILING
+                    if (this->show_profiling_data) {
+                        text_pos_left_upper = ImVec2(module_center.x - (text_width / 2.0f),
+                            module_rect_min.y + (1.0f * ImGui::GetFrameHeightWithSpacing()));
+                    }
+#endif
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
                 if (button_count > 0) {
-                    float item_y_offset = (line_height / 2.0f);
                     float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
+                    float item_y_offset = (line_height / 2.0f);
                     if (!state.interact.module_show_label) {
                         item_y_offset = -(line_height / 2.0f);
                     }
@@ -455,7 +461,12 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                         (style.ItemSpacing.x * state.canvas.zooming);
                     }
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-
+#ifdef PROFILING
+                    if (this->show_profiling_data) {
+                        ImGui::SetCursorScreenPos(ImVec2(module_center.x - item_x_offset,
+                            module_rect_min.y + (2.0f * ImGui::GetFrameHeightWithSpacing())));
+                    }
+#endif
                     if (graph_entry_button) {
                         bool is_graph_entry = this->IsGraphEntry();
                         if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
@@ -518,6 +529,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         auto button_size = ImGui::GetFrameHeight();
                         if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
+                            this->gui_update = true;
                         }
                         if (hovered) {
                             ImGui::PushFont(state.canvas.gui_font_ptr);
@@ -525,10 +537,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             ImGui::PopFont();
                         }
                         if (this->show_profiling_data) {
-                            ImGui::SameLine();
                             ImVec2 profiling_child_pos = ImGui::GetCursorScreenPos();
-                            profiling_child_pos.y += ImGui::GetFrameHeightWithSpacing();
-                            profiling_child_pos.x -= ImGui::GetFrameHeightWithSpacing();
+                            profiling_child_pos.x = module_rect_min.x + (1.5f * GUI_SLOT_RADIUS * state.canvas.zooming);
                             ImGui::SetCursorScreenPos(profiling_child_pos);
                             this->draw_profiling_data();
                         }
@@ -622,6 +632,17 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
     float text_button_height = (line_height * ((state.interact.module_show_label) ? (4.0f) : (1.0f)));
     float module_height = std::max(module_slot_height, text_button_height);
 
+#ifdef PROFILING
+    if (this->show_profiling_data) {
+        module_width = std::max(module_width,
+            (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_WIDTH / state.canvas.zooming) + (3.0f * GUI_SLOT_RADIUS));
+        module_height = std::max(
+            module_height, (4.0f * ImGui::GetFrameHeightWithSpacing()) +
+                               (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_HEIGHT / state.canvas.zooming) +
+                               (1.5f * GUI_SLOT_RADIUS));
+    }
+#endif
+
     // Clamp to minimum size
     this->gui_size = ImVec2(std::max(module_width, (100.0f * megamol::gui::gui_scaling.Get())),
         std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
@@ -653,6 +674,37 @@ void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
 }
 
 
+bool megamol::gui::Module::ParametersVisible() {
+
+    return this->gui_param_groups.ParametersVisible(this->parameters);
+}
+
+
+bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
+
+    // Parameter Groups
+    bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
+    // Parameters
+    for (auto& param : this->parameters) {
+        retval &= param.StateToJSON(inout_json, param.FullNameProject());
+    }
+    return retval;
+}
+
+
+bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
+
+    // Parameter Groups
+    bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
+    // Parameters
+    for (auto& param : this->parameters) {
+        retval &= param.StateFromJSON(in_json, param.FullNameProject());
+        param.ForceSetGUIStateDirty();
+    }
+    return retval;
+}
+
+
 #ifdef PROFILING
 
 void megamol::gui::Module::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
@@ -673,11 +725,11 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
 void megamol::gui::Module::draw_profiling_data() {
 
     ImGui::BeginChild("module_profiling_info",
-        ImVec2((ImGui ::GetFrameHeight() * PROFILING_CHILD_WIDTH), (ImGui::GetFrameHeight() * PROFILING_CHILD_HEIGHT)),
-        false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
+        ImVec2((ImGui ::GetFrameHeight() * MODULE_PROFILING_CHILD_WIDTH),
+            (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_HEIGHT)),
+        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
 
     ImGui::TextUnformatted("Profiling");
-    /* TODO
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback Name]");
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
@@ -694,8 +746,8 @@ void megamol::gui::Module::draw_profiling_data() {
                 // ImGui::TextUnformatted("LastCPUTime");
                 // ImGui::TableNextColumn();
                 // ImGui::Text("%.12f",
-                //
-    this->cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));//this->profiling[i].lcput);
+                // this->cpu_perf_history[i].last_value(core::MultiPerformanceHistory::metric_type::AVERAGE));
+                // this->profiling[i].lcput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("AverageCPUTime");
@@ -736,7 +788,7 @@ void megamol::gui::Module::draw_profiling_data() {
                 ImGui::EndCombo();
             }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
@@ -780,7 +832,7 @@ void megamol::gui::Module::draw_profiling_data() {
             }
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###glminmax", xbuf.data(),
@@ -804,40 +856,8 @@ void megamol::gui::Module::draw_profiling_data() {
         }
     }
     ImGui::EndTabBar();
-    */
 
     ImGui::EndChild();
 }
 
 #endif // PROFILING
-
-
-bool megamol::gui::Module::ParametersVisible() {
-
-    return this->gui_param_groups.ParametersVisible(this->parameters);
-}
-
-
-bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
-
-    // Parameter Groups
-    bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
-    // Parameters
-    for (auto& param : this->parameters) {
-        retval &= param.StateToJSON(inout_json, param.FullNameProject());
-    }
-    return retval;
-}
-
-
-bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
-
-    // Parameter Groups
-    bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
-    // Parameters
-    for (auto& param : this->parameters) {
-        retval &= param.StateFromJSON(in_json, param.FullNameProject());
-        param.ForceSetGUIStateDirty();
-    }
-    return retval;
-}
