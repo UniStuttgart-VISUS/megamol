@@ -63,8 +63,9 @@ namespace frontend {
             "optional<WindowManipulation>",               // 11 - GLFW window pointer
             frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
             "ImagePresentationEntryPoints",               // 13 - Entry point
+            "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
 #ifdef PROFILING
-            frontend_resources::PerformanceManager_Req_Name // 14 - Performance Manager
+            frontend_resources::PerformanceManager_Req_Name // 15 - Performance Manager
 #endif
         };
 
@@ -369,10 +370,14 @@ namespace frontend {
                 "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
         }
 
+        m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
+            &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
+        m_gui->SetLuaFunc(m_exec_lua);
+
 #ifdef PROFILING
         // PerformanceManager
         perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-            &this->m_requestedResourceReferences[14].getResource<megamol::frontend_resources::PerformanceManager>());
+            &this->m_requestedResourceReferences[15].getResource<megamol::frontend_resources::PerformanceManager>());
         // this needs to happen before the first (gui) module is spawned to help it look up the timers
         m_gui->SetPerformanceManager(perf_manager);
         perf_manager->subscribe_to_updates(
