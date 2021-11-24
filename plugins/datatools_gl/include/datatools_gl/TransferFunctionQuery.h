@@ -19,57 +19,54 @@ namespace megamol {
 namespace datatools_gl {
 
 
+/**
+ * In-Between management module to change time codes of a data set
+ */
+class TransferFunctionQuery {
+public:
+    /** Ctor. */
+    TransferFunctionQuery(void);
+
+    /** Dtor. */
+    ~TransferFunctionQuery(void);
+
     /**
-     * In-Between management module to change time codes of a data set
+     * Answer the slot for the transfer function call
+     *
+     * @return The slot for the transfer function
      */
-    class TransferFunctionQuery {
-    public:
+    inline core::CallerSlot* GetSlot(void) {
+        return &this->getTFSlot;
+    }
 
-        /** Ctor. */
-        TransferFunctionQuery(void);
+    /**
+     * Clears the transfer function data
+     */
+    inline void Clear(void) {
+        this->texDat.EnforceSize(0);
+        this->texDatSize = 0;
+    }
 
-        /** Dtor. */
-        ~TransferFunctionQuery(void);
+    /**
+     * Queries the transfer function
+     *
+     * @param col Points to four floats receiving the RGBA value
+     * @param val The value to query
+     */
+    void Query(float* col, float val);
 
-        /**
-         * Answer the slot for the transfer function call
-         *
-         * @return The slot for the transfer function
-         */
-        inline core::CallerSlot* GetSlot(void) {
-            return &this->getTFSlot;
-        }
+private:
+    /** The call for Transfer function */
+    core::CallerSlot getTFSlot;
 
-        /**
-         * Clears the transfer function data
-         */
-        inline void Clear(void) {
-            this->texDat.EnforceSize(0);
-            this->texDatSize = 0;
-        }
+    /** The transfer function raw data */
+    vislib::RawStorage texDat;
 
-        /**
-         * Queries the transfer function
-         *
-         * @param col Points to four floats receiving the RGBA value
-         * @param val The value to query
-         */
-        void Query(float *col, float val);
+    /** The size of the transfer function */
+    unsigned int texDatSize;
+};
 
-    private:
-
-        /** The call for Transfer function */
-        core::CallerSlot getTFSlot;
-
-        /** The transfer function raw data */
-        vislib::RawStorage texDat;
-
-        /** The size of the transfer function */
-        unsigned int texDatSize;
-
-    };
-
-} /* end namespace datatools */
+} // namespace datatools_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED */

@@ -1,33 +1,30 @@
 /*
-* CinematicUtils.cpp
-*
-* Copyright (C) 2019 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*/
+ * CinematicUtils.cpp
+ *
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "cinematic_gl/CinematicUtils.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "stdafx.h"
 
 
 using namespace megamol::cinematic_gl;
 
 
-CinematicUtils::CinematicUtils(void) : core_gl::utility::RenderUtils()
-    , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
-    , init_once(false)
-    , menu_font_size(20.0f)
-    , menu_height(20.0f)
-    , background_color(0.0f, 0.0f, 0.0f, 0.0f)
-    , hotkey_window_setup_once (true) {
+CinematicUtils::CinematicUtils(void)
+        : core_gl::utility::RenderUtils()
+        , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
+        , init_once(false)
+        , menu_font_size(20.0f)
+        , menu_height(20.0f)
+        , background_color(0.0f, 0.0f, 0.0f, 0.0f)
+        , hotkey_window_setup_once(true) {}
 
-}
 
-
-CinematicUtils::~CinematicUtils(void) {
-
-}
+CinematicUtils::~CinematicUtils(void) {}
 
 
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
@@ -38,12 +35,14 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     }
 
     if (this->init_once) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     // Initialise font
     if (!this->font.Initialise(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->font.SetBatchDrawMode(true);
@@ -52,7 +51,8 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     auto ssf =
         std::make_shared<core_gl::utility::ShaderSourceFactory>(core_instance->Configuration().ShaderDirectories());
     if (!this->InitPrimitiveRendering(*ssf)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -64,14 +64,14 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
 
 const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 
-    glm::vec4 color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    glm::vec4 color = {0.0f, 0.0f, 0.0f, 0.0f};
 
     switch (c) {
     case (CinematicUtils::Colors::BACKGROUND):
         color = this->background_color;
         break;
     case (CinematicUtils::Colors::FOREGROUND): {
-        glm::vec4 foreground = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glm::vec4 foreground = {1.0f, 1.0f, 1.0f, 1.0f};
         color = this->background_color;
         for (unsigned int i = 0; i < 3; i++) {
             foreground[i] -= color[i];
@@ -79,69 +79,71 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
         color = foreground;
     } break;
     case (CinematicUtils::Colors::KEYFRAME):
-        color = { 0.7f, 0.7f, 1.0f, 1.0f };
+        color = {0.7f, 0.7f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::KEYFRAME_DRAGGED):
-        color = { 0.5f, 0.5f, 1.0f, 1.0f };
+        color = {0.5f, 0.5f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::KEYFRAME_SELECTED):
-        color = { 0.2f, 0.2f, 1.0f, 1.0f };
+        color = {0.2f, 0.2f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::KEYFRAME_SPLINE):
-        color = { 0.4f, 0.4f, 1.0f, 1.0f };
+        color = {0.4f, 0.4f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MENU):
-        color = { 0.0f, 0.0f, 0.5f, 1.0f };
+        color = {0.0f, 0.0f, 0.5f, 1.0f};
         break;
     case (CinematicUtils::Colors::FONT):
-        color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        color = {1.0f, 1.0f, 1.0f, 1.0f};
         if (CinematicUtils::lightness(this->background_color) > 0.5f) {
-            color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            color = {0.0f, 0.0f, 0.0f, 1.0f};
         }
         break;
     case (CinematicUtils::Colors::FONT_HIGHLIGHT):
-        color = { 0.75f, 0.75f, 0.0f, 1.0f };
+        color = {0.75f, 0.75f, 0.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::LETTER_BOX):
-        color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        color = {1.0f, 1.0f, 1.0f, 1.0f};
         if (CinematicUtils::lightness(this->background_color) > 0.5f) {
-            color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            color = {0.0f, 0.0f, 0.0f, 1.0f};
         }
         break;
     case (CinematicUtils::Colors::FRAME_MARKER):
-        color = { 1.0f, 0.6f, 0.6f, 1.0f };
+        color = {1.0f, 0.6f, 0.6f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_X):
-        color = { 1.0f, 0.0f, 0.0f, 1.0f };
+        color = {1.0f, 0.0f, 0.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_Y):
-        color = { 0.0f, 1.0f, 0.0f, 1.0f };
+        color = {0.0f, 1.0f, 0.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_Z):
-        color = { 0.0f, 0.0f, 1.0f, 1.0f };
+        color = {0.0f, 0.0f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_VECTOR):
-        color = { 0.0f, 1.0f, 1.0f, 1.0f };
+        color = {0.0f, 1.0f, 1.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_ROTATION):
-        color = { 1.0f, 1.0f, 0.0f, 1.0f };
+        color = {1.0f, 1.0f, 0.0f, 1.0f};
         break;
     case (CinematicUtils::Colors::MANIPULATOR_CTRLPOINT):
-        color = { 1.0f, 0.0f, 1.0f, 1.0f };
+        color = {1.0f, 0.0f, 1.0f, 1.0f};
         break;
-    default: break;
+    default:
+        break;
     }
 
     return color;
 }
 
 
-void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp, float depth) {
+void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label,
+    const std::string& right_label, glm::vec2 dim_vp, float depth) {
 
     this->gui_update();
-   
+
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, depth), glm::vec3(0.0f, dim_vp.y - this->menu_height, depth), 
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, depth), glm::vec3(0.0f, dim_vp.y - this->menu_height, depth),
         glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, depth), glm::vec3(dim_vp.x, dim_vp.y, depth),
         this->Color(CinematicUtils::Colors::MENU));
 
@@ -151,7 +153,8 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
     float leftLabelWidth = this->font.LineWidth(this->menu_font_size, left_label.c_str());
     float midleftLabelWidth = this->font.LineWidth(this->menu_font_size, middle_label.c_str());
     float rightLabelWidth = this->font.LineWidth(this->menu_font_size, right_label.c_str());
-    while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
+    while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) ||
+           ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
         new_font_size -= 0.5f;
         leftLabelWidth = this->font.LineWidth(new_font_size, left_label.c_str());
         midleftLabelWidth = this->font.LineWidth(new_font_size, middle_label.c_str());
@@ -162,9 +165,12 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
 
-    this->font.DrawString(ortho, glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(),
+        megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - midleftLabelWidth) / 2.0f, textPosY, new_font_size,
+        false, middle_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - rightLabelWidth), textPosY, new_font_size, false,
+        right_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
     this->SetBackgroundColor(current_back_color);
 }
 
@@ -243,14 +249,17 @@ void CinematicUtils::Push2DText(const glm::mat4& ortho, const std::string& text,
 
     this->gui_update();
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(ortho, glm::value_ptr(color), x, y, this->menu_font_size, false, text.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), x, y, this->menu_font_size, false, text.c_str(),
+        megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
 }
 
 
-void CinematicUtils::DrawAll(const glm::mat4&mvp, glm::vec2 dim_vp) {
+void CinematicUtils::DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Cinematic utilities must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return;
     }
 
@@ -290,7 +299,9 @@ void CinematicUtils::ResetTextRotation(void) {
 
 const float CinematicUtils::lightness(glm::vec4 background) const {
 
-    return ((glm::max(background[0], glm::max(background[1], background[2])) + glm::min(background[0], glm::min(background[1], background[2]))) / 2.0f);
+    return ((glm::max(background[0], glm::max(background[1], background[2])) +
+                glm::min(background[0], glm::min(background[1], background[2]))) /
+            2.0f);
 }
 
 

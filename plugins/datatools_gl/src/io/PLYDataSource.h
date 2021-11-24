@@ -9,18 +9,18 @@
 #define MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED
 #pragma once
 
-#include <cstdint>
-#include <fstream>
-#include <map>
-#include <vector>
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "tinyply.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
-#include "mmcore/utility/log/Log.h"
+#include <cstdint>
+#include <fstream>
+#include <map>
+#include <vector>
 
 namespace megamol {
 namespace datatools_gl {
@@ -37,21 +37,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "PLYDataSource"; }
+    static const char* ClassName(void) {
+        return "PLYDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source module for .PLY files."; }
+    static const char* Description(void) {
+        return "Data source module for .PLY files.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /**
      * Constructor.
@@ -105,7 +111,7 @@ protected:
 
     /**
      * Updates the currently read values according to the new selections.
-     * 
+     *
      * @param slot The slot containing the file path.
      * @return True on success, false otherwise.
      */
@@ -217,8 +223,8 @@ protected:
     /** Count of data points for each element */
     std::vector<uint64_t> elementCount;
 
-	/** The names for each element */
-	std::vector<std::string> elementNames;
+    /** The names for each element */
+    std::vector<std::string> elementNames;
 
     /** Sizes in byte for each property of the read ply file. The size is splitted into the sizes of each separate
      * element */
@@ -306,7 +312,7 @@ protected:
 };
 
 } /* end namespace io */
-} /* end namespace datatools */
+} // namespace datatools_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED */

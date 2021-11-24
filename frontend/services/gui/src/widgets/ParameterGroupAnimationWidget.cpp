@@ -18,7 +18,9 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), image_buttons(), tooltip() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , image_buttons()
+        , tooltip() {
 
     this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";

@@ -5,11 +5,11 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "BlockVolumeMesh.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include "trisoup/CallBinaryVolumeData.h"
 #include "vislib/assert.h"
-#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;
@@ -18,9 +18,10 @@ using namespace megamol::trisoup_gl;
 /*
  * BlockVolumeMesh::BlockVolumeMesh
  */
-BlockVolumeMesh::BlockVolumeMesh(void) : AbstractTriMeshDataSource(),
-        inDataSlot("indata", "Slot fetching binary volume data"),
-        inDataHash(0) {
+BlockVolumeMesh::BlockVolumeMesh(void)
+        : AbstractTriMeshDataSource()
+        , inDataSlot("indata", "Slot fetching binary volume data")
+        , inDataHash(0) {
 
     this->inDataSlot.SetCompatibleCall<trisoup::CallBinaryVolumeDataDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -42,9 +43,11 @@ BlockVolumeMesh::~BlockVolumeMesh(void) {
  */
 void BlockVolumeMesh::assertData(void) {
 
-    trisoup::CallBinaryVolumeData *cbvd = this->inDataSlot.CallAs<trisoup::CallBinaryVolumeData>();
-    if (cbvd == NULL) return;
-    if (!(*cbvd)(0)) return;
+    trisoup::CallBinaryVolumeData* cbvd = this->inDataSlot.CallAs<trisoup::CallBinaryVolumeData>();
+    if (cbvd == NULL)
+        return;
+    if (!(*cbvd)(0))
+        return;
 
     if ((this->inDataHash == cbvd->DataHash()) && (this->inDataHash != 0)) {
         cbvd->Unlock(); // data has not changed
@@ -53,7 +56,7 @@ void BlockVolumeMesh::assertData(void) {
 
     // new data!
     this->inDataHash = cbvd->DataHash();
-    const bool *volume = cbvd->GetVolume();
+    const bool* volume = cbvd->GetVolume();
     unsigned int cntX = cbvd->GetSizeX(), cntY = cbvd->GetSizeY(), cntZ = cbvd->GetSizeZ();
     float sizeX = cbvd->GetVoxelSizeX(), sizeY = cbvd->GetVoxelSizeY(), sizeZ = cbvd->GetVoxelSizeZ();
 
@@ -64,26 +67,34 @@ void BlockVolumeMesh::assertData(void) {
     unsigned int fCnt = 0;
     for (unsigned int z = 0; z < cntZ; z++) {
         for (unsigned int y = 0; y < cntY; y++) {
-            for (unsigned int x = 0; x <cntX; x++) {
-                if (!volume[x + (y + z * cntY) * cntZ]) continue;
+            for (unsigned int x = 0; x < cntX; x++) {
+                if (!volume[x + (y + z * cntY) * cntZ])
+                    continue;
 
-                if ((x == 0) || !volume[(x - 1) + (y + z * cntY) * cntZ]) fCnt++;
-                if ((x + 1 == cntX) || !volume[(x + 1) + (y + z * cntY) * cntZ]) fCnt++;
-                if ((y == 0) || !volume[x + ((y - 1) + z * cntY) * cntZ]) fCnt++;
-                if ((y + 1 == cntY) || !volume[x + ((y + 1) + z * cntY) * cntZ]) fCnt++;
-                if ((z == 0) || !volume[x + (y + (z - 1) * cntY) * cntZ]) fCnt++;
-                if ((z + 1 == cntZ) || !volume[x + (y + (z + 1) * cntY) * cntZ]) fCnt++;
+                if ((x == 0) || !volume[(x - 1) + (y + z * cntY) * cntZ])
+                    fCnt++;
+                if ((x + 1 == cntX) || !volume[(x + 1) + (y + z * cntY) * cntZ])
+                    fCnt++;
+                if ((y == 0) || !volume[x + ((y - 1) + z * cntY) * cntZ])
+                    fCnt++;
+                if ((y + 1 == cntY) || !volume[x + ((y + 1) + z * cntY) * cntZ])
+                    fCnt++;
+                if ((z == 0) || !volume[x + (y + (z - 1) * cntY) * cntZ])
+                    fCnt++;
+                if ((z + 1 == cntZ) || !volume[x + (y + (z + 1) * cntY) * cntZ])
+                    fCnt++;
             }
         }
     }
 
-    float *v = new float[3 * 4 * fCnt];
-    float *n = new float[3 * 4 * fCnt];
+    float* v = new float[3 * 4 * fCnt];
+    float* n = new float[3 * 4 * fCnt];
     fCnt = 0;
     for (unsigned int z = 0; z < cntZ; z++) {
         for (unsigned int y = 0; y < cntY; y++) {
-            for (unsigned int x = 0; x <cntX; x++) {
-                if (!volume[x + (y + z * cntY) * cntZ]) continue;
+            for (unsigned int x = 0; x < cntX; x++) {
+                if (!volume[x + (y + z * cntY) * cntZ])
+                    continue;
 
                 if ((x == 0) || !volume[(x - 1) + (y + z * cntY) * cntZ]) {
                     v[(fCnt * 4 + 0) * 3 + 0] = x * sizeX;
@@ -254,7 +265,7 @@ void BlockVolumeMesh::assertData(void) {
     this->objs.Append(Mesh());
     Mesh& mesh = this->objs.Last();
     mesh.SetVertexData(4 * fCnt, v, n, NULL, NULL, true);
-    unsigned int *t = new unsigned int[6 * fCnt];
+    unsigned int* t = new unsigned int[6 * fCnt];
     for (unsigned int i = 0; i < fCnt; i++) {
         t[i * 6 + 0] = i * 4 + 0;
         t[i * 6 + 1] = i * 4 + 1;
@@ -265,5 +276,4 @@ void BlockVolumeMesh::assertData(void) {
     }
     mesh.SetTriangleData(2 * fCnt, t, true);
     this->datahash++;
-
 }

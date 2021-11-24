@@ -10,8 +10,8 @@
 #pragma once
 
 
-#include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore/view/Camera.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 
 
 // ##################################################################### //
@@ -55,7 +55,9 @@ public:
 
     const glm::vec4 Color(CinematicUtils::Colors color) const;
 
-    void SetBackgroundColor(glm::vec4 bc) { this->background_color = bc; };
+    void SetBackgroundColor(glm::vec4 bc) {
+        this->background_color = bc;
+    };
 
     void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label,
         const std::string& right_label, glm::vec2 dim_vp, float depth);
@@ -74,7 +76,9 @@ public:
 
     void ResetTextRotation();
 
-    bool Initialized(void) { return this->init_once; }
+    bool Initialized(void) {
+        return this->init_once;
+    }
 
 private:
     // VARIABLES ------------------------------------------------------- //
@@ -97,7 +101,7 @@ private:
     void gui_table_row(const char* left, const char* right);
 };
 
-} /* end namespace cinematic */
+} // namespace cinematic_gl
 } /* end namespace megamol */
 
 #endif // MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED

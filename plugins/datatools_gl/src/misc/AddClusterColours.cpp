@@ -5,13 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "AddClusterColours.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol::datatools_gl::misc {
 
@@ -20,9 +20,9 @@ namespace megamol::datatools_gl::misc {
 /*
  * AddClusterColours::Unlocker::Unlocker
  */
-AddClusterColours::Unlocker::Unlocker(
-        geocalls::MultiParticleDataCall::Unlocker *inner)
-        : geocalls::MultiParticleDataCall::Unlocker(), inner(inner) {
+AddClusterColours::Unlocker::Unlocker(geocalls::MultiParticleDataCall::Unlocker* inner)
+        : geocalls::MultiParticleDataCall::Unlocker()
+        , inner(inner) {
     // intentionally empty ATM
 }
 
@@ -52,17 +52,18 @@ void AddClusterColours::Unlocker::Unlock(void) {
 /*
  * AddClusterColours::AddClusterColours
  */
-AddClusterColours::AddClusterColours(void) : Module(),
-        putDataSlot("putdata", "Connects from the data consumer"),
-        getDataSlot("getdata", "Connects to the data source"),
-        getTFSlot("gettransferfunction", "Connects to the transfer function module"),
-        rebuildButtonSlot("rebuild", "Forces rebuild of colour data"),
-        lastFrame(0), colData(), updateHash() {
+AddClusterColours::AddClusterColours(void)
+        : Module()
+        , putDataSlot("putdata", "Connects from the data consumer")
+        , getDataSlot("getdata", "Connects to the data source")
+        , getTFSlot("gettransferfunction", "Connects to the transfer function module")
+        , rebuildButtonSlot("rebuild", "Forces rebuild of colour data")
+        , lastFrame(0)
+        , colData()
+        , updateHash() {
 
-    this->putDataSlot.SetCallback("MultiParticleDataCall", "GetData",
-        &AddClusterColours::getDataCallback);
-    this->putDataSlot.SetCallback("MultiParticleDataCall", "GetExtent",
-        &AddClusterColours::getExtentCallback);
+    this->putDataSlot.SetCallback("MultiParticleDataCall", "GetData", &AddClusterColours::getDataCallback);
+    this->putDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &AddClusterColours::getExtentCallback);
     this->MakeSlotAvailable(&this->putDataSlot);
 
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
@@ -106,11 +107,13 @@ void AddClusterColours::release(void) {
 bool AddClusterColours::getDataCallback(core::Call& caller) {
     static vislib::RawStorage updateHash;
     static vislib::RawStorageWriter uhWriter(updateHash);
-    geocalls::MultiParticleDataCall *inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (inCall == NULL) return false;
+    geocalls::MultiParticleDataCall* inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (inCall == NULL)
+        return false;
 
-    geocalls::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (outCall == NULL) return false;
+    geocalls::MultiParticleDataCall* outCall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    if (outCall == NULL)
+        return false;
 
     *outCall = *inCall;
 
@@ -119,13 +122,13 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
         SIZE_T cntCol = 0;
         for (unsigned int i = 0; i < outCall->GetParticleListCount(); i++) {
-            geocalls::MultiParticleDataCall::Particles &part = outCall->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles& part = outCall->AccessParticles(i);
             if (part.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                 SIZE_T cnt = static_cast<SIZE_T>(part.GetCount());
                 cntCol += cnt;
                 uhWriter.Write(part.GetMinColourIndexValue());
                 uhWriter.Write(part.GetMaxColourIndexValue());
-                const float *cd = static_cast<const float*>(part.GetColourData());
+                const float* cd = static_cast<const float*>(part.GetColourData());
                 uhWriter.Write(cd[0]);
                 uhWriter.Write(cd[(cnt - 1) / 2]);
                 uhWriter.Write(cd[cnt - 1]);
@@ -133,9 +136,9 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
         }
 
         if (cntCol > 0) {
-            if ((this->lastFrame != outCall->FrameID()) || ((cntCol * 3) != this->colData.GetSize())
-                    || this->rebuildButtonSlot.IsDirty() || (uhWriter.End() != this->updateHash.GetSize())
-                    || (::memcmp(updateHash.As<void>(), this->updateHash.As<void>(), uhWriter.End()) != 0)) {
+            if ((this->lastFrame != outCall->FrameID()) || ((cntCol * 3) != this->colData.GetSize()) ||
+                this->rebuildButtonSlot.IsDirty() || (uhWriter.End() != this->updateHash.GetSize()) ||
+                (::memcmp(updateHash.As<void>(), this->updateHash.As<void>(), uhWriter.End()) != 0)) {
 
                 this->updateHash = updateHash;
                 this->updateHash.EnforceSize(uhWriter.End(), true);
@@ -147,7 +150,8 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
                 vislib::RawStorage texDat;
 
-                core_gl::view::CallGetTransferFunctionGL *cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                core_gl::view::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
                 if ((cgtf != NULL) && ((*cgtf)(0))) {
                     ::glGetError();
                     ::glEnable(GL_TEXTURE_1D);
@@ -184,17 +188,20 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
                 cntCol = 0;
                 for (unsigned int i = 0; i < outCall->GetParticleListCount(); i++) {
-                    geocalls::MultiParticleDataCall::Particles &parts = outCall->AccessParticles(i);
-                    if (parts.GetColourDataType() != geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
-                    const float *values = static_cast<const float*>(parts.GetColourData());
+                    geocalls::MultiParticleDataCall::Particles& parts = outCall->AccessParticles(i);
+                    if (parts.GetColourDataType() != geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I)
+                        continue;
+                    const float* values = static_cast<const float*>(parts.GetColourData());
                     for (UINT64 j = 0; j < parts.GetCount(); j++) {
-//                        float v = (values[j] - parts.GetMinColourIndexValue()) /
-//                            (parts.GetMaxColourIndexValue() - parts.GetMinColourIndexValue());
-                        unsigned int clusterId = (unsigned int)(values[j]/100000000.0);
-                        unsigned int colorIdx = (clusterId%13);
+                        //                        float v = (values[j] - parts.GetMinColourIndexValue()) /
+                        //                            (parts.GetMaxColourIndexValue() - parts.GetMinColourIndexValue());
+                        unsigned int clusterId = (unsigned int)(values[j] / 100000000.0);
+                        unsigned int colorIdx = (clusterId % 13);
                         float v = static_cast<float>(colorIdx) / 13.0f;
-                        if (v < 0.0f) v = 0.0f;
-                        else if (v > 1.0f) v = 1.0f;
+                        if (v < 0.0f)
+                            v = 0.0f;
+                        else if (v > 1.0f)
+                            v = 1.0f;
 
                         v *= static_cast<float>(texDatSize);
 
@@ -207,15 +214,14 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
                             w = 0.0;
                         }
 
-                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12) * w + *texDat.AsAt<float>(idx * 12 + 12) * v));
-                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12 + 4) * w + *texDat.AsAt<float>(idx * 12 + 16) * v));
-                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12 + 8) * w + *texDat.AsAt<float>(idx * 12 + 20) * v));
+                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(
+                            255.0f * (*texDat.AsAt<float>(idx * 12) * w + *texDat.AsAt<float>(idx * 12 + 12) * v));
+                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(
+                            255.0f * (*texDat.AsAt<float>(idx * 12 + 4) * w + *texDat.AsAt<float>(idx * 12 + 16) * v));
+                        *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(
+                            255.0f * (*texDat.AsAt<float>(idx * 12 + 8) * w + *texDat.AsAt<float>(idx * 12 + 20) * v));
                     }
                 }
-
             }
 
             *inCall = *outCall;
@@ -224,8 +230,10 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
             cntCol = 0;
             for (unsigned int i = 0; i < inCall->GetParticleListCount(); i++) {
-                if (inCall->AccessParticles(i).GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                    inCall->AccessParticles(i).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(cntCol));
+                if (inCall->AccessParticles(i).GetColourDataType() ==
+                    geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                    inCall->AccessParticles(i).SetColourData(
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(cntCol));
                     cntCol += 3 * static_cast<SIZE_T>(inCall->AccessParticles(i).GetCount());
                 }
             }
@@ -247,11 +255,13 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
  * AddClusterColours::getExtentCallback
  */
 bool AddClusterColours::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (inCall == NULL) return false;
+    geocalls::MultiParticleDataCall* inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (inCall == NULL)
+        return false;
 
-    geocalls::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (outCall == NULL) return false;
+    geocalls::MultiParticleDataCall* outCall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    if (outCall == NULL)
+        return false;
 
     *outCall = *inCall;
 
@@ -263,4 +273,4 @@ bool AddClusterColours::getExtentCallback(core::Call& caller) {
 
     return false;
 }
-}
+} // namespace megamol::datatools_gl::misc

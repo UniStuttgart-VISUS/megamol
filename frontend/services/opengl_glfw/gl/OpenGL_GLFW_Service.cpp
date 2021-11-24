@@ -19,23 +19,23 @@
 
 #include "glad/gl.h"
 #ifdef _WIN32
-#    include <Windows.h>
-#    include <DbgHelp.h>
+#include <DbgHelp.h>
+#include <Windows.h>
 #pragma comment(lib, "dbghelp.lib")
-#    undef min
-#    undef max
-#    include "glad/wgl.h"
+#undef min
+#undef max
+#include "glad/wgl.h"
 #else
-#    include "glad/glx.h"
+#include "glad/glx.h"
 #endif
 
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
-#    ifndef USE_EGL
-#        define GLFW_EXPOSE_NATIVE_WGL
-#        define GLFW_EXPOSE_NATIVE_WIN32
-#        include <GLFW/glfw3native.h>
-#    endif
+#ifndef USE_EGL
+#define GLFW_EXPOSE_NATIVE_WGL
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#endif
 #endif
 
 #include <functional>
@@ -59,8 +59,7 @@ static void log_warning(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
-static void glfw_error_callback(int error, const char* description)
-{
+static void glfw_error_callback(int error, const char* description) {
     log_error("[GLFW Error] " + std::to_string(error) + ": " + description);
 }
 
@@ -116,11 +115,11 @@ static std::string get_message_id_name(GLuint id) {
 
 #ifdef _WIN32
 static std::string GetStack() {
-    unsigned int   i;
-    void         * stack[100];
+    unsigned int i;
+    void* stack[100];
     unsigned short frames;
-    SYMBOL_INFO  * symbol;
-    HANDLE         process;
+    SYMBOL_INFO* symbol;
+    HANDLE process;
     std::stringstream output;
 
     process = GetCurrentProcess();
@@ -130,23 +129,20 @@ static std::string GetStack() {
     SymInitialize(process, NULL, TRUE);
 
     frames = CaptureStackBackTrace(0, 200, stack, NULL);
-    symbol = (SYMBOL_INFO *)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
     symbol->MaxNameLen = 255;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
     for (i = 0; i < frames; i++) {
         SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-        DWORD  dwDisplacement;
+        DWORD dwDisplacement;
         IMAGEHLP_LINE64 line;
 
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-        if (!strstr(symbol->Name, "khr::getStack") &&
-            !strstr(symbol->Name, "khr::DebugCallback") &&
+        if (!strstr(symbol->Name, "khr::getStack") && !strstr(symbol->Name, "khr::DebugCallback") &&
             SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &dwDisplacement, &line)) {
 
-            output << "function: " << symbol->Name <<
-                " - line: " << line.LineNumber << "\n";
-
+            output << "function: " << symbol->Name << " - line: " << line.LineNumber << "\n";
         }
         if (0 == strcmp(symbol->Name, "main"))
             break;
@@ -272,7 +268,8 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     }
 
     std::stringstream output;
-    output << "[" << sourceText << " " << severityText << "] (" << typeText << " " << id << " [" << get_message_id_name(id) << "]) " << message << std::endl
+    output << "[" << sourceText << " " << severityText << "] (" << typeText << " " << id << " ["
+           << get_message_id_name(id) << "]) " << message << std::endl
            << "stack trace:" << std::endl;
 #ifdef _WIN32
     output << GetStack() << std::endl;
@@ -298,7 +295,8 @@ void megamol::frontend_resources::WindowManipulation::set_window_title(const cha
     glfwSetWindowTitle(reinterpret_cast<GLFWwindow*>(window_ptr), title);
 }
 
-void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(const unsigned int width, const unsigned int height) const {
+void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(
+    const unsigned int width, const unsigned int height) const {
     auto window = reinterpret_cast<GLFWwindow*>(this->window_ptr);
 
     int fbo_width = 0, fbo_height = 0;
@@ -310,24 +308,26 @@ void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(const
     glfwGetWindowSize(window, &window_width, &window_height);
 
     if (fbo_width != width || fbo_height != height) {
-        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" + std::to_string(height) + ". You wont be able to resize the window manually after this.");
+        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" +
+            std::to_string(height) + ". You wont be able to resize the window manually after this.");
         glfwSetWindowSizeLimits(window, width, height, width, height);
         glfwSetWindowSize(window, width, height);
         glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
         glfwGetWindowSize(window, &window_width, &window_height);
     }
 
-    if(fbo_width != width || fbo_height != height) {
-        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested framebuffer size of w: "
-            + std::to_string(width) + ", h: " + std::to_string(height)
-            + ".\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height)
-            + "\n Requesting shutdown.");
+    if (fbo_width != width || fbo_height != height) {
+        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested "
+                  "framebuffer size of w: " +
+                  std::to_string(width) + ", h: " + std::to_string(height) + ".\n Framebuffer has size w: " +
+                  std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height) + "\n Requesting shutdown.");
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         static_cast<megamol::frontend::OpenGL_GLFW_Service*>(glfwGetWindowUserPointer(window))->setShutdown();
     }
 }
 
-void megamol::frontend_resources::WindowManipulation::set_window_position(const unsigned int width, const unsigned int height) const {
+void megamol::frontend_resources::WindowManipulation::set_window_position(
+    const unsigned int width, const unsigned int height) const {
     glfwSetWindowPos(reinterpret_cast<GLFWwindow*>(window_ptr), width, height);
 }
 
@@ -341,14 +341,14 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
     switch (action) {
-        case Fullscreen::Maximize:
-            glfwMaximizeWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
-            break;
-        case Fullscreen::Restore:
-            glfwRestoreWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
-            break;
-        default:
-            break;
+    case Fullscreen::Maximize:
+        glfwMaximizeWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
+        break;
+    case Fullscreen::Restore:
+        glfwRestoreWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
+        break;
+    default:
+        break;
     }
 }
 
@@ -358,27 +358,27 @@ namespace frontend {
 
 struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
-    OpenGL_GLFW_Service::Config config;    // keep copy of user-provided config
+    OpenGL_GLFW_Service::Config config; // keep copy of user-provided config
     std::string fullWindowTitle;
     std::chrono::system_clock::time_point last_time;
     megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
     std::array<GLFWcursor*, 9> mouse_cursors;
 };
 
-OpenGL_GLFW_Service::OpenGL_GLFW_Service() {
-}
+OpenGL_GLFW_Service::OpenGL_GLFW_Service() {}
 
-OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
-}
+OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {}
 
 bool OpenGL_GLFW_Service::init(void* configPtr) {
-    if (configPtr == nullptr) return false;
+    if (configPtr == nullptr)
+        return false;
 
     return init(*static_cast<Config*>(configPtr));
 }
 
 bool OpenGL_GLFW_Service::init(const Config& config) {
-    m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData, [](PimplData* ptr) { delete ptr; });
+    m_pimpl =
+        std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData, [](PimplData* ptr) { delete ptr; });
     if (!m_pimpl) {
         log_error("could not allocate private data");
         return false;
@@ -389,7 +389,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     bool success_glfw = glfwInit();
     if (!success_glfw) {
-        log_error("could not initialize GLFW for OpenGL window. \nmaybe your machine is using outdated graphics hardware, drivers or you are working remotely?");
+        log_error("could not initialize GLFW for OpenGL window. \nmaybe your machine is using outdated graphics "
+                  "hardware, drivers or you are working remotely?");
         return false; // glfw had error on init; abort
     }
 
@@ -398,32 +399,38 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     // init glfw window and OpenGL Context
     ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
-    ::glfwWindowHint(GLFW_DECORATED,
-        (m_pimpl->config.windowPlacement.fullScreen) ? (GL_FALSE) : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
+    ::glfwWindowHint(GLFW_DECORATED, (m_pimpl->config.windowPlacement.fullScreen)
+                                         ? (GL_FALSE)
+                                         : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
     ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
 
     int monCnt = 0;
     GLFWmonitor** monitors = ::glfwGetMonitors(&monCnt); // primary monitor is first in list
-    if (!monitors) return false;                         // no monitor found; abort
+    if (!monitors)
+        return false; // no monitor found; abort
 
     // in fullscreen, use last available monitor as to not block primary monitor, where the user may have important
     // stuff he wants to look at
     int monitorNr =
         (m_pimpl->config.windowPlacement.fullScreen)
-            ? std::max<int>(0, std::min<int>(monCnt - 1,
-                                   m_pimpl->config.windowPlacement.mon)) // if fullscreen, use last or user-provided monitor
-            : (0);                                              // if windowed, use primary monitor
+            ? std::max<int>(
+                  0, std::min<int>(monCnt - 1,
+                         m_pimpl->config.windowPlacement.mon)) // if fullscreen, use last or user-provided monitor
+            : (0);                                             // if windowed, use primary monitor
     GLFWmonitor* selectedMonitor = monitors[monitorNr];
-    if (!selectedMonitor) return false; // selected monitor not valid for some reason; abort
+    if (!selectedMonitor)
+        return false; // selected monitor not valid for some reason; abort
 
     const GLFWvidmode* mode = ::glfwGetVideoMode(selectedMonitor);
-    if (!mode) return false; // error while receiving monitor mode; abort
+    if (!mode)
+        return false; // error while receiving monitor mode; abort
 
     // window size for windowed mode
     int initial_width = 0;
     int initial_height = 0;
     if (!m_pimpl->config.windowPlacement.fullScreen) {
-        if (m_pimpl->config.windowPlacement.size && (m_pimpl->config.windowPlacement.w > 0) && (m_pimpl->config.windowPlacement.h > 0)) {
+        if (m_pimpl->config.windowPlacement.size && (m_pimpl->config.windowPlacement.w > 0) &&
+            (m_pimpl->config.windowPlacement.h > 0)) {
             initial_width = m_pimpl->config.windowPlacement.w;
             initial_height = m_pimpl->config.windowPlacement.h;
         } else {
@@ -434,7 +441,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         }
     }
 
-    if(m_pimpl->config.windowPlacement.topMost){
+    if (m_pimpl->config.windowPlacement.topMost) {
         ::glfwWindowHint(GLFW_FLOATING, GL_TRUE); // floating above other windows / top most
     }
 
@@ -472,29 +479,27 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_pimpl->config.versionMinor);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
     // context profiles available since 3.2
-    bool has_profiles = m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+    bool has_profiles =
+        m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
     if (has_profiles)
-        glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE,
+            m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
 
     std::string profile_name =
-        has_profiles
-            ? ((m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + std::string(" Profile"))
-            : "";
+        has_profiles ? ((m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + std::string(" Profile"))
+                     : "";
 
-    log("Requesting OpenGL "
-        + std::to_string(m_pimpl->config.versionMajor) + "."
-        + std::to_string(m_pimpl->config.versionMinor) + " "
-        + profile_name
-        + (m_pimpl->config.enableKHRDebug ? ", Debug Context" : "" )
-    );
+    log("Requesting OpenGL " + std::to_string(m_pimpl->config.versionMajor) + "." +
+        std::to_string(m_pimpl->config.versionMinor) + " " + profile_name +
+        (m_pimpl->config.enableKHRDebug ? ", Debug Context" : ""));
 
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
-    window_ptr = ::glfwCreateWindow(initial_width, initial_height,
-        m_pimpl->config.windowTitlePrefix.c_str(), nullptr, nullptr);
+    window_ptr =
+        ::glfwCreateWindow(initial_width, initial_height, m_pimpl->config.windowTitlePrefix.c_str(), nullptr, nullptr);
 
     if (!window_ptr) {
         log_error("Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
-                "be very old, your drivers could be outdated or you are running in a remote desktop session.");
+                  "be very old, your drivers could be outdated or you are running in a remote desktop session.");
         return false;
     }
     log("Create window with size w: " + std::to_string(initial_width) + " h: " + std::to_string(initial_height));
@@ -537,23 +542,21 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         }
     }
 
-    log(std::string("OpenGL Context Info")
-        + "\n\tVersion:  " + reinterpret_cast<const char*>(glGetString(GL_VERSION))
-        + "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR))
-        + "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER))
-        + "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION))
-    );
+    log(std::string("OpenGL Context Info") + "\n\tVersion:  " + reinterpret_cast<const char*>(glGetString(GL_VERSION)) +
+        "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR)) +
+        "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER)) +
+        "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
     if (m_pimpl->config.enableKHRDebug) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-                GLuint ignorethis;
-                ignorethis = 131185;
-                glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
-                ignorethis = 131184;
-                glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
-                ignorethis = 131204;
-                glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
+        GLuint ignorethis;
+        ignorethis = 131185;
+        glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
+        ignorethis = 131184;
+        glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
+        ignorethis = 131204;
+        glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
         glDebugMessageCallback(opengl_debug_message_callback, nullptr);
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
@@ -566,8 +569,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     // note the m_data window position got overwritten with monitor position for fullscreen mode
     if (m_pimpl->config.windowPlacement.pos || m_pimpl->config.windowPlacement.fullScreen)
-        ::glfwSetWindowPos(
-            window_ptr, m_pimpl->config.windowPlacement.x, m_pimpl->config.windowPlacement.y);
+        ::glfwSetWindowPos(window_ptr, m_pimpl->config.windowPlacement.x, m_pimpl->config.windowPlacement.y);
 
     register_glfw_callbacks();
 
@@ -588,24 +590,15 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     m_windowManipulation.window_ptr = window_ptr;
 
-    m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void {
-        update_glfw_mouse_cursors(cursor_id);
-    };
+    m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void { update_glfw_mouse_cursors(cursor_id); };
 
     // make the events and resources managed/provided by this service available to the outside world
-    m_renderResourceReferences = {
-        {"KeyboardEvents", m_keyboardEvents},
-        {"MouseEvents", m_mouseEvents},
+    m_renderResourceReferences = {{"KeyboardEvents", m_keyboardEvents}, {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
         //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
-        {"OpenGL_Context", m_opengl_context},
-        {"WindowManipulation", m_windowManipulation}
-    };
+        {"OpenGL_Context", m_opengl_context}, {"WindowManipulation", m_windowManipulation}};
 
-    m_requestedResourcesNames = {
-          "FrameStatistics",
-          "FramebufferEvents"
-    };
+    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents"};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 
@@ -628,19 +621,17 @@ void OpenGL_GLFW_Service::do_every_second() {
 
         std::string fps = std::to_string(m_pimpl->frame_statistics->last_averaged_fps);
         std::string mspf = std::to_string(m_pimpl->frame_statistics->last_averaged_mspf);
-        std::string title =
-            m_pimpl->config.windowTitlePrefix
-            + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
+        std::string title = m_pimpl->config.windowTitlePrefix + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
         glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
 
 #ifdef _WIN32
         // TODO fix this for EGL + Win
         //log("Periodic reordering of windows.");
         if (m_pimpl->config.windowPlacement.topMost) {
-            SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+            SetWindowPos(
+                glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         }
 #endif
-
     }
 }
 
@@ -651,34 +642,30 @@ void OpenGL_GLFW_Service::register_glfw_callbacks() {
     ::glfwSetWindowUserPointer(window_ptr, this); // this is ok, as long as no one derives from this class
 
     // keyboard events
-    ::glfwSetKeyCallback(window_ptr, [](GLFWwindow* wnd, int key, int scancode, int action, int mods){
+    ::glfwSetKeyCallback(window_ptr, [](GLFWwindow* wnd, int key, int scancode, int action, int mods) {
         // Fix mods, see: https://github.com/glfw/glfw/issues/1630
         mods = fixGlfwKeyboardMods(mods, key, action);
         that->glfw_onKey_func(key, scancode, action, mods);
     });
 
-    ::glfwSetCharCallback(window_ptr, [](GLFWwindow* wnd, unsigned int codepoint) {
-        that->glfw_onChar_func(codepoint);
-    });
+    ::glfwSetCharCallback(
+        window_ptr, [](GLFWwindow* wnd, unsigned int codepoint) { that->glfw_onChar_func(codepoint); });
     // this->m_keyboardEvents; // ignore because no interaction happened yet
 
     // mouse events
-    ::glfwSetMouseButtonCallback(window_ptr, [](GLFWwindow* wnd, int button, int action, int mods) {
-        that->glfw_onMouseButton_func(button, action, mods);
-    });
+    ::glfwSetMouseButtonCallback(window_ptr,
+        [](GLFWwindow* wnd, int button, int action, int mods) { that->glfw_onMouseButton_func(button, action, mods); });
 
     ::glfwSetCursorPosCallback(window_ptr, [](GLFWwindow* wnd, double xpos, double ypos) {
         // cursor (x,y) position in screen coordinates relative to upper-left corner
         that->glfw_onMouseCursorPosition_func(xpos, ypos);
     });
 
-    ::glfwSetCursorEnterCallback(window_ptr, [](GLFWwindow* wnd, int entered) {
-        that->glfw_onMouseCursorEnter_func(entered == GLFW_TRUE);
-    });
+    ::glfwSetCursorEnterCallback(
+        window_ptr, [](GLFWwindow* wnd, int entered) { that->glfw_onMouseCursorEnter_func(entered == GLFW_TRUE); });
 
-    ::glfwSetScrollCallback(window_ptr, [](GLFWwindow* wnd, double xoffset, double yoffset) {
-        that->glfw_onMouseScroll_func(xoffset, yoffset);
-    });
+    ::glfwSetScrollCallback(window_ptr,
+        [](GLFWwindow* wnd, double xoffset, double yoffset) { that->glfw_onMouseScroll_func(xoffset, yoffset); });
 
     // set current state for mouse events
     // this->m_mouseEvents.previous_state.buttons; // ignore because no interaction yet
@@ -689,55 +676,46 @@ void OpenGL_GLFW_Service::register_glfw_callbacks() {
     this->m_mouseEvents.previous_state.y_scroll = 0.0;
 
     // window events
-    ::glfwSetWindowSizeCallback(window_ptr, [](GLFWwindow* wnd, int width /* in screen coordinates of the window */, int height) {
-        that->glfw_onWindowSize_func(width, height);
-    });
-    ::glfwSetWindowFocusCallback(window_ptr, [](GLFWwindow* wnd, int focused) { that->glfw_onWindowFocus_func(focused == GLFW_TRUE); });
+    ::glfwSetWindowSizeCallback(window_ptr, [](GLFWwindow* wnd, int width /* in screen coordinates of the window */,
+                                                int height) { that->glfw_onWindowSize_func(width, height); });
+    ::glfwSetWindowFocusCallback(
+        window_ptr, [](GLFWwindow* wnd, int focused) { that->glfw_onWindowFocus_func(focused == GLFW_TRUE); });
     ::glfwSetWindowCloseCallback(window_ptr, [](GLFWwindow* wnd) { that->glfw_onWindowShouldClose_func(true); });
-    ::glfwSetWindowIconifyCallback(window_ptr, [](GLFWwindow* wnd, int iconified) { that->glfw_onWindowIconified_func(iconified == GLFW_TRUE); });
+    ::glfwSetWindowIconifyCallback(
+        window_ptr, [](GLFWwindow* wnd, int iconified) { that->glfw_onWindowIconified_func(iconified == GLFW_TRUE); });
 
-    ::glfwSetWindowContentScaleCallback(window_ptr, [](GLFWwindow* wnd, float xscale, float yscale) {
-        that->glfw_onWindowContentScale_func(xscale, yscale);
-    });
+    ::glfwSetWindowContentScaleCallback(window_ptr,
+        [](GLFWwindow* wnd, float xscale, float yscale) { that->glfw_onWindowContentScale_func(xscale, yscale); });
 
-    ::glfwSetDropCallback(window_ptr, [](GLFWwindow* wnd, int path_count, const char* paths[]) {
-        that->glfw_onPathDrop_func(path_count, paths);
-    });
+    ::glfwSetDropCallback(window_ptr,
+        [](GLFWwindow* wnd, int path_count, const char* paths[]) { that->glfw_onPathDrop_func(path_count, paths); });
     // void outer_glfw_WindowPosition_func(GLFWwindow* wnd, int xpos, int ypos) { that->glfw_WindowPosition_func(xpos, ypos); }
 
     // set current window state, needed for correct linux window management with imgui
     glfwGetWindowSize(
         window_ptr, &this->m_windowEvents.previous_state.width, &this->m_windowEvents.previous_state.height);
     this->m_windowEvents.previous_state.is_focused = (GLFW_TRUE == glfwGetWindowAttrib(window_ptr, GLFW_FOCUSED));
-    this->m_windowEvents.previous_state.is_iconified =
-        (GLFW_TRUE == glfwGetWindowAttrib(window_ptr, GLFW_ICONIFIED));
+    this->m_windowEvents.previous_state.is_iconified = (GLFW_TRUE == glfwGetWindowAttrib(window_ptr, GLFW_ICONIFIED));
     this->m_windowEvents.previous_state.should_close = (GLFW_TRUE == glfwWindowShouldClose(window_ptr));
-    glfwGetWindowContentScale(window_ptr,
-        &this->m_windowEvents.previous_state.x_contentscale,
+    glfwGetWindowContentScale(window_ptr, &this->m_windowEvents.previous_state.x_contentscale,
         &this->m_windowEvents.previous_state.y_contentscale);
 
-    glfw_onWindowSize_func(
-        this->m_windowEvents.previous_state.width,
-        this->m_windowEvents.previous_state.height);
+    glfw_onWindowSize_func(this->m_windowEvents.previous_state.width, this->m_windowEvents.previous_state.height);
     glfw_onWindowFocus_func(this->m_windowEvents.previous_state.is_focused);
     glfw_onWindowIconified_func(this->m_windowEvents.previous_state.is_iconified);
     glfw_onWindowContentScale_func(
-        this->m_windowEvents.previous_state.x_contentscale,
-        this->m_windowEvents.previous_state.y_contentscale);
+        this->m_windowEvents.previous_state.x_contentscale, this->m_windowEvents.previous_state.y_contentscale);
 
     // set callbacks
-    ::glfwSetFramebufferSizeCallback(window_ptr, [](GLFWwindow* wnd, int widthpx, int heightpx) {
-        that->glfw_onFramebufferSize_func(widthpx, heightpx);
-    });
+    ::glfwSetFramebufferSizeCallback(window_ptr,
+        [](GLFWwindow* wnd, int widthpx, int heightpx) { that->glfw_onFramebufferSize_func(widthpx, heightpx); });
 
     // set current framebuffer state as pending event
-    glfwGetFramebufferSize(window_ptr,
-        &this->m_framebufferEvents.previous_state.width,
-        &this->m_framebufferEvents.previous_state.height);
+    glfwGetFramebufferSize(
+        window_ptr, &this->m_framebufferEvents.previous_state.width, &this->m_framebufferEvents.previous_state.height);
 
     glfw_onFramebufferSize_func(
-        this->m_framebufferEvents.previous_state.width,
-        this->m_framebufferEvents.previous_state.height);
+        this->m_framebufferEvents.previous_state.width, this->m_framebufferEvents.previous_state.height);
 }
 #undef that
 
@@ -753,7 +731,8 @@ void OpenGL_GLFW_Service::close() {
     }
 
     // GL context and destruction of all other things happens in destructors of pimpl data members
-    if (m_pimpl->glfwContextWindowPtr) ::glfwDestroyWindow(m_pimpl->glfwContextWindowPtr);
+    if (m_pimpl->glfwContextWindowPtr)
+        ::glfwDestroyWindow(m_pimpl->glfwContextWindowPtr);
     m_pimpl->glfwContextWindowPtr = nullptr;
     this->m_pimpl.release();
 
@@ -778,12 +757,12 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
 
-    auto& global_framebuffer_events = const_cast<FramebufferEvents&>(m_requestedResourceReferences[1].getResource<FramebufferEvents>());
+    auto& global_framebuffer_events =
+        const_cast<FramebufferEvents&>(m_requestedResourceReferences[1].getResource<FramebufferEvents>());
     global_framebuffer_events.append(m_framebufferEvents);
 }
 
-void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-}
+void OpenGL_GLFW_Service::digestChangedRequestedResources() {}
 
 void OpenGL_GLFW_Service::resetProvidedResources() {
     m_keyboardEvents.clear();
@@ -818,7 +797,8 @@ const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     m_requestedResourceReferences = resources;
 
-    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
+    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(
+        resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
@@ -838,9 +818,12 @@ void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, con
     }
 
     frontend_resources::Modifiers mods_;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= frontend_resources::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= frontend_resources::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= frontend_resources::Modifier::ALT;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT)
+        mods_ |= frontend_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL)
+        mods_ |= frontend_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT)
+        mods_ |= frontend_resources::Modifier::ALT;
 
     this->m_keyboardEvents.key_events.emplace_back(std::make_tuple(key_, action_, mods_));
 }
@@ -856,13 +839,17 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorPosition_func(const double xpos, con
 
 void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int action, const int mods) {
     frontend_resources::MouseButton btn = static_cast<frontend_resources::MouseButton>(button);
-    frontend_resources::MouseButtonAction btnaction =
-        (action == GLFW_PRESS) ? frontend_resources::MouseButtonAction::PRESS : frontend_resources::MouseButtonAction::RELEASE;
+    frontend_resources::MouseButtonAction btnaction = (action == GLFW_PRESS)
+                                                          ? frontend_resources::MouseButtonAction::PRESS
+                                                          : frontend_resources::MouseButtonAction::RELEASE;
 
     frontend_resources::Modifiers btnmods;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= frontend_resources::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= frontend_resources::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= frontend_resources::Modifier::ALT;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT)
+        btnmods |= frontend_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL)
+        btnmods |= frontend_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT)
+        btnmods |= frontend_resources::Modifier::ALT;
 
     this->m_mouseEvents.buttons_events.emplace_back(std::make_tuple(btn, btnaction, btnmods));
 }
@@ -879,7 +866,8 @@ void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const i
     this->m_framebufferEvents.size_events.emplace_back(frontend_resources::FramebufferState{widthpx, heightpx});
 }
 
-void OpenGL_GLFW_Service::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window
+void OpenGL_GLFW_Service::glfw_onWindowSize_func(
+    const int width, const int height) { // in screen coordinates, of the window
     this->m_windowEvents.size_events.emplace_back(std::tuple(width, height));
 }
 
@@ -917,15 +905,15 @@ void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
     if (m_pimpl->mouse_cursors.size() != 9) {
         return;
     }
-    // See imgui.h: enum ImGuiMouseCursor_ 
+    // See imgui.h: enum ImGuiMouseCursor_
     GLFWerrorfun prev_error_callback = ::glfwSetErrorCallback(nullptr);
-    m_pimpl->mouse_cursors[0] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_Arrow
-    m_pimpl->mouse_cursors[1] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); // ImGuiMouseCursor_TextInput
-    m_pimpl->mouse_cursors[3] = ::glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR); // ImGuiMouseCursor_ResizeNS
-    m_pimpl->mouse_cursors[4] = ::glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR); // ImGuiMouseCursor_ResizeEW
-    m_pimpl->mouse_cursors[7] = ::glfwCreateStandardCursor(GLFW_HAND_CURSOR);    // ImGuiMouseCursor_Hand
-#if ((GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100) >= 3400) // glfw 3.4+
-    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR); // ImGuiMouseCursor_ResizeAll
+    m_pimpl->mouse_cursors[0] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);       // ImGuiMouseCursor_Arrow
+    m_pimpl->mouse_cursors[1] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);       // ImGuiMouseCursor_TextInput
+    m_pimpl->mouse_cursors[3] = ::glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);     // ImGuiMouseCursor_ResizeNS
+    m_pimpl->mouse_cursors[4] = ::glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);     // ImGuiMouseCursor_ResizeEW
+    m_pimpl->mouse_cursors[7] = ::glfwCreateStandardCursor(GLFW_HAND_CURSOR);        // ImGuiMouseCursor_Hand
+#if ((GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100) >= 3400)                 // glfw 3.4+
+    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);  // ImGuiMouseCursor_ResizeAll
     m_pimpl->mouse_cursors[5] = ::glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR); // ImGuiMouseCursor_ResizeNESW
     m_pimpl->mouse_cursors[6] = ::glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR); // ImGuiMouseCursor_ResizeNWSE
     m_pimpl->mouse_cursors[8] = ::glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR); // ImGuiMouseCursor_NotAllowed

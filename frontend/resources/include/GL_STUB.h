@@ -8,10 +8,10 @@
 #pragma once
 
 #ifndef GL_STUB
-    #ifdef WITH_GL
-        #define GL_STUB(value)
-    #else // WITH_GL
-        #define GL_STUB(value) {return value;}
-    #endif // WITH_GL
+#ifdef WITH_GL
+#define GL_STUB(value)
+#else // WITH_GL
+#define GL_STUB(value) \
+    { return value; }
+#endif // WITH_GL
 #endif // GL_STUB
-

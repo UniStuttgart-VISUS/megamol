@@ -6,7 +6,7 @@
  */
 
 
-# pragma once
+#pragma once
 
 #include <array>
 #include <cassert>
@@ -33,21 +33,27 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallGetTransferFunction"; }
+    static const char* ClassName(void) {
+        return "CallGetTransferFunction";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call for a 1D transfer function"; }
+    static const char* Description(void) {
+        return "Call for a 1D transfer function";
+    }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 1; }
+    static unsigned int FunctionCount(void) {
+        return 1;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -96,7 +102,7 @@ public:
 
     // SET --------------------------------------------------------------------
     /// !!! NOTE: In order to propagte changes from the call to the actual tf parameter,
-   ///            the callback 'GetTexture' has to be called afterwards.
+    ///            the callback 'GetTexture' has to be called afterwards.
 
     /**
      * Sets the value range (domain) of this transfer function. Values
@@ -187,8 +193,8 @@ public:
      *            is responsible for keeping the memory alive.
      * @param format The texture format
      */
-    inline void SetTexture(unsigned int id, unsigned int size, float const* tex,
-        TextureFormat format, std::array<float, 2> range, uint32_t version) {
+    inline void SetTexture(unsigned int id, unsigned int size, float const* tex, TextureFormat format,
+        std::array<float, 2> range, uint32_t version) {
         this->texID = id;
         this->texSize = size;
         this->texFormat = format;

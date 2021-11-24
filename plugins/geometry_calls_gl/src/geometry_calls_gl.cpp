@@ -16,7 +16,8 @@ class GeometryCallsGLPluginInstance : public megamol::core::utility::plugins::Ab
 
 public:
     GeometryCallsGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("geometry_calls_gl", "The geometry_calls_gl plugin."){};
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "geometry_calls_gl", "The geometry_calls_gl plugin."){};
 
     ~GeometryCallsGLPluginInstance() override = default;
 

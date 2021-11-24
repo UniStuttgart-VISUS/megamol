@@ -14,24 +14,24 @@
 
 
 namespace megamol::moldyn_gl {
-    class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MoldynGLPluginInstance)
 
-    public:
+public:
     MoldynGLPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "moldyn_gl", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "moldyn_gl", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
 
-        ~MoldynGLPluginInstance() override = default;
+    ~MoldynGLPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GrimRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
-        }
-    };
-} // namespace megamol::moldyn
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GrimRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
+    }
+};
+} // namespace megamol::moldyn_gl

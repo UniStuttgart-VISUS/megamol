@@ -11,11 +11,11 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
-#include "Window_Events.h"
-#include "WindowManipulation.h"
+#include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "WindowManipulation.h"
+#include "Window_Events.h"
 
 #include <memory>
 
@@ -40,7 +40,6 @@ class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using WindowManipulation = megamol::frontend_resources::WindowManipulation;
 
 public:
-
     struct Config {
         int versionMajor = 4;
         int versionMinor = 6;
@@ -51,7 +50,9 @@ public:
         bool glContextCoreProfile = false;
     };
 
-    std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
+    std::string serviceName() const override {
+        return "OpenGL_GLFW_Service";
+    }
 
     OpenGL_GLFW_Service() GL_STUB();
     ~OpenGL_GLFW_Service() override GL_STUB();
@@ -61,13 +62,14 @@ public:
     bool init(const Config& config) GL_STUB(true);
     bool init(void* configPtr) override GL_STUB(true);
     void close() override GL_STUB();
-    
+
     void updateProvidedResources() override GL_STUB();
     void digestChangedRequestedResources() override GL_STUB();
     void resetProvidedResources() override GL_STUB();
 
-    void preGraphRender() override GL_STUB();  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    void postGraphRender() override GL_STUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+    void preGraphRender() override GL_STUB(); // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void postGraphRender() override
+        GL_STUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
     std::vector<FrontendResource>& getProvidedResources() override GL_STUB(m_renderResourceReferences);

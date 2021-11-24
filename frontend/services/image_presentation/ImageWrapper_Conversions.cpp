@@ -8,9 +8,9 @@
 
 #include <stdexcept>
 
-#include "ImageWrapper_to_GLTexture.hpp"
-#include "ImageWrapper_to_ByteArray.hpp"
 #include "ImageWrapper_Conversion_Helpers.hpp"
+#include "ImageWrapper_to_ByteArray.hpp"
+#include "ImageWrapper_to_GLTexture.hpp"
 
 #include <tuple>
 
@@ -25,17 +25,18 @@ void gl_download_texture_to_vector(
 namespace megamol {
 namespace frontend_resources {
 namespace conversion {
-    unsigned int to_uint(void* ptr) {
-        return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
-    }
+unsigned int to_uint(void* ptr) {
+    return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
+}
 
-    std::vector<byte>* to_vector(void* ptr) {
-        return static_cast<std::vector<byte>*>(ptr);
-    }
-}}}
+std::vector<byte>* to_vector(void* ptr) {
+    return static_cast<std::vector<byte>*>(ptr);
+}
+} // namespace conversion
+} // namespace frontend_resources
+} // namespace megamol
 
-gl_texture::gl_texture(ImageWrapper const& image)
-{
+gl_texture::gl_texture(ImageWrapper const& image) {
 #ifdef WITH_GL
     this->from_image(image);
 #else
@@ -43,39 +44,33 @@ gl_texture::gl_texture(ImageWrapper const& image)
 #endif
 }
 
-unsigned int gl_texture::as_gl_handle()
-{
+unsigned int gl_texture::as_gl_handle() {
     return this->texture_reference;
 }
 
-gl_texture::gl_texture(gl_texture const& other)
-{
+gl_texture::gl_texture(gl_texture const& other) {
     this->assign(other, false);
 }
 
-gl_texture& gl_texture::operator=(gl_texture const& other)
-{
+gl_texture& gl_texture::operator=(gl_texture const& other) {
     this->assign(other, false);
 
     return *this;
 }
 
-gl_texture::gl_texture(gl_texture&& other) noexcept
-{
+gl_texture::gl_texture(gl_texture&& other) noexcept {
     this->assign(other, true);
     other.clear();
 }
 
-gl_texture& gl_texture::operator=(gl_texture&& other) noexcept
-{
+gl_texture& gl_texture::operator=(gl_texture&& other) noexcept {
     this->assign(other, true);
     other.clear();
 
     return *this;
 }
 
-gl_texture& gl_texture::operator=(ImageWrapper const& image)
-{
+gl_texture& gl_texture::operator=(ImageWrapper const& image) {
 #ifdef WITH_GL
     this->from_image(image);
 
@@ -88,29 +83,25 @@ gl_texture& gl_texture::operator=(ImageWrapper const& image)
 void gl_texture::clear() {
     this->image_wrapper_ptr = nullptr;
     this->texture_reference = 0;
-    this->texture           = 0;
+    this->texture = 0;
 }
 
 
-byte_texture::byte_texture(ImageWrapper const& image)
-{
+byte_texture::byte_texture(ImageWrapper const& image) {
     this->from_image(image);
 }
 
-byte_texture& byte_texture::operator=(ImageWrapper const& image)
-{
+byte_texture& byte_texture::operator=(ImageWrapper const& image) {
     this->from_image(image);
 
     return *this;
 }
 
-std::vector<byte> const& byte_texture::as_byte_vector()
-{
+std::vector<byte> const& byte_texture::as_byte_vector() {
     return *this->texture_ptr;
 }
 
-void byte_texture::from_image(ImageWrapper const& image)
-{
+void byte_texture::from_image(ImageWrapper const& image) {
     this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
     this->size = image.size;
 
@@ -131,4 +122,3 @@ void byte_texture::from_image(ImageWrapper const& image)
         break;
     }
 }
-

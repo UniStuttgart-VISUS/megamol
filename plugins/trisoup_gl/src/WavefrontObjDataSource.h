@@ -22,126 +22,114 @@ namespace megamol {
 namespace trisoup_gl {
 
 
+/**
+ * Data source class for wavefront OBJ files
+ */
+class WavefrontObjDataSource : public AbstractTriMeshLoader {
+public:
     /**
-     * Data source class for wavefront OBJ files
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class WavefrontObjDataSource : public AbstractTriMeshLoader {
-    public:
+    static const char* ClassName(void) {
+        return "WavefrontObjDataSource";
+    }
+
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Data source for wavefront OBJ files";
+    }
+
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    /** Ctor */
+    WavefrontObjDataSource(void);
+
+    /** Dtor */
+    virtual ~WavefrontObjDataSource(void);
+
+protected:
+    /**
+     * Loads the specified file
+     *
+     * @param filename The file to load
+     *
+     * @return True on success
+     */
+    virtual bool load(const vislib::TString& filename);
+
+private:
+    /** Internat utility struct to store a single triangle */
+    typedef struct _tri_t {
+
+        /** The indices of the vertices */
+        unsigned int v1, v2, v3;
+
+        /** The indices of the normals */
+        unsigned int n1, n2, n3;
+
+        /** The indices of the texture coordinates */
+        unsigned int t1, t2, t3;
+
+        /** validity flags for normal and texture coodrinate information */
+        bool n, t;
 
         /**
-         * Answer the name of this module.
+         * Test for equality
          *
-         * @return The name of this module.
+         * @param rhs The right hand side operand
+         *
+         * @return True if this and rhs are equal
          */
-        static const char *ClassName(void) {
-            return "WavefrontObjDataSource";
+        bool operator==(const struct _tri_t& rhs) const {
+            return (this->v1 == rhs.v1) && (this->v2 == rhs.v2) && (this->v3 == rhs.v3) && (this->n1 == rhs.n1) &&
+                   (this->n2 == rhs.n2) && (this->n3 == rhs.n3) && (this->t1 == rhs.t1) && (this->t2 == rhs.t2) &&
+                   (this->t3 == rhs.t3) && (this->n == rhs.n) && (this->t == rhs.t);
         }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Data source for wavefront OBJ files";
-        }
+    } Tri;
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Loads a material library file
+     *
+     * @param filename The file name of the material library file to load
+     * @param names Array to store the material names
+     */
+    void loadMaterialLibrary(const vislib::TString& filename, vislib::Array<vislib::StringA>& names);
 
-        /** Ctor */
-        WavefrontObjDataSource(void);
-
-        /** Dtor */
-        virtual ~WavefrontObjDataSource(void);
-
-    protected:
-
-        /**
-         * Loads the specified file
-         *
-         * @param filename The file to load
-         *
-         * @return True on success
-         */
-        virtual bool load(const vislib::TString& filename);
-
-    private:
-
-        /** Internat utility struct to store a single triangle */
-        typedef struct _tri_t {
-
-            /** The indices of the vertices */
-            unsigned int v1, v2, v3;
-
-            /** The indices of the normals */
-            unsigned int n1, n2, n3;
-
-            /** The indices of the texture coordinates */
-            unsigned int t1, t2, t3;
-
-            /** validity flags for normal and texture coodrinate information */
-            bool n, t;
-
-            /**
-             * Test for equality
-             *
-             * @param rhs The right hand side operand
-             *
-             * @return True if this and rhs are equal
-             */
-            bool operator==(const struct _tri_t& rhs) const {
-                return (this->v1 == rhs.v1)
-                    && (this->v2 == rhs.v2)
-                    && (this->v3 == rhs.v3)
-                    && (this->n1 == rhs.n1)
-                    && (this->n2 == rhs.n2)
-                    && (this->n3 == rhs.n3)
-                    && (this->t1 == rhs.t1)
-                    && (this->t2 == rhs.t2)
-                    && (this->t3 == rhs.t3)
-                    && (this->n == rhs.n)
-                    && (this->t == rhs.t);
-            }
-
-        } Tri;
-
-        /**
-         * Loads a material library file
-         *
-         * @param filename The file name of the material library file to load
-         * @param names Array to store the material names
-         */
-        void loadMaterialLibrary(const vislib::TString& filename, vislib::Array<vislib::StringA>& names);
-
-        /**
-         * Creates a mesh from the loaded triangles
-         *
-         * @param mesh The object to store the new mesh
-         * @param tris The incoming triangles
-         * @param vu unsigned-int-Array of the same size as 'v' free to use
-         * @param v The vertices array
-         * @param n The normal vectors array
-         * @param t The texture coordinates array
-         */
-        void makeMesh(megamol::geocalls_gl::CallTriMeshDataGL::Mesh& mesh,
-                const vislib::Array<WavefrontObjDataSource::Tri>& tris,
-                unsigned int* vu, const vislib::Array<vislib::math::Vector<float, 3> >& v,
-                const vislib::Array<vislib::math::Vector<float, 3> >& n,
-                const vislib::Array<vislib::math::Vector<float, 2> >& t);
+    /**
+     * Creates a mesh from the loaded triangles
+     *
+     * @param mesh The object to store the new mesh
+     * @param tris The incoming triangles
+     * @param vu unsigned-int-Array of the same size as 'v' free to use
+     * @param v The vertices array
+     * @param n The normal vectors array
+     * @param t The texture coordinates array
+     */
+    void makeMesh(megamol::geocalls_gl::CallTriMeshDataGL::Mesh& mesh,
+        const vislib::Array<WavefrontObjDataSource::Tri>& tris, unsigned int* vu,
+        const vislib::Array<vislib::math::Vector<float, 3>>& v, const vislib::Array<vislib::math::Vector<float, 3>>& n,
+        const vislib::Array<vislib::math::Vector<float, 2>>& t);
 
 
-        /** vertex store for lines */
-        vislib::Array<vislib::Array<float> > lineVerts;
-    };
+    /** vertex store for lines */
+    vislib::Array<vislib::Array<float>> lineVerts;
+};
 
-} /* end namespace trisoup */
+} // namespace trisoup_gl
 } /* end namespace megamol */
 
 #endif /* MMTRISOUPPLG_WAVEFRONTOBJDATASOURCE_H_INCLUDED */

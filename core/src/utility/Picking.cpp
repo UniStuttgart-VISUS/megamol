@@ -13,7 +13,6 @@ using namespace megamol::core;
 using namespace megamol::core::utility;
 
 
-
 PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
@@ -23,7 +22,6 @@ PickingBuffer::PickingBuffer()
         , available_interactions()
         , pending_manipulations()
         , enabled(false) {}
-
 
 
 bool PickingBuffer::ProcessMouseMove(double x, double y) {
@@ -58,7 +56,7 @@ bool PickingBuffer::ProcessMouseMove(double x, double y) {
                 float scale = glm::dot(axis_norm, mouse_move);
 
                 this->pending_manipulations.emplace_back(Manipulation{InteractionType::MOVE_ALONG_AXIS_SCREEN,
-                                                                      active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
+                    active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
 
             } else if (interaction.type == InteractionType::MOVE_ALONG_AXIS_3D) {
                 /* FIXME
@@ -112,7 +110,7 @@ bool PickingBuffer::ProcessMouseMove(double x, double y) {
 
 
 bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
-                                                              megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+    megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     // Enable/Disable cursor interaction
     if ((button == megamol::core::view::MouseButton::BUTTON_LEFT) &&
@@ -124,7 +122,7 @@ bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
             this->active_interaction_obj = this->cursor_on_interaction_obj;
             auto active_id = std::get<1>(this->active_interaction_obj);
             this->pending_manipulations.emplace_back(
-                    Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+                Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
 
             // Consume when interaction is started
             return true;
@@ -134,7 +132,7 @@ bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
 
         auto active_id = std::get<1>(this->active_interaction_obj);
         this->pending_manipulations.emplace_back(
-                Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+            Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
         this->active_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
     }
 

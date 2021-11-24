@@ -6,7 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TriSoupRenderer.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/param/BoolParam.h"
@@ -15,6 +14,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
+#include "stdafx.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 

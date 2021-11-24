@@ -22,10 +22,7 @@ struct WindowManipulation {
 
     void swap_buffers() const GL_STUB();
 
-    enum class Fullscreen {
-        Maximize,
-        Restore
-    };
+    enum class Fullscreen { Maximize, Restore };
     void set_fullscreen(const Fullscreen action) const GL_STUB();
 
     void* window_ptr = nullptr;

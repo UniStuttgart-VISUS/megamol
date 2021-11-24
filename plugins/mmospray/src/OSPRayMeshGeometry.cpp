@@ -122,7 +122,7 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
                 }
             }
         }
-    } 
+    }
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
@@ -170,7 +170,6 @@ bool OSPRayMeshGeometry::getExtends(megamol::core::Call& call) {
         this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);
         this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
         this->extendContainer.isValid = true;
-
     }
     return true;
 }

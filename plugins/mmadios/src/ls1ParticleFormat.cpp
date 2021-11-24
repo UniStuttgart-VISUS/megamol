@@ -5,15 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ls1ParticleFormat.h"
-#include "mmadios/CallADIOSData.h"
-#include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/view/CallGetTransferFunction.h"
 #include "MinSphereWrapper.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "stdafx.h"
 #include <numeric>
 
 
@@ -21,12 +21,12 @@ namespace megamol {
 namespace adios {
 
 ls1ParticleFormat::ls1ParticleFormat(void)
-    : core::Module()
-    , mpSlot("mpSlot", "Slot to send multi particle data.")
-    , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
-    , representationSlot("representation", "Chose between displaying molecules or atoms")
-    , forceFloatSlot("force float", "")
-    , transferfunctionSlot("transferfunctionSlot", "") {
+        : core::Module()
+        , mpSlot("mpSlot", "Slot to send multi particle data.")
+        , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
+        , representationSlot("representation", "Chose between displaying molecules or atoms")
+        , forceFloatSlot("force float", "")
+        , transferfunctionSlot("transferfunctionSlot", "") {
 
     this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &ls1ParticleFormat::getDataCallback);
@@ -52,21 +52,26 @@ ls1ParticleFormat::ls1ParticleFormat(void)
     this->transferfunctionSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->transferfunctionSlot);
     this->transferfunctionSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
-
 }
 
-ls1ParticleFormat::~ls1ParticleFormat(void) { this->Release(); }
+ls1ParticleFormat::~ls1ParticleFormat(void) {
+    this->Release();
+}
 
-bool ls1ParticleFormat::create(void) { return true; }
+bool ls1ParticleFormat::create(void) {
+    return true;
+}
 
 void ls1ParticleFormat::release(void) {}
 
 bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     if (!(*cad)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ls1ParticleFormat]: Error during GetHeader");
@@ -132,7 +137,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
             int pos_size = 0;
             int dir_size = 0;
-            
+
             bbox = cad->getData("global_box")->GetAsFloat();
 
             int num_atoms_total = 0;
@@ -145,7 +150,8 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             for (int n = 0; n < num_components; ++n) {
                 std::string sigma_string = std::string("component_") + std::to_string(n) + std::string("_sigma");
                 comp_sigmas[n] = cad->getData(sigma_string)->GetAsFloat();
-                std::string element_string = std::string("component_") + std::to_string(n) + std::string("_element_names");
+                std::string element_string =
+                    std::string("component_") + std::to_string(n) + std::string("_element_names");
                 auto element_name_data = cad->getData(element_string)->GetAsString()[0];
                 comp_element_names[n] = splitElementString(element_name_data);
 
@@ -168,7 +174,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 dirs.resize(num_plists);
                 list_radii.clear();
                 list_radii.resize(num_plists);
-                plist_count.resize(num_plists,0);
+                plist_count.resize(num_plists, 0);
 
                 for (int i = 0; i < p_count; ++i) {
                     mix[comp_id[i]].push_back(X[i]);
@@ -178,7 +184,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                     dirs[comp_id[i]].push_back(VY[i]);
                     dirs[comp_id[i]].push_back(VZ[i]);
                     ++plist_count[comp_id[i]];
-                }                
+                }
 
                 // calc circumsphere
                 for (int j = 0; j < num_components; ++j) {
@@ -250,11 +256,11 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     // transferfunction stuff
     core::view::CallGetTransferFunction* ctf = transferfunctionSlot.CallAs<core::view::CallGetTransferFunction>();
     if (ctf != nullptr) {
-        std::array<float, 2> range = {0, num_plists-1};
+        std::array<float, 2> range = {0, num_plists - 1};
         ctf->SetRange(range);
         if (!(*ctf)()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[ls1ParticleFormat]: Error in transfer function callback." );
+                "[ls1ParticleFormat]: Error in transfer function callback.");
             return false;
         }
         auto tf_dirty = ctf->IsDirty();
@@ -282,12 +288,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         // Set particles
         parts.SetCount(plist_count[k]);
 
-        if (mix[k].data()== nullptr) {
+        if (mix[k].data() == nullptr) {
             parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
         } else {
             parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, mix[k].data());
         }
-        
+
         if (dirs[k].data() == nullptr) {
             parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
         } else {
@@ -302,7 +308,6 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         //    mix[k].data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
         //        geocalls::SimpleSphericalParticles::ColorDataSize[colType],
         //    stride);
-
     }
 
     mpdc->SetFrameCount(cad->getFrameCount());
@@ -316,12 +321,15 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 bool ls1ParticleFormat::getExtentCallback(core::Call& call) {
 
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
-    if (!this->getDataCallback(call)) return false;
+    if (!this->getDataCallback(call))
+        return false;
 
     return true;
 }

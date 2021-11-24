@@ -14,39 +14,38 @@
 namespace megamol {
 namespace frontend_resources {
 
-    // RAII manager for on-the-fly gl texture handle
-    struct gl_texture {
-        unsigned int texture = 0;
-        unsigned int texture_reference = 0;
-        ImageWrapper* image_wrapper_ptr = nullptr;
+// RAII manager for on-the-fly gl texture handle
+struct gl_texture {
+    unsigned int texture = 0;
+    unsigned int texture_reference = 0;
+    ImageWrapper* image_wrapper_ptr = nullptr;
 
-        ImageWrapper::ImageSize size;
+    ImageWrapper::ImageSize size;
 
-        gl_texture(ImageWrapper const& image);
-        ~gl_texture() GL_STUB(); // frees texture if owned
-        // rule of five
-        gl_texture(gl_texture const& other);
-        gl_texture(gl_texture&& other) noexcept;
-        gl_texture& operator=(gl_texture const& other);
-        gl_texture& operator=(gl_texture&& other) noexcept;
+    gl_texture(ImageWrapper const& image);
+    ~gl_texture() GL_STUB(); // frees texture if owned
+    // rule of five
+    gl_texture(gl_texture const& other);
+    gl_texture(gl_texture&& other) noexcept;
+    gl_texture& operator=(gl_texture const& other);
+    gl_texture& operator=(gl_texture&& other) noexcept;
 
-        gl_texture& operator=(ImageWrapper const& image);
+    gl_texture& operator=(ImageWrapper const& image);
 
-        unsigned int as_gl_handle();
+    unsigned int as_gl_handle();
 
-        private:
-        void assign(gl_texture const& other, bool take_ownership) GL_STUB();
-        void from_image(ImageWrapper const& image) GL_STUB();
-        void clear();
+private:
+    void assign(gl_texture const& other, bool take_ownership) GL_STUB();
+    void from_image(ImageWrapper const& image) GL_STUB();
+    void clear();
 
-        // void clear() {
-        //     this->image_wrapper_ptr = nullptr;
-        //     this->texture_reference = 0;
-        //     this->texture = 0;
-        //     this->size = {0, 0};
-        // }
-
-    };
+    // void clear() {
+    //     this->image_wrapper_ptr = nullptr;
+    //     this->texture_reference = 0;
+    //     this->texture = 0;
+    //     this->size = {0, 0};
+    // }
+};
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */

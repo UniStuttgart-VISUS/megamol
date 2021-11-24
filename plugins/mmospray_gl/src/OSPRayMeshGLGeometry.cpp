@@ -6,10 +6,10 @@
 
 #include "OSPRayMeshGLGeometry.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
 #include "mmcore/utility/log/Log.h"
-#include "mesh/MeshCalls.h"
 
 
 using namespace megamol::ospray;
@@ -71,7 +71,6 @@ bool OSPRayMeshGLGeometry::readData(megamol::core::Call& call) {
         ms.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
 
 
-
         unsigned int triangleCount = 0;
         unsigned int vertexCount = 0;
 
@@ -131,7 +130,7 @@ bool OSPRayMeshGLGeometry::readData(megamol::core::Call& call) {
                 case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
                     _color.reserve(vertexCount * 4);
                     for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
-                        _color.push_back((float) obj.GetColourPointerByte()[i] / 255.0f);
+                        _color.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
                         if ((i + 1) % 3 == 0) {
                             _color.push_back(1.0f);
                         }
@@ -265,7 +264,8 @@ bool OSPRayMeshGLGeometry::getExtends(megamol::core::Call& call) {
 
     } else {
 
-        megamol::geocalls_gl::CallTriMeshDataGL* cd = this->_getTrimeshDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
+        megamol::geocalls_gl::CallTriMeshDataGL* cd =
+            this->_getTrimeshDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
 
         if (cd == NULL)
             return false;

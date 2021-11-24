@@ -48,7 +48,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
     if (this->fbo == nullptr) {
         try {
-            this->fbo = new glowl::FramebufferObject(this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+            this->fbo = new glowl::FramebufferObject(
+                this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
         } catch (glowl::FramebufferObjectException& e) {
             log::Log::DefaultLog.WriteError(
                 "[GL Picking Buffer] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(),

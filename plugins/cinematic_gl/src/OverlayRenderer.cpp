@@ -8,8 +8,6 @@
 
 #include "OverlayRenderer.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,6 +19,8 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -101,7 +101,7 @@ OverlayRenderer::OverlayRenderer()
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, { "png" });
+    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, {"png"});
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
@@ -234,7 +234,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
                 this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
                                               .PeekBuffer());
-            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
+            if (!this->LoadTextureFromFile(
+                    this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
                 return false;
             }
         }

@@ -4,10 +4,10 @@
  * Copyright (C) 2011 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "CoordSysMarker.h"
-#include "vislib/assert.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/assert.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Vector.h"
 
@@ -56,8 +56,10 @@ void CoordSysMarker::assertData(void) {
     float sin[cntSeg + 1];
     float cos[cntSeg + 1];
     for (unsigned int i = 0; i < cntSeg; i++) {
-        sin[i] = static_cast<float>(::sin(vislib::math::PI_DOUBLE * 2.0 * static_cast<double>(i) / static_cast<double>(cntSeg)));
-        cos[i] = static_cast<float>(::cos(vislib::math::PI_DOUBLE * 2.0 * static_cast<double>(i) / static_cast<double>(cntSeg)));
+        sin[i] = static_cast<float>(
+            ::sin(vislib::math::PI_DOUBLE * 2.0 * static_cast<double>(i) / static_cast<double>(cntSeg)));
+        cos[i] = static_cast<float>(
+            ::cos(vislib::math::PI_DOUBLE * 2.0 * static_cast<double>(i) / static_cast<double>(cntSeg)));
     }
     sin[cntSeg] = sin[0];
     cos[cntSeg] = cos[0];
@@ -105,7 +107,6 @@ void CoordSysMarker::assertData(void) {
         n.Add(Vector(1.0f, 0.0f, 0.0f));
         v.Add(Point(0.9f, sin[i + 1] * 0.06f, cos[i + 1] * 0.06f));
         n.Add(Vector(0.5f, sin[i + 1], cos[i + 1]));
-
     }
 
     // caps
@@ -118,34 +119,20 @@ void CoordSysMarker::assertData(void) {
         n.Add(Vector(-1.0f, 0.0f, 0.0f));
     }
 
-    const float tm[6][3][3] = {
-        { { 1.0f, 0.0f, 0.0f },
-          { 0.0f, 1.0f, 0.0f },
-          { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, 1.0f, 0.0f },
-          { -1.0f, 0.0f, 0.0f },
-          { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, 0.0f, 1.0f },
-          { 0.0f, 1.0f, 0.0f },
-          { -1.0f, 0.0f, 0.0f } },
-        { { -1.0f, 0.0f, 0.0f },
-          { 0.0f, -1.0f, 0.0f },
-          { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, -1.0f, 0.0f },
-          { 1.0f, 0.0f, 0.0f },
-          { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, 0.0f, -1.0f },
-          { 0.0f, 1.0f, 0.0f },
-          { 1.0f, 0.0f, 0.0f } }
-    };
+    const float tm[6][3][3] = {{{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{0.0f, 1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
+        {{-1.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{0.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}}};
 
     ASSERT(v.Count() == n.Count());
     this->objs.SetCount(6);
     for (SIZE_T i = 0; i < 6; i++) {
         this->objs[i].SetMaterial((i < 3) ? &this->mats[i + 1] : &this->mats[0]);
 
-        float *vDat = new float[v.Count() * 3];
-        float *nDat = new float[v.Count() * 3];
+        float* vDat = new float[v.Count() * 3];
+        float* nDat = new float[v.Count() * 3];
         for (SIZE_T j = 0; j < v.Count(); j++) {
             vDat[j * 3 + 0] = tm[i][0][0] * v[j].X() + tm[i][1][0] * v[j].Y() + tm[i][2][0] * v[j].Z();
             vDat[j * 3 + 1] = tm[i][0][1] * v[j].X() + tm[i][1][1] * v[j].Y() + tm[i][2][1] * v[j].Z();

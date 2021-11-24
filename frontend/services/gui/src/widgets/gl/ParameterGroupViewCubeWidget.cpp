@@ -444,8 +444,8 @@ core::utility::InteractVector_t megamol::gui::PickableCube::GetInteractions(unsi
     core::utility::InteractVector_t interactions;
     interactions.emplace_back(
         core::utility::Interaction({core::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(core::utility::Interaction(
-        {core::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        core::utility::Interaction({core::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -604,8 +604,8 @@ core::utility::InteractVector_t megamol::gui::PickableTexture::GetInteractions(u
     core::utility::InteractVector_t interactions;
     interactions.emplace_back(
         core::utility::Interaction({core::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(core::utility::Interaction(
-        {core::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        core::utility::Interaction({core::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 

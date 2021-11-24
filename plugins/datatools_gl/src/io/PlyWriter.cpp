@@ -17,10 +17,11 @@ using namespace megamol::geocalls_gl;
 /*
  * io::PlyWriter::PlyWriter
  */
-io::PlyWriter::PlyWriter(void) : AbstractDataWriter(),
-    filenameSlot("filename", "The path to the .ply file to be written"),
-    frameIDSlot("frameID", "The ID of the frame to be written"),
-    meshDataSlot("meshData", "The slot requesting the data to be written") {
+io::PlyWriter::PlyWriter(void)
+        : AbstractDataWriter()
+        , filenameSlot("filename", "The path to the .ply file to be written")
+        , frameIDSlot("frameID", "The ID of the frame to be written")
+        , meshDataSlot("meshData", "The slot requesting the data to be written") {
 
     this->filenameSlot.SetParameter(
         new param::FilePathParam("", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"ply"}));
@@ -50,8 +51,7 @@ bool io::PlyWriter::create(void) {
 /*
  * io::PlyWriter::release
  */
-void io::PlyWriter::release(void) {
-}
+void io::PlyWriter::release(void) {}
 
 /*
  * io::PlyWriter::run
@@ -60,22 +60,22 @@ bool io::PlyWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "No file name specified. Abort.");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;
     }
 
-    CallTriMeshDataGL *ctd = this->meshDataSlot.CallAs<CallTriMeshDataGL>();
+    CallTriMeshDataGL* ctd = this->meshDataSlot.CallAs<CallTriMeshDataGL>();
     if (ctd == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "No data source connected. Abort.");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
     }
 
     ctd->SetFrameID(this->frameIDSlot.Param<param::IntParam>()->Value());
-    if (!(*ctd)(1))return false; // getExtents
+    if (!(*ctd)(1))
+        return false; // getExtents
     ctd->SetFrameID(this->frameIDSlot.Param<param::IntParam>()->Value());
-    if (!(*ctd)(0))return false; // getData
+    if (!(*ctd)(0))
+        return false; // getData
 
     std::vector<std::vector<unsigned int>> faces;
     std::vector<std::vector<float>> vertices;
@@ -85,7 +85,7 @@ bool io::PlyWriter::run(void) {
     // read in the complete mesh data
     for (unsigned int objID = 0; objID < ctd->Count(); objID++) {
         const CallTriMeshDataGL::Mesh& mesh = ctd->Objects()[objID];
-        
+
         std::vector<unsigned int> fac;
         std::vector<float> vert;
         std::vector<float> norm;
@@ -99,7 +99,7 @@ bool io::PlyWriter::run(void) {
 
         vert.resize(vertCnt * 3);
         vert.shrink_to_fit();
-        
+
         norm.resize(vertCnt * 3);
         norm.shrink_to_fit();
 
@@ -119,11 +119,10 @@ bool io::PlyWriter::run(void) {
             }
         } else if (mesh.GetVertexDataType() == CallTriMeshDataGL::Mesh::DT_DOUBLE) {
             if (mesh.GetVertexPointerDouble() != nullptr) {
-                std::transform(mesh.GetVertexPointerDouble(), mesh.GetVertexPointerDouble() + vertCnt * 3, vert.begin(), [](double v) {
-                    return static_cast<float>(v);
-                });
+                std::transform(mesh.GetVertexPointerDouble(), mesh.GetVertexPointerDouble() + vertCnt * 3, vert.begin(),
+                    [](double v) { return static_cast<float>(v); });
                 verticesAvailable = true;
-            } 
+            }
         }
 
         auto dt = mesh.GetTriDataType();
@@ -136,16 +135,14 @@ bool io::PlyWriter::run(void) {
             }
         } else if (mesh.GetTriDataType() == CallTriMeshDataGL::Mesh::DT_UINT16) {
             if (mesh.GetTriIndexPointerUInt16() != nullptr) {
-                std::transform(mesh.GetTriIndexPointerUInt16(), mesh.GetTriIndexPointerUInt16() + faceCnt * 3, fac.begin(), [](unsigned short v) {
-                    return static_cast<unsigned int>(v);
-                });
+                std::transform(mesh.GetTriIndexPointerUInt16(), mesh.GetTriIndexPointerUInt16() + faceCnt * 3,
+                    fac.begin(), [](unsigned short v) { return static_cast<unsigned int>(v); });
                 facesAvailable = true;
             }
         } else if (mesh.GetTriDataType() == CallTriMeshDataGL::Mesh::DT_BYTE) {
             if (mesh.GetTriIndexPointerByte() != nullptr) {
-                std::transform(mesh.GetTriIndexPointerByte(), mesh.GetTriIndexPointerByte() + faceCnt * 3, fac.begin(), [](unsigned char v) {
-                    return static_cast<unsigned int>(v);
-                });
+                std::transform(mesh.GetTriIndexPointerByte(), mesh.GetTriIndexPointerByte() + faceCnt * 3, fac.begin(),
+                    [](unsigned char v) { return static_cast<unsigned int>(v); });
                 facesAvailable = true;
             }
         }
@@ -158,9 +155,8 @@ bool io::PlyWriter::run(void) {
             }
         } else if (mesh.GetNormalDataType() == CallTriMeshDataGL::Mesh::DT_DOUBLE) {
             if (mesh.GetNormalPointerDouble() != nullptr) {
-                std::transform(mesh.GetNormalPointerDouble(), mesh.GetNormalPointerDouble() + vertCnt * 3, norm.begin(), [](double v) {
-                    return static_cast<float>(v);
-                });
+                std::transform(mesh.GetNormalPointerDouble(), mesh.GetNormalPointerDouble() + vertCnt * 3, norm.begin(),
+                    [](double v) { return static_cast<float>(v); });
                 normalsAvailable = true;
             }
         }
@@ -173,16 +169,14 @@ bool io::PlyWriter::run(void) {
             }
         } else if (mesh.GetColourDataType() == CallTriMeshDataGL::Mesh::DT_DOUBLE) {
             if (mesh.GetColourPointerDouble() != nullptr) {
-                std::transform(mesh.GetColourPointerDouble(), mesh.GetColourPointerDouble() + vertCnt * 3, col.begin(), [](double v) {
-                    return static_cast<float>(v);
-                });
+                std::transform(mesh.GetColourPointerDouble(), mesh.GetColourPointerDouble() + vertCnt * 3, col.begin(),
+                    [](double v) { return static_cast<float>(v); });
                 colorsAvailable = true;
             }
         } else if (mesh.GetColourDataType() == CallTriMeshDataGL::Mesh::DT_BYTE) {
             if (mesh.GetColourPointerByte() != nullptr) {
-                std::transform(mesh.GetColourPointerByte(), mesh.GetColourPointerByte() + vertCnt * 3, col.begin(), [](unsigned char v) {
-                    return static_cast<float>(v) / 255.0f;
-                });
+                std::transform(mesh.GetColourPointerByte(), mesh.GetColourPointerByte() + vertCnt * 3, col.begin(),
+                    [](unsigned char v) { return static_cast<float>(v) / 255.0f; });
                 colorsAvailable = true;
             }
         }
@@ -230,7 +224,7 @@ bool io::PlyWriter::run(void) {
         vertexCount += static_cast<unsigned int>(vertices[objID].size() / 3);
         faceCount += static_cast<unsigned int>(faces[objID].size() / 3);
 
-        if (normals[objID].size() <  vertices[objID].size()) {
+        if (normals[objID].size() < vertices[objID].size()) {
             wantNormals = false;
         }
     }
@@ -238,19 +232,20 @@ bool io::PlyWriter::run(void) {
     ctd->Unlock();
     // write the ply file
     vislib::sys::FastFile file;
-    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to create output file \"%s\". Abort.",
-            filename.generic_u8string().c_str());
+    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
+            vislib::sys::File::CREATE_OVERWRITE)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
-    
-    
-#define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
+
+
+#define ASSERT_WRITEOUT(A, S)                                                   \
+    if (file.Write((A), (S)) != (S)) {                                          \
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
-        file.Close(); \
-        return false; \
-            }
+        file.Close();                                                           \
+        return false;                                                           \
+    }
 
     // header
     // the color type has to be uchar since most programs can only read this type (although float would be available)
@@ -259,7 +254,8 @@ bool io::PlyWriter::run(void) {
     ASSERT_WRITEOUT(header.c_str(), header.size());
     header = "element vertex " + std::to_string(vertexCount) + "\n";
     ASSERT_WRITEOUT(header.c_str(), header.size());
-    header = "property float x\nproperty float y\nproperty float z\nproperty uchar red\nproperty uchar green\nproperty uchar blue\n";
+    header = "property float x\nproperty float y\nproperty float z\nproperty uchar red\nproperty uchar green\nproperty "
+             "uchar blue\n";
     ASSERT_WRITEOUT(header.c_str(), header.size());
 
     if (wantNormals) {
@@ -278,17 +274,20 @@ bool io::PlyWriter::run(void) {
     // body vertices
     for (unsigned int objID = 0; objID < static_cast<unsigned int>(vertices.size()); objID++) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(vertices[objID].size() / 3); i++) {
-            text = std::to_string(vertices[objID][i * 3 + 0]) + " " + std::to_string(vertices[objID][i * 3 + 1]) + " " + std::to_string(vertices[objID][i * 3 + 2]);
+            text = std::to_string(vertices[objID][i * 3 + 0]) + " " + std::to_string(vertices[objID][i * 3 + 1]) + " " +
+                   std::to_string(vertices[objID][i * 3 + 2]);
             if (colors[objID].size() > i * 3 + 2) {
                 unsigned char c1 = static_cast<unsigned char>(colors[objID][i * 3 + 0] * 255.0f);
                 unsigned char c2 = static_cast<unsigned char>(colors[objID][i * 3 + 1] * 255.0f);
                 unsigned char c3 = static_cast<unsigned char>(colors[objID][i * 3 + 2] * 255.0f);
                 text += " " + std::to_string(c1) + " " + std::to_string(c2) + " " + std::to_string(c3);
             } else {
-                text += " " + std::to_string(standardCol.GetX()) + " " + std::to_string(standardCol.GetY()) + " " + std::to_string(standardCol.GetZ());
+                text += " " + std::to_string(standardCol.GetX()) + " " + std::to_string(standardCol.GetY()) + " " +
+                        std::to_string(standardCol.GetZ());
             }
             if (wantNormals) {
-                text += " " + std::to_string(normals[objID][i * 3 + 0]) + " " + std::to_string(normals[objID][i * 3 + 1]) + " " + std::to_string(normals[objID][i * 3 + 2]);
+                text += " " + std::to_string(normals[objID][i * 3 + 0]) + " " +
+                        std::to_string(normals[objID][i * 3 + 1]) + " " + std::to_string(normals[objID][i * 3 + 2]);
             }
             text += "\n";
             ASSERT_WRITEOUT(text.c_str(), text.size());
@@ -298,9 +297,9 @@ bool io::PlyWriter::run(void) {
     // body faces
     for (unsigned int objID = 0; objID < static_cast<unsigned int>(faces.size()); objID++) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(faces[objID].size() / 3); i++) {
-            text = "3 " + std::to_string(faces[objID][i * 3 + 0] + indexOffset) + " " + 
-                std::to_string(faces[objID][i * 3 + 1] + indexOffset) + " " + 
-                std::to_string(faces[objID][i * 3 + 2] + indexOffset) + "\n";
+            text = "3 " + std::to_string(faces[objID][i * 3 + 0] + indexOffset) + " " +
+                   std::to_string(faces[objID][i * 3 + 1] + indexOffset) + " " +
+                   std::to_string(faces[objID][i * 3 + 2] + indexOffset) + "\n";
             ASSERT_WRITEOUT(text.c_str(), text.size());
         }
 

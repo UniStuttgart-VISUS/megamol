@@ -7,13 +7,13 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "ModernTrisoupRenderer.h"
-#include "TriSoupRenderer.h"
-#include "vislib/Trace.h"
 #include "BlockVolumeMesh.h"
 #include "CoordSysMarker.h"
+#include "ModernTrisoupRenderer.h"
 #include "TriSoupDataSource.h"
+#include "TriSoupRenderer.h"
 #include "WavefrontObjDataSource.h"
+#include "vislib/Trace.h"
 #include "volumetrics/IsoSurface.h"
 #include "volumetrics/VoluMetricJob.h"
 

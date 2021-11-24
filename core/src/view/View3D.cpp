@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/View3D.h"
+#include "stdafx.h"
 
 #include "GlobalValueStore.h"
 #include "mmcore/view/CallRenderView.h"
@@ -23,7 +23,6 @@ View3D::View3D(void) {
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
-
 }
 
 /*
@@ -48,7 +47,7 @@ ImageWrapper View3D::Render(double time, double instanceTime) {
         cr3d->SetFramebuffer(_fbo);
         cr3d->SetCamera(this->_camera);
         (*cr3d)(view::CallRender3D::FnRender);
-    
+
         BaseView::afterRender();
     }
 
@@ -68,7 +67,7 @@ ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
 void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {
     BaseView::Resize(width, height);
 
-    _fbo->colorBuffer = std::vector<uint32_t>(width*height);
+    _fbo->colorBuffer = std::vector<uint32_t>(width * height);
     _fbo->depthBuffer = std::vector<float>(width * height);
     _fbo->width = width;
     _fbo->height = height;
@@ -89,8 +88,7 @@ bool View3D::create() {
     const auto arcball_key = "arcball";
 
     // new frontend has global key-value resource
-    auto maybe =
-        this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+    auto maybe = this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
     if (maybe.has_value()) {
         this->_camera_controller.setArcballDefault(vislib::CharTraitsA::ParseBool(maybe.value().c_str()));
     }

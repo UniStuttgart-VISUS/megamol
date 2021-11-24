@@ -20,20 +20,19 @@ using namespace megamol::datatools_gl::table;
 using namespace megamol;
 
 TableSelectionTx::TableSelectionTx()
-    : core::Module()
-    , tableInSlot("getTableIn", "Float table input")
-    , flagStorageReadInSlot("readFlagStorageIn", "Flag storage read input")
-    , flagStorageWriteInSlot("writeFlagStorageIn", "Flag storage write input")
-    , flagStorageReadOutSlot("readFlagStorageOut", "Flag storage read output")
-    , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
-    , updateSelectionParam("updateSelection", "Enable selection update")
-    , useColumnAsIndexParam("useColumnAsIndex", "Use column as index instead of row id")
-    , indexColumnParam("indexColumn", "Numeric index of column, which is used as row index")
-    , senderThreadQuit_(false)
-    , senderThreadNotified_(false)
-    , receiverThreadQuit_(false)
-    , receivedSelectionUpdate_(false)
-{
+        : core::Module()
+        , tableInSlot("getTableIn", "Float table input")
+        , flagStorageReadInSlot("readFlagStorageIn", "Flag storage read input")
+        , flagStorageWriteInSlot("writeFlagStorageIn", "Flag storage write input")
+        , flagStorageReadOutSlot("readFlagStorageOut", "Flag storage read output")
+        , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
+        , updateSelectionParam("updateSelection", "Enable selection update")
+        , useColumnAsIndexParam("useColumnAsIndex", "Use column as index instead of row id")
+        , indexColumnParam("indexColumn", "Numeric index of column, which is used as row index")
+        , senderThreadQuit_(false)
+        , senderThreadNotified_(false)
+        , receiverThreadQuit_(false)
+        , receivedSelectionUpdate_(false) {
     this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
@@ -43,12 +42,20 @@ TableSelectionTx::TableSelectionTx()
     this->flagStorageWriteInSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageWriteInSlot);
 
-    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(), core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetData), &TableSelectionTx::readDataCallback);
-    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(), core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetMetaData), &TableSelectionTx::readMetaDataCallback);
+    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(),
+        core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetData),
+        &TableSelectionTx::readDataCallback);
+    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(),
+        core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetMetaData),
+        &TableSelectionTx::readMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageReadOutSlot);
 
-    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(), core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetData), &TableSelectionTx::writeDataCallback);
-    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(), core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetMetaData), &TableSelectionTx::writeMetaDataCallback);
+    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(),
+        core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetData),
+        &TableSelectionTx::writeDataCallback);
+    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(),
+        core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetMetaData),
+        &TableSelectionTx::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageWriteOutSlot);
 
     this->updateSelectionParam << new core::param::BoolParam(true);
@@ -97,7 +104,7 @@ void TableSelectionTx::release() {
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
-    auto *flagsReadOutCall = dynamic_cast<core_gl::FlagCallRead_GL*>(&call);
+    auto* flagsReadOutCall = dynamic_cast<core_gl::FlagCallRead_GL*>(&call);
     if (flagsReadOutCall == nullptr) {
         return false;
     }
@@ -110,7 +117,7 @@ bool TableSelectionTx::readDataCallback(core::Call& call) {
         return false;
     }
 
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
     flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
@@ -124,7 +131,7 @@ bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::writeDataCallback(core::Call& call) {
-    auto *flagsWriteOutCall = dynamic_cast<core_gl::FlagCallWrite_GL*>(&call);
+    auto* flagsWriteOutCall = dynamic_cast<core_gl::FlagCallWrite_GL*>(&call);
     if (flagsWriteOutCall == nullptr) {
         return false;
     }
@@ -133,14 +140,14 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
         return false;
     }
 
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
     flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
     (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
 
     // Send data
 
-    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
+    auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
 
     tableInCall->SetFrameID(0);
     (*tableInCall)(1);
@@ -201,9 +208,9 @@ bool TableSelectionTx::writeMetaDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::validateCalls() {
-    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
     if (tableInCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a table!");
@@ -235,12 +242,12 @@ bool TableSelectionTx::validateSelectionUpdate() {
         return true;
     }
 
-    auto *flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
     (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
     auto flagCollection = flagsReadInCall->getData();
     auto version = flagsReadInCall->version();
 
-    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
+    auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
     tableInCall->SetFrameID(0);
     (*tableInCall)(1);
     (*tableInCall)(0);
@@ -280,9 +287,10 @@ bool TableSelectionTx::validateSelectionUpdate() {
         }
     }
 
-    flagCollection->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, flags_data, GL_DYNAMIC_DRAW);
+    flagCollection->flags =
+        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, flags_data, GL_DYNAMIC_DRAW);
 
-    auto *flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
     flagsWriteInCall->setData(flagCollection, version + 1);
     (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
 

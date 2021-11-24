@@ -7,13 +7,13 @@
  */
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
-#include <GL/glu.h>
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Exception.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/BitmapImage.h"
-#include "mmcore/utility/log/Log.h"
+#include <GL/glu.h>
 
 using namespace megamol;
 using namespace megamol::geocalls_gl;
@@ -25,15 +25,15 @@ using namespace megamol::geocalls_gl;
  * CallTriMeshData::Material::Material
  */
 CallTriMeshDataGL::Material::Material(void)
-    : Ns(0.0f)
-    , Ni(0.0f)
-    , d(0.0f)
-    , Tr(0.0f)
-    , illum(ILLUM_DIFF_SPEC)
-    , mapFileName()
-    , bumpMapFileName()
-    , mapID(0)
-    , bumpMapID(0) {
+        : Ns(0.0f)
+        , Ni(0.0f)
+        , d(0.0f)
+        , Tr(0.0f)
+        , illum(ILLUM_DIFF_SPEC)
+        , mapFileName()
+        , bumpMapFileName()
+        , mapID(0)
+        , bumpMapID(0) {
     this->Tf[0] = this->Tf[1] = this->Tf[2] = 0.0f;
     this->Ka[0] = this->Ka[1] = this->Ka[2] = 0.2f;
     this->Kd[0] = this->Kd[1] = this->Kd[2] = 0.8f;
@@ -45,7 +45,9 @@ CallTriMeshDataGL::Material::Material(void)
 /*
  * CallTriMeshData::Material::Material
  */
-CallTriMeshDataGL::Material::Material(const CallTriMeshDataGL::Material& src) { *this = src; }
+CallTriMeshDataGL::Material::Material(const CallTriMeshDataGL::Material& src) {
+    *this = src;
+}
 
 
 /*
@@ -135,7 +137,8 @@ void CallTriMeshDataGL::Material::MakeDefault(void) {
  * CallTriMeshData::Material::SetMapFileName
  */
 void CallTriMeshDataGL::Material::SetMapFileName(const vislib::TString& filename) {
-    if (this->mapFileName.Equals(filename)) return;
+    if (this->mapFileName.Equals(filename))
+        return;
     this->mapFileName = filename;
     if (this->mapID != 0) {
         ::glDeleteTextures(1, &this->mapID);
@@ -148,7 +151,8 @@ void CallTriMeshDataGL::Material::SetMapFileName(const vislib::TString& filename
  * CallTriMeshData::Material::SetBumpMapFileName
  */
 void CallTriMeshDataGL::Material::SetBumpMapFileName(const vislib::TString& filename) {
-    if (this->bumpMapFileName.Equals(filename)) return;
+    if (this->bumpMapFileName.Equals(filename))
+        return;
     this->bumpMapFileName = filename;
     if (this->bumpMapID != 0) {
         ::glDeleteTextures(1, &this->bumpMapID);
@@ -261,18 +265,18 @@ unsigned int CallTriMeshDataGL::Material::loadTexture(vislib::TString& filename)
  * CallTriMeshData::Mesh::Mesh
  */
 CallTriMeshDataGL::Mesh::Mesh(void)
-    : triCnt(0)
-    , triDT(DT_NONE)
-    , /*tri(NULL), */ triMemOwned(false)
-    , vrtCnt(0)
-    , vrtDT(DT_NONE)
-    , /*vrt(NULL), */ nrmDT(DT_NONE)
-    , /*nrm(NULL), */
-    colDT(DT_NONE)
-    , /*col(NULL), */ texDT(DT_NONE)
-    , /*tex(NULL), */ vrtMemOwned(false)
-    , mat(NULL)
-    , vattCount(0) {
+        : triCnt(0)
+        , triDT(DT_NONE)
+        , /*tri(NULL), */ triMemOwned(false)
+        , vrtCnt(0)
+        , vrtDT(DT_NONE)
+        , /*vrt(NULL), */ nrmDT(DT_NONE)
+        , /*nrm(NULL), */
+        colDT(DT_NONE)
+        , /*col(NULL), */ texDT(DT_NONE)
+        , /*tex(NULL), */ vrtMemOwned(false)
+        , mat(NULL)
+        , vattCount(0) {
     this->tri.dataByte = NULL;
     this->vrt.dataFloat = NULL;
     this->nrm.dataFloat = NULL;
@@ -288,7 +292,9 @@ CallTriMeshDataGL::Mesh::Mesh(void)
 /*
  * CallTriMeshData::Mesh::Mesh
  */
-CallTriMeshDataGL::Mesh::Mesh(const CallTriMeshDataGL::Mesh& src) { *this = src; }
+CallTriMeshDataGL::Mesh::Mesh(const CallTriMeshDataGL::Mesh& src) {
+    *this = src;
+}
 
 
 /*

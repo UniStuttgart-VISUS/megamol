@@ -10,14 +10,14 @@
 namespace megamol {
 namespace frontend_resources {
 
-    using byte = unsigned char;
+using byte = unsigned char;
 
-    namespace conversion {
+namespace conversion {
 
-        unsigned int to_uint(void* ptr);
+unsigned int to_uint(void* ptr);
 
-        std::vector<byte>* to_vector(void* ptr);
-    } // conversion
+std::vector<byte>* to_vector(void* ptr);
+} // namespace conversion
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */

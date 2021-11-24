@@ -5,11 +5,11 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TriSoupDataSource.h"
-#include "vislib/assert.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
+#include "stdafx.h"
+#include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 
@@ -37,14 +37,14 @@ TriSoupDataSource::~TriSoupDataSource(void) {
  * TriSoupDataSource::load
  */
 bool TriSoupDataSource::load(const vislib::TString& filename) {
-    using vislib::sys::MemmappedFile;
-    using vislib::sys::File;
     using megamol::core::utility::log::Log;
+    using vislib::sys::File;
+    using vislib::sys::MemmappedFile;
 
-#define FILE_READ(A, B) if ((B) != file.Read((A), (B))) {\
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,\
-            "Unable to load file: data corruption");\
-        return false;\
+#define FILE_READ(A, B)                                                                     \
+    if ((B) != file.Read((A), (B))) {                                                       \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load file: data corruption"); \
+        return false;                                                                       \
     }
 
     File::FileSize r;
@@ -94,13 +94,9 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
         scale = 2.0f / scale;
     }
 
-    this->bbox.Set(
-        vislib::math::Abs(maxX - minX) * scale * -0.5f,
-        vislib::math::Abs(maxY - minY) * scale * -0.5f,
-        vislib::math::Abs(maxZ - minZ) * scale * -0.5f,
-        vislib::math::Abs(maxX - minX) * scale * 0.5f,
-        vislib::math::Abs(maxY - minY) * scale * 0.5f,
-        vislib::math::Abs(maxZ - minZ) * scale * 0.5f);
+    this->bbox.Set(vislib::math::Abs(maxX - minX) * scale * -0.5f, vislib::math::Abs(maxY - minY) * scale * -0.5f,
+        vislib::math::Abs(maxZ - minZ) * scale * -0.5f, vislib::math::Abs(maxX - minX) * scale * 0.5f,
+        vislib::math::Abs(maxY - minY) * scale * 0.5f, vislib::math::Abs(maxZ - minZ) * scale * 0.5f);
 
     this->objs.SetCount(ui);
 
@@ -111,10 +107,11 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
         unsigned int vrtCnt;
         FILE_READ(&vrtCnt, sizeof(unsigned int));
 
-        float *v = new float[3 * vrtCnt];
-        float *n = new float[3 * vrtCnt];
-        unsigned char *c = new unsigned char[3 * vrtCnt];
-        this->objs[i].SetVertexData(vrtCnt, v, n, c, NULL, true); // Do not delete v, n, or c since the memory is now owned by objs[i]
+        float* v = new float[3 * vrtCnt];
+        float* n = new float[3 * vrtCnt];
+        unsigned char* c = new unsigned char[3 * vrtCnt];
+        this->objs[i].SetVertexData(
+            vrtCnt, v, n, c, NULL, true); // Do not delete v, n, or c since the memory is now owned by objs[i]
 
         FILE_READ(v, sizeof(float) * 3 * vrtCnt);
 
@@ -130,7 +127,7 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
         unsigned int triCnt;
         FILE_READ(&triCnt, sizeof(unsigned int));
 
-        unsigned int *t = new unsigned int[3 * triCnt];
+        unsigned int* t = new unsigned int[3 * triCnt];
         this->objs[i].SetTriangleData(triCnt, t, true); // Do not delet t since the memory is now owned by objs[i]
 
         FILE_READ(t, sizeof(unsigned int) * 3 * triCnt);
@@ -142,7 +139,7 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
         }
 
         // Calculate the vertex normals
-        unsigned int *nc = new unsigned int[vrtCnt];
+        unsigned int* nc = new unsigned int[vrtCnt];
         ::memset(nc, 0, vrtCnt * sizeof(unsigned int));
         ::memset(n, 0, vrtCnt * 3 * sizeof(float));
 
@@ -181,12 +178,14 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
         this->objs[i].SetMaterial(NULL);
         for (unsigned int j = 0; j < 3 * vrtCnt; j += 3) {
             float a = float(j) / float(3 * (vrtCnt - 1));
-            if (a < 0.0f) a = 0.0f; else if (a > 1.0f) a = 1.0f;
+            if (a < 0.0f)
+                a = 0.0f;
+            else if (a > 1.0f)
+                a = 1.0f;
             c[j + 2] = int(255.f * a);
             c[j + 1] = 0;
             c[j + 0] = 255 - c[j + 2];
         }
-
     }
 
     file.Close();

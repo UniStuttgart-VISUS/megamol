@@ -16,16 +16,16 @@ using namespace megamol::datatools_gl::table;
 using namespace megamol;
 
 TableFlagFilter::TableFlagFilter()
-    : core::Module()
-    , tableInSlot("getDataIn", "Float table input")
-    , flagStorageInSlot("readFlagStorage", "Flag storage read input")
-    , tableOutSlot("getDataOut", "Float table output")
-    , filterModeParam("filterMode", "filter mode")
-    , tableInFrameCount(0)
-    , tableInDataHash(0)
-    , tableInColCount(0)
-    , dataHash(0)
-    , rowCount(0) {
+        : core::Module()
+        , tableInSlot("getDataIn", "Float table input")
+        , flagStorageInSlot("readFlagStorage", "Flag storage read input")
+        , tableOutSlot("getDataOut", "Float table output")
+        , filterModeParam("filterMode", "filter mode")
+        , tableInFrameCount(0)
+        , tableInDataHash(0)
+        , tableInColCount(0)
+        , dataHash(0)
+        , rowCount(0) {
 
     this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
@@ -34,11 +34,9 @@ TableFlagFilter::TableFlagFilter()
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
     this->tableOutSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
-        datatools::table::TableDataCall::FunctionName(0),
-        &TableFlagFilter::getData);
+        datatools::table::TableDataCall::FunctionName(0), &TableFlagFilter::getData);
     this->tableOutSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
-        datatools::table::TableDataCall::FunctionName(1),
-        &TableFlagFilter::getHash);
+        datatools::table::TableDataCall::FunctionName(1), &TableFlagFilter::getHash);
     this->MakeSlotAvailable(&this->tableOutSlot);
 
     auto* fmp = new core::param::EnumParam(FilterMode::FILTERED);
@@ -56,15 +54,14 @@ bool TableFlagFilter::create() {
     return true;
 }
 
-void TableFlagFilter::release() {
-}
+void TableFlagFilter::release() {}
 
-bool TableFlagFilter::getData(core::Call &call) {
+bool TableFlagFilter::getData(core::Call& call) {
     if (!this->handleCall(call)) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
+    auto* tableOutCall = dynamic_cast<datatools::table::TableDataCall*>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
     tableOutCall->Set(this->tableInColCount, this->rowCount, this->colInfos.data(), this->data.data());
@@ -72,22 +69,22 @@ bool TableFlagFilter::getData(core::Call &call) {
     return true;
 }
 
-bool TableFlagFilter::getHash(core::Call &call) {
+bool TableFlagFilter::getHash(core::Call& call) {
     if (!this->handleCall(call)) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
+    auto* tableOutCall = dynamic_cast<datatools::table::TableDataCall*>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
 
     return true;
 }
 
-bool TableFlagFilter::handleCall(core::Call &call) {
-    auto *tableOutCall = dynamic_cast<datatools::table::TableDataCall *>(&call);
-    auto *tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
-    auto *flagsInCall = this->flagStorageInSlot.CallAs<core_gl::FlagCallRead_GL>();
+bool TableFlagFilter::handleCall(core::Call& call) {
+    auto* tableOutCall = dynamic_cast<datatools::table::TableDataCall*>(&call);
+    auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
+    auto* flagsInCall = this->flagStorageInSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     if (tableOutCall == nullptr) {
         return false;
@@ -110,7 +107,8 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     (*tableInCall)(0);
     (*flagsInCall)(core_gl::FlagCallRead_GL::CallGetData);
 
-    if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || flagsInCall->hasUpdate()) {
+    if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() ||
+        flagsInCall->hasUpdate()) {
         // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
 
         this->dataHash++;
@@ -123,7 +121,7 @@ bool TableFlagFilter::handleCall(core::Call &call) {
         // download flags
         flagsInCall->getData()->validateFlagCount(tableInRowCount);
         auto flags = flagsInCall->getData()->flags;
-        uint32_t *flagsData = new uint32_t[flags->getByteSize() / sizeof(uint32_t)];
+        uint32_t* flagsData = new uint32_t[flags->getByteSize() / sizeof(uint32_t)];
         flags->bind();
         glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData);
 
@@ -136,8 +134,10 @@ bool TableFlagFilter::handleCall(core::Call &call) {
         }
 
         core::FlagStorage::FlagItemType testMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
-        core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;;
-        if (static_cast<FilterMode>(this->filterModeParam.Param<core::param::EnumParam>()->Value()) == FilterMode::SELECTED) {
+        core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;
+        ;
+        if (static_cast<FilterMode>(this->filterModeParam.Param<core::param::EnumParam>()->Value()) ==
+            FilterMode::SELECTED) {
             testMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED;
             passMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
         }
@@ -146,7 +146,7 @@ bool TableFlagFilter::handleCall(core::Call &call) {
         this->data.resize(this->tableInColCount * tableInRowCount);
         this->rowCount = 0;
 
-        const float *tableInData = tableInCall->GetData();
+        const float* tableInData = tableInCall->GetData();
         for (size_t r = 0; r < tableInRowCount; ++r) {
             if ((flagsData[r] & testMask) == passMask) {
                 for (size_t c = 0; c < this->tableInColCount; ++c) {

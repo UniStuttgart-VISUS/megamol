@@ -46,6 +46,7 @@
 #include "ParticleIColGradientField.h"
 #include "ParticleIdentitySort.h"
 #include "ParticleInstantiator.h"
+#include "ParticleListFilter.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleNeighborhoodGraph.h"
@@ -58,22 +59,25 @@
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
 #include "RemapIColValues.h"
+#include "SiffCSplineFitter.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
 #include "SyncedMMPLDProvider.h"
 #include "clustering/ParticleIColClustering.h"
-#include "io/CPERAWDataSource.h"
-#include "io/MMGDDDataSource.h"
-#include "io/MMGDDWriter.h"
 #include "datatools/GraphDataCall.h"
 #include "datatools/MultiIndexListDataCall.h"
 #include "datatools/ParticleFilterMapDataCall.h"
 #include "datatools/table/TableDataCall.h"
+#include "io/CPERAWDataSource.h"
+#include "io/MMGDDDataSource.h"
+#include "io/MMGDDWriter.h"
 #include "table/CSVDataSource.h"
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
+#include "table/ParticlesToTable.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
+#include "table/TableInspector.h"
 #include "table/TableJoin.h"
 #include "table/TableManipulator.h"
 #include "table/TableObserverPlane.h"
@@ -83,10 +87,6 @@
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
-#include "table/ParticlesToTable.h"
-#include "table/TableInspector.h"
-#include "ParticleListFilter.h"
-#include "SiffCSplineFitter.h"
 
 namespace megamol::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -116,17 +116,13 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleBBox>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleColorSignThreshold>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleColorSignedDistance>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::EnforceSymmetricParticleColorRanges>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::EnforceSymmetricParticleColorRanges>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleSortFixHack>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::ParticleDataSequenceConcatenate>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleDataSequenceConcatenate>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleIColFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MultiParticleRelister>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::OverrideMultiParticleListGlobalColors>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::ParticleBoxGeneratorDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideMultiParticleListGlobalColors>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleBoxGeneratorDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::CSVDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableToParticles>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableToLines>();
@@ -162,8 +158,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCListsConcatenate>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleTranslateRotateScale>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::ParticleVisibilityFromVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVisibilityFromVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVFileSequence>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColToIdentity>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleIdentitySort>();
@@ -177,8 +172,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCGrid>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSplit>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVWriter>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::datatools::clustering::ParticleIColClustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToTable>();

@@ -18,86 +18,86 @@
 namespace megamol {
 namespace gui {
 
-    template <typename T>
-    struct CPUTexture2D {
-        uint32_t width = 0;
-        uint32_t height = 0;
-        std::vector<T> data;
-    };
+template<typename T>
+struct CPUTexture2D {
+    uint32_t width = 0;
+    uint32_t height = 0;
+    std::vector<T> data;
+};
 
 
-    /** ************************************************************************
-     * OpenGL implementation of textured image widget
-     */
-    class ImageWidget {
-    public:
-        ImageWidget();
-        ~ImageWidget() = default;
+/** ************************************************************************
+ * OpenGL implementation of textured image widget
+ */
+class ImageWidget {
+public:
+    ImageWidget();
+    ~ImageWidget() = default;
 
 #ifdef WITH_GL
-        bool IsLoaded() {
-            if (this->tex_ptr == nullptr)
-                return false;
-            return (this->tex_ptr->getName() != 0); // OpenGL texture id
-        }
+    bool IsLoaded() {
+        if (this->tex_ptr == nullptr)
+            return false;
+        return (this->tex_ptr->getName() != 0); // OpenGL texture id
+    }
 
-        bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
-            GLint tex_max_filter = GL_LINEAR) {
-            return megamol::core_gl::utility::RenderUtils::LoadTextureFromData(
-                this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
-        }
+    bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+        GLint tex_max_filter = GL_LINEAR) {
+        return megamol::core_gl::utility::RenderUtils::LoadTextureFromData(
+            this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
+    }
 
-        bool LoadTextureFromFile(const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
-            GLint tex_max_filter = GL_LINEAR);
+    bool LoadTextureFromFile(
+        const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
 
-        /**
-         * Return texture id for external usage.
-         */
-        GLuint GetTextureID() const {
-            return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
-        }
+    /**
+     * Return texture id for external usage.
+     */
+    GLuint GetTextureID() const {
+        return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
+    }
 
-        ImTextureID getImTextureID() {
-            return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
-        }
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
+    }
 
 #else
-        bool IsLoaded() const {
-            if (this->cpu_tex_ptr == nullptr)
-                return false;
-            return true;
-        }
+    bool IsLoaded() const {
+        if (this->cpu_tex_ptr == nullptr)
+            return false;
+        return true;
+    }
 
-        ImTextureID getImTextureID() {
-            return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
-        }
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
+    }
 
-        bool LoadTextureFromData(int width, int height, float* data);
+    bool LoadTextureFromData(int width, int height, float* data);
 
-        bool LoadTextureFromFile(const std::string& filename);
+    bool LoadTextureFromFile(const std::string& filename);
 
 #endif
 
-        /**
-         * Draw texture as simple image.
-         */
-        void Widget(ImVec2 size, ImVec2 uv0 = ImVec2(0.0f, 0.0f), ImVec2 uv1 = ImVec2(1.0f, 1.0f));
+    /**
+     * Draw texture as simple image.
+     */
+    void Widget(ImVec2 size, ImVec2 uv0 = ImVec2(0.0f, 0.0f), ImVec2 uv1 = ImVec2(1.0f, 1.0f));
 
-        /**
-         * Draw texture as button.
-         */
-        bool Button(const std::string& tooltip_text, ImVec2 size);
+    /**
+     * Draw texture as button.
+     */
+    bool Button(const std::string& tooltip_text, ImVec2 size);
 
-    private:
-        // VARIABLES --------------------------------------------------------------
+private:
+    // VARIABLES --------------------------------------------------------------
 #ifdef WITH_GL
-        std::shared_ptr<glowl::Texture2D> tex_ptr = nullptr;
+    std::shared_ptr<glowl::Texture2D> tex_ptr = nullptr;
 #endif
-        std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
+    std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
 
-        // Widgets
-        HoverToolTip tooltip;
-    };
+    // Widgets
+    HoverToolTip tooltip;
+};
 
 
 } // namespace gui

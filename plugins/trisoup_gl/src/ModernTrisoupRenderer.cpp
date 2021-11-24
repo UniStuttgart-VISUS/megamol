@@ -225,7 +225,8 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto lc = this->getLightsSlot_.CallAs<core::view::light::CallLight>();
     this->updateLights(lc, cam.getPose().direction);
 
-    megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot_.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
+    megamol::geocalls_gl::CallTriMeshDataGL* ctmd =
+        this->getDataSlot_.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
         return false;
     }
