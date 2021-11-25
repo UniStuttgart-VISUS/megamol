@@ -224,9 +224,10 @@ namespace gui {
         std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
             gl_perf_history;
         void* profiling_parent_pointer;
-
+        float profiling_window_height; // determine dynamically
         bool show_profiling_data;
-        void draw_profiling_data();
+
+        void draw_profiling_data(GraphItemsState_t& state);
 #endif // PROFILING
 
         // FUNCTIONS --------------------------------------------------------------

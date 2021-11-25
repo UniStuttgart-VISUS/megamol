@@ -11,12 +11,11 @@
 #include "CallSlot.h"
 #include "InterfaceSlot.h"
 
-
-#define MODULE_PROFILING_PLOT_HEIGHT (7.0f)
-#define MODULE_PROFILING_CHILD_WIDTH (15.0f)
-#define MODULE_PROFILING_CHILD_HEIGHT (9.0f + 2.0f * MODULE_PROFILING_PLOT_HEIGHT)
-#include "implot.h"
-
+#ifdef PROFILING
+    #include "implot.h"
+    #define MODULE_PROFILING_PLOT_HEIGHT (200.0f)
+    #define MODULE_PROFILING_WINDOW_WIDTH (350.0f)
+#endif // PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -44,14 +43,15 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_set_selected_slot_position(false)
         , gui_hidden(false)
+        , gui_other_item_hovered(false)
         , gui_tooltip()
         , gui_rename_popup()
         , gui_profiling_button()
-        , gui_other_item_hovered(false)
 #ifdef PROFILING
         , cpu_perf_history()
         , gl_perf_history()
         , profiling_parent_pointer(nullptr)
+        , profiling_window_height(1.0f)
         , show_profiling_data(false)
 #endif // PROFILING
 {
@@ -524,7 +524,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     if (profiling_button) {
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {
-                            this->gui_profiling_button.LoadTextureFromFile(GUI_PROFILING_BUTTON);
+                            this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
                         }
                         auto button_size = ImGui::GetFrameHeight();
                         if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
@@ -540,7 +540,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             ImVec2 profiling_child_pos = ImGui::GetCursorScreenPos();
                             profiling_child_pos.x = module_rect_min.x + (1.5f * GUI_SLOT_RADIUS * state.canvas.zooming);
                             ImGui::SetCursorScreenPos(profiling_child_pos);
-                            this->draw_profiling_data();
+                            this->draw_profiling_data(state);
                         }
                     }
 #endif
@@ -634,18 +634,15 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
 
 #ifdef PROFILING
     if (this->show_profiling_data) {
-        module_width = std::max(module_width,
-            (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_WIDTH / state.canvas.zooming) + (3.0f * GUI_SLOT_RADIUS));
+        module_width = std::max(module_width, (MODULE_PROFILING_WINDOW_WIDTH) + (3.0f * GUI_SLOT_RADIUS));
         module_height = std::max(
-            module_height, (4.0f * ImGui::GetFrameHeightWithSpacing()) +
-                               (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_HEIGHT / state.canvas.zooming) +
-                               (1.5f * GUI_SLOT_RADIUS));
+            module_height, (4.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) + (this->profiling_window_height) + (1.5f * GUI_SLOT_RADIUS));
     }
 #endif
 
     // Clamp to minimum size
-    this->gui_size = ImVec2(std::max(module_width, (100.0f * megamol::gui::gui_scaling.Get())),
-        std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
+    this->gui_size = ImVec2(std::max(module_width, (2.0f * megamol::gui::gui_scaling.Get())),
+        std::max(module_height, (1.0f * megamol::gui::gui_scaling.Get())));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : this->CallSlots()) {
@@ -722,12 +719,12 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
 }
 
 
-void megamol::gui::Module::draw_profiling_data() {
+void megamol::gui::Module::draw_profiling_data(GraphItemsState_t& state) {
 
     ImGui::BeginChild("module_profiling_info",
-        ImVec2((ImGui ::GetFrameHeight() * MODULE_PROFILING_CHILD_WIDTH),
-            (ImGui::GetFrameHeight() * MODULE_PROFILING_CHILD_HEIGHT)),
-        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
+        ImVec2((MODULE_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
+            (this->profiling_window_height * state.canvas.zooming)),
+        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -788,7 +785,7 @@ void megamol::gui::Module::draw_profiling_data() {
                 ImGui::EndCombo();
             }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * state.canvas.zooming)),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
@@ -832,7 +829,7 @@ void megamol::gui::Module::draw_profiling_data() {
             }
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * state.canvas.zooming)),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###glminmax", xbuf.data(),
@@ -856,6 +853,12 @@ void megamol::gui::Module::draw_profiling_data() {
         }
     }
     ImGui::EndTabBar();
+
+     auto new_profiling_window_height =  std::max(1.0f, ImGui::GetCursorPosY() / state.canvas.zooming);
+     if (this->profiling_window_height != new_profiling_window_height) {
+         this->profiling_window_height = new_profiling_window_height;
+         this->gui_update = true;
+     }
 
     ImGui::EndChild();
 }

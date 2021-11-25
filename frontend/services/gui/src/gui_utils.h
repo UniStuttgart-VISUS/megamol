@@ -66,15 +66,15 @@
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 // Texture File Names
-#define GUI_DEFAULT_FONT_ROBOTOSANS ("Roboto-Regular.ttf")
-#define GUI_DEFAULT_FONT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
-#define GUI_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
-#define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
-#define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
-#define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
-#define GUI_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
-#define GUI_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
-#define GUI_PROFILING_BUTTON ("profiling_button.png")
+#define GUI_FILENAME_FONT_DEFAULT_ROBOTOSANS ("Roboto-Regular.ttf")
+#define GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
+#define GUI_FILENAME_TEXTURE_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
+#define GUI_FILENAME_TEXTURE_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
+#define GUI_FILENAME_TEXTURE_PROFILING_BUTTON ("profiling_button.png")
 
 
 namespace megamol {

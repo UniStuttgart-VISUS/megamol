@@ -101,7 +101,7 @@ namespace frontend_resources {
             virtual bool start(frame_type frame);
 
             virtual void end();
-            ;
+
             virtual void collect() = 0;
 
             timer_config _conf;

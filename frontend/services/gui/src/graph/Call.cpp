@@ -11,13 +11,10 @@
 #include "Module.h"
 
 #ifdef PROFILING
-
-#define CALL_PROFILING_PLOT_HEIGHT (7.0f)
-#define CALL_PROFILING_CHILD_WIDTH (15.0f)
-#define CALL_PROFILING_CHILD_HEIGHT (9.0f + 2.0f * CALL_PROFILING_PLOT_HEIGHT)
-#include "implot.h"
-
-#endif
+    #include "implot.h"
+    #define CALL_PROFILING_PLOT_HEIGHT (200.0f)
+    #define CALL_PROFILING_WINDOW_WIDTH (350.0f)
+#endif // PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -41,6 +38,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , cpu_perf_history()
         , gl_perf_history()
         , profiling_parent_pointer(nullptr)
+        , profiling_window_height(1.0f)
         , show_profiling_data(false)
 #endif // PROFILING
 {
@@ -235,22 +233,22 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     if (state.interact.call_show_slots_label) {
                         call_name_width = std::max(call_name_width, slots_label_width);
                     }
-                    ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
-                        ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
+                    ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x * state.canvas.zooming),
+                        ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y * state.canvas.zooming));
                     if (state.interact.call_show_label && state.interact.call_show_slots_label) {
-                        rect_size.y += (ImGui::GetFontSize() + style.ItemSpacing.y);
+                        rect_size.y += (ImGui::GetFontSize() + (style.ItemSpacing.y * state.canvas.zooming));
                     }
 #ifdef PROFILING
-                    rect_size.x += 2.0f * ImGui::GetFrameHeightWithSpacing();
-                    rect_size.y = std::max(rect_size.y, ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y);
+                    rect_size.x += 2.0f * ImGui::GetTextLineHeightWithSpacing();
+                    rect_size.y = std::max(rect_size.y, ImGui::GetTextLineHeightWithSpacing());
 #endif
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
 #ifdef PROFILING
                     if (this->show_profiling_data) {
                         rect_size = ImVec2(
-                            ((ImGui::GetFrameHeight() * CALL_PROFILING_CHILD_WIDTH) + style.ItemSpacing.x * 2.0f),
-                            (ImGui::GetFrameHeight() * (CALL_PROFILING_CHILD_HEIGHT) + style.ItemSpacing.y * 2.0f +
+                            ((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming) + (style.ItemSpacing.x * 2.0f * state.canvas.zooming)),
+                            ((this->profiling_window_height * state.canvas.zooming) + (style.ItemSpacing.y * 2.0f * state.canvas.zooming) +
                                 rect_size.y));
                     }
 #endif
@@ -347,26 +345,25 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 #ifdef PROFILING
                         // Lazy loading of performance button texture
+                        const auto profiling_button_size = ImGui::GetTextLineHeight();
                         if (!this->gui_profiling_button.IsLoaded()) {
-                            this->gui_profiling_button.LoadTextureFromFile(GUI_PROFILING_BUTTON);
+                            this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
                         }
                         ImVec2 profiling_button_pos = ImVec2(
-                            call_rect_min.x + style.ItemSpacing.x, call_center.y - (ImGui::GetFrameHeight() / 2.0f));
+                            call_rect_min.x + (style.ItemInnerSpacing.x * state.canvas.zooming), call_center.y - (profiling_button_size / 2.0f));
                         ImGui::SetCursorScreenPos(profiling_button_pos);
-
-                        auto button_size = ImGui::GetFrameHeight() - style.ItemSpacing.y;
                         ImGui::PushFont(state.canvas.gui_font_ptr);
                         if (this->gui_profiling_button.Button(
-                                "Performance Monitor", ImVec2(button_size, button_size))) {
+                                "Performance Monitor", ImVec2(profiling_button_size, profiling_button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
                         }
                         this->gui_profiling_btn_hovered = ImGui::IsItemHovered();
                         ImGui::PopFont();
 
                         if (this->show_profiling_data) {
-                            ImGui::SetCursorScreenPos(ImVec2(call_rect_min.x + style.ItemSpacing.x,
+                            ImGui::SetCursorScreenPos(ImVec2(call_rect_min.x + (style.ItemSpacing.x * state.canvas.zooming),
                                 call_center.y + (call_center.y - call_rect_min.y)));
-                            this->draw_profiling_data();
+                            this->draw_profiling_data(state);
                         }
 #endif
                         // Draw Text
@@ -433,12 +430,12 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
 }
 
 
-void megamol::gui::Call::draw_profiling_data() {
+void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
 
     ImGui::BeginChild("call_profiling_info",
-        ImVec2((ImGui ::GetFrameHeight() * CALL_PROFILING_CHILD_WIDTH),
-            (ImGui::GetFrameHeight() * CALL_PROFILING_CHILD_HEIGHT)),
-        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
+        ImVec2((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
+            (this->profiling_window_height * state.canvas.zooming)),
+        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -498,7 +495,7 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::EndCombo();
             }
             if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit, y_flags)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###cpuminmax", xbuf.data(),
@@ -542,7 +539,7 @@ void megamol::gui::Call::draw_profiling_data() {
             }
 
             if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
-                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)),
                     ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 if (display_idx == 0) {
                     ImPlot::PlotShaded("###glminmax", xbuf.data(),
@@ -566,6 +563,8 @@ void megamol::gui::Call::draw_profiling_data() {
         }
     }
     ImGui::EndTabBar();
+
+    this->profiling_window_height =  std::max(1.0f, ImGui::GetCursorPosY() / state.canvas.zooming);
 
     ImGui::EndChild();
 }

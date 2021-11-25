@@ -2291,8 +2291,9 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
                 }
             }
             // Limit zooming
+            const float zooming_minimum = 0.01f;
             this->gui_graph_state.canvas.zooming =
-                (this->gui_graph_state.canvas.zooming <= 0.0f) ? 0.000001f : (this->gui_graph_state.canvas.zooming);
+                (this->gui_graph_state.canvas.zooming <= zooming_minimum) ? zooming_minimum : (this->gui_graph_state.canvas.zooming);
             // Compensate zooming shift of origin
             ImVec2 scrolling_diff = (this->gui_graph_state.canvas.scrolling * last_zooming) -
                                     (this->gui_graph_state.canvas.scrolling * this->gui_graph_state.canvas.zooming);
