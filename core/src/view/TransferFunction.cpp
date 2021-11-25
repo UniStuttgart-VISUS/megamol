@@ -16,16 +16,7 @@ using namespace megamol::core::param;
 
 
 view::TransferFunction::TransferFunction(void)
-    : Module()
-    , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
-    , texSize(1)
-    , tex()
-    , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
-    , interpolMode(TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f})
-    , version(0)
-    , last_frame_id(0) {
+    : Module(), AbstractTransferFunction() {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -34,9 +25,6 @@ view::TransferFunction::TransferFunction(void)
     this->tfParam << new TransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfParam);
 }
-
-
-TransferFunction::~TransferFunction(void) { this->Release(); }
 
 
 bool TransferFunction::requestTF(core::Call& call) {

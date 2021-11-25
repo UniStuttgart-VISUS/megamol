@@ -7,16 +7,8 @@
 
 #pragma once
 
-#include "mmcore/CoreInstance.h"
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-
-#include "vislib/sys/sysfunctions.h"
-#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/AbstractTransferFunction.h"
 
 
 namespace megamol {
@@ -27,14 +19,14 @@ namespace view {
     /**
      * Module defining a transfer function.
      */
-    class MEGAMOLCORE_API TransferFunction : public Module {
+    class MEGAMOLCORE_API TransferFunction : public Module, public AbstractTransferFunction {
     public:
         
         /**
          * Answer the name of this module.
          *
          * @return The name of this module.
-         */
+         */ 
         static const char *ClassName(void) {
             return "TransferFunction";
         }
@@ -61,7 +53,9 @@ namespace view {
         TransferFunction(void);
 
         /** Dtor. */
-        virtual ~TransferFunction(void);
+        virtual ~TransferFunction(void) {
+            this->Release();
+        }
 
     private:
 
@@ -88,34 +82,6 @@ namespace view {
          */
         bool requestTF(core::Call& call);
 
-        // VARIABLES ----------------------------------------------------------
-
-        /** The callee slot called on request of a transfer function */
-        core::CalleeSlot getTFSlot;
-
-        /** Parameter containing the transfer function data serialized into JSON string */
-        core::param::ParamSlot tfParam;
-
-        /** The texture size in texel */
-        unsigned int texSize;
-
-        /** The texture data */
-        std::vector<float> tex;
-
-        /** The texture format */
-        core::view::CallGetTransferFunction::TextureFormat texFormat;
-
-        /** The interpolation mode */
-        core::param::TransferFunctionParam::InterpolationMode interpolMode;
-
-        /** The value range */
-        std::array<float, 2> range;
-
-        /** Version of texture */
-        uint32_t version;
-
-        /** Global frame ID */
-        uint32_t last_frame_id;
     };
 
 

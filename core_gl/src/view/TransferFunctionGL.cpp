@@ -1,7 +1,7 @@
 /*
- * TransferFunction.cpp
+ * TransferFunctionGL.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -17,17 +17,8 @@ using namespace megamol::core::param;
 
 
 view::TransferFunctionGL::TransferFunctionGL(void)
-    : ModuleGL()
-    , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
-    , texID(0)
-    , texSize(1)
-    , tex()
-    , texFormat(CallGetTransferFunctionGL::TEXTURE_FORMAT_RGBA)
-    , interpolMode(TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f})
-    , version(0)
-    , last_frame_id(0) {
+    : ModuleGL(), AbstractTransferFunction(), texID(0)
+{
 
     CallGetTransferFunctionGLDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunctionGL::requestTF);
@@ -36,9 +27,6 @@ view::TransferFunctionGL::TransferFunctionGL(void)
     this->tfParam << new TransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfParam);
 }
-
-
-TransferFunctionGL::~TransferFunctionGL(void) { this->Release(); }
 
 
 bool TransferFunctionGL::create(void) {
@@ -56,7 +44,7 @@ void TransferFunctionGL::release(void) {
 
 bool TransferFunctionGL::requestTF(core::Call& call) {
 
-    CallGetTransferFunctionGL* cgtf = dynamic_cast<CallGetTransferFunctionGL*>(&call);
+    auto cgtf = dynamic_cast<CallGetTransferFunctionGL*>(&call);
     if (cgtf == nullptr) return false;
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
@@ -109,8 +97,9 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
+        const auto tex_format = this->texFormat == core::view::AbstractCallGetTransferFunction::TEXTURE_FORMAT_RGBA ? GL_RGBA : GL_RGB;
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, this->texFormat, GL_FLOAT, this->tex.data());
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, tex_format, GL_FLOAT, this->tex.data());
 
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

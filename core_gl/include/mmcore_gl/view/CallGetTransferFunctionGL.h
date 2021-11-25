@@ -16,8 +16,7 @@
 
 #include "glowl/glowl.h"
 
-#include "mmcore/Call.h"
-#include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/view/AbstractCallGetTransferFunction.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -37,10 +36,8 @@ namespace view {
  * - Use `vec color = tflookup(tfTexture, tfRange, value);`
  * - Or, conveniently `vec color = tflookup(value);`
  */
-class MEGAMOLCORE_API CallGetTransferFunctionGL : public core::Call {
+class MEGAMOLCORE_API CallGetTransferFunctionGL : public core::view::AbstractCallGetTransferFunction {
 public:
-    /** possible texture formats */
-    enum TextureFormat { TEXTURE_FORMAT_RGB = GL_RGB, TEXTURE_FORMAT_RGBA = GL_RGBA };
 
     /**
      * Answer the name of the objects of this description.
@@ -104,50 +101,6 @@ public:
 
     // CHANGES ----------------------------------------------------------------
 
-    /**
-     * Answer whether the connected transferfunction is dirty
-     *
-     * @return dirty flag
-     */
-    inline bool IsDirty() {
-        return this->usedTFVersion != this->availableTFVersion;
-    }
-
-    /**
-     * Sets the transferfunction dirtiness
-     */
-    inline void ResetDirty() {
-        this->usedTFVersion = availableTFVersion;
-    }
-
-    // SET --------------------------------------------------------------------
-    /// !!! NOTE: In order to propagte changes from the call to the actual tf parameter,
-   ///            the callback 'GetTexture' has to be called afterwards.
-
-    /**
-     * Sets the value range (domain) of this transfer function. Values
-     * outside of min/max are to be clamped.
-     */
-    inline void SetRange(std::array<float, 2> range) {
-        this->range_updated = true;
-        this->range = range;
-    }
-
-    // GET --------------------------------------------------------------------
-
-    /**
-     * Copies a color from the transfer function
-     *
-     * @param index The n-th color to copy.
-     * @param color A pointer to copy the color to.
-     * @param colorSize The size of the color in bytes.
-     */
-    inline void CopyColor(size_t index, float* color, size_t colorSize) {
-        assert(index >= 0 && index < this->texSize && "Invalid index");
-        assert((colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float)) && "Not a RGB(A) color");
-        memcpy(color, &this->texData[index * 4], colorSize);
-    }
-
     /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
      * Answer the OpenGL texture object id of the transfer function 1D
      * texture.
@@ -159,45 +112,16 @@ public:
     }
 
     /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the OpenGL texture data. This is always an RGBA float color
-     * array, regardless the TextureFormat returned. If TextureFormat is
-     * RGB the A values stored, are simply meaningless. Thus, this pointer
-     * always points to TextureSize*4 floats.
-     *
-     * @return The OpenGL texture data
-     */
-    inline float const* GetTextureData(void) const {
-        return this->texData;
-    }
-
-    /**  ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the size of the 1D texture in texel.
-     *
-     * @return The size of the texture
-     */
-    inline unsigned int TextureSize(void) const {
-        return this->texSize;
-    }
-
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
      * Answer the OpenGL format of the texture.
      *
      * @return The OpenGL format of the texture
      */
-    inline TextureFormat OpenGLTextureFormat(void) const {
-        return this->texFormat;
+    inline int OpenGLTextureFormat(void) const {
+        if (this->texFormat == TEXTURE_FORMAT_RGBA) {
+            return GL_RGBA;
+        }
+        return GL_RGB;
     }
-
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the value range (domain) of this transfer function. Values
-     * outside of min/max are to be clamped.
-     *
-     * @return The (min, max) pair.
-     */
-    inline std::array<float, 2> Range(void) const {
-        return this->range;
-    }
-
 
     ///// CALLEE Interface Functions //////////////////////////////////////////
 
@@ -226,36 +150,9 @@ public:
         this->availableTFVersion = version;
     }
 
-    /**
-     * Check for updated range value and consume triggered update
-     */
-    bool ConsumeRangeUpdate(void) {
-        bool consume = this->range_updated;
-        this->range_updated = false;
-        return consume;
-    }
-
 private:
     /** The OpenGL texture object id */
     unsigned int texID;
-
-    /** The size of the texture in texel */
-    unsigned int texSize;
-
-    /** The texture data */
-    float const* texData;
-
-    /** The texture format */
-    TextureFormat texFormat;
-
-    /** The range the texture lies within */
-    std::array<float, 2> range;
-
-    /** Flag indicating changed range value. */
-    bool range_updated;
-
-    uint32_t availableTFVersion = 1;
-    uint32_t usedTFVersion = 0;
 };
 
 

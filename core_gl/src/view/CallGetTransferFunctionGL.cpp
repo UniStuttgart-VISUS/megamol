@@ -14,11 +14,10 @@ using namespace megamol::core_gl;
 /*
  * view::CallGetTransferFunctionGL::CallGetTransferFunctionGL
  */
-view::CallGetTransferFunctionGL::CallGetTransferFunctionGL(void) : Call(),
-    texID(0), texSize(1), texData(NULL), range({0.0f, 1.0f}), range_updated(false) {
+view::CallGetTransferFunctionGL::CallGetTransferFunctionGL(void) : AbstractCallGetTransferFunction(),
+    texID(0) {
     // intentionally empty
 }
-
 
 /*
  * view::CallGetTransferFunctionGL::~CallGetTransferFunctionGL
