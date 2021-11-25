@@ -2252,7 +2252,8 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    if ((ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemActive()) ||
+    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in profiling diagrams
+    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) ||
         this->gui_reset_zooming || this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)

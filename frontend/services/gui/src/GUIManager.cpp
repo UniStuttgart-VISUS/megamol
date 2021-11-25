@@ -403,20 +403,20 @@ bool GUIManager::PostDraw() {
         } break;
         }
 
-        ////////// DRAW GUI ///////////////////////////////////////////////////////
+        ////////// DRAW GUI ///////////////////////////////////////////////////
 
         try {
 
-            // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
+            // Draw global menu -----------------------------------------------
             this->draw_menu();
 
-            // Draw Windows ------------------------------------------------------------
+            // Draw Windows and their pop-ups ---------------------------------
             this->win_collection.Draw(this->gui_state.menu_visible);
 
-            // Draw Pop-ups ------------------------------------------------------------
+            // Draw global pop-ups --------------------------------------------
             this->draw_popups();
 
-            // Draw global parameter widgets -------------------------------------------
+            // Draw global parameter widgets ----------------------------------
             if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
                 /// ! Only enabled in second frame if interaction objects are added during first frame !
                 this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
@@ -1389,9 +1389,6 @@ void GUIManager::draw_menu() {
 
 
 void megamol::gui::GUIManager::draw_popups() {
-
-    // Draw pop-ups defined in windows
-    this->win_collection.PopUps();
 
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
