@@ -137,6 +137,7 @@ megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resour
 
     // keep allocated vector memory around
     // note that this initially holds a nullptr texture - bad!
+
     static frontend_resources::byte_texture image_bytes({});
 
     // fill bytes with image data

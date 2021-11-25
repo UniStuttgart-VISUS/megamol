@@ -57,11 +57,10 @@ ImageWrapper View3D::Render(double time, double instanceTime) {
 ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib_gl::graphics::gl::FramebufferObject seems to use RGBA8
-    void* data_pointer = _fbo->colorBuffer.data();
     size_t fbo_width = _fbo->width;
     size_t fbo_height = _fbo->height;
 
-    return frontend_resources::wrap_image<WrappedImageType::ByteArray>({fbo_width, fbo_height}, data_pointer, channels);
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, std::make_shared<std::vector<uint32_t>>(_fbo->colorBuffer), channels);
 }
 
 void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {

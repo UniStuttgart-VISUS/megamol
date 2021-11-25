@@ -44,6 +44,7 @@ struct ImageWrapper {
     };
 
     ImageWrapper(ImageSize size, DataChannels channels, WrappedImageType type, const void* data);
+    ImageWrapper(ImageSize size, DataChannels channels, WrappedImageType type, std::shared_ptr<std::vector<uint32_t>> data);
     ImageWrapper(std::string const& name);
     ImageWrapper() = default;
 
@@ -52,6 +53,7 @@ struct ImageWrapper {
     DataChannels channels = DataChannels::RGBA8;
 
     void* referenced_image_handle = nullptr;
+    std::shared_ptr<std::vector<uint32_t>> referenced_image_handle_vector;
 
     size_t channels_count() const;
 
@@ -75,8 +77,8 @@ ImageWrapper wrap_image(
 ImageWrapper wrap_image(
     ImageWrapper::ImageSize size, std::vector<unsigned char> const& byte_texture, ImageWrapper::DataChannels channels);
 
-ImageWrapper wrap_image(
-    ImageWrapper::ImageSize size, std::vector<uint32_t> const& byte_texture, ImageWrapper::DataChannels channels);
+ImageWrapper wrap_image(ImageWrapper::ImageSize size, std::shared_ptr<std::vector<uint32_t>> byte_texture,
+    ImageWrapper::DataChannels channels);
 
 size_t channels_count(ImageWrapper::DataChannels channels);
 
