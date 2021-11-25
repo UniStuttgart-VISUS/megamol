@@ -19,8 +19,10 @@
 
 #include "glad/gl.h"
 #ifdef _WIN32
-#include <DbgHelp.h>
+// clang-format off
 #include <Windows.h>
+#include <DbgHelp.h>
+// clang-format on
 #pragma comment(lib, "dbghelp.lib")
 #undef min
 #undef max
