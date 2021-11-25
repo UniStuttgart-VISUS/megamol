@@ -638,7 +638,7 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
 #ifdef PROFILING
     if (this->show_profiling_data) {
         module_width = std::max(module_width, (MODULE_PROFILING_WINDOW_WIDTH) + (3.0f * GUI_SLOT_RADIUS));
-        module_height = std::max(module_height, (4.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) +
+        module_height = std::max(module_height, (3.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) +
                                                     (this->profiling_window_height) + (1.5f * GUI_SLOT_RADIUS));
     }
 #endif

@@ -653,65 +653,11 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    //// GUI
-    // for (auto& hotkey : this->gui_hotkeys) {
-    //    if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //        hotkey.second.is_pressed = true;
-    //        hotkeyPressed = true;
-    //    }
-    //}
-    //// Hotkeys of window(s)
-    // const auto windows_func = [&](AbstractWindow& wc) {
-    //    // Check Window Hotkey
-    //    bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
-    //    if (windowHotkeyPressed) {
-    //        wc.Config().show = !wc.Config().show;
-    //    }
-    //    hotkeyPressed |= windowHotkeyPressed;
-    //
-    //    // Check for additional window hotkeys
-    //    for (auto& hotkey : wc.GetHotkeys()) {
-    //        if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //            hotkey.second.is_pressed = true;
-    //            hotkeyPressed = true;
-    //        }
-    //    }
-    //};
-    // this->win_collection.EnumWindows(windows_func);
-    //
-    // if (hotkeyPressed)
-    //    return true;
-
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
     if (io.WantTextInput) { /// io.WantCaptureKeyboard
         return true;
     }
-
-    // Check for parameter hotkeys
-    // hotkeyPressed = false;
-    // if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-    //    for (auto& module_ptr : graph_ptr->Modules()) {
-    //        // Break loop after first occurrence of parameter hotkey
-    //        if (hotkeyPressed) {
-    //            break;
-    //        }
-    //        for (auto& p : module_ptr->Parameters()) {
-    //            if (p.Type() == ParamType_t::BUTTON) {
-    //                auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
-    //                if (this->is_hotkey_pressed(keyCode)) {
-    //                    // Sync directly button action to parameter in core
-    //                    /// Does not require syncing of graphs
-    //                    if (p.CoreParamPtr() != nullptr) {
-    //                        p.CoreParamPtr()->setDirty();
-    //                    }
-    //                    /// p.ForceSetValueDirty();
-    //                    hotkeyPressed = true;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
 
     return hotkeyPressed;
 }

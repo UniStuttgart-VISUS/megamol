@@ -348,16 +348,16 @@ bool megamol::gui::LogConsole::Draw() {
         }
     }
 
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted("Input");
+    this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/Arrwo down] Browse command history.");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
+    auto popup_pos = ImGui::GetCursorScreenPos();
     if (this->input_reclaim_focus) {
         ImGui::SetKeyboardFocusHere();
         this->input_reclaim_focus = false;
     }
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextUnformatted("Input");
-    this->tooltip.Marker("Confirm autocomplete selection with 'Space'.");
-    ImGui::SameLine();
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
-    auto popup_pos = ImGui::GetCursorScreenPos();
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText(
             "###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback, (void*) this->input_shared_data.get())) {
@@ -378,14 +378,16 @@ bool megamol::gui::LogConsole::Draw() {
 
     if (this->input_shared_data->open_autocomplete_popup) {
         ImGui::OpenPopup("autocomplete_selector");
-        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + style.ItemInnerSpacing);
-        ImGui::SetItemDefaultFocus();
+        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + ImVec2(2.0f, 2.0f)*style.ItemInnerSpacing);
+        ImGui::SetNextWindowFocus();
         this->input_shared_data->open_autocomplete_popup = false;
     }
     if (ImGui::BeginPopup("autocomplete_selector")) {
         bool selected_candidate = false;
         for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
-            if (ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].data())) {
+            selected_candidate = ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].data());
+            // Keyboard selection can only be confirmed with 'space'. Also allow confirmation using 'enter'
+            if (selected_candidate || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {
                 this->input_buffer = this->input_shared_data->autocomplete_candidates[i];
                 this->input_buffer.append("(");
                 this->input_shared_data->autocomplete_candidates.clear();
@@ -393,13 +395,13 @@ bool megamol::gui::LogConsole::Draw() {
                 selected_candidate = true;
             }
         }
-
         if (selected_candidate || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             this->input_reclaim_focus = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
     }
+    ImGui::SetItemDefaultFocus();
 
     return true;
 }
