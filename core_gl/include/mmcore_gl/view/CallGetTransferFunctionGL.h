@@ -47,7 +47,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallGetTransferFunction"; }
+    static const char* ClassName(void) { return "CallGetTransferFunctionGL"; }
 
     /**
      * Gets a human readable description of the module.

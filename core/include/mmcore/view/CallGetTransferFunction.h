@@ -74,7 +74,6 @@ public:
     /** Ctor. */
     CallGetTransferFunction(void)
             : Call()
-            , texID(0)
             , texSize(1)
             , texData(NULL)
             , texFormat(TEXTURE_FORMAT_RGBA)
@@ -128,29 +127,20 @@ public:
         memcpy(color, &this->texData[index * 4], colorSize);
     }
 
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the OpenGL texture object id of the transfer function 1D
-     * texture.
-     *
-     * @return The OpenGL texture object id
-     */
-    inline unsigned int OpenGLTexture(void) const {
-        return this->texID;
-    }
 
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the OpenGL texture data. This is always an RGBA float color
+    /**
+     * Answer the texture data. This is always an RGBA float color
      * array, regardless the TextureFormat returned. If TextureFormat is
      * RGB the A values stored, are simply meaningless. Thus, this pointer
      * always points to TextureSize*4 floats.
      *
-     * @return The OpenGL texture data
+     * @return The texture data
      */
     inline float const* GetTextureData(void) const {
         return this->texData;
     }
 
-    /**  ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
+    /**
      * Answer the size of the 1D texture in texel.
      *
      * @return The size of the texture
@@ -159,16 +149,16 @@ public:
         return this->texSize;
     }
 
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
-     * Answer the OpenGL format of the texture.
+    /**
+     * Answer the format of the texture.
      *
-     * @return The OpenGL format of the texture
+     * @return The format of the texture
      */
     inline TextureFormat TFTextureFormat(void) const {
         return this->texFormat;
     }
 
-    /** ----- DEPRECATED ----- (use BindConvenience and tfconvenience snippet)
+    /**
      * Answer the value range (domain) of this transfer function. Values
      * outside of min/max are to be clamped.
      *
@@ -181,8 +171,6 @@ public:
 
     ///// CALLEE Interface Functions //////////////////////////////////////////
 
-    // SET --------------------------------------------------------------------
-
     /**
      * Sets the 1D texture information
      *
@@ -193,9 +181,8 @@ public:
      *            is responsible for keeping the memory alive.
      * @param format The texture format
      */
-    inline void SetTexture(unsigned int id, unsigned int size, float const* tex, TextureFormat format,
+    inline void SetTexture(unsigned int size, float const* tex, TextureFormat format,
         std::array<float, 2> range, uint32_t version) {
-        this->texID = id;
         this->texSize = size;
         this->texFormat = format;
         this->texData = tex;
@@ -216,9 +203,6 @@ public:
     }
 
 private:
-    /** The OpenGL texture object id */
-    unsigned int texID;
-
     /** The size of the texture in texel */
     unsigned int texSize;
 

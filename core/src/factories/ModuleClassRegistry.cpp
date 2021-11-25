@@ -31,6 +31,7 @@
 #include "mmcore/view/View3D.h"
 #include "mmcore/ResourceTestModule.h"
 #include "mmcore/param/GenericParamModule.h"
+#include "mmcore/view/TransferFunction.h"
 
 using namespace megamol::core;
 
@@ -65,4 +66,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<ResourceTestModule>();
     instance.RegisterAutoDescription<param::FloatParamModule>();
     instance.RegisterAutoDescription<param::IntParamModule>();
+    instance.RegisterAutoDescription<view::TransferFunction>();
 }

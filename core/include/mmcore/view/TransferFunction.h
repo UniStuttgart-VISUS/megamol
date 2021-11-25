@@ -5,34 +5,29 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore_gl/ModuleGL.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
-namespace core_gl {
+namespace core {
 namespace view {
 
 
     /**
      * Module defining a transfer function.
      */
-    class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL {
+    class MEGAMOLCORE_API TransferFunction : public Module {
     public:
         
         /**
@@ -41,7 +36,7 @@ namespace view {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "TransferFunctionGL";
+            return "TransferFunction";
         }
 
         /**
@@ -63,10 +58,10 @@ namespace view {
         }
 
         /** Ctor. */
-        TransferFunctionGL(void);
+        TransferFunction(void);
 
         /** Dtor. */
-        virtual ~TransferFunctionGL(void);
+        virtual ~TransferFunction(void);
 
     private:
 
@@ -77,12 +72,12 @@ namespace view {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool create(void);
+        virtual bool create(void) {return true;}
 
         /**
          * Implementation of 'Release'.
          */
-        virtual void release(void);
+        virtual void release(void) {}
 
         /**
          * Callback called when the transfer function is requested.
@@ -95,18 +90,11 @@ namespace view {
 
         // VARIABLES ----------------------------------------------------------
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-
         /** The callee slot called on request of a transfer function */
         core::CalleeSlot getTFSlot;
 
         /** Parameter containing the transfer function data serialized into JSON string */
         core::param::ParamSlot tfParam;
-
-        /** The OpenGL texture object id */
-        unsigned int texID;
 
         /** The texture size in texel */
         unsigned int texSize;
@@ -115,7 +103,7 @@ namespace view {
         std::vector<float> tex;
 
         /** The texture format */
-        CallGetTransferFunctionGL::TextureFormat texFormat;
+        core::view::CallGetTransferFunction::TextureFormat texFormat;
 
         /** The interpolation mode */
         core::param::TransferFunctionParam::InterpolationMode interpolMode;
@@ -128,15 +116,9 @@ namespace view {
 
         /** Global frame ID */
         uint32_t last_frame_id;
-
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
     };
 
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED */
