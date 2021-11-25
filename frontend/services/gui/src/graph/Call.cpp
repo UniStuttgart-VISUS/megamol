@@ -457,9 +457,15 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
                     ImVec2(0.0f, 0.0f))) {
                 ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                ProfilingUtils::PrintTableRow("Min CPU Time",
+                    this->cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MIN,
+                        core::MultiPerformanceHistory::metric_type::MIN));
                 ProfilingUtils::PrintTableRow("Average CPU Time",
                     this->cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
                         core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ProfilingUtils::PrintTableRow("Max CPU Time",
+                    this->cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
+                        core::MultiPerformanceHistory::metric_type::MAX));
                 ProfilingUtils::PrintTableRow("Max CPU Samples / Frame",
                     static_cast<int>(
                         this->cpu_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
@@ -476,9 +482,15 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
                     ImVec2(0.0f, 0.0f))) {
                 ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                ProfilingUtils::PrintTableRow("Min GL Time",
+                    this->gl_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MIN,
+                        core::MultiPerformanceHistory::metric_type::MIN));
                 ProfilingUtils::PrintTableRow("Average GL Time",
                     this->gl_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
                         core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ProfilingUtils::PrintTableRow("Max GL Time",
+                    this->gl_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
+                        core::MultiPerformanceHistory::metric_type::MAX));
                 ProfilingUtils::PrintTableRow("Max GL Samples / Frame",
                     static_cast<int>(
                         this->gl_perf_history[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
