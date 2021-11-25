@@ -51,6 +51,14 @@ namespace gui {
     class LogConsole : public AbstractWindow {
     public:
         using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+
+        struct InputSharedData {
+            bool autocomplete_appended;
+            std::vector<std::string> commands;
+            std::vector<std::string> autocomplete_candidates;
+            bool open_autocomplete_popup;
+        };
+
         explicit LogConsole(const std::string& window_name);
         ~LogConsole();
 
@@ -61,7 +69,7 @@ namespace gui {
         void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         void SetLuaFunc(lua_func_type* func) {
-            lua_func = func;
+            this->input_lua_func = func;
         }
 
     private:
@@ -82,15 +90,16 @@ namespace gui {
         // Widgets
         HoverToolTip tooltip;
 
-        // FUNCTIONS --------------------------------------------------------------
-
-        bool connect_log();
-
-        void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
-
-        std::array<char, 512> input_buffer;
+        // Input
+        std::shared_ptr<InputSharedData> input_shared_data;
+        bool input_reclaim_focus;
+        std::string input_buffer;
         // where would I get this from? and the autocomplete stuff?
-        lua_func_type* lua_func;
+        lua_func_type* input_lua_func;
+
+        // FUNCTIONS --------------------------------------------------------------
+        bool connect_log();
+        void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
     };
 
 

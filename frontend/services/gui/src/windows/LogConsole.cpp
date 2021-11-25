@@ -6,101 +6,124 @@
  */
 
 #include <regex>
-
 #include "LogConsole.h"
 #include "mmcore/utility/log/OfflineTarget.h"
 #include "widgets/ButtonWidgets.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol::gui;
 
-std::vector<std::string> Commands; //= {"mmHelp", "mmQuit"};
-std::vector<std::string> autocomplete_candidates;
 
-int TextEditCallback(ImGuiInputTextCallbackData* data) {
-    // AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
-    switch (data->EventFlag) {
-    case ImGuiInputTextFlags_CallbackCompletion: {
-        // Example of TEXT COMPLETION
+namespace megamol {
+namespace gui {
 
-        // Locate beginning of current word
-        const char* word_end = data->Buf + data->CursorPos;
-        const char* word_start = word_end;
-        while (word_start > data->Buf) {
-            const char c = word_start[-1];
-            if (c == ' ' || c == '\t' || c == ',' || c == ';')
-                break;
-            word_start--;
-        }
+    int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
+        
+       /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[LogConsole] DEBUG: cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
+       auto user_data = static_cast<megamol::gui::LogConsole::InputSharedData*>(data->UserData);
+       if (user_data == nullptr) {
+           megamol::core::utility::log::Log::DefaultLog.WriteError(
+               "[LogConsole] Unable to get pointer to user data.");
+       }
+       
+       switch (data->EventFlag) {
+       case ImGuiInputTextFlags_CallbackAlways: {
+           if (user_data->autocomplete_appended) {
+               data->CursorPos = data->BufTextLen;
+               user_data->autocomplete_appended = false;
+           }
+           break;
+       }
+       case ImGuiInputTextFlags_CallbackCompletion: {
+           // Example of TEXT COMPLETION
 
-        // Build a list of candidates
-        autocomplete_candidates.clear();
-        for (int i = 0; i < Commands.size(); i++)
-            if (strncmp(Commands[i].data(), word_start, (int) (word_end - word_start)) == 0)
-                autocomplete_candidates.push_back(Commands[i]);
+           // Locate beginning of current word
+           const char* word_end = data->Buf + data->CursorPos;
+           const char* word_start = word_end;
+           while (word_start > data->Buf) {
+               const char c = word_start[-1];
+               if (c == ' ' || c == '\t' || c == ',' || c == ';')
+                   break;
+               word_start--;
+           }
 
-        if (autocomplete_candidates.size() == 0) {
-            // No match
-            // AddLog("No match for \"%.*s\"!\n", (int) (word_end - word_start), word_start);
-        } else if (autocomplete_candidates.size() == 1) {
-            // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
-            data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
-            data->InsertChars(data->CursorPos, autocomplete_candidates[0].data());
-            data->InsertChars(data->CursorPos, "(");
-        } else {
-            // Multiple matches. Complete as much as we can..
-            // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-            int match_len = (int) (word_end - word_start);
-            for (;;) {
-                int c = 0;
-                bool all_candidates_matches = true;
-                for (int i = 0; i < autocomplete_candidates.size() && all_candidates_matches; i++)
-                    if (i == 0)
-                        c = toupper(autocomplete_candidates[i][match_len]);
-                    else if (c == 0 || c != toupper(autocomplete_candidates[i][match_len]))
-                        all_candidates_matches = false;
-                if (!all_candidates_matches)
-                    break;
-                match_len++;
-            }
+           // Build a list of candidates
+           user_data->autocomplete_candidates.clear();
+           for (int i = 0; i < user_data->commands.size(); i++)
+               if (strncmp(user_data->commands[i].data(), word_start, (int) (word_end - word_start)) == 0)
+                   user_data->autocomplete_candidates.push_back(user_data->commands[i]);
 
-            if (match_len > 0) {
-                data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
-                data->InsertChars(
-                    data->CursorPos, autocomplete_candidates[0].data(), autocomplete_candidates[0].data() + match_len);
-            }
+           if (user_data->autocomplete_candidates.size() == 0) {
+               // No match
+               // AddLog("No match for \"%.*s\"!\n", (int) (word_end - word_start), word_start);
+           } else if (user_data->autocomplete_candidates.size() == 1) {
+               // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
+               data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
+               data->InsertChars(data->CursorPos, user_data->autocomplete_candidates[0].data());
+               data->InsertChars(data->CursorPos, "(");
+           } else {
+               // Multiple matches. Complete as much as we can..
+               // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
+               int match_len = (int) (word_end - word_start);
+               for (;;) {
+                   int c = 0;
+                   bool all_candidates_matches = true;
+                   for (int i = 0; i < user_data->autocomplete_candidates.size() && all_candidates_matches; i++)
+                       if (i == 0)
+                           c = toupper(user_data->autocomplete_candidates[i][match_len]);
+                       else if (c == 0 || c != toupper(user_data->autocomplete_candidates[i][match_len]))
+                           all_candidates_matches = false;
+                   if (!all_candidates_matches)
+                       break;
+                   match_len++;
+               }
 
-            // List matches
-            // AddLog("Possible matches:\n");
-            // for (int i = 0; i < candidates.Size; i++)
-            // AddLog("- %s\n", candidates[i]);
-        }
+               if (match_len > 0) {
+                   data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
+                   data->InsertChars(data->CursorPos, user_data->autocomplete_candidates[0].data(),
+                       user_data->autocomplete_candidates[0].data() + match_len);
+               }
 
-        break;
-    }
-    case ImGuiInputTextFlags_CallbackHistory: {
-        // Example of HISTORY
-        // const int prev_history_pos = HistoryPos;
-        // if (data->EventKey == ImGuiKey_UpArrow) {
-        //    if (HistoryPos == -1)
-        //        HistoryPos = History.Size - 1;
-        //    else if (HistoryPos > 0)
-        //        HistoryPos--;
-        //} else if (data->EventKey == ImGuiKey_DownArrow) {
-        //    if (HistoryPos != -1)
-        //        if (++HistoryPos >= History.Size)
-        //            HistoryPos = -1;
-        //}
+               // List matches
+               // AddLog("Possible matches:\n");
+               // for (int i = 0; i < candidates.Size; i++)
+               // AddLog("- %s\n", candidates[i]);
+           }
 
-        //// A better implementation would preserve the data on the current input line along with cursor position.
-        // if (prev_history_pos != HistoryPos) {
-        //    const char* history_str = (HistoryPos >= 0) ? History[HistoryPos] : "";
-        //    data->DeleteChars(0, data->BufTextLen);
-        //    data->InsertChars(0, history_str);
-        //}
-    }
-    }
-    return 0;
+           user_data->open_autocomplete_popup = (user_data->autocomplete_candidates.size() > 1);
+           break;
+       }
+       case ImGuiInputTextFlags_CallbackHistory: {
+           // Example of HISTORY
+
+           // const int prev_history_pos = HistoryPos;
+           // if (data->EventKey == ImGuiKey_UpArrow) {
+           //    if (HistoryPos == -1)
+           //        HistoryPos = History.Size - 1;
+           //    else if (HistoryPos > 0)
+           //        HistoryPos--;
+           //} else if (data->EventKey == ImGuiKey_DownArrow) {
+           //    if (HistoryPos != -1)
+           //        if (++HistoryPos >= History.Size)
+           //            HistoryPos = -1;
+           //}
+
+           //// A better implementation would preserve the data on the current input line along with cursor position.
+           // if (prev_history_pos != HistoryPos) {
+           //    const char* history_str = (HistoryPos >= 0) ? History[HistoryPos] : "";
+           //    data->DeleteChars(0, data->BufTextLen);
+           //    data->InsertChars(0, history_str);
+           //}
+           break;
+       }
+       default:
+           break;
+       }
+       return 0;
+   }
+
+}
 }
 
 
@@ -156,7 +179,11 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
         , win_log_force_open(true)
         , tooltip()
-        , lua_func(lua_func) {
+        , input_shared_data(nullptr)
+        , input_reclaim_focus(false)
+        , input_buffer()
+        , input_lua_func(nullptr)
+{
 
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
         this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
@@ -169,7 +196,12 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
 
-    this->input_buffer.fill(0);
+    // Initialise
+    this->input_shared_data = std::make_shared<InputSharedData>();
+    this->input_shared_data->commands = {"mmHelp", "mmQuit"};
+    this->input_shared_data->open_autocomplete_popup = false;
+    this->input_shared_data->autocomplete_appended = false;
+    // this->input_shared_data->autocomplete_candidates;
 }
 
 
@@ -300,12 +332,10 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::EndChild();
 
     // Console Input ----------------------------------------------------------
-    bool reclaim_focus = false;
-    static int selected_command = -1;
-    ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
-                                           ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-    if (Commands.size() == 0) {
-        auto result = (*lua_func)("return mmHelp()");
+
+    /// DEBUG
+    if (this->input_shared_data->commands.size() == 0) {
+        auto result = (*this->input_lua_func)("return mmHelp()");
         if (std::get<0>(result)) {
             auto res = std::get<1>(result);
             std::regex cmd_regex("mm\\w+", std::regex_constants::ECMAScript);
@@ -313,53 +343,61 @@ bool megamol::gui::LogConsole::Draw() {
             auto cmd_end = std::sregex_iterator();
             for (auto i = cmd_begin; i != cmd_end; ++i) {
                 auto match = *i;
-                Commands.push_back(match.str());
+                this->input_shared_data->commands.push_back(match.str());
             }
         }
     }
-    if (reclaim_focus) {
+
+    if (this->input_reclaim_focus) {
         ImGui::SetKeyboardFocusHere();
-        reclaim_focus = false;
+        this->input_reclaim_focus = false;
     }
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Input");
+    this->tooltip.Marker("Confirm autocomplete selection with 'Space'.");
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();
+    ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText(
-            "###input", input_buffer.data(), input_buffer.size(), input_text_flags, TextEditCallback, (void*) this)) {
-        std::string command = "return " + std::string(input_buffer.data());
-        auto result = (*lua_func)(command.c_str());
+            "###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback, (void*) this->input_shared_data.get())) {
+        std::string command = "return " + this->input_buffer;
+        auto result = (*this->input_lua_func)(command.c_str());
         if (std::get<0>(result)) {
             // command was fine, no editing required
             auto blah = std::get<1>(result);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(blah.c_str());
-            input_buffer[0] = '\0';
+            this->input_buffer.clear();
         } else {
             auto blah = std::get<1>(result);
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
+        this->input_reclaim_focus = true;
     }
     ImGui::PopItemWidth();
-    ImGui::SetItemDefaultFocus();
-    if (autocomplete_candidates.size() > 1) {
+
+    if (this->input_shared_data->open_autocomplete_popup) {
         ImGui::OpenPopup("autocomplete_selector");
-        ImGui::SetNextWindowPos(popup_pos - ImVec2(0, autocomplete_candidates.size() * ImGui::CalcTextSize("a").y));
+        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + style.ItemInnerSpacing);
+        ImGui::SetItemDefaultFocus();
+        this->input_shared_data->open_autocomplete_popup = false;
     }
     if (ImGui::BeginPopup("autocomplete_selector")) {
-        for (int i = 0; i < autocomplete_candidates.size(); i++)
-            if (ImGui::Selectable(autocomplete_candidates[i].data())) {
-                selected_command = i;
-                ImGui::CloseCurrentPopup();
-                std::copy(autocomplete_candidates[selected_command].begin(),
-                    autocomplete_candidates[selected_command].end(), input_buffer.begin());
-                auto cmd_len = autocomplete_candidates[selected_command].size();
-                input_buffer[cmd_len] = '(';
-                input_buffer[cmd_len + 1] = '\0';
-                autocomplete_candidates.clear();
-                reclaim_focus = true;
-                ImGui::SetKeyboardFocusHere(-1);
+        bool selected_candidate = false;
+        for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
+            if (ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].data())) {
+                this->input_buffer = this->input_shared_data->autocomplete_candidates[i];
+                this->input_buffer.append("(");
+                this->input_shared_data->autocomplete_candidates.clear();
+                this->input_shared_data->autocomplete_appended = true;
+                selected_candidate = true;
             }
+        }
+
+        if (selected_candidate || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            this->input_reclaim_focus = true;
+            ImGui::CloseCurrentPopup();
+        }
         ImGui::EndPopup();
     }
 
