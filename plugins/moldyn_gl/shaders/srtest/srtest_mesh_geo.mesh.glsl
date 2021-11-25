@@ -48,7 +48,7 @@ void main() {
         vec3 oc_pos = objPos - camPos;
         float sqrRad = rad * rad;
 
-        float dd = dot(oc_pos, oc_pos);
+        /*float dd = dot(oc_pos, oc_pos);
 
         float s = (sqrRad) / (dd);
 
@@ -66,15 +66,18 @@ void main() {
         v[0] = MVP * v[0];
         v[1] = MVP * v[1];
         v[2] = MVP * v[2];
-        v[3] = MVP * v[3];
+        v[3] = MVP * v[3];*/
 
-        vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
-        projPos = projPos / projPos.w;
+        /*vec4 projPos = MVP * vec4(objPos - rad * (camDir), 1.0f);
+        projPos = projPos / projPos.w;*/
 
-        vec3 fac = vec3(1.0f);
-        if (isOutsideP(v[0], v[1], v[2], v[3], rad)) {
+        mat4 v;
+        touchplane_old(objPos, rad, oc_pos, v);
+
+        //vec3 fac = vec3(1.0f);
+        /*if (isOutsideP(v[0], v[1], v[2], v[3], rad)) {
             fac = vec3(0.0f);
-        }
+        }*/
 
         for (int i = 0; i < NUM_V; ++i) {
             //v[i] = MVP * v[i];
@@ -89,7 +92,8 @@ void main() {
             pp[l_idx * NUM_V + i].sqrRad = sqrRad;
 
 
-            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy * fac.xy, projPos.z * fac.z, 1.0f);
+            //gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy * fac.xy, projPos.z * fac.z, 1.0f);
+            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = v[i];
         }
 
         gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 1;
