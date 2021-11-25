@@ -98,7 +98,7 @@ byte_texture& byte_texture::operator=(ImageWrapper const& image) {
 }
 
 std::vector<byte> const& byte_texture::as_byte_vector() {
-    return reinterpret_cast<std::vector<byte>&>(*this->texture_shared_ptr);
+    return *this->texture_ptr;
 }
 
 void byte_texture::from_image(ImageWrapper const& image) {
@@ -108,7 +108,7 @@ void byte_texture::from_image(ImageWrapper const& image) {
     switch (image.type) {
     case WrappedImageType::ByteArray:
         this->texture_owned = false;
-        this->texture_shared_ptr = image.referenced_image_handle_vector;
+        this->texture_ptr = conversion::to_vector(image.referenced_image_handle);
         break;
     case WrappedImageType::GLTexureHandle:
 #ifdef WITH_GL

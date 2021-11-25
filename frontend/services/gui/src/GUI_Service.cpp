@@ -394,7 +394,7 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
 #else
     auto fbo = gui_ptr->getFBOHandle();
     result_image =
-        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, std::make_shared<std::vector<uint32_t>>(fbo->colorBuffer), channels);
+        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
 #endif
 
     return true;

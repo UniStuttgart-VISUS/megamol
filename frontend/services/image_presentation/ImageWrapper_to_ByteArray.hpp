@@ -18,7 +18,6 @@ namespace frontend_resources {
 struct byte_texture {
     std::vector<byte> texture;
     std::vector<byte>* texture_ptr = nullptr;
-    std::shared_ptr<std::vector<uint32_t>> texture_shared_ptr = nullptr;
     bool texture_owned = false;
     ImageWrapper* image_wrapper_ptr = nullptr;
 

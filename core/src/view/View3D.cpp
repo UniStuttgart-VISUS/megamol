@@ -60,7 +60,7 @@ ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
     size_t fbo_width = _fbo->width;
     size_t fbo_height = _fbo->height;
 
-    return frontend_resources::wrap_image({fbo_width, fbo_height}, std::make_shared<std::vector<uint32_t>>(_fbo->colorBuffer), channels);
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, _fbo->colorBuffer, channels);
 }
 
 void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {

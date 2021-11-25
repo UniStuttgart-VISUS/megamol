@@ -20,13 +20,6 @@ ImageWrapper::ImageWrapper(ImageSize size, DataChannels channels, WrappedImageTy
     referenced_image_handle = const_cast<void*>(data);
 }
 
-ImageWrapper::ImageWrapper(ImageSize size, DataChannels channels, WrappedImageType type, std::shared_ptr<std::vector<uint32_t>> data)
-        : size{size}
-        , channels{channels}
-        , type{type} {
-    referenced_image_handle_vector = data;
-}
-
 ImageWrapper::ImageWrapper(std::string const& name) : name{name} {}
 
 size_t ImageWrapper::channels_count() const {
@@ -51,13 +44,18 @@ ImageWrapper megamol::frontend_resources::wrap_image(
 }
 
 ImageWrapper megamol::frontend_resources::wrap_image(
-    ImageWrapper::ImageSize size, std::vector<unsigned char> const& byte_texture, ImageWrapper::DataChannels channels) {
+    ImageWrapper::ImageSize size, std::vector<byte> const& byte_texture, ImageWrapper::DataChannels channels) {
     return wrap_image<WrappedImageType::ByteArray>(size, &byte_texture, channels);
 }
 
 ImageWrapper megamol::frontend_resources::wrap_image(
-    ImageWrapper::ImageSize size, std::shared_ptr<std::vector<uint32_t>> byte_texture, ImageWrapper::DataChannels channels) {
-    return ImageWrapper(size, channels, WrappedImageType::ByteArray, byte_texture);
+    ImageWrapper::ImageSize size, std::vector<uint32_t> const& byte_texture, ImageWrapper::DataChannels channels) {
+    return wrap_image(size, reinterpret_cast<std::vector<byte> const&>(byte_texture), channels);
+}
+
+ImageWrapper megamol::frontend_resources::wrap_image(
+    ImageWrapper::ImageSize size, std::vector<float> const& byte_texture, ImageWrapper::DataChannels channels) {
+    return wrap_image(size, reinterpret_cast<std::vector<byte> const&>(byte_texture), channels);
 }
 
 size_t megamol::frontend_resources::channels_count(ImageWrapper::DataChannels channels) {
