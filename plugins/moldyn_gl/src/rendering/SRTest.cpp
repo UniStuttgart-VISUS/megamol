@@ -184,7 +184,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         ubo_params_t ubo_st;
         ubo_st.dir = cam_pose.direction;
         ubo_st.up = cam_pose.up;
-        ubo_st.right = cam_pose.right;
+        //ubo_st.right = cam_pose.right;
+        ubo_st.right = glm::normalize(glm::cross(cam_pose.direction, cam_pose.up));
         ubo_st.pos = cam_pose.position;
         auto mvp = proj * view;
         ubo_st.mvp = mvp;
