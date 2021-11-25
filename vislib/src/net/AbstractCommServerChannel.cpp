@@ -9,13 +9,10 @@
 #include "vislib/net/AbstractCommServerChannel.h"
 
 
-
 /*
  * vislib::net::AbstractCommServerChannel::AbstractCommServerChannel
  */
-vislib::net::AbstractCommServerChannel::AbstractCommServerChannel(void) 
-        : Super() {
-}
+vislib::net::AbstractCommServerChannel::AbstractCommServerChannel(void) : Super() {}
 
 
 /*

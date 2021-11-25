@@ -7,26 +7,22 @@
 #include "vislib/sys/Runnable.h"
 
 
-
 /*
  * vislib::sys::Runnable::~Runnable
  */
-vislib::sys::Runnable::~Runnable(void) {
-}
+vislib::sys::Runnable::~Runnable(void) {}
 
 
 /*
  * vislib::sys::Runnable::OnThreadStarted
  */
-void vislib::sys::Runnable::OnThreadStarted(void *userData) {
-}
+void vislib::sys::Runnable::OnThreadStarted(void* userData) {}
 
 
 /*
  * vislib::sys::Runnable::OnThreadStarting
  */
-void vislib::sys::Runnable::OnThreadStarting(void *userData) {
-}
+void vislib::sys::Runnable::OnThreadStarting(void* userData) {}
 
 
 /*

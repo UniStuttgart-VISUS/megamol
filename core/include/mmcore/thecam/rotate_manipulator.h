@@ -1,10 +1,10 @@
 #ifndef THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
+#pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include <glm/gtx/rotate_vector.hpp>
@@ -21,7 +21,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class rotate_manipulator : public manipulator_base<T> {
+template<class T>
+class rotate_manipulator : public manipulator_base<T> {
 public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
@@ -55,7 +56,9 @@ public:
     /**
      * Rotates the camera around the right vector using the internally stored rotation angle.
      */
-    inline void pitch(void) { this->pitch(this->rotationAngle); }
+    inline void pitch(void) {
+        this->pitch(this->rotationAngle);
+    }
 
     /**
      * Rotates the camera around the up vector.
@@ -67,7 +70,9 @@ public:
     /**
      * Rotates the camera around the up vector using the internally stored rotation angle.
      */
-    inline void yaw(bool fixToWorldUp) { this->yaw(this->rotationAngle, fixToWorldUp); }
+    inline void yaw(bool fixToWorldUp) {
+        this->yaw(this->rotationAngle, fixToWorldUp);
+    }
 
     /**
      * Rotates the camera around the view vector.
@@ -79,21 +84,27 @@ public:
     /**
      * Rotates the camera around the view vector using the internally stored rotation angle.
      */
-    inline void roll(void) { this->roll(this->rotationAngle); }
+    inline void roll(void) {
+        this->roll(this->rotationAngle);
+    }
 
     /**
      * Sets the default rotation angle.
      *
      * @param angle The new default angle in degrees.
      */
-    inline void set_rotation_angle(const world_type angle) { this->rotationAngle = angle; }
+    inline void set_rotation_angle(const world_type angle) {
+        this->rotationAngle = angle;
+    }
 
     /**
      * Returns the current default rotation angle in degrees.
      *
      * @return The default rotation angle in degrees.
      */
-    inline world_type rotation_angle(void) const { return this->rotationAngle; }
+    inline world_type rotation_angle(void) const {
+        return this->rotationAngle;
+    }
 
     void setActive() {
         if (!this->manipulating() && this->enabled()) {
@@ -104,7 +115,9 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The angle that is used for rotation */
@@ -118,6 +131,6 @@ private:
 #include "mmcore/thecam/rotate_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(pop)
+#pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif

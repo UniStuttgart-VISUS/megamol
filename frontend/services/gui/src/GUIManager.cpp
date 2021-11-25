@@ -723,7 +723,7 @@ bool GUIManager::OnChar(unsigned int codePoint) {
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) {
-        io.AddInputCharacter((unsigned short) codePoint);
+        io.AddInputCharacter((unsigned short)codePoint);
     }
 
     return false;
@@ -779,8 +779,8 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += (float) dx;
-    io.MouseWheel += (float) dy;
+    io.MouseWheelH += (float)dx;
+    io.MouseWheel += (float)dy;
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;

@@ -5,8 +5,8 @@
  * Alle rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "VolumetricDataSource.h"
+#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,7 +21,7 @@
 #define STATIC_ARRAY_COUNT(ary) (sizeof(ary) / sizeof(*(ary)))
 
 #ifndef FALSE
-#    define FALSE (0)
+#define FALSE (0)
 #endif /* !FALSE */
 
 
@@ -35,18 +35,18 @@
  * megamol::volume::VolumetricDataSource::VolumetricDataSource
  */
 megamol::volume::VolumetricDataSource::VolumetricDataSource(void)
-    : Base()
-    , dataHash(-234895)
-    , fileInfo(nullptr)
-    , loaderThread(VolumetricDataSource::loadAsync)
-    , paramAsyncSleep("AsyncSleep", "The time in milliseconds that the loader sleeps between two frames.")
-    , paramAsyncWake("AsyncWake", "The time in milliseconds after that the loader wakes itself.")
-    , paramBuffers("Buffers", "The number of buffers for loading frames asynchronously.")
-    , paramFileName("FileName", "The path to the dat file to be loaded.")
-    , paramOutputDataSize("OutputDataSize", "Forces the scalar type to the specified size.")
-    , paramOutputDataType("OutputDataType", "Enforces the type of a scalar during loading.")
-    , paramLoadAsync("LoadAsync", "Start asynchronous loading of frames.")
-    , slotGetData("GetData", "Slot for requesting data from the source.") {
+        : Base()
+        , dataHash(-234895)
+        , fileInfo(nullptr)
+        , loaderThread(VolumetricDataSource::loadAsync)
+        , paramAsyncSleep("AsyncSleep", "The time in milliseconds that the loader sleeps between two frames.")
+        , paramAsyncWake("AsyncWake", "The time in milliseconds after that the loader wakes itself.")
+        , paramBuffers("Buffers", "The number of buffers for loading frames asynchronously.")
+        , paramFileName("FileName", "The path to the dat file to be loaded.")
+        , paramOutputDataSize("OutputDataSize", "Forces the scalar type to the specified size.")
+        , paramOutputDataType("OutputDataType", "Enforces the type of a scalar during loading.")
+        , paramLoadAsync("LoadAsync", "Start asynchronous loading of frames.")
+        , slotGetData("GetData", "Slot for requesting data from the source.") {
     using geocalls::VolumetricDataCall;
     core::param::EnumParam* enumParam = nullptr;
 
@@ -419,9 +419,9 @@ bool megamol::volume::VolumetricDataSource::onFileNameChanged(core::param::Param
  * megamol::volume::VolumetricDataSource::onGetData
  */
 bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
-    using geocalls::VolumetricDataCall;
     using core::param::BoolParam;
     using core::param::IntParam;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     int expected = 0;
@@ -701,12 +701,14 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
                 this->calcMinMax<int16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
                 break;
             case DR_FORMAT_RAW:
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "Cannot determine min/max of BITS volume. Setting to [0,1].");
                 this->mins.resize(this->metadata.Components, 0.0);
                 this->maxes.resize(this->metadata.Components, 1.0);
                 break;
             default:
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Cannot determine min/max of unknown volume. Setting to [0,1].");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "Cannot determine min/max of unknown volume. Setting to [0,1].");
                 this->mins.resize(this->metadata.Components, 0.0);
                 this->maxes.resize(this->metadata.Components, 1.0);
                 break;
@@ -1011,9 +1013,7 @@ void megamol::volume::VolumetricDataSource::release(void) {
             this->stopAsyncLoad(true);
         }
         ASSERT(!this->loaderThread.IsRunning());
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError(1, e.GetMsg());
-    } catch (...) {
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(1, e.GetMsg()); } catch (...) {
         Log::DefaultLog.WriteError(1, _T("Unexpected exception while ")
                                       _T("stopping volume loader thread during release of data source."));
     }
@@ -1073,9 +1073,7 @@ void megamol::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
             this->loaderThread.Join();
             ASSERT(this->loaderStatus.load() == LOADER_STATUS_STOPPED);
         }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError(1, e.GetMsg());
-    }
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(1, e.GetMsg()); }
 }
 
 
@@ -1109,7 +1107,9 @@ bool megamol::volume::VolumetricDataSource::suspendAsyncLoad(const bool isWait) 
 /*
  * megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker
  */
-megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(void) { this->Unlock(); }
+megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(void) {
+    this->Unlock();
+}
 
 
 /*
@@ -1128,8 +1128,8 @@ void megamol::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock(void) {
  * megamol::volume::VolumetricDataSource::loadAsync
  */
 DWORD megamol::volume::VolumetricDataSource::loadAsync(void* userData) {
-    using geocalls::VolumetricDataCall;
     using core::param::IntParam;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     int expected = 0;
@@ -1219,8 +1219,7 @@ DWORD megamol::volume::VolumetricDataSource::loadAsync(void* userData) {
 /*
  * megamol::volume::VolumetricDataSource::setUnlocker
  */
-void megamol::volume::VolumetricDataSource::setUnlocker(
-    geocalls::VolumetricDataCall& call, BufferSlot* buffer) {
+void megamol::volume::VolumetricDataSource::setUnlocker(geocalls::VolumetricDataCall& call, BufferSlot* buffer) {
     ASSERT(buffer != nullptr);
     auto ul = dynamic_cast<BufferSlotUnlocker*>(call.GetUnlocker());
     if (ul != nullptr) {
@@ -1301,9 +1300,7 @@ size_t megamol::volume::VolumetricDataSource::assertBuffersUnsafe(size_t cntFram
         }
 
         retval = this->buffers.Count();
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError(1, e.GetMsg());
-    } catch (...) {
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(1, e.GetMsg()); } catch (...) {
         Log::DefaultLog.WriteError(1, _T("Unexpected exception while ")
                                       _T("preparing data buffers. Not all of the requested memory ")
                                       _T("might be available."));

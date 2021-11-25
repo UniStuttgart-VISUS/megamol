@@ -5,23 +5,23 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "WavefrontObjDataSource.h"
-#include "vislib/Array.h"
-#include "vislib/assert.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/sys/File.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
+#include "stdafx.h"
+#include "vislib/Array.h"
+#include "vislib/PtrArray.h"
+#include "vislib/StringConverter.h"
+#include "vislib/assert.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Vector.h"
+#include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "vislib/PtrArray.h"
-#include "vislib/math/ShallowVector.h"
-#include "vislib/StringConverter.h"
-#include "vislib/math/Vector.h"
-#include <map>
 #include <cfloat>
+#include <map>
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -77,20 +77,21 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     float vec3[3];
     vislib::math::ShallowVector<float, 3> vec3v3(vec3);
     vislib::math::ShallowVector<float, 2> vec3v2(vec3);
-    vislib::Array<vislib::math::Vector<float, 3> > vert;
-    vislib::Array<vislib::math::Vector<float, 3> > norm;
-    vislib::Array<vislib::math::Vector<float, 2> > texc;
+    vislib::Array<vislib::math::Vector<float, 3>> vert;
+    vislib::Array<vislib::math::Vector<float, 3>> norm;
+    vislib::Array<vislib::math::Vector<float, 2>> texc;
     std::map<size_t, size_t> lineID2Idx;
     vislib::Array<vislib::StringA> objsMats;
-    vislib::PtrArray<vislib::Array<Tri> > objs;
-    vislib::Array<Tri> *obj = NULL;
+    vislib::PtrArray<vislib::Array<Tri>> objs;
+    vislib::Array<Tri>* obj = NULL;
     vislib::Array<vislib::StringA> matNames;
 
     const SIZE_T capacityGrowth = 10 * 1024;
 
     for (SIZE_T li = 0; li < linesA.Count(); li++) {
         const vislib::sys::ASCIIFileBuffer::LineBuffer& line = linesA[li];
-        if (line.Count() <= 0) continue;
+        if (line.Count() <= 0)
+            continue;
 
         try {
 
@@ -118,7 +119,6 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                     } else {
                         objsMats.Last() = line.Word(1);
                     }
-
                 }
 
             } else if ((::strcmp(line.Word(0), "v") == 0) && (line.Count() >= 4)) {
@@ -126,7 +126,8 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
                 vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2)));
                 vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3)));
-                if (vert.Count() == vert.Capacity()) vert.AssertCapacity(vert.Capacity() + capacityGrowth);
+                if (vert.Count() == vert.Capacity())
+                    vert.AssertCapacity(vert.Capacity() + capacityGrowth);
                 vert.Add(vec3v3);
 
             } else if ((::strcmp(line.Word(0), "vn") == 0) && (line.Count() >= 4)) {
@@ -134,14 +135,17 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
                 vec3[1] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2)));
                 vec3[2] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3)));
-                if (norm.Count() == norm.Capacity()) norm.AssertCapacity(norm.Capacity() + capacityGrowth);
+                if (norm.Count() == norm.Capacity())
+                    norm.AssertCapacity(norm.Capacity() + capacityGrowth);
                 norm.Add(vec3v3);
 
             } else if ((::strcmp(line.Word(0), "vt") == 0) && (line.Count() >= 2)) {
                 // vertex texture coordinate
                 vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
-                vec3[1] = (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))) : 0.0f;
-                if (texc.Count() == texc.Capacity()) texc.AssertCapacity(texc.Capacity() + capacityGrowth);
+                vec3[1] =
+                    (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))) : 0.0f;
+                if (texc.Count() == texc.Capacity())
+                    texc.AssertCapacity(texc.Capacity() + capacityGrowth);
                 texc.Add(vec3v2);
 
             } else if ((::strcmp(line.Word(0), "f") == 0) && (line.Count() >= 4)) {
@@ -161,14 +165,17 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                     t.n1 = t.n2 = t.n3 = 0;
                     t.t1 = t.t2 = t.t3 = 0;
                     idx = vislib::CharTraitsA::ParseInt(line.Word(1));
-                    if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                    if (idx <= 0)
+                        throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v1 = static_cast<unsigned int>(idx - 1);
                     idx = vislib::CharTraitsA::ParseInt(line.Word(2));
-                    if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                    if (idx <= 0)
+                        throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v2 = static_cast<unsigned int>(idx - 1);
                     for (unsigned int i = 3; i < line.Count(); i++) {
                         idx = vislib::CharTraitsA::ParseInt(line.Word(i));
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.v3 = static_cast<unsigned int>(idx - 1);
                         obj->Append(t);
                         t.v2 = t.v3;
@@ -177,81 +184,103 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 } else {
                     SIZE_T len = vislib::CharTraitsA::SafeStringLength(line.Word(1));
                     const char* p2 = ::strchr(p1 + 1, '/');
-                    if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
+                    if (p2 == NULL)
+                        throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                     t.t = (p2 > p1 + 1);
                     t.n = (p2 + 1 < line.Word(1) + len);
                     t.n1 = t.n2 = t.n3 = 0;
                     t.t1 = t.t2 = t.t3 = 0;
-                    *const_cast<char *>(p1) = '\0';
-                    *const_cast<char *>(p2) = '\0';
+                    *const_cast<char*>(p1) = '\0';
+                    *const_cast<char*>(p2) = '\0';
                     p1++;
                     p2++;
                     idx = vislib::CharTraitsA::ParseInt(line.Word(1));
-                    if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                    if (idx <= 0)
+                        throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v1 = static_cast<unsigned int>(idx - 1);
                     if (t.t) {
                         idx = vislib::CharTraitsA::ParseInt(p1);
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.t1 = static_cast<unsigned int>(idx - 1);
                     }
                     if (t.n) {
                         idx = vislib::CharTraitsA::ParseInt(p2);
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.n1 = static_cast<unsigned int>(idx - 1);
                     }
 
                     len = vislib::CharTraitsA::SafeStringLength(line.Word(2));
                     p1 = ::strchr(line.Word(2), '/');
-                    if (p1 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
+                    if (p1 == NULL)
+                        throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                     p2 = ::strchr(p1 + 1, '/');
-                    if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
-                    if (t.t != (p2 > p1 + 1)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                    if (t.n != (p2 + 1 < line.Word(2) + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                    *const_cast<char *>(p1) = '\0';
-                    *const_cast<char *>(p2) = '\0';
+                    if (p2 == NULL)
+                        throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
+                    if (t.t != (p2 > p1 + 1))
+                        throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                    if (t.n != (p2 + 1 < line.Word(2) + len))
+                        throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                    *const_cast<char*>(p1) = '\0';
+                    *const_cast<char*>(p2) = '\0';
                     p1++;
                     p2++;
                     idx = vislib::CharTraitsA::ParseInt(line.Word(2));
-                    if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                    if (idx <= 0)
+                        throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                     t.v2 = static_cast<unsigned int>(idx - 1);
                     if (t.t) {
                         idx = vislib::CharTraitsA::ParseInt(p1);
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.t2 = static_cast<unsigned int>(idx - 1);
                     }
                     if (t.n) {
                         idx = vislib::CharTraitsA::ParseInt(p2);
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.n2 = static_cast<unsigned int>(idx - 1);
                     }
 
                     t.v2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line.Word(2)) - 1);
-                    if (t.t) t.t2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p1) - 1);
-                    if (t.n) t.n2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p2) - 1);
+                    if (t.t)
+                        t.t2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p1) - 1);
+                    if (t.n)
+                        t.n2 = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(p2) - 1);
 
                     for (unsigned int i = 3; i < line.Count(); i++) {
                         len = vislib::CharTraitsA::SafeStringLength(line.Word(i));
                         p1 = ::strchr(line.Word(i), '/');
-                        if (p1 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
+                        if (p1 == NULL)
+                            throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
                         p2 = ::strchr(p1 + 1, '/');
-                        if (p2 == NULL) throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
-                        if (t.t != (p2 > p1 + 1)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                        if (t.n != (p2 + 1 < line.Word(i) + len)) throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
-                        *const_cast<char *>(p1) = '\0';
-                        *const_cast<char *>(p2) = '\0';
+                        if (p2 == NULL)
+                            throw vislib::Exception("Single slash face entry element illegal", __FILE__, __LINE__);
+                        if (t.t != (p2 > p1 + 1))
+                            throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                        if (t.n != (p2 + 1 < line.Word(i) + len))
+                            throw vislib::Exception("face entry inconsistancy", __FILE__, __LINE__);
+                        *const_cast<char*>(p1) = '\0';
+                        *const_cast<char*>(p2) = '\0';
                         p1++;
                         p2++;
                         idx = vislib::CharTraitsA::ParseInt(line.Word(i));
-                        if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                        if (idx <= 0)
+                            throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
                         t.v3 = static_cast<unsigned int>(idx - 1);
                         if (t.t) {
                             idx = vislib::CharTraitsA::ParseInt(p1);
-                            if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                            if (idx <= 0)
+                                throw vislib::Exception(
+                                    "Negative face element indices not supported", __FILE__, __LINE__);
                             t.t3 = static_cast<unsigned int>(idx - 1);
                         }
                         if (t.n) {
                             idx = vislib::CharTraitsA::ParseInt(p2);
-                            if (idx <= 0) throw vislib::Exception("Negative face element indices not supported", __FILE__, __LINE__);
+                            if (idx <= 0)
+                                throw vislib::Exception(
+                                    "Negative face element indices not supported", __FILE__, __LINE__);
                             t.n3 = static_cast<unsigned int>(idx - 1);
                         }
                         obj->Append(t);
@@ -259,7 +288,6 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                         t.t2 = t.t3;
                         t.n2 = t.n3;
                     }
-
                 }
 
             } else if (::strcmp(line.Word(0), "g") == 0) {
@@ -299,7 +327,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                         this->lines.push_back(lineData);
                     }
                 }
-                float *vertices = new float[6];
+                float* vertices = new float[6];
                 auto s = vert[idxS - 1];
                 auto t = vert[idxT - 1];
                 lineVerts[listIdx].Append(s.X());
@@ -312,16 +340,15 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 //this->lines.push_back(lineData);
             }
 
-        } catch(vislib::Exception ex) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: %s (%s, %d)",
-                li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch(...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: unexpected exception", li);
-        }
+        } catch (vislib::Exception ex) {
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        } catch (...) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: unexpected exception", li); }
     }
     if (lineVerts.Count() > 0) {
         for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
-            lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].Count() / 3), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+            lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].Count() / 3), lineVerts[loop].PeekElements(),
+                vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
         }
     }
 
@@ -352,24 +379,28 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
         this->bbox.Set(minV[0], minV[1], minV[2], maxV[0], maxV[1], maxV[2]);
     } else {
 
-        unsigned int *vertUsed = new unsigned int[vert.Count()];
+        unsigned int* vertUsed = new unsigned int[vert.Count()];
 
         unsigned int oc = 0;
         for (SIZE_T i = 0; i < objs.Count(); i++) {
-            if (objs[i]->Count() > 0) oc++;
+            if (objs[i]->Count() > 0)
+                oc++;
         }
         this->objs.SetCount(oc);
         this->objs.Trim();
-        if (oc == 0) this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-        else this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        if (oc == 0)
+            this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        else
+            this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         oc = 0;
         for (SIZE_T i = 0; i < objs.Count(); i++) {
-            if (objs[i]->Count() <= 0) continue;
+            if (objs[i]->Count() <= 0)
+                continue;
             INT_PTR matIdx = matNames.IndexOf(objsMats[i]);
-            this->objs[oc].SetMaterial(
-                ((matIdx == vislib::Array<vislib::StringA>::INVALID_POS) || (static_cast<SIZE_T>(matIdx) >= this->mats.Count()))
-                ? NULL
-                : &this->mats[static_cast<SIZE_T>(matIdx)]);
+            this->objs[oc].SetMaterial(((matIdx == vislib::Array<vislib::StringA>::INVALID_POS) ||
+                                           (static_cast<SIZE_T>(matIdx) >= this->mats.Count()))
+                                           ? NULL
+                                           : &this->mats[static_cast<SIZE_T>(matIdx)]);
             this->makeMesh(this->objs[oc], *objs[i], vertUsed, vert, norm, texc);
             oc++;
         }
@@ -384,7 +415,8 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
 /*
  * WavefrontObjDataSource::loadMaterialLibrary
  */
-void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename, vislib::Array<vislib::StringA>& names) {
+void WavefrontObjDataSource::loadMaterialLibrary(
+    const vislib::TString& filename, vislib::Array<vislib::StringA>& names) {
     using megamol::core::utility::log::Log;
     ASSERT(names.Count() == this->mats.Count());
 
@@ -393,22 +425,26 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
         return;
     }
     if (!vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Material library \"%s\" file does not exist", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Material library \"%s\" file does not exist", vislib::StringA(filename).PeekBuffer());
         return;
     }
     vislib::sys::ASCIIFileBuffer linesA(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     if (!linesA.LoadFile(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load material library \"%s\"", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to load material library \"%s\"", vislib::StringA(filename).PeekBuffer());
         return;
     }
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Loading material library \"%s\"", vislib::StringA(filename).PeekBuffer());
+    Log::DefaultLog.WriteMsg(
+        Log::LEVEL_INFO, "Loading material library \"%s\"", vislib::StringA(filename).PeekBuffer());
 
     vislib::TString path = vislib::sys::Path::GetDirectoryName(filename);
-    Material *mat = NULL;
+    Material* mat = NULL;
 
     for (SIZE_T li = 0; li < linesA.Count(); li++) {
         const vislib::sys::ASCIIFileBuffer::LineBuffer& line = linesA[li];
-        if (line.Count() <= 0) continue;
+        if (line.Count() <= 0)
+            continue;
 
         try {
 
@@ -435,43 +471,38 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
                 mat->SetD(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))));
 
             } else if ((strcmp(line.Word(0), "Ka") == 0) && (line.Count() >= 4)) {
-                mat->SetKa(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                mat->SetKa(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
             } else if ((strcmp(line.Word(0), "Kd") == 0) && (line.Count() >= 4)) {
-                mat->SetKd(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                mat->SetKd(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
             } else if ((strcmp(line.Word(0), "Ks") == 0) && (line.Count() >= 4)) {
-                mat->SetKs(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                mat->SetKs(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
             } else if ((strcmp(line.Word(0), "Ke") == 0) && (line.Count() >= 4)) {
-                mat->SetKe(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
+                mat->SetKe(static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-            } else if (((strcmp(line.Word(0), "bump") == 0) || (strcmp(line.Word(0), "map_bump") == 0) || (strcmp(line.Word(0), "bump_map") == 0)) && (line.Count() >= 2)) {
+            } else if (((strcmp(line.Word(0), "bump") == 0) || (strcmp(line.Word(0), "map_bump") == 0) ||
+                           (strcmp(line.Word(0), "bump_map") == 0)) &&
+                       (line.Count() >= 2)) {
                 mat->SetBumpMapFileName(vislib::sys::Path::Concatenate(path, line.Word(1)));
 
             } else if ((strncmp(line.Word(0), "map", 3) == 0) && (line.Count() >= 2)) {
                 mat->SetMapFileName(vislib::sys::Path::Concatenate(path, line.Word(1)));
-
             }
 
-        } catch(vislib::Exception ex) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: %s (%s, %d)",
-                li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch(...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: unexpected exception", li);
-        }
+        } catch (vislib::Exception ex) {
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        } catch (...) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: unexpected exception", li); }
     }
 
     ASSERT(names.Count() == this->mats.Count());
@@ -482,17 +513,18 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
  * WavefrontObjDataSource::makeMesh
  */
 void WavefrontObjDataSource::makeMesh(megamol::geocalls::CallTriMeshData::Mesh& mesh,
-        const vislib::Array<WavefrontObjDataSource::Tri>& tris,
-        unsigned int* vu, const vislib::Array<vislib::math::Vector<float, 3> >& v,
-        const vislib::Array<vislib::math::Vector<float, 3> >& n,
-        const vislib::Array<vislib::math::Vector<float, 2> >& t) {
+    const vislib::Array<WavefrontObjDataSource::Tri>& tris, unsigned int* vu,
+    const vislib::Array<vislib::math::Vector<float, 3>>& v, const vislib::Array<vislib::math::Vector<float, 3>>& n,
+    const vislib::Array<vislib::math::Vector<float, 2>>& t) {
     ASSERT(tris.Count() > 0);
     ASSERT(v.Count() > 0);
 
-    float *vd = new float[tris.Count() * 3 * 3];  // vertices
-    float *nd = (tris[0].n) ? new float[tris.Count() * 3 * 3] : NULL;  // normals
-    float *td = (tris[0].t) ? new float[tris.Count() * 3 * 2] : NULL;  // texture coordinates
-    unsigned int* fd = new unsigned int[tris.Count() * 3]; // faces. actually just 0,1,2,3,4... since everything is multiplied out already
+    float* vd = new float[tris.Count() * 3 * 3];                      // vertices
+    float* nd = (tris[0].n) ? new float[tris.Count() * 3 * 3] : NULL; // normals
+    float* td = (tris[0].t) ? new float[tris.Count() * 3 * 2] : NULL; // texture coordinates
+    unsigned int* fd =
+        new unsigned int[tris.Count() *
+                         3]; // faces. actually just 0,1,2,3,4... since everything is multiplied out already
     vislib::math::Cuboid<float> bbox(v[0].X(), v[0].Y(), v[0].Z(), v[0].X(), v[0].Y(), v[0].Z());
 
     for (SIZE_T ti = 0; ti < tris.Count(); ti++) {
@@ -536,10 +568,13 @@ void WavefrontObjDataSource::makeMesh(megamol::geocalls::CallTriMeshData::Mesh& 
     // TODO: normal smoothing?
     // TODO: data consolidation?
 
-    mesh.SetVertexData(static_cast<unsigned int>(tris.Count() * 3), vd, nd, NULL, td, true); // now don't delete vd, nd, or td
+    mesh.SetVertexData(
+        static_cast<unsigned int>(tris.Count() * 3), vd, nd, NULL, td, true); // now don't delete vd, nd, or td
     //mesh.SetTriangleData(0, NULL, false);
     mesh.SetTriangleData(tris.Count(), fd, true);
 
-    if (this->bbox.IsEmpty()) this->bbox = bbox;
-    else this->bbox.Union(bbox);
+    if (this->bbox.IsEmpty())
+        this->bbox = bbox;
+    else
+        this->bbox.Union(bbox);
 }

@@ -11,8 +11,8 @@
 #ifndef MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 
-#include "cuda_runtime.h"
 #include "cuda_error_check.h"
+#include "cuda_runtime.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -21,21 +21,18 @@ template<class T>
 class CudaDevArr {
 
 public:
-
     /** Ctor */
     CudaDevArr() : size(0), count(0), pt_D(NULL) {}
 
     /** Dtor */
-    ~CudaDevArr() {
-    }
+    ~CudaDevArr() {}
 
     /**
      * Copies the content of the array to a host array. Does not allocate host
      * memory.
      */
-    inline cudaError_t CopyToHost(T *hostArr) {
-        CudaSafeCall(cudaMemcpy(hostArr, this->pt_D, sizeof(T)*this->count,
-                cudaMemcpyDeviceToHost));
+    inline cudaError_t CopyToHost(T* hostArr) {
+        CudaSafeCall(cudaMemcpy(hostArr, this->pt_D, sizeof(T) * this->count, cudaMemcpyDeviceToHost));
         return cudaGetLastError();
     }
 
@@ -73,7 +70,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline T *Peek() {
+    inline T* Peek() {
         return this->pt_D;
     }
 
@@ -82,7 +79,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline const T *PeekConst() const {
+    inline const T* PeekConst() const {
         return this->pt_D;
     }
 
@@ -108,7 +105,7 @@ public:
      * @return 'cudaSuccess' on success, the respective error value otherwise
      */
     inline cudaError_t Set(unsigned char c) {
-        CudaSafeCall(cudaMemset(this->pt_D, c, sizeof(T)*this->size));
+        CudaSafeCall(cudaMemset(this->pt_D, c, sizeof(T) * this->size));
         return cudaGetLastError();
     }
 
@@ -121,10 +118,10 @@ public:
      */
     inline cudaError_t Validate(size_t sizeNew) {
 
-        if((this->pt_D == NULL)||(sizeNew > this->size)) {
+        if ((this->pt_D == NULL) || (sizeNew > this->size)) {
             this->Release();
-            CudaSafeCall(cudaMalloc((void**)&this->pt_D, sizeof(T)*sizeNew));
-//            printf("Allocated at %p\n", &this->pt_D);
+            CudaSafeCall(cudaMalloc((void**)&this->pt_D, sizeof(T) * sizeNew));
+            //            printf("Allocated at %p\n", &this->pt_D);
             this->size = sizeNew;
         }
         this->count = sizeNew;
@@ -132,7 +129,6 @@ public:
     }
 
 private:
-
     /// The amount of allocated memory in sizeof(T)
     size_t size;
 
@@ -140,7 +136,7 @@ private:
     size_t count;
 
     /// The pointer to the device memory
-    T *pt_D;
+    T* pt_D;
 };
 
 } // namespace protein_cuda

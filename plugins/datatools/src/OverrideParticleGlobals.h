@@ -18,75 +18,71 @@
 namespace megamol {
 namespace datatools {
 
+/**
+ * Module overriding global attributes of particles
+ */
+class OverrideParticleGlobals : public AbstractParticleManipulator {
+public:
+    /** Return module class name */
+    static const char* ClassName(void) {
+        return "OverrideParticleGlobals";
+    }
+
+    /** Return module class description */
+    static const char* Description(void) {
+        return "Module overriding global attributes of particles";
+    }
+
+    /** Module is always available */
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    /** Ctor */
+    OverrideParticleGlobals(void);
+
+    /** Dtor */
+    virtual ~OverrideParticleGlobals(void);
+
+protected:
     /**
-     * Module overriding global attributes of particles
+     * Manipulates the particle data
+     *
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
      */
-    class OverrideParticleGlobals : public AbstractParticleManipulator {
-    public:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-        /** Return module class name */
-        static const char *ClassName(void) {
-            return "OverrideParticleGlobals";
-        }
+private:
+    /** Activates overriding the selected values for all particle lists */
+    core::param::ParamSlot overrideAllListSlot;
 
-        /** Return module class description */
-        static const char *Description(void) {
-            return "Module overriding global attributes of particles";
-        }
+    /** The particle list to override the values of */
+    core::param::ParamSlot overrideListSlot;
 
-        /** Module is always available */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Activates overriding the radius */
+    core::param::ParamSlot overrideRadiusSlot;
 
-        /** Ctor */
-        OverrideParticleGlobals(void);
+    /** The new radius value */
+    core::param::ParamSlot radiusSlot;
 
-        /** Dtor */
-        virtual ~OverrideParticleGlobals(void);
+    /** Activates overriding the color */
+    core::param::ParamSlot overrideColorSlot;
 
-    protected:
+    /** The new color value */
+    core::param::ParamSlot colorSlot;
 
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    /** Activates overriding the intensity range */
+    core::param::ParamSlot overrideIntensityRangeSlot;
 
-    private:
-
-        /** Activates overriding the selected values for all particle lists */
-        core::param::ParamSlot overrideAllListSlot;
-
-        /** The particle list to override the values of */
-        core::param::ParamSlot overrideListSlot;
-
-        /** Activates overriding the radius */
-        core::param::ParamSlot overrideRadiusSlot;
-
-        /** The new radius value */
-        core::param::ParamSlot radiusSlot;
-
-        /** Activates overriding the color */
-        core::param::ParamSlot overrideColorSlot;
-
-        /** The new color value */
-        core::param::ParamSlot colorSlot;
-
-        /** Activates overriding the intensity range */
-        core::param::ParamSlot overrideIntensityRangeSlot;
-
-        /** the new range */
-        core::param::ParamSlot minIntSlot;
-        core::param::ParamSlot maxIntSlot;
-    };
+    /** the new range */
+    core::param::ParamSlot minIntSlot;
+    core::param::ParamSlot maxIntSlot;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

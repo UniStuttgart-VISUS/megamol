@@ -24,155 +24,147 @@
 namespace megamol {
 namespace volume {
 
+/**
+ * Computes the difference between two time steps of a volumetric data
+ * source.
+ */
+class DifferenceVolume : public core::Module {
+
+public:
     /**
-     * Computes the difference between two time steps of a volumetric data
-     * source.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class DifferenceVolume : public core::Module {
+    static inline constexpr const char* ClassName(void) {
+        return "DifferenceVolume";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline constexpr const char* Description(void) {
+        return "Computes the difference between volumes.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline constexpr const char* ClassName(void) {
-            return "DifferenceVolume";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline constexpr bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline constexpr const char* Description(void) {
-            return "Computes the difference between volumes.";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    DifferenceVolume(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline constexpr bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~DifferenceVolume(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        DifferenceVolume(void);
+protected:
+    /**
+     * Compute the size of a single frame in bytes.
+     */
+    static std::size_t getFrameSize(const geocalls::VolumetricMetadata_t& md);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~DifferenceVolume(void);
+    /**
+     * Gets the scalar type to be used for the difference volume.
+     */
+    static geocalls::ScalarType_t getDifferenceType(const geocalls::VolumetricMetadata_t& md);
 
-    protected:
+    /**
+     * Increment the cache ring index.
+     */
+    static inline std::size_t increment(std::size_t frameIdx) {
+        return (++frameIdx % 2);
+    }
 
-        /**
-         * Compute the size of a single frame in bytes.
-         */
-        static std::size_t getFrameSize(
-            const geocalls::VolumetricMetadata_t& md);
+    /**
+     * Compute the difference from 'prev' to 'cur' into 'dst'.
+     */
+    template<class D, class S>
+    void calcDifference(D* dst, const S* cur, const S* prev, const std::size_t cnt);
 
-        /**
-         * Gets the scalar type to be used for the difference volume.
-         */
-        static geocalls::ScalarType_t getDifferenceType(
-            const geocalls::VolumetricMetadata_t& md);
+    /**
+     * Check whether the given metadata are compatible with the cache state
+     * of the module.
+     */
+    bool checkCompatibility(const geocalls::VolumetricMetadata_t& md) const;
 
-        /**
-         * Increment the cache ring index.
-         */
-        static inline std::size_t increment(std::size_t frameIdx) {
-            return (++frameIdx % 2);
-        }
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Compute the difference from 'prev' to 'cur' into 'dst'.
-         */
-        template<class D, class S>
-        void calcDifference(D *dst, const S *cur, const S *prev,
-            const std::size_t cnt);
+    /**
+     * Computes the hash of 'data'.
+     *
+     * @return The hash of the currently available data.
+     */
+    inline std::size_t getHash(void) {
+        auto retval = this->hashData;
+        retval ^= this->hashState + 0x9e3779b9 + (retval << 6) + (retval >> 2);
+        return retval;
+    }
 
-        /**
-         * Check whether the given metadata are compatible with the cache state
-         * of the module.
-         */
-        bool checkCompatibility(const geocalls::VolumetricMetadata_t& md) const;
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool onGetData(core::Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Gets the data extents.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool onGetExtents(core::Call& call);
 
-        /**
-         * Computes the hash of 'data'.
-         *
-         * @return The hash of the currently available data.
-         */
-        inline std::size_t getHash(void) {
-            auto retval = this->hashData;
-            retval ^= this->hashState + 0x9e3779b9 + (retval << 6)
-                + (retval >> 2);
-            return retval;
-        }
+    /**
+     * Gets the meta data.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool onGetMetadata(core::Call& call);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool onGetData(core::Call& call);
+    /**
+     * Callback for all unsupported operations.
+     */
+    bool onUnsupported(core::Call& call);
 
-        /**
-         * Gets the data extents.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool onGetExtents(core::Call& call);
+    /**
+     * Clean up module.
+     */
+    virtual void release(void) override;
 
-        /**
-         * Gets the meta data.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool onGetMetadata(core::Call& call);
-
-        /**
-         * Callback for all unsupported operations.
-         */
-        bool onUnsupported(core::Call& call);
-
-        /**
-         * Clean up module.
-         */
-        virtual void release(void) override;
-
-    private:
-
-        std::array<std::vector<std::uint8_t>, 2> cache;
-        std::vector<std::uint8_t> data;
-        unsigned int frameID;
-        std::size_t frameIdx;
-        std::size_t hashData;
-        std::size_t hashState;
-        geocalls::VolumetricMetadataStore metadata;
-        core::param::ParamSlot paramIgnoreInputHash;
-        core::CallerSlot slotIn;
-        core::CalleeSlot slotOut;
-
-    };
+private:
+    std::array<std::vector<std::uint8_t>, 2> cache;
+    std::vector<std::uint8_t> data;
+    unsigned int frameID;
+    std::size_t frameIdx;
+    std::size_t hashData;
+    std::size_t hashState;
+    geocalls::VolumetricMetadataStore metadata;
+    core::param::ParamSlot paramIgnoreInputHash;
+    core::CallerSlot slotIn;
+    core::CalleeSlot slotOut;
+};
 
 } /* end namespace volume */
 } /* namespace megamol */

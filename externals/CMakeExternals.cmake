@@ -94,7 +94,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
       INCLUDE_DIR "include")
-    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
   # json
   elseif(NAME STREQUAL "json")
@@ -675,7 +675,7 @@ function(require_external NAME)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
-      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # obj-io
   elseif (NAME STREQUAL "obj-io")
@@ -965,8 +965,8 @@ function(require_external NAME)
       GIT_TAG "v${VTKM_VER}.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${VTKM_CONT_LIB}"
-	    "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
-	    "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
+        "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+        "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DBUILD_TESTING:BOOL=OFF

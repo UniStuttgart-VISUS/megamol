@@ -25,30 +25,28 @@
 
 #include <variant>
 
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
+#include "glowl/Sampler.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
 #include "glowl/Texture2DView.hpp"
-#include "glowl/Sampler.hpp"
 
 #include <glm/glm.hpp>
 
 namespace megamol {
 namespace compositing {
 
-    typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>>
-        TextureSamplerTuple;
-    typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
-        TextureViewSamplerTuple;
-    typedef std::tuple<std::shared_ptr<glowl::Texture2DArray>, std::string, std::shared_ptr<glowl::Sampler>>
-        TextureArraySamplerTuple;
+typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>> TextureSamplerTuple;
+typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
+    TextureViewSamplerTuple;
+typedef std::tuple<std::shared_ptr<glowl::Texture2DArray>, std::string, std::shared_ptr<glowl::Sampler>>
+    TextureArraySamplerTuple;
 
 struct ASSAO_Inputs {
     // Custom viewports not supported yet; this is here for future support. ViewportWidth and ViewportHeight must
@@ -70,12 +68,12 @@ struct ASSAO_Inputs {
     glm::mat4 ViewMatrix;
 
     ASSAO_Inputs() {
-        ViewportX = 0;              // stays constant
-        ViewportY = 0;              // stays constant
+        ViewportX = 0; // stays constant
+        ViewportY = 0; // stays constant
         ViewportWidth = 0;
         ViewportHeight = 0;
-        NormalsUnpackMul = 2.0f;    // stays constant
-        NormalsUnpackAdd = -1.0f;   // stays constant
+        NormalsUnpackMul = 2.0f;  // stays constant
+        NormalsUnpackAdd = -1.0f; // stays constant
         GenerateNormals = false;
         ProjectionMatrix = glm::mat4(1.0f);
         ViewMatrix = glm::mat4(1.0f);
@@ -194,21 +192,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ASSAO"; }
+    static const char* ClassName() {
+        return "ASSAO";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Compositing module that computes screen space ambient occlusion"; }
+    static const char* Description() {
+        return "Compositing module that computes screen space ambient occlusion";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     ASSAO();
     ~ASSAO();
@@ -246,25 +250,22 @@ private:
         std::shared_ptr<glowl::Texture2D> depthTexture, std::shared_ptr<glowl::Texture2D> normalTexture);
 
     template<typename Tuple, typename Tex>
-    void fullscreenPassDraw(
-        const std::unique_ptr<GLSLComputeShader>& prgm,
-        const std::vector<Tuple>& input_textures,
-        std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures,
-        bool add_constants = true,
-        const std::vector<TextureArraySamplerTuple>& finals = {}
-    );
-    
+    void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, const std::vector<Tuple>& input_textures,
+        std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures, bool add_constants = true,
+        const std::vector<TextureArraySamplerTuple>& finals = {});
+
     bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     bool equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     void updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs);
     void updateConstants(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass);
-    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps = false);
+    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly,
+        bool generateMipMaps = false);
     bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
     bool reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
-        std::shared_ptr<glowl::Texture2DArray> original,
-        glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice);
-    bool reCreateMIPViewIfNeeded(std::shared_ptr<glowl::Texture2DView> current,
-        std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
+        std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly,
+        int arraySlice);
+    bool reCreateMIPViewIfNeeded(
+        std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
 
     // callback functions
     bool settingsCallback(core::param::ParamSlot& slot);
@@ -399,13 +400,9 @@ private:
 };
 
 template<typename Tuple, typename Tex>
-void ASSAO::fullscreenPassDraw(
-    const std::unique_ptr<GLSLComputeShader>& prgm,
-    const std::vector<Tuple>& inputTextures,
-    std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures,
-    bool addConstants,
-    const std::vector<TextureArraySamplerTuple>& finals)
-{
+void ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, const std::vector<Tuple>& inputTextures,
+    std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures, bool addConstants,
+    const std::vector<TextureArraySamplerTuple>& finals) {
     prgm->Enable();
 
     if (addConstants)

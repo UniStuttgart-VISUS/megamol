@@ -3,8 +3,8 @@
  *
  * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS). Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "stdafx.h"
 
 #include "msf/LineTranslator.h"
 #include "msf/ShaderFactory.h"

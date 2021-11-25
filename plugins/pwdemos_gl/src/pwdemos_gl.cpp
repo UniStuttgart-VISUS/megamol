@@ -25,40 +25,40 @@
 #include "QuartzParticleGridDataCall.h"
 
 namespace megamol::demos_gl {
-    class PwdemosGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PwdemosGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(PwdemosGLPluginInstance)
 
-    public:
-        PwdemosGLPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance("pwdemos_gl", "The pwdemos plugin."){};
+public:
+    PwdemosGLPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("pwdemos_gl", "The pwdemos plugin."){};
 
-        ~PwdemosGLPluginInstance() override = default;
+    ~PwdemosGLPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::AOSphereRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::BezierCPUMeshRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzPlaneRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzPlaneTexRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::DataGridder>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleFortLoader>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzTexRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::PoreNetExtractor>();
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::AOSphereRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::BezierCPUMeshRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzPlaneRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzPlaneTexRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::DataGridder>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleFortLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::QuartzTexRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos_gl::PoreNetExtractor>();
 
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-            this->module_descriptions.RegisterAutoDescription<megamol::demos::CrystalStructureVolumeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::demos::CrystalStructureVolumeRenderer>();
 #endif
 
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalDataCall>();
-            this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleDataCall>();
-            this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleGridDataCall>();
-        }
-    };
-} // namespace megamol::demos
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::CrystalDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::demos_gl::ParticleGridDataCall>();
+    }
+};
+} // namespace megamol::demos_gl

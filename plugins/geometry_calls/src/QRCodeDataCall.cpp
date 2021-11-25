@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "geometry_calls/QRCodeDataCall.h"
+#include "stdafx.h"
 
 namespace megamol::geocalls {
 
@@ -33,16 +33,12 @@ const unsigned int QRCodeDataCall::CallForGetBoundingBox = 4;
  */
 const unsigned int QRCodeDataCall::CallForSetBoundingBox = 5;
 
-QRCodeDataCall::QRCodeDataCall(void) : qr_text(NULL), qr_pointer(NULL), bbox(NULL)
-{
-
-}
+QRCodeDataCall::QRCodeDataCall(void) : qr_text(NULL), qr_pointer(NULL), bbox(NULL) {}
 
 
-QRCodeDataCall::~QRCodeDataCall(void) 
-{
-	qr_text = NULL;
-	qr_pointer = NULL;
-	bbox = NULL;
+QRCodeDataCall::~QRCodeDataCall(void) {
+    qr_text = NULL;
+    qr_pointer = NULL;
+    bbox = NULL;
 }
-}
+} // namespace megamol::geocalls

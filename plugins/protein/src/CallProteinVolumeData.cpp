@@ -6,12 +6,12 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "CallProteinVolumeData.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol;
 
@@ -21,10 +21,14 @@ using namespace megamol;
 /*
  * protein::CallProteinVolumeData::CallProteinVolumeData
  */
-protein::CallProteinVolumeData::CallProteinVolumeData(void) : Call(),
-    map( NULL), mapMemory( false), volDim( 0, 0, 0),
-    minDensity( 0.0f), maxDensity( 0.0f), meanDensity( 0.0f)
-{
+protein::CallProteinVolumeData::CallProteinVolumeData(void)
+        : Call()
+        , map(NULL)
+        , mapMemory(false)
+        , volDim(0, 0, 0)
+        , minDensity(0.0f)
+        , maxDensity(0.0f)
+        , meanDensity(0.0f) {
     // intentionally empty
 }
 
@@ -32,16 +36,15 @@ protein::CallProteinVolumeData::CallProteinVolumeData(void) : Call(),
 /*
  * protein::CallProteinVolumeData::~CallProteinVolumeData
  */
-protein::CallProteinVolumeData::~CallProteinVolumeData(void) {
-
-}
+protein::CallProteinVolumeData::~CallProteinVolumeData(void) {}
 
 
 /*
  * Sets a pointer to the voxel map array.
  */
-void protein::CallProteinVolumeData::SetVoxelMapPointer( float *voxelMap) {
-    if( this->mapMemory ) delete[] this->map;
+void protein::CallProteinVolumeData::SetVoxelMapPointer(float* voxelMap) {
+    if (this->mapMemory)
+        delete[] this->map;
     this->map = voxelMap;
     this->mapMemory = false;
 }

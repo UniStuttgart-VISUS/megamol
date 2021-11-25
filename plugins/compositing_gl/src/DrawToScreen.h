@@ -8,8 +8,8 @@
 #ifndef DRAW_TO_SCREEN_H_INCLUDED
 #define DRAW_TO_SCREEN_H_INCLUDED
 
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -31,14 +31,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "DrawToScreen"; }
+    static const char* ClassName(void) {
+        return "DrawToScreen";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "...TODO..."; }
+    static const char* Description(void) {
+        return "...TODO...";
+    }
 
     /**
      * Answers whether this module is available on the current system.

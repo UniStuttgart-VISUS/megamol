@@ -5,16 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/SIFFWriter.h"
 #include "mmcore/BoundingBoxes.h"
-#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "stdafx.h"
+#include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/sysfunctions.h"
 
 using namespace megamol;
@@ -24,11 +24,12 @@ using namespace megamol::moldyn::io;
 /*
  * SIFFWriter::SIFFWriter
  */
-SIFFWriter::SIFFWriter(void) : AbstractDataWriter(),
-        filenameSlot("filename", "The path to the MMPLD file to be written"),
-        asciiSlot("ascii", "Set to true to write ASCII-versions of SIFF"),
-        versionSlot("version", "The file format version to write"),
-        dataSlot("data", "The slot requesting the data to be written") {
+SIFFWriter::SIFFWriter(void)
+        : AbstractDataWriter()
+        , filenameSlot("filename", "The path to the MMPLD file to be written")
+        , asciiSlot("ascii", "Set to true to write ASCII-versions of SIFF")
+        , versionSlot("version", "The file format version to write")
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot << new core::param::FilePathParam(
         "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"siff"});
@@ -37,7 +38,7 @@ SIFFWriter::SIFFWriter(void) : AbstractDataWriter(),
     this->asciiSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->asciiSlot);
 
-    core::param::EnumParam *version = new core::param::EnumParam(100);
+    core::param::EnumParam* version = new core::param::EnumParam(100);
     version->SetTypePair(100, "1.0");
     version->SetTypePair(101, "1.1");
     this->versionSlot << version;
@@ -86,7 +87,7 @@ bool SIFFWriter::run(void) {
         return false;
     }
 
-    geocalls::MultiParticleDataCall *mpdc = this->dataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* mpdc = this->dataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
@@ -101,7 +102,8 @@ bool SIFFWriter::run(void) {
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     mpdc->SetFrameID(0, true);
@@ -119,20 +121,23 @@ bool SIFFWriter::run(void) {
     }
 
     try {
-    
-        if (file.Write("SIFF", 4) != 4) throw Exception("Write failed", __FILE__, __LINE__);
-        if (file.Write((useAscii ? "a" : "b"), 1) != 1) throw Exception("Write failed", __FILE__, __LINE__);
+
+        if (file.Write("SIFF", 4) != 4)
+            throw Exception("Write failed", __FILE__, __LINE__);
+        if (file.Write((useAscii ? "a" : "b"), 1) != 1)
+            throw Exception("Write failed", __FILE__, __LINE__);
         if (useAscii) {
             vislib::sys::WriteFormattedLineToFile(file, "%u.%u\n", version / 100, version % 100);
         } else {
             unsigned short v = static_cast<unsigned short>(version);
-            if (file.Write(&v, 2) != 2) throw Exception("Write failed", __FILE__, __LINE__);
+            if (file.Write(&v, 2) != 2)
+                throw Exception("Write failed", __FILE__, __LINE__);
         }
 
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-            geocalls::MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
-            const char *colPtr = static_cast<const char*>(parts.GetColourData());
-            const char *vertPtr = static_cast<const char*>(parts.GetVertexData());
+            geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            const char* colPtr = static_cast<const char*>(parts.GetColourData());
+            const char* vertPtr = static_cast<const char*>(parts.GetVertexData());
             size_t colStep = 0;
             size_t vertStep = 0;
             unsigned char col[3];
@@ -143,53 +148,53 @@ bool SIFFWriter::run(void) {
 
             // colour
             switch (parts.GetColourDataType()) {
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
-                    ::memcpy(col, parts.GetGlobalColour(), 3);
-                    colPtr = NULL;
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                    colStep = 3;
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                    colStep = 4;
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-                    colStep = 12;
-                    colFloats = true;
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-                    colStep = 16;
-                    colFloats = true;
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
-                    colStep = 4;
-                    colFloats = true;
-                    singleCol = true;
-                    minC = parts.GetMinColourIndexValue();
-                    maxC = parts.GetMaxColourIndexValue();
-                    break;
-                default:
-                    col[0] = col[1] = col[2] = 127;
-                    colPtr = NULL;
-                    break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
+                ::memcpy(col, parts.GetGlobalColour(), 3);
+                colPtr = NULL;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                colStep = 3;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                colStep = 4;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                colStep = 12;
+                colFloats = true;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                colStep = 16;
+                colFloats = true;
+                break;
+            case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                colStep = 4;
+                colFloats = true;
+                singleCol = true;
+                minC = parts.GetMinColourIndexValue();
+                maxC = parts.GetMaxColourIndexValue();
+                break;
+            default:
+                col[0] = col[1] = col[2] = 127;
+                colPtr = NULL;
+                break;
             }
             colStep = vislib::math::Max<size_t>(colStep, parts.GetColourDataStride());
 
             // radius and position
             switch (parts.GetVertexDataType()) {
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
-                    continue;
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                    vertStep = 12;
-                    ASSERT(vertPtr != NULL);
-                    break;
-                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                    vertStep = 16;
-                    hasRad = true;
-                    ASSERT(vertPtr != NULL);
-                    break;
-                default:
-                    continue;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                continue;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                vertStep = 12;
+                ASSERT(vertPtr != NULL);
+                break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                vertStep = 16;
+                hasRad = true;
+                ASSERT(vertPtr != NULL);
+                break;
+            default:
+                continue;
             }
             vertStep = vislib::math::Max<size_t>(vertStep, parts.GetVertexDataStride());
 
@@ -204,7 +209,8 @@ bool SIFFWriter::run(void) {
                             ::memcpy(c, colPtr, 3 * sizeof(float));
                         }
                         for (int j = 0; j < 3; j++) {
-                            col[j] = static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(c[j] * 255.0f), 0, 255));
+                            col[j] = static_cast<unsigned char>(
+                                vislib::math::Clamp<int>(static_cast<int>(c[j] * 255.0f), 0, 255));
                         }
                     } else {
                         ::memcpy(col, colPtr, 3);
@@ -219,28 +225,26 @@ bool SIFFWriter::run(void) {
 
                 if (useAscii) {
                     vislib::sys::WriteFormattedLineToFile(file,
-                        (version == 101)
-                        ? "%f %f %f\n"
-                        : "%f %f %f %f %u %u %u\n",
-                        v[0], v[1], v[2], v[3], col[0], col[1], col[2]);
+                        (version == 101) ? "%f %f %f\n" : "%f %f %f %f %u %u %u\n", v[0], v[1], v[2], v[3], col[0],
+                        col[1], col[2]);
                 } else {
                     if (version == 101) {
-                        if (file.Write(&v, 12) != 12) throw Exception("Write failed", __FILE__, __LINE__);
+                        if (file.Write(&v, 12) != 12)
+                            throw Exception("Write failed", __FILE__, __LINE__);
                     } else if (version == 100) {
-                        if (file.Write(&v, 16) != 16) throw Exception("Write failed", __FILE__, __LINE__);
-                        if (file.Write(&col, 3) != 3) throw Exception("Write failed", __FILE__, __LINE__);
+                        if (file.Write(&v, 16) != 16)
+                            throw Exception("Write failed", __FILE__, __LINE__);
+                        if (file.Write(&col, 3) != 3)
+                            throw Exception("Write failed", __FILE__, __LINE__);
                     }
                 }
-
             }
         }
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Completed writing data\n");
-    } catch(Exception ex) {
+    } catch (Exception ex) {
         Log::DefaultLog.WriteError("Failed to write: %s (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-    } catch(...) {
-        Log::DefaultLog.WriteError("Failed to write: unexpected exception\n");
-    }
+    } catch (...) { Log::DefaultLog.WriteError("Failed to write: unexpected exception\n"); }
     file.Close();
 
     return true;

@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "geometry_calls/MultiParticleDataCall.h"
 #include "datatools/AbstractManipulator.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace datatools {

@@ -4,96 +4,93 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "geometry_calls//MultiParticleDataCall.h"
-#include "geometry_calls//EllipsoidalDataCall.h"
-#include "mmcore/param/ParamSlot.h"
 #include "datatools/table/TableDataCall.h"
-#include <map>
+#include "geometry_calls//EllipsoidalDataCall.h"
+#include "geometry_calls//MultiParticleDataCall.h"
+#include "mmcore/param/ParamSlot.h"
 #include <array>
+#include <map>
 
 namespace megamol {
 namespace datatools {
 
+/**
+ * This module converts from a generic table to the MultiParticleDataCall.
+ */
+class ParticlesToTable : public megamol::core::Module {
+
+public:
     /**
-     * This module converts from a generic table to the MultiParticleDataCall.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ParticlesToTable : public megamol::core::Module {
+    static inline const char* ClassName(void) {
+        return "ParticlesToTable";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Converts particles to generic tables.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void)  {
-            return "ParticlesToTable";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "Converts particles to generic tables.";
-        }
+    /**
+     * Initialises a new instance.
+     */
+    ParticlesToTable(void);
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Finalises an instance.
+     */
+    virtual ~ParticlesToTable(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        ParticlesToTable(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~ParticlesToTable(void);
+    bool getTableData(core::Call& call);
 
-    protected:
+    bool getTableHash(core::Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        bool getTableData(core::Call& call);
+private:
+    bool assertMPDC(geocalls::MultiParticleDataCall* in, table::TableDataCall* tc);
+    bool assertEPDC(geocalls::EllipsoidalParticleDataCall* c, table::TableDataCall* tc);
 
-        bool getTableHash(core::Call& call);
+    /** The slot for retrieving the data as multi particle data. */
+    core::CalleeSlot slotTableOut;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The data callee slot. */
+    core::CallerSlot slotParticlesIn;
 
-    private:
+    std::vector<float> everything;
 
-        bool assertMPDC(geocalls::MultiParticleDataCall *in, table::TableDataCall *tc);
-        bool assertEPDC(geocalls::EllipsoidalParticleDataCall *c, table::TableDataCall *tc);
-
-        /** The slot for retrieving the data as multi particle data. */
-        core::CalleeSlot slotTableOut;
-
-        /** The data callee slot. */
-        core::CallerSlot slotParticlesIn;
-
-        std::vector<float> everything;
-
-        SIZE_T inHash = SIZE_MAX;
-        unsigned int inFrameID = std::numeric_limits<unsigned int>::max();
-        std::vector<table::TableDataCall::ColumnInfo> column_infos;
-        uint32_t total_particles = 0;
-    };
+    SIZE_T inHash = SIZE_MAX;
+    unsigned int inFrameID = std::numeric_limits<unsigned int>::max();
+    std::vector<table::TableDataCall::ColumnInfo> column_infos;
+    uint32_t total_particles = 0;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

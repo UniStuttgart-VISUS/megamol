@@ -11,276 +11,266 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/sys/CriticalSection.h"
 #include "mmcore/utility/net/DiscoveryListener.h"
 #include "mmcore/utility/net/DiscoveryService.h"
+#include "vislib/sys/CriticalSection.h"
 
 
 namespace megamol {
 namespace core {
 namespace cluster {
 
-    /** forward declaration */
-    class ClusterControllerClient;
+/** forward declaration */
+class ClusterControllerClient;
 
+
+/**
+ * Class implementing the cluster rendering master job
+ */
+class ClusterController : public job::AbstractThreadedJob,
+                          public Module,
+                          public vislib::net::cluster::DiscoveryListener {
+public:
+    /** DiscoveryService::PeerHandle */
+    typedef vislib::net::cluster::DiscoveryService::PeerHandle PeerHandle;
+
+    /** The default name of the rendering cluster */
+    static const char* DEFAULT_CLUSTERNAME;
 
     /**
-     * Class implementing the cluster rendering master job
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ClusterController : public job::AbstractThreadedJob, public Module,
-        public vislib::net::cluster::DiscoveryListener {
-    public:
+    static const char* ClassName(void) {
+        return "ClusterController";
+    }
 
-        /** DiscoveryService::PeerHandle */
-        typedef vislib::net::cluster::DiscoveryService::PeerHandle PeerHandle;
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "The controller thread for cluster operation";
+    }
 
-        /** The default name of the rendering cluster */
-        static const char * DEFAULT_CLUSTERNAME;
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "ClusterController";
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "The controller thread for cluster operation";
-        }
+    /**
+     * Ctor
+     */
+    ClusterController();
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Dtor
+     */
+    virtual ~ClusterController();
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * Sends a message to all nodes in the cluster.
+     *
+     * @param msgType The type value for the message
+     * @param msgBody The data of the message
+     * @param msgSize The size of the data of the message in bytes
+     */
+    void SendUserMsg(const UINT32 msgType, const BYTE* msgBody, const SIZE_T msgSize);
 
-        /**
-         * Ctor
-         */
-        ClusterController();
+    /**
+     * Sends a message to one nodes in the cluster.
+     *
+     * @param hPeer The peer to the node to send the message to
+     * @param msgType The type value for the message
+     * @param msgBody The data of the message
+     * @param msgSize The size of the data of the message in bytes
+     */
+    void SendUserMsg(const PeerHandle& hPeer, const UINT32 msgType, const BYTE* msgBody, const SIZE_T msgSize);
 
-        /**
-         * Dtor
-         */
-        virtual ~ClusterController();
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Sends a message to all nodes in the cluster.
-         *
-         * @param msgType The type value for the message
-         * @param msgBody The data of the message
-         * @param msgSize The size of the data of the message in bytes
-         */
-        void SendUserMsg(const UINT32 msgType, const BYTE *msgBody,
-            const SIZE_T msgSize);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Sends a message to one nodes in the cluster.
-         *
-         * @param hPeer The peer to the node to send the message to
-         * @param msgType The type value for the message
-         * @param msgBody The data of the message
-         * @param msgSize The size of the data of the message in bytes
-         */
-        void SendUserMsg(const PeerHandle& hPeer, const UINT32 msgType,
-            const BYTE *msgBody, const SIZE_T msgSize);
+    /**
+     * Perform the work of a thread.
+     *
+     * @param userData A pointer to user data that are passed to the thread,
+     *                 if it started.
+     *
+     * @return The application dependent return code of the thread. This
+     *         must not be STILL_ACTIVE (259).
+     */
+    virtual DWORD Run(void* userData);
 
-    protected:
+    /**
+     * This method will be called, if a new computer was found
+     * by a DiscoveryService.
+     *
+     * This method should return very quickly and should not perform
+     * excessive work as it is executed in the discovery thread.
+     *
+     * @param src   The discovery service that fired the event.
+     * @param hPeer The handle of the peer that was found. The response
+     *              address associated with this handle can be retrieved
+     *              via src[hPeer].
+     */
+    virtual void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw();
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * This method will be called, if a new computer disconnected from
+     * a DiscoveryService or is regarded as lost.
+     *
+     * This method should return very quickly and should not perform
+     * excessive work as it is executed in the discovery thread.
+     *
+     * Note that the peer handle 'hPeer' is only guaranteed to be valid
+     * until this method returns!
+     *
+     * @param src    The discovery service that fired the event.
+     * @param hPeer  The handle of the peer that was removed.
+     * @param reason The reason why the node was removed from the cluster.
+     */
+    virtual void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
+        const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) throw();
+    /**
+     * This method is called once the discovery service receives a user
+     * message (user defined payload).
+     *
+     * This method should return very quickly and should not perform
+     * excessive work as it is executed in the discovery thread.
+     *
+     * Remarks regarding 'hPeer': The peer handle can be used to send an
+     * answer message to the sender of this message. It can be used for
+     * other operations on 'src' in case the peer node is a member of the
+     * cluster, i. e. if 'isClusterMember' is true. Otherwise, operations
+     * on 'src' might fail and indicate an invalid handle. It is guaranteed
+     * that SendUserMessage() will work for non-member handles.
+     *
+     * @param src             The discovery service that fired the event.
+     * @param hPeer           Handle of the peer node that sent the message.
+     * @param isClusterMember This flag is set if the node designated by
+     *                        'hPeer' is a known peer node of the cluster
+     *                        managed by 'src'. If not, the message was
+     *                        received from an observer node. Please be
+     *                        aware that 'hPeer' is of limited use in this
+     *                        case.
+     * @param msgType         The message type identifier.
+     * @param msgBody         The message body data. These are user defined
+     *                        and probably dependent on the 'msgType'. The
+     *                        callee remains owner of the memory designated
+     *                        by 'msgBody'. It is valid until the callback
+     *                        is left.
+     */
+    virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, const bool isClusterMember,
+        const UINT32 msgType, const BYTE* msgBody) throw();
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+private:
+    /**
+     * Answer the default port
+     *
+     * @return The default port
+     */
+    UINT16 defaultPort(void);
 
-        /**
-         * Perform the work of a thread.
-         *
-         * @param userData A pointer to user data that are passed to the thread,
-         *                 if it started.
-         *
-         * @return The application dependent return code of the thread. This 
-         *         must not be STILL_ACTIVE (259).
-         */
-        virtual DWORD Run(void *userData);
+    /**
+     * Stops the discovery service.
+     */
+    void stopDiscoveryService(void);
 
-        /**
-         * This method will be called, if a new computer was found
-         * by a DiscoveryService.
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * @param src   The discovery service that fired the event.
-         * @param hPeer The handle of the peer that was found. The response 
-         *              address associated with this handle can be retrieved
-         *              via src[hPeer].
-         */
-        virtual void OnNodeFound(
-            vislib::net::cluster::DiscoveryService& src,
-            const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer)
-            throw();
+    /**
+     * A module want's to register at the controller.
+     *
+     * @param call The calling call.
+     *
+     * @return 'true'
+     */
+    bool registerModule(Call& call);
 
-        /**
-         * This method will be called, if a new computer disconnected from
-         * a DiscoveryService or is regarded as lost.
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * Note that the peer handle 'hPeer' is only guaranteed to be valid
-         * until this method returns!
-         *
-         * @param src    The discovery service that fired the event.
-         * @param hPeer  The handle of the peer that was removed.
-         * @param reason The reason why the node was removed from the cluster.
-         */
-        virtual void OnNodeLost(
-            vislib::net::cluster::DiscoveryService& src,
-            const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
-            const vislib::net::cluster::DiscoveryListener::NodeLostReason
-                reason) throw();
-        /**
-         * This method is called once the discovery service receives a user
-         * message (user defined payload).
-         *
-         * This method should return very quickly and should not perform
-         * excessive work as it is executed in the discovery thread.
-         *
-         * Remarks regarding 'hPeer': The peer handle can be used to send an
-         * answer message to the sender of this message. It can be used for
-         * other operations on 'src' in case the peer node is a member of the
-         * cluster, i. e. if 'isClusterMember' is true. Otherwise, operations
-         * on 'src' might fail and indicate an invalid handle. It is guaranteed
-         * that SendUserMessage() will work for non-member handles.
-         *
-         * @param src             The discovery service that fired the event.
-         * @param hPeer           Handle of the peer node that sent the message.
-         * @param isClusterMember This flag is set if the node designated by 
-         *                        'hPeer' is a known peer node of the cluster
-         *                        managed by 'src'. If not, the message was 
-         *                        received from an observer node. Please be 
-         *                        aware that 'hPeer' is of limited use in this
-         *                        case.
-         * @param msgType         The message type identifier.
-         * @param msgBody         The message body data. These are user defined 
-         *                        and probably dependent on the 'msgType'. The 
-         *                        callee remains owner of the memory designated 
-         *                        by 'msgBody'. It is valid until the callback 
-         *                        is left.
-         */
-        virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
-            const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
-            const bool isClusterMember, const UINT32 msgType,
-            const BYTE *msgBody) throw();
+    /**
+     * A module want's to unregister from the controller.
+     *
+     * @param call The calling call.
+     *
+     * @return 'true'
+     */
+    bool unregisterModule(Call& call);
 
-    private:
+    /**
+     * A module queries the status of the controller
+     *
+     * @param call The calling call.
+     *
+     * @return 'true'
+     */
+    bool queryStatus(Call& call);
 
-        /**
-         * Answer the default port
-         *
-         * @return The default port
-         */
-        UINT16 defaultPort(void);
+    /**
+     * Event handler for the shutdown-cluster button
+     *
+     * @param slot Must be shutdownClusterButton
+     *
+     * @return true
+     */
+    bool onShutdownCluster(param::ParamSlot& slot);
 
-        /**
-         * Stops the discovery service.
-         */
-        void stopDiscoveryService(void);
+    /** The name of the rendering cluster */
+    param::ParamSlot cdsNameSlot;
 
-        /**
-         * A module want's to register at the controller.
-         *
-         * @param call The calling call.
-         *
-         * @return 'true'
-         */
-        bool registerModule(Call& call);
+    /** The ip port to be used by the cluster discovery service. */
+    param::ParamSlot cdsPortSlot;
 
-        /**
-         * A module want's to unregister from the controller.
-         *
-         * @param call The calling call.
-         *
-         * @return 'true'
-         */
-        bool unregisterModule(Call& call);
+    /** Flag to start or stop the cluster discovery service */
+    param::ParamSlot cdsRunSlot;
 
-        /**
-         * A module queries the status of the controller
-         *
-         * @param call The calling call.
-         *
-         * @return 'true'
-         */
-        bool queryStatus(Call& call);
+    /** Button slot to shut down the whole cluster */
+    param::ParamSlot shutdownClusterSlot;
 
-        /**
-         * Event handler for the shutdown-cluster button
-         *
-         * @param slot Must be shutdownClusterButton
-         *
-         * @return true
-         */
-        bool onShutdownCluster(param::ParamSlot& slot);
+    /** The discovery service object */
+    vislib::net::cluster::DiscoveryService discoveryService;
 
-        /** The name of the rendering cluster */
-        param::ParamSlot cdsNameSlot;
+    /** The slot to register at */
+    CalleeSlot registerSlot;
 
-        /** The ip port to be used by the cluster discovery service. */
-        param::ParamSlot cdsPortSlot;
+    /** List of the registered clients */
+    vislib::SingleLinkedList<ClusterControllerClient*> clients;
 
-        /** Flag to start or stop the cluster discovery service */
-        param::ParamSlot cdsRunSlot;
-
-        /** Button slot to shut down the whole cluster */
-        param::ParamSlot shutdownClusterSlot;
-
-        /** The discovery service object */
-        vislib::net::cluster::DiscoveryService discoveryService;
-
-        /** The slot to register at */
-        CalleeSlot registerSlot;
-
-        /** List of the registered clients */
-        vislib::SingleLinkedList<ClusterControllerClient *> clients;
-
-        /** The locking for accessing the clients list */
-        vislib::sys::CriticalSection clientsLock;
-
-    };
+    /** The locking for accessing the clients list */
+    vislib::sys::CriticalSection clientsLock;
+};
 
 
-} /* end namespace special */
+} // namespace cluster
 } /* end namespace core */
 } /* end namespace megamol */
 

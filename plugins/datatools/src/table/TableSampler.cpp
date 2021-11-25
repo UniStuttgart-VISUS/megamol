@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableSampler.h"
+#include "stdafx.h"
 
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -24,32 +24,28 @@ using namespace megamol::datatools::table;
 using namespace megamol;
 
 TableSampler::TableSampler()
-    : core::Module()
-    , tableInSlot("getDataIn", "Float table input")
-    , tableOutSlot("getDataOut", "Float table output")
-    , sampleNumberModeParam("sampleNumberMode", "sample number mode")
-    , sampleNumberAbsoluteParam("sampleNumberAbsolute", "number of samples")
-    , sampleNumberRelativeParam("sampleNumberRelative", "percentage of samples")
-    , resampleParam("resample", "resample")
-    , tableInFrameCount(0)
-    , tableInDataHash(0)
-    , tableInColCount(0)
-    , dataHash(0)
-    , rowCount(0)
-    , doResampling(false) {
+        : core::Module()
+        , tableInSlot("getDataIn", "Float table input")
+        , tableOutSlot("getDataOut", "Float table output")
+        , sampleNumberModeParam("sampleNumberMode", "sample number mode")
+        , sampleNumberAbsoluteParam("sampleNumberAbsolute", "number of samples")
+        , sampleNumberRelativeParam("sampleNumberRelative", "percentage of samples")
+        , resampleParam("resample", "resample")
+        , tableInFrameCount(0)
+        , tableInDataHash(0)
+        , tableInColCount(0)
+        , dataHash(0)
+        , rowCount(0)
+        , doResampling(false) {
 
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
-    this->tableOutSlot.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(0),
-        &TableSampler::getData);
-    this->tableOutSlot.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(1),
-        &TableSampler::getHash);
+    this->tableOutSlot.SetCallback(TableDataCall::ClassName(), TableDataCall::FunctionName(0), &TableSampler::getData);
+    this->tableOutSlot.SetCallback(TableDataCall::ClassName(), TableDataCall::FunctionName(1), &TableSampler::getHash);
     this->MakeSlotAvailable(&this->tableOutSlot);
 
-    auto *snp = new core::param::EnumParam(SampleNumberMode::ABSOLUTE);
+    auto* snp = new core::param::EnumParam(SampleNumberMode::ABSOLUTE);
     snp->SetTypePair(SampleNumberMode::ABSOLUTE, "Number of samples");
     snp->SetTypePair(SampleNumberMode::RELATIVE, "Percentage");
     this->sampleNumberModeParam << snp;
@@ -60,7 +56,7 @@ TableSampler::TableSampler()
     this->sampleNumberAbsoluteParam.SetUpdateCallback(this, &TableSampler::resampleCallback);
     this->MakeSlotAvailable(&this->sampleNumberAbsoluteParam);
 
-    auto *snrp = new core::param::FloatParam(10.0, 0.0, 100.0);
+    auto* snrp = new core::param::FloatParam(10.0, 0.0, 100.0);
     snrp->SetGUIVisible(false);
     this->sampleNumberRelativeParam << snrp;
     this->sampleNumberRelativeParam.SetUpdateCallback(this, &TableSampler::resampleCallback);
@@ -79,15 +75,14 @@ bool TableSampler::create() {
     return true;
 }
 
-void TableSampler::release() {
-}
+void TableSampler::release() {}
 
-bool TableSampler::getData(core::Call &call) {
+bool TableSampler::getData(core::Call& call) {
     if (!this->handleCall(call)) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
+    auto* tableOutCall = dynamic_cast<TableDataCall*>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
     tableOutCall->Set(this->tableInColCount, this->rowCount, this->colInfos.data(), this->data.data());
@@ -95,21 +90,21 @@ bool TableSampler::getData(core::Call &call) {
     return true;
 }
 
-bool TableSampler::getHash(core::Call &call) {
+bool TableSampler::getHash(core::Call& call) {
     if (!this->handleCall(call)) {
         return false;
     }
 
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
+    auto* tableOutCall = dynamic_cast<TableDataCall*>(&call);
     tableOutCall->SetFrameCount(this->tableInFrameCount);
     tableOutCall->SetDataHash(this->dataHash);
 
     return true;
 }
 
-bool TableSampler::handleCall(core::Call &call) {
-    auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
-    auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
+bool TableSampler::handleCall(core::Call& call) {
+    auto* tableOutCall = dynamic_cast<TableDataCall*>(&call);
+    auto* tableInCall = this->tableInSlot.CallAs<TableDataCall>();
 
     if (tableOutCall == nullptr) {
         return false;
@@ -125,7 +120,8 @@ bool TableSampler::handleCall(core::Call &call) {
     (*tableInCall)(1);
     (*tableInCall)(0);
 
-    if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || doResampling) {
+    if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() ||
+        doResampling) {
         //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableSampler: Sample table.");
 
         this->dataHash++;
@@ -147,10 +143,12 @@ bool TableSampler::handleCall(core::Call &call) {
         size_t numberOfSamples = 0;
         switch (static_cast<SampleNumberMode>(this->sampleNumberModeParam.Param<core::param::EnumParam>()->Value())) {
         case SampleNumberMode::ABSOLUTE:
-            numberOfSamples = static_cast<size_t>(this->sampleNumberAbsoluteParam.Param<core::param::IntParam>()->Value());
+            numberOfSamples =
+                static_cast<size_t>(this->sampleNumberAbsoluteParam.Param<core::param::IntParam>()->Value());
             break;
         case SampleNumberMode::RELATIVE:
-            numberOfSamples = tableInRowCount * this->sampleNumberRelativeParam.Param<core::param::FloatParam>()->Value() / 100.0;
+            numberOfSamples =
+                tableInRowCount * this->sampleNumberRelativeParam.Param<core::param::FloatParam>()->Value() / 100.0;
             break;
         }
 
@@ -166,7 +164,7 @@ bool TableSampler::handleCall(core::Call &call) {
 
         this->data.resize(this->tableInColCount * this->rowCount);
 
-        const float *tableInData = tableInCall->GetData();
+        const float* tableInData = tableInCall->GetData();
         for (size_t r = 0; r < this->rowCount; ++r) {
             for (size_t c = 0; c < this->tableInColCount; ++c) {
                 float val = tableInData[this->tableInColCount * indexList[r] + c];
@@ -192,12 +190,12 @@ bool TableSampler::handleCall(core::Call &call) {
     return true;
 }
 
-bool TableSampler::resampleCallback(core::param::ParamSlot &caller) {
+bool TableSampler::resampleCallback(core::param::ParamSlot& caller) {
     this->doResampling = true;
     return true;
 }
 
-bool TableSampler::numberModeCallback(core::param::ParamSlot &caller) {
+bool TableSampler::numberModeCallback(core::param::ParamSlot& caller) {
     this->doResampling = true;
     this->sampleNumberAbsoluteParam.Param<core::param::IntParam>()->SetGUIVisible(false);
     this->sampleNumberRelativeParam.Param<core::param::FloatParam>()->SetGUIVisible(false);

@@ -13,8 +13,8 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/ParamSlot.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "vislib/sys/File.h"
 
 
@@ -28,13 +28,12 @@ namespace io {
  */
 class MMPGDWriter : public core::AbstractDataWriter {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "MMPGDWriter";
     }
 
@@ -43,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "MMPGD file writer";
     }
 
@@ -72,7 +71,6 @@ public:
     virtual ~MMPGDWriter(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -99,10 +97,9 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall &call);
+    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
 
 private:
-
     /**
      * Writes the data of one frame to the file
      *
@@ -111,17 +108,16 @@ private:
      *
      * @return True on success
      */
-    bool writeFrame(vislib::sys::File &file, ParticleGridDataCall &data);
+    bool writeFrame(vislib::sys::File& file, ParticleGridDataCall& data);
 
     /** The file name of the file to be written */
     core::param::ParamSlot filenameSlot;
 
     /** The slot asking for data */
     core::CallerSlot dataSlot;
-
 };
 
-}
+} // namespace io
 } /* end namespace moldyn */
 } /* end namespace megamol */
 

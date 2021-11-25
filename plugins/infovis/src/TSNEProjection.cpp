@@ -155,7 +155,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
     }
 
     // Load data in a double Array
-    double* inputData = (double*) malloc(columnCount * rowsCount * sizeof(double));
+    double* inputData = (double*)malloc(columnCount * rowsCount * sizeof(double));
     for (int col = 0; col < columnCount; col++) {
         for (int row = 0; row < rowsCount; row++) {
             inputData[row * columnCount + col] = inData[row * columnCount + col];
@@ -166,7 +166,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
 
     TSNE* tsne = new TSNE();
 
-    double* result = (double*) malloc(rowsCount * outputColumnCount * sizeof(double));
+    double* result = (double*)malloc(rowsCount * outputColumnCount * sizeof(double));
     // void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
     // bool skip_random_init, int max_iter = 1000, int stop_lying_iter = 250, int mom_switch_iter = 250);
     tsne->run(

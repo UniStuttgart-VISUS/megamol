@@ -6,19 +6,41 @@ EXIT_CODE=0
 changed_files=$(git diff --name-only origin/master...HEAD)
 git_root=$(git rev-parse --show-toplevel)
 
-find . -type f -print0 | while read -d $'\0' file; do
+file_list=$(find . -type f | sort)
+while read -r file; do
+  #ignore .git dir
+  if [[ $file == "./.git/"* ]]; then
+    continue
+  fi
+
+  # ignore files ignored by git
+  if git check-ignore -q "$file"; then
+    continue
+  fi
+
   # only process file if mime type is text
   mime=$(file -b --mime-type "$file")
   if ! [[ $mime == "text/"* ]]; then
     continue
   fi
 
+  # ignore 3rd dirs in plugins
+  if [[ $file == "./plugins/"* ]]; then
+    if [[ $file == *"/3rd/"* ]]; then
+      continue
+    fi
+    if [[ $file == *"/protein/msms/"* ]]; then
+      continue
+    fi
+  fi
+
+  # === File tests ===
+
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
   if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
     EXIT_CODE=1
     echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
-    continue
   fi
 
   # Check if file contains CRLF line endings
@@ -26,14 +48,24 @@ find . -type f -print0 | while read -d $'\0' file; do
   if [[ $fileinfo == *"CRLF"* ]]; then
     EXIT_CODE=1
     echo "ERROR: File contains CRLF line endings: $file"
-    continue
   fi
 
   # Check if file starts with BOM
   if [[ $fileinfo == *"BOM"* ]]; then
     EXIT_CODE=1
     echo "ERROR: File starts with BOM: $file"
-    continue
+  fi
+
+  # Check if file ends with newline
+  if [[ -n "$(tail -c 1 "$file")" ]]; then
+    EXIT_CODE=1
+    echo "ERROR: File does not end with new line: $file"
+  fi
+
+  # Check if file contains tabs
+  if grep -qP "\t" "$file"; then
+    EXIT_CODE=1
+    echo "ERROR: File contains tabs: $file"
   fi
 
   # Get absolute file path and path relative to git root (for comparison with changed_files).
@@ -46,19 +78,8 @@ find . -type f -print0 | while read -d $'\0' file; do
     continue
   fi
 
-  # Check if file ends with newline
-  if [[ -n "$(tail -c 1 "$file")" ]]; then
-    EXIT_CODE=1
-    echo "ERROR: File does not end with new line: $file"
-    continue
-  fi
+  # === File tests (only on changed files) ===
 
-  # Check if file contains tabs
-  if grep -qP "\t" "$file"; then
-    EXIT_CODE=1
-    echo "ERROR: File contains tabs: $file"
-    continue
-  fi
-done
+done <<< "$file_list"
 
 exit $EXIT_CODE

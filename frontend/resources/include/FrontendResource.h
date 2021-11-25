@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
 #include <any>
 #include <functional>
+#include <iostream>
 #include <optional>
+#include <string>
 #include <typeinfo>
 
 namespace megamol {
@@ -27,50 +27,51 @@ using megamol::frontend_resources::optional;
 
 class FrontendResource {
 public:
+    FrontendResource() : identifier{""}, resource{}, type_hash{0}, optional{false} {}
 
-    FrontendResource()
-        : identifier{""}
-        , resource{}
-        , type_hash{0}
-        , optional{false}
-    {}
-
-    template <typename T>
+    template<typename T>
     FrontendResource(const char* identifier, const T& resource) : FrontendResource(std::string{identifier}, resource) {}
 
-    template <typename T>
+    template<typename T>
     FrontendResource(const std::string& identifier, const T& resource)
             : identifier{identifier}
             , resource{std::reference_wrapper<const T>(resource)}
             , type_hash{typeid(T).hash_code()}
-            , optional{false}
-    {}
+            , optional{false} {}
 
-    const std::string& getIdentifier() const { return identifier; }
+    const std::string& getIdentifier() const {
+        return identifier;
+    }
 
-    template <typename T> void setResource(const T& resource) {
+    template<typename T>
+    void setResource(const T& resource) {
         this->resource = std::reference_wrapper<const T>(resource);
     }
 
-    template <typename T> T const& getResource() const {
+    template<typename T>
+    T const& getResource() const {
         if (optional) {
-            std::cout << "FrontendResource fatal error: resource " + this->identifier + " accessed non-optional but is marked as optional";
-            std::cerr << "FrontendResource fatal error: resource " + this->identifier + " accessed non-optional but is marked as optional";
+            std::cout << "FrontendResource fatal error: resource " + this->identifier +
+                             " accessed non-optional but is marked as optional";
+            std::cerr << "FrontendResource fatal error: resource " + this->identifier +
+                             " accessed non-optional but is marked as optional";
             std::exit(1);
         }
 
         //try {
-            return std::any_cast<std::reference_wrapper<const T>>(resource).get();
+        return std::any_cast<std::reference_wrapper<const T>>(resource).get();
         //} catch (const std::bad_any_cast& e) {
         //    return std::nullopt;
         //}
     }
 
     template<typename T>
-    optional<const T> getOptionalResource() const {
+    frontend_resources::optional<const T> getOptionalResource() const {
         if (!optional) {
-            std::cout << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";
-            std::cerr << "FrontendResource fatal error: resource " + this->identifier + " accessed optional but is marked as non-optional";
+            std::cout << "FrontendResource fatal error: resource " + this->identifier +
+                             " accessed optional but is marked as non-optional";
+            std::cerr << "FrontendResource fatal error: resource " + this->identifier +
+                             " accessed optional but is marked as non-optional";
             std::exit(1);
         }
 
@@ -79,7 +80,7 @@ public:
         }
 
         //try {
-            return std::make_optional( std::any_cast<std::reference_wrapper<const T>>(resource) );
+        return std::make_optional(std::any_cast<std::reference_wrapper<const T>>(resource));
         //} catch (const std::bad_any_cast& e) {
         //    return std::nullopt;
         //}
@@ -107,4 +108,3 @@ private:
 } /* end namespace frontend */
 
 } /* end namespace megamol */
-

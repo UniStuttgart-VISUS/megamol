@@ -1,12 +1,12 @@
 /*
  * MultiParticleDataCall.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "stdafx.h"
 //#include "vislib/memutils.h"
 
 namespace megamol::geocalls {
@@ -15,8 +15,7 @@ namespace megamol::geocalls {
 /*
  * MultiParticleDataCall::MultiParticleDataCall
  */
-MultiParticleDataCall::MultiParticleDataCall(void)
-        : AbstractParticleDataCall<SimpleSphericalParticles>() {
+MultiParticleDataCall::MultiParticleDataCall(void) : AbstractParticleDataCall<SimpleSphericalParticles>() {
     // Intentionally empty
 }
 
@@ -32,9 +31,8 @@ MultiParticleDataCall::~MultiParticleDataCall(void) {
 /*
  * MultiParticleDataCall::operator=
  */
-MultiParticleDataCall& MultiParticleDataCall::operator=(
-        const MultiParticleDataCall& rhs) {
-    AbstractParticleDataCall<SimpleSphericalParticles>::operator =(rhs);
+MultiParticleDataCall& MultiParticleDataCall::operator=(const MultiParticleDataCall& rhs) {
+    AbstractParticleDataCall<SimpleSphericalParticles>::operator=(rhs);
     return *this;
 }
-}
+} // namespace megamol::geocalls

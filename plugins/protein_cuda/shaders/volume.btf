@@ -88,7 +88,7 @@ void main(void) {
         //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
         gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
     } else {
-    //	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
+    //    vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
         vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
         if (texture3D(volumeSampler, volPos).w /*< 0.000001*/ == 0)
             //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
@@ -193,7 +193,7 @@ float computeColorDensity( vec3 pos) {
 void main(void) {
     vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
     //gl_FragColor = vec4(0, 0, 0, computeDensity(pos));
-	gl_FragColor = vec4( color * computeColorDensity( pos) * scale, computeDensity(pos));
+    gl_FragColor = vec4( color * computeColorDensity( pos) * scale, computeDensity(pos));
 }
 -->
         </snippet>

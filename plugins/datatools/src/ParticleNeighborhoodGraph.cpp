@@ -1,35 +1,42 @@
-#include "stdafx.h"
 #include "ParticleNeighborhoodGraph.h"
 #include "datatools/GraphDataCall.h"
+#include "datatools/MultiParticleDataAdaptor.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "datatools/MultiParticleDataAdaptor.h"
-#include <random>
+#include "mmcore/param/IntParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include <cfloat>
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/param/IntParam.h"
 #include <chrono>
 #include <omp.h>
+#include <random>
 #include <set>
 
 using namespace megamol;
 using namespace megamol::datatools;
 
-ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
-        outGraphDataSlot("outGraphData", "Publishes graph edge data"),
-        inParticleDataSlot("inParticle", "Fetches particle data"),
-        radiusSlot("radius", "The neighborhood radius"),
-        autoRadiusSlot("autoRadius::detect", "Flag to automatically assess the neighborhood radius"),
-        autoRadiusSamplesSlot("autoRadius::samples", "Number of samples to determine the neighborhood radius"),
-        autoRadiusSampleRndSeedSlot("autoRadius::randomSeed", "Seed for the random generator selecting the samples"),
-        autoRadiusFactorSlot("autoRadius::resultsFactor", "Increase factor for the determined neighborhood radius"),
-        forceConnectIsolatedSlot("forceConnectIsolated", "Forces to inter-connect isolated parts of the graph"),
-        boundaryXCyclicSlot("boundary::XCyclic", "Activates connection over cyclic boundary conditions in x direction"),
-        boundaryYCyclicSlot("boundary::YCyclic", "Activates connection over cyclic boundary conditions in y direction"),
-        boundaryZCyclicSlot("boundary::ZCyclic", "Activates connection over cyclic boundary conditions in z direction"),
-        frameId(0), inDataHash(0), outDataHash(0), edges() {
+ParticleNeighborhoodGraph::ParticleNeighborhoodGraph()
+        : Module()
+        , outGraphDataSlot("outGraphData", "Publishes graph edge data")
+        , inParticleDataSlot("inParticle", "Fetches particle data")
+        , radiusSlot("radius", "The neighborhood radius")
+        , autoRadiusSlot("autoRadius::detect", "Flag to automatically assess the neighborhood radius")
+        , autoRadiusSamplesSlot("autoRadius::samples", "Number of samples to determine the neighborhood radius")
+        , autoRadiusSampleRndSeedSlot("autoRadius::randomSeed", "Seed for the random generator selecting the samples")
+        , autoRadiusFactorSlot("autoRadius::resultsFactor", "Increase factor for the determined neighborhood radius")
+        , forceConnectIsolatedSlot("forceConnectIsolated", "Forces to inter-connect isolated parts of the graph")
+        , boundaryXCyclicSlot(
+              "boundary::XCyclic", "Activates connection over cyclic boundary conditions in x direction")
+        , boundaryYCyclicSlot(
+              "boundary::YCyclic", "Activates connection over cyclic boundary conditions in y direction")
+        , boundaryZCyclicSlot(
+              "boundary::ZCyclic", "Activates connection over cyclic boundary conditions in z direction")
+        , frameId(0)
+        , inDataHash(0)
+        , outDataHash(0)
+        , edges() {
 
     static_assert(sizeof(index_t) * 2 == sizeof(GraphDataCall::edge), "Index type error.");
 
@@ -66,7 +73,6 @@ ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
 
     forceConnectIsolatedSlot.SetParameter(new core::param::BoolParam(true));
     //MakeSlotAvailable(&forceConnectIsolatedSlot);
-
 }
 
 ParticleNeighborhoodGraph::~ParticleNeighborhoodGraph() {
@@ -84,14 +90,17 @@ void ParticleNeighborhoodGraph::release(void) {
 
 bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
     using datatools::GraphDataCall;
-    GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
-    if (gdc == nullptr) return false;
+    GraphDataCall* gdc = dynamic_cast<GraphDataCall*>(&c);
+    if (gdc == nullptr)
+        return false;
 
-    geocalls::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpc == nullptr) return false;
+    geocalls::MultiParticleDataCall* mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    if (mpc == nullptr)
+        return false;
 
     mpc->SetFrameID(gdc->FrameID(), true);
-    if (!(*mpc)(1)) return false;
+    if (!(*mpc)(1))
+        return false;
 
     gdc->SetFrameCount(mpc->FrameCount());
     gdc->SetFrameID(mpc->FrameID());
@@ -103,34 +112,30 @@ bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
 
 bool ParticleNeighborhoodGraph::getData(core::Call& c) {
     using datatools::GraphDataCall;
-    GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
-    if (gdc == nullptr) return false;
+    GraphDataCall* gdc = dynamic_cast<GraphDataCall*>(&c);
+    if (gdc == nullptr)
+        return false;
 
-    geocalls::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (mpc == nullptr) return false;
+    geocalls::MultiParticleDataCall* mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+    if (mpc == nullptr)
+        return false;
 
     mpc->SetFrameID(gdc->FrameID(), true);
-    if (!(*mpc)(1)) return false;
+    if (!(*mpc)(1))
+        return false;
     core::BoundingBoxes bboxes = mpc->AccessBoundingBoxes();
     mpc->Unlock();
 
     mpc->SetFrameID(gdc->FrameID(), true);
-    if (!(*mpc)(0)) return false;
+    if (!(*mpc)(0))
+        return false;
     mpc->AccessBoundingBoxes() = bboxes;
 
-    if ((mpc->DataHash() != inDataHash)
-            || (mpc->FrameID() != frameId)
-            || (frameId != gdc->FrameID())
-            || (inDataHash == 0)
-            || autoRadiusSlot.IsDirty()
-            || autoRadiusFactorSlot.IsDirty()
-            || autoRadiusSamplesSlot.IsDirty()
-            || autoRadiusSampleRndSeedSlot.IsDirty()
-            || radiusSlot.IsDirty()
-            || boundaryXCyclicSlot.IsDirty()
-            || boundaryYCyclicSlot.IsDirty()
-            || boundaryZCyclicSlot.IsDirty()
-            || forceConnectIsolatedSlot.IsDirty()) {
+    if ((mpc->DataHash() != inDataHash) || (mpc->FrameID() != frameId) || (frameId != gdc->FrameID()) ||
+        (inDataHash == 0) || autoRadiusSlot.IsDirty() || autoRadiusFactorSlot.IsDirty() ||
+        autoRadiusSamplesSlot.IsDirty() || autoRadiusSampleRndSeedSlot.IsDirty() || radiusSlot.IsDirty() ||
+        boundaryXCyclicSlot.IsDirty() || boundaryYCyclicSlot.IsDirty() || boundaryZCyclicSlot.IsDirty() ||
+        forceConnectIsolatedSlot.IsDirty()) {
         // update data
         inDataHash = mpc->DataHash();
         frameId = mpc->FrameID();
@@ -149,7 +154,6 @@ bool ParticleNeighborhoodGraph::getData(core::Call& c) {
         outDataHash++;
 
         this->calcData(mpc);
-
     }
 
     // set data
@@ -165,17 +169,18 @@ bool ParticleNeighborhoodGraph::getData(core::Call& c) {
 
 namespace {
 
-    struct graph_component {
-        unsigned int id;
-        size_t cnt;
-        vislib::math::Vector<double, 3> pos;
-    };
+struct graph_component {
+    unsigned int id;
+    size_t cnt;
+    vislib::math::Vector<double, 3> pos;
+};
 
-}
+} // namespace
 
 void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) {
     datatools::MultiParticleDataAdaptor d(*data);
-    if (d.get_count() < 1) return;
+    if (d.get_count() < 1)
+        return;
 
     using std::chrono::high_resolution_clock;
     high_resolution_clock::time_point start = high_resolution_clock::now(), end;
@@ -199,13 +204,16 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
             float min_dist = FLT_MAX;
 
             for (size_t i = 0; i < d.get_count(); ++i) {
-                if (i == sample_idx) continue;
+                if (i == sample_idx)
+                    continue;
                 vislib::math::ShallowPoint<float, 3> pt(const_cast<float*>(d.get_position(i)));
                 float dist = (pt - sample_pt).SquareLength();
-                if (dist < min_dist) min_dist = dist;
+                if (dist < min_dist)
+                    min_dist = dist;
             }
 
-            if (min_dist == FLT_MAX) continue;
+            if (min_dist == FLT_MAX)
+                continue;
 
             mean_dist += std::sqrt(min_dist);
         }
@@ -215,21 +223,17 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
         neiRad = dist_fac * mean_dist;
         end = high_resolution_clock::now();
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG detecting radius (in %u ms) %f * %f => %f",
-            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(),
-            mean_dist, dist_fac, neiRad);
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), mean_dist, dist_fac, neiRad);
         start = end;
 
         this->radiusSlot.Param<core::param::FloatParam>()->SetValue(neiRad, false);
     }
     float neiRadSq = neiRad * neiRad;
 
-    vislib::math::Cuboid<float> box(
-        vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(0))),
+    vislib::math::Cuboid<float> box(vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(0))),
         vislib::math::Dimension<float, 3>(0.0f, 0.0f, 0.0f));
     for (size_t i = 1; i < d.get_count(); ++i) {
-        box.GrowToPoint(
-            vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i)))
-            );
+        box.GrowToPoint(vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i))));
     }
 
     unsigned int x_size = static_cast<unsigned int>(std::ceil(box.Width() / neiRad));
@@ -242,20 +246,24 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
     float bboxCentY = bboxCent.Y();
     float bboxCentZ = bboxCent.Z();
 
-#define _COORD(x, y, z) ((x) + ((y) + ((z) * y_size)) * x_size)
+#define _COORD(x, y, z) ((x) + ((y) + ((z)*y_size)) * x_size)
 
     std::vector<size_t> grid(d.get_count());
     std::vector<size_t*> gridCell(x_size * y_size * z_size);
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG search grid : (%u, %u, %u)", x_size, y_size, z_size);
 
-    std::vector<vislib::math::Vector<unsigned int, 3> > cell(d.get_count());
+    std::vector<vislib::math::Vector<unsigned int, 3>> cell(d.get_count());
     for (size_t i = 0; i < d.get_count(); ++i) {
-        vislib::math::Vector<float, 3> c = vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i))) - box.GetLeftBottomBack();
+        vislib::math::Vector<float, 3> c =
+            vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i))) - box.GetLeftBottomBack();
         cell[i] = c / neiRad;
-        if (cell[i].X() >= x_size) cell[i].SetX(x_size - 1);
-        if (cell[i].Y() >= y_size) cell[i].SetY(y_size - 1);
-        if (cell[i].Z() >= z_size) cell[i].SetZ(z_size - 1);
+        if (cell[i].X() >= x_size)
+            cell[i].SetX(x_size - 1);
+        if (cell[i].Y() >= y_size)
+            cell[i].SetY(y_size - 1);
+        if (cell[i].Z() >= z_size)
+            cell[i].SetZ(z_size - 1);
         //assert(cell[i].X() < x_size);
         //assert(cell[i].Y() < y_size);
         //assert(cell[i].Z() < z_size);
@@ -267,7 +275,7 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
         gridCellSize[_COORD(cell[i].X(), cell[i].Y(), cell[i].Z())]++;
     }
 
-    size_t * p = grid.data();
+    size_t* p = grid.data();
     for (unsigned int gci = 0; gci < x_size * y_size * z_size; ++gci) {
         if (gridCellSize[gci] == 0) {
             gridCell[gci] = nullptr;
@@ -286,7 +294,8 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
     }
 
     end = high_resolution_clock::now();
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG search grid constructed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG search grid constructed in %u ms",
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
     edges.reserve(d.get_count() * 2 * 4); // something
@@ -298,18 +307,20 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
     // iterate over cells
     int cellCnt = static_cast<int>(x_size * y_size * z_size);
     int maxThreads = omp_get_max_threads();
-    std::vector<std::set<int> > neighborCellsMT(maxThreads); // all neighboring cells, from which particles need to be tested.
-    std::vector<std::vector<vislib::math::Point<float, 3> > > testPossMT(maxThreads); // all positions of this one particle to be tested.
+    std::vector<std::set<int>> neighborCellsMT(
+        maxThreads); // all neighboring cells, from which particles need to be tested.
+    std::vector<std::vector<vislib::math::Point<float, 3>>> testPossMT(
+        maxThreads); // all positions of this one particle to be tested.
 
     float bboxSizeX = data->AccessBoundingBoxes().ObjectSpaceBBox().Width();
     float bboxSizeY = data->AccessBoundingBoxes().ObjectSpaceBBox().Height();
     float bboxSizeZ = data->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int cellIdx = 0; cellIdx < cellCnt; ++cellIdx) {
         int mt = omp_get_thread_num();
         std::set<int>& neighborCells = neighborCellsMT[mt];
-        std::vector<vislib::math::Point<float, 3> >& testPoss = testPossMT[mt];
+        std::vector<vislib::math::Point<float, 3>>& testPoss = testPossMT[mt];
         neighborCells.clear();
 
         // cell coordinate from cell index
@@ -322,26 +333,44 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
         for (int dx = -1; dx <= 1; ++dx) {
             int x = cellX + dx;
             if (x < 0) {
-                if (cycX) x = x_size - 1; else continue; // skip this x
+                if (cycX)
+                    x = x_size - 1;
+                else
+                    continue; // skip this x
             }
             if (x >= static_cast<int>(x_size)) {
-                if (cycX) x = 0; else continue; // skip this x
+                if (cycX)
+                    x = 0;
+                else
+                    continue; // skip this x
             }
             for (int dy = -1; dy <= 1; ++dy) {
                 int y = cellY + dy;
                 if (y < 0) {
-                    if (cycY) y = y_size - 1; else continue; // skip this y
+                    if (cycY)
+                        y = y_size - 1;
+                    else
+                        continue; // skip this y
                 }
                 if (y >= static_cast<int>(y_size)) {
-                    if (cycY) y = 0; else continue; // skip this y
+                    if (cycY)
+                        y = 0;
+                    else
+                        continue; // skip this y
                 }
                 for (int dz = -1; dz <= 1; ++dz) {
                     int z = cellZ + dz;
                     if (z < 0) {
-                        if (cycZ) z = z_size - 1; else continue; // skip this z
+                        if (cycZ)
+                            z = z_size - 1;
+                        else
+                            continue; // skip this z
                     }
                     if (z >= static_cast<int>(z_size)) {
-                        if (cycZ) z = 0; else continue; // skip this z
+                        if (cycZ)
+                            z = 0;
+                        else
+                            continue; // skip this z
                     }
                     neighborCells.insert(_COORD(x, y, z));
                 }
@@ -364,15 +393,24 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
                     for (int dz = 0; dz < (cycZ ? 2 : 1); ++dz) {
                         testPoss.push_back(vislib::math::Point<float, 3>(x, y, z));
                         if (dz == 0) {
-                            if (z < bboxCentZ) z += bboxSizeZ; else z -= bboxSizeZ;
+                            if (z < bboxCentZ)
+                                z += bboxSizeZ;
+                            else
+                                z -= bboxSizeZ;
                         }
                     }
                     if (dy == 0) {
-                        if (y < bboxCentY) y += bboxSizeY; else y -= bboxSizeY;
+                        if (y < bboxCentY)
+                            y += bboxSizeY;
+                        else
+                            y -= bboxSizeY;
                     }
                 }
                 if (dx == 0) {
-                    if (x < bboxCentX) x += bboxSizeX; else x -= bboxSizeX;
+                    if (x < bboxCentX)
+                        x += bboxSizeX;
+                    else
+                        x -= bboxSizeX;
                 }
             }
 
@@ -381,14 +419,15 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
                     // point to test
                     size_t nPtIdx = gridCell[neiCellIdx][locNPtIdx];
 
-                     if (ptIdx >= nPtIdx) continue; // we only every construct edges from small to large indices
+                    if (ptIdx >= nPtIdx)
+                        continue; // we only every construct edges from small to large indices
 
                     vislib::math::ShallowPoint<float, 3> nPtPos(const_cast<float*>(d.get_position(nPtIdx)));
                     for (vislib::math::Point<float, 3>& pt : testPoss) {
                         float sqDist = pt.SquareDistance(nPtPos);
                         if (sqDist < neiRadSq) {
 
-                            #pragma omp critical
+#pragma omp critical
                             {
                                 edges.push_back(static_cast<index_t>(ptIdx));
                                 edges.push_back(static_cast<index_t>(nPtIdx));
@@ -397,15 +436,14 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
                             break;
                         }
                     }
-
                 }
             }
         }
-
     }
 
     end = high_resolution_clock::now();
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG edges computed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "PNhG edges computed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
     //if (forceConnectIsolatedSlot.Param<core::param::BoolParam>()->Value()) {
@@ -548,6 +586,6 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
     edges.shrink_to_fit();
 
     end = high_resolution_clock::now();
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("PNhG completed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "PNhG completed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 }

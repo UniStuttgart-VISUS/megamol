@@ -6,13 +6,13 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "ProteinAligner.h"
 #include "RMS.h"
+#include "stdafx.h"
 
+#include "mmcore/param/BoolParam.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "mmcore/param/BoolParam.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -22,11 +22,11 @@ using namespace megamol::protein_calls;
  * ProteinAligner::ProteinAligner
  */
 ProteinAligner::ProteinAligner(void)
-    : core::Module()
-    , dataOutSlot("dataOut", "Output protein slot")
-    , inputProteinSlot("inputProtein", "Input protein that will be moved and rotated to match the reference")
-    , referenceProteinSlot("referenceProtein", "Reference protein slot")
-    , isActiveSlot("isActive", "Activates and deactivates the effect of this module") {
+        : core::Module()
+        , dataOutSlot("dataOut", "Output protein slot")
+        , inputProteinSlot("inputProtein", "Input protein that will be moved and rotated to match the reference")
+        , referenceProteinSlot("referenceProtein", "Reference protein slot")
+        , isActiveSlot("isActive", "Activates and deactivates the effect of this module") {
 
     // callee slot
     this->dataOutSlot.SetCallback(
@@ -50,7 +50,9 @@ ProteinAligner::ProteinAligner(void)
 /*
  * ProteinAligner::~ProteinAligner
  */
-ProteinAligner::~ProteinAligner(void) { this->Release(); }
+ProteinAligner::~ProteinAligner(void) {
+    this->Release();
+}
 
 /*
  * ProteinAligner::create
@@ -72,7 +74,8 @@ void ProteinAligner::release(void) {
  */
 bool ProteinAligner::getData(core::Call& call) {
     MolecularDataCall* out = dynamic_cast<MolecularDataCall*>(&call);
-    if (out == nullptr) return false;
+    if (out == nullptr)
+        return false;
 
     if (this->isActiveSlot.Param<core::param::BoolParam>()->Value() && this->alignedPositions.data() != nullptr) {
         out->SetAtomPositions(this->alignedPositions.data());
@@ -89,20 +92,27 @@ bool ProteinAligner::getData(core::Call& call) {
  */
 bool ProteinAligner::getExtents(core::Call& call) {
     MolecularDataCall* out = dynamic_cast<MolecularDataCall*>(&call);
-    if (out == nullptr) return false;
+    if (out == nullptr)
+        return false;
 
     MolecularDataCall* input = this->inputProteinSlot.CallAs<MolecularDataCall>();
-    if (input == nullptr) return false;
+    if (input == nullptr)
+        return false;
 
     MolecularDataCall* ref = this->referenceProteinSlot.CallAs<MolecularDataCall>();
-    if (ref == nullptr) return false;
+    if (ref == nullptr)
+        return false;
 
     // call all the data
-    if (!(*input)(1)) return false;
-    if (!(*input)(0)) return false;
+    if (!(*input)(1))
+        return false;
+    if (!(*input)(0))
+        return false;
 
-    if (!(*ref)(1)) return false;
-    if (!(*ref)(0)) return false;
+    if (!(*ref)(1))
+        return false;
+    if (!(*ref)(0))
+        return false;
 
     out->operator=(*input); // deep copy
 

@@ -4,17 +4,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "OSPRayAOVSphereGeometry.h"
-#include "mmospray/CallOSPRayAPIObject.h"
-#include "mmcore/Call.h"
-#include "geometry_calls/VolumetricDataCall.h"
 #include "geometry_calls//MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/Call.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "ospray/ospray_cpp.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmospray/CallOSPRayAPIObject.h"
+#include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
+#include "stdafx.h"
 
 
 using namespace megamol::ospray;
@@ -25,13 +25,13 @@ typedef unsigned char (*byteFromArrayFunc)(const megamol::geocalls::MultiParticl
 
 
 OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
-    : samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
-    , aoThresholdSlot(
-          "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
-    , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
-    , getDataSlot("getdata", "Connects to the data source")
-    , getVolSlot("getVol", "Connects to the density volume provider")
-    , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure") {
+        : samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
+        , aoThresholdSlot(
+              "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")
+        , aoRayOffsetFactorSlot("aoRayOffsetFactor", "Set the factor for AO ray offset, to avoid self intersection")
+        , getDataSlot("getdata", "Connects to the data source")
+        , getVolSlot("getVol", "Connects to the density volume provider")
+        , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -66,9 +66,11 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     auto vd = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
-    if (vd == nullptr) return false;
+    if (vd == nullptr)
+        return false;
 
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     auto particleExtentsOK = (*cd)(1);
     auto volExtentsOK = (*vd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS);
@@ -106,7 +108,8 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     auto volDataOK = (*vd)(geocalls::VolumetricDataCall::IDX_GET_DATA);
 
 
-    if (cd->GetParticleListCount() == 0) recompute = false;
+    if (cd->GetParticleListCount() == 0)
+        recompute = false;
 
     static bool isInitAOV = false;
 
@@ -152,7 +155,8 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
             geocalls::MultiParticleDataCall::Particles& parts = cd->AccessParticles(plist);
 
-            if (parts.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE) continue;
+            if (parts.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+                continue;
 
             unsigned int const partCount = parts.GetCount();
             float const globalRadius = parts.GetGlobalRadius();
@@ -163,8 +167,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             // Vertex data type check
             if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
                 vertexLength = 3;
-            } else if (parts.GetVertexDataType() ==
-                       geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+            } else if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 vertexLength = 4;
             }
 
@@ -175,8 +178,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 colorLength = 1;
             } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
                 colorLength = 3;
-            } else if (parts.GetColourDataType() ==
-                       geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+            } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
                 colorLength = 4;
             } else if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_NONE) {
                 colorLength = 0;
@@ -235,13 +237,14 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             // geo.resize(geo.size() + numCreateGeo);
             for (unsigned int i = 0; i < numCreateGeo; i++) {
 
-                if (parts.GetCount() == 0) continue;
+                if (parts.GetCount() == 0)
+                    continue;
                 geo.emplace_back(::ospray::cpp::Geometry("aovspheres_geometry"));
                 unsigned long long floatsToRead = parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
                 floatsToRead -= floatsToRead % (vertStride / sizeof(float));
 
-                auto vertexData = ::ospray::cpp::SharedData(
-                    &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead],
+                auto vertexData =
+                    ::ospray::cpp::SharedData(&static_cast<const float*>(parts.GetVertexData())[i * floatsToRead],
                         OSP_FLOAT, floatsToRead / 3, vertStride);
 
                 vertexData.commit();
@@ -285,18 +288,15 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
 
                     // add data
-                    rkcommon::math::vec3i dims = {
-                        this->dimensions[0],
-                        this->dimensions[1],
-                        this->dimensions[2]};
-                    auto voxelData = ::ospray::cpp::SharedData(vd->GetData(), OSP_FLOAT, dims, rkcommon::math::vec3i(0));
+                    rkcommon::math::vec3i dims = {this->dimensions[0], this->dimensions[1], this->dimensions[2]};
+                    auto voxelData =
+                        ::ospray::cpp::SharedData(vd->GetData(), OSP_FLOAT, dims, rkcommon::math::vec3i(0));
                     voxelData.commit();
 
 
                     aovol.setParam("data", voxelData);
 
-                    rkcommon::math::vec3f gorigin = {
-                        this->gridorigin[0], this->gridorigin[1], this->gridorigin[2]};
+                    rkcommon::math::vec3f gorigin = {this->gridorigin[0], this->gridorigin[1], this->gridorigin[2]};
                     aovol.setParam("gridOrigin", gorigin);
                     rkcommon::math::vec3f gspacing = {this->gridspacing[0], this->gridspacing[1], this->gridspacing[2]};
                     aovol.setParam("gridSpacing", gspacing);
@@ -318,8 +318,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                     auto tf_opa = ::ospray::cpp::CopiedData(fakeopa);
                     tf.setParam("color", tf_rgb);
                     tf.setParam("opacity", tf_opa);
-                    rkcommon::math::vec2f valrange = {
-                        this->valuerange[0], this->valuerange[1]};
+                    rkcommon::math::vec2f valrange = {this->valuerange[0], this->valuerange[1]};
                     tf.setParam("valueRange", valrange);
 
                     tf.commit();
@@ -327,28 +326,27 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                     aovol.commit();
 
                     aovol_model = ::ospray::cpp::VolumetricModel(aovol);
- 
+
                     aovol_model.setParam("transferFunction", tf);
                     aovol_model.commit();
 
-                   
+
                     //aovol, "voxelRange", this->valuerange.first, this->valuerange.second);
                     //ospSet1f(aovol, "samplingRate", this->samplingRateSlot.Param<core::param::FloatParam>()->Value());
                     // ospSet1b(aovol, "adaptiveSampling", false);
-
 
 
                     /*auto ptr = element.raw2.get();
                     ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
                         osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
 
-                     /*ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));*/
+                    /*ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));*/
                 }
 
                 assert(aovol);
 
-                geo.back().setParam("aothreshold",
-                    valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
+                geo.back().setParam(
+                    "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
                 geo.back().setParam("aoRayOffset",
                     maxGridSpacing * this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value());
                 geo.back().setParam("aovol", ::ospray::cpp::CopiedData(aovol_model));
@@ -367,10 +365,14 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     return true;
 }
 
-OSPRayAOVSphereGeometry::~OSPRayAOVSphereGeometry() { this->Release(); }
+OSPRayAOVSphereGeometry::~OSPRayAOVSphereGeometry() {
+    this->Release();
+}
 
 
-bool OSPRayAOVSphereGeometry::create() { return true; }
+bool OSPRayAOVSphereGeometry::create() {
+    return true;
+}
 
 
 void OSPRayAOVSphereGeometry::release() {}
@@ -401,7 +403,8 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
     cd->SetFrameID(os->FrameID());
     (*cd)(1);
     core::BoundingBoxes_2 box;
@@ -415,7 +418,8 @@ bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     auto cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
     if (this->InterfaceIsDirtyNoReset()) {
         os->setDirty();
     }

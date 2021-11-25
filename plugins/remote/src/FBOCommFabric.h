@@ -38,6 +38,7 @@ public:
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
     bool Disconnect() override;
     virtual ~MPICommFabric(void);
+
 private:
     int my_rank_;
 

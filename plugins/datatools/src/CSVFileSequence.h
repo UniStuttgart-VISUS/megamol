@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "mmcore/Module.h"
-#include "mmcore/factories/CallDescription.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/factories/CallDescription.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 
@@ -19,186 +19,183 @@ namespace megamol {
 namespace datatools {
 
 
+/**
+ * In-Between management module for seralize multiple data files with one
+ * data frame each (the first if more are available) to write a continous
+ * data series into a data writer
+ */
+class CSVFileSequence : public core::Module {
+public:
     /**
-     * In-Between management module for seralize multiple data files with one
-     * data frame each (the first if more are available) to write a continous
-     * data series into a data writer
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class CSVFileSequence : public core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "CSVFileSequence";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "CSVFileSequence";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "This modules is pluged between a data loader and consumer modules. It will change the name of the data "
+               "file loaded depending on the requested time. This module only supports time independent data sets.";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "This modules is pluged between a data loader and consumer modules. It will change the name of the data file loaded depending on the requested time. This module only supports time independent data sets.";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /** Ctor. */
+    CSVFileSequence(void);
 
-        /** Ctor. */
-        CSVFileSequence(void);
+    /** Dtor. */
+    virtual ~CSVFileSequence(void);
 
-        /** Dtor. */
-        virtual ~CSVFileSequence(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Tests if th description of a call seems compatible
+     *
+     * @param desc The description to test
+     *
+     * @return True if description seems compatible
+     */
+    static bool IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-    private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-        /**
-         * Tests if th description of a call seems compatible
-         *
-         * @param desc The description to test
-         *
-         * @return True if description seems compatible
-         */
-        static bool IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc);
+    /**
+     * Checks the module parameters for updates
+     */
+    void checkParameters(void);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
+    /**
+     * Update when the file name template changes
+     *
+     * @param slot Must be 'fileNameTemplateSlot'
+     *
+     * @return true
+     */
+    bool onFileNameTemplateChanged(core::param::ParamSlot& slot);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+    /**
+     * Update when the file name slot name changes
+     *
+     * @param slot Must be 'fileNameSlotNameSlot'
+     *
+     * @return true
+     */
+    bool onFileNameSlotNameChanged(core::param::ParamSlot& slot);
 
-        /**
-         * Checks the module parameters for updates
-         */
-        void checkParameters(void);
+    /**
+     * Finds the parameter slot for the file name
+     *
+     * @return The parameter slot for the file name or NULL if not found
+     */
+    core::param::ParamSlot* findFileNameSlot(void);
 
-        /**
-         * Update when the file name template changes
-         *
-         * @param slot Must be 'fileNameTemplateSlot'
-         *
-         * @return true
-         */
-        bool onFileNameTemplateChanged(core::param::ParamSlot& slot);
+    /**
+     * Asserts the data is available blablabla
+     */
+    void assertData(void);
 
-        /**
-         * Update when the file name slot name changes
-         *
-         * @param slot Must be 'fileNameSlotNameSlot'
-         *
-         * @return true
-         */
-        bool onFileNameSlotNameChanged(core::param::ParamSlot& slot);
+    /** The file name template */
+    core::param::ParamSlot fileNameTemplateSlot;
 
-        /**
-         * Finds the parameter slot for the file name
-         *
-         * @return The parameter slot for the file name or NULL if not found
-         */
-        core::param::ParamSlot *findFileNameSlot(void);
+    /** Slot for the minimum file number */
+    core::param::ParamSlot fileNumberMinSlot;
 
-        /**
-         * Asserts the data is available blablabla
-         */
-        void assertData(void);
+    /** Slot for the maximum file number */
+    core::param::ParamSlot fileNumberMaxSlot;
 
-        /** The file name template */
-        core::param::ParamSlot fileNameTemplateSlot;
+    /** Slot for the file number increase step */
+    core::param::ParamSlot fileNumberStepSlot;
 
-        /** Slot for the minimum file number */
-        core::param::ParamSlot fileNumberMinSlot;
+    /** The name of the data source file name parameter slot */
+    core::param::ParamSlot fileNameSlotNameSlot;
 
-        /** Slot for the maximum file number */
-        core::param::ParamSlot fileNumberMaxSlot;
+    /** Flag controlling the bounding box */
+    core::param::ParamSlot useClipBoxAsBBox;
 
-        /** Slot for the file number increase step */
-        core::param::ParamSlot fileNumberStepSlot;
+    /** The slot for publishing data to the writer */
+    core::CalleeSlot outDataSlot;
 
-        /** The name of the data source file name parameter slot */
-        core::param::ParamSlot fileNameSlotNameSlot;
+    /** The slot for requesting data from the source */
+    core::CallerSlot inDataSlot;
 
-        /** Flag controlling the bounding box */
-        core::param::ParamSlot useClipBoxAsBBox;
+    /** The clip box fit from multiple data frames */
+    vislib::math::Cuboid<float> clipbox;
 
-        /** The slot for publishing data to the writer */
-        core::CalleeSlot outDataSlot;
+    /** The data hash */
+    SIZE_T datahash;
 
-        /** The slot for requesting data from the source */
-        core::CallerSlot inDataSlot;
+    /** The file name template */
+    vislib::TString fileNameTemplate;
 
-        /** The clip box fit from multiple data frames */
-        vislib::math::Cuboid<float> clipbox;
+    /** The minimum file number */
+    unsigned int fileNumMin;
 
-        /** The data hash */
-        SIZE_T datahash;
+    /** The maximum file number */
+    unsigned int fileNumMax;
 
-        /** The file name template */
-        vislib::TString fileNameTemplate;
+    /** The file number increase step */
+    unsigned int fileNumStep;
 
-        /** The minimum file number */
-        unsigned int fileNumMin;
+    /** Needs to update the data */
+    bool needDataUpdate;
 
-        /** The maximum file number */
-        unsigned int fileNumMax;
+    /** The actual number of frames available */
+    unsigned int frameCnt;
 
-        /** The file number increase step */
-        unsigned int fileNumStep;
-
-        /** Needs to update the data */
-        bool needDataUpdate;
-
-        /** The actual number of frames available */
-        unsigned int frameCnt;
-
-        /** The last frame index requested */
-        unsigned int lastIdxRequested;
-
-    };
+    /** The last frame index requested */
+    unsigned int lastIdxRequested;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

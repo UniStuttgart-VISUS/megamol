@@ -28,39 +28,36 @@ bool megamol::frontend::Command_Service::init(void* configPtr) {
 }
 
 
-void megamol::frontend::Command_Service::close() {
-
-}
+void megamol::frontend::Command_Service::close() {}
 
 void megamol::frontend::Command_Service::digestChangedRequestedResources() {
-        auto maybe_keyboard_events =
-            this->requestedResourceReferences[0].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
+    auto maybe_keyboard_events =
+        this->requestedResourceReferences[0].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
 
-        if (!maybe_keyboard_events.has_value()) {
-            return;
+    if (!maybe_keyboard_events.has_value()) {
+        return;
+    }
+
+    megamol::frontend_resources::KeyboardEvents const& keyboard_events = maybe_keyboard_events.value().get();
+
+    for (auto& key_event : keyboard_events.key_events) {
+        auto key = std::get<0>(key_event);
+        auto action = std::get<1>(key_event);
+        auto modifiers = std::get<2>(key_event);
+
+        if (key == frontend_resources::Key::KEY_RIGHT_SHIFT || key == frontend_resources::Key::KEY_LEFT_SHIFT ||
+            key == frontend_resources::Key::KEY_RIGHT_CONTROL || key == frontend_resources::Key::KEY_LEFT_CONTROL ||
+            key == frontend_resources::Key::KEY_RIGHT_ALT || key == frontend_resources::Key::KEY_LEFT_ALT) {
+            commands.modifiers_changed(modifiers);
         }
 
-        megamol::frontend_resources::KeyboardEvents const& keyboard_events = maybe_keyboard_events.value().get();
-
-        for (auto& key_event : keyboard_events.key_events) {
-            auto key = std::get<0>(key_event);
-            auto action = std::get<1>(key_event);
-            auto modifiers = std::get<2>(key_event);
-
-            if (key == frontend_resources::Key::KEY_RIGHT_SHIFT || key == frontend_resources::Key::KEY_LEFT_SHIFT ||
-                key == frontend_resources::Key::KEY_RIGHT_CONTROL|| key == frontend_resources::Key::KEY_LEFT_CONTROL||
-                key == frontend_resources::Key::KEY_RIGHT_ALT || key == frontend_resources::Key::KEY_LEFT_ALT) {
-                commands.modifiers_changed(modifiers);
-            }
-
-            if (action == frontend_resources::KeyAction::PRESS) {
-                frontend_resources::KeyCode kc {key, modifiers};
-                commands.exec_command(kc);
-            }
+        if (action == frontend_resources::KeyAction::PRESS) {
+            frontend_resources::KeyCode kc{key, modifiers};
+            commands.exec_command(kc);
         }
+    }
 }
 
 void megamol::frontend::Command_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     requestedResourceReferences = resources;
 }
-

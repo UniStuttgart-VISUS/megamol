@@ -4,16 +4,16 @@
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "FilamentFilter.h"
+#include "stdafx.h"
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include <algorithm>
 #include <climits>
 #include <queue>
 #include <set>
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::astro;
@@ -23,19 +23,19 @@ using namespace megamol::core;
  * FilamentFilter::FilamentFilter
  */
 FilamentFilter::FilamentFilter(void)
-    : Module()
-    , filamentOutSlot("filamentOut", "Output slot for the filament particles")
-    , particlesInSlot("particlesIn", "Input slot for the astro particle data")
-    , radiusSlot("radius", "The used radius for the FOF algorithm")
-    , isActiveSlot("isActive", "When deactivated this module only passes through the incoming data")
-    , densitySeedPercentageSlot(
-          "densityPercentage", "Percentage of data points that is thrown away because of too low density")
-    , minClusterSizeSlot("minClusterSize", "Minimal number of particles in a detected cluster")
-    , maxParticlePercentageCuttoff(
-          "maxParticlePercentage", "Maximum percentage of particles that is considered as candidates")
-    , recalculateFilaments(true)
-    , hashOffset(0)
-    , lastDataHash(0) {
+        : Module()
+        , filamentOutSlot("filamentOut", "Output slot for the filament particles")
+        , particlesInSlot("particlesIn", "Input slot for the astro particle data")
+        , radiusSlot("radius", "The used radius for the FOF algorithm")
+        , isActiveSlot("isActive", "When deactivated this module only passes through the incoming data")
+        , densitySeedPercentageSlot(
+              "densityPercentage", "Percentage of data points that is thrown away because of too low density")
+        , minClusterSizeSlot("minClusterSize", "Minimal number of particles in a detected cluster")
+        , maxParticlePercentageCuttoff(
+              "maxParticlePercentage", "Maximum percentage of particles that is considered as candidates")
+        , recalculateFilaments(true)
+        , hashOffset(0)
+        , lastDataHash(0) {
 
     this->particlesInSlot.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->particlesInSlot);
@@ -67,7 +67,9 @@ FilamentFilter::FilamentFilter(void)
 /*
  * FilamentFilter::~FilamentFilter
  */
-FilamentFilter::~FilamentFilter(void) { this->Release(); }
+FilamentFilter::~FilamentFilter(void) {
+    this->Release();
+}
 
 /*
  * FilamentFilter::create
@@ -89,10 +91,12 @@ void FilamentFilter::release(void) {
  */
 bool FilamentFilter::getData(core::Call& call) {
     AstroDataCall* adc = dynamic_cast<AstroDataCall*>(&call);
-    if (adc == nullptr) return false;
+    if (adc == nullptr)
+        return false;
 
     AstroDataCall* inCall = this->particlesInSlot.CallAs<AstroDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->operator=(*adc);
     inCall->SetUnlocker(nullptr, false);
@@ -118,10 +122,12 @@ bool FilamentFilter::getData(core::Call& call) {
  */
 bool FilamentFilter::getExtent(core::Call& call) {
     AstroDataCall* adc = dynamic_cast<AstroDataCall*>(&call);
-    if (adc == nullptr) return false;
+    if (adc == nullptr)
+        return false;
 
     AstroDataCall* inCall = this->particlesInSlot.CallAs<AstroDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->operator=(*adc);
     adc->SetUnlocker(nullptr, false);
@@ -232,7 +238,8 @@ void FilamentFilter::initFields(void) {
  */
 std::pair<float, float> FilamentFilter::getMinMaxDensity(const AstroDataCall& call) const {
     const auto& dens = call.GetDensity();
-    if (dens == nullptr) return std::make_pair(0.0f, 0.0f);
+    if (dens == nullptr)
+        return std::make_pair(0.0f, 0.0f);
     auto resit = std::minmax_element(dens->begin(), dens->end());
     return std::make_pair(*resit.first, *resit.second);
 }
@@ -244,7 +251,8 @@ void FilamentFilter::retrieveDensityCandidateList(
     const AstroDataCall& call, std::vector<std::pair<float, uint64_t>>& result) {
     result.clear();
     const auto& dens = call.GetDensity();
-    if (dens == nullptr) return;
+    if (dens == nullptr)
+        return;
     auto minmax = this->getMinMaxDensity(call);
     result.resize(dens->size());
     for (uint64_t i = 0; i < dens->size(); i++) {
@@ -332,7 +340,8 @@ bool FilamentFilter::copyInCallToContent(const AstroDataCall& inCall, const std:
  * FilamentFilter::filterFilaments
  */
 bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
-    if (call.GetPositions() == nullptr) return false;
+    if (call.GetPositions() == nullptr)
+        return false;
     std::vector<std::pair<float, uint64_t>> densityPeaks;
     this->retrieveDensityCandidateList(call, densityPeaks);
     std::set<uint64_t> candidateSet;
@@ -340,7 +349,8 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
         candidateSet.insert(a.second);
     }
     this->initSearchStructure(call);
-    if (this->searchIndexPtr == nullptr) return false;
+    if (this->searchIndexPtr == nullptr)
+        return false;
 
     // the following approach is not really performant, but it should work
     std::vector<std::set<uint64_t>> setVec;
@@ -363,7 +373,8 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
         // insert everything in the vicinity of the current candidate to the queue
         for (const auto& v : searchResults) {
             uint64_t index = v.first;
-            if (index == current) continue;
+            if (index == current)
+                continue;
             if (!calculatedFlags[index]) {
                 toProcessSet.insert(index);
                 setVec.back().insert(index);
@@ -378,7 +389,8 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
                 this->searchIndexPtr->radiusSearch(&pos.x, searchRadius * searchRadius, searchResults, searchParams);
             for (const auto& v : searchResults) {
                 uint64_t index = v.first;
-                if (index == cur) continue;
+                if (index == cur)
+                    continue;
                 if (!calculatedFlags[index]) {
                     toProcessSet.insert(index);
                     setVec.back().insert(index);

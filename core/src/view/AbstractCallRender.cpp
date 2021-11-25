@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "stdafx.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;
@@ -20,8 +20,7 @@ using namespace megamol::core;
 /*
  * view::AbstractCallRender::operator=
  */
-view::AbstractCallRender& view::AbstractCallRender::operator=(
-        const view::AbstractCallRender& rhs) {
+view::AbstractCallRender& view::AbstractCallRender::operator=(const view::AbstractCallRender& rhs) {
     this->_cntTimeFrames = rhs._cntTimeFrames;
     this->_camera = rhs._camera;
     this->_bboxs = rhs._bboxs;
@@ -39,7 +38,10 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
 /*
  * view::AbstractCallRender::AbstractCallRender
  */
-view::AbstractCallRender::AbstractCallRender(void) : InputCall(), _cntTimeFrames(1), _time(0.0f)
+view::AbstractCallRender::AbstractCallRender(void)
+        : InputCall()
+        , _cntTimeFrames(1)
+        , _time(0.0f)
         , _instTime(0.0f)
         , _isInSituTime(false)
         , _lastFrameTime(0.0)

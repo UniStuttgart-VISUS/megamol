@@ -5,17 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/PLYDataSource.h"
-#include <array>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include "geometry_calls/CallTriMeshData.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
+#include <array>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace megamol;
 using namespace megamol::geocalls;
@@ -29,7 +29,9 @@ using namespace megamol::core;
  * @param b The second char.
  * @return True if the two chars are equal, false otherwise.
  */
-bool icompare_pred(unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); }
+bool icompare_pred(unsigned char a, unsigned char b) {
+    return std::tolower(a) == std::tolower(b);
+}
 
 /*
  * Checks two strings for equality, regardless of the letters case.
@@ -118,7 +120,8 @@ bool tinyIsSigned(tinyply::Type tinyplyType) {
  *
  * @param obj Reference to the variable of which the endianness is changed.
  */
-template <class T> void changeEndianness(T& obj) {
+template<class T>
+void changeEndianness(T& obj) {
     unsigned char* mem = reinterpret_cast<unsigned char*>(&obj);
     std::reverse(mem, mem + sizeof(T));
 }
@@ -132,30 +135,30 @@ const char theUndef[] = "undef";
  * io::PLYDataSource::PLYDataSource
  */
 io::PLYDataSource::PLYDataSource(void)
-    : core::Module()
-    , filename("filename", "The path to the PLY file to load.")
-    , vertElemSlot("vertex element", "which element to get the vertex info from")
-    , faceElemSlot("face element", "which element to get the face info from")
-    , xPropSlot("x property", "which property to get the x position from")
-    , yPropSlot("y property", "which property to get the y position from")
-    , zPropSlot("z property", "which property to get the z position from")
-    , nxPropSlot("nx property", "which property to get the normal x component from")
-    , nyPropSlot("ny property", "which property to get the normal y component from")
-    , nzPropSlot("nz property", "which property to get the normal z component from")
-    , rPropSlot("r property", "which property to get the red component from")
-    , gPropSlot("g property", "which property to get the green component from")
-    , bPropSlot("b property", "which property to get the blue component from")
-    , iPropSlot("i property", "which property to get the intensity from")
-    , indexPropSlot("index property", "which property to get the vertex indices from")
-    , radiusSlot("sphere radius", "the radius of the output spheres")
-    , getSphereData("getspheredata", "Slot to request sphere data from this data source.")
-    , getMeshData("getmeshdata", "Slot to request mesh data from this data source.")
-    , data_hash(0)
-    , data_offset(0)
-    , vertex_count(0)
-    , face_count(0)
-    , hasBinaryFormat(false)
-    , isLittleEndian(true) {
+        : core::Module()
+        , filename("filename", "The path to the PLY file to load.")
+        , vertElemSlot("vertex element", "which element to get the vertex info from")
+        , faceElemSlot("face element", "which element to get the face info from")
+        , xPropSlot("x property", "which property to get the x position from")
+        , yPropSlot("y property", "which property to get the y position from")
+        , zPropSlot("z property", "which property to get the z position from")
+        , nxPropSlot("nx property", "which property to get the normal x component from")
+        , nyPropSlot("ny property", "which property to get the normal y component from")
+        , nzPropSlot("nz property", "which property to get the normal z component from")
+        , rPropSlot("r property", "which property to get the red component from")
+        , gPropSlot("g property", "which property to get the green component from")
+        , bPropSlot("b property", "which property to get the blue component from")
+        , iPropSlot("i property", "which property to get the intensity from")
+        , indexPropSlot("index property", "which property to get the vertex indices from")
+        , radiusSlot("sphere radius", "the radius of the output spheres")
+        , getSphereData("getspheredata", "Slot to request sphere data from this data source.")
+        , getMeshData("getmeshdata", "Slot to request mesh data from this data source.")
+        , data_hash(0)
+        , data_offset(0)
+        , vertex_count(0)
+        , face_count(0)
+        , hasBinaryFormat(false)
+        , isLittleEndian(true) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&PLYDataSource::filenameChanged);
@@ -211,7 +214,9 @@ io::PLYDataSource::PLYDataSource(void)
 /*
  * io::PLYDataSource::~PLYDataSource
  */
-io::PLYDataSource::~PLYDataSource(void) { this->Release(); }
+io::PLYDataSource::~PLYDataSource(void) {
+    this->Release();
+}
 
 /*
  * io::PLYDataSource::create
@@ -233,12 +238,14 @@ void io::PLYDataSource::release(void) {
  */
 bool io::PLYDataSource::assertData() {
     // if one of these pointers is not null, we already have read the data
-    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr) return true;
+    if (posPointers.pos_double != nullptr || posPointers.pos_float != nullptr)
+        return true;
 
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open PLY File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to open PLY File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return true;
     }
@@ -252,8 +259,8 @@ bool io::PLYDataSource::assertData() {
 
     // reserve the space for the data
     if (std::none_of(selectedPos.begin(), selectedPos.end(), [](std::string s) { return s.empty(); })) {
-        if (std::any_of(
-                selectedPos.begin(), selectedPos.end(), [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
+        if (std::any_of(selectedPos.begin(), selectedPos.end(),
+                [this](std::string s) { return elementIndexMap.count(s) > 0; })) {
             uint64_t maxSize = 0;
             uint64_t elemCount = 0;
             for (auto s : selectedPos) {
@@ -422,7 +429,8 @@ bool io::PLYDataSource::assertData() {
         }
 
         for (size_t i = 0; i < selectedColor.size(); i++) {
-            if (i > 2) break;
+            if (i > 2)
+                break;
             if (elementIndexMap.count(selectedColor[i]) > 0) {
                 auto idx = elementIndexMap[selectedColor[i]];
                 auto elemSize = elementSizes[idx.first];
@@ -601,7 +609,8 @@ bool io::PLYDataSource::assertData() {
                             }
                         }
                     } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected file ending during vertex parsing");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "Unexpected file ending during vertex parsing");
                         return false;
                     }
                 }
@@ -632,7 +641,8 @@ bool io::PLYDataSource::assertData() {
                             }
                         }
                     } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected file ending during face parsing");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "Unexpected file ending during face parsing");
                         return false;
                     }
                 }
@@ -849,7 +859,8 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
                     this->isLittleEndian = true;
                 }
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("File format could not be determined, assuming ASCII");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "File format could not be determined, assuming ASCII");
                 this->hasBinaryFormat = false;
             }
         }
@@ -899,11 +910,9 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
         if (this->guessedNormal[i].length() > 0) {
             if (i == 0) {
                 this->selectedNormal[i] = this->nxPropSlot.Param<param::FlexEnumParam>()->Value();
-            }
-            else if (i == 1) {
+            } else if (i == 1) {
                 this->selectedNormal[i] = this->nyPropSlot.Param<param::FlexEnumParam>()->Value();
-            }
-            else if (i == 2) {
+            } else if (i == 2) {
                 this->selectedNormal[i] = this->nzPropSlot.Param<param::FlexEnumParam>()->Value();
             }
         }
@@ -913,11 +922,9 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
         if (this->guessedColor[i].length() > 0) {
             if (i == 0) {
                 this->selectedColor[i] = this->rPropSlot.Param<param::FlexEnumParam>()->Value();
-            }
-            else if (i == 1) {
+            } else if (i == 1) {
                 this->selectedColor[i] = this->gPropSlot.Param<param::FlexEnumParam>()->Value();
-            }
-            else if (i == 2) {
+            } else if (i == 2) {
                 this->selectedColor[i] = this->bPropSlot.Param<param::FlexEnumParam>()->Value();
             }
         }
@@ -945,7 +952,8 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
  */
 bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
     auto c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (c2 == nullptr) return false;
+    if (c2 == nullptr)
+        return false;
 
     c2->SetParticleListCount(1);
     MultiParticleDataCall::Particles& p = c2->AccessParticles(0);
@@ -986,14 +994,16 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
  */
 bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
-    if (c2 == nullptr) return false;
+    if (c2 == nullptr)
+        return false;
 
     if (this->checkParameterDirtyness()) {
         this->fileUpdate(this->filename);
         this->data_hash++;
     }
 
-    if (!assertData()) return false;
+    if (!assertData())
+        return false;
 
     if (this->radiusSlot.IsDirty()) {
         this->radiusSlot.ResetDirty();
@@ -1016,7 +1026,8 @@ bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
  */
 bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
     auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
-    if (c2 == nullptr) return false;
+    if (c2 == nullptr)
+        return false;
 
     // stupid if-cascade...
     // if you come up with something more beautiful, just do it
@@ -1133,14 +1144,16 @@ bool io::PLYDataSource::getMeshDataCallback(core::Call& caller) {
  */
 bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
     auto c2 = dynamic_cast<CallTriMeshData*>(&caller);
-    if (c2 == nullptr) return false;
+    if (c2 == nullptr)
+        return false;
 
     if (this->checkParameterDirtyness()) {
         this->fileUpdate(this->filename);
         this->data_hash++;
     }
 
-    if (!assertData()) return false;
+    if (!assertData())
+        return false;
 
     c2->AccessBoundingBoxes().Clear();
     c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);

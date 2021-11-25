@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "geometry_calls/EllipsoidalDataCall.h"
 #include "datatools/AbstractManipulator.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 
 namespace megamol {
 namespace datatools {

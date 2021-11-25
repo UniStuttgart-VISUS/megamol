@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/BoolParam.h"
@@ -21,7 +22,6 @@
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "datatools/table/TableDataCall.h"
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
