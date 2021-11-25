@@ -26,6 +26,27 @@ namespace gui {
             return static_cast<std::underlying_type_t<E>>(e);
         }
 
+        class ProxyVector {
+        private:
+            std::vector<core::MultiPerformanceHistory*> my_histories;
+
+        public:
+            ProxyVector() = default;
+            void append(
+                std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>&
+                histories) {
+                for (auto& item : histories) {
+                    my_histories.push_back(&(item.second));
+                }
+            }
+            core::MultiPerformanceHistory& operator[](const size_t& i) const {
+                return *my_histories[i];
+            }
+            const size_t size() const {
+                return my_histories.size();
+            }
+        };
+
         static void PrintTableRow(const std::string& label, float data) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
