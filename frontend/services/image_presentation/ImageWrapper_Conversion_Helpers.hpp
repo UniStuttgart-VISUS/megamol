@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <vector>
+
 namespace megamol {
 namespace frontend_resources {
 

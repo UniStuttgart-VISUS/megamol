@@ -7,7 +7,7 @@
 #pragma once
 
 #include "AbstractManipulator.h"
-#include "geometry_calls_GL/CallTriMeshDataGL.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 
 namespace megamol {
 namespace datatools {
