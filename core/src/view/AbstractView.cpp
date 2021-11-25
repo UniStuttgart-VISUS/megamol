@@ -5,9 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/AbstractView.h"
-#include <climits>
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
@@ -17,8 +15,10 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRenderView.h"
+#include "stdafx.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
+#include <climits>
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;

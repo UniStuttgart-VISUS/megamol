@@ -4,28 +4,28 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "factories/CallClassRegistry.h"
+#include "stdafx.h"
 
-#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 
 #include "mmcore/DataWriterCtrlCall.h"
-#include "mmcore/cluster/CallRegisterAtController.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallTimeControl.h"
-#include "mmcore/view/Call6DofInteraction.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore/job/TickCall.h"
 #include "mmcore/DirectDataWriterCall.h"
-#include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/FlagCall.h"
 #include "mmcore/UniFlagCalls.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/cluster/CallRegisterAtController.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
+#include "mmcore/job/TickCall.h"
 #include "mmcore/param/ParamCalls.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/Call6DofInteraction.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallTimeControl.h"
+#include "mmcore/view/light/CallLight.h"
 
 using namespace megamol::core;
 

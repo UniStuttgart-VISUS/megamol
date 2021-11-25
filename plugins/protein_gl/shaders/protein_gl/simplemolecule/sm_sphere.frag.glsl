@@ -46,7 +46,7 @@ void main(void) {
     else {
         // chose color for lighting
         color = move_color.rgb;
-		if( lambda < 0.0 ) discard;
+        if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;

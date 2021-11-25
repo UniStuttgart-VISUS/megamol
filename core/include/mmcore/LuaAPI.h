@@ -8,13 +8,13 @@
 #ifndef MEGAMOLCORE_LUAAPI_H_INCLUDED
 #define MEGAMOLCORE_LUAAPI_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <mutex>
-#include <string>
 #include "LuaInterpreter.h"
 #include "mmcore/MegaMolGraph.h"
+#include <mutex>
+#include <string>
 
 #include "LuaCallbacksCollection.h"
 
@@ -89,12 +89,12 @@ public:
     void SetScriptPath(std::string const& scriptPath);
 
     void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
-    void RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
+    void RemoveCallbacks(
+        megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
     void RemoveCallbacks(std::vector<std::string> const& callback_names);
     void ClearCallbacks();
 
 protected:
-
     // ** MegaMol API provided for configuration / startup
 
     /** mmGetBithWidth get bits of executable (integer) */
@@ -125,7 +125,6 @@ protected:
     int Invoke(lua_State* L);
 
 private:
-
     /** all of the Lua startup code */
     void commonInit();
 

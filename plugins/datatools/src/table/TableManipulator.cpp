@@ -5,14 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableManipulator.h"
+#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 
-#include <limits>
-#include "vislib/StringTokeniser.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/StringTokeniser.h"
+#include <limits>
 
 using namespace megamol::datatools;
 using namespace megamol::datatools::table;
@@ -23,14 +23,14 @@ std::string TableManipulator::ModuleName = std::string("TableManipulator");
 std::string TableManipulator::defaultScript = "";
 
 TableManipulator::TableManipulator(void)
-    : core::Module()
-    , dataOutSlot("dataOut", "Output")
-    , dataInSlot("dataIn", "Input")
-    , scriptSlot("script", "script to execute on incoming table data")
-    , frameID(-1)
-    , in_datahash(std::numeric_limits<unsigned long>::max())
-    , out_datahash(0)
-    , theLua(this) {
+        : core::Module()
+        , dataOutSlot("dataOut", "Output")
+        , dataInSlot("dataIn", "Input")
+        , scriptSlot("script", "script to execute on incoming table data")
+        , frameID(-1)
+        , in_datahash(std::numeric_limits<unsigned long>::max())
+        , out_datahash(0)
+        , theLua(this) {
 
     this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -90,7 +90,9 @@ TableManipulator::TableManipulator(void)
     this->MakeSlotAvailable(&this->scriptSlot);
 }
 
-TableManipulator::~TableManipulator(void) { this->Release(); }
+TableManipulator::~TableManipulator(void) {
+    this->Release();
+}
 
 bool TableManipulator::create(void) {
     theLua.RegisterCallback<TableManipulator, &TableManipulator::getInputSize>(
@@ -120,15 +122,19 @@ void TableManipulator::release(void) {}
 bool TableManipulator::processData(core::Call& c) {
     try {
         TableDataCall* outCall = dynamic_cast<TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         TableDataCall* inCall = this->dataInSlot.CallAs<TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)()) return false;
+        if (!(*inCall)())
+            return false;
 
-        if (this->in_datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() || this->scriptSlot.IsDirty()) {
+        if (this->in_datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
+            this->scriptSlot.IsDirty()) {
             this->in_datahash = inCall->DataHash();
             this->frameID = inCall->GetFrameID();
             this->scriptSlot.ResetDirty();
@@ -150,7 +156,8 @@ bool TableManipulator::processData(core::Call& c) {
             const bool ok = theLua.RunString(scriptString, res);
 
             if (!ok) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("TableManipulator: Lua execution is NOT OK and returned '%s'", res.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "TableManipulator: Lua execution is NOT OK and returned '%s'", res.c_str());
             }
         }
 
@@ -159,13 +166,14 @@ bool TableManipulator::processData(core::Call& c) {
         outCall->SetDataHash(this->out_datahash);
 
         if (!this->info.empty()) {
-            outCall->Set(this->info.size(), this->data.size() / this->info.size(),
-                this->info.data(), this->data.data());
+            outCall->Set(
+                this->info.size(), this->data.size() / this->info.size(), this->info.data(), this->data.data());
         } else {
             outCall->Set(0, 0, NULL, NULL);
         }
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("%hs: Failed to execute processData\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("%hs: Failed to execute processData\n"), ModuleName.c_str());
         return false;
     }
 
@@ -175,18 +183,22 @@ bool TableManipulator::processData(core::Call& c) {
 bool TableManipulator::getExtent(core::Call& c) {
     try {
         TableDataCall* outCall = dynamic_cast<TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         TableDataCall* inCall = this->dataInSlot.CallAs<TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)(1)) return false;
+        if (!(*inCall)(1))
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->out_datahash); // TODO: this is actually crap if somebody properly checks it
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::getExtent\n"), ModuleName.c_str());
         return false;
     }
 

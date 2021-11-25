@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallGetTransferFunctionGL.h"
 #include "mmcore_gl/ModuleGL.h"
@@ -21,79 +17,77 @@ namespace core_gl {
 namespace view {
 
 
+/**
+ * Module defining a transfer function.
+ */
+class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
+public:
+    
     /**
-     * Module defining a transfer function.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
-    public:
-        
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "TransferFunctionGL";
-        }
+    static const char *ClassName(void) {
+        return "TransferFunctionGL";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module defining a piecewise linear transfer function";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char *Description(void) {
+        return "Module defining a piecewise linear transfer function";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /** Ctor. */
-        TransferFunctionGL(void);
+    /** Ctor. */
+    TransferFunctionGL(void);
 
-        /** Dtor. */
-        virtual ~TransferFunctionGL(void) {
-            this->Release();
-        }
+    /** Dtor. */
+    virtual ~TransferFunctionGL(void) {
+        this->Release();
+    }
 
-    private:
+private:
 
-        // FUNCTIONS ----------------------------------------------------------
+    // FUNCTIONS ----------------------------------------------------------
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Callback called when the transfer function is requested.
-         *
-         * @param call The calling call
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        bool requestTF(core::Call& call);
+    /**
+     * Callback called when the transfer function is requested.
+     *
+     * @param call The calling call
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    bool requestTF(core::Call& call);
 
-        /** The OpenGL texture object id */
-        unsigned int texID;
-    };
+    /** The OpenGL texture object id */
+    unsigned int texID;
+};
 
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED */

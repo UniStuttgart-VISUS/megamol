@@ -6,6 +6,7 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmospray/AbstractOSPRayStructure.h"
 
 namespace megamol {

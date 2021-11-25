@@ -22,9 +22,7 @@ using namespace megamol::frontend_resources;
 // shorthand notation to unpack a FrontendResource to some type.
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
 // note that when using this macro there is no visible opening bracket { for the if statements because it is hidden inside the macro
-#define GET_RESOURCE(TYPENAME) \
-    {                          \
-        TYPENAME const& events = resource.getOptionalResource<TYPENAME>().value().get();
+#define GET_RESOURCE(TYPENAME) TYPENAME const& events = resource.getOptionalResource<TYPENAME>().value().get();
 
 
 void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
@@ -35,7 +33,7 @@ void view_consume_keyboard_events(AbstractView& view, megamol::frontend::Fronten
     for (auto& e : events.codepoint_events)
         view.OnChar(e);
 }
-}
+
 
 void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(MouseEvents) //{
@@ -50,13 +48,12 @@ void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendRe
 
     //for (auto& e: events.enter_events) {}
 }
-}
 
 void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(WindowEvents) //{
     events.is_focused_events;
 }
-}
+
 
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;

@@ -13,10 +13,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/view/TimeControl.h"
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
 
 #include "protein_calls/CrystalStructureDataCall.h"
 
@@ -30,13 +30,12 @@ namespace protein_cuda {
 class DataWriter : public core::job::AbstractJob, public core::Module {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "DataWriter";
     }
 
@@ -45,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Job writing data to files of different formats.";
     }
 
@@ -111,12 +110,8 @@ public:
      * @param isoval      Isovalue for the extracted surface.
      * @return True, if the calculation was successful.
      */
-	bool CalcMapDipoleAvg(protein_calls::CrystalStructureDataCall *dc,
-            int offset,
-            int quality,
-            float radscale,
-            float gridspacing,
-            float isoval);
+    bool CalcMapDipoleAvg(protein_calls::CrystalStructureDataCall* dc, int offset, int quality, float radscale,
+        float gridspacing, float isoval);
 
 
     /**
@@ -130,16 +125,11 @@ public:
      * @param isoval      Isovalue for the extracted surface.
      * @return True, if the calculation was successful.
      */
-	bool CalcMapTiDisplAvg(protein_calls::CrystalStructureDataCall *dc,
-            int offset,
-            int quality,
-            float radscale,
-            float gridspacing,
-            float isoval);
+    bool CalcMapTiDisplAvg(protein_calls::CrystalStructureDataCall* dc, int offset, int quality, float radscale,
+        float gridspacing, float isoval);
 
 
-    bool PutStatistics(unsigned int frameIdx0, unsigned int frameIdx1,
-            unsigned int avgOffs);
+    bool PutStatistics(unsigned int frameIdx0, unsigned int frameIdx1, unsigned int avgOffs);
 
 
     /**
@@ -149,21 +139,14 @@ public:
      * TODO
      * @return True, if the file could be written.
      */
-    bool WriteFrame2VTI(std::string filePrefix,
-            vislib::TString dataIdentifier,
-            float org[3],
-            float step[3],
-            int dim[3],
-            int cycle,
-            float *data);
+    bool WriteFrame2VTI(std::string filePrefix, vislib::TString dataIdentifier, float org[3], float step[3], int dim[3],
+        int cycle, float* data);
 
-    bool WriteDipoleToVTI(unsigned int frameIdx0, unsigned int frameIdx1,
-            unsigned int avgOffs);
+    bool WriteDipoleToVTI(unsigned int frameIdx0, unsigned int frameIdx1, unsigned int avgOffs);
 
-    bool WriteTiDisplVTI(unsigned int frameIdx0, unsigned int frameIdx1,
-            unsigned int avgOffs);
+    bool WriteTiDisplVTI(unsigned int frameIdx0, unsigned int frameIdx1, unsigned int avgOffs);
 
-	float GetNearestDistTi(protein_calls::CrystalStructureDataCall *dc, int idx);
+    float GetNearestDistTi(protein_calls::CrystalStructureDataCall* dc, int idx);
 
     /**
      * Print cell length averaged over 'offs' frames.
@@ -174,11 +157,9 @@ public:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool PutAvgCellLength(unsigned int idxStart, unsigned int offs,
-			protein_calls::CrystalStructureDataCall *dc);
+    bool PutAvgCellLength(unsigned int idxStart, unsigned int offs, protein_calls::CrystalStructureDataCall* dc);
 
-    bool PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd,
-			protein_calls::CrystalStructureDataCall *dc);
+    bool PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd, protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Print the sidelength/Volume of the data set.
@@ -188,11 +169,10 @@ public:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise.
      */
-    bool PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
-			protein_calls::CrystalStructureDataCall *dc);
+    bool PutCubeSize(unsigned int frIdx0, unsigned int frIdx1, protein_calls::CrystalStructureDataCall* dc);
 
-	bool WriteTiDispl(protein_calls::CrystalStructureDataCall *dc);
-	bool ReadTiDispl(protein_calls::CrystalStructureDataCall *dc);
+    bool WriteTiDispl(protein_calls::CrystalStructureDataCall* dc);
+    bool ReadTiDispl(protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Determine the maximum (absolute) values for x, y and z values of the
@@ -201,34 +181,23 @@ public:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise.
      */
-	bool GetMaxCoords(protein_calls::CrystalStructureDataCall *dc);
+    bool GetMaxCoords(protein_calls::CrystalStructureDataCall* dc);
 
-	bool PutCubeVol(protein_calls::CrystalStructureDataCall *dc);
+    bool PutCubeVol(protein_calls::CrystalStructureDataCall* dc);
 
 protected:
-
+    /**
+     * TODO
+     */
+    float CalcCellVolume(vislib::math::Vector<float, 3> A, vislib::math::Vector<float, 3> B,
+        vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D, vislib::math::Vector<float, 3> E,
+        vislib::math::Vector<float, 3> F, vislib::math::Vector<float, 3> G, vislib::math::Vector<float, 3> H);
 
     /**
      * TODO
      */
-    float CalcCellVolume(
-            vislib::math::Vector<float, 3> A,
-            vislib::math::Vector<float, 3> B,
-            vislib::math::Vector<float, 3> C,
-            vislib::math::Vector<float, 3> D,
-            vislib::math::Vector<float, 3> E,
-            vislib::math::Vector<float, 3> F,
-            vislib::math::Vector<float, 3> G,
-            vislib::math::Vector<float, 3> H);
-
-    /**
-     * TODO
-     */
-    float CalcVolTetrahedron(
-            vislib::math::Vector<float, 3> A,
-            vislib::math::Vector<float, 3> B,
-            vislib::math::Vector<float, 3> C,
-            vislib::math::Vector<float, 3> D);
+    float CalcVolTetrahedron(vislib::math::Vector<float, 3> A, vislib::math::Vector<float, 3> B,
+        vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D);
 
     /**
      * Implementation of 'Create'.
@@ -249,24 +218,21 @@ protected:
      * @param fileName The name of the outputfile.
      * @return True, if the file could be written.
      */
-    bool writeFrame2VTKLegacy(unsigned int frameIdx,
-            float gridspacing,
-            vislib::TString fileName);
+    bool writeFrame2VTKLegacy(unsigned int frameIdx, float gridspacing, vislib::TString fileName);
 
-	bool WriteFrameFileBinAvg(protein_calls::CrystalStructureDataCall *dc);
+    bool WriteFrameFileBinAvg(protein_calls::CrystalStructureDataCall* dc);
 
-    void sortByKey(unsigned int *idx, unsigned int n, float *pos);
+    void sortByKey(unsigned int* idx, unsigned int n, float* pos);
 
-	bool WriteTiODipole(protein_calls::CrystalStructureDataCall *dc);
+    bool WriteTiODipole(protein_calls::CrystalStructureDataCall* dc);
 
-	bool ReadTiODipole(protein_calls::CrystalStructureDataCall *dc);
+    bool ReadTiODipole(protein_calls::CrystalStructureDataCall* dc);
 
     void PutVelocity();
 
-	void PutDisplacement(protein_calls::CrystalStructureDataCall *dc);
+    void PutDisplacement(protein_calls::CrystalStructureDataCall* dc);
 
 private:
-
     /** Data caller slot */
     core::CallerSlot dataCallerSlot;
 
@@ -280,13 +246,13 @@ private:
     /// Arrays ///
 
     /* Array containing data of the current frame */
-    float *frameData0;
+    float* frameData0;
 
     /* Array containing data of the next frame */
-    float *frameData1;
+    float* frameData1;
 
     /* Array containing data of the displacement frame */
-    float *frameDataDispl;
+    float* frameDataDispl;
 
     float* addedPos;
     float* addedTiDispl;
@@ -295,23 +261,22 @@ private:
     //// Quicksurf branch ///
     // TODO
 
-    void *cudaqsurf;         ///< Pointer to CUDAQuickSurf object if it exists
-    double pretime;          ///< Internal timer for performance instrumentation
-    double voltime;          ///< Internal timer for performance instrumentation
-    double gradtime;         ///< Internal timer for performance instrumentation
-    double mctime;           ///< Internal timer for performance instrumentation
-    double mcverttime;       ///< Internal timer for performance instrumentation
-    double reptime;          ///< Internal timer for performance instrumentation
-    float solidcolor[3];     ///< RGB color to use when not using per-atom colors
-    int numvoxels[3];        ///< Number of voxels in each dimension
-    float origin[3];         ///< Origin of the volumetric map
-    float xaxis[3];          ///< X-axis of the volumetric map
-    float yaxis[3];          ///< Y-axis of the volumetric map
-    float zaxis[3];          ///< Z-axis of the volumetric map
+    void* cudaqsurf;     ///< Pointer to CUDAQuickSurf object if it exists
+    double pretime;      ///< Internal timer for performance instrumentation
+    double voltime;      ///< Internal timer for performance instrumentation
+    double gradtime;     ///< Internal timer for performance instrumentation
+    double mctime;       ///< Internal timer for performance instrumentation
+    double mcverttime;   ///< Internal timer for performance instrumentation
+    double reptime;      ///< Internal timer for performance instrumentation
+    float solidcolor[3]; ///< RGB color to use when not using per-atom colors
+    int numvoxels[3];    ///< Number of voxels in each dimension
+    float origin[3];     ///< Origin of the volumetric map
+    float xaxis[3];      ///< X-axis of the volumetric map
+    float yaxis[3];      ///< Y-axis of the volumetric map
+    float zaxis[3];      ///< Z-axis of the volumetric map
 
     /** The grid spacing */
     float step[3];
-
 };
 
 } /* end namespace protein_cuda */

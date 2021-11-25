@@ -8,15 +8,15 @@
 #ifndef MEGAMOLCORE_DATRAWWRITER_H_INCLUDED
 #define MEGAMOLCORE_DATRAWWRITER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <fstream>
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/DataWriterCtrlCall.h"
-#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/ParamSlot.h"
+#include <fstream>
 
 namespace megamol {
 namespace volume {
@@ -31,28 +31,36 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "DatRawWriter"; }
+    static const char* ClassName(void) {
+        return "DatRawWriter";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Dat-Raw file writer"; }
+    static const char* Description(void) {
+        return "Dat-Raw file writer";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /**
      * Disallow usage in quickstarts
      *
      * @return false
      */
-    static bool SupportQuickstart(void) { return false; }
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
     /** Ctor. */
     DatRawWriter(void);

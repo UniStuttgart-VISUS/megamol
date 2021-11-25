@@ -5,13 +5,10 @@
  * Copyright (C) 2015 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MSMSGenus0Generator.h"
-#include <fstream>
 #include "protein/Color.h"
-
-
-
+#include "stdafx.h"
+#include <fstream>
 
 
 #include "mmcore/param/ColorParam.h"
@@ -27,7 +24,6 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-
 
 
 using namespace megamol;

@@ -22,7 +22,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "Render3DUI"; }
+    static const char* ClassName(void) {
+        return "Render3DUI";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -107,7 +109,7 @@ private:
     megamol::core::CallerSlot m_3DInteraction_callerSlot;
 };
 
-} // namespace mesh
+} // namespace mesh_gl
 } // namespace megamol
 
 #endif // !RENDER_3D_UI_H_INCLUDED

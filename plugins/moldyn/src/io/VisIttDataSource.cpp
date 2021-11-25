@@ -5,22 +5,22 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include <climits>
 #include "io/VisIttDataSource.h"
-#include "vislib/sys/FastFile.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/String.h"
-#include "vislib/sys/sysfunctions.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/String.h"
 #include "vislib/graphics/ColourRGBAu8.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/sysfunctions.h"
 #include <algorithm>
+#include <climits>
 
 using namespace megamol;
 using namespace megamol::moldyn::io;
@@ -40,7 +40,9 @@ using namespace megamol::moldyn::io;
  * VisIttDataSource::Frame::Frame
  */
 VisIttDataSource::Frame::Frame(core::view::AnimDataModule& owner)
-        : core::view::AnimDataModule::Frame(owner), size(0), dat() {
+        : core::view::AnimDataModule::Frame(owner)
+        , size(0)
+        , dat() {
     // intentionally empty
 }
 
@@ -58,19 +60,25 @@ VisIttDataSource::Frame::~Frame() {
 /*
  * VisIttDataSource::VisIttDataSource
  */
-VisIttDataSource::VisIttDataSource(void) : core::view::AnimDataModule(),
-        filename("filename", "The path to the trisoup file to load."),
-        radius("radius", "The radius to be assumed for the particles"),
-        filter("filter::type", "The filter to be applied"),
-        filterColumn("filter::column", "The filter column to be applied"),
-        filterValue("filter::value", "The filter value to be applied"),
-        getData("getdata", "Slot to request data from this data source."),
-        file(NULL), dataHash(0), frameTable(), header(), headerIdx(),
-        filterIndex(UINT_MAX),
-        sortPartIdSlots("sortById", "Sorts particles by their IDs"), idIndex(UINT_MAX),
-        splitTypesSlots("splitTypes", "Activates splitting based on types"), 
-        splitTypesNameSlots("splitTypesName", "Split types based on this data column"),
-        typeIndex(UINT_MAX) {
+VisIttDataSource::VisIttDataSource(void)
+        : core::view::AnimDataModule()
+        , filename("filename", "The path to the trisoup file to load.")
+        , radius("radius", "The radius to be assumed for the particles")
+        , filter("filter::type", "The filter to be applied")
+        , filterColumn("filter::column", "The filter column to be applied")
+        , filterValue("filter::value", "The filter value to be applied")
+        , getData("getdata", "Slot to request data from this data source.")
+        , file(NULL)
+        , dataHash(0)
+        , frameTable()
+        , header()
+        , headerIdx()
+        , filterIndex(UINT_MAX)
+        , sortPartIdSlots("sortById", "Sorts particles by their IDs")
+        , idIndex(UINT_MAX)
+        , splitTypesSlots("splitTypes", "Activates splitting based on types")
+        , splitTypesNameSlots("splitTypesName", "Split types based on this data column")
+        , typeIndex(UINT_MAX) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VisIttDataSource::filenameChanged);
@@ -79,7 +87,7 @@ VisIttDataSource::VisIttDataSource(void) : core::view::AnimDataModule(),
     this->radius << new core::param::FloatParam(0.5f, 0.00001f);
     this->MakeSlotAvailable(&this->radius);
 
-    core::param::EnumParam *filterTypes = new core::param::EnumParam(0);
+    core::param::EnumParam* filterTypes = new core::param::EnumParam(0);
     filterTypes->SetTypePair(0, "none");
     filterTypes->SetTypePair(1, "=");
     filterTypes->SetTypePair(6, "!=");
@@ -99,10 +107,8 @@ VisIttDataSource::VisIttDataSource(void) : core::view::AnimDataModule(),
     this->filterValue.SetUpdateCallback(&VisIttDataSource::filterChanged);
     this->MakeSlotAvailable(&this->filterValue);
 
-    this->getData.SetCallback("MultiParticleDataCall", "GetData",
-        &VisIttDataSource::getDataCallback);
-    this->getData.SetCallback("MultiParticleDataCall", "GetExtent",
-        &VisIttDataSource::getExtentCallback);
+    this->getData.SetCallback("MultiParticleDataCall", "GetData", &VisIttDataSource::getDataCallback);
+    this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &VisIttDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->sortPartIdSlots.SetParameter(new core::param::BoolParam(true));
@@ -133,9 +139,8 @@ VisIttDataSource::~VisIttDataSource(void) {
 /*
  * VisIttDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame*
-VisIttDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<VisIttDataSource*>(this));
+core::view::AnimDataModule::Frame* VisIttDataSource::constructFrame(void) const {
+    Frame* f = new Frame(*const_cast<VisIttDataSource*>(this));
     return f;
 }
 
@@ -151,9 +156,10 @@ bool VisIttDataSource::create(void) {
 /*
  * VisIttDataSource::loadFrame
  */
-void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsigned int idx) {
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
+void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == NULL)
+        return;
     f->Clear();
     if (this->file == NULL) {
         return;
@@ -162,23 +168,26 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
     ASSERT(this->headerIdx.Count() >= 3);
 
     unsigned int typeId = 0;
-    std::map<unsigned int, std::vector< std::pair<unsigned int, unsigned int> > > pids;
+    std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int>>> pids;
 
-    SIZE_T len = static_cast<SIZE_T>(
-        ((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize())
-        - this->frameTable[idx]);
+    SIZE_T len =
+        static_cast<SIZE_T>(((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize()) -
+                            this->frameTable[idx]);
     this->file->Seek(this->frameTable[idx]);
-    char *buf = new char[len + 2];
+    char* buf = new char[len + 2];
     len = static_cast<SIZE_T>(this->file->Read(buf, len));
     buf[len] = '\n';
     buf[len + 1] = 0;
     int filterType = this->filter.Param<core::param::EnumParam>()->Value();
     float filterVal = this->filterValue.Param<core::param::FloatParam>()->Value();
     for (SIZE_T i = 0; i <= len; i++) {
-        char *line = buf + i;
-        if (line[0] == '#') break; // end of frame
-        while ((i <= len) && (buf[i] != '\n')) i++;
-        if (i > len) break;
+        char* line = buf + i;
+        if (line[0] == '#')
+            break; // end of frame
+        while ((i <= len) && (buf[i] != '\n'))
+            i++;
+        if (i > len)
+            break;
         buf[i] = '0';
 
         if ((filterType > 0) && (this->filterIndex < this->header.Count())) {
@@ -193,31 +202,31 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             try {
                 float v = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
                 switch (filterType) {
-                    case 1: // =
-                        doFilter = vislib::math::IsEqual(v, filterVal);
-                        break;
-                    case 6: // !=
-                        doFilter = !vislib::math::IsEqual(v, filterVal);
-                        break;
-                    case 2: // <
-                        doFilter = (v < filterVal);
-                        break;
-                    case 3: // >
-                        doFilter = (v > filterVal);
-                        break;
-                    case 4: // <=
-                        doFilter = (v <= filterVal);
-                        break;
-                    case 5: // >=
-                        doFilter = (v >= filterVal);
-                        break;
-                    default: // do not filter
-                        break;
+                case 1: // =
+                    doFilter = vislib::math::IsEqual(v, filterVal);
+                    break;
+                case 6: // !=
+                    doFilter = !vislib::math::IsEqual(v, filterVal);
+                    break;
+                case 2: // <
+                    doFilter = (v < filterVal);
+                    break;
+                case 3: // >
+                    doFilter = (v > filterVal);
+                    break;
+                case 4: // <=
+                    doFilter = (v <= filterVal);
+                    break;
+                case 5: // >=
+                    doFilter = (v >= filterVal);
+                    break;
+                default: // do not filter
+                    break;
                 }
-            } catch(...) {
-            }
+            } catch (...) {}
             line[end] = endChar;
-            if (doFilter) continue;
+            if (doFilter)
+                continue;
         }
 
         if (this->typeIndex != UINT_MAX) {
@@ -232,9 +241,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             line[end] = 0;
             try {
                 typeId = vislib::CharTraitsA::ParseInt(line + start);
-            } catch(...) {
-                typeId = 0;
-            }
+            } catch (...) { typeId = 0; }
             line[end] = endChar;
         }
 
@@ -250,17 +257,16 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             line[end] = 0;
             try {
                 pid = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line + start));
-            } catch(...) {
-                pid = static_cast<unsigned int>(pids[typeId].size());
-            }
+            } catch (...) { pid = static_cast<unsigned int>(pids[typeId].size()); }
             line[end] = endChar;
-            pids[typeId].push_back(std::pair<unsigned int, unsigned int>(static_cast<unsigned int>(pids[typeId].size()), pid));
+            pids[typeId].push_back(
+                std::pair<unsigned int, unsigned int>(static_cast<unsigned int>(pids[typeId].size()), pid));
         }
 
-        std::vector<float> &vec = f->AccessParticleData(typeId);
+        std::vector<float>& vec = f->AccessParticleData(typeId);
         size_t ovs = vec.size();
         vec.resize(ovs + 3);
-        float *pos = vec.data() + ovs;
+        float* pos = vec.data() + ovs;
 
         for (unsigned int j = 0; j < 3; j++) {
             unsigned int hidx = this->headerIdx[j];
@@ -273,12 +279,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             line[end] = 0;
             try {
                 pos[j] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
-            } catch(...) {
-                pos[j] = 0.0f;
-            }
+            } catch (...) { pos[j] = 0.0f; }
             line[end] = endChar;
         }
-
     }
     delete[] buf;
     f->SetFrameNumber(idx);
@@ -288,12 +291,11 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
         std::vector<unsigned int> keys = f->ParticleTypes();
         for (unsigned int key : keys) {
             std::vector<float>& poss = f->AccessParticleData(key);
-            std::vector< std::pair<unsigned int, unsigned int> >& ids = pids[key];
+            std::vector<std::pair<unsigned int, unsigned int>>& ids = pids[key];
             assert(ids.size() * 3 == poss.size());
             std::sort(ids.begin(), ids.end(),
-                [](const std::pair<unsigned int, unsigned int>& a, const std::pair<unsigned int, unsigned int>& b) -> bool {
-                    return a.second < b.second;
-                });
+                [](const std::pair<unsigned int, unsigned int>& a,
+                    const std::pair<unsigned int, unsigned int>& b) -> bool { return a.second < b.second; });
             std::vector<float> pos_copy(poss);
             unsigned int cnt = static_cast<unsigned int>(ids.size());
             for (unsigned int i = 0; i < cnt; ++i) {
@@ -314,7 +316,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
 void VisIttDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
@@ -332,7 +334,7 @@ void VisIttDataSource::buildFrameTable(void) {
     ASSERT(this->file != NULL);
 
     const unsigned int bufSize = 1024 * 1024;
-    char *buf = new char[bufSize];
+    char* buf = new char[bufSize];
     unsigned int size = 1;
     char lCh1 = 0, lCh2 = 0;
     vislib::sys::File::FileSize pos = 0;
@@ -358,8 +360,8 @@ void VisIttDataSource::buildFrameTable(void) {
                 if (buf[i + 1] == '#') {
                     break; // end of data
                 }
-                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A)))
-                        || ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
+                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A))) ||
+                    ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
                     this->frameTable.Add(pos + i);
                 }
             }
@@ -388,7 +390,6 @@ void VisIttDataSource::buildFrameTable(void) {
     for (SIZE_T i = 1; i < this->frameTable.Count(); i++) {
         this->frameTable[i] += this->frameTable[0] + 2; // header offset
     }
-
 }
 
 
@@ -455,11 +456,11 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (tmpFrame.GetFrameSize() > sizeof(float) * 3) {
         std::vector<unsigned int> keys = tmpFrame.ParticleTypes();
 
-        const float *pos = tmpFrame.ParticleData(keys[0]);
+        const float* pos = tmpFrame.ParticleData(keys[0]);
         this->bbox.Set(pos[0], pos[1], pos[2], pos[0], pos[1], pos[2]);
 
         for (unsigned int key : keys) {
-            const float *pos = tmpFrame.ParticleData(key);
+            const float* pos = tmpFrame.ParticleData(key);
             unsigned int cnt = tmpFrame.ParticleCount(key);
             for (unsigned int i = 0; i < cnt; i++, pos += 3) {
                 this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
@@ -484,8 +485,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
-        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-            CACHE_SIZE_MIN, cacheSize);
+        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
@@ -498,7 +498,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
         this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() - 1));
         std::vector<unsigned int> keys = tmpFrame.ParticleTypes();
         for (unsigned int key : keys) {
-            const float *pos = tmpFrame.ParticleData(key);
+            const float* pos = tmpFrame.ParticleData(key);
             unsigned int cnt = tmpFrame.ParticleCount(key);
             for (unsigned int i = 0; i < cnt; i++, pos += 3) {
                 this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
@@ -508,13 +508,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
         this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() / 2));
         keys = tmpFrame.ParticleTypes();
         for (unsigned int key : keys) {
-            const float *pos = tmpFrame.ParticleData(key);
+            const float* pos = tmpFrame.ParticleData(key);
             unsigned int cnt = tmpFrame.ParticleCount(key);
             for (unsigned int i = 0; i < cnt; i++, pos += 3) {
                 this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
             }
         }
-
     }
     this->initFrameCache(cacheSize);
 
@@ -544,11 +543,14 @@ bool VisIttDataSource::parseHeader(const vislib::StringA& header) {
     ASSERT(this->header.Count() == 0);
     ASSERT(this->headerIdx.Count() == 0);
     unsigned int len = header.Length();
-    if (len == 0) return false;
+    if (len == 0)
+        return false;
     for (unsigned int p = 0; p < len;) {
         unsigned int start = p;
-        while ((p < len) && vislib::CharTraitsA::IsSpace(header[p])) p++;
-        while ((p < len) && !vislib::CharTraitsA::IsSpace(header[p])) p++;
+        while ((p < len) && vislib::CharTraitsA::IsSpace(header[p]))
+            p++;
+        while ((p < len) && !vislib::CharTraitsA::IsSpace(header[p]))
+            p++;
         if ((p - start) > 0) {
             vislib::StringA label = header.Substring(start, p - start);
             label.TrimSpaces();
@@ -557,7 +559,8 @@ bool VisIttDataSource::parseHeader(const vislib::StringA& header) {
             }
         }
     }
-    if (this->header.Count() == 0) return false;
+    if (this->header.Count() == 0)
+        return false;
 
     for (SIZE_T i = 0; i < this->header.Count(); i++) {
         if (this->header[i].First().Equals("x", false)) {
@@ -574,7 +577,8 @@ bool VisIttDataSource::parseHeader(const vislib::StringA& header) {
             this->headerIdx.Add(static_cast<unsigned int>(i));
         }
     }
-    if (this->headerIdx.Count() == 0) return false;
+    if (this->headerIdx.Count() == 0)
+        return false;
 
     while (this->headerIdx.Count() < 3) { // stupid, but makes things easier for now
         this->headerIdx.Add(this->headerIdx[0]);
@@ -588,12 +592,13 @@ bool VisIttDataSource::parseHeader(const vislib::StringA& header) {
  * VisIttDataSource::getDataCallback
  */
 bool VisIttDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
-    Frame *f = NULL;
+    Frame* f = NULL;
     if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        if (f == NULL) return false;
+        f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID()));
+        if (f == NULL)
+            return false;
 
         c2->SetDataHash((this->file == NULL) ? 0 : this->dataHash);
         c2->SetUnlocker(new Unlocker(*f));
@@ -607,7 +612,8 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
             // some colors
             cols[0] = vislib::graphics::ColourRGBAu8(255, 0, 0, 255);
             cols[1] = vislib::graphics::ColourRGBAu8(0, 255, 0, 255);
-            if (cols.size() > 2) cols[2] = vislib::graphics::ColourRGBAu8(0, 0, 255, 255);
+            if (cols.size() > 2)
+                cols[2] = vislib::graphics::ColourRGBAu8(0, 0, 255, 255);
             // not bright, but ok for now
         }
 
@@ -617,7 +623,8 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
             c2->AccessParticles(ti).SetGlobalRadius(this->radius.Param<core::param::FloatParam>()->Value());
             c2->AccessParticles(ti).SetGlobalColour(cols[ti].R(), cols[ti].G(), cols[ti].B());
             c2->AccessParticles(ti).SetCount(f->ParticleCount(key));
-            c2->AccessParticles(ti).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->ParticleData(key));
+            c2->AccessParticles(ti).SetVertexData(
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->ParticleData(key));
             ++ti;
         }
 
@@ -632,7 +639,7 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
  * VisIttDataSource::getExtentCallback
  */
 bool VisIttDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
     if (c2 != NULL) {
         float border = this->radius.Param<core::param::FloatParam>()->Value();
@@ -641,9 +648,9 @@ bool VisIttDataSource::getExtentCallback(core::Call& caller) {
         c2->SetFrameCount(static_cast<unsigned int>(this->frameTable.Count()));
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(
-            this->bbox.Left() - border, this->bbox.Bottom() - border, this->bbox.Back() - border, 
-            this->bbox.Right() + border, this->bbox.Top() + border, this->bbox.Front() + border);
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox.Left() - border, this->bbox.Bottom() - border,
+            this->bbox.Back() - border, this->bbox.Right() + border, this->bbox.Top() + border,
+            this->bbox.Front() + border);
 
         return true;
     }
@@ -682,8 +689,7 @@ void VisIttDataSource::findFilterColumn(void) {
             if ((idx >= 0) && (idx < static_cast<int>(this->header.Count()))) {
                 this->filterIndex = idx;
             }
-        } catch(...) {
-        }
+        } catch (...) {}
     }
 }
 

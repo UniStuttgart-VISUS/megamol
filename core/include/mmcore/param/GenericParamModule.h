@@ -43,7 +43,8 @@ private:
 };
 
 template<typename T>
-inline GenericParamModule<T>::GenericParamModule() : value_out_slot_("valueOut", ""), param_("param", "") {
+inline GenericParamModule<T>::GenericParamModule() : value_out_slot_("valueOut", "")
+                                                   , param_("param", "") {
     value_out_slot_.SetCallback(T::ClassName(), T::FunctionName(T::CallGetData), &GenericParamModule::get_data_cb);
     value_out_slot_.SetCallback(T::ClassName(), T::FunctionName(T::CallSetData), &GenericParamModule::set_data_cb);
     MakeSlotAvailable(&value_out_slot_);

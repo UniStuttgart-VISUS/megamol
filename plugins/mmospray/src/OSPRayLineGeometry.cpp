@@ -4,26 +4,26 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "OSPRayLineGeometry.h"
-#include "mmospray/CallOSPRayStructure.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmospray/CallOSPRayStructure.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 using namespace megamol;
 
 
 OSPRayLineGeometry::OSPRayLineGeometry(void)
-    : AbstractOSPRayStructure()
-    , getDataSlot("getdata", "Connects to the data source")
-    , getLineDataSlot("getLineData", "")
-    , globalRadiusSlot("globalRadius", "Sets the radius of the lines")
-    , smoothSlot("smooth", "Set whether to smooth the lines") {
+        : AbstractOSPRayStructure()
+        , getDataSlot("getdata", "Connects to the data source")
+        , getLineDataSlot("getLineData", "")
+        , globalRadiusSlot("globalRadius", "Sets the radius of the lines")
+        , smoothSlot("smooth", "Set whether to smooth the lines") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::LinesDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -64,10 +64,12 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
             meta_data.m_frame_ID = os->getTime();
         }
         cm->setMetaData(meta_data);
-        if (!(*cm)(1)) return false;
-        if (!(*cm)(0)) return false;
+        if (!(*cm)(1))
+            return false;
+        if (!(*cm)(0))
+            return false;
         meta_data = cm->getMetaData();
-        auto interface_dirty = this->InterfaceIsDirty(); 
+        auto interface_dirty = this->InterfaceIsDirty();
         if (cm->hasUpdate() || this->time != os->getTime() || interface_dirty) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
@@ -80,13 +82,16 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
 
         geocalls::LinesDataCall* cd = this->getDataSlot.CallAs<geocalls::LinesDataCall>();
         this->structureContainer.dataChanged = false;
-        if (cd == NULL) return false;
+        if (cd == NULL)
+            return false;
         cd->SetTime(os->getTime());
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
         auto interface_dirty = this->InterfaceIsDirty();
 
-        if (!(*cd)(1)) return false;
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(1))
+            return false;
+        if (!(*cd)(0))
+            return false;
 
         if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_dirty) {
             this->datahash = cd->DataHash();
@@ -95,7 +100,6 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         } else {
             return true;
         }
-
 
 
         unsigned int lineCount = cd->Count();
@@ -172,9 +176,13 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     return true;
 }
 
-OSPRayLineGeometry::~OSPRayLineGeometry() { this->Release(); }
+OSPRayLineGeometry::~OSPRayLineGeometry() {
+    this->Release();
+}
 
-bool OSPRayLineGeometry::create() { return true; }
+bool OSPRayLineGeometry::create() {
+    return true;
+}
 
 void OSPRayLineGeometry::release() {}
 
@@ -200,7 +208,8 @@ bool OSPRayLineGeometry::getExtends(core::Call& call) {
     mesh::CallMesh* cm = this->getLineDataSlot.CallAs<mesh::CallMesh>();
     if (cm != nullptr) {
 
-        if (!(*cm)(1)) return false;
+        if (!(*cm)(1))
+            return false;
         auto meta_data = cm->getMetaData();
         if (os->getTime() > meta_data.m_frame_cnt) {
             meta_data.m_frame_ID = meta_data.m_frame_cnt - 1;
@@ -216,7 +225,8 @@ bool OSPRayLineGeometry::getExtends(core::Call& call) {
     } else {
         geocalls::LinesDataCall* cd = this->getDataSlot.CallAs<geocalls::LinesDataCall>();
 
-        if (cd == NULL) return false;
+        if (cd == NULL)
+            return false;
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
         // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
         (*cd)(1);

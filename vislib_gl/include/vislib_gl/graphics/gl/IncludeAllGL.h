@@ -35,7 +35,7 @@ inline void LoadAllGL() {
 #ifdef _WIN32
         gladLoaderLoadWGL(wglGetCurrentDC());
 #else
-        Display *display = XOpenDisplay(NULL);
+        Display* display = XOpenDisplay(NULL);
         gladLoaderLoadGLX(display, DefaultScreen(display));
         XCloseDisplay(display);
 #endif
@@ -44,7 +44,7 @@ inline void LoadAllGL() {
 
 } /* end namespace gl */
 } /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib_gl
 
 
 #endif /* INCLUDEALLGL_H_INCLUDED */

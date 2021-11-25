@@ -1,10 +1,10 @@
-#include "stdafx.h"
 #include "TableInspector.h"
+#include "stdafx.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::datatools;
 using namespace megamol;
@@ -20,10 +20,8 @@ TableInspector::TableInspector(void)
     /* Register parameters. */
 
     /* Register calls. */
-    this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetData", &TableInspector::getTableData);
-    this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetHash", &TableInspector::getTableHash);
+    this->slotTableOut.SetCallback(table::TableDataCall::ClassName(), "GetData", &TableInspector::getTableData);
+    this->slotTableOut.SetCallback(table::TableDataCall::ClassName(), "GetHash", &TableInspector::getTableHash);
 
     this->MakeSlotAvailable(&this->slotTableOut);
 
@@ -35,7 +33,9 @@ TableInspector::TableInspector(void)
 /*
  * megamol::datatools::TableInspector::~TableInspector
  */
-TableInspector::~TableInspector(void) { this->Release(); }
+TableInspector::~TableInspector(void) {
+    this->Release();
+}
 
 
 /*
@@ -52,11 +52,13 @@ bool TableInspector::getTableData(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
 
     auto* t_out = dynamic_cast<table::TableDataCall*>(&call);
-    if (t_out == nullptr) return false;
+    if (t_out == nullptr)
+        return false;
 
     if (t_in != nullptr) {
         t_in->SetFrameID(t_out->GetFrameID());
-        if (!(*t_in)(0)) return false;
+        if (!(*t_in)(0))
+            return false;
 
         if (t_in->GetColumnsCount() > 0) {
             drawTable(t_in);
@@ -79,11 +81,13 @@ bool TableInspector::getTableHash(core::Call& call) {
     auto* t_in = this->slotTableIn.CallAs<table::TableDataCall>();
 
     auto* t_out = dynamic_cast<table::TableDataCall*>(&call);
-    if (t_out == nullptr) return false;
+    if (t_out == nullptr)
+        return false;
 
     if (t_in != nullptr) {
         t_in->SetFrameID(t_out->GetFrameID());
-        if (!(*t_in)(1)) return false;
+        if (!(*t_in)(1))
+            return false;
         t_out->SetDataHash(t_in->DataHash());
         t_out->SetFrameCount(t_in->GetFrameCount());
         return true;
@@ -95,9 +99,7 @@ bool TableInspector::getTableHash(core::Call& call) {
 /*
  * megamol::datatools::TableInspector::release
  */
-void TableInspector::release(void) {
-    
-}
+void TableInspector::release(void) {}
 
 
 /*
@@ -109,7 +111,8 @@ void TableInspector::drawTable(table::TableDataCall* t_in) {
     if (!valid_imgui_scope)
         return;
 
-    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame) return;
+    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame)
+        return;
     lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
 
     std::string table_name = "##table";

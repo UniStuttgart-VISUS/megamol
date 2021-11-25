@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/TransferFunctionGL.h"
+#include "stdafx.h"
 
 #include "mmcore/param/TransferFunctionParam.h"
 
@@ -74,15 +74,15 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
 
         // Get current values from parameter string (Values are checked, too).
         TransferFunctionParam::NodeVector_t tmp_nodes;
-        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(), tmp_nodes, this->interpolMode, this->texSize, this->range)) {
+        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(),
+                tmp_nodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == TransferFunctionParam::InterpolationMode::LINEAR) {
             this->tex = TransferFunctionParam::LinearInterpolation(this->texSize, tmp_nodes);
-        }
-        else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
+        } else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
             this->tex = TransferFunctionParam::GaussInterpolation(this->texSize, tmp_nodes);
         }
 
@@ -91,8 +91,10 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
-        if (!t1de) glEnable(GL_TEXTURE_1D);
-        if (this->texID == 0) glGenTextures(1, &this->texID);
+        if (!t1de)
+            glEnable(GL_TEXTURE_1D);
+        if (this->texID == 0)
+            glGenTextures(1, &this->texID);
 
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
@@ -107,12 +109,12 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
 
         glBindTexture(GL_TEXTURE_1D, otid);
 
-        if (!t1de) glDisable(GL_TEXTURE_1D);
+        if (!t1de)
+            glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
 
-    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
-        this->range, this->version);
+    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat, this->range, this->version);
 
     return true;
 }

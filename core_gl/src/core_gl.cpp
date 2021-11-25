@@ -4,29 +4,29 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
+#include "stdafx.h"
 
+#include "mmcore_gl/DeferredShading.h"
+#include "mmcore_gl/UniFlagStorageGL.h"
+#include "mmcore_gl/view/BoundingBoxRenderer.h"
+#include "mmcore_gl/view/ContextToGL.h"
+#include "mmcore_gl/view/HeadView.h"
+#include "mmcore_gl/view/SplitViewGL.h"
 #include "mmcore_gl/view/TransferFunctionGL.h"
+#include "mmcore_gl/view/View2DGL.h"
+#include "mmcore_gl/view/View3DGL.h"
+#include "mmcore_gl/view/special/CallbackScreenShooter.h"
 #include "mmcore_gl/view/special/ChronoGraph.h"
 #include "mmcore_gl/view/special/DemoRenderer2D.h"
 #include "mmcore_gl/view/special/ScreenShooter.h"
-#include "mmcore_gl/view/View2DGL.h"
-#include "mmcore_gl/view/View3DGL.h"
-#include "mmcore_gl/view/HeadView.h"
-#include "mmcore_gl/view/BoundingBoxRenderer.h"
-#include "mmcore_gl/view/SplitViewGL.h"
-#include "mmcore_gl/view/special/CallbackScreenShooter.h"
-#include "mmcore_gl/UniFlagStorageGL.h"
-#include "mmcore_gl/DeferredShading.h"
-#include "mmcore_gl/view/ContextToGL.h"
 
+#include "mmcore_gl/UniFlagCallsGL.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
 
 
 namespace megamol::core_gl {

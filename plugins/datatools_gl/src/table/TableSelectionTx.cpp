@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-
 #include "TableSelectionTx.h"
 
 #include <unordered_set>

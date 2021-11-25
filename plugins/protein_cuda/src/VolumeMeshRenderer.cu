@@ -310,8 +310,8 @@ void GenerateTriangles_kernel(float4* vertices, int* neighborAtom, float4* norma
         // Test if edge intersects with surface.
         if (tetrahedronEdgeFlags[tetrahedronFlags] & (1 << static_cast<unsigned char>(edgeIndex)))  {
             // Interpolate vertex.
-            const float3 v0 = cubeVertex0 + cubeVertexOffsets[tetrahedronsInACube[tetrahedronIndex][tetrahedronEdgeConnections[edgeIndex][0]]];		
-            const float3 v1 = cubeVertex0 + cubeVertexOffsets[tetrahedronsInACube[tetrahedronIndex][tetrahedronEdgeConnections[edgeIndex][1]]];	
+            const float3 v0 = cubeVertex0 + cubeVertexOffsets[tetrahedronsInACube[tetrahedronIndex][tetrahedronEdgeConnections[edgeIndex][0]]];
+            const float3 v1 = cubeVertex0 + cubeVertexOffsets[tetrahedronsInACube[tetrahedronIndex][tetrahedronEdgeConnections[edgeIndex][1]]];
             const float f0 = VoxelValue(v0);
             const float interpolator = (thresholdValue - f0) / (VoxelValue(v1) - f0);
             float3 vertex = lerp(make_float3(v0.x, v0.y, v0.z), make_float3(v1.x, v1.y, v1.z), interpolator);
@@ -324,7 +324,7 @@ void GenerateTriangles_kernel(float4* vertices, int* neighborAtom, float4* norma
     }
     // Write vertices.
     for (int triangleIndex = 0; triangleIndex < 2; triangleIndex++) {
-        if (tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex] >= 0) {	 
+        if (tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex] >= 0) {
             //int edgeIndex0 = threadIdx.x * 6 + tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex + 0];
             //int edgeIndex1 = threadIdx.x * 6 + tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex + 1];
             //int edgeIndex2 = threadIdx.x * 6 + tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex + 2];
@@ -334,11 +334,11 @@ void GenerateTriangles_kernel(float4* vertices, int* neighborAtom, float4* norma
                 int edgeIndex = threadIdx.x * 6 + tetrahedronTriangles[tetrahedronFlags][3 * triangleIndex + cornerIndex];
                 uint vertexOffset = vertexOffsets[id] + 3 * triangleIndex + cornerIndex;
                 //vertices[vertexOffset] = make_float4(translateX + edgeVertex[edgeIndex].x * scaleX, 
-                //	translateY + edgeVertex[edgeIndex].y * scaleY, 
-                //	translateZ + edgeVertex[edgeIndex].z * scaleZ, 1.0f);
+                //    translateY + edgeVertex[edgeIndex].y * scaleY,
+                //    translateZ + edgeVertex[edgeIndex].z * scaleZ, 1.0f);
                 //vertices[vertexOffset] = make_float4( edgeVertex[edgeIndex].x / 128.0f, 
-                //	 edgeVertex[edgeIndex].y / 128.0f , 
-                //	 edgeVertex[edgeIndex].z / 128.0f, 1.0f);
+                //     edgeVertex[edgeIndex].y / 128.0f ,
+                //     edgeVertex[edgeIndex].z / 128.0f, 1.0f);
                 vertices[vertexOffset] = make_float4( edgeVertex[edgeIndex].x, 
                      edgeVertex[edgeIndex].y, edgeVertex[edgeIndex].z, 1.0f);
                 // store nearest atom per output vertex
@@ -405,7 +405,7 @@ void LoadTetrahedronNeighbours()
 {
     // Load tetrahedron face masks into shared memory.
     if (threadIdx.x < 4) {
-        tetrahedronFaceMask[threadIdx.x] = tetrahedronFaceMaskC[threadIdx.x];		
+        tetrahedronFaceMask[threadIdx.x] = tetrahedronFaceMaskC[threadIdx.x];
     }
     // Load tetrahedron face neighbours table into shared memory.
     if (threadIdx.x < 6) {
@@ -658,8 +658,8 @@ void ComputeTriangleAreas_kernel(float4 *pos, float *area, unsigned int maxTria)
 //    //CUdevprop deviceProps;
 //    //cuDeviceGetProperties(&deviceProps, device);
 //    //this->gridSize = dim3(deviceProps.maxGridSize[0],
-//    //	deviceProps.maxGridSize[1],
-//    //	deviceProps.maxGridSize[2]);
+//    //    deviceProps.maxGridSize[1],
+//    //    deviceProps.maxGridSize[2]);
 //    const dim3 maxGridSize(65535, 65535, 0);
 //    const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
 //    dim3 grid(blocksPerGrid, 1, 1);

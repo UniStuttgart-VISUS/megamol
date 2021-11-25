@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "stdafx.h"
 
 using namespace megamol::core_gl;
 
@@ -26,7 +26,8 @@ view::CallGetTransferFunctionGL::~CallGetTransferFunctionGL(void) {
     // intentionally empty
 }
 
-void view::CallGetTransferFunctionGL::BindConvenience(vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform) {
+void view::CallGetTransferFunctionGL::BindConvenience(
+    vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);
@@ -34,7 +35,8 @@ void view::CallGetTransferFunctionGL::BindConvenience(vislib_gl::graphics::gl::G
     glUniform2fv(shader.ParameterLocation("tfRange"), 1, this->range.data());
 }
 
-void view::CallGetTransferFunctionGL::BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
+void view::CallGetTransferFunctionGL::BindConvenience(
+    std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);

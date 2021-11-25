@@ -20,7 +20,7 @@ using namespace megamol::frontend_resources;
 namespace gl_wrapper_impl {
 void gl_download_texture_to_vector(
     unsigned int handle, ImageWrapper::ImageSize size, ImageWrapper::DataChannels channels, std::vector<byte>& target);
-}
+} // namespace
 
 namespace megamol {
 namespace frontend_resources {
@@ -84,8 +84,8 @@ void gl_texture::clear() {
     this->image_wrapper_ptr = nullptr;
     this->texture_reference = 0;
     this->texture = 0;
+    this->size = {0, 0};
 }
-
 
 byte_texture::byte_texture(ImageWrapper const& image) {
     this->from_image(image);

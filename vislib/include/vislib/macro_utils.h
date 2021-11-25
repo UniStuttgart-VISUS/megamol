@@ -22,7 +22,7 @@
  *
  */
 #ifdef _MSC_VER
-#define VISLIB_MSVC_SUPPRESS_WARNING(A) __pragma(warning(suppress:A)) 
+#define VISLIB_MSVC_SUPPRESS_WARNING(A) __pragma(warning(suppress : A))
 #else /* _MSC_VER */
 #define VISLIB_MSVC_SUPPRESS_WARNING(A)
 #endif /* _MSC_VER */

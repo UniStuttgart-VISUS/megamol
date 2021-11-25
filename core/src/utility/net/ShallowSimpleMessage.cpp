@@ -11,12 +11,12 @@
 /*
  * vislib::net::ShallowSimpleMessage::ShallowSimpleMessage
  */
-vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
-        void *storage, const SIZE_T cntStorage) 
-        : Super(), cntStorage(cntStorage), storage(storage) {
+vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(void* storage, const SIZE_T cntStorage)
+        : Super()
+        , cntStorage(cntStorage)
+        , storage(storage) {
     ASSERT(storage != NULL);
-    ASSERT((cntStorage == 0) 
-        || (cntStorage >= sizeof(SimpleMessageHeaderData)));
+    ASSERT((cntStorage == 0) || (cntStorage >= sizeof(SimpleMessageHeaderData)));
 
     this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
     // Note: Cannot do that in initialiser!
@@ -29,19 +29,16 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
 /*
  * vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage
  */
-vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
-}
+vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {}
 
 
 /*
  * vislib::net::ShallowSimpleMessage::SetStorage
  */
-void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
-        const SIZE_T cntStorage) {
+void vislib::net::ShallowSimpleMessage::SetStorage(void* storage, const SIZE_T cntStorage) {
     ASSERT(storage != NULL);
-    ASSERT((cntStorage == 0) 
-        || (cntStorage >= sizeof(SimpleMessageHeaderData)));
-    
+    ASSERT((cntStorage == 0) || (cntStorage >= sizeof(SimpleMessageHeaderData)));
+
     // Note: Order of assignments is important!
     this->storage = storage;
     this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
@@ -52,7 +49,7 @@ void vislib::net::ShallowSimpleMessage::SetStorage(void *storage,
 /*
  * vislib::net::ShallowSimpleMessage::assertStorage
  */
-bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const SIZE_T size) {
+bool vislib::net::ShallowSimpleMessage::assertStorage(void*& outStorage, const SIZE_T size) {
     // intentionally empty atm
     return false;
 }

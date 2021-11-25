@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#    pragma once
+#pragma once
 
-#include "mmcore/factories/CallAutoDescription.h"
 #include "geometry_calls/AbstractParticleDataCall.h"
 #include "geometry_calls/SimpleSphericalParticles.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol::geocalls {
 
@@ -29,7 +29,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "MultiParticleDataCall"; }
+    static const char* ClassName(void) {
+        return "MultiParticleDataCall";
+    }
 
     /** Ctor. */
     MultiParticleDataCall(void);
@@ -55,4 +57,3 @@ typedef core::factories::CallAutoDescription<MultiParticleDataCall> MultiParticl
 
 
 } /* end namespace megamol::geocalls */
-

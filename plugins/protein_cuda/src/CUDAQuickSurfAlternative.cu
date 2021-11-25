@@ -607,7 +607,7 @@ static void * cudadensitythread(void *voidparms) {
                                       gridspacing, k, devdensity);
       }
       cudaThreadSynchronize();
-	  getLastCudaError("kernel failed");
+      getLastCudaError("kernel failed");
       CUERR // check and clear any existing errors
 
       // Copy the GPU output data back to the host and use/store it..
@@ -958,8 +958,8 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #if GTEXUNROLL >= 2
             float dz2 = dz + gridspacing;
             float r22 = (dxy2 + dz2*dz2) * atom.w;
-			float tmp2 = exp2f(r22) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
-			densityval2 += tmp2;
+            float tmp2 = exp2f(r22) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
+            densityval2 += tmp2;
             tmp2 *= invisovalue;
             densitycol2.x += tmp2 * color.x;
             densitycol2.y += tmp2 * color.y;
@@ -973,7 +973,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #if GTEXUNROLL >= 4
             float dz3 = dz2 + gridspacing;
             float r23 = (dxy2 + dz3*dz3) * atom.w;
-			float tmp3 = exp2f(r23) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
+            float tmp3 = exp2f(r23) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
             densityval3 += tmp3;
             tmp3 *= invisovalue;
             densitycol3.x += tmp3 * color.x;
@@ -987,7 +987,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 
             float dz4 = dz3 + gridspacing;
             float r24 = (dxy2 + dz4*dz4) * atom.w;
-			float tmp4 = exp2f(r24) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
+            float tmp4 = exp2f(r24) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
             densityval4 += tmp4;
             tmp4 *= invisovalue;
             densitycol4.x += tmp4 * color.x;
@@ -2679,9 +2679,9 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
     }
   } else {
     uint3 mcmaxgridsize = gpuh->mc->GetMaxGridSize();
-	if (slabsz.x <= (int)mcmaxgridsize.x &&
-		slabsz.y <= (int)mcmaxgridsize.y &&
-		slabsz.z <= (int)mcmaxgridsize.z) {
+    if (slabsz.x <= (int)mcmaxgridsize.x &&
+        slabsz.y <= (int)mcmaxgridsize.y &&
+        slabsz.z <= (int)mcmaxgridsize.z) {
 #if VERBOSE
       printf("Reusing MC object...\n");
 #endif
@@ -2784,10 +2784,10 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
       }
     }
     cudaThreadSynchronize(); 
-	getLastCudaError("kernel failed");
+    getLastCudaError("kernel failed");
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
-#ifdef CUDA_TIMER		
+#ifdef CUDA_TIMER
     cudaDeviceSynchronize();
     cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop);
@@ -3401,7 +3401,7 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
+    for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 
@@ -3435,10 +3435,10 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
       }
     }
     cudaThreadSynchronize(); 
-	getLastCudaError("kernel failed");
+    getLastCudaError("kernel failed");
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
-#ifdef CUDA_TIMER		
+#ifdef CUDA_TIMER
     cudaDeviceSynchronize();
     cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop);
@@ -3746,8 +3746,8 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
                              float radscale, float gridspacing, 
                              float isovalue, float gausslim, 
                              bool storeNearestAtom,
-							 int fileIndex,
-							 int resolution) {
+                             int fileIndex,
+                             int resolution) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   float4 *colors = (float4 *) colors_f;
@@ -3889,7 +3889,7 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
           grid.y *= 2;
       }
       setArrayToInt<<<grid, 256>>>( gridDim, gpuh->nearest_atom_d, -1);
-	  getLastCudaError("kernel failed");
+      getLastCudaError("kernel failed");
   }
   
   free(xyzr);
@@ -3974,7 +3974,7 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
+    for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 

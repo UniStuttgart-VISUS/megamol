@@ -32,8 +32,8 @@ ParticleWorker::ParticleWorker(void)
         : inParticlesDataSlot("inPartData", "Input for particle data")
         , outParticlesDataSlot("outPartData", "Output of particle data")
         , glClusterInfos(0)
-//	glParticleList(0),
-//	glPrefixIn(0), glPrefixOut(0)
+// glParticleList(0),
+// glPrefixIn(0), glPrefixOut(0)
 {
 
     this->inParticlesDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
@@ -283,8 +283,8 @@ bool ParticleWorker::getDataCallback(Call& call) {
                 partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
             glEnableClientState(GL_VERTEX_ARRAY);
             glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
-            //			glEnableClientState(GL_COLOR_ARRAY);
-            //		glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
+            // glEnableClientState(GL_COLOR_ARRAY);
+            // glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
             glBindVertexArray(0);
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
 

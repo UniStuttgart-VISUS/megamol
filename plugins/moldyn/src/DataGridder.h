@@ -1,7 +1,7 @@
 /*
  * DataGridder.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
@@ -32,13 +32,12 @@ namespace moldyn {
  */
 class DataGridder : public core::Module {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "DataGridder";
     }
 
@@ -47,7 +46,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "A data storage module gridding flat particle data";
     }
 
@@ -76,7 +75,6 @@ public:
     virtual ~DataGridder(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -90,12 +88,10 @@ protected:
     virtual void release(void);
 
 private:
-
     /**
      * TODO: Document
      */
-    static int doSort(const vislib::Pair<SIZE_T, unsigned int> &lhs,
-        const vislib::Pair<SIZE_T, unsigned int> &rhs);
+    static int doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs, const vislib::Pair<SIZE_T, unsigned int>& rhs);
 
     /**
      * Callback publishing the gridded data
@@ -104,7 +100,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure
      */
-    bool getData(megamol::core::Call &call);
+    bool getData(megamol::core::Call& call);
 
     /**
      * Callback publishing the extend of the data
@@ -113,7 +109,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure
      */
-    bool getExtent(megamol::core::Call &call);
+    bool getExtent(megamol::core::Call& call);
 
     /** Slot to fetch flat data */
     core::CallerSlot inDataSlot;
@@ -156,7 +152,6 @@ private:
 
     /** the out-going hash */
     SIZE_T outhash;
-
 };
 
 } /* end namespace moldyn */

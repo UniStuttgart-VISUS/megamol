@@ -6,18 +6,24 @@
 
 #include <variant>
 
-#include "GenerateGlyphs.h"
 #include "DrawTextureUtility.h"
+#include "GenerateGlyphs.h"
 #include "ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace probe {
 
-template <typename T> static bool approxEq(T a, T b) { return std::abs(a - b) < std::numeric_limits<T>::epsilon(); }
+template<typename T>
+static bool approxEq(T a, T b) {
+    return std::abs(a - b) < std::numeric_limits<T>::epsilon();
+}
 
 GenerateGlyphs::GenerateGlyphs()
-    : Module(), _deploy_texture("deployTexture", ""), _deploy_mesh("deployMesh", ""), _get_probes("getProbes", "") {
+        : Module()
+        , _deploy_texture("deployTexture", "")
+        , _deploy_mesh("deployMesh", "")
+        , _get_probes("getProbes", "") {
 
     this->_deploy_mesh.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
@@ -35,7 +41,9 @@ GenerateGlyphs::GenerateGlyphs()
     this->MakeSlotAvailable(&this->_get_probes);
 }
 
-GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
+GenerateGlyphs::~GenerateGlyphs() {
+    this->Release();
+}
 
 
 bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
@@ -196,7 +204,7 @@ bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) {
         samples->samples.front()[0], samples->samples.front()[1], samples->samples.front()[2]};
 
     float sample_vector_length = std::sqrt(sample_vector[0] * sample_vector[0] + sample_vector[1] * sample_vector[1] +
-                                     sample_vector[2] * sample_vector[2]);
+                                           sample_vector[2] * sample_vector[2]);
     sample_vector[0] /= sample_vector_length;
     sample_vector[1] /= sample_vector_length;
     sample_vector[2] /= sample_vector_length;
@@ -228,14 +236,13 @@ bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) {
     for (int i = 1; i < samples->samples.size(); ++i) {
 
         std::array<float, 3> sample_vector = {samples->samples[i][0], samples->samples[i][1], samples->samples[i][2]};
-        float sample_vector_length = std::sqrt(
-            sample_vector[0] * sample_vector[0] + 
-            sample_vector[1] * sample_vector[1] +
-            sample_vector[2] * sample_vector[2]);
+        float sample_vector_length =
+            std::sqrt(sample_vector[0] * sample_vector[0] + sample_vector[1] * sample_vector[1] +
+                      sample_vector[2] * sample_vector[2]);
         sample_vector[0] /= sample_vector_length;
         sample_vector[1] /= sample_vector_length;
         sample_vector[2] /= sample_vector_length;
-    
+
         // compute vertices 3 and 4 of "quad" section of the ribbon
         std::array<float, 3> vertex3;
         vertex3[0] = ribbon_base[0] + ribbon_width * sample_vector[0];
@@ -316,12 +323,12 @@ bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) {
 
     mesh::MeshDataAccessCollection::IndexData index_data;
     index_data.data = reinterpret_cast<uint8_t*>(&this->_generated_mesh_indices[base_index]);
-    index_data.byte_size = sizeof(uint32_t) * 6 * samples->samples.size() -1;
+    index_data.byte_size = sizeof(uint32_t) * 6 * samples->samples.size() - 1;
     index_data.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
     this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-    return false; 
+    return false;
 }
 
 bool GenerateGlyphs::doVectorRadarGlyphGeneration(Vec4Probe& probe) {
@@ -358,14 +365,14 @@ bool GenerateGlyphs::doVectorRadarGlyphGeneration(Vec4Probe& probe) {
         plane_vec_2[1] = probe.m_direction[2] * plane_vec_1[0] - probe.m_direction[0] * plane_vec_1[2];
         plane_vec_2[2] = probe.m_direction[0] * plane_vec_1[1] - probe.m_direction[1] * plane_vec_1[0];
 
-        float plane_vec_1_length =
-            std::sqrt(plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
+        float plane_vec_1_length = std::sqrt(
+            plane_vec_1[0] * plane_vec_1[0] + plane_vec_1[1] * plane_vec_1[1] + plane_vec_1[2] * plane_vec_1[2]);
         plane_vec_1[0] /= plane_vec_1_length;
         plane_vec_1[1] /= plane_vec_1_length;
         plane_vec_1[2] /= plane_vec_1_length;
 
-        float plane_vec_2_length =
-            std::sqrt(plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
+        float plane_vec_2_length = std::sqrt(
+            plane_vec_2[0] * plane_vec_2[0] + plane_vec_2[1] * plane_vec_2[1] + plane_vec_2[2] * plane_vec_2[2]);
         plane_vec_2[0] /= plane_vec_2_length;
         plane_vec_2[1] /= plane_vec_2_length;
         plane_vec_2[2] /= plane_vec_2_length;
@@ -431,14 +438,14 @@ bool GenerateGlyphs::doVectorRadarGlyphGeneration(Vec4Probe& probe) {
     }
 
     _dtu.push_back(DrawTextureUtility());
-    _dtu.back().setResolution(400, 400);                 // should be changeable
+    _dtu.back().setResolution(400, 400);                      // should be changeable
     _dtu.back().setGraphType(DrawTextureUtility::RADARGLYPH); // should be changeable
 
     auto tex_ptr = _dtu.back().draw(samples->samples, probe.m_direction);
     this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
         _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() * _dtu.back().getPixelHeight());
 
-    return true; 
+    return true;
 }
 
 
@@ -447,10 +454,13 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
     auto cprobes = this->_get_probes.CallAs<CallProbes>();
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
 
-    if (cprobes == nullptr) return false;
-    if (cm == nullptr) return false;
+    if (cprobes == nullptr)
+        return false;
+    if (cm == nullptr)
+        return false;
 
-    if (!(*cprobes)(0)) return false;
+    if (!(*cprobes)(0))
+        return false;
 
     auto probe_meta_data = cprobes->getMetaData();
     auto mesh_meta_data = cm->getMetaData();
@@ -461,8 +471,9 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     if (cprobes->hasUpdate()) {
         ++_version;
-        
-        if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+
+        if (this->scale <= 0.0)
+            this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
 
         this->_probe_data = cprobes->getData();
 
@@ -472,7 +483,7 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
         this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
 
         _dtu.reserve(this->_probe_data->getProbeCount());
-        // reserve memory because reallocation will invalidate pointers to memory later on ! 
+        // reserve memory because reallocation will invalidate pointers to memory later on !
         _generated_mesh_vertices.reserve(this->_probe_data->getProbeCount() * 10 * 2);
         _generated_mesh_normals.reserve(this->_probe_data->getProbeCount() * 10 * 2);
         _generated_mesh_indices.reserve(this->_probe_data->getProbeCount() * 10 * 6);
@@ -503,7 +514,6 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
             std::visit(visitor, generic_probe);
         } // end for probe count
-
     }
 
     cm->setData(this->_mesh_data, _version);
@@ -516,8 +526,10 @@ bool GenerateGlyphs::getMetaData(core::Call& call) {
     auto cprobes = this->_get_probes.CallAs<CallProbes>();
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
 
-    if (cprobes == nullptr) return false;
-    if (cm == nullptr) return false;
+    if (cprobes == nullptr)
+        return false;
+    if (cm == nullptr)
+        return false;
 
     auto probe_meta_data = cprobes->getMetaData();
     auto mesh_meta_data = cm->getMetaData();
@@ -525,7 +537,8 @@ bool GenerateGlyphs::getMetaData(core::Call& call) {
     probe_meta_data.m_frame_ID = mesh_meta_data.m_frame_ID;
     cprobes->setMetaData(probe_meta_data);
 
-    if (!(*cprobes)(1)) return false;
+    if (!(*cprobes)(1))
+        return false;
 
     probe_meta_data = cprobes->getMetaData();
 
@@ -541,10 +554,13 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
     auto cprobes = this->_get_probes.CallAs<CallProbes>();
     auto ctex = dynamic_cast<mesh::CallImage*>(&call);
 
-    if (cprobes == nullptr) return false;
-    if (ctex == nullptr) return false;
+    if (cprobes == nullptr)
+        return false;
+    if (ctex == nullptr)
+        return false;
 
-    if (!(*cprobes)(0)) return false;
+    if (!(*cprobes)(0))
+        return false;
 
     auto probe_meta_data = cprobes->getMetaData();
 
@@ -552,7 +568,8 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
     if (cprobes->hasUpdate()) {
         ++_version;
 
-        if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+        if (this->scale <= 0.0)
+            this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
 
         this->_probe_data = cprobes->getData();
         this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
@@ -572,16 +589,13 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
 
             auto generic_probe = this->_probe_data->getGenericProbe(i);
 
-            auto visitor =
-                [this](auto&& arg) {
-                    using T = std::decay_t<decltype(arg)>;
+            auto visitor = [this](auto&& arg) {
+                using T = std::decay_t<decltype(arg)>;
                 if constexpr (std::is_same_v<T, FloatProbe>) {
                     doScalarGlyphGeneration(arg);
-                }
-                else if constexpr (std::is_same_v<T, IntProbe>) {
+                } else if constexpr (std::is_same_v<T, IntProbe>) {
                     //TODO
-                }
-                else if constexpr (std::is_same_v<T, Vec4Probe>) {
+                } else if constexpr (std::is_same_v<T, Vec4Probe>) {
                     doVectorRadarGlyphGeneration(arg);
                 } else {
                     // unknown probe type, throw error? do nothing?
@@ -602,10 +616,13 @@ bool GenerateGlyphs::getTextureMetaData(core::Call& call) {
     auto cprobes = this->_get_probes.CallAs<CallProbes>();
     auto ctex = dynamic_cast<mesh::CallImage*>(&call);
 
-    if (cprobes == nullptr) return false;
-    if (ctex == nullptr) return false;
+    if (cprobes == nullptr)
+        return false;
+    if (ctex == nullptr)
+        return false;
 
-    if (!(*cprobes)(1)) return false;
+    if (!(*cprobes)(1))
+        return false;
 
     auto probe_meta_data = cprobes->getMetaData();
     auto tex_meta_data = ctex->getMetaData();

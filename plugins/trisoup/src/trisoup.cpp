@@ -7,7 +7,6 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-
 #include "OSCBFix.h"
 #include "WavefrontObjWriter.h"
 #include "trisoup/CallBinaryVolumeData.h"

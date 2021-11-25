@@ -315,7 +315,6 @@ private:
         bool load_docking_preset;             // Flag indicating docking preset loading
     };
 
-
     // VARIABLES --------------------------------------------------------------
 
     megamol::gui::HotkeyMap_t gui_hotkeys;

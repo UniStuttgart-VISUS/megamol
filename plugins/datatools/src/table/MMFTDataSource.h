@@ -9,11 +9,11 @@
 
 #include <vector>
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "datatools/table/TableDataCall.h"
 
 namespace megamol::datatools::table {
 

@@ -1,4 +1,3 @@
-
 #include "ParticleDensityOpacityModule.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

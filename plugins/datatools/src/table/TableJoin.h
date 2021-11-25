@@ -8,10 +8,10 @@
 #ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED
 #define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -33,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char *ClassName(void) {
+    static inline const char* ClassName(void) {
         return ModuleName.c_str();
     }
 
@@ -42,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char *Description(void) {
+    static inline const char* Description(void) {
         return "Joins two tables (union of columns)";
     }
 
@@ -80,14 +80,14 @@ protected:
 
 private:
     /** data callback */
-    bool processData(core::Call &c);
+    bool processData(core::Call& c);
 
     /** extent callback */
-    bool getExtent(core::Call &c);
+    bool getExtent(core::Call& c);
 
     /** concatenates two tables */
-    static void concatenate(float* const out, const size_t rowCount, const size_t columnCount,
-        const float* const first, const size_t firstRowCount, const size_t firstColumnCount, const float* const second,
+    static void concatenate(float* const out, const size_t rowCount, const size_t columnCount, const float* const first,
+        const size_t firstRowCount, const size_t firstColumnCount, const float* const second,
         const size_t secondRowCount, const size_t secondColumnCount);
 
     /** input slot of first table */

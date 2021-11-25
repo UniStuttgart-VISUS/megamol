@@ -31,145 +31,142 @@ namespace core {
 namespace cluster {
 namespace mpi {
 
+/**
+ * This module lazily initialises MPI and provides the communicator for the
+ * MegaMol display nodes.
+ */
+class MpiProvider : public Module {
+
+public:
     /**
-     * This module lazily initialises MPI and provides the communicator for the
-     * MegaMol display nodes.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class MpiProvider : public Module {
+    static inline const char* ClassName(void) {
+        return "MpiProvider";
+    }
 
-    public:
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Initialises MPI on behalf of another module.";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char *ClassName(void) {
-            return "MpiProvider";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void);
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char *Description(void) {
-            return "Initialises MPI on behalf of another module.";
-        }
+    /**
+     * Disallow usage in quickstarts.
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void);
+    /**
+     * Initialises a new instance.
+     */
+    MpiProvider(void);
 
-        /**
-         * Disallow usage in quickstarts.
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * Finalises the instance.
+     */
+    virtual ~MpiProvider(void);
 
-        /**
-         * Initialises a new instance.
-         */
-        MpiProvider(void);
+protected:
+    /**
+     * Initialises the module.
+     *
+     * @return true unconditionally.
+     */
+    virtual bool create(void);
 
-        /**
-         * Finalises the instance.
-         */
-        virtual ~MpiProvider(void);
+    /**
+     * Lazily initialises MPI and returns the communicator.
+     *
+     * @param call
+     *
+     * @return
+     */
+    bool OnCallProvideMpi(Call& call);
 
-    protected:
+    /**
+     * Finalises the module and releases MPI.
+     */
+    virtual void release(void);
 
-        /**
-         * Initialises the module.
-         *
-         * @return true unconditionally.
-         */
-        virtual bool create(void);
+private:
+    /** Super class. */
+    typedef Module Base;
 
-        /**
-         * Lazily initialises MPI and returns the communicator.
-         *
-         * @param call
-         *
-         * @return
-         */
-        bool OnCallProvideMpi(Call& call);
+    /**
+     * Answer the command line the application was started with.
+     *
+     * @return The command line string.
+     */
+    static vislib::StringA getCommandLine(void);
 
-        /**
-         * Finalises the module and releases MPI.
-         */
-        virtual void release(void);
+    /**
+     * Initialises MPI and performs node colouring.
+     *
+     * This method performs all necessary checks for MPI being already
+     * initialised, "ownership" of the MPI initialisation and node
+     * colouring.
+     *
+     * @param colour The node colour of the calling process.
+     *
+     * @return true in case of success, false otherwise.
+     */
+    bool initialiseMpi(const int colour);
 
-    private:
+    /** Call for retrieving the communicator and other MPI-related data. */
+    CalleeSlot callProvideMpi;
 
-        /** Super class. */
-        typedef Module Base;
+    /** Configures the node colour of the MegaMol nodes. */
+    param::ParamSlot paramNodeColour;
 
-        /**
-         * Answer the command line the application was started with.
-         *
-         * @return The command line string.
-         */
-        static vislib::StringA getCommandLine(void);
+    /**
+     * The number of instances of MpiProvider that are between create() and
+     * release() in their lifecycle. These are the instances that might use
+     * MPI. If it becomes zero, MPI can be released.
+     */
+    static std::atomic<int> activeInstances;
 
-        /**
-         * Initialises MPI and performs node colouring.
-         *
-         * This method performs all necessary checks for MPI being already
-         * initialised, "ownership" of the MPI initialisation and node
-         * colouring.
-         *
-         * @param colour The node colour of the calling process.
-         *
-         * @return true in case of success, false otherwise.
-         */
-        bool initialiseMpi(const int colour);
-
-        /** Call for retrieving the communicator and other MPI-related data. */
-        CalleeSlot callProvideMpi;
-
-        /** Configures the node colour of the MegaMol nodes. */
-        param::ParamSlot paramNodeColour;
-
-        /**
-         * The number of instances of MpiProvider that are between create() and
-         * release() in their lifecycle. These are the instances that might use
-         * MPI. If it becomes zero, MPI can be released.
-         */
-        static std::atomic<int> activeInstances;
-
-        /**
-         * Remembers the node colour that was used when initialising the nodes.
-         * MPI_UNDEFINED indicates that node colouring has not yet been
-         * performed.
-         *
-         * This atomic also serves as lock that prevents multiple
-         * initialisations (enter of critical section).
-         */
-        std::atomic<int> activeNodeColour;
+    /**
+     * Remembers the node colour that was used when initialising the nodes.
+     * MPI_UNDEFINED indicates that node colouring has not yet been
+     * performed.
+     *
+     * This atomic also serves as lock that prevents multiple
+     * initialisations (enter of critical section).
+     */
+    std::atomic<int> activeNodeColour;
 
 #ifdef WITH_MPI
-        /**
-         * The communicator that was retrieved during node colouring. If this
-         * is MPI_COMM_NULL, it indicates that node colouring has not yet been
-         * performed.
-         */
-        std::atomic<MPI_Comm> comm;
+    /**
+     * The communicator that was retrieved during node colouring. If this
+     * is MPI_COMM_NULL, it indicates that node colouring has not yet been
+     * performed.
+     */
+    std::atomic<MPI_Comm> comm;
 #endif /* WITH_MPI */
 
-        /**
-         * Remembers whether the MpiProvider has initialised MPI. In this case,
-         * it will also finalise it if the last one was destroyed. Otherwise,
-         * someone else is responsible for doing so.
-         */
-        // static bool isMpiOwner;
-    };
+    /**
+     * Remembers whether the MpiProvider has initialised MPI. In this case,
+     * it will also finalise it if the last one was destroyed. Otherwise,
+     * someone else is responsible for doing so.
+     */
+    // static bool isMpiOwner;
+};
 
 } /* end namespace mpi */
 } /* end namespace cluster */

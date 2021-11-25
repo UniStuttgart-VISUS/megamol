@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "SpectralIntensityVolume.h"
+#include "stdafx.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -22,26 +22,27 @@
 
 
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
-    : volume_in_slot_("volumeIn", "Input of volume containing optical depth")
-    , temp_in_slot_("tempIn", "Input of volume containing temperature")
-    , mass_in_slot_("massIn", "Input of volume containing mass")
-    , mw_in_slot_("mwIn", "Input of volume containing molecular weight")
-    , astro_in_slot_("astroIn", "Input of astro particles")
-    , volume_out_slot_("volumeOut", "Output of spectral intensity volume")
-    , lsu_out_slot_("lsuOut", "Output of Bremsstrahlungs volume")
-    , absorption_out_slot_("absorptionOut", "Output of Absorption volume")
-    , xResSlot("sizex", "The size of the volume in numbers of voxels")
-    , yResSlot("sizey", "The size of the volume in numbers of voxels")
-    , zResSlot("sizez", "The size of the volume in numbers of voxels")
-    , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
-    , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
-    , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
-    , normalizeSlot("normalize", "Normalize the output volume")
-    //, wavelength_slot_("wavelength", "Set the wavelength for the spectral intensity (in nm)")
-    , numSamplesSlot("numSamples", "Number of samples per particle in the darth volume case")
-    , absorptionBiasSlot("absorptionBias", "Determines influence of absorption coefficient in the darth volume case")
-    , coneSampleNumSlot("coneNumSamples", "Number of samples for cone tracing in darth volume case")
-    , coneAngleSlot("coneAngle", "Angle of the cone in the darth volume case (degree)") {
+        : volume_in_slot_("volumeIn", "Input of volume containing optical depth")
+        , temp_in_slot_("tempIn", "Input of volume containing temperature")
+        , mass_in_slot_("massIn", "Input of volume containing mass")
+        , mw_in_slot_("mwIn", "Input of volume containing molecular weight")
+        , astro_in_slot_("astroIn", "Input of astro particles")
+        , volume_out_slot_("volumeOut", "Output of spectral intensity volume")
+        , lsu_out_slot_("lsuOut", "Output of Bremsstrahlungs volume")
+        , absorption_out_slot_("absorptionOut", "Output of Absorption volume")
+        , xResSlot("sizex", "The size of the volume in numbers of voxels")
+        , yResSlot("sizey", "The size of the volume in numbers of voxels")
+        , zResSlot("sizez", "The size of the volume in numbers of voxels")
+        , cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+        , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+        , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+        , normalizeSlot("normalize", "Normalize the output volume")
+        //, wavelength_slot_("wavelength", "Set the wavelength for the spectral intensity (in nm)")
+        , numSamplesSlot("numSamples", "Number of samples per particle in the darth volume case")
+        , absorptionBiasSlot(
+              "absorptionBias", "Determines influence of absorption coefficient in the darth volume case")
+        , coneSampleNumSlot("coneNumSamples", "Number of samples for cone tracing in darth volume case")
+        , coneAngleSlot("coneAngle", "Angle of the cone in the darth volume case (degree)") {
     volume_in_slot_.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     MakeSlotAvailable(&volume_in_slot_);
 
@@ -151,10 +152,14 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
 }
 
 
-megamol::astro::SpectralIntensityVolume::~SpectralIntensityVolume() { this->Release(); }
+megamol::astro::SpectralIntensityVolume::~SpectralIntensityVolume() {
+    this->Release();
+}
 
 
-bool megamol::astro::SpectralIntensityVolume::create() { return true; }
+bool megamol::astro::SpectralIntensityVolume::create() {
+    return true;
+}
 
 
 void megamol::astro::SpectralIntensityVolume::release(void) {
@@ -168,10 +173,12 @@ void megamol::astro::SpectralIntensityVolume::release(void) {
 
 bool megamol::astro::SpectralIntensityVolume::getExtentCallback(core::Call& c) {
     auto* out = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
-    if (out == nullptr) return false;
+    if (out == nullptr)
+        return false;
 
     auto* ast = this->astro_in_slot_.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     // if (!this->assertData(inMpdc, outDpdc)) return false;
     ast->SetFrameID(out->FrameID(), true);
@@ -190,22 +197,28 @@ bool megamol::astro::SpectralIntensityVolume::getExtentCallback(core::Call& c) {
 
 bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
     auto* ast = this->astro_in_slot_.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     auto* vdc = this->volume_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (vdc == nullptr) return false;
+    if (vdc == nullptr)
+        return false;
 
     auto* tdc = this->temp_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (tdc == nullptr) return false;
+    if (tdc == nullptr)
+        return false;
 
     auto* mdc = this->mass_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     auto* mwdc = this->mw_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mwdc == nullptr) return false;
+    if (mwdc == nullptr)
+        return false;
 
     auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
-    if (outVol == nullptr) return false;
+    if (outVol == nullptr)
+        return false;
 
     ast->SetFrameID(outVol->FrameID(), true);
     vdc->SetFrameID(outVol->FrameID(), true);
@@ -221,11 +234,13 @@ bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
@@ -233,27 +248,33 @@ bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
@@ -268,13 +289,15 @@ bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
         return false;
     }
     if (!(*mwdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
         this->time != mdc->FrameID() || this->time != mwdc->FrameID() || this->in_datahash != ast->DataHash() ||
         this->anythingDirty()) {
-        if (!this->createVolumeCPU(*vdc, *tdc, *mdc, *mwdc, *ast)) return false;
+        if (!this->createVolumeCPU(*vdc, *tdc, *mdc, *mwdc, *ast))
+            return false;
         this->time = ast->FrameID();
         this->in_datahash = ast->DataHash();
         ++this->datahash;
@@ -323,22 +346,28 @@ bool megamol::astro::SpectralIntensityVolume::getDataCallback(core::Call& c) {
 
 bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) {
     auto* ast = this->astro_in_slot_.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     auto* vdc = this->volume_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (vdc == nullptr) return false;
+    if (vdc == nullptr)
+        return false;
 
     auto* tdc = this->temp_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (tdc == nullptr) return false;
+    if (tdc == nullptr)
+        return false;
 
     auto* mdc = this->mass_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     auto* mwdc = this->mw_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mwdc == nullptr) return false;
+    if (mwdc == nullptr)
+        return false;
 
     auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
-    if (outVol == nullptr) return false;
+    if (outVol == nullptr)
+        return false;
 
     ast->SetFrameID(outVol->FrameID(), true);
     vdc->SetFrameID(outVol->FrameID(), true);
@@ -354,11 +383,13 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
@@ -366,27 +397,33 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
@@ -401,13 +438,15 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
         return false;
     }
     if (!(*mwdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
         this->time != mdc->FrameID() || this->time != mwdc->FrameID() || this->in_datahash != ast->DataHash() ||
         this->anythingDirty()) {
-        if (!this->createBremsstrahlungVolume(*vdc, *tdc, *mdc, *mwdc, *ast)) return false;
+        if (!this->createBremsstrahlungVolume(*vdc, *tdc, *mdc, *mwdc, *ast))
+            return false;
         this->time = ast->FrameID();
         this->in_datahash = ast->DataHash();
         ++this->datahash;
@@ -456,22 +495,28 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
 
 bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Call& c) {
     auto* ast = this->astro_in_slot_.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     auto* vdc = this->volume_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (vdc == nullptr) return false;
+    if (vdc == nullptr)
+        return false;
 
     auto* tdc = this->temp_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (tdc == nullptr) return false;
+    if (tdc == nullptr)
+        return false;
 
     auto* mdc = this->mass_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     auto* mwdc = this->mw_in_slot_.CallAs<geocalls::VolumetricDataCall>();
-    if (mwdc == nullptr) return false;
+    if (mwdc == nullptr)
+        return false;
 
     auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
-    if (outVol == nullptr) return false;
+    if (outVol == nullptr)
+        return false;
 
     ast->SetFrameID(outVol->FrameID(), true);
     vdc->SetFrameID(outVol->FrameID(), true);
@@ -487,11 +532,13 @@ bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Ca
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume metadata.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get volume extents.");
         return false;
     }
     if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
@@ -499,27 +546,33 @@ bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Ca
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume metadata.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume extents.");
         return false;
     }
     if (!(*tdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get temperature volume data.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume metadata.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume extents.");
         return false;
     }
     if (!(*mdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get mass volume data.");
         return false;
     }
 
@@ -534,13 +587,15 @@ bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Ca
         return false;
     }
     if (!(*mwdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get molecular weight volume data.");
         return false;
     }
     if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
         this->time != mdc->FrameID() || this->time != mwdc->FrameID() || this->in_datahash != ast->DataHash() ||
         this->anythingDirty()) {
-        if (!this->createAbsorptionVolume(*vdc, *tdc, *mdc, *mwdc, *ast)) return false;
+        if (!this->createAbsorptionVolume(*vdc, *tdc, *mdc, *mwdc, *ast))
+            return false;
         this->time = ast->FrameID();
         this->in_datahash = ast->DataHash();
         ++this->datahash;
@@ -793,7 +848,8 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(geocalls::Volumetr
         // offensive formula
         //return 0.018 * std::pow(static_cast<double>(t), -1.5) * 0.0134 * 0.0134 * static_cast<double>(mw) * 1.2;
         // correct formula?
-        return 0.018 * std::pow(static_cast<double>(t), -1.5) * 1.4 * static_cast<double>(d) * static_cast<double>(d) * 1.2;
+        return 0.018 * std::pow(static_cast<double>(t), -1.5) * 1.4 * static_cast<double>(d) * static_cast<double>(d) *
+               1.2;
         // return 1.7 * 10e-25 * std::pow(static_cast<double>(t), -3.5) * 0.0134 * 0.0134 * static_cast<double>(mw)
         // * 1.2;
     });
@@ -862,7 +918,8 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(geocalls::Volumetr
     // Implements the Bump Function from
     // https://en.wikipedia.org/wiki/Radial_basis_function
     auto rbf = [](float const dist, float const epsilon) -> float {
-        if (dist >= epsilon) return 0.0f;
+        if (dist >= epsilon)
+            return 0.0f;
         return std::exp(-1.0f / (1.0f - std::pow((1.0f / epsilon) * dist, 2.0f)));
     };
 
@@ -871,7 +928,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(geocalls::Volumetr
     auto const cone_factor = std::tan(coneAngleDeg * M_PI / 180.0f);
     auto const cone_angle = coneAngleDeg * M_PI / 180.0;
 
-#    pragma omp parallel for
+#pragma omp parallel for
     for (int64_t idx = 0; idx < positions.size(); ++idx) {
         auto const pos = positions[idx];
         /*auto x_base = pos.x;
@@ -882,7 +939,6 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(geocalls::Volumetr
         auto z = voxel_idx[idx].z;*/
         auto const rad = sl[idx];
 
-        
 
         for (int iter = 0; iter < numSamples; ++iter) {
             // https://corysimon.github.io/articles/uniformdistn-on-sphere/

@@ -4,8 +4,8 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore_gl/view/BoundingBoxRenderer.h"
+#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -13,12 +13,12 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "glm/glm.hpp"
-#include <glm/ext.hpp>
 #include "glm/gtc/matrix_transform.hpp"
+#include <glm/ext.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -34,17 +34,17 @@ using namespace megamol::core_gl::view;
  * BoundingBoxRenderer::BoundingBoxRenderer
  */
 BoundingBoxRenderer::BoundingBoxRenderer(void)
-    : RendererModule<CallRender3DGL, ModuleGL>()
-    , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
-    , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
-    , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
-    , enableViewCubeSlot("enableViewCube", "Enables the rendering of the view cube")
-    , viewCubePosSlot("viewCubePosition", "Position of the view cube")
-    , viewCubeSizeSlot("viewCubeSize", "Size of the view cube")
-    , vbo(0)
-    , ibo(0)
-    , va(0)
-    , boundingBoxes () {
+        : RendererModule<CallRender3DGL, ModuleGL>()
+        , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
+        , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
+        , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
+        , enableViewCubeSlot("enableViewCube", "Enables the rendering of the view cube")
+        , viewCubePosSlot("viewCubePosition", "Position of the view cube")
+        , viewCubeSizeSlot("viewCubeSize", "Size of the view cube")
+        , vbo(0)
+        , ibo(0)
+        , va(0)
+        , boundingBoxes() {
 
     this->enableBoundingBoxSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->enableBoundingBoxSlot);
@@ -75,7 +75,9 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
 /*
  * BoundingBoxRenderer::~BoundingBoxRenderer
  */
-BoundingBoxRenderer::~BoundingBoxRenderer(void) { this->Release(); }
+BoundingBoxRenderer::~BoundingBoxRenderer(void) {
+    this->Release();
+}
 
 /*
  * BoundingBoxRenderer::create
@@ -85,26 +87,31 @@ bool BoundingBoxRenderer::create(void) {
     vislib_gl::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load vertex shader source for bounding box line shader");
     }
     if (!ssf->MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load fragment shader source for bounding box line shader");
     }
     try {
         if (!this->lineShader.Create(bbVertSrc.Code(), bbVertSrc.Count(), bbFragSrc.Code(), bbFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to create bounding box line shader: %s\n", e.GetMsgA());
         return false;
     }
 
     vislib_gl::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
     if (!ssf->MakeShaderSource("viewcube::vertex", vcVertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load vertex shader source for view cube shader");
     }
     if (!ssf->MakeShaderSource("viewcube::fragment", vcFragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load fragment shader source for view cube shader");
     }
     try {
         if (!this->cubeShader.Create(vcVertSrc.Code(), vcVertSrc.Count(), vcFragSrc.Code(), vcFragSrc.Count())) {
@@ -233,7 +240,8 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 /*
  * BoundingBoxRenderer::RenderBoundingBoxFront
  */
-bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const core::BoundingBoxes_2& bb, bool smoothLines) {
+bool BoundingBoxRenderer::RenderBoundingBoxFront(
+    const glm::mat4& mvp, const core::BoundingBoxes_2& bb, bool smoothLines) {
     glm::vec3 bbmin = glm::vec3(bb.BoundingBox().Left(), bb.BoundingBox().Bottom(), bb.BoundingBox().Back());
     glm::vec3 bbmax = glm::vec3(bb.BoundingBox().Right(), bb.BoundingBox().Top(), bb.BoundingBox().Front());
 
@@ -248,7 +256,8 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const cor
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    if (smoothLines) glEnable(GL_LINE_SMOOTH);
+    if (smoothLines)
+        glEnable(GL_LINE_SMOOTH);
     glLineWidth(1.75f);
     glPolygonMode(GL_FRONT, GL_LINE);
 
@@ -268,7 +277,8 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const cor
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    if (smoothLines) glDisable(GL_LINE_SMOOTH);
+    if (smoothLines)
+        glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -281,7 +291,8 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(const glm::mat4& mvp, const cor
 /*
  * BoundingBoxRenderer::RenderBoundingBoxBack
  */
-bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const core::BoundingBoxes_2& bb, bool smoothLines) {
+bool BoundingBoxRenderer::RenderBoundingBoxBack(
+    const glm::mat4& mvp, const core::BoundingBoxes_2& bb, bool smoothLines) {
     glm::vec3 bbmin = glm::vec3(bb.BoundingBox().Left(), bb.BoundingBox().Bottom(), bb.BoundingBox().Back());
     glm::vec3 bbmax = glm::vec3(bb.BoundingBox().Right(), bb.BoundingBox().Top(), bb.BoundingBox().Front());
 
@@ -296,7 +307,8 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const core
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    if (smoothLines) glEnable(GL_LINE_SMOOTH);
+    if (smoothLines)
+        glEnable(GL_LINE_SMOOTH);
     glLineWidth(1.25f);
     glPolygonMode(GL_BACK, GL_LINE);
 
@@ -316,7 +328,8 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const core
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    if (smoothLines) glDisable(GL_LINE_SMOOTH);
+    if (smoothLines)
+        glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_BACK, GL_FILL);
@@ -345,10 +358,12 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
 
     // Set state
     const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
-    if (depth_test) glDisable(GL_DEPTH_TEST);
+    if (depth_test)
+        glDisable(GL_DEPTH_TEST);
 
     const auto culling = glIsEnabled(GL_CULL_FACE);
-    if (!culling) glEnable(GL_CULL_FACE);
+    if (!culling)
+        glEnable(GL_CULL_FACE);
 
     // Set viewport
     std::array<GLint, 4> viewport;
@@ -396,8 +411,10 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     // Restore state
-    if (depth_test) glEnable(GL_DEPTH_TEST);
-    if (!culling) glDisable(GL_CULL_FACE);
+    if (depth_test)
+        glEnable(GL_DEPTH_TEST);
+    if (!culling)
+        glDisable(GL_CULL_FACE);
 
     return true;
 }

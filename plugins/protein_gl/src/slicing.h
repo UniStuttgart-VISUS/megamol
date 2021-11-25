@@ -42,50 +42,50 @@ namespace protein_gl {
 #define VS_FACE_BOTTOM 16
 #define VS_FACE_TOP 32
 
-    // class for view-aligned slicing of a volume
-    class ViewSlicing {
-    public:
-        ViewSlicing(void){};
-        ~ViewSlicing(void){};
+// class for view-aligned slicing of a volume
+class ViewSlicing {
+public:
+    ViewSlicing(void){};
+    ~ViewSlicing(void){};
 
-        // setup slicing
-        // needs the model view matrix (column oriented),
-        // the sampling distance, and the extends of the volume
-        // returns total number of slices
-        int setupSlicing(float* mvMatrix, float sampDist, float* extents);
-        void drawSlice(int slice);
-        void drawSlices(GLenum mode, int frontToBack, int maxSlices);
+    // setup slicing
+    // needs the model view matrix (column oriented),
+    // the sampling distance, and the extends of the volume
+    // returns total number of slices
+    int setupSlicing(float* mvMatrix, float sampDist, float* extents);
+    void drawSlice(int slice);
+    void drawSlices(GLenum mode, int frontToBack, int maxSlices);
 
-        int getNumSlices(void) {
-            return _numSlices;
-        }
+    int getNumSlices(void) {
+        return _numSlices;
+    }
 
-        void setupSingleSlice(double* viewVec, float* ext);
-        void drawSingleSlice(float dist);
+    void setupSingleSlice(double* viewVec, float* ext);
+    void drawSingleSlice(float dist);
 
-    protected:
-        // compares two points, if equal return true, false otherwise
-        inline bool pointCmp(float* p1, float* p2, float eps);
+protected:
+    // compares two points, if equal return true, false otherwise
+    inline bool pointCmp(float* p1, float* p2, float eps);
 
-    private:
-        static const char cubeEdges[12];
+private:
+    static const char cubeEdges[12];
 
-        // store the model view matrix (column oriented)
-        float _m[16];
-        // view direction
-        float _v[3];
-        // extent of the volume
-        float _ext[3];
-        // sampling distance between two slices
-        double _sampDist;
-        // max distance from the origin to the volume
-        float _d;
-        // coordinates of all 12 possible vertices
-        float _p[12][3];
+    // store the model view matrix (column oriented)
+    float _m[16];
+    // view direction
+    float _v[3];
+    // extent of the volume
+    float _ext[3];
+    // sampling distance between two slices
+    double _sampDist;
+    // max distance from the origin to the volume
+    float _d;
+    // coordinates of all 12 possible vertices
+    float _p[12][3];
 
-        int _numSlices;
-        int _maxSlices;
-    };
+    int _numSlices;
+    int _maxSlices;
+};
 
 } // namespace protein_gl
 } /* end namespace megamol */

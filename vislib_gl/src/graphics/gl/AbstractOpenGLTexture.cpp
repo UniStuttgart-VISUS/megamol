@@ -10,18 +10,17 @@
 
 #include <climits>
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib_gl/graphics/gl/glverify.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib_gl/graphics/gl/glverify.h"
 
 
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions
  */
-const char *vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions(
-        void) {
+const char* vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions(void) {
     return " GL_VERSION_1_3 ";
 }
 
@@ -37,8 +36,7 @@ vislib_gl::graphics::gl::AbstractOpenGLTexture::~AbstractOpenGLTexture(void) {
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::Bind
  */
-GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::Bind(GLenum textureUnit,
-                                                         const bool isReset) {
+GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::Bind(GLenum textureUnit, const bool isReset) {
     USES_GL_VERIFY;
     int oldTexUnit = GL_TEXTURE0;
     GLenum retval = GL_NO_ERROR;
@@ -70,7 +68,7 @@ bool vislib_gl::graphics::gl::AbstractOpenGLTexture::IsValid(void) const throw()
  */
 void vislib_gl::graphics::gl::AbstractOpenGLTexture::Release(void) {
     USES_GL_VERIFY;
-    
+
     if (this->IsValid()) {
         GL_VERIFY_THROW(::glDeleteTextures(1, &this->id));
     }
@@ -82,13 +80,11 @@ void vislib_gl::graphics::gl::AbstractOpenGLTexture::Release(void) {
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::setFilter
  */
 GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::setFilter(
-        const GLenum target, const GLint minFilter, const GLint magFilter) {
+    const GLenum target, const GLint minFilter, const GLint magFilter) {
     USES_GL_VERIFY;
 
-    GL_VERIFY_RETURN(::glTexParameteri(target, GL_TEXTURE_MIN_FILTER, 
-        minFilter));
-    GL_VERIFY_RETURN(::glTexParameteri(target, GL_TEXTURE_MAG_FILTER, 
-        magFilter));
+    GL_VERIFY_RETURN(::glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilter));
+    GL_VERIFY_RETURN(::glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilter));
 
     return GL_NO_ERROR;
 }
@@ -97,26 +93,20 @@ GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::setFilter(
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(void) 
-        : id(UINT_MAX) {
-}
+vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(void) : id(UINT_MAX) {}
 
 
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(
-        const GLuint id) : id(id) {
-}
+vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(const GLuint id) : id(id) {}
 
 
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(
-        AbstractOpenGLTexture& rhs) {
-    throw vislib::UnsupportedOperationException(
-        "AbstractOpenGLTexture::AbstractOpenGLTexture", __FILE__, __LINE__);
+vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(AbstractOpenGLTexture& rhs) {
+    throw vislib::UnsupportedOperationException("AbstractOpenGLTexture::AbstractOpenGLTexture", __FILE__, __LINE__);
 }
 
 
@@ -134,9 +124,8 @@ GLuint vislib_gl::graphics::gl::AbstractOpenGLTexture::createId(void) {
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::operator =
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture&
-vislib_gl::graphics::gl::AbstractOpenGLTexture::operator =(
-        const AbstractOpenGLTexture& rhs) {
+vislib_gl::graphics::gl::AbstractOpenGLTexture& vislib_gl::graphics::gl::AbstractOpenGLTexture::operator=(
+    const AbstractOpenGLTexture& rhs) {
     if (this != &rhs) {
         throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
     }

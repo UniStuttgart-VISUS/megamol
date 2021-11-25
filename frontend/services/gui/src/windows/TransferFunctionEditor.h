@@ -25,7 +25,6 @@ namespace gui {
 // Forward declarations
 class Parameter;
 
-
 /** ************************************************************************
  * 1D Transfer Function Editor GUI window
  */

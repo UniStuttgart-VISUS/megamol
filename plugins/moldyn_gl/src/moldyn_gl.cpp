@@ -12,7 +12,6 @@
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
 
-
 namespace megamol::moldyn_gl {
 class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MoldynGLPluginInstance)

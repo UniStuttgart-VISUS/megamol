@@ -15,17 +15,19 @@ using namespace megamol;
 using namespace megamol::mmvtkm_gl;
 
 mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks()
-        : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {
+        : m_version(0)
+        , m_material_slot("gpuMaterials", "Connects to a material data source") {
     this->m_material_slot.SetCompatibleCall<mesh_gl::CallGPUMaterialDataDescription>();
     this->MakeSlotAvailable(&this->m_material_slot);
 }
 
-mmvtkmMeshRenderTasks ::~mmvtkmMeshRenderTasks () {}
+mmvtkmMeshRenderTasks ::~mmvtkmMeshRenderTasks() {}
 
 bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
-    
+
     mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == nullptr) return false;
+    if (lhs_rtc == nullptr)
+        return false;
 
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
@@ -125,7 +127,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
                 for (int i = 0; i < batch_meshes.size(); ++i) {
                     auto const& shader = gpu_mtl_collection->getMaterials().begin()->second.shader_program;
 
-                    std::string ghostIdentifier = (std::string) this->FullName() + "ghostplane";
+                    std::string ghostIdentifier = (std::string)this->FullName() + "ghostplane";
                     std::vector<std::string>::iterator it =
                         std::find(identifiers[i].begin(), identifiers[i].end(), ghostIdentifier.c_str());
 

@@ -18,11 +18,17 @@ namespace astro {
 
 class SpectralIntensityVolume : public core::Module {
 public:
-    static const char* ClassName(void) { return "SpectralIntensityVolume"; }
+    static const char* ClassName(void) {
+        return "SpectralIntensityVolume";
+    }
 
-    static const char* Description(void) { return "Creates of volume capturing spectral intensity."; }
+    static const char* Description(void) {
+        return "Creates of volume capturing spectral intensity.";
+    }
 
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     SpectralIntensityVolume();
 
@@ -42,11 +48,12 @@ private:
 
     bool getAbsorptionDataCallback(core::Call& c);
 
-    bool dummyCallback(megamol::core::Call& c) { return true; }
+    bool dummyCallback(megamol::core::Call& c) {
+        return true;
+    }
 
     bool createVolumeCPU(geocalls::VolumetricDataCall const& volumeIn, geocalls::VolumetricDataCall const& tempIn,
-        geocalls::VolumetricDataCall const& massIn, geocalls::VolumetricDataCall const& mwIn,
-        AstroDataCall& astroIn);
+        geocalls::VolumetricDataCall const& massIn, geocalls::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
 
     bool createBremsstrahlungVolume(geocalls::VolumetricDataCall const& volumeIn,
         geocalls::VolumetricDataCall const& tempIn, geocalls::VolumetricDataCall const& massIn,
@@ -59,7 +66,8 @@ private:
     bool anythingDirty() const {
         return this->xResSlot.IsDirty() || this->yResSlot.IsDirty() || this->zResSlot.IsDirty() ||
                this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty() ||
-               this->normalizeSlot.IsDirty() /*|| wavelength_slot_.IsDirty()*/ || numSamplesSlot.IsDirty() || absorptionBiasSlot.IsDirty();
+               this->normalizeSlot.IsDirty() /*|| wavelength_slot_.IsDirty()*/ || numSamplesSlot.IsDirty() ||
+               absorptionBiasSlot.IsDirty();
     }
 
     void resetDirty() {

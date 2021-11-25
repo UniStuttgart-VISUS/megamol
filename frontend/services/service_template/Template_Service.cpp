@@ -38,7 +38,7 @@ Template_Service::Template_Service() {
 }
 
 Template_Service::~Template_Service() {
-    // clean up raw pointers you allocated with new, which is bad practice and nobody does 
+    // clean up raw pointers you allocated with new, which is bad practice and nobody does
 }
 
 bool Template_Service::init(void* configPtr) {
@@ -74,12 +74,11 @@ std::vector<FrontendResource>& Template_Service::getProvidedResources() {
     this->m_providedResource2 = MyProvidedResource_2{...};
     this->m_providedResource3 = MyProvidedResource_3{...};
 
-    this->m_providedResourceReferences =
-    { // construct std::vector
-        {"MyProvidedResource_1", m_providedResource1}, // constructor FrontendResource{"MyProvidedResource_1", m_providedResource1}
-        {"MyProvidedResource_2", m_providedResource2 /*reference to resource gets passed around*/ },
-        {"MyProvidedResource_3" /*resources are identified using unique names in the system*/ , m_providedResource3}
-    };
+    this->m_providedResourceReferences = {// construct std::vector
+        {"MyProvidedResource_1",
+            m_providedResource1}, // constructor FrontendResource{"MyProvidedResource_1", m_providedResource1}
+        {"MyProvidedResource_2", m_providedResource2 /*reference to resource gets passed around*/},
+        {"MyProvidedResource_3" /*resources are identified using unique names in the system*/, m_providedResource3}};
 
     return m_providedResourceReferences;
 }
@@ -87,20 +86,12 @@ std::vector<FrontendResource>& Template_Service::getProvidedResources() {
 const std::vector<std::string> Template_Service::getRequestedResourceNames() const {
     // since this function should not change the state of the service
     // you should assign your requested resource names in init()
-    this->m_requestedResourcesNames =
-    {
-        "ExternalResource_1",
-        "ExternalResource_2"
-    };
+    this->m_requestedResourcesNames = {"ExternalResource_1", "ExternalResource_2"};
 
     return m_requestedResourcesNames;
 
     // alternative
-    return 
-    {
-        "ExternalResource_1",
-        "ExternalResource_2"
-    };
+    return {"ExternalResource_1", "ExternalResource_2"};
 }
 
 void Template_Service::setRequestedResources(std::vector<FrontendResource> resources) {
@@ -108,10 +99,14 @@ void Template_Service::setRequestedResources(std::vector<FrontendResource> resou
     this->m_requestedResourceReferences = resources;
 
     // prepare usage of requested resources
-    this->m_externalResource_1_ptr = &resources[0].getResource<ExternalResource_1>(); // resources are in requested order and not null
-    this->m_externalResource_2_ptr = &resources[1].getResource<namspace::to::resource::ExternalResource_2>(); // ptr will be not null or program terminates by design
+    this->m_externalResource_1_ptr =
+        &resources[0].getResource<ExternalResource_1>(); // resources are in requested order and not null
+    this->m_externalResource_2_ptr =
+        &resources[1]
+             .getResource<
+                 namspace::to::resource::ExternalResource_2>(); // ptr will be not null or program terminates by design
 }
-    
+
 void Template_Service::updateProvidedResources() {
     // update resources we provide to others with new available data
 
@@ -128,7 +123,7 @@ void Template_Service::digestChangedRequestedResources() {
     digest_changes(*this->m_externalResource_2_ptr); // not that the pointer should never become invalid by design
 
     // FrontendResource::getResource<>() returns CONST references. if you know what you are doing you may modify resources that are not yours.
-    modify_resource(const_cast<ExternalResource_1&>( resources[0].getResource<ExternalResource_1>() ));
+    modify_resource(const_cast<ExternalResource_1&>(resources[0].getResource<ExternalResource_1>()));
 
     if (need_to_shutdown)
         this->setShutdown();
@@ -136,7 +131,7 @@ void Template_Service::digestChangedRequestedResources() {
 
 void Template_Service::resetProvidedResources() {
     // this gets called at the end of the main loop iteration
-    // since the current resources state should have been handled in this frame already 
+    // since the current resources state should have been handled in this frame already
     // you may clean up resources whose state is not needed for the next iteration
     // e.g. m_keyboardEvents.clear();
     // network_traffic_buffer.reset_to_empty();

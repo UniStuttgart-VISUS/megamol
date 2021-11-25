@@ -1,4 +1,4 @@
-/*
+ /*
  * WindowManipulation.h
  *
  * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).

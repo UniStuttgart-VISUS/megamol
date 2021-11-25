@@ -6,7 +6,6 @@
  */
 
 #include "TableFlagFilter.h"
-
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/UniFlagCallsGL.h"

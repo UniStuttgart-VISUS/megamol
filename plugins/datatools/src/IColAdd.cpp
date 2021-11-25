@@ -4,25 +4,33 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "IColAdd.h"
 #include "datatools/MultiParticleDataAdaptor.h"
+#include "mmcore/param/FloatParam.h"
+#include "stdafx.h"
 #include "vislib/math/ShallowVector.h"
 #include <algorithm>
-#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 
-IColAdd::IColAdd() : datatools::AbstractParticleManipulator("outData", "inDataA"),
-        inDataBSlot("inDataB", "Fetches the second ICol value stream"),
+IColAdd::IColAdd()
+        : datatools::AbstractParticleManipulator("outData", "inDataA")
+        , inDataBSlot("inDataB", "Fetches the second ICol value stream")
+        ,
         //aOffsetSlot("aOffset", "Offset to values of stream A"),
-        aScaleSlot("aScale", "Scale for values of stream A"),
+        aScaleSlot("aScale", "Scale for values of stream A")
+        ,
         //bOffsetSlot("bOffset", "Offset to values of stream B"),
-        bScaleSlot("bScale", "Scale to values of stream B"),
-        inAHash(0), inBHash(0), outHash(0),
-        frameID(0), colors(), minCol(0.0f), maxCol(1.0f) {
+        bScaleSlot("bScale", "Scale to values of stream B")
+        , inAHash(0)
+        , inBHash(0)
+        , outHash(0)
+        , frameID(0)
+        , colors()
+        , minCol(0.0f)
+        , maxCol(1.0f) {
 
     inDataBSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&inDataBSlot);
@@ -44,37 +52,37 @@ IColAdd::~IColAdd() {
     Release();
 }
 
-bool IColAdd::manipulateData(
-        geocalls::MultiParticleDataCall& outData,
-        geocalls::MultiParticleDataCall& inDataA) {
+bool IColAdd::manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inDataA) {
 
-    geocalls::MultiParticleDataCall *inDataBptr = inDataBSlot.CallAs<geocalls::MultiParticleDataCall>();
-    if (inDataBptr == nullptr) return false;
+    geocalls::MultiParticleDataCall* inDataBptr = inDataBSlot.CallAs<geocalls::MultiParticleDataCall>();
+    if (inDataBptr == nullptr)
+        return false;
     geocalls::MultiParticleDataCall& inDataB = *inDataBptr;
 
     inDataB.SetFrameID(inDataA.FrameID(), true);
-    if (!inDataB(0)) return false;
+    if (!inDataB(0))
+        return false;
 
-    if ( (inAHash != inDataA.DataHash()) || (inDataA.DataHash() == 0)
-            || (inBHash != inDataB.DataHash()) || (inDataB.DataHash() == 0)
-            || (frameID != inDataA.FrameID())
-//            || aOffsetSlot.IsDirty()
-            || aScaleSlot.IsDirty()
-//            || bOffsetSlot.IsDirty()
-            || bScaleSlot.IsDirty() ) {
+    if ((inAHash != inDataA.DataHash()) || (inDataA.DataHash() == 0) || (inBHash != inDataB.DataHash()) ||
+        (inDataB.DataHash() == 0) ||
+        (frameID != inDataA.FrameID())
+        //            || aOffsetSlot.IsDirty()
+        || aScaleSlot.IsDirty()
+        //            || bOffsetSlot.IsDirty()
+        || bScaleSlot.IsDirty()) {
         // Update data
         inAHash = inDataA.DataHash();
         inBHash = inDataB.DataHash();
         outHash++;
         frameID = inDataA.FrameID();
-//        aOffsetSlot.ResetDirty();
+        //        aOffsetSlot.ResetDirty();
         aScaleSlot.ResetDirty();
-//        bOffsetSlot.ResetDirty();
+        //        bOffsetSlot.ResetDirty();
         bScaleSlot.ResetDirty();
 
-//        float aOff = aOffsetSlot.Param<core::param::FloatParam>()->Value();
+        //        float aOff = aOffsetSlot.Param<core::param::FloatParam>()->Value();
         float aScl = aScaleSlot.Param<core::param::FloatParam>()->Value();
-//        float bOff = bOffsetSlot.Param<core::param::FloatParam>()->Value();
+        //        float bOff = bOffsetSlot.Param<core::param::FloatParam>()->Value();
         float bScl = bScaleSlot.Param<core::param::FloatParam>()->Value();
 
         datatools::MultiParticleDataAdaptor a(inDataA);
@@ -94,15 +102,16 @@ bool IColAdd::manipulateData(
 
             minCol = maxCol = colors[0];
             for (size_t i = 1; i < a.get_count(); ++i) {
-                if (minCol > colors[i]) minCol = colors[i];
-                if (maxCol < colors[i]) maxCol = colors[i];
+                if (minCol > colors[i])
+                    minCol = colors[i];
+                if (maxCol < colors[i])
+                    maxCol = colors[i];
             }
 
         } else {
             minCol = 0.0f;
             maxCol = 1.0f;
         }
-
     }
 
     inDataB.Unlock();
@@ -112,9 +121,9 @@ bool IColAdd::manipulateData(
     outData.SetFrameID(frameID);
     inDataA.SetUnlocker(nullptr, false);
 
-    const float *data = colors.data();
+    const float* data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
-        auto &plist = outData.AccessParticles(list);
+        auto& plist = outData.AccessParticles(list);
         plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(minCol, maxCol);
         data += plist.GetCount();
