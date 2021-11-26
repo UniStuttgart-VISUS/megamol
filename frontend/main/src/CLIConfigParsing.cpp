@@ -466,7 +466,6 @@ static void viewport_tile_handler(
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>,
     std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
-// clang-format off
 std::vector<OptionsListEntry> cli_options_list =
     {     // config name         option description                                                                 type                                        handler
           {config_option,        "Path to Lua configuration file(s)",                                               cxxopts::value<std::vector<std::string>>(), config_handler}
@@ -514,7 +513,6 @@ std::vector<OptionsListEntry> cli_options_list =
                                  "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
-// clang-format on
 
 static std::string loong(std::string const& option) {
     auto f = option.find(',');
