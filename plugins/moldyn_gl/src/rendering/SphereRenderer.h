@@ -213,7 +213,16 @@ protected:
      */
     virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
 private:
     /*********************************************************************/

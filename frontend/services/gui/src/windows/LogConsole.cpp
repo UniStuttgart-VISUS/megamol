@@ -9,8 +9,8 @@
 #include "imgui_stdlib.h"
 #include "mmcore/utility/log/OfflineTarget.h"
 #include "widgets/ButtonWidgets.h"
-#include <regex>
 
+#include <regex>
 
 using namespace megamol::gui;
 
@@ -197,10 +197,8 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
 
     // Initialise
     this->input_shared_data = std::make_shared<InputSharedData>();
-    // this->input_shared_data->commands = {"mmHelp", "mmQuit"};
     this->input_shared_data->open_autocomplete_popup = false;
     this->input_shared_data->autocomplete_appended = false;
-    // this->input_shared_data->autocomplete_candidates;
 }
 
 
@@ -332,7 +330,7 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Console Input ----------------------------------------------------------
 
-    /// DEBUG
+    // Lazy init of command list through lua interface itself
     if (this->input_shared_data->commands.size() == 0) {
         auto result = (*this->input_lua_func)("return mmHelp()");
         if (std::get<0>(result)) {
