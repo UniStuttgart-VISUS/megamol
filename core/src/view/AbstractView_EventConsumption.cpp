@@ -50,7 +50,7 @@ void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendRe
 }
 
 void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(WindowEvents) //{
+    GET_RESOURCE(WindowEvents)
     events.is_focused_events;
 }
 
