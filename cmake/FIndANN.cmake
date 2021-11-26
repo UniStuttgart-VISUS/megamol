@@ -12,8 +12,8 @@ set(ANN_INSTALL_DIR $ENV{ANN_INSTALL_DIR} CACHE PATH "Path to ANN installed loca
 set(lib_search_hints )
 set(inc_search_hints )
 if (ANN_INSTALL_DIR)
-	set(lib_search_hints "${ANN_INSTALL_DIR}" "${ANN_INSTALL_DIR}/lib")
-	set(inc_search_hints "${ANN_INSTALL_DIR}" "${ANN_INSTALL_DIR}/include")
+    set(lib_search_hints "${ANN_INSTALL_DIR}" "${ANN_INSTALL_DIR}/lib")
+    set(inc_search_hints "${ANN_INSTALL_DIR}" "${ANN_INSTALL_DIR}/include")
 endif()
 
 if (WIN32)
@@ -39,7 +39,7 @@ endif()
 find_library(ANN_LIBRARIES
   ANN
   HINTS    
-	${lib_search_hints})
+    ${lib_search_hints})
 if (WIN32)
 find_library(ANN_DLL
   ANN
@@ -60,27 +60,27 @@ endif()
 #     PATHS ${lib_search_paths})
 # endif()
 find_path(ANN_INCLUDE_DIR
-	NAMES ANN/ANN.h
-	HINTS ${inc_search_hints}
-	PATHS ${inc_search_paths}
-	)
+    NAMES ANN/ANN.h
+    HINTS ${inc_search_hints}
+    PATHS ${inc_search_paths}
+    )
 
 # finalizing search
 if (ANN_LIBRARIES AND ANN_INCLUDE_DIR)
-	set(ANN_FOUND TRUE)
+    set(ANN_FOUND TRUE)
 else ()
-	set(ANN_FOUND FALSE)
+    set(ANN_FOUND FALSE)
 endif ()
 
 # search result feedback
 if (ANN_FOUND)
-	if (NOT ANN_FIND_QUIETLY)
-		message(STATUS "Found ANN: ${ANN_LIBRARIES}")
-	endif ()
+    if (NOT ANN_FIND_QUIETLY)
+        message(STATUS "Found ANN: ${ANN_LIBRARIES}")
+    endif ()
 else ()
-	if (ANN_FIND_REQUIRED)
-		#message( "library: ${ANN_LIBRARIES}" )
-		#message( "include: ${ANN_INCLUDE_DIR}" )
-		message(FATAL_ERROR "Could not find ANN library")
-	endif ()
+    if (ANN_FIND_REQUIRED)
+        #message( "library: ${ANN_LIBRARIES}" )
+        #message( "include: ${ANN_INCLUDE_DIR}" )
+        message(FATAL_ERROR "Could not find ANN library")
+    endif ()
 endif ()

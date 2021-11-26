@@ -5,20 +5,20 @@
 
     <shader name="setFlags">
         <snippet type="version">430</snippet>
-		<snippet name="bitflags::main"/>
+        <snippet name="bitflags::main"/>
         <snippet name="Main"             type="file">utility/setFlags.glsl</snippet>
     </shader>
 
-  <shader name="filterAll">
-    <snippet type="version">430</snippet>
-    <snippet name="bitflags::main"/>
-    <snippet name="Main"             type="file">utility/filterAll.glsl</snippet>
-  </shader>
+    <shader name="filterAll">
+        <snippet type="version">430</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet name="Main"             type="file">utility/filterAll.glsl</snippet>
+    </shader>
 
-  <shader name="filterNone">
-    <snippet type="version">430</snippet>
-    <snippet name="bitflags::main"/>
-    <snippet name="Main"             type="file">utility/filterNone.glsl</snippet>
-  </shader>
+    <shader name="filterNone">
+        <snippet type="version">430</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet name="Main"             type="file">utility/filterNone.glsl</snippet>
+    </shader>
 
 </btf>

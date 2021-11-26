@@ -15,7 +15,7 @@ void main()
         return;
     }
 
-	bitflag_set(flagsArray[gID.x], FLAG_ENABLED, false);
-	bitflag_set(flagsArray[gID.x], FLAG_FILTERED, true);
+    bitflag_set(flagsArray[gID.x], FLAG_ENABLED, false);
+    bitflag_set(flagsArray[gID.x], FLAG_FILTERED, true);
 
 }

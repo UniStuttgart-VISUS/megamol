@@ -10,8 +10,8 @@ struct MeshShaderParams
     float sample_cnt;
     vec4 samples[32];  
 
-	uvec2 tf_texture_handle;
-	float tf_min;
+    uvec2 tf_texture_handle;
+    float tf_min;
     float tf_max;
 };
 

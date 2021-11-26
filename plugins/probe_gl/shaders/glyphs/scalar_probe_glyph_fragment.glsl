@@ -64,18 +64,18 @@ void main() {
             //out_colour = fakeViridis(sample_value_normalized);
             out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-			if( radius > sample_value_normalized && radius < 0.96 ) discard;
+            if( radius > sample_value_normalized && radius < 0.96 ) discard;
         }
         else
         {
-			int sample_idx = int(round(angle_shifted * sample_cnt));
-			float sample_value = mesh_shader_params[draw_id].samples[sample_idx];
+            int sample_idx = int(round(angle_shifted * sample_cnt));
+            float sample_value = mesh_shader_params[draw_id].samples[sample_idx];
 
             float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
             //out_colour = fakeViridis(sample_value_normalized);
             out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-			if( radius > sample_value_normalized && radius < 0.96 ) discard;
+            if( radius > sample_value_normalized && radius < 0.96 ) discard;
         }
     }
 

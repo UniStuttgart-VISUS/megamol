@@ -26,11 +26,11 @@ mat4 rotationMatrix(vec3 axis, float angle)
 void main()
 {
     const vec4 vertices[6] = vec4[6]( vec4( -1.0,-1.0,0.0,0.0 ),
-									  vec4( 1.0,1.0,1.0,1.0 ),
-									  vec4( -1.0,1.0,0.0,1.0 ),
-									  vec4( 1.0,1.0,1.0,1.0 ),
-									  vec4( -1.0,-1.0,0.0,0.0 ),
-                                	  vec4( 1.0,-1.0,1.0,0.0 ) );
+                                      vec4( 1.0,1.0,1.0,1.0 ),
+                                      vec4( -1.0,1.0,0.0,1.0 ),
+                                      vec4( 1.0,1.0,1.0,1.0 ),
+                                      vec4( -1.0,-1.0,0.0,0.0 ),
+                                      vec4( 1.0,-1.0,1.0,0.0 ) );
 
     draw_id = gl_DrawIDARB;
     uv_coords = vertices[gl_VertexID].zw;
