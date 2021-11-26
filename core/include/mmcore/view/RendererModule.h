@@ -235,7 +235,6 @@ protected:
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMoveChain(evt.mouseMoveData.x, evt.mouseMoveData.y);
-        return false;
     }
 
     bool OnMouseScrollChainCallback(Call& call) {
