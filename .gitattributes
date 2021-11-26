@@ -1,0 +1,20 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+## change tabs to spaces and lf line endings
+*.py    text eol=lf filter=spabs
+*.cpp   text eol=lf filter=spabs
+*.hpp   text eol=lf filter=spabs
+*.c     text eol=lf filter=spabs
+*.h     text eol=lf filter=spabs
+*.inl   text eol=lf filter=spabs
+*.btf   text eol=lf filter=spabs
+*.glsl  text eol=lf filter=spabs
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.bin binary
+*.exe binary
+*.ico binary
+*.reg binary
