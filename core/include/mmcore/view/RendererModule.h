@@ -231,14 +231,6 @@ protected:
     }
 
     bool OnMouseMoveChainCallback(Call& call) {
-        //try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    auto& evt = cr.GetInputEvent();
-        //    ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-        //    return this->OnMouseMoveChain(evt.mouseMoveData.x, evt.mouseMoveData.y);
-        //} catch (...) {
-        //    ASSERT("onRenderCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
