@@ -36,7 +36,7 @@ void view_consume_keyboard_events(AbstractView& view, megamol::frontend::Fronten
 
 
 void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(MouseEvents) //{
+    GET_RESOURCE(MouseEvents)
     for (auto& e : events.buttons_events)
         view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
 
