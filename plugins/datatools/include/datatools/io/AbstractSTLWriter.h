@@ -60,7 +60,7 @@ namespace io {
 /// - ASCII/Binary option  - Option to choose between ASCII and binary output (default: binary)
 /// - Automatic writing    - Checkbox to allow automatic writing when new data is provided by the source (default: on)
 /// - File name increment  - Option to choose how to behave in naming and when the output file already exists (default: increment)
-///	                         None:                          Overwrite file if it exists
+///                         None:                          Overwrite file if it exists
 ///                          Increment number (safe):       Append a number to prevent overwriting
 ///                          Increment number (overwrite):  Start with 0 and keep incrementing to prevent overwriting previously created files
 ///                          Time stamp:                    Append human-readable, sortable time stamp
