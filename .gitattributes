@@ -10,6 +10,7 @@
 *.inl   text eol=lf filter=spabs
 *.btf   text eol=lf filter=spabs
 *.glsl  text eol=lf filter=spabs
+*.txt   text eol=lf filter=spabs
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary
