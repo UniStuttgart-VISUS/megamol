@@ -220,7 +220,6 @@ protected:
     bool RenderChainCallback(Call& call) {
         C& cr = dynamic_cast<C&>(call);
         return this->RenderChain(cr);
-        return false;
     }
 
     bool OnMouseButtonChainCallback(Call& call) {
