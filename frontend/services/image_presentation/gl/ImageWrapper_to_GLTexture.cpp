@@ -21,6 +21,11 @@ void gl_init_texture(unsigned int& handle) {
 }
 
 std::tuple<int, int, int> getInternalformatFormatType(ImageWrapper::DataChannels channels) {
+    if (channels != ImageWrapper::DataChannels::RGBA8 &&
+        channels != ImageWrapper::DataChannels::RGB8) {
+        throw std::runtime_error("[ImageWrapper_to_GLTexture.cpp] Only image with RGBA8 or RGA8 channels supported for now...");
+    }
+
     const auto internalformat = channels == ImageWrapper::DataChannels::RGB8 ? GL_RGB8 : GL_RGBA8;
     const auto format = channels == ImageWrapper::DataChannels::RGB8 ? GL_RGB : GL_RGBA;
     const auto type = GL_UNSIGNED_BYTE;
