@@ -252,14 +252,6 @@ protected:
     }
 
     bool OnKeyChainCallback(Call& call) {
-        //try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    auto& evt = cr.GetInputEvent();
-        //    ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
-        //    return this->OnKeyChain(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-        //} catch (...) {
-        //    ASSERT("onRenderCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
