@@ -256,7 +256,6 @@ protected:
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKeyChain(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-        return false;
     }
 
     /** Slot for the daisy-chained renderer */
