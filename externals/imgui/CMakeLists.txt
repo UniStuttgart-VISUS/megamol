@@ -18,27 +18,23 @@ set(IMGUI_SOURCES
   imgui_tables.cpp
   imgui_widgets.cpp
   misc/cpp/imgui_stdlib.cpp)
+set(IMGUI_BACKEND_HEADERS
+  imgui_sw.h
+  backends/imgui_impl_generic.cpp
+)
+set(IMGUI_BACKEND_SOURCES
+  imgui_sw.cpp
+  backends/imgui_impl_generic.cpp
+)
+
 if (ENABLE_GL)
-  set(IMGUI_BACKEND_HEADERS
-    imgui_sw.h
-    backends/imgui_impl_generic.h
+  set(IMGUI_BACKEND_HEADERS ${IMGUI_BACKEND_HEADERS}
     backends/imgui_impl_opengl3.h
     backends/imgui_impl_glfw.h
   )
-  set(IMGUI_BACKEND_SOURCES
-    imgui_sw.cpp
-    backends/imgui_impl_generic.cpp
+  set(IMGUI_BACKEND_SOURCES ${IMGUI_BACKEND_SOURCES}
     backends/imgui_impl_opengl3.cpp
     backends/imgui_impl_glfw.cpp
-  )
-else()
-  set(IMGUI_BACKEND_HEADERS
-    imgui_sw.h
-    backends/imgui_impl_generic.cpp
-  )
-  set(IMGUI_BACKEND_SOURCES
-    imgui_sw.cpp
-    backends/imgui_impl_generic.cpp
   )
 endif()
 
@@ -55,4 +51,4 @@ target_include_directories(imgui PUBLIC
   ${GLFW_INCLUDE_DIR})
 
 install(TARGETS imgui DESTINATION "lib")
-install(FILES ${IMGUI_PUBLIC_HEADERS} ${IMGUI_PRIVATE_HEADERS} DESTINATION "include")
+install(FILES ${IMGUI_PUBLIC_HEADERS} ${IMGUI_PRIVATE_HEADERS} ${IMGUI_BACKEND_HEADERS} DESTINATION "include")

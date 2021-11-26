@@ -427,6 +427,7 @@ function(require_external NAME)
       require_external(glfw)
       external_get_property(glfw INSTALL_DIR)
       set(glfw_include_dir "${INSTALL_DIR}/include")
+      set(glad_include_dir "${CMAKE_SOURCE_DIR}/externals/glad/include")
       set(glfw_dep "glfw")
     endif()
 
@@ -458,7 +459,7 @@ function(require_external NAME)
       DEPENDS
         ${glfw_dep}
       CMAKE_ARGS
-        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
+        -DGLAD_INCLUDE_DIR:PATH=${glad_include_dir}
         -DGLFW_INCLUDE_DIR:PATH=${glfw_include_dir}
         -DENABLE_GL=${ENABLE_GL})
 
