@@ -238,14 +238,6 @@ protected:
     }
 
     bool OnMouseScrollChainCallback(Call& call) {
-        // try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    auto& evt = cr.GetInputEvent();
-        //    ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
-        //    return this->OnMouseScrollChain(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-        //} catch (...) {
-        //    ASSERT("onRenderCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
