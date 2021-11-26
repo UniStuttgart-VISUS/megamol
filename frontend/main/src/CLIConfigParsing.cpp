@@ -467,52 +467,81 @@ using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cx
     std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
 std::vector<OptionsListEntry> cli_options_list =
-    {     // config name         option description                                                                 type                                        handler
-          {config_option,        "Path to Lua configuration file(s)",                                               cxxopts::value<std::vector<std::string>>(), config_handler}
-        , {appdir_option,        "Set application directory",                                                       cxxopts::value<std::string>(),              appdir_handler}
-        , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
-        , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
-        , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
-        , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
-        , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {execute_lua_option,   "Execute Lua command(s). Commands separated by ;",                                 cxxopts::value<std::vector<std::string>>(), execute_lua_handler}
-        , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
+    { // config name         option description                                                                 type                                        handler
+        {config_option, "Path to Lua configuration file(s)", cxxopts::value<std::vector<std::string>>(),
+            config_handler},
+        {appdir_option, "Set application directory", cxxopts::value<std::string>(), appdir_handler},
+        {resourcedir_option, "Add resource directory(ies)", cxxopts::value<std::vector<std::string>>(),
+            resourcedir_handler},
+        {shaderdir_option, "Add shader directory(ies)", cxxopts::value<std::vector<std::string>>(), shaderdir_handler},
+        {logfile_option, "Set log file", cxxopts::value<std::string>(), logfile_handler},
+        {loglevel_option, "Set logging level, accepted values: " + accepted_log_level_strings,
+            cxxopts::value<std::string>(), loglevel_handler},
+        {echolevel_option, "Set echo level, accepted values see above", cxxopts::value<std::string>(),
+            echolevel_handler},
+        {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
+            project_handler},
+        {execute_lua_option, "Execute Lua command(s). Commands separated by ;",
+            cxxopts::value<std::vector<std::string>>(), execute_lua_handler},
+        {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
+            cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
-        , {host_option,          "Address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
-        , {opengl_context_option,"OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",    cxxopts::value<std::string>(),              opengl_context_handler}
-        , {khrdebug_option,      "Enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
-        , {vsync_option,         "Enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
-        , {disable_opengl_option,"Disable OpenGL. Always TRUE if not build with OpenGL",                            cxxopts::value<bool>(),                     no_opengl_handler }
-        , {window_option,        "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }
-        , {fullscreen_option,    "Open maximized window",                                                           cxxopts::value<bool>(),                     fullscreen_handler   }
-        , {nodecoration_option,  "Open window without decorations",                                                 cxxopts::value<bool>(),                     nodecoration_handler }
-        , {topmost_option,       "Open window that stays on top of all others",                                     cxxopts::value<bool>(),                     topmost_handler      }
-        , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
-        , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
-        , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {guishow_option,       "Render GUI overlay",                                                              cxxopts::value<bool>(),                     guishow_handler}
-        , {nogui_option,         "Dont render GUI overlay",                                                         cxxopts::value<bool>(),                     nogui_handler}
-        , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
-        , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
-        , {versionnote_option,   "Show version warning when loading a project, use '=false' to disable",            cxxopts::value<bool>(),                     versionnote_handler}
-        , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
-        , {remote_head_option,   "Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
-        , {remote_render_option, "Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}
-        , {remote_mpi_option,    "Start MPI RenderNode client and run Remote_Service test ",         cxxopts::value<bool>(),                     remote_mpirender_handler}
-        , {remote_mpi_broadcast_rank_option,   "MPI rank that broadcasts to others, default: 0",     cxxopts::value<unsigned int>(),             remote_mpirank_handler}
-        , {remote_headnode_zmq_target_option,  "Address and port where to send state via ZMQ",       cxxopts::value<std::string>(),              remote_zmqtarget_handler}
-        , {remote_rendernode_zmq_source_option,"Address and port where to receive state via ZMQ from",cxxopts::value<std::string>(),             remote_zmqsource_handler}
-        , {remote_headnode_broadcast_quit_option,   "Headnode broadcasts mmQuit to rendernodes on shutdown",                    cxxopts::value<bool>(), remote_head_broadcast_quit_handler}
-        , {remote_headnode_broadcast_project_option,"Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(), remote_head_broadcast_project_handler}
-        , {remote_headnode_connect_at_start_option, "Headnode starts sender thread at startup",                                 cxxopts::value<bool>(), remote_head_connect_at_start_handler}
-        , {framebuffer_option,   "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT",                         cxxopts::value<std::string>(),              framebuffer_handler}
-        , {viewport_tile_option, "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
-                                 "where x,y is the lower left start pixel of the local tile, "
-                                 "LWIDTHxLHEIGHT is the local framebuffer resolution, "
-                                 "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
-        , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
-    };
+        ,
+        {host_option, "Address of lua host server", cxxopts::value<std::string>(), host_handler},
+        {opengl_context_option, "OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",
+            cxxopts::value<std::string>(), opengl_context_handler},
+        {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
+        {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
+        {disable_opengl_option, "Disable OpenGL. Always TRUE if not build with OpenGL", cxxopts::value<bool>(),
+            no_opengl_handler},
+        {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
+            cxxopts::value<std::string>(), window_handler},
+        {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
+        {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
+        {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
+        {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
+        {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
+            interactive_handler},
+        {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
+            project_handler},
+        {guishow_option, "Render GUI overlay", cxxopts::value<bool>(), guishow_handler},
+        {nogui_option, "Dont render GUI overlay", cxxopts::value<bool>(), nogui_handler},
+        {guiscale_option, "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",
+            cxxopts::value<float>(), guiscale_handler},
+        {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
+            cxxopts::value<bool>(), privacynote_handler},
+        {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
+            cxxopts::value<bool>(), versionnote_handler},
+        {param_option, "Set MegaMol Graph parameter to value: --param param=value",
+            cxxopts::value<std::vector<std::string>>(), param_handler},
+        {remote_head_option, "Start HeadNode server and run Remote_Service test ", cxxopts::value<bool>(),
+            remote_head_handler},
+        {remote_render_option, "Start RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
+            remote_render_handler},
+        {remote_mpi_option, "Start MPI RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
+            remote_mpirender_handler},
+        {remote_mpi_broadcast_rank_option, "MPI rank that broadcasts to others, default: 0",
+            cxxopts::value<unsigned int>(), remote_mpirank_handler},
+        {remote_headnode_zmq_target_option, "Address and port where to send state via ZMQ",
+            cxxopts::value<std::string>(), remote_zmqtarget_handler},
+        {remote_rendernode_zmq_source_option, "Address and port where to receive state via ZMQ from",
+            cxxopts::value<std::string>(), remote_zmqsource_handler},
+        {remote_headnode_broadcast_quit_option, "Headnode broadcasts mmQuit to rendernodes on shutdown",
+            cxxopts::value<bool>(), remote_head_broadcast_quit_handler},
+        {remote_headnode_broadcast_project_option,
+            "Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(),
+            remote_head_broadcast_project_handler},
+        {remote_headnode_connect_at_start_option, "Headnode starts sender thread at startup", cxxopts::value<bool>(),
+            remote_head_connect_at_start_handler},
+        {framebuffer_option, "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT", cxxopts::value<std::string>(),
+            framebuffer_handler},
+        {viewport_tile_option,
+            "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
+            "where x,y is the lower left start pixel of the local tile, "
+            "LWIDTHxLHEIGHT is the local framebuffer resolution, "
+            "GWIDTHxGHEIGHT is the global framebuffer resolution",
+            cxxopts::value<std::string>(), viewport_tile_handler},
+        {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
 
 static std::string loong(std::string const& option) {
     auto f = option.find(',');

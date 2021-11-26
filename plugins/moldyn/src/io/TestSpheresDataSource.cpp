@@ -90,17 +90,17 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
     if (frm == NULL)
         return;
     frm->SetFrameNumber(idx);
-	auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
-	auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
+    auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
+    auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
     frm->data = new float[8 * sphereCount];
     for (unsigned int i = 0; i < sphereCount; i++) {
         vislib::math::ShallowVector<float, 3> pos(&frm->data[i * 8]);
         ::srand(i); // stablize values for particles
-        float &r = frm->data[i * 8 + 3];
-        float &cr = frm->data[i * 8 + 4];
-        float &cg = frm->data[i * 8 + 5];
-        float &cb = frm->data[i * 8 + 6];
-        float &ca = frm->data[i * 8 + 7];
+        float& r = frm->data[i * 8 + 3];
+        float& cr = frm->data[i * 8 + 4];
+        float& cg = frm->data[i * 8 + 5];
+        float& cb = frm->data[i * 8 + 6];
+        float& ca = frm->data[i * 8 + 7];
         vislib::math::Vector<float, 3> X(static_cast<float>((::rand() % 2) * 2 - 1), 0.0f, 0.0f);
         vislib::math::Vector<float, 3> Y(0.0f, static_cast<float>((::rand() % 2) * 2 - 1), 0.0f);
         vislib::math::Vector<float, 3> Z(static_cast<float>(1000 - ::rand() % 2001) * 0.001f,
@@ -170,7 +170,6 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
         cg = vislib::math::Abs(Z.Y());
         cb = vislib::math::Abs(Z.Z());
         ca = 1.0f;
-
     }
 }
 
@@ -230,8 +229,10 @@ bool TestSpheresDataSource::getDataCallback(core::Call& caller) {
     mpdc->SetExtent(frameCount, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     mpdc->SetParticleListCount(1);
     mpdc->AccessParticles(0).SetCount(sphereCount);
-    mpdc->AccessParticles(0).SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, frm->data, sizeof(float) * 8);
-    mpdc->AccessParticles(0).SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, frm->data + 4, sizeof(float) * 8);
+    mpdc->AccessParticles(0).SetVertexData(
+        geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, frm->data, sizeof(float) * 8);
+    mpdc->AccessParticles(0).SetColourData(
+        geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, frm->data + 4, sizeof(float) * 8);
     mpdc->SetUnlocker(NULL);
 
     return true;

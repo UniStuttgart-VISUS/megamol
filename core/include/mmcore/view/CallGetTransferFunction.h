@@ -20,7 +20,6 @@ namespace view {
  */
 class MEGAMOLCORE_API CallGetTransferFunction : public AbstractCallGetTransferFunction {
 public:
-
     /**
      * Answer the name of the objects of this description.
      *
@@ -69,7 +68,6 @@ public:
 
     /** Dtor. */
     virtual ~CallGetTransferFunction(void) {}
-
 };
 
 

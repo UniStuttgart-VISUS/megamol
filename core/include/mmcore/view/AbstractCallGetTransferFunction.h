@@ -138,8 +138,8 @@ public:
      *            is responsible for keeping the memory alive.
      * @param format The texture format
      */
-    inline void SetTexture(unsigned int size, float const* tex, TextureFormat format,
-        std::array<float, 2> range, uint32_t version) {
+    inline void SetTexture(
+        unsigned int size, float const* tex, TextureFormat format, std::array<float, 2> range, uint32_t version) {
         this->texSize = size;
         this->texFormat = format;
         this->texData = tex;
