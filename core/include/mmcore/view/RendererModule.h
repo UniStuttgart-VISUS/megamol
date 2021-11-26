@@ -245,14 +245,6 @@ protected:
     }
 
     bool OnCharChainCallback(Call& call) {
-        //try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    auto& evt = cr.GetInputEvent();
-        //    ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
-        //    return this->OnCharChain(evt.charData.codePoint);
-        //} catch (...) {
-        //    ASSERT("onRenderCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
