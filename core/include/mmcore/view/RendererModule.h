@@ -206,15 +206,8 @@ protected:
     }
 
     bool GetExtentsChainCallback(Call& call) {
-        //try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    return this->GetExtentsChain(cr);
-        //} catch (...) {
-        //    ASSERT("onGetExtentsCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         return this->GetExtentsChain(cr);
-        return false;
     }
 
     bool RenderChainCallback(Call& call) {
