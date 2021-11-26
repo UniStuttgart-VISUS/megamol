@@ -125,9 +125,11 @@ if(BUILD_FRONTEND_SERVICES)
   endif()
   
   # GLFW
-  if(USE_GLFW)
-    require_external(glfw)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+  if (ENABLE_GL)
+    if(USE_GLFW)
+      require_external(glfw)
+      target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    endif()
   endif()
 
   # Linux Stacktrace
