@@ -218,12 +218,6 @@ protected:
     }
 
     bool RenderChainCallback(Call& call) {
-        //try {
-        //    C& cr = dynamic_cast<C&>(call);
-        //    return this->RenderChain(cr);
-        //} catch (...) {
-        //    ASSERT("onRenderCallback call cast failed\n");
-        //}
         C& cr = dynamic_cast<C&>(call);
         return this->RenderChain(cr);
         return false;
