@@ -93,6 +93,57 @@ jobs:
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
 
+- job: nonGL_Linux
+  strategy:
+    matrix:
+      'GCC9 / Make / Debug':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
+        configuration: Debug
+        generator: 'Unix Makefiles'
+  pool:
+    name: 'default'
+    demands:
+    - Agent.OS -equals Linux
+    - cmake
+    - megamol_build_enabled
+
+  steps:
+  - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
+    displayName: 'Bash get number of CPU cores'
+  - task: CMake@1
+    displayName: 'CMake Configure'
+    inputs:
+      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) -DENABLE_GL=OFF'
+  - task: CMake@1
+    displayName: 'CMake Build'
+    inputs:
+      cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
+
+- job: nonGL_Windows
+  strategy:
+    matrix:
+      'VS2019 Release':
+        configuration: Release
+        generator: 'Visual Studio 16 2019'
+
+  pool:
+    name: 'hardware'
+    demands:
+    - Agent.OS -equals Windows_NT
+    - cmake
+    - VisualStudio_16.0
+
+  steps:
+  - task: CMake@1
+    displayName: 'CMake Configure'
+    inputs:
+      cmakeArgs: '.. -G"$(generator)" -A"x64" -DENALBE_GL=OFF'
+  - task: CMake@1
+    displayName: 'CMake Build'
+    inputs:
+      cmakeArgs: '--build . --config $(configuration)'
+
 # The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
 - job: FileChecks
   displayName: 'File Checks'
