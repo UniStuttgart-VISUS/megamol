@@ -180,7 +180,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , win_log_force_open(true)
         , tooltip()
         , input_shared_data(nullptr)
-        , input_reclaim_focus(false)
+        , input_reclaim_focus(0)
         , input_buffer()
         , input_lua_func(nullptr) {
 
@@ -351,9 +351,9 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();
-    if (this->input_reclaim_focus) {
+    if (this->input_reclaim_focus > 0) {
         ImGui::SetKeyboardFocusHere();
-        this->input_reclaim_focus = false;
+        this->input_reclaim_focus--;
     }
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
                                            ImGuiInputTextFlags_CallbackCompletion |
@@ -371,7 +371,7 @@ bool megamol::gui::LogConsole::Draw() {
             auto blah = std::get<1>(result);
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
-        this->input_reclaim_focus = true;
+        this->input_reclaim_focus = 2;
     }
     ImGui::PopItemWidth();
 
@@ -395,7 +395,7 @@ bool megamol::gui::LogConsole::Draw() {
             }
         }
         if (selected_candidate || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-            this->input_reclaim_focus = true;
+            this->input_reclaim_focus = 2;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();

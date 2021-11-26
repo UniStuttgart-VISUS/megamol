@@ -92,7 +92,7 @@ private:
 
     // Input
     std::shared_ptr<InputSharedData> input_shared_data;
-    bool input_reclaim_focus;
+    unsigned int input_reclaim_focus;
     std::string input_buffer;
     // where would I get this from? and the autocomplete stuff?
     lua_func_type* input_lua_func;
