@@ -38,13 +38,6 @@ private:
     void assign(gl_texture const& other, bool take_ownership) GL_STUB();
     void from_image(ImageWrapper const& image) GL_STUB();
     void clear();
-
-    // void clear() {
-    //     this->image_wrapper_ptr = nullptr;
-    //     this->texture_reference = 0;
-    //     this->texture = 0;
-    //     this->size = {0, 0};
-    // }
 };
 
 } /* end namespace frontend_resources */
