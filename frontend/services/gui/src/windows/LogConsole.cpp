@@ -351,6 +351,10 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();
+    if (this->input_reclaim_focus) {
+        ImGui::SetKeyboardFocusHere();
+        this->input_reclaim_focus = false;
+    }
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
                                            ImGuiInputTextFlags_CallbackCompletion |
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
