@@ -423,8 +423,12 @@ function(require_external NAME)
       return()
     endif()
 
-    require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    if (ENABLE_GL)
+      require_external(glfw)
+      external_get_property(glfw INSTALL_DIR)
+      set(glfw_include_dir "${INSTALL_DIR}/include")
+      set(glfw_dep "glfw")
+    endif()
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
@@ -439,11 +443,24 @@ function(require_external NAME)
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_sw.cpp"
+        "<SOURCE_DIR>/imgui_sw.cpp"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_sw.h"
+        "<SOURCE_DIR>/imgui_sw.h"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_impl_generic.cpp"
+        "<SOURCE_DIR>/backends/imgui_impl_generic.cpp"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_impl_generic.h"
+        "<SOURCE_DIR>/backends/imgui_impl_generic.h"
       DEPENDS
-        glfw
+        ${glfw_dep}
       CMAKE_ARGS
         -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
-        -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
+        -DGLFW_INCLUDE_DIR:PATH=${glfw_include_dir}
+        -DENABLE_GL=${ENABLE_GL})
 
     add_external_library(imgui
       LIBRARY ${IMGUI_LIB})
