@@ -346,7 +346,9 @@ bool SphereRenderer::create(void) {
 
 
 void SphereRenderer::release(void) {
-
+#ifdef PROFILING
+    perf_manager->remove_timers(timers);
+#endif
     this->resetResources();
 }
 

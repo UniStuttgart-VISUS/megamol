@@ -5,25 +5,21 @@
 #include <string>
 #include <vector>
 
+#include "CommandRegistry.h"
+#include "FrontendResource.h"
+#include "FrontendResourcesLookup.h"
+#include "ImagePresentationEntryPoints.h"
+#include "PerformanceManager.h"
+
+#include "mmcore/MegaMolGraphTypes.h"
+#include "mmcore/MegaMolGraph_Convenience.h"
+#include "mmcore/RootModuleNamespace.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-
 #include "mmcore/serializable.h"
-
-#include "mmcore/MegaMolGraphTypes.h"
-#include "mmcore/MegaMolGraph_Convenience.h"
-
-#include "mmcore/RootModuleNamespace.h"
-
-#include "CommandRegistry.h"
-#include "FrontendResource.h"
-#include "FrontendResourcesLookup.h"
-#include "ImagePresentationEntryPoints.h"
-#include "CommandRegistry.h"
-#include "PerformanceManager.h"
 
 namespace megamol {
 namespace core {
@@ -141,11 +137,11 @@ private:
 
     megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
 
+    MegaMolGraph_Convenience convenience_functions;
+
 #ifdef PROFILING
     megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
 #endif
-
-    MegaMolGraph_Convenience convenience_functions;
 };
 
 

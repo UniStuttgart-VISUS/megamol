@@ -11,9 +11,9 @@ namespace megamol {
 namespace core {
 
 /**
- * Class encapsulating the results captured from single performance region. It contains a ring buffer of length
+ * Class encapsulating the results captured from a single performance region. It contains a ring buffer of length
  * buffer_length for keeping the values. Multiple values per frame a supported since a region can be entered
- * multiple times.
+ * multiple times, for example when the graph activates a module more than once per frame.
  */
 class MultiPerformanceHistory {
 public:
@@ -45,6 +45,7 @@ public:
 
     perf_type average(metric_type metric) const;
 
+    /** return statistics over the whole window/buffer in the sense of outer(inner(samples)). The outer metric summarizes the buffer, the inner metric a frame, so you can have, e.g., the average over all frame minima etc. */
     perf_type window_statistics(metric_type outer_metric, metric_type inner_metric) {
         switch (outer_metric) {
         case metric_type::MIN:
@@ -70,7 +71,7 @@ public:
         return num_frames;
     }
 
-    // copies the disjunct segments in the ring buffer into a contiguous array for draw calls
+    /** copies the disjunct segments in the ring buffer into a contiguous array for draw calls */
     std::array<perf_type, buffer_length> copyHistory(metric_type metric) const;
 
 private:
@@ -173,7 +174,8 @@ private:
             return median;
         }
         void reset(bool clear_values = true) {
-            if (clear_values) values.clear();
+            if (clear_values)
+                values.clear();
             average = median = total = 0;
             minimum = std::numeric_limits<perf_type>::max();
             maximum = std::numeric_limits<perf_type>::lowest();
@@ -218,5 +220,5 @@ private:
     std::array<windowed_frame_statistics, metric_count> window_metrics;
 };
 
-}
-}
+} // namespace core
+} // namespace megamol

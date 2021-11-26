@@ -12,15 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallCapabilities.h"
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
+#include "mmcore/api/MegaMolCore.std.h"
 #ifdef PROFILING
 #include "PerformanceManager.h"
 #endif
 
-#include "mmcore/api/MegaMolCore.std.h"
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace megamol {
 namespace core {
@@ -119,9 +119,9 @@ public:
         return static_cast<uint32_t>(callback_names.size());
     }
 
-    private:
-        /** The callee connected by this call */
-        CalleeSlot *callee;
+private:
+    /** The callee connected by this call */
+    CalleeSlot* callee;
 
     /** The caller connected by this call */
     CallerSlot* caller;
@@ -131,14 +131,15 @@ public:
     /** The function id mapping */
     unsigned int* funcMap;
 
+    /* Callback names for runtime introspection */
     std::vector<std::string> callback_names;
 
     inline static std::string err_out_of_bounds = "index out of bounds";
 
 #ifdef PROFILING
-        friend class MegaMolGraph;
-        frontend_resources::PerformanceManager* perf_man = nullptr;
-        frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
+    friend class MegaMolGraph;
+    frontend_resources::PerformanceManager* perf_man = nullptr;
+    frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // PROFILING
 protected:
     CallCapabilities caps;
