@@ -20,80 +20,73 @@ namespace megamol {
 namespace datatools {
 namespace table {
 
+/**
+ * A base class for modules processing table data.
+ */
+class TableProcessorBase : public core::Module {
+
+public:
     /**
-     * A base class for modules processing table data.
+     * Finalises an instance.
      */
-    class TableProcessorBase : public core::Module {
+    virtual ~TableProcessorBase(void) = default;
 
-    public:
+protected:
+    typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~TableProcessorBase(void) = default;
+    /**
+     * Initialises a new instance.
+     */
+    TableProcessorBase(void);
 
-    protected:
+    /**
+     * Computes the combined hash from the hash of the local state and the
+     * hash of the input
+     *
+     * @return The hash of the data currently stored in the module.
+     */
+    inline std::size_t getHash(void) {
+        auto retval = this->inputHash;
+        retval ^= this->localHash + 0x9e3779b9 + (retval << 6) + (retval >> 2);
+        return retval;
+    }
 
-        typedef megamol::datatools::table::TableDataCall::ColumnInfo
-            ColumnInfo;
+    /**
+     * Prepares the data requested by 'call'.
+     *
+     * @param src     The call providing the data.
+     * @param frameID The ID of the frame requested by the caller.
+     *
+     * @return true in case of suceess, false otherwise.
+     */
+    virtual bool prepareData(TableDataCall& src, const unsigned int frameID) = 0;
 
-        /**
-         * Initialises a new instance.
-         */
-        TableProcessorBase(void);
+    /** Holds the columns of the (filtered) table. */
+    std::vector<ColumnInfo> columns;
 
-        /**
-         * Computes the combined hash from the hash of the local state and the
-         * hash of the input
-         *
-         * @return The hash of the data currently stored in the module.
-         */
-        inline std::size_t getHash(void) {
-            auto retval = this->inputHash;
-            retval ^= this->localHash + 0x9e3779b9 + (retval << 6)
-                + (retval >> 2);
-            return retval;
-        }
+    /** Holds the ID of the current frame. */
+    unsigned int frameID;
 
-        /**
-         * Prepares the data requested by 'call'.
-         *
-         * @param src     The call providing the data.
-         * @param frameID The ID of the frame requested by the caller.
-         *
-         * @return true in case of suceess, false otherwise.
-         */
-        virtual bool prepareData(TableDataCall& src,
-            const unsigned int frameID) = 0;
+    /** Holds the hash of the data as reported by the input module. */
+    std::size_t inputHash;
 
-        /** Holds the columns of the (filtered) table. */
-        std::vector<ColumnInfo> columns;
+    /** Holds a hash representing the current state of the processor. */
+    std::size_t localHash;
 
-        /** Holds the ID of the current frame. */
-        unsigned int frameID;
+    /** The slot providing the input data. */
+    core::CallerSlot slotInput;
 
-        /** Holds the hash of the data as reported by the input module. */
-        std::size_t inputHash;
+    /** The slot allowing for retrieval of the output data. */
+    core::CalleeSlot slotOutput;
 
-        /** Holds a hash representing the current state of the processor. */
-        std::size_t localHash;
+    /** The actual values. */
+    std::vector<float> values;
 
-        /** The slot providing the input data. */
-        core::CallerSlot slotInput;
+private:
+    bool getData(core::Call& call);
 
-        /** The slot allowing for retrieval of the output data. */
-        core::CalleeSlot slotOutput;
-
-        /** The actual values. */
-        std::vector<float> values;
-
-    private:
-
-        bool getData(core::Call& call);
-
-        bool getHash(core::Call& call);
-
-    };
+    bool getHash(core::Call& call);
+};
 
 } /* end namespace table */
 } /* end namespace datatools */

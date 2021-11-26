@@ -11,7 +11,7 @@
 #ifndef MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
 #define MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein/AbstractVTKLegacyData.h"
@@ -141,21 +141,27 @@ public:
      *
      * @return The number of points
      */
-    size_t GetNumberOfPoints() const { return this->nPoints; }
+    size_t GetNumberOfPoints() const {
+        return this->nPoints;
+    }
 
     /**
      * Answers the size of the cell index data
      *
      * @return The size of the cell index data
      */
-    size_t GetCellDataSize() const { return this->nCellData; }
+    size_t GetCellDataSize() const {
+        return this->nCellData;
+    }
 
     /**
      * Answers the size of the cell index data
      *
      * @return The size of the cell index data
      */
-    size_t GetNumberOfCells() const { return this->nCells; }
+    size_t GetNumberOfCells() const {
+        return this->nCells;
+    }
 
     /**
      * Copy vertex coordinates from a buffer.
@@ -166,7 +172,8 @@ public:
     void SetPoints(const float* buff, size_t nPoints) {
         // (Re)allocate if necessary
         if (nPoints > this->nPoints) {
-            if (this->points) delete[] this->points;
+            if (this->points)
+                delete[] this->points;
             this->points = new float[3 * nPoints];
         }
         this->nPoints = nPoints;
@@ -181,7 +188,8 @@ public:
     void SetCellIndexData(const int* buff, size_t cellDataCnt) {
         // (Re)allocate if necessary
         if (cellDataCnt > this->nCellData) {
-            if (this->cells) delete[] this->cells;
+            if (this->cells)
+                delete[] this->cells;
             this->cells = new int[cellDataCnt];
         }
         this->nCellData = cellDataCnt;
@@ -196,7 +204,8 @@ public:
     void SetCellTypes(const int* buff, size_t cellCnt) {
         // (Re)allocate if necessary
         if (cellCnt > this->nCells) {
-            if (this->cellTypes) delete[] this->cellTypes;
+            if (this->cellTypes)
+                delete[] this->cellTypes;
             this->cellTypes = new CellType[cellCnt];
         }
         this->nCells = cellCnt;
@@ -204,7 +213,9 @@ public:
     }
 
     /** TODO */
-    inline size_t GetPointDataCount() const { return this->pointData.Count(); }
+    inline size_t GetPointDataCount() const {
+        return this->pointData.Count();
+    }
 
 protected:
 private:

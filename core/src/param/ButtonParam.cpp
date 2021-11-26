@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ButtonParam.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core::param;
@@ -23,8 +23,7 @@ ButtonParam::ButtonParam() : AbstractParam(), keycode() {
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::KeyCode& keycode)
-        : AbstractParam(), keycode(keycode) {
+ButtonParam::ButtonParam(const core::view::KeyCode& keycode) : AbstractParam(), keycode(keycode) {
     initialize();
 }
 
@@ -33,7 +32,8 @@ ButtonParam::ButtonParam(const core::view::KeyCode& keycode)
  * ButtonParam::ButtonParam
  */
 ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifiers& mods)
-        : AbstractParam(), keycode(key, mods) {
+        : AbstractParam()
+        , keycode(key, mods) {
     initialize();
 }
 
@@ -42,7 +42,8 @@ ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifiers
  * ButtonParam::ButtonParam
  */
 ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifier& mod)
-        : AbstractParam(), keycode(key, core::view::Modifiers(mod)) {
+        : AbstractParam()
+        , keycode(key, core::view::Modifiers(mod)) {
     initialize();
 }
 
@@ -50,8 +51,7 @@ ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifier&
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key& key)
-        : AbstractParam(), keycode(key) {
+ButtonParam::ButtonParam(const core::view::Key& key) : AbstractParam(), keycode(key) {
     initialize();
 }
 
@@ -76,8 +76,7 @@ std::string ButtonParam::Definition() const {
     std::copy(reinterpret_cast<char const*>(&this->keycode.key),
         reinterpret_cast<char const*>(&this->keycode.key) + sizeof(WORD), return_str.begin() + name.size());
     auto const mods = this->keycode.mods.toInt();
-    std::copy(reinterpret_cast<char const*>(&this->keycode.key),
-        reinterpret_cast<char const*>(&mods) + sizeof(WORD),
+    std::copy(reinterpret_cast<char const*>(&this->keycode.key), reinterpret_cast<char const*>(&mods) + sizeof(WORD),
         return_str.begin() + name.size() + sizeof(WORD));
     return return_str;
 }

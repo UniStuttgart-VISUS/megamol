@@ -1,8 +1,8 @@
-#include "stdafx.h"
 #include "GlWidgetLibrary.h"
 #include "GlButton.h"
 #include "GlWidget.h"
 #include "mmcore/view/MouseFlags.h"
+#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/types.h"
 

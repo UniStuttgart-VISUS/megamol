@@ -4,7 +4,7 @@
 
     <shader name="vertex">
         <snippet type="version">110</snippet>
-		<snippet type="string">#extension GL_ARB_gpu_shader_fp64 : enable</snippet>
+        <snippet type="string">#extension GL_ARB_gpu_shader_fp64 : enable</snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
             <![CDATA[
@@ -209,7 +209,7 @@ void main(void) {
 
     <shader name="fragment">
         <snippet type="version">110</snippet>
-		<snippet type="string">#extension GL_ARB_gpu_shader_fp64 : enable</snippet>
+        <snippet type="string">#extension GL_ARB_gpu_shader_fp64 : enable</snippet>
         <snippet name="common::defines"/>
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="body1" type="string">
@@ -328,10 +328,10 @@ void main(void) {
 <snippet name="out-lighting" type="string">
             <![CDATA[
     // phong lighting with directional light
-	vec3 fRay = vec3(ray);
-	vec3 fNorm = vec3(normal);
+    vec3 fRay = vec3(ray);
+    vec3 fNorm = vec3(normal);
     gl_FragColor = vec4(LocalLighting(
-		fRay, fNorm, vec3(lightPos.xyz), color.rgb), color.a);
+        fRay, fNorm, vec3(lightPos.xyz), color.rgb), color.a);
     //gl_FragColor = color;
 ]]>
   </snippet>

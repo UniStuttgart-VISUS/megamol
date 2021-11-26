@@ -28,10 +28,10 @@
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayTransform.h"
 #include "OSPRayVelvetMaterial.h"
+#include "Pkd.h"
 #include "mmospray/CallOSPRayAPIObject.h"
 #include "mmospray/CallOSPRayMaterial.h"
 #include "mmospray/CallOSPRayStructure.h"
-#include "Pkd.h"
 
 namespace megamol::ospray {
 class MMOSPRayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {

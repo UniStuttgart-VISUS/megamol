@@ -179,7 +179,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 
                 std::string identifier =
                     m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string() +
-                                         model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
+                    model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
                 m_mesh_access_collection.second.push_back(identifier);
 
@@ -237,8 +237,7 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
     if (this->m_glTFFilename_slot.IsDirty()) {
         m_glTFFilename_slot.ResetDirty();
 
-        auto filename =
-            m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
+        auto filename = m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
         m_gltf_model = std::make_shared<tinygltf::Model>();
 
         if (filename != "") {

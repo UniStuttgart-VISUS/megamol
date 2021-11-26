@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MapGenerator.h"
+#include "stdafx.h"
 
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/BoolParam.h"
@@ -1420,7 +1420,7 @@ bool MapGenerator::GetMeshExtents(Call& call) {
         return false;
 
     if (this->store_new_mesh) {
-        MeshMode selected = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+        MeshMode selected = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
         geocalls::CallTriMeshData::Mesh themesh;
         if (selected == MeshMode::MESH_ORIGINAL) {
             themesh.SetVertexData(static_cast<uint>(this->vertices.size() / 3), this->vertices.data(),
@@ -3701,7 +3701,7 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
         shaderReloaded = true;
     }
 
-    MeshMode meshMode = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+    MeshMode meshMode = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
     if (this->out_mesh_selection_slot.IsDirty()) {
         store_new_mesh = true;
         this->out_mesh_selection_slot.ResetDirty();
@@ -3778,7 +3778,7 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
     auto dir = cam.getPose().direction;
     auto dirUp = cam.getPose().up;
 
-    vec3f eye_dir = vec3f(dir.x,dir.y,dir.z);
+    vec3f eye_dir = vec3f(dir.x, dir.y, dir.z);
     vec3f up_dir = vec3f(dirUp.x, dirUp.y, dirUp.z);
 
     // Has the input data changed or the shader been reloaded?

@@ -20,144 +20,140 @@
 namespace megamol::datatools {
 
 
+/**
+ * Data loader module for 3+1 dim cubic bézier data
+ */
+class SiffCSplineFitter : public core::Module {
+public:
     /**
-     * Data loader module for 3+1 dim cubic bézier data
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class SiffCSplineFitter : public core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "SiffCSplineFitter";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "SiffCSplineFitter";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module to fit cardinal splines into timed siff data";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module to fit cardinal splines into timed siff data";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /** Ctor. */
+    SiffCSplineFitter(void);
 
-        /** Ctor. */
-        SiffCSplineFitter(void);
+    /** Dtor. */
+    virtual ~SiffCSplineFitter(void);
 
-        /** Dtor. */
-        virtual ~SiffCSplineFitter(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getDataCallback(core::Call& caller);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getExtentCallback(core::Call& caller);
 
-    private:
+    /**
+     * Ensures that the data file is loaded into memory, if possible
+     */
+    void assertData(void);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
+    /**
+     * Adds a spline from input positions to the stored curves
+     *
+     * @param pos The input positions (x, y, z)
+     * @param times The input time steps (t1, t2)
+     * @param cnt The number of input positions
+     * @param rad The base radius value
+     * @param colR The red colour component of the input points
+     * @param colG The green colour component of the input points
+     * @param colB The blue colour component of the input points
+     */
+    void addSpline(float* pos, float* times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG,
+        unsigned char colB);
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+    /**
+     * Answer the colour value for a specific time from the time colour map
+     *
+     * @param time The time to return the colour for
+     * @param outR The variable to receive the red colour value
+     * @param outG The variable to recieve the green colour value
+     * @param outB The variable to recieve the blue colour value
+     */
+    void timeColour(float time, unsigned char& outR, unsigned char& outG, unsigned char& outB);
 
-        /**
-         * Ensures that the data file is loaded into memory, if possible
-         */
-        void assertData(void);
+    /** The slot for requesting data */
+    core::CalleeSlot getDataSlot;
 
-        /**
-         * Adds a spline from input positions to the stored curves
-         *
-         * @param pos The input positions (x, y, z)
-         * @param times The input time steps (t1, t2)
-         * @param cnt The number of input positions
-         * @param rad The base radius value
-         * @param colR The red colour component of the input points
-         * @param colG The green colour component of the input points
-         * @param colB The blue colour component of the input points
-         */
-        void addSpline(float *pos, float *times, unsigned int cnt, float rad, unsigned char colR, unsigned char colG, unsigned char colB);
+    /** The slot for fetching siff data */
+    core::CallerSlot inDataSlot;
 
-        /**
-         * Answer the colour value for a specific time from the time colour map
-         *
-         * @param time The time to return the colour for
-         * @param outR The variable to receive the red colour value
-         * @param outG The variable to recieve the green colour value
-         * @param outB The variable to recieve the blue colour value
-         */
-        void timeColour(float time, unsigned char &outR, unsigned char &outG, unsigned char &outB);
+    /** Parameter slot defining the colour map */
+    core::param::ParamSlot colourMapSlot;
 
-        /** The slot for requesting data */
-        core::CalleeSlot getDataSlot;
+    /** Parameter slot to compensate cyclic boundary conditions */
+    core::param::ParamSlot deCycleSlot;
 
-        /** The slot for fetching siff data */
-        core::CallerSlot inDataSlot;
+    /** The bounding box of positions*/
+    vislib::math::Cuboid<float> bbox;
 
-        /** Parameter slot defining the colour map */
-        core::param::ParamSlot colourMapSlot;
+    /** The clipping box of positions */
+    vislib::math::Cuboid<float> cbox;
 
-        /** Parameter slot to compensate cyclic boundary conditions */
-        core::param::ParamSlot deCycleSlot;
+    /** The curves data */
+    vislib::Array<geocalls::BezierCurvesListDataCall::Curves> curves;
 
-        /** The bounding box of positions*/
-        vislib::math::Cuboid<float> bbox;
+    /** The hash value of the outgoing data */
+    SIZE_T datahash;
 
-        /** The clipping box of positions */
-        vislib::math::Cuboid<float> cbox;
+    /** The hash value of the incoming data */
+    SIZE_T inhash;
+};
 
-        /** The curves data */
-        vislib::Array<geocalls::BezierCurvesListDataCall::Curves> curves;
-
-        /** The hash value of the outgoing data */
-        SIZE_T datahash;
-
-        /** The hash value of the incoming data */
-        SIZE_T inhash;
-
-    };
-
-} /* end namespace megamol */
-
+} // namespace megamol::datatools

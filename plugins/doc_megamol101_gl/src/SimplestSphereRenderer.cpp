@@ -68,8 +68,8 @@ bool SimplestSphereRenderer::create() {
     auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        simpleShader = core::utility::make_glowl_shader(
-            "simplePoints", shader_options, "megamol101_gl/simple_points.vert.glsl", "megamol101_gl/simple_points.frag.glsl");
+        simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,
+            "megamol101_gl/simple_points.vert.glsl", "megamol101_gl/simple_points.frag.glsl");
         sphereShader =
             core::utility::make_glowl_shader("prettyPoints", shader_options, "megamol101_gl/pretty_points.vert.glsl",
                 "megamol101_gl/pretty_points.geom.glsl", "megamol101_gl/pretty_points.frag.glsl");
@@ -169,7 +169,7 @@ bool SimplestSphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 colVec.data()); // write colors to the gpu
         }
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*) (sizeof(float) * 4 * sphereCount));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)(sizeof(float) * 4 * sphereCount));
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);

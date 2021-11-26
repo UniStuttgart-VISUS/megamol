@@ -15,21 +15,27 @@ public:
      *
      * @return The name of this call.
      */
-    static const char* ClassName(void) { return "Image2DCall"; }
+    static const char* ClassName(void) {
+        return "Image2DCall";
+    }
 
     /**
      * Answer a human readable description of this call.
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) { return "Call to transport 2D image data"; }
+    static const char* Description(void) {
+        return "Call to transport 2D image data";
+    }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 1; }
+    static unsigned int FunctionCount(void) {
+        return 1;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -54,20 +60,31 @@ public:
 
     virtual ~Image2DCall() = default;
 
-    void* GetData() const { return this->data_; }
+    void* GetData() const {
+        return this->data_;
+    }
 
-    Encoding GetEncoding() const { return this->enc_; }
+    Encoding GetEncoding() const {
+        return this->enc_;
+    }
 
-    Format GetFormat() const { return this->format_; }
+    Format GetFormat() const {
+        return this->format_;
+    }
 
-    size_t GetWidth() const { return this->width_; }
+    size_t GetWidth() const {
+        return this->width_;
+    }
 
-    size_t GetHeight() const { return this->height_; }
+    size_t GetHeight() const {
+        return this->height_;
+    }
 
-    size_t GetFilesize() const { return this->filesize_; }
+    size_t GetFilesize() const {
+        return this->filesize_;
+    }
 
-    void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize,
-        void* data) {
+    void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize, void* data) {
         this->enc_ = enc;
         this->format_ = format;
         this->width_ = width;

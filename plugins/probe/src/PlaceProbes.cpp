@@ -5,19 +5,19 @@
  */
 
 #include "PlaceProbes.h"
-#include <random>
 #include "ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
+#include <random>
 
 megamol::probe::PlaceProbes::PlaceProbes()
-    : Module()
-    , m_version(0)
-    , m_mesh_slot("getMesh", "")
-    , m_probe_slot("deployProbes", "")
-    , m_centerline_slot("getCenterLine", "")
-    , m_method_slot("method", "")
-    , m_probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area") {
+        : Module()
+        , m_version(0)
+        , m_mesh_slot("getMesh", "")
+        , m_probe_slot("deployProbes", "")
+        , m_centerline_slot("getCenterLine", "")
+        , m_method_slot("method", "")
+        , m_probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area") {
 
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
     this->m_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &PlaceProbes::getMetaData);
@@ -38,7 +38,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
     this->m_method_slot << ep;
     this->MakeSlotAvailable(&this->m_method_slot);
 
-    this->m_probes_per_unit_slot << new core::param::IntParam(1,0);
+    this->m_probes_per_unit_slot << new core::param::IntParam(1, 0);
 
     /* Feasibility test */
     m_probes = std::make_shared<ProbeCollection>();
@@ -52,9 +52,13 @@ megamol::probe::PlaceProbes::PlaceProbes()
     auto result = retrieved_probe.getSamplingResult();
 }
 
-megamol::probe::PlaceProbes::~PlaceProbes() { this->Release(); }
+megamol::probe::PlaceProbes::~PlaceProbes() {
+    this->Release();
+}
 
-bool megamol::probe::PlaceProbes::create() { return true; }
+bool megamol::probe::PlaceProbes::create() {
+    return true;
+}
 
 void megamol::probe::PlaceProbes::release() {}
 
@@ -64,10 +68,13 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     mesh::CallMesh* cm = this->m_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->m_centerline_slot.CallAs<mesh::CallMesh>();
 
-    if (cm == nullptr || ccl == nullptr) return false;
+    if (cm == nullptr || ccl == nullptr)
+        return false;
 
-    if (!(*cm)(0)) return false;
-    if (!(*ccl)(0)) return false;
+    if (!(*cm)(0))
+        return false;
+    if (!(*ccl)(0))
+        return false;
 
     bool something_changed = cm->hasUpdate() || ccl->hasUpdate();
 
@@ -83,12 +90,13 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     // here something really happens
     if (something_changed) {
         ++m_version;
-        
+
         if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
             m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
-            mesh_meta_data.m_bboxs.BoundingBox().Depth()};
+                mesh_meta_data.m_bboxs.BoundingBox().Depth()};
         } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
-            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
+            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(),
+                centerline_meta_data.m_bboxs.BoundingBox().Height(),
                 centerline_meta_data.m_bboxs.BoundingBox().Depth()};
         }
         const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
@@ -96,7 +104,7 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
         this->placeProbes(longest_edge_index);
     }
 
-    pc->setData(this->m_probes,m_version);
+    pc->setData(this->m_probes, m_version);
 
     pc->setMetaData(probe_meta_data);
     return true;
@@ -108,7 +116,8 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     mesh::CallMesh* cm = this->m_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->m_centerline_slot.CallAs<mesh::CallMesh>();
 
-    if (cm == nullptr || ccl == nullptr) return false;
+    if (cm == nullptr || ccl == nullptr)
+        return false;
 
     // set frame id before callback
     auto mesh_meta_data = cm->getMetaData();
@@ -121,15 +130,17 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     cm->setMetaData(mesh_meta_data);
     ccl->setMetaData(centerline_meta_data);
 
-    if (!(*cm)(1)) return false;
-    if (!(*ccl)(1)) return false;
-    
+    if (!(*cm)(1))
+        return false;
+    if (!(*ccl)(1))
+        return false;
+
     mesh_meta_data = cm->getMetaData();
     centerline_meta_data = ccl->getMetaData();
 
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
-    
+
     pc->setMetaData(probe_meta_data);
 
     return true;
@@ -155,7 +166,7 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
 
     uint32_t indx = 0;
     uint32_t error_index = 0;
-    while (indx != (num_probes - 1) && error_index < num_probes){//&& error_index < (num_triangles - indx)) {
+    while (indx != (num_probes - 1) && error_index < num_probes) { //&& error_index < (num_triangles - indx)) {
 
         uint32_t triangle = dist(rnd);
         std::array<float, 3> vert0;
@@ -180,9 +191,9 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
         float rnd3 = 1 - (rnd1 + rnd2);
 
         std::array<float, 3> triangle_middle;
-        triangle_middle[0] = (rnd1*vert0[0] + rnd2*vert1[0] + rnd3*vert2[0]) ;
-        triangle_middle[1] = (rnd1*vert0[1] + rnd2*vert1[1] + rnd3*vert2[1]) ;
-        triangle_middle[2] = (rnd1*vert0[2] + rnd2*vert1[2] + rnd3*vert2[2]) ;
+        triangle_middle[0] = (rnd1 * vert0[0] + rnd2 * vert1[0] + rnd3 * vert2[0]);
+        triangle_middle[1] = (rnd1 * vert0[1] + rnd2 * vert1[1] + rnd3 * vert2[1]);
+        triangle_middle[2] = (rnd1 * vert0[2] + rnd2 * vert1[2] + rnd3 * vert2[2]);
 
         bool do_placement = true;
         for (uint32_t j = 0; j < indx; j++) {
@@ -201,7 +212,8 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
         }
 
         if (do_placement) {
-            output.emplace_back(std::array<float,4>({triangle_middle[0], triangle_middle[1], triangle_middle[2], 1.0f}));
+            output.emplace_back(
+                std::array<float, 4>({triangle_middle[0], triangle_middle[1], triangle_middle[2], 1.0f}));
             indx++;
             error_index = 0;
         } else {
@@ -212,14 +224,7 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
 }
 
 void megamol::probe::PlaceProbes::forceDirectedSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {
-
-
-
-
-
-
-}
+    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {}
 
 
 void megamol::probe::PlaceProbes::vertexSampling(
@@ -241,10 +246,8 @@ void megamol::probe::PlaceProbes::vertexSampling(
     }
 }
 
-void megamol::probe::PlaceProbes::vertexNormalSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    mesh::MeshDataAccessCollection::VertexAttribute& normals)
-{
+void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+    mesh::MeshDataAccessCollection::VertexAttribute& normals) {
 
     uint32_t probe_count = vertices.byte_size / vertices.stride;
 
@@ -254,18 +257,14 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(
     auto normal_accessor = reinterpret_cast<float*>(normals.data);
     auto normal_step = normals.stride / sizeof(float);
 
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
 
         BaseProbe probe;
 
-        probe.m_position = {
-            vertex_accessor[vertex_step * i + 0],
-            vertex_accessor[vertex_step * i + 1],
+        probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
             vertex_accessor[vertex_step * i + 2]};
-        probe.m_direction = {
-            normal_accessor[normal_step * i + 0],
-            normal_accessor[normal_step * i + 1],
+        probe.m_direction = {normal_accessor[normal_step * i + 0], normal_accessor[normal_step * i + 1],
             normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0;
         probe.m_end = 50.0;
@@ -323,9 +322,7 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
         }
 
         this->vertexNormalSampling(vertices, normals);
-    }
-    else
-    {
+    } else {
         this->placeByCenterline(lei, probePositions, centerline);
     }
 
@@ -345,7 +342,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<st
 
     auto vertex_step = 4;
     auto centerline_step = centerline.stride / sizeof(centerline.component_type);
-    
+
     for (uint32_t i = 0; i < probe_count; i++) {
         BaseProbe probe;
 

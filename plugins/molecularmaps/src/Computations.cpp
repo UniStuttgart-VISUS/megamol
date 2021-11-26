@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "Computations.h"
+#include "stdafx.h"
 
 using namespace megamol::molecularmaps;
 using namespace megamol::protein_calls;

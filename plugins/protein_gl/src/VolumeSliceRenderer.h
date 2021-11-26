@@ -19,103 +19,103 @@
 
 namespace megamol {
 namespace protein_gl {
+/**
+ * Protein Renderer class
+ */
+class VolumeSliceRenderer : public core_gl::view::Renderer2DModuleGL {
+public:
     /**
-     * Protein Renderer class
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class VolumeSliceRenderer : public core_gl::view::Renderer2DModuleGL {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char* ClassName(void) {
-            return "VolumeSliceRenderer";
-        }
+    static const char* ClassName(void) {
+        return "VolumeSliceRenderer";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char* Description(void) {
-            return "Offers volume slice renderings.";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Offers volume slice renderings.";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /** ctor */
-        VolumeSliceRenderer(void);
+    /** ctor */
+    VolumeSliceRenderer(void);
 
-        /** dtor */
-        ~VolumeSliceRenderer(void);
+    /** dtor */
+    ~VolumeSliceRenderer(void);
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Callback for mouse events (move, press, and release)
-         *
-         * @param x The x coordinate of the mouse in world space
-         * @param y The y coordinate of the mouse in world space
-         * @param flags The mouse flags
-         */
-        virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+    /**
+     * Callback for mouse events (move, press, and release)
+     *
+     * @param x The x coordinate of the mouse in world space
+     * @param y The y coordinate of the mouse in world space
+     * @param flags The mouse flags
+     */
+    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
-    private:
-        /**********************************************************************
-         * 'render'-functions
-         **********************************************************************/
+private:
+    /**********************************************************************
+     * 'render'-functions
+     **********************************************************************/
 
-        /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
 
-        /**
-         * The Open GL Render callback.
-         *
-         * @param call The calling call.
-         * @return The return value of the function.
-         */
-        virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    /**
+     * The Open GL Render callback.
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
+    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
 
-        /**********************************************************************
-         * variables
-         **********************************************************************/
+    /**********************************************************************
+     * variables
+     **********************************************************************/
 
-        /** caller slot */
-        core::CallerSlot volDataCallerSlot;
+    /** caller slot */
+    core::CallerSlot volDataCallerSlot;
 
-        // shader for volume slice rendering
-        vislib_gl::graphics::gl::GLSLShader volumeSliceShader;
+    // shader for volume slice rendering
+    vislib_gl::graphics::gl::GLSLShader volumeSliceShader;
 
-        // the mouse position
-        vislib::math::Vector<float, 3> mousePos;
-    };
+    // the mouse position
+    vislib::math::Vector<float, 3> mousePos;
+};
 
 } // namespace protein_gl
 } // namespace megamol

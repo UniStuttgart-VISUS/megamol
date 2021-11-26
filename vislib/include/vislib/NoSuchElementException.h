@@ -1,7 +1,7 @@
 /*
  * NoSuchElementException.h
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -21,49 +21,45 @@
 namespace vislib {
 
 
+/**
+ * This exception should be used to indicated that a non-existing
+ * element was requested from some kind of collection.
+ */
+class NoSuchElementException : public Exception {
+
+public:
     /**
-     * This exception should be used to indicated that a non-existing 
-     * element was requested from some kind of collection.
+     * Ctor.
+     *
+     * @param msg  A human readable message.
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
      */
-    class NoSuchElementException : public Exception {
+    NoSuchElementException(const char* msg, const char* file, const int line);
 
-    public:
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    NoSuchElementException(const NoSuchElementException& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param msg  A human readable message.
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        NoSuchElementException(const char *msg, const char *file, 
-            const int line);
+    /** Dtor. */
+    ~NoSuchElementException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        NoSuchElementException(const NoSuchElementException& rhs);
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    NoSuchElementException& operator=(const NoSuchElementException& rhs);
+};
 
-        /** Dtor. */
-        ~NoSuchElementException(void);
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        NoSuchElementException& operator =(const NoSuchElementException& rhs);
-
-    };
-    
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_NOSUCHELEMENTEXCEPTION_H_INCLUDED */
-

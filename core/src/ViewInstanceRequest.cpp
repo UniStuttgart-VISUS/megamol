@@ -5,15 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/ViewInstanceRequest.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::ViewInstanceRequest::ViewInstanceRequest
  */
-megamol::core::ViewInstanceRequest::ViewInstanceRequest(void)
-        : InstanceRequest(), desc(NULL) {
+megamol::core::ViewInstanceRequest::ViewInstanceRequest(void) : InstanceRequest(), desc(NULL) {
     // intentionally empty
 }
 
@@ -21,9 +20,9 @@ megamol::core::ViewInstanceRequest::ViewInstanceRequest(void)
 /*
  * megamol::core::ViewInstanceRequest::ViewInstanceRequest
  */
-megamol::core::ViewInstanceRequest::ViewInstanceRequest(
-        const megamol::core::ViewInstanceRequest& src) : InstanceRequest(),
-        desc(NULL) {
+megamol::core::ViewInstanceRequest::ViewInstanceRequest(const megamol::core::ViewInstanceRequest& src)
+        : InstanceRequest()
+        , desc(NULL) {
     *this = src;
 }
 
@@ -39,10 +38,10 @@ megamol::core::ViewInstanceRequest::~ViewInstanceRequest(void) {
 /*
  * megamol::core::ViewInstanceRequest::operator=
  */
-megamol::core::ViewInstanceRequest&
-megamol::core::ViewInstanceRequest::operator=(
-        const megamol::core::ViewInstanceRequest& rhs) {
-    if (&rhs == this) return *this;
+megamol::core::ViewInstanceRequest& megamol::core::ViewInstanceRequest::operator=(
+    const megamol::core::ViewInstanceRequest& rhs) {
+    if (&rhs == this)
+        return *this;
     ParamValueSetRequest::operator=(rhs);
     this->SetName(rhs.Name());
     this->desc = rhs.desc;
@@ -53,9 +52,6 @@ megamol::core::ViewInstanceRequest::operator=(
 /*
  * megamol::core::ViewInstanceRequest::operator==
  */
-bool megamol::core::ViewInstanceRequest::operator==(
-        const megamol::core::ViewInstanceRequest& rhs) const {
-    return ParamValueSetRequest::operator ==(rhs)
-        && (this->Name() == rhs.Name())
-        && (this->desc == rhs.desc);
+bool megamol::core::ViewInstanceRequest::operator==(const megamol::core::ViewInstanceRequest& rhs) const {
+    return ParamValueSetRequest::operator==(rhs) && (this->Name() == rhs.Name()) && (this->desc == rhs.desc);
 }

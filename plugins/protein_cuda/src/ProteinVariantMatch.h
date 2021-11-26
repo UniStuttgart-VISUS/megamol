@@ -13,27 +13,26 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "vislib/Array.h"
 #include "HostArr.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
 typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Vector<float, 3> Vec3f;
 
 
 #include "CUDAQuickSurf.h"
-#include "gridParams.h"
-#include "cuda_error_check.h"
 #include "CudaDevArr.h"
 #include "DeformableGPUSurfaceMT.h"
+#include "cuda_error_check.h"
+#include "gridParams.h"
 
 typedef unsigned int uint;
 
@@ -44,12 +43,11 @@ namespace protein_cuda {
 class ProteinVariantMatch : public core::Module {
 
 public:
-
     /// Enum defining the differend heuristics
-    enum Heuristic {RMS_VALUE=0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_VERTEX_PATH, HAUSDORFF_DIST};
+    enum Heuristic { RMS_VALUE = 0, SURFACE_POTENTIAL, SURFACE_POTENTIAL_SIGN, MEAN_VERTEX_PATH, HAUSDORFF_DIST };
 
     /// Enum describing different ways of using RMS fitting
-    enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};
+    enum RMSFittingMode { RMS_NONE = 0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA };
 
     /** CTor */
     ProteinVariantMatch(void);
@@ -62,7 +60,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "ProteinVariantMatch";
     }
 
@@ -71,7 +69,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Matches a series of protein variants against each other based on different heuristics.";
     }
 
@@ -85,7 +83,6 @@ public:
     }
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -128,14 +125,12 @@ protected:
      * @param surf  The surface object
      * @return 'True' on success, 'false' otherwise
      */
-//    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
+    //    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
 
     /** TODO */
-    void computeDensityBBox(const float *atomPos1, const float *atomPos2,
-            size_t atomCnt1, size_t atomCnt2);
+    void computeDensityBBox(const float* atomPos1, const float* atomPos2, size_t atomCnt1, size_t atomCnt2);
 
 private:
-
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
      * positions using a CUDA implementation.
@@ -148,9 +143,7 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDensityMap( //TODO
-            float* atomPos,
-            size_t atomCnt,
-            CUDAQuickSurf *cqs);
+        float* atomPos, size_t atomCnt, CUDAQuickSurf* cqs);
 
     /**
      * Computes the result of the chosen heuristic when comparing every variant
@@ -189,8 +182,8 @@ private:
      *
      * @return The RMS value of the two variants
      */
-    float getRMS(float *atomPos0, float *atomPos1, unsigned int cnt, bool fit,
-            int flag, float rotation[3][3], float translation[3]);
+    float getRMS(float* atomPos0, float* atomPos1, unsigned int cnt, bool fit, int flag, float rotation[3][3],
+        float translation[3]);
 
     /**
      * Extracts all atom positions from a moleculr data call, that are used to
@@ -203,14 +196,13 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool getRMSPosArray(megamol::protein_calls::MolecularDataCall *mol, HostArr<float> &posArr,
-            unsigned int &cnt);
+    bool getRMSPosArray(megamol::protein_calls::MolecularDataCall* mol, HostArr<float>& posArr, unsigned int& cnt);
 
 
     /**
      * TODO
      */
-    void getAtomPosArray(megamol::protein_calls::MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
+    void getAtomPosArray(megamol::protein_calls::MolecularDataCall* mol, HostArr<float>& posArr, size_t& particleCnt);
 
     /**
      * Update parameters slots.
@@ -258,19 +250,19 @@ private:
     /* Hardcoded parameters for the 'quicksurf' class */
 
     /// Parameter for assumed radius of density grid data
-//    static const float qsParticleRad;
+    //    static const float qsParticleRad;
 
     /// Parameter for the cutoff radius for the gaussian kernel
     static const float qsGaussLim;
 
     /// Parameter for assumed radius of density grid data
-//    static const float qsGridSpacing;
+    //    static const float qsGridSpacing;
 
     /// Parameter to toggle scaling by van der Waals radius
     static const bool qsSclVanDerWaals;
 
     /// Parameter for iso value for volume rendering
-//    static const float qsIsoVal;
+    //    static const float qsIsoVal;
 
     /* Parameter slots for surface mapping */
 
@@ -400,20 +392,20 @@ private:
     /* Diagram data */
 
     /// Diagram series that contains data series for DiagramCall
-	vislib::PtrArray<protein_calls::DiagramCall::DiagramSeries> featureList;
+    vislib::PtrArray<protein_calls::DiagramCall::DiagramSeries> featureList;
 
 
     /* RMS fitting */
 
-    HostArr<float> rmsPosVec0;  ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec1;  ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;  ///> Particle weights
-    HostArr<int> rmsMask;       ///> Mask for particles
+    HostArr<float> rmsPosVec0; ///> Position vector #0 for rms fitting
+    HostArr<float> rmsPosVec1; ///> Position vector #1 for rms fitting
+    HostArr<float> rmsWeights; ///> Particle weights
+    HostArr<int> rmsMask;      ///> Mask for particles
 
     /* Volume generation */
 
-    void *cudaqsurf0, *cudaqsurf1;   ///> Pointer to CUDAQuickSurf objects
-    HostArr<float> gridDataPos;      ///> Data array for intermediate calculations
+    void *cudaqsurf0, *cudaqsurf1; ///> Pointer to CUDAQuickSurf objects
+    HostArr<float> gridDataPos;    ///> Data array for intermediate calculations
 
     /// Dimensions of the density volumes
     int3 volDim;
@@ -457,14 +449,14 @@ private:
     CudaDevArr<float> potentialTex1_D;
 
 
-    Mat3f rmsRotation;          ///> Rotation matrix for the fitting
-    Vec3f rmsTranslation;       ///> Translation vector for the fitting
+    Mat3f rmsRotation;    ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation; ///> Translation vector for the fitting
     HostArr<float> atomPosFitted;
     HostArr<float> atomPos0;
 
-//    DeformableGPUSurfaceMT surfStart;
-//    DeformableGPUSurfaceMT surfEnd;
-//    DeformableGPUSurfaceMT surfTarget;
+    //    DeformableGPUSurfaceMT surfStart;
+    //    DeformableGPUSurfaceMT surfEnd;
+    //    DeformableGPUSurfaceMT surfTarget;
 
     /// The bounding boxes for particle data
     Cubef bboxParticles;
@@ -475,7 +467,6 @@ private:
     HostArr<float> atomPosTmp;
 
     vislib::Array<vislib::StringA> labels;
-
 };
 
 } // end namespace protein_cuda

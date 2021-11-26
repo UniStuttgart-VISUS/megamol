@@ -14,14 +14,14 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/CallerSlot.h"
-#include "CudaDevArr.h"
-#include "mmcore/view/CallRender3D.h"
-#include "protein_calls/VTIDataCall.h"
-#include "VBODataCall.h"
-#include "mmcore/param/ParamSlot.h"
 #include "CUDAStreamlines.h"
+#include "CudaDevArr.h"
+#include "VBODataCall.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "protein_calls/VTIDataCall.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -34,8 +34,7 @@ namespace protein_cuda {
 class StreamlineRenderer : public core::view::Renderer3DModuleDS {
 
 public:
-
-    enum RenderModes {NONE=0, LINES, ILLUMINATED_LINES, TUBES};
+    enum RenderModes { NONE = 0, LINES, ILLUMINATED_LINES, TUBES };
 
     /** CTor */
     StreamlineRenderer(void);
@@ -48,7 +47,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "StreamlineRenderer";
     }
 
@@ -57,7 +56,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Renders streamlines based on a given array of seepoints.";
     }
 
@@ -71,8 +70,7 @@ public:
     }
 
 protected:
-
-    enum StreamlineShading {UNIFORM=0, TEXTURE};
+    enum StreamlineShading { UNIFORM = 0, TEXTURE };
 
     /**
      * Implementation of 'Create'.
@@ -115,7 +113,6 @@ protected:
     bool requestPlane(core::Call& call);
 
 private:
-
     /**
      * Fills up the seed point array based on given clipping plane z values
      * and matching isovalues.
@@ -124,7 +121,7 @@ private:
      * @param zClip   The clipping plane z values
      * @param isoval  The iso values
      */
-	void genSeedPoints(protein_calls::VTIDataCall *vti, float zClip, float isoval);
+    void genSeedPoints(protein_calls::VTIDataCall* vti, float zClip, float isoval);
 
     /**
      * Samples the field at a given position using linear interpolation.
@@ -133,7 +130,7 @@ private:
      * @param pos The position
      * @return The sampled value of the field
      */
-	float sampleFieldAtPosTrilin(protein_calls::VTIDataCall *vtiCall, float3 pos, float *field_D);
+    float sampleFieldAtPosTrilin(protein_calls::VTIDataCall* vtiCall, float3 pos, float* field_D);
 
     /**
      * Update all parameters and set boolean flags accordingly.

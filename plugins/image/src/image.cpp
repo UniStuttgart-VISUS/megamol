@@ -10,22 +10,22 @@
 #include "imageviewer2/ImageRenderer.h"
 
 namespace megamol::imageviewer2 {
-    class Imaggeviewer2PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(Imaggeviewer2PluginInstance)
+class Imaggeviewer2PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(Imaggeviewer2PluginInstance)
 
-    public:
-        Imaggeviewer2PluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance("imageviewer2", "The imageviewer2 plugin."){};
+public:
+    Imaggeviewer2PluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("imageviewer2", "The imageviewer2 plugin."){};
 
-        ~Imaggeviewer2PluginInstance() override = default;
+    ~Imaggeviewer2PluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageRenderer>();
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageRenderer>();
 
-            // register calls
-        }
-    };
+        // register calls
+    }
+};
 } // namespace megamol::imageviewer2

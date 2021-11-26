@@ -12,7 +12,8 @@
 #include "mesh_gl/MeshCalls_gl.h"
 
 megamol::mesh_gl::MeshViewerRenderTasks::MeshViewerRenderTasks()
-        : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {
+        : m_version(0)
+        , m_material_slot("gpuMaterials", "Connects to a material data source") {
     this->m_material_slot.SetCompatibleCall<CallGPUMaterialDataDescription>();
     this->MakeSlotAvailable(&this->m_material_slot);
 }

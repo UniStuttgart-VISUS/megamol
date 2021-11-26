@@ -5,7 +5,6 @@
  */
 #pragma once
 
-#include <cstdlib>
 #include "concave_hull.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -14,6 +13,7 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "poisson.h"
+#include <cstdlib>
 
 namespace megamol {
 namespace probe {
@@ -25,21 +25,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SurfaceNets"; }
+    static const char* ClassName(void) {
+        return "SurfaceNets";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Extracts a surface mesh from volume data."; }
+    static const char* Description(void) {
+        return "Extracts a surface mesh from volume data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     SurfaceNets(void);

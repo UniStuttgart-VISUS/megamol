@@ -46,10 +46,10 @@ if(ENABLE_CUDA)
 endif()
 
 if (ENABLE_GL)
-option(ENABLE_PROFILING "Enable profiling code" OFF)
-if (ENABLE_PROFILING)
-  add_compile_definitions(PROFILING)
-endif()
+  option(ENABLE_PROFILING "Enable profiling code" OFF)
+  if (ENABLE_PROFILING)
+    add_compile_definitions(PROFILING)
+  endif()
 endif()
 
 # CUE

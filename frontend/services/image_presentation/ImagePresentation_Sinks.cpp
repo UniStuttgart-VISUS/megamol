@@ -8,7 +8,7 @@
 #include "ImagePresentation_Sinks.hpp"
 #include <glowl/GLSLProgram.hpp>
 
-#include "glad/glad.h"
+#include "glad/gl.h"
 //#include <iostream>
 #include "mmcore/utility/log/Log.h"
 
@@ -39,7 +39,8 @@ void glfw_window_blit::set_framebuffer_size(unsigned int width, unsigned int hei
     fbo_height = height;
 }
 
-void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height) {
+void glfw_window_blit::blit_texture(
+    unsigned int gl_texture_handle, unsigned int texture_width, unsigned int texture_height) {
     // credit goes to: https://stackoverflow.com/questions/31482816/opengl-is-there-an-easier-way-to-fill-window-with-a-texture-instead-using-vbo
 
     // Supports no blending:
@@ -51,10 +52,10 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
     //    std::exit(1);
     //}
     glBlitNamedFramebuffer(gl_fbo_handle , 0, // from, to
-        0, 0, texture_width, texture_height, // src: x0, y0, x1, y1, 
-        0, 0, fbo_width, fbo_height, // dst: x0, y0, x1, y1, 
-        GL_COLOR_BUFFER_BIT, // mask: GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_STENCIL_BUFFER_BIT 
-        GL_LINEAR // filter: GL_NEAREST, GL_LINEAR 
+        0, 0, texture_width, texture_height, // src: x0, y0, x1, y1,
+        0, 0, fbo_width, fbo_height, // dst: x0, y0, x1, y1,
+        GL_COLOR_BUFFER_BIT, // mask: GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_STENCIL_BUFFER_BIT
+        GL_LINEAR // filter: GL_NEAREST, GL_LINEAR
         );
     */
     /**/
@@ -121,4 +122,3 @@ void glfw_window_blit::blit_texture(unsigned int gl_texture_handle, unsigned int
     glBindTexture(GL_TEXTURE_2D, 0);
     /**/
 }
-

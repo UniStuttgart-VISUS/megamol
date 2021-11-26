@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ImageWrapper.h"
+#include "EntryPoint.h"
 #include "FrontendResource.h"
 
 #include <functional>
@@ -15,22 +15,13 @@
 namespace megamol {
 namespace frontend_resources {
 
-using EntryPointExecutionCallback =
-    std::function<bool(
-          void*
-        , std::vector<megamol::frontend::FrontendResource> const&
-        , ImageWrapper&
-        )>;
-
-using EntryPointRenderFunctions =
-    std::tuple<
-        // ptr to entry point object
-        void*,
-        // rendering execution function
-        EntryPointExecutionCallback,
-        // get requested resources function
-        std::function<std::vector<std::string>()>
-    >;
+using EntryPointRenderFunctions = std::tuple<
+    // ptr to entry point object
+    void*,
+    // rendering execution function
+    EntryPointExecutionCallback,
+    // get requested resources function
+    std::function<std::vector<std::string>()>>;
 
 struct ImagePresentationEntryPoints {
     std::function<bool(std::string, EntryPointRenderFunctions const&)> add_entry_point;

@@ -1,12 +1,13 @@
-#include "stdafx.h"
 #include "IColToIdentity.h"
+#include "stdafx.h"
 
 
-megamol::datatools::IColToIdentity::IColToIdentity(void)
-    : AbstractParticleManipulator("outData", "indata") {}
+megamol::datatools::IColToIdentity::IColToIdentity(void) : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::datatools::IColToIdentity::~IColToIdentity(void) { this->Release(); };
+megamol::datatools::IColToIdentity::~IColToIdentity(void) {
+    this->Release();
+};
 
 
 bool megamol::datatools::IColToIdentity::manipulateData(
@@ -24,7 +25,8 @@ bool megamol::datatools::IColToIdentity::manipulateData(
 
         if (p.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
             p.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("IColToIdentity: Particlelist %d has no intensity\n", i);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "IColToIdentity: Particlelist %d has no intensity\n", i);
             continue;
         }
 

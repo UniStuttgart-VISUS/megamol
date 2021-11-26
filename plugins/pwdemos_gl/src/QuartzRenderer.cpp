@@ -5,20 +5,21 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "QuartzRenderer.h"
-#include <cfloat>
+#include "OpenGL_Context.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/light/PointLight.h"
+#include "stdafx.h"
+#include "vislib/graphics/graphicsfunctions.h"
+#include "vislib/memutils.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
-#include "vislib/graphics/graphicsfunctions.h"
-#include "vislib/memutils.h"
-#include "mmcore/utility/log/Log.h"
+#include <cfloat>
 #include <glm/ext.hpp>
 
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
@@ -30,9 +31,9 @@ namespace demos_gl {
  * QuartzRenderer::QuartzRenderer
  */
 QuartzRenderer::QuartzRenderer(void)
-    : core_gl::view::Renderer3DModuleGL()
-    , AbstractMultiShaderQuartzRenderer()
-    , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
+        : core_gl::view::Renderer3DModuleGL()
+        , AbstractMultiShaderQuartzRenderer()
+        , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
 
     this->showClipAxesSlot << new core::param::BoolParam(true);
 
@@ -84,9 +85,11 @@ bool QuartzRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
  */
 bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
-    if (pgdc == NULL) return false;
+    if (pgdc == NULL)
+        return false;
     CrystalDataCall* tdc = this->getCrystaliteData();
-    if (tdc == NULL) return false;
+    if (tdc == NULL)
+        return false;
     this->assertGrainColour();
     core::view::CallClipPlane* ccp = this->getClipPlaneData();
 
@@ -101,8 +104,10 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // Generate complete snapshot and calculate matrices
     glm::vec4 viewport = glm::vec4(0, 0, fbo->getWidth(), fbo->getHeight());
-    if (viewport.z < 1.0f) viewport.z = 1.0f;
-    if (viewport.w < 1.0f) viewport.w = 1.0f;
+    if (viewport.z < 1.0f)
+        viewport.z = 1.0f;
+    if (viewport.w < 1.0f)
+        viewport.w = 1.0f;
     float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);
     viewport = glm::vec4(0, 0, 2.f / viewport.z, 2.f / viewport.w);
 
@@ -252,7 +257,8 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
                                vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                         hasPos = true;
                     }
-                    if (!hasPos) continue;
+                    if (!hasPos)
+                        continue;
                 }
 
                 //::glColor3ub(255, 127, 0);
@@ -268,8 +274,7 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
                         unsigned int t = list.Type() % this->cntShaders;
                         try {
                             shader = this->shaders[t] = this->makeShader(tdc->GetCrystals()[t]);
-                        } catch (...) {
-                        }
+                        } catch (...) {}
                         shaderInitCnt--;
                     }
 
@@ -366,18 +371,30 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
         vislib::Array<vislib::math::Point<float, 3>> poly;
         bbox.Grow(bbox.LongestEdge() * 0.001f);
 
-        if (px.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (py.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (py.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (ny.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (ny.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
+        if (px.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (py.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (py.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (ny.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (ny.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
 
         if (poly.Count() > 0) {
             vislib::graphics::FlatPolygonSort(poly);
@@ -400,7 +417,8 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 float l = FLT_MAX;
                 for (SIZE_T i = 0; i < poly.Count(); i++) {
                     float d = (p - poly[i]).Length();
-                    if (d < l) l = d;
+                    if (d < l)
+                        l = d;
                 }
 
                 vislib::math::Vector<float, 3> cx, cy;
@@ -421,7 +439,8 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
     }
 
-    if (tdc) tdc->Unlock();
+    if (tdc)
+        tdc->Unlock();
     pgdc->Unlock();
 
     return true;
@@ -432,14 +451,13 @@ bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
  * QuartzRenderer::create
  */
 bool QuartzRenderer::create(void) {
+    using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::GLSLShader;
     using vislib_gl::graphics::gl::ShaderSource;
-    using megamol::core::utility::log::Log;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
-    }
 
     ShaderSource vert, frag;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
@@ -508,9 +526,9 @@ void QuartzRenderer::release(void) {
  * QuartzRenderer::makeShader
  */
 vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
+    using megamol::core::utility::log::Log;
     using vislib_gl::graphics::gl::GLSLShader;
     using vislib_gl::graphics::gl::ShaderSource;
-    using megamol::core::utility::log::Log;
 
     GLSLShader* s = new GLSLShader();
 
@@ -580,5 +598,5 @@ vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDat
     return s;
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

@@ -45,7 +45,9 @@ megamol::core::utility::log::StreamTarget::~StreamTarget(void) {
 /*
  * megamol::core::utility::log::StreamTarget::Flush
  */
-void megamol::core::utility::log::StreamTarget::Flush(void) { logger->flush(); }
+void megamol::core::utility::log::StreamTarget::Flush(void) {
+    logger->flush();
+}
 
 
 /*
@@ -62,6 +64,7 @@ void megamol::core::utility::log::StreamTarget::Msg(Log::UINT level, megamol::co
  */
 void megamol::core::utility::log::StreamTarget::Msg(Log::UINT level, megamol::core::utility::log::Log::TimeStamp time,
     megamol::core::utility::log::Log::SourceID sid, std::string const& msg) {
-    if ((level > this->Level())) return;
+    if ((level > this->Level()))
+        return;
     logger->info("{}|{}", level, msg);
 }

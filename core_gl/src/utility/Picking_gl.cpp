@@ -16,7 +16,7 @@ using namespace megamol::core_gl::utility;
 #define PICKING_INTERACTION_TUPLE_INIT \
     { false, -1, FLT_MAX }
 
-#define PICKING_GL_CHECK_ERROR                                                                        \
+#define PICKING_GL_CHECK_ERROR                                                                    \
     {                                                                                             \
         auto err = glGetError();                                                                  \
         if (err != 0)                                                                             \
@@ -77,7 +77,7 @@ bool PickingBuffer::ProcessMouseMove(double x, double y) {
                 float scale = glm::dot(axis_norm, mouse_move);
 
                 this->pending_manipulations.emplace_back(Manipulation{InteractionType::MOVE_ALONG_AXIS_SCREEN,
-                                                                      active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
+                    active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
 
             } else if (interaction.type == InteractionType::MOVE_ALONG_AXIS_3D) {
                 /* FIXME
@@ -131,7 +131,7 @@ bool PickingBuffer::ProcessMouseMove(double x, double y) {
 
 
 bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
-                                                              megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+    megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     // Enable/Disable cursor interaction
     if ((button == megamol::core::view::MouseButton::BUTTON_LEFT) &&
@@ -143,7 +143,7 @@ bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
             this->active_interaction_obj = this->cursor_on_interaction_obj;
             auto active_id = std::get<1>(this->active_interaction_obj);
             this->pending_manipulations.emplace_back(
-                    Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+                Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
 
             // Consume when interaction is started
             return true;
@@ -153,7 +153,7 @@ bool PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
 
         auto active_id = std::get<1>(this->active_interaction_obj);
         this->pending_manipulations.emplace_back(
-                Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+            Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
         this->active_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
     }
 
@@ -165,7 +165,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
     if (this->enabled) {
         Log::DefaultLog.WriteError(
-                "[GL Picking Buffer] Disable interaction before enabling again. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
+            "[GL Picking Buffer] Disable interaction before enabling again. [%s, %s, line %d]\n ", __FILE__,
+            __FUNCTION__, __LINE__);
         return true;
     }
 
@@ -182,11 +183,11 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     if (this->fbo == nullptr) {
         try {
             this->fbo = std::make_unique<glowl::FramebufferObject>(
-                    this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+                this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
         } catch (glowl::FramebufferObjectException& e) {
             Log::DefaultLog.WriteError(
-                    "[GL Picking Buffer] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
-                    __FUNCTION__, __LINE__);
+                "[GL Picking Buffer] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(),
+                __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
@@ -265,7 +266,7 @@ bool PickingBuffer::DisableInteraction() {
     // Get object id and depth at cursor location from framebuffer's second color attachment
     /// TODO Check if cursor position is within framebuffer pixel range -> ensured by GLFW?
     glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1,
-                 GL_RG, GL_FLOAT, pixel_data);
+        GL_RG, GL_FLOAT, pixel_data);
     PICKING_GL_CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

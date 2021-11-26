@@ -7,15 +7,15 @@
 
 #include "stdafx.h"
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "protein/Color.h"
+#include "vislib/math/ShallowVector.h"
 #include <array>
 #include <iostream>
 #include <omp.h>
 #include <string>
-#include "protein/Color.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "vislib/math/ShallowVector.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1105,8 +1105,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID &&
                 mol2->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol2->Residues()[cntRes]);
+                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }

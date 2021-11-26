@@ -9,9 +9,9 @@
 #include "glm/gtx/transform.hpp"
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
-    : m_version(0)
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probe_manipulation_slot("GetProbeManipulation", "") {
+        : m_version(0)
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_probe_manipulation_slot("GetProbeManipulation", "") {
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
@@ -24,33 +24,43 @@ megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}
 bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false; // TODO only call callback when hash is outdated?
+    if (mc == NULL)
+        return false;
+    if (!(*mc)(0))
+        return false; // TODO only call callback when hash is outdated?
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL) return false;
-    if (!(*pc)(0)) return false;
+    if (pc == NULL)
+        return false;
+    if (!(*pc)(0))
+        return false;
 
     // something has changed in the neath
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || pc->hasUpdate();
 
     // no incoming render task collection -> use your own collection
     std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    if (lhs_rtc->getData() == nullptr) rt_collection = this->m_gpu_render_tasks;
-    else rt_collection = lhs_rtc->getData();
+    if (lhs_rtc->getData() == nullptr)
+        rt_collection = this->m_gpu_render_tasks;
+    else
+        rt_collection = lhs_rtc->getData();
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
-        if (!(*rhs_rtc)(0)) return false;
+        rhs_rtc->setData(rt_collection, 0);
+        if (!(*rhs_rtc)(0))
+            return false;
     }
 
     struct PerObjData {
@@ -130,10 +140,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, end - begin));
 
-                auto probe_start_point = glm::vec3(
-                    position[0] + direction[0] * begin,
-                    position[1] + direction[1] * begin,
-                    position[2] + direction[2] * begin);
+                auto probe_start_point = glm::vec3(position[0] + direction[0] * begin,
+                    position[1] + direction[1] * begin, position[2] + direction[2] * begin);
                 auto translation = glm::translate(glm::mat4(), probe_start_point);
                 m_probe_draw_data[probe_idx].object_transform =
                     translation * m_probe_draw_data[probe_idx].object_transform * scaling;
@@ -154,22 +162,22 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     // check for pending probe manipulations
     CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
     if (pic != NULL) {
-        if (!(*pic)(0)) return false;
+        if (!(*pic)(0))
+            return false;
 
         if (pic->hasUpdate()) {
             auto interaction_collection = pic->getData();
 
             auto& pending_manips = interaction_collection->accessPendingManipulations();
 
-            if (pc->hasUpdate())
-            {
-                if (!(*pc)(0)) return false;
+            if (pc->hasUpdate()) {
+                if (!(*pc)(0))
+                    return false;
             }
             auto probes = pc->getData();
 
             for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
-                if (itr->type == HIGHLIGHT) 
-                {
+                if (itr->type == HIGHLIGHT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
                     //itr = pending_manips.erase(itr);
@@ -178,19 +186,15 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                     per_probe_data[0].highlighted = 1;
 
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                }
-                else if (itr->type == DEHIGHLIGHT)
-                {
+                } else if (itr->type == DEHIGHLIGHT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
                     //itr = pending_manips.erase(itr);
 
-                    std::array<PerProbeDrawData,1> per_probe_data = { m_probe_draw_data[manipulation.obj_id] };
+                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
 
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                } 
-                else if (itr->type == SELECT) 
-                {
+                } else if (itr->type == SELECT) {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
                     //itr = pending_manips.erase(itr);
@@ -199,8 +203,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                     std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
 
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                }
-                else {
+                } else {
                     ++itr;
                 }
             }
@@ -212,18 +215,21 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
 bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller) {
 
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL) return false;
+    if (probe_call == NULL)
+        return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     auto probe_meta_data = probe_call->getMetaData();
     probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1)) return false;
+    if (!(*probe_call)(1))
+        return false;
     probe_meta_data = probe_call->getMetaData();
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);

@@ -8,54 +8,56 @@
 #define MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED
 #pragma once
 
+#include "geometry_calls/ParticleRelistCall.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "geometry_calls/ParticleRelistCall.h"
 #include <vector>
 
 namespace megamol {
 namespace moldyn {
 namespace io {
 
-    /**
-     * Data loader for tcl files containing mol commands for selection serials:
-     *
-     * mol selection serial {}
-     * mol addrep *
-     *
-     */
-    class TclMolSelectionLoader : public core::Module {
-    public:
+/**
+ * Data loader for tcl files containing mol commands for selection serials:
+ *
+ * mol selection serial {}
+ * mol addrep *
+ *
+ */
+class TclMolSelectionLoader : public core::Module {
+public:
+    static const char* ClassName(void) {
+        return "TclMolSelectionLoader";
+    }
+    static const char* Description(void) {
+        return "Data loader for tcl files containing mol commands for selection serials";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        static const char *ClassName(void) { return "TclMolSelectionLoader"; }
-        static const char *Description(void) { return "Data loader for tcl files containing mol commands for selection serials"; }
-        static bool IsAvailable(void) { return true; }
+    TclMolSelectionLoader();
+    virtual ~TclMolSelectionLoader();
 
-        TclMolSelectionLoader();
-        virtual ~TclMolSelectionLoader();
+protected:
+    virtual bool create(void);
+    virtual void release(void);
 
-    protected:
+private:
+    bool getDataCallback(core::Call& caller);
 
-        virtual bool create(void);
-        virtual void release(void);
+    void clear(void);
+    void load(void);
 
-    private:
+    core::CalleeSlot getDataSlot;
 
-        bool getDataCallback(core::Call& caller);
+    core::param::ParamSlot filenameSlot;
 
-        void clear(void);
-        void load(void);
-
-        core::CalleeSlot getDataSlot;
-
-        core::param::ParamSlot filenameSlot;
-
-        size_t hash;
-        geocalls::ParticleRelistCall::ListIDType cnt;
-        std::vector<geocalls::ParticleRelistCall::ListIDType> data;
-
-    };
+    size_t hash;
+    geocalls::ParticleRelistCall::ListIDType cnt;
+    std::vector<geocalls::ParticleRelistCall::ListIDType> data;
+};
 
 } /* end namespace io */
 } /* end namespace moldyn */

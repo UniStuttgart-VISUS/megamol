@@ -4,19 +4,19 @@
  * Copyright (C) 2018 MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleTranslateRotateScale.h"
+#include "stdafx.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 using namespace megamol;
 
@@ -25,12 +25,12 @@ using namespace megamol;
  * datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale
  */
 datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
-    : AbstractParticleManipulator("outData", "indata")
-    , translateSlot("translation", "Translates the particles in x, y, z direction")
-    , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
-    , scaleSlot("scale", "Scales the particle data")
-    , getTFSlot("gettransferfunction", "Connects to the transfer function module")
-, finalData(NULL){
+        : AbstractParticleManipulator("outData", "indata")
+        , translateSlot("translation", "Translates the particles in x, y, z direction")
+        , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
+        , scaleSlot("scale", "Scales the particle data")
+        , getTFSlot("gettransferfunction", "Connects to the transfer function module")
+        , finalData(NULL) {
     this->translateSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0, 0, 0)));
     this->MakeSlotAvailable(&this->translateSlot);
 
@@ -44,8 +44,6 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
 
     this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
-
-
 }
 
 
@@ -104,7 +102,8 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
     trafo = glm::translate(trafo, glm::vec3(bboxCenterX, bboxCenterY, bboxCenterZ));
     trafo = glm::translate(trafo, glm::vec3(transX, transY, transZ));
 
-    if (InterfaceIsDirty() || (hash != inData.DataHash()) || (inData.DataHash() == 0) || (frameID != inData.FrameID())) {
+    if (InterfaceIsDirty() || (hash != inData.DataHash()) || (inData.DataHash() == 0) ||
+        (frameID != inData.FrameID())) {
         // Update data
         hash = inData.DataHash();
         frameID = inData.FrameID();
@@ -113,7 +112,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
         unsigned int plc = inData.GetParticleListCount();
         outData.SetParticleListCount(plc);
 
-        outData = inData; // also transfers the unlocker to 'outData'
+        outData = inData;                   // also transfers the unlocker to 'outData'
         inData.SetUnlocker(nullptr, false); // keep original data locked
                                             // original data will be unlocked through outData
 
@@ -156,19 +155,18 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             auto const& aAcc = parStore.GetCAAcc();
 
             finalData[i].resize(cnt * 7, 0.0f);
-//#pragma omp parallel for
+            //#pragma omp parallel for
             for (int64_t loop = 0; loop < cnt; loop++) {
 
                 glm::vec4 glmpos = trafo * glm::vec4(xAcc->Get_f(loop), yAcc->Get_f(loop), zAcc->Get_f(loop), 1.0);
 
-                finalData[i][7 * loop + 0] = glmpos.x; // pos.GetX();
-                finalData[i][7 * loop + 1] = glmpos.y; // pos.GetY();
-                finalData[i][7 * loop + 2] = glmpos.z; //pos.GetZ();
-                finalData[i][7 * loop + 3] = rAcc->Get_f(loop);                              // rgba[4 * loop + 0];
+                finalData[i][7 * loop + 0] = glmpos.x;          // pos.GetX();
+                finalData[i][7 * loop + 1] = glmpos.y;          // pos.GetY();
+                finalData[i][7 * loop + 2] = glmpos.z;          //pos.GetZ();
+                finalData[i][7 * loop + 3] = rAcc->Get_f(loop); // rgba[4 * loop + 0];
                 finalData[i][7 * loop + 4] = gAcc->Get_f(loop); // rgba[4 * loop + 1];
                 finalData[i][7 * loop + 5] = bAcc->Get_f(loop); // rgba[4 * loop + 2];
                 finalData[i][7 * loop + 6] = aAcc->Get_f(loop); // rgba[4 * loop + 3];
-
             }
 
             auto lbb_local = glm::vec3(finalData[i][0], finalData[i][1], finalData[i][2]);
@@ -181,8 +179,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             }
 
             vislib::math::Cuboid<float> newBoxLocal;
-            newBoxLocal.Set(
-                lbb_local.x, lbb_local.y, lbb_local.z, rtf_local.x, rtf_local.y, rtf_local.z);
+            newBoxLocal.Set(lbb_local.x, lbb_local.y, lbb_local.z, rtf_local.x, rtf_local.y, rtf_local.z);
             _global_box = newBoxLocal;
             MultiParticleDataCall::Particles& outp = outData.AccessParticles(i);
             outp.SetBBox(newBoxLocal);
@@ -203,7 +200,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
                 lbb = glm::min(lbb, glm::vec3(bbox.Left(), bbox.Bottom(), bbox.Back()));
                 rtf = glm::max(rtf, glm::vec3(bbox.Right(), bbox.Top(), bbox.Front()));
             }
-            
+
             _global_box.Set(lbb.x, lbb.y, lbb.z, rtf.x, rtf.y, rtf.z);
             outData.AccessBoundingBoxes().SetObjectSpaceBBox(_global_box);
             outData.AccessBoundingBoxes().SetObjectSpaceClipBox(_global_box);
@@ -229,7 +226,6 @@ bool datatools::ParticleTranslateRotateScale::manipulateExtent(
 }
 
 
-
 void datatools::ParticleTranslateRotateScale::colorTransferGray(geocalls::MultiParticleDataCall::Particles& p,
     float const* transferTable, unsigned int tableSize, std::vector<float>& rgbaArray) {
 
@@ -240,7 +236,7 @@ void datatools::ParticleTranslateRotateScale::colorTransferGray(geocalls::MultiP
     for (size_t i = 0; i < p.GetCount(); i++) {
         grayArray[i] = iAcc->Get_f(i);
     }
-    
+
     float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
     float gray_min = *std::min_element(grayArray.begin(), grayArray.end());
 

@@ -22,9 +22,9 @@ using megamol::core::utility::log::Log;
 /*
  * view::HeadView::HeadView
  */
-view::HeadView::HeadView(void) : AbstractView(),
-viewSlot("view", "Connects to a view"),
-tickSlot("tick", "Connects to a module that needs a tick") {
+view::HeadView::HeadView(void)
+        : viewSlot("view", "Connects to a view")
+        , tickSlot("tick", "Connects to a module that needs a tick") {
 
     this->viewSlot.SetCompatibleCall<core_gl::view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
@@ -127,9 +127,10 @@ core::view::ImageWrapper megamol::core_gl::view::HeadView::GetRenderingResult() 
  * view::HeadView::ResetView
  */
 void view::HeadView::ResetView(void) {
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
-    if (view != nullptr) (*view)(CallRenderViewGL::CALL_RESETVIEW);
+    if (view != nullptr)
+        (*view)(CallRenderViewGL::CALL_RESETVIEW);
 }
 
 
@@ -137,13 +138,14 @@ void view::HeadView::ResetView(void) {
  * view::HeadView::Resize
  */
 void view::HeadView::Resize(unsigned int width, unsigned int height) {
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     this->width = width;
     this->height = height;
 
     if (view != nullptr) {
-        AbstractView *abstract_view = const_cast<AbstractView*>(dynamic_cast<const AbstractView *>(static_cast<const Module*>(view->PeekCalleeSlot()->Owner())));
+        AbstractView* abstract_view = const_cast<AbstractView*>(
+            dynamic_cast<const AbstractView*>(static_cast<const Module*>(view->PeekCalleeSlot()->Owner())));
 
         if (abstract_view != nullptr) {
             abstract_view->Resize(width, height);
@@ -156,8 +158,9 @@ void view::HeadView::Resize(unsigned int width, unsigned int height) {
  * view::HeadView::OnRenderView
  */
 bool view::HeadView::OnRenderView(core::Call& call) {
-    view::CallRenderViewGL *view = dynamic_cast<view::CallRenderViewGL *>(&call);
-    if (view == nullptr) return false;
+    view::CallRenderViewGL* view = dynamic_cast<view::CallRenderViewGL*>(&call);
+    if (view == nullptr)
+        return false;
 
     this->override_view_call = view;
 
@@ -172,11 +175,12 @@ bool view::HeadView::OnRenderView(core::Call& call) {
 }
 
 
-bool view::HeadView::OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
+bool view::HeadView::OnKey(
+    frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
 
     bool consumed = false;
 
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
     if (view != nullptr) {
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::Key;
@@ -186,7 +190,8 @@ bool view::HeadView::OnKey(frontend_resources::Key key, frontend_resources::KeyA
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnKey)) consumed = true;
+        if ((*view)(view::CallRenderViewGL::FnOnKey))
+            consumed = true;
     }
 
     return consumed;
@@ -197,7 +202,7 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
     bool consumed = false;
 
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         core::view::InputEvent evt;
@@ -206,16 +211,18 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnChar)) consumed = true;
+        if ((*view)(view::CallRenderViewGL::FnOnChar))
+            consumed = true;
     }
 
     return consumed;
 }
 
 
-bool view::HeadView::OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) {
+bool view::HeadView::OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
+    frontend_resources::Modifiers mods) {
 
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         core::view::InputEvent evt;
@@ -226,7 +233,8 @@ bool view::HeadView::OnMouseButton(frontend_resources::MouseButton button, front
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseButton)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseButton))
+            return true;
     }
 
     return true;
@@ -235,7 +243,7 @@ bool view::HeadView::OnMouseButton(frontend_resources::MouseButton button, front
 
 bool view::HeadView::OnMouseMove(double x, double y) {
 
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         core::view::InputEvent evt;
@@ -245,7 +253,8 @@ bool view::HeadView::OnMouseMove(double x, double y) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseMove)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseMove))
+            return true;
     }
 
     return true;
@@ -254,7 +263,7 @@ bool view::HeadView::OnMouseMove(double x, double y) {
 
 bool view::HeadView::OnMouseScroll(double dx, double dy) {
 
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         core::view::InputEvent evt;
@@ -264,7 +273,8 @@ bool view::HeadView::OnMouseScroll(double dx, double dy) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseScroll)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseScroll))
+            return true;
     }
 
     return true;
@@ -283,12 +293,10 @@ bool view::HeadView::create(void) {
 /*
  * view::HeadView::release
  */
-void view::HeadView::release(void) {
-}
+void view::HeadView::release(void) {}
 
 
 /*
  * view::HeadView::unpackMouseCoordinates
  */
-void view::HeadView::unpackMouseCoordinates(float &x, float &y) {
-}
+void view::HeadView::unpackMouseCoordinates(float& x, float& y) {}

@@ -2252,9 +2252,10 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in profiling diagrams
-    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) ||
-        this->gui_reset_zooming || this->gui_increment_zooming || this->gui_decrement_zooming) {
+    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in
+    /// profiling diagrams
+    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming ||
+        this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(
@@ -2292,8 +2293,9 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
             }
             // Limit zooming
             const float zooming_minimum = 0.01f;
-            this->gui_graph_state.canvas.zooming =
-                (this->gui_graph_state.canvas.zooming <= zooming_minimum) ? zooming_minimum : (this->gui_graph_state.canvas.zooming);
+            this->gui_graph_state.canvas.zooming = (this->gui_graph_state.canvas.zooming <= zooming_minimum)
+                                                       ? zooming_minimum
+                                                       : (this->gui_graph_state.canvas.zooming);
             // Compensate zooming shift of origin
             ImVec2 scrolling_diff = (this->gui_graph_state.canvas.scrolling * last_zooming) -
                                     (this->gui_graph_state.canvas.scrolling * this->gui_graph_state.canvas.zooming);
@@ -2444,7 +2446,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            auto* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
+            auto* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,

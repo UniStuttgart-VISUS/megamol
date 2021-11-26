@@ -1,44 +1,43 @@
 /*
-* CallADIOSData.cpp
-*
-* Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
-* Alle Rechte vorbehalten.
-*/
+ * CallADIOSData.cpp
+ *
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include <algorithm>
 
 namespace megamol {
 namespace adios {
-    
-CallADIOSData::CallADIOSData()
-    : dataHash(0)
-    , time(0)
-    , frameCount(0)
-    , dataptr(nullptr) {
-}
+
+CallADIOSData::CallADIOSData() : dataHash(0), time(0), frameCount(0), dataptr(nullptr) {}
 
 
 /**
- * \brief 
+ * \brief
  */
 CallADIOSData::~CallADIOSData(void) = default;
 
 
 /**
  * \brief CallADIOSData::setTime
- * \param time 
+ * \param time
  */
-void CallADIOSData::setTime(float time) { this->time = time; }
+void CallADIOSData::setTime(float time) {
+    this->time = time;
+}
 
 
 /**
- * \brief 
- * \return 
+ * \brief
+ * \return
  */
-float CallADIOSData::getTime() const { return this->time; }
+float CallADIOSData::getTime() const {
+    return this->time;
+}
 
 
 /**
@@ -46,16 +45,18 @@ float CallADIOSData::getTime() const { return this->time; }
  * \param varname: The name of the variable.
  * \return Returns false if variable is not available, true otherwise.
  */
-bool CallADIOSData::inquireVar(const std::string &varname) {
+bool CallADIOSData::inquireVar(const std::string& varname) {
     if (!this->availableVars.empty()) {
         if (std::find(this->availableVars.begin(), this->availableVars.end(), varname) != this->availableVars.end()) {
             this->inqVars.push_back(varname);
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
             return false;
         }
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[CallADIOSData] No available Vars. Read header first.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[CallADIOSData] No available Vars. Read header first.");
         return false;
     }
     // erase non-unique occurrences
@@ -79,7 +80,8 @@ void CallADIOSData::setAvailableVars(const std::vector<std::string>& avars) {
 
 bool CallADIOSData::inquireAttr(const std::string& attrname) {
     if (!this->availableVars.empty()) {
-        if (std::find(this->availableAttributes.begin(), this->availableAttributes.end(), attrname) != this->availableAttributes.end()) {
+        if (std::find(this->availableAttributes.begin(), this->availableAttributes.end(), attrname) !=
+            this->availableAttributes.end()) {
             this->inqAttributes.push_back(attrname);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -87,8 +89,7 @@ bool CallADIOSData::inquireAttr(const std::string& attrname) {
             return false;
         }
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[CallADIOSData] No available Attributes");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[CallADIOSData] No available Attributes");
         return false;
     }
     // erase non-unique occurrences
@@ -107,7 +108,7 @@ std::vector<std::string> CallADIOSData::getAvailableAttributes() const {
 }
 
 void CallADIOSData::setAvailableAttributes(const std::vector<std::string>& availattribs) {
-    this->availableAttributes= availattribs;
+    this->availableAttributes = availattribs;
 }
 
 void CallADIOSData::setData(std::shared_ptr<adiosDataMap> _dta) {
@@ -119,14 +120,17 @@ void CallADIOSData::setData(std::shared_ptr<adiosDataMap> _dta) {
     }
 }
 
-std::shared_ptr<abstractContainer> CallADIOSData::getData(std::string _str) const { return this->dataptr->at(_str); }
+std::shared_ptr<abstractContainer> CallADIOSData::getData(std::string _str) const {
+    return this->dataptr->at(_str);
+}
 
 bool CallADIOSData::isInVars(std::string var) {
     return std::find(this->availableVars.begin(), this->availableVars.end(), var) != this->availableVars.end();
 }
 
 bool CallADIOSData::isInAttributes(std::string attr) {
-    return std::find(this->availableAttributes.begin(), this->availableAttributes.end(), attr) != this->availableAttributes.end();
+    return std::find(this->availableAttributes.begin(), this->availableAttributes.end(), attr) !=
+           this->availableAttributes.end();
 }
 
 } // end namespace adios

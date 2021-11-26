@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "mmcore/utility/ZMQContextUser.h"
+#include "stdafx.h"
 
 std::weak_ptr<megamol::core::utility::ZMQContextUser> megamol::core::utility::ZMQContextUser::inst;
 
@@ -11,9 +11,6 @@ megamol::core::utility::ZMQContextUser::ptr megamol::core::utility::ZMQContextUs
     return p;
 }
 
-megamol::core::utility::ZMQContextUser::ZMQContextUser()
-    : context(1) {
-}
+megamol::core::utility::ZMQContextUser::ZMQContextUser() : context(1) {}
 
-megamol::core::utility::ZMQContextUser::~ZMQContextUser() {
-}
+megamol::core::utility::ZMQContextUser::~ZMQContextUser() {}

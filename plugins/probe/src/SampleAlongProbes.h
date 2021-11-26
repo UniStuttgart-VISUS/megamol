@@ -13,10 +13,10 @@
 #include "mmcore/Module.h"
 
 #include "ProbeCollection.h"
-#include "mmcore/param/ParamSlot.h"
 #include "kdtree.h"
-#include "mmcore/param/IntParam.h"
 #include "mmadios/CallADIOSData.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace probe {
@@ -28,21 +28,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "SampleAlongProbes"; }
+    static const char* ClassName() {
+        return "SampleAlongProbes";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "..."; }
+    static const char* Description() {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     SampleAlongPobes();
     virtual ~SampleAlongPobes();
@@ -68,18 +74,18 @@ protected:
     core::param::ParamSlot _num_samples_per_probe_slot;
     core::param::ParamSlot _sample_radius_factor_slot;
 
-	core::param::ParamSlot _sampling_mode;
+    core::param::ParamSlot _sampling_mode;
     core::param::ParamSlot _vec_param_to_samplex_x;
     core::param::ParamSlot _vec_param_to_samplex_y;
     core::param::ParamSlot _vec_param_to_samplex_z;
     core::param::ParamSlot _vec_param_to_samplex_w;
 
 private:
-	//TODO rename to "doScalarSampling" ?
-    template <typename T>
+    //TODO rename to "doScalarSampling" ?
+    template<typename T>
     void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
 
-	template <typename T>
+    template<typename T>
     void doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, const std::vector<T>& data_x,
         const std::vector<T>& data_y, const std::vector<T>& data_z, const std::vector<T>& data_w);
 
@@ -95,13 +101,13 @@ private:
 };
 
 
-template <typename T>
+template<typename T>
 void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
         FloatProbe probe;
@@ -174,14 +180,11 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
     } // end for probes
 }
 
-template <typename T>
-inline void SampleAlongPobes::doVectorSamling(
-	const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
-    const std::vector<T>& data_x,
-	const std::vector<T>& data_y,
-	const std::vector<T>& data_z,
+template<typename T>
+inline void SampleAlongPobes::doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+    const std::vector<T>& data_x, const std::vector<T>& data_y, const std::vector<T>& data_z,
     const std::vector<T>& data_w) {
-	
+
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
@@ -190,7 +193,7 @@ inline void SampleAlongPobes::doVectorSamling(
 
         Vec4Probe probe;
 
-        auto visitor = [&probe,i,this](auto&& arg) {
+        auto visitor = [&probe, i, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe>) {
 
@@ -248,10 +251,14 @@ inline void SampleAlongPobes::doVectorSamling(
                 value_z += data_z[k_indices[n]];
                 value_w += data_w[k_indices[n]];
             } // end num_neighbors
-            samples->samples[j][0] = value_x / num_neighbors;;
-            samples->samples[j][1] = value_y / num_neighbors;;
-            samples->samples[j][2] = value_z / num_neighbors;;
-            samples->samples[j][3] = value_w / num_neighbors;;
+            samples->samples[j][0] = value_x / num_neighbors;
+            ;
+            samples->samples[j][1] = value_y / num_neighbors;
+            ;
+            samples->samples[j][2] = value_z / num_neighbors;
+            ;
+            samples->samples[j][3] = value_w / num_neighbors;
+            ;
             //min_value = std::min(min_value, value);
             //max_value = std::max(max_value, value);
             //avg_value += value;
@@ -261,7 +268,6 @@ inline void SampleAlongPobes::doVectorSamling(
         //samples->max_value = max_value;
         //samples->min_value = min_value;
     } // end for probes
-
 }
 
 

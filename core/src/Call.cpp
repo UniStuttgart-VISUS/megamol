@@ -5,12 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "stdafx.h"
 #ifdef PROFILING
-#    include "mmcore/CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 #endif
 #include "mmcore/utility/log/Log.h"
 
@@ -19,8 +19,7 @@ using namespace megamol::core;
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {
-}
+Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
@@ -36,7 +35,8 @@ Call::~Call(void) {
         this->callee->ConnectCall(nullptr);
         this->callee = nullptr; // DO NOT DELETE
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
 }
 
@@ -71,7 +71,8 @@ bool Call::operator()(unsigned int func) {
         perf_man->stop_timer(cpu_queries[func]);
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (caps.OpenGLRequired()) glPopDebugGroup();
+        if (caps.OpenGLRequired())
+            glPopDebugGroup();
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,

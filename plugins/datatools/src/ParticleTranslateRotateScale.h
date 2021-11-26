@@ -14,70 +14,65 @@
 namespace megamol {
 namespace datatools {
 
+/**
+ * Module thinning the number of particles
+ *
+ * Migrated from SGrottel particle's tool box
+ */
+class ParticleTranslateRotateScale : public AbstractParticleManipulator {
+public:
+    /** Return module class name */
+    static const char* ClassName(void) {
+        return "ParticleTranslateRotateScale";
+    }
+
+    /** Return module class description */
+    static const char* Description(void) {
+        return "Rotates, translates and scales the data";
+    }
+
+    /** Module is always available */
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    /** Ctor */
+    ParticleTranslateRotateScale(void);
+
+    /** Dtor */
+    virtual ~ParticleTranslateRotateScale(void);
+    bool InterfaceIsDirty() const;
+    void InterfaceResetDirty();
+
+protected:
     /**
-     * Module thinning the number of particles
+     * Manipulates the particle data
      *
-     * Migrated from SGrottel particle's tool box
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
      */
-    class ParticleTranslateRotateScale : public AbstractParticleManipulator {
-    public:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    virtual bool manipulateExtent(
+        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    void colorTransferGray(geocalls::MultiParticleDataCall::Particles& p, float const* transferTable,
+        unsigned tableSize, std::vector<float>& rgbaArray);
+    megamol::core::CallerSlot getTFSlot;
 
-        /** Return module class name */
-        static const char *ClassName(void) {
-            return "ParticleTranslateRotateScale";
-        }
+private:
+    core::param::ParamSlot translateSlot;
+    core::param::ParamSlot quaternionSlot;
+    core::param::ParamSlot scaleSlot;
 
-        /** Return module class description */
-        static const char *Description(void) {
-            return "Rotates, translates and scales the data";
-        }
+    size_t hash = -1;
+    unsigned int frameID = -1;
 
-        /** Module is always available */
-        static bool IsAvailable(void) {
-            return true;
-        }
-
-        /** Ctor */
-        ParticleTranslateRotateScale(void);
-
-        /** Dtor */
-        virtual ~ParticleTranslateRotateScale(void);
-        bool InterfaceIsDirty() const;
-        void InterfaceResetDirty();
-
-    protected:
-
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-        virtual bool manipulateExtent(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
-        void colorTransferGray(geocalls::MultiParticleDataCall::Particles& p, float const* transferTable,
-            unsigned tableSize,
-                               std::vector<float> &rgbaArray);
-        megamol::core::CallerSlot getTFSlot;
-
-    private:
-
-        core::param::ParamSlot translateSlot;
-        core::param::ParamSlot quaternionSlot;
-        core::param::ParamSlot scaleSlot;
-
-        size_t hash = -1;
-        unsigned int frameID = -1;
-
-        std::vector<std::vector<float>> finalData;
-        vislib::math::Cuboid<float> _global_box;
-    };
+    std::vector<std::vector<float>> finalData;
+    vislib::math::Cuboid<float> _global_box;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

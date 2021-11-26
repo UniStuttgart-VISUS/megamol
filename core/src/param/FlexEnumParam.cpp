@@ -1,12 +1,12 @@
 /*
  * FlexEnumParam.cpp
  *
- * Copyright (C) 2017 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2017 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "stdafx.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UTF8Encoder.h"
@@ -49,7 +49,7 @@ std::string FlexEnumParam::Definition() const {
     vislib::StringA utf8;
     unsigned int s = 6;
     unsigned int c = 0;
-    for (const auto &v : this->values) {
+    for (const auto& v : this->values) {
         s += static_cast<unsigned int>(v.length() + 1); //terminating zero
     }
     s += sizeof(unsigned int);
@@ -58,7 +58,7 @@ std::string FlexEnumParam::Definition() const {
     outDef.AssertSize(s);
     memcpy(outDef.AsAt<char>(0), "MMFENU", 6);
     s = 6 + sizeof(unsigned int);
-    for (const auto &v: this->values) {
+    for (const auto& v : this->values) {
         unsigned int strsize = static_cast<unsigned int>(v.length() + 1);
         memcpy(outDef.AsAt<char>(s), v.c_str(), strsize);
         s += strsize;
@@ -87,8 +87,7 @@ bool FlexEnumParam::ParseValue(std::string const& v) {
         //    this->SetValue(*iter);
         //    return true;
         //}
-    } catch(...) {
-    }
+    } catch (...) {}
     return false;
 }
 
@@ -113,7 +112,8 @@ void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         this->indicateChange();
-        if (setDirty) this->setDirty();
+        if (setDirty)
+            this->setDirty();
     }
 }
 

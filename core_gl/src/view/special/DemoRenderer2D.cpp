@@ -1,14 +1,14 @@
 /*
  * DemoRenderer2D.cpp
  *
- * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore_gl/view/special/DemoRenderer2D.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cmath>
 
 using namespace megamol::core_gl;
@@ -17,9 +17,15 @@ using namespace megamol::core_gl;
 /*
  * view::special::DemoRenderer2D::DemoRenderer2D
  */
-view::special::DemoRenderer2D::DemoRenderer2D() : core_gl::view::Renderer2DModuleGL(),
-        mx(0.0f), my(0.0f), fromx(1.0f), fromy(1.0f), tox(3.0f), toy(3.0f),
-        drag(false) {
+view::special::DemoRenderer2D::DemoRenderer2D()
+        : core_gl::view::Renderer2DModuleGL()
+        , mx(0.0f)
+        , my(0.0f)
+        , fromx(1.0f)
+        , fromy(1.0f)
+        , tox(3.0f)
+        , toy(3.0f)
+        , drag(false) {
     // intentionally empty
 }
 
@@ -46,7 +52,7 @@ bool view::special::DemoRenderer2D::create(void) {
  */
 bool view::special::DemoRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
 
-    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f,0, 4.0f, 4.0f,0);
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0, 4.0f, 4.0f, 0);
 
     return true;
 }
@@ -84,16 +90,16 @@ bool view::special::DemoRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
 
     ::glColor3ub(0, 0, 255);
     ::glBegin(GL_LINES);
-        ::glVertex2f(this->mx, 0.0f);
-        ::glVertex2f(this->mx, 4.0f);
-        ::glVertex2f(0.0f, this->my);
-        ::glVertex2f(4.0f, this->my);
+    ::glVertex2f(this->mx, 0.0f);
+    ::glVertex2f(this->mx, 4.0f);
+    ::glVertex2f(0.0f, this->my);
+    ::glVertex2f(4.0f, this->my);
     ::glEnd();
 
     ::glColor3ub(0, 255, 0);
     ::glBegin(GL_LINES);
-        ::glVertex2f(this->fromx, this->fromy);
-        ::glVertex2f(this->tox, this->toy);
+    ::glVertex2f(this->fromx, this->fromy);
+    ::glVertex2f(this->tox, this->toy);
     ::glEnd();
 
     return true;
@@ -112,12 +118,18 @@ void view::special::DemoRenderer2D::release(void) {
  * view::special::DemoRenderer2D::MouseEvent
  */
 bool view::special::DemoRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-    if (x < 0.0f) this->mx = 0.0f;
-    else if (x > 4.0f) this->mx = 4.0f;
-    else mx = x;
-    if (y < 0.0f) this->my = 0.0f;
-    else if (y > 4.0f) this->my = 4.0f;
-    else my = y;
+    if (x < 0.0f)
+        this->mx = 0.0f;
+    else if (x > 4.0f)
+        this->mx = 4.0f;
+    else
+        mx = x;
+    if (y < 0.0f)
+        this->my = 0.0f;
+    else if (y > 4.0f)
+        this->my = 4.0f;
+    else
+        my = y;
 
     if ((flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0) {
         if ((flags & core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) != 0) {

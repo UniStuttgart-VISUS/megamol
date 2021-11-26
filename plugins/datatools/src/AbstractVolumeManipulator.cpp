@@ -4,9 +4,9 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
-#include "datatools/AbstractParticleManipulator.h"
 #include "datatools/AbstractVolumeManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
+#include "stdafx.h"
 
 using namespace megamol;
 
@@ -15,9 +15,9 @@ using namespace megamol;
  * datatools::AbstractVolumeManipulator::AbstractVolumeManipulator
  */
 datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outSlotName, const char* inSlotName)
-    : megamol::core::Module()
-    , outDataSlot(outSlotName, "providing access to the manipulated data")
-    , inDataSlot(inSlotName, "accessing the original data") {
+        : megamol::core::Module()
+        , outDataSlot(outSlotName, "providing access to the manipulated data")
+        , inDataSlot(inSlotName, "accessing the original data") {
 
     this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
         geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_DATA),
@@ -53,7 +53,9 @@ datatools::AbstractVolumeManipulator::~AbstractVolumeManipulator(void) {}
 /*
  * datatools::AbstractVolumeManipulator::create
  */
-bool datatools::AbstractVolumeManipulator::create(void) { return true; }
+bool datatools::AbstractVolumeManipulator::create(void) {
+    return true;
+}
 
 
 /*
@@ -102,15 +104,17 @@ bool datatools::AbstractVolumeManipulator::getDataCallback(megamol::core::Call& 
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_DATA)){ 
-      megamol::core::utility::log::Log::DefaultLog.WriteInfo("AbstractVolumeManipulator: No data available.\n");
-      return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_GET_DATA)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("AbstractVolumeManipulator: No data available.\n");
+        return false;
     }
     if (!this->manipulateData(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -130,13 +134,16 @@ bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_GET_EXTENTS))
+        return false;
 
     if (!this->manipulateExtent(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -152,13 +159,16 @@ bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Ca
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_GET_METADATA))
+        return false;
 
     if (!this->manipulateMetaData(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -174,13 +184,16 @@ bool datatools::AbstractVolumeManipulator::startAsyncCallback(megamol::core::Cal
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_START_ASYNC)) return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_START_ASYNC))
+        return false;
 
     inVdc->Unlock();
 
@@ -191,13 +204,16 @@ bool datatools::AbstractVolumeManipulator::stopAsyncCallback(megamol::core::Call
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_STOP_ASYNC)) return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_STOP_ASYNC))
+        return false;
 
     inVdc->Unlock();
 
@@ -208,13 +224,16 @@ bool datatools::AbstractVolumeManipulator::tryGetDataCallback(megamol::core::Cal
     using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
-    if (outVdc == nullptr) return false;
+    if (outVdc == nullptr)
+        return false;
 
     auto* inVdc = this->inDataSlot.CallAs<VolumetricDataCall>();
-    if (inVdc == nullptr) return false;
+    if (inVdc == nullptr)
+        return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_TRY_GET_DATA)) return false;
+    if (!(*inVdc)(VolumetricDataCall::IDX_TRY_GET_DATA))
+        return false;
 
     // TODO BUG HAZARD: if data, manipulate.
 

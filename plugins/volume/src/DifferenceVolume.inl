@@ -10,12 +10,11 @@
  * megamol::volume::DifferenceVolume::calcDifference
  */
 template<class D, class S>
-void megamol::volume::DifferenceVolume::calcDifference(D *dst,
-        const S *cur, const S *prev, const std::size_t cnt) {
-//#pragma omp parallel for
-//    for (std::size_t i = 0; i < cnt; ++i) {
-//        dst[i] = static_cast<D>(cur[i]) - static_cast<D>(prev[i]);
-//    }
+void megamol::volume::DifferenceVolume::calcDifference(D* dst, const S* cur, const S* prev, const std::size_t cnt) {
+    //#pragma omp parallel for
+    //    for (std::size_t i = 0; i < cnt; ++i) {
+    //        dst[i] = static_cast<D>(cur[i]) - static_cast<D>(prev[i]);
+    //    }
 
     const auto components = this->metadata.Components;
 

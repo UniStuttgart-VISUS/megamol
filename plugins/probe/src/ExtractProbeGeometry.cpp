@@ -6,15 +6,15 @@
 
 #include "ExtractProbeGeometry.h"
 
-#include "mesh/MeshCalls.h"
 #include "ProbeCalls.h"
+#include "mesh/MeshCalls.h"
 
-megamol::probe::ExtractProbeGeometry::ExtractProbeGeometry() 
-    : Module()
-    , _version(0)
-    , _line(nullptr)
-    , m_mesh_slot("deployMesh", "")
-    , m_probe_slot("getProbes", "") {
+megamol::probe::ExtractProbeGeometry::ExtractProbeGeometry()
+        : Module()
+        , _version(0)
+        , _line(nullptr)
+        , m_mesh_slot("deployMesh", "")
+        , m_probe_slot("getProbes", "") {
 
     this->m_mesh_slot.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ExtractProbeGeometry::getData);
@@ -30,11 +30,14 @@ megamol::probe::ExtractProbeGeometry::~ExtractProbeGeometry() {
     this->Release();
 }
 
-bool megamol::probe::ExtractProbeGeometry::create() { return true; }
+bool megamol::probe::ExtractProbeGeometry::create() {
+    return true;
+}
 
 void megamol::probe::ExtractProbeGeometry::release() {}
 
-std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
+std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::ExtractProbeGeometry::convertToLine(
+    core::Call& call) {
 
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     std::shared_ptr<mesh::MeshDataAccessCollection> line = std::make_shared<mesh::MeshDataAccessCollection>();
@@ -50,13 +53,13 @@ std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::Extract
     _vertex_data.clear();
 
     _line_attribs.resize(probe_count);
-    _vertex_data.resize(2*probe_count);
+    _vertex_data.resize(2 * probe_count);
 
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (auto i = 0; i < probe_count; i++) {
         auto probe = this->_probes->getProbe<FloatProbe>(i);
 
-        std::array<float,4> vert1, vert2;
+        std::array<float, 4> vert1, vert2;
 
         vert1[0] = probe.m_position[0] + probe.m_direction[0] * probe.m_begin;
         vert1[1] = probe.m_position[1] + probe.m_direction[1] * probe.m_begin;
@@ -88,18 +91,19 @@ std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::Extract
 }
 
 bool megamol::probe::ExtractProbeGeometry::getData(core::Call& call) {
-    
+
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     auto* cp = this->m_probe_slot.CallAs<CallProbes>();
 
-    if (cp == nullptr) return false;
-    if (!(*cp)(0)) return false;
+    if (cp == nullptr)
+        return false;
+    if (!(*cp)(0))
+        return false;
 
     auto mesh_meta_data = cm->getMetaData();
     auto probe_meta_data = cp->getMetaData();
 
-    if (cp->hasUpdate())
-    {
+    if (cp->hasUpdate()) {
         ++_version;
         _probes = cp->getData();
 
@@ -107,22 +111,22 @@ bool megamol::probe::ExtractProbeGeometry::getData(core::Call& call) {
         this->convertToLine(call);
     }
 
-    if (cm->version() < _version)
-    {
+    if (cm->version() < _version) {
         mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
         cm->setMetaData(mesh_meta_data);
-        cm->setData(_line,_version);
+        cm->setData(_line, _version);
     }
 
-    return true; 
+    return true;
 }
 
 bool megamol::probe::ExtractProbeGeometry::getMetaData(core::Call& call) {
-    
+
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     auto* cp = this->m_probe_slot.CallAs<CallProbes>();
 
-    if (cp == nullptr) return false;
+    if (cp == nullptr)
+        return false;
 
     // set frame id before callback
     auto mesh_meta_data = cm->getMetaData();
@@ -131,7 +135,8 @@ bool megamol::probe::ExtractProbeGeometry::getMetaData(core::Call& call) {
     probe_meta_data.m_frame_ID = mesh_meta_data.m_frame_ID;
     cp->setMetaData(probe_meta_data);
 
-    if (!(*cp)(1)) return false;
+    if (!(*cp)(1))
+        return false;
 
     probe_meta_data = cp->getMetaData();
     mesh_meta_data.m_frame_cnt = probe_meta_data.m_frame_cnt;

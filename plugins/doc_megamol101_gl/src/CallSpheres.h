@@ -173,6 +173,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallSpheres> CallSpheresDescription;
 
-} // namespace megamol::megamol101
+} // namespace megamol::megamol101_gl
 
 #endif // MEGAMOL_MEGAMOL101_CALLSPHERES_H

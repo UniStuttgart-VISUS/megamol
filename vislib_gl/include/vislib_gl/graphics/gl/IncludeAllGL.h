@@ -7,13 +7,15 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "glad/gl.h"
+
 #ifdef _WIN32
 #include <Windows.h>
 #undef min
 #undef max
-#include "glad/glad_wgl.h"
+#include "glad/wgl.h"
 #else
-#include "glad/glad_glx.h"
+#include "glad/glx.h"
 #undef Status
 #endif
 
@@ -29,12 +31,12 @@ inline void LoadAllGL() {
     //bool expected = false;
     //if (alreadyLoaded.compare_exchange_strong(expected, true)) {
     if (alreadyLoaded == true) {
-        gladLoadGL();
+        gladLoaderLoadGL();
 #ifdef _WIN32
-        gladLoadWGL(wglGetCurrentDC());
+        gladLoaderLoadWGL(wglGetCurrentDC());
 #else
-        Display *display = XOpenDisplay(NULL);
-        gladLoadGLX(display, DefaultScreen(display));
+        Display* display = XOpenDisplay(NULL);
+        gladLoaderLoadGLX(display, DefaultScreen(display));
         XCloseDisplay(display);
 #endif
     }
@@ -42,7 +44,7 @@ inline void LoadAllGL() {
 
 } /* end namespace gl */
 } /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib_gl
 
 
 #endif /* INCLUDEALLGL_H_INCLUDED */
