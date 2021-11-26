@@ -138,7 +138,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" -DENALBE_GL=OFF'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" -DENABLE_GL=OFF'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
