@@ -249,7 +249,6 @@ protected:
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnCharChain(evt.charData.codePoint);
-        return false;
     }
 
     bool OnKeyChainCallback(Call& call) {
