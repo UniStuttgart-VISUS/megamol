@@ -228,7 +228,6 @@ protected:
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButtonChain(
             evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-        return false;
     }
 
     bool OnMouseMoveChainCallback(Call& call) {
