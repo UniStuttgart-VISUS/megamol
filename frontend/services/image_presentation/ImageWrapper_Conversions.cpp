@@ -20,7 +20,7 @@ using namespace megamol::frontend_resources;
 namespace gl_wrapper_impl {
 void gl_download_texture_to_vector(
     unsigned int handle, ImageWrapper::ImageSize size, ImageWrapper::DataChannels channels, std::vector<byte>& target);
-} // namespace
+} // namespace gl_wrapper_impl
 
 namespace megamol {
 namespace frontend_resources {

@@ -34,13 +34,14 @@ namespace view {
  */
 class MEGAMOLCORE_API CallGetTransferFunctionGL : public core::view::AbstractCallGetTransferFunction {
 public:
-
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallGetTransferFunctionGL"; }
+    static const char* ClassName(void) {
+        return "CallGetTransferFunctionGL";
+    }
 
     /**
      * Gets a human readable description of the module.

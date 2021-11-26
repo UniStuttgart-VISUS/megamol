@@ -14,8 +14,7 @@ using namespace megamol::core_gl;
 /*
  * view::CallGetTransferFunctionGL::CallGetTransferFunctionGL
  */
-view::CallGetTransferFunctionGL::CallGetTransferFunctionGL(void) : AbstractCallGetTransferFunction(),
-    texID(0) {
+view::CallGetTransferFunctionGL::CallGetTransferFunctionGL(void) : AbstractCallGetTransferFunction(), texID(0) {
     // intentionally empty
 }
 

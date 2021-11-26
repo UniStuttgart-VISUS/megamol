@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/TransferFunction.h"
 #include "mmcore/param/TransferFunctionParam.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core;
@@ -15,8 +15,7 @@ using namespace megamol::core::view;
 using namespace megamol::core::param;
 
 
-view::TransferFunction::TransferFunction(void)
-    : Module(), AbstractTransferFunction() {
+view::TransferFunction::TransferFunction(void) : Module(), AbstractTransferFunction() {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -30,7 +29,8 @@ view::TransferFunction::TransferFunction(void)
 bool TransferFunction::requestTF(core::Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
-    if (cgtf == nullptr) return false;
+    if (cgtf == nullptr)
+        return false;
 
     if (this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
@@ -59,23 +59,22 @@ bool TransferFunction::requestTF(core::Call& call) {
 
         // Get current values from parameter string (Values are checked, too).
         TransferFunctionParam::NodeVector_t tmp_nodes;
-        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(), tmp_nodes, this->interpolMode, this->texSize, this->range)) {
+        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(),
+                tmp_nodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == TransferFunctionParam::InterpolationMode::LINEAR) {
             this->tex = TransferFunctionParam::LinearInterpolation(this->texSize, tmp_nodes);
-        }
-        else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
+        } else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
             this->tex = TransferFunctionParam::GaussInterpolation(this->texSize, tmp_nodes);
         }
 
         ++this->version;
     }
 
-    cgtf->SetTexture(this->texSize, this->tex.data(), this->texFormat,
-        this->range, this->version);
+    cgtf->SetTexture(this->texSize, this->tex.data(), this->texFormat, this->range, this->version);
 
     return true;
 }

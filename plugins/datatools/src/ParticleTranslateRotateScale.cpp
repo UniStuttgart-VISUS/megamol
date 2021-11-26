@@ -39,7 +39,6 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
 
     this->scaleSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->MakeSlotAvailable(&this->scaleSlot);
-
 }
 
 

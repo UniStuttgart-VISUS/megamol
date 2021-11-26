@@ -16,9 +16,7 @@ using namespace megamol::core_gl::view;
 using namespace megamol::core::param;
 
 
-view::TransferFunctionGL::TransferFunctionGL(void)
-    : ModuleGL(), AbstractTransferFunction(), texID(0)
-{
+view::TransferFunctionGL::TransferFunctionGL(void) : ModuleGL(), AbstractTransferFunction(), texID(0) {
 
     CallGetTransferFunctionGLDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunctionGL::requestTF);
@@ -45,7 +43,8 @@ void TransferFunctionGL::release(void) {
 bool TransferFunctionGL::requestTF(core::Call& call) {
 
     auto cgtf = dynamic_cast<CallGetTransferFunctionGL*>(&call);
-    if (cgtf == nullptr) return false;
+    if (cgtf == nullptr)
+        return false;
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
@@ -99,7 +98,8 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
         glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
-        const auto tex_format = this->texFormat == core::view::AbstractCallGetTransferFunction::TEXTURE_FORMAT_RGBA ? GL_RGBA : GL_RGB;
+        const auto tex_format =
+            this->texFormat == core::view::AbstractCallGetTransferFunction::TEXTURE_FORMAT_RGBA ? GL_RGBA : GL_RGB;
 
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, tex_format, GL_FLOAT, this->tex.data());
 

@@ -1,15 +1,15 @@
 /*
  * TransferFunctionGL.h
  *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #pragma once
 
 #include "CallGetTransferFunctionGL.h"
-#include "mmcore_gl/ModuleGL.h"
 #include "mmcore/view/AbstractTransferFunction.h"
+#include "mmcore_gl/ModuleGL.h"
 
 
 namespace megamol {
@@ -22,13 +22,12 @@ namespace view {
  */
 class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
 public:
-    
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "TransferFunctionGL";
     }
 
@@ -37,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Module defining a piecewise linear transfer function";
     }
 
@@ -59,7 +58,6 @@ public:
     }
 
 private:
-
     // FUNCTIONS ----------------------------------------------------------
 
     /**

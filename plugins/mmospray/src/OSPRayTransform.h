@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #pragma once
-#include "mmospray/CallOSPRayTransformation.h"
 #include "OSPRayTransform.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
