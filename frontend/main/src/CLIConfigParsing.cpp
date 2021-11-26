@@ -492,7 +492,7 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<std::string>(), opengl_context_handler},
         {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
         {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
-        {disable_opengl_option, "Disable OpenGL. Always TRUE if not build with OpenGL", cxxopts::value<bool>(),
+        {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
             no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
             cxxopts::value<std::string>(), window_handler},

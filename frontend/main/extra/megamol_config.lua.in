@@ -17,8 +17,8 @@ print("Default MegaMol Frontend 3000 Configuration:")
 --   mmSetCliOption(string option,  string argument)
 --   mmSetGlobalValue(string key, string value)
 --
---   mmSetLogLevel(sring level)
---   mmSetEchoLevel(sring level)
+--   mmSetLogLevel(string level)
+--   mmSetEchoLevel(string level)
 --   mmSetLogFile(string file_path)
 --
 --   mmSetAppDir(string dir_path)
