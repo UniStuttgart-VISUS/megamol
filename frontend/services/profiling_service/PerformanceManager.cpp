@@ -5,7 +5,7 @@
 #include <array>
 
 #ifdef WITH_GL
-#include "glad/glad.h"
+#include "glad/gl.h"
 #endif
 
 namespace megamol {

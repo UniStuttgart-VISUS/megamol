@@ -276,7 +276,6 @@ void GUI_Service::preGraphRender() {
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }
-    this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
 }
 
 
