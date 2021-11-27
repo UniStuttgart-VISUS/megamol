@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "cinematic/CinematicUtils.h"
+#include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
@@ -112,7 +112,7 @@ private:
     };
 
     bool draw_replacement;
-    cinematic::CinematicUtils utils;
+    CinematicUtils utils;
     vislib::math::Cuboid<float> bbox;
 
     /**********************************************************************

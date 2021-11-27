@@ -141,10 +141,17 @@ megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() con
 
     // keep allocated vector memory around
     // note that this initially holds a nullptr texture - bad!
+
     static frontend_resources::byte_texture image_bytes({});
 
     // fill bytes with image data
     image_bytes = *m_image;
+    if (m_image->channels != ImageWrapper::DataChannels::RGBA8 &&
+        m_image->channels != ImageWrapper::DataChannels::RGB8) {
+        throw std::runtime_error("[Screenshot_Service] Only image with RGBA8 or RGA8 channels supported for now...");
+    }
+
+
     auto& byte_vector = image_bytes.as_byte_vector();
 
     screenshot_image.resize(m_image->size.width, m_image->size.height);
