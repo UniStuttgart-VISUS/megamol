@@ -59,26 +59,6 @@ public:
     ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_rt() = default;
-
-//    bool render(GLuint ubo) override;
-//
-//    bool upload(data_package_t const& package) override;
-//
-//private:
-//    std::vector<GLuint> vbos_;
-//    std::vector<GLuint> cbos_;
-//
-//    std::vector<GLuint> xbos_;
-//    std::vector<GLuint> ybos_;
-//    std::vector<GLuint> zbos_;
-//    std::vector<GLuint> radbos_;
-//    std::vector<GLuint> rbos_;
-//    std::vector<GLuint> gbos_;
-//    std::vector<GLuint> bbos_;
-//    std::vector<GLuint> abos_;
-//
-//    std::vector<uint64_t> num_prims_;
-//    per_list_package_t pl_data_;
 };
 
 class ssbo_geo_rt : public ssbo_shader_task {
@@ -86,16 +66,6 @@ public:
     ssbo_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_geo_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;
-
-private:
-    std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class ssbo_vert_rt : public ssbo_shader_task {
@@ -103,16 +73,6 @@ public:
     ssbo_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_vert_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;
-
-private:
-    std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class mesh_rt : public mesh_shader_task {
