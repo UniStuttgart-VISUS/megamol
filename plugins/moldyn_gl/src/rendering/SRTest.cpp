@@ -12,7 +12,10 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
         : data_in_slot_("inData", "")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
         , method_slot_("method", "")
-        , clip_thres_slot_("clip distance", "") {
+        , upload_mode_slot_("upload mode", "")
+/*
+, clip_thres_slot_("clip distance", "")*/
+{
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
@@ -33,13 +36,93 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
-    clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
-    MakeSlotAvailable(&clip_thres_slot_);
+    ep = new core::param::EnumParam(static_cast<upload_mode_ut>(upload_mode::FULL_SEP));
+    ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::FULL_SEP), "FULL_SEP");
+    ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::POS_COL_SEP), "POS_COL_SEP");
+    upload_mode_slot_ << ep;
+    upload_mode_slot_.SetUpdateCallback(&SRTest::update_upload_setting);
+    MakeSlotAvailable(&upload_mode_slot_);
+
+    /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
+    MakeSlotAvailable(&clip_thres_slot_);*/
 }
 
 
 megamol::moldyn_gl::rendering::SRTest::~SRTest() {
     this->Release();
+}
+
+
+bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
+    try {
+        auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_vao_options.addDefinition("__SRTEST_VAO__");
+        auto shdr_tex_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_tex_options.addDefinition("__SRTEST_TEX__");
+        auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
+        auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_options.addDefinition("__SRTEST_MESH__");
+        auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
+        auto shdr_mesh_geo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
+        auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
+        switch (static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value())) {
+        case upload_mode::FULL_SEP: {
+            shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+        } break;
+        case upload_mode::POS_COL_SEP:
+        default: {
+            shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+        }
+        }
+
+        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_unique<vao_rt>(shdr_vao_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_unique<tex_rt>(shdr_tex_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(shdr_ssbo_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(shdr_ssbo_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
+
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
+
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO, std::make_unique<mesh_geo_rt>(shdr_mesh_geo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO_TASK, std::make_unique<mesh_geo_task_rt>(shdr_mesh_geo_options)));
+
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO_ALTN, std::make_unique<mesh_geo_altn_rt>(shdr_mesh_geo_altn_options)));
+    } catch (glowl::GLSLProgramException const& e) {
+        core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
+        return false;
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[SRTest] Failed to create shader programs");
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::SRTest::update_upload_setting(core::param::ParamSlot& p) {
+    rendering_tasks_.clear();
+
+    return create_shaders();
 }
 
 
@@ -54,42 +137,8 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
     render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
     timing_handles_ = pm.add_timers(this, {upload_timer, render_timer});
 #endif
-    try {
-        auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_vao_options.addDefinition("__SRTEST_VAO__");
-        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_unique<vao_rt>(shdr_vao_options)));
-        auto shdr_tex_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_tex_options.addDefinition("__SRTEST_TEX__");
-        rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_unique<tex_rt>(shdr_tex_options)));
-        auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(shdr_ssbo_options)));
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(shdr_ssbo_options)));
-        auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_mesh_options.addDefinition("__SRTEST_MESH__");
-        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
-        auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
-        auto shdr_mesh_geo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO, std::make_unique<mesh_geo_rt>(shdr_mesh_geo_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_TASK, std::make_unique<mesh_geo_task_rt>(shdr_mesh_geo_options)));
-        auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_ALTN, std::make_unique<mesh_geo_altn_rt>(shdr_mesh_geo_altn_options)));
-    } catch (glowl::GLSLProgramException const& e) {
-        core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
+    if (!create_shaders())
         return false;
-    } catch (...) {
-        core::utility::log::Log::DefaultLog.WriteError("[SRTest] Failed to create shader programs");
-        return false;
-    }
 
     glCreateBuffers(1, &ubo_);
     glNamedBufferData(ubo_, sizeof(ubo_params_t), nullptr, GL_DYNAMIC_DRAW);
@@ -227,7 +276,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glGenQueries(3, queryID);
 
     glQueryCounter(queryID[0], GL_TIMESTAMP);*/
-    if (new_data || clip_thres_slot_.IsDirty()) {
+    if (new_data /* || clip_thres_slot_.IsDirty()*/) {
 #ifdef PROFILING
         pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
 #endif
@@ -239,7 +288,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 #endif
 
         new_data = false;
-        clip_thres_slot_.ResetDirty();
+        // clip_thres_slot_.ResetDirty();
     }
 
 #ifdef PROFILING
@@ -502,22 +551,26 @@ megamol::moldyn_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(msf::ShaderFactoryOpti
 
 
 megamol::moldyn_gl::rendering::mesh_rt::mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : mesh_shader_task("SRTestMesh", options, std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
+        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMesh", options,
+              std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh.frag.glsl")) {}
 
 
 megamol::moldyn_gl::rendering::mesh_geo_altn_rt::mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : mesh_shader_task("SRTestMeshGeoAltn", options, std::filesystem::path("srtest/srtest_mesh_geo_altn.mesh.glsl"),
+        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshGeoAltn", options,
+              std::filesystem::path("srtest/srtest_mesh_geo_altn.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo_altn.frag.glsl")) {}
 
 
 megamol::moldyn_gl::rendering::mesh_geo_rt::mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : mesh_shader_task("SRTestMeshGeo", options, std::filesystem::path("srtest/srtest_mesh_geo.mesh.glsl"),
+        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshGeo", options,
+              std::filesystem::path("srtest/srtest_mesh_geo.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
 
 
 megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : mesh_shader_task("SRTestMeshAltn", options, std::filesystem::path("srtest/srtest_mesh_altn.mesh.glsl"),
+        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshAltn", options,
+              std::filesystem::path("srtest/srtest_mesh_altn.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_altn.frag.glsl")) {}
 
 

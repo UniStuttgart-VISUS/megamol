@@ -1,4 +1,5 @@
-/*layout(std430, binding = 2) buffer SpherePos {
+#ifdef __SRTEST_UPLOAD_POS_COL_SEP__
+layout(std430, binding = 2) buffer SpherePos {
     vec4 inPosition[];
 };
 layout(std430, binding = 3) buffer SphereColor {
@@ -19,8 +20,8 @@ void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
     } else {
         objColor = inColor[idx];
     }
-}*/
-
+}
+#elif defined(__SRTEST_UPLOAD_FULL_SEP__)
 layout(std430, binding = 2) buffer X {
     float xPtr[];
 };
@@ -61,3 +62,4 @@ void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
         objColor = vec4(rPtr[idx], gPtr[idx], bPtr[idx], aPtr[idx]);
     }
 }
+#endif

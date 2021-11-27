@@ -53,6 +53,7 @@ private:
 
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
 static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / 32 + 1); };
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -75,28 +76,28 @@ public:
     virtual ~ssbo_vert_rt() = default;
 };
 
-class mesh_rt : public mesh_shader_task {
+class mesh_rt : public ssbo_shader_task {
 public:
     mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_rt() = default;
 };
 
-class mesh_altn_rt : public mesh_shader_task {
+class mesh_altn_rt : public ssbo_shader_task {
 public:
     mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_altn_rt() = default;
 };
 
-class mesh_geo_rt : public mesh_shader_task {
+class mesh_geo_rt : public ssbo_shader_task {
 public:
     mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_rt() = default;
 };
 
-class mesh_geo_altn_rt : public mesh_shader_task {
+class mesh_geo_altn_rt : public ssbo_shader_task {
 public:
     mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
@@ -176,13 +177,19 @@ private:
 
     void loadData(geocalls::MultiParticleDataCall& in_data);
 
+    bool create_shaders();
+
+    bool update_upload_setting(core::param::ParamSlot& p);
+
     core::CallerSlot data_in_slot_;
 
     core::CallerSlot getLightsSlot;
 
     core::param::ParamSlot method_slot_;
 
-    core::param::ParamSlot clip_thres_slot_;
+    core::param::ParamSlot upload_mode_slot_;
+
+    // core::param::ParamSlot clip_thres_slot_;
 
     std::unordered_map<method_e, std::unique_ptr<rendering_task>> rendering_tasks_;
 
