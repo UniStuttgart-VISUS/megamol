@@ -15,6 +15,14 @@ using per_list_package_t = per_list_package;
 struct data_package {
     std::vector<std::vector<float>> positions;
     std::vector<std::vector<float>> colors;
+    std::vector<std::vector<float>> x;
+    std::vector<std::vector<float>> y;
+    std::vector<std::vector<float>> z;
+    std::vector<std::vector<float>> rad;
+    std::vector<std::vector<float>> r;
+    std::vector<std::vector<float>> g;
+    std::vector<std::vector<float>> b;
+    std::vector<std::vector<float>> a;
     std::vector<uint64_t> data_sizes;
     per_list_package pl_data;
 };
@@ -54,6 +62,8 @@ struct param_package {
 
 using param_package_t = param_package;
 
+enum class upload_mode { POS_COL_SEP, FULL_SEP };
+
 class rendering_task {
 public:
     template<typename... Paths>
@@ -80,4 +90,4 @@ protected:
 private:
     std::unique_ptr<glowl::GLSLProgram> program_;
 };
-}
+} // namespace megamol::moldyn_gl::rendering

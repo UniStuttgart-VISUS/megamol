@@ -18,6 +18,8 @@ flat out vec3 oc_pos;
 #include "srtest_vao.glsl"
 #elif defined(__SRTEST_SSBO__)
 #include "srtest_ssbo.glsl"
+#elif defined(__SRTEST_TEX__)
+#include "srtest_tex.glsl"
 #endif
 
 #include "srtest_touchplane.glsl"

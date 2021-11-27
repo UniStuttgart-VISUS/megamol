@@ -10,87 +10,11 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#include "srtest/rendering_task.h"
 #include "srtest/mesh_shader_task.h"
+#include "srtest/rendering_task.h"
+#include "srtest/ssbo_shader_task.h"
 
 namespace megamol::moldyn_gl::rendering {
-//struct per_list_package {
-//    std::vector<float> global_radii;
-//    std::vector<glm::vec4> global_color;
-//    std::vector<uint8_t> use_global_radii;
-//    std::vector<uint8_t> use_global_color;
-//};
-//
-//using per_list_package_t = per_list_package;
-//
-//struct data_package {
-//    std::vector<std::vector<float>> positions;
-//    std::vector<std::vector<float>> colors;
-//    std::vector<uint64_t> data_sizes;
-//    per_list_package pl_data;
-//};
-//
-//using data_package_t = data_package;
-//
-//struct ubo_params {
-//    alignas(16) glm::mat4 mvp;
-//    alignas(16) glm::mat4 mvp_inv;
-//    alignas(16) glm::vec4 attr;
-//    alignas(16) glm::vec3 dir, up, right, pos;
-//    alignas(16) glm::vec3 light_dir;
-//    alignas(4) float near_;
-//    alignas(4) float far_;
-//    alignas(4) float p2_z;
-//    alignas(4) float p3_z;
-//    alignas(4) float frustum_ratio_x;
-//    alignas(4) float frustum_ratio_y;
-//    alignas(4) float frustum_ratio_w;
-//    alignas(4) float frustum_ratio_h;
-//};
-//
-//using ubo_params_t = ubo_params;
-//
-//struct param_package {
-//    glm::vec3 dir, up, right, pos;
-//    float rad;
-//    glm::vec3 light_dir;
-//    glm::vec4 global_col;
-//    glm::vec4 attr;
-//    glm::mat4 mvp;
-//    glm::mat4 mvp_inv;
-//    glm::mat4 mvp_trans;
-//    float near_;
-//    float far_;
-//};
-//
-//using param_package_t = param_package;
-//
-//class rendering_task {
-//public:
-//    template<typename... Paths>
-//    rendering_task(std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths) {
-//        try {
-//            program_ = core::utility::make_glowl_shader(label, options, std::forward<Paths>(paths)...);
-//        } catch (...) {
-//            core::utility::log::Log::DefaultLog.WriteError("[rendering_task] Failed to create program");
-//            throw;
-//        }
-//    }
-//
-//    virtual ~rendering_task() = default;
-//
-//    virtual bool render(GLuint ubo) = 0;
-//
-//    virtual bool upload(data_package_t const& package) = 0;
-//
-//protected:
-//    glowl::GLSLProgram* get_program() const {
-//        return program_.get();
-//    }
-//
-//private:
-//    std::unique_ptr<glowl::GLSLProgram> program_;
-//};
 
 class vao_rt : public rendering_task {
 public:
@@ -110,30 +34,60 @@ private:
     per_list_package_t pl_data_;
 };
 
-class ssbo_rt : public rendering_task {
+class tex_rt : public rendering_task {
+public:
+    tex_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~tex_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> tex_;
+    std::vector<GLuint> buf_;
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+};
+
+static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
+static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+
+class ssbo_rt : public ssbo_shader_task {
 public:
     ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_rt() = default;
 
-    bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;
-
-private:
-    std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;
+//    bool render(GLuint ubo) override;
+//
+//    bool upload(data_package_t const& package) override;
+//
+//private:
+//    std::vector<GLuint> vbos_;
+//    std::vector<GLuint> cbos_;
+//
+//    std::vector<GLuint> xbos_;
+//    std::vector<GLuint> ybos_;
+//    std::vector<GLuint> zbos_;
+//    std::vector<GLuint> radbos_;
+//    std::vector<GLuint> rbos_;
+//    std::vector<GLuint> gbos_;
+//    std::vector<GLuint> bbos_;
+//    std::vector<GLuint> abos_;
+//
+//    std::vector<uint64_t> num_prims_;
+//    per_list_package_t pl_data_;
 };
 
-class ssbo_geo_rt : public rendering_task {
+class ssbo_geo_rt : public ssbo_shader_task {
 public:
     ssbo_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_geo_rt() = default;
 
-    bool render(GLuint ubo) override;
+    /*bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -141,16 +95,16 @@ private:
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;
     std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;
+    per_list_package_t pl_data_;*/
 };
 
-class ssbo_vert_rt : public rendering_task {
+class ssbo_vert_rt : public ssbo_shader_task {
 public:
     ssbo_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_vert_rt() = default;
 
-    bool render(GLuint ubo) override;
+    /*bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -158,7 +112,7 @@ private:
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;
     std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;
+    per_list_package_t pl_data_;*/
 };
 
 class mesh_rt : public mesh_shader_task {
@@ -166,16 +120,6 @@ public:
     mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;*/
-
-private:
-    /*std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class mesh_altn_rt : public mesh_shader_task {
@@ -183,16 +127,6 @@ public:
     mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_altn_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;*/
-
-private:
-    /*std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class mesh_geo_rt : public mesh_shader_task {
@@ -200,16 +134,6 @@ public:
     mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_rt() = default;
-
-    //bool render(GLuint ubo) override;
-
-    //bool upload(data_package_t const& package) override;
-
-private:
-    /*std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class mesh_geo_altn_rt : public mesh_shader_task {
@@ -217,16 +141,6 @@ public:
     mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_altn_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;*/
-
-private:
-    /*std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class mesh_geo_task_rt : public mesh_shader_task {
@@ -234,16 +148,6 @@ public:
     mesh_geo_task_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_task_rt() = default;
-
-    /*bool render(GLuint ubo) override;
-
-    bool upload(data_package_t const& package) override;*/
-
-private:
-    /*std::vector<GLuint> vbos_;
-    std::vector<GLuint> cbos_;
-    std::vector<uint64_t> num_prims_;
-    per_list_package_t pl_data_;*/
 };
 
 class SRTest : public core_gl::view::Renderer3DModuleGL {
@@ -293,6 +197,7 @@ protected:
 private:
     enum class method_e : uint8_t {
         VAO,
+        TEX,
         SSBO,
         SSBO_GEO,
         SSBO_VERT,
