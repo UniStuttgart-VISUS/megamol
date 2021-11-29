@@ -9,7 +9,6 @@
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -19,7 +18,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "vislib/graphics/InputModifiers.h"

@@ -14,7 +14,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/UniFlagCalls.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

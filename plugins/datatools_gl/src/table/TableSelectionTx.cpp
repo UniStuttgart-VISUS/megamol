@@ -12,7 +12,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 
 using namespace megamol::datatools_gl;
 using namespace megamol::datatools_gl::table;

@@ -4,7 +4,6 @@
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/utility/SDFFont.h"
@@ -15,7 +14,7 @@
 
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "vislib/math/Matrix.h"
 #include <glowl/FramebufferObject.hpp>
 #include <memory>

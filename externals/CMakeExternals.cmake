@@ -150,24 +150,42 @@ function(require_external NAME)
       return()
     endif()
 
-    set(TBB_LIB "lib/tbb12.lib")
-    set(TBB_DLL "bin/tbb12.dll")
-
     if (MSVC)
       set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
     endif()
 
-    add_external_project(tbb SHARED
-      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-      GIT_TAG "v2021.3.0"
-      CMAKE_ARGS -DTBB_TEST=OFF
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}" "<INSTALL_DIR>/${TBB_LIB}"
-    )
+    set(TBB_REPO "https://github.com/oneapi-src/oneTBB.git")
+    set(TBB_TAG "v2021.3.0")
+    set(TBB_ARGS "-DTBB_TEST=OFF")
 
-    add_external_library(tbb
-      LIBRARY "${TBB_DLL}"
-      IMPORT_LIBRARY "${TBB_LIB}"
-    )
+    if (WIN32)
+      set(TBB_LIB "lib/tbb12.lib")
+      set(TBB_DLL "bin/tbb12.dll")
+
+      add_external_project(tbb SHARED
+        GIT_REPOSITORY ${TBB_REPO}
+        GIT_TAG ${TBB_TAG}
+        CMAKE_ARGS ${TBB_ARGS}
+        BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}" "<INSTALL_DIR>/${TBB_LIB}"
+      )
+      add_external_library(tbb
+        LIBRARY "${TBB_DLL}"
+        IMPORT_LIBRARY "${TBB_LIB}"
+      )
+    else()
+      # todo this is surely not portable, as always
+      set(TBB_LIB "lib64/libtbb.so.12.3")
+
+      add_external_project(tbb SHARED
+        GIT_REPOSITORY ${TBB_REPO}
+        GIT_TAG ${TBB_TAG}
+        CMAKE_ARGS ${TBB_ARGS}
+        BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_LIB}"
+      )
+      add_external_library(tbb
+        LIBRARY "${TBB_LIB}"
+      )
+    endif()
 
   # tinygltf
   elseif(NAME STREQUAL "tinygltf")
