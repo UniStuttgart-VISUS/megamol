@@ -1,7 +1,7 @@
 /*
  * gui_render_backend.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -10,14 +10,15 @@
 #pragma once
 
 
+#include <memory>
+#include <glm/glm.hpp>
+#include "imgui.h"
+#include "imgui_sw.h"
+#include "imgui_impl_generic.h"
+#include "mmcore/view/CPUFramebuffer.h"
 
 #ifdef WITH_GL
-#include "imgui_impl_opengl3.h"
 #include <glowl/FramebufferObject.hpp>
-#else
-#include "imgui_sw.h"
-#include "backends/imgui_impl_generic.h"
-#include "mmcore/view/CPUFramebuffer.h"
 #endif
 
 
@@ -49,13 +50,13 @@ public:
 
     bool CheckPrerequisites(GUIRenderBackend backend);
 
-    bool InitializeBackend(GUIRenderBackend backend);
+    bool Init(GUIRenderBackend backend);
 
-    void NewFrame();
+    void NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size);
 
-    bool EnableRendering(size_t width, size_t height);
+    bool EnableRendering(unsigned int width, unsigned int height);
 
-    bool Render();
+    bool Render(ImDrawData* draw_data);
 
     bool ShutdownBackend();
 
@@ -65,22 +66,22 @@ public:
 
     inline void GetFBOData_GL(
         unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
-        if (this->fbo == nullptr) {
+        if (this->ogl_fbo == nullptr) {
             out_fbo_color_buffer_gl_handle = 0;
             out_fbo_width = 0;
             out_fbo_height = 0;
         } else {
             // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
-            out_fbo_color_buffer_gl_handle = this->fbo->getColorAttachment(0)->getName();
-            out_fbo_width = this->fbo->getWidth();
-            out_fbo_height = this->fbo->getHeight();
+            out_fbo_color_buffer_gl_handle = this->ogl_fbo->getColorAttachment(0)->getName();
+            out_fbo_width = static_cast<size_t>(this->ogl_fbo->getWidth());
+            out_fbo_height = static_cast<size_t>(this->ogl_fbo->getHeight());
         }
     }
 
 #else
 
-    inline std::shared_ptr<core::view::CPUFramebuffer> GetFBOData_CPU() {
-        return this->fbo;
+    inline std::shared_ptr<megamol::core::view::CPUFramebuffer>& GetFBOData_CPU() {
+        return this->cpu_fbo;
     }
 
 #endif // WITH_GL
@@ -91,15 +92,13 @@ private:
 
     GUIRenderBackend initialized_backend;
 
-// FBO
+    GenericWindow sw_window;
+    GenericMonitor sw_monitor;
+
 #ifdef WITH_GL
-    std::shared_ptr<glowl::FramebufferObject> fbo;
-#else
-    std::shared_ptr<core::view::CPUFramebuffer> fbo;
+    std::shared_ptr<glowl::FramebufferObject> ogl_fbo = nullptr;
 #endif // WITH_GL
-
-    // FUNCTIONS --------------------------------------------------------------
-
+    std::shared_ptr<megamol::core::view::CPUFramebuffer> cpu_fbo = nullptr;
 
 };
 

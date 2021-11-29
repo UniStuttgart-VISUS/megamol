@@ -45,9 +45,9 @@ public:
     /**
      * Create ImGui context using OpenGL.
      *
-     * @param rbnd     The ImGui render backend to use.
+     * @param backend     The ImGui render backend to use.
      */
-    bool CreateContext(GUIRenderBackend rbnd);
+    bool CreateContext(GUIRenderBackend backend);
 
     /**
      * Setup and enable ImGui context for subsequent use.
@@ -168,17 +168,13 @@ public:
     }
 
 #ifdef WITH_GL
-
     inline void GetFBOData_GL(unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) {
         this->render_backend.GetFBOData_GL(out_fbo_color_buffer_gl_handle, out_fbo_width, out_fbo_height);
     }
-
 #else
-
     inline std::shared_ptr<core::view::CPUFramebuffer> GetFBOData_CPU() {
         return this->render_backend.GetFBOData_CPU();
     }
-
 #endif // WITH_GL
 
     ///////// SET ///////////

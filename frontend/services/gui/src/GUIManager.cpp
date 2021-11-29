@@ -109,7 +109,7 @@ bool GUIManager::CreateContext(GUIRenderBackend backend) {
     if (this->create_context()) {
         // If previous imgui context has been created, render backend already has been initialized.
         if (!previous_imgui_context_exists) {
-            if (!this->render_backend.InitializeBackend(backend)) {
+            if (!this->render_backend.Init(backend)) {
                 this->destroy_context();
                 return false;
             }
@@ -135,7 +135,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     if (!this->render_backend.IsBackendInitialized()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->imgui_context == nullptr) {
@@ -228,7 +228,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Start new ImGui frame --------------------------------------------------
-    this->render_backend.NewFrame();
+    this->render_backend.NewFrame(framebuffer_size,  window_size);
     ImGui::NewFrame();
 
 /// DOCKING
@@ -258,7 +258,7 @@ bool GUIManager::PostDraw() {
 
         if (!this->render_backend.IsBackendInitialized()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No ImGui render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         if (this->imgui_context == nullptr) {
@@ -273,8 +273,8 @@ bool GUIManager::PostDraw() {
         ImGuiStyle& style = ImGui::GetStyle();
 
         // Enable backend rendering
-        auto width = static_cast<size_t>(io.DisplaySize.x);
-        auto height = static_cast<size_t>(io.DisplaySize.y);
+        auto width = static_cast<int>(io.DisplaySize.x);
+        auto height = static_cast<int>(io.DisplaySize.y);
         this->render_backend.EnableRendering(width, height);
 
         ////////// DRAW GUI ///////////////////////////////////////////////////////
@@ -315,7 +315,7 @@ bool GUIManager::PostDraw() {
             return false;
         }
         // Actual backend rendering
-        this->render_backend.Render();
+        this->render_backend.Render(draw_data);
 
         // Loading new font -------------------------------------------------------
         // (after first imgui frame for default fonts being available)
