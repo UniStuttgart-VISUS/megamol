@@ -29,6 +29,8 @@ public:
 };
 
 } // namespace core
+
+#ifdef WITH_GL
 namespace core_gl {
 
 class FlagCollection_GL {
@@ -47,5 +49,6 @@ public:
 };
 
 } // namespace core_gl
+#endif
 
 } // namespace megamol
