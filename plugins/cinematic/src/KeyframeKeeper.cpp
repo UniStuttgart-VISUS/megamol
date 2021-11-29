@@ -18,8 +18,11 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "stdafx.h"
 
+#include <fstream>
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include "mmcore/CoreInstance.h"
 
 
 using namespace megamol;
@@ -472,8 +475,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 pos_v =
-                utility::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 pos_v = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = {pos_v.x, pos_v.y, pos_v.z};
             auto camera = this->selectedKeyframe.GetCamera();
             auto cam_pose = camera.get<view::Camera::Pose>();
@@ -1531,9 +1533,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     glm::vec3 up = cam_pose.up;
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
-    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(up), false);
     this->editCurrentProjectionParam.Param<param::EnumParam>()->SetValue(
         static_cast<int>(camera.getProjectionType()), false);
     if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {

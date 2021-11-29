@@ -21,9 +21,9 @@ LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
     this->MakeSlotAvailable(&this->outLinesSlot);
 
     this->outMeshSlot.SetCallback(
-        geocalls::CallTriMeshData::ClassName(), "GetData", &LocalBoundingBoxExtractor::getDataCallback);
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &LocalBoundingBoxExtractor::getDataCallback);
     this->outMeshSlot.SetCallback(
-        geocalls::CallTriMeshData::ClassName(), "GetExtent", &LocalBoundingBoxExtractor::getExtentCallback);
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &LocalBoundingBoxExtractor::getExtentCallback);
     this->MakeSlotAvailable(&this->outMeshSlot);
 
     this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
@@ -48,7 +48,7 @@ void LocalBoundingBoxExtractor::release() {
 bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
-    geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
+    mesh::CallMesh* ctmd = dynamic_cast<mesh::CallMesh*>(&c);
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr)
         return false;
@@ -145,6 +145,9 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
     // set trimesh data
     if (ctmd != nullptr) {
+        if (mesh == nullptr) {
+            mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+        }
         int triCount = 12;
         int vertCount = 8;
 
@@ -162,26 +165,44 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 
 
         allCols.clear();
-        int colCount = 3;
+        int colCount = 4;
         allCols.resize(colCount * vertCount);
         for (auto i = 0; i < vertCount; i++) {
             allCols[colCount * i + 0] = this->colorSlot.Param<core::param::ColorParam>()->Value()[0];
             allCols[colCount * i + 1] = this->colorSlot.Param<core::param::ColorParam>()->Value()[1];
             allCols[colCount * i + 2] = this->colorSlot.Param<core::param::ColorParam>()->Value()[2];
-            // allCols[colCount * i + 3] = this->colorSlot.Param<core::param::ColorParam>()->Value()[3];
+            allCols[colCount * i + 3] = this->colorSlot.Param<core::param::ColorParam>()->Value()[3];
         }
 
         allIdx.clear();
         allIdx = {LBF, RBF, LTF, LBF, RBF, LBB, LBF, LTF, LBB, RTF, RBF, LTF, RTF, RBF, RTB, RTF, LTF, RTB, RBB, RTB,
             RBF, RBB, RTB, LBB, RBB, RBF, LBB, LTB, LBB, RTB, LTB, LBB, LTF, LTB, RTB, LTF};
 
-        this->mesh.SetVertexData(vertCount, allVerts.data(), nullptr, allCols.data(), nullptr, false);
-        this->mesh.SetTriangleData(triCount, allIdx.data(), false);
+        std::vector<mesh::MeshDataAccessCollection::VertexAttribute> attrib;
+        mesh::MeshDataAccessCollection::IndexData index;
 
-        ctmd->SetFrameCount(1);
-        ctmd->SetFrameID(0);
-        ctmd->SetObjects(1, &this->mesh);
-        ctmd->SetDataHash(mpdc->DataHash());
+        attrib.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(allVerts.data())),
+            allVerts.size() * mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT), 3,
+            mesh::MeshDataAccessCollection::FLOAT,
+            3 * mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT), 0,
+            mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION});
+
+        attrib.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(allCols.data())),
+            allCols.size() * mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT), 4,
+            mesh::MeshDataAccessCollection::FLOAT, 4 * sizeof(float), 0,
+            mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR});
+
+
+        index.data = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(allIdx.data()));
+        index.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+        index.byte_size = 3 * sizeof(uint32_t) * (triCount - 1);
+
+        mesh->addMesh("LocalBBox", attrib, index);
+
+        ctmd->setData(mesh, mesh_version);
+        mesh_version++;
     }
 
 
@@ -191,11 +212,24 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
 bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
 
     geocalls::LinesDataCall* ldc = dynamic_cast<geocalls::LinesDataCall*>(&c);
-    geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&c);
+    mesh::CallMesh* ctmd = dynamic_cast<mesh::CallMesh*>(&c);
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr)
         return false;
 
+    uint32_t frame_id = 0;
+    if (ldc != nullptr) {
+        frame_id = ldc->FrameID();
+    }
+
+    if (ctmd != nullptr) {
+        const auto meta_data = ctmd->getMetaData();
+        if (meta_data.m_frame_ID > frame_id) {
+            frame_id = meta_data.m_frame_ID;
+        }
+    }
+
+    mpdc->SetFrameID(frame_id);
     if (!(*mpdc)(1))
         return false;
 
@@ -204,11 +238,14 @@ bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
     if (ldc != nullptr) {
         ldc->SetExtent(
             1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
+        ldc->SetFrameCount(mpdc->FrameCount());
     }
 
     if (ctmd != nullptr) {
-        ctmd->SetExtent(
-            1, globalBB.Left(), globalBB.Bottom(), globalBB.Front(), globalBB.Right(), globalBB.Top(), globalBB.Back());
+        auto meta_data = ctmd->getMetaData();
+        meta_data.m_bboxs.SetBoundingBox(globalBB);
+        meta_data.m_frame_cnt = mpdc->FrameCount();
+        ctmd->setMetaData(meta_data);
     }
 
     return true;

@@ -46,7 +46,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 
 
 bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, core_gl::utility::PickingBuffer* inout_picking_buffer,
+    megamol::gui::Parameter::WidgetScope in_scope, core::utility::PickingBuffer* inout_picking_buffer,
     ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {

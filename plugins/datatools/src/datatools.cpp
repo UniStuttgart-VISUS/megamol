@@ -7,7 +7,6 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "AddClusterColours.h"
 #include "AddParticleColors.h"
 #include "CSVFileSequence.h"
 #include "CSVWriter.h"
@@ -31,7 +30,6 @@
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
-#include "MeshTranslateRotateScale.h"
 #include "ModColIRange.h"
 #include "MultiParticleRelister.h"
 #include "NullParticleWriter.h"
@@ -44,13 +42,11 @@
 #include "ParticleColorSignThreshold.h"
 #include "ParticleColorSignedDistance.h"
 #include "ParticleDataSequenceConcatenate.h"
-#include "ParticleDensityOpacityModule.h"
 #include "ParticleIColFilter.h"
 #include "ParticleIColGradientField.h"
 #include "ParticleIdentitySort.h"
 #include "ParticleInstantiator.h"
 #include "ParticleListFilter.h"
-#include "ParticleListMergeModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleNeighborhoodGraph.h"
@@ -75,23 +71,17 @@
 #include "io/CPERAWDataSource.h"
 #include "io/MMGDDDataSource.h"
 #include "io/MMGDDWriter.h"
-#include "io/PLYDataSource.h"
-#include "io/PlyWriter.h"
-#include "io/STLDataSource.h"
-#include "io/TriMeshSTLWriter.h"
 #include "table/CSVDataSource.h"
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
 #include "table/ParticlesToTable.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
-#include "table/TableFlagFilter.h"
 #include "table/TableInspector.h"
 #include "table/TableJoin.h"
 #include "table/TableManipulator.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
-#include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
 #include "table/TableSplit.h"
 #include "table/TableToLines.h"
@@ -114,14 +104,12 @@ public:
 
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataSetTimeRewriteModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListMergeModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequenceStepper>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SphereDataUnifier>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThinner>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleGlobals>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleRelaxationModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListSelector>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleDensityOpacityModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ForceCubicCBoxModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DumpIColorHistogramModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequence>();
@@ -160,23 +148,16 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSampler>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableFlagFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSort>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThermodyn>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PlyWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIParticleCollector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIVolumeAggregator>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCListsConcatenate>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::STLDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::TriMeshSTLWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleTranslateRotateScale>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PLYDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MeshTranslateRotateScale>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVisibilityFromVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVFileSequence>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColToIdentity>();
@@ -196,7 +177,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToTable>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableInspector>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddClusterColours>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SiffCSplineFitter>();
         // register calls

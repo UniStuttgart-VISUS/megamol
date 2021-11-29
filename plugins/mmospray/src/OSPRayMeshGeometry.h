@@ -59,7 +59,6 @@ protected:
     bool InterfaceIsDirty();
 
     /** The call for data */
-    core::CallerSlot _getTrimeshDataSlot;
     core::CallerSlot _getMeshDataSlot;
     std::vector<float> _color;
     std::vector<size_t> _mesh_prefix_count;

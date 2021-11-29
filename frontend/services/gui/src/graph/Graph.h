@@ -128,7 +128,7 @@ public:
 
     void Draw(GraphState_t& state);
 
-    void DrawGlobalParameterWidgets(megamol::core_gl::utility::PickingBuffer& picking_buffer,
+    void DrawGlobalParameterWidgets(megamol::core::utility::PickingBuffer& picking_buffer,
         std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr);
 
     inline ImGuiID UID() const {

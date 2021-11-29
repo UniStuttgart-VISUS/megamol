@@ -8,7 +8,6 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "geometry_calls/BezierCurvesListDataCall.h"
-#include "geometry_calls/CallTriMeshData.h"
 #include "geometry_calls/CalloutImageCall.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "geometry_calls/LinesDataCall.h"
@@ -30,10 +29,7 @@ public:
     // Registers modules and calls
     void registerClasses() override {
 
-        // register modules
-
         // register calls
-        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CallTriMeshData>();
         this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::geocalls::MultiParticleDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::geocalls::EllipsoidalParticleDataCall>();

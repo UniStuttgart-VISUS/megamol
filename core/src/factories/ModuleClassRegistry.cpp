@@ -24,6 +24,7 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
 #include "mmcore/view/ClipPlane.h"
+#include "mmcore/view/TransferFunction.h"
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
@@ -31,6 +32,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
+
 
 using namespace megamol::core;
 
@@ -65,4 +67,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<ResourceTestModule>();
     instance.RegisterAutoDescription<param::FloatParamModule>();
     instance.RegisterAutoDescription<param::IntParamModule>();
+    instance.RegisterAutoDescription<view::TransferFunction>();
 }

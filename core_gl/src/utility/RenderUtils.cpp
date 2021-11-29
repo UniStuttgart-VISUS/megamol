@@ -7,7 +7,7 @@
 
 #include "mmcore_gl/utility/RenderUtils.h"
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // STATIC functions -------------------------------------------------------
 
@@ -571,4 +571,4 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
     }
 }
 
-} // namespace megamol::core::utility
+} // namespace megamol::core_gl::utility
