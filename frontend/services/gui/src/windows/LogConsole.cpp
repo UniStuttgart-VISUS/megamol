@@ -20,8 +20,7 @@ namespace gui {
 
 int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
 
-    /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[LogConsole] DEBUG: cursor: %d, selection: %d-%d",
-    /// data->CursorPos, data->SelectionStart, data->SelectionEnd);
+    /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[LogConsole] DEBUG: cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
     auto user_data = static_cast<megamol::gui::LogConsole::InputSharedData*>(data->UserData);
     if (user_data == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[LogConsole] Unable to get pointer to user data.");
@@ -56,7 +55,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
 
         if (user_data->autocomplete_candidates.size() == 0) {
             // No match
-            // AddLog("No match for \"%.*s\"!\n", (int) (word_end - word_start), word_start);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteError("No match for \"%.*s\"!\n", (int) (word_end - word_start), word_start);
         } else if (user_data->autocomplete_candidates.size() == 1) {
             // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
             data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
@@ -86,9 +85,9 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             }
 
             // List matches
-            // AddLog("Possible matches:\n");
-            // for (int i = 0; i < candidates.Size; i++)
-            // AddLog("- %s\n", candidates[i]);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[LogConsole] DEBUG Possible matches:\n");
+            /// for (int i = 0; i < user_data->autocomplete_candidates.size(); i++)
+            ///     megamol::core::utility::log::Log::DefaultLog.WriteInfo("- %s\n", user_data->autocomplete_candidates[i].c_str());
         }
 
         user_data->open_autocomplete_popup = (user_data->autocomplete_candidates.size() > 1);
@@ -180,9 +179,10 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , win_log_force_open(true)
         , tooltip()
         , input_shared_data(nullptr)
-        , input_reclaim_focus(0)
+        , input_reclaim_focus(false)
         , input_buffer()
-        , input_lua_func(nullptr) {
+        , input_lua_func(nullptr)
+        , input_is_popup_open(false) {
 
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
         this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
@@ -304,7 +304,6 @@ bool megamol::gui::LogConsole::Draw() {
         ImGui::EndMenuBar();
     }
 
-
     // Print messages ---------------------------------------------------------
     ImGuiStyle& style = ImGui::GetStyle();
     ImGui::BeginChild("log_messages",
@@ -335,7 +334,7 @@ bool megamol::gui::LogConsole::Draw() {
         auto result = (*this->input_lua_func)("return mmHelp()");
         if (std::get<0>(result)) {
             auto res = std::get<1>(result);
-            std::regex cmd_regex("mm\\w+", std::regex_constants::ECMAScript);
+            std::regex cmd_regex("mm[A-Z]\\w+", std::regex_constants::ECMAScript);
             auto cmd_begin = std::sregex_iterator(res.begin(), res.end(), cmd_regex);
             auto cmd_end = std::sregex_iterator();
             for (auto i = cmd_begin; i != cmd_end; ++i) {
@@ -351,9 +350,9 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();
-    if (this->input_reclaim_focus > 0) {
+    if (this->input_reclaim_focus) {
         ImGui::SetKeyboardFocusHere();
-        this->input_reclaim_focus--;
+        this->input_reclaim_focus = false;
     }
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
                                            ImGuiInputTextFlags_CallbackCompletion |
@@ -371,36 +370,38 @@ bool megamol::gui::LogConsole::Draw() {
             auto blah = std::get<1>(result);
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
-        this->input_reclaim_focus = 2;
+        this->input_reclaim_focus = true;
     }
     ImGui::PopItemWidth();
 
+    std::string popup_id = "autocomplete_selector";
     if (this->input_shared_data->open_autocomplete_popup) {
-        ImGui::OpenPopup("autocomplete_selector");
-        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + ImVec2(2.0f, 2.0f)*style.ItemInnerSpacing);
+        ImGui::OpenPopup(popup_id.c_str());
+        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + (ImVec2(2.0f, 2.0f) * style.ItemInnerSpacing));
         ImGui::SetNextWindowFocus();
         this->input_shared_data->open_autocomplete_popup = false;
     }
-    if (ImGui::BeginPopup("autocomplete_selector")) {
-        bool selected_candidate = false;
+    if (ImGui::BeginPopup(popup_id.c_str())) {
         for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
-            selected_candidate = ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].data());
+            bool selected_candidate = ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].c_str(), false, ImGuiSelectableFlags_AllowDoubleClick);
             // Keyboard selection can only be confirmed with 'space'. Also allow confirmation using 'enter'
-            if (selected_candidate || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {
+            if (selected_candidate ||
+                (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {
                 this->input_buffer = this->input_shared_data->autocomplete_candidates[i];
                 this->input_buffer.append("(");
                 this->input_shared_data->autocomplete_candidates.clear();
                 this->input_shared_data->autocomplete_appended = true;
-                selected_candidate = true;
+                this->input_reclaim_focus = true;
+                ImGui::CloseCurrentPopup();
             }
-        }
-        if (selected_candidate || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-            this->input_reclaim_focus = 2;
-            ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
     }
-    ImGui::SetItemDefaultFocus();
+    // Check if pop-up was closed last frame (needed to detect pop-up closing for reclaiming input focus )
+    if (this->input_is_popup_open && !ImGui::IsPopupOpen(popup_id.c_str())) {
+        this->input_reclaim_focus = true;
+    }
+    this->input_is_popup_open = ImGui::IsPopupOpen(popup_id.c_str());
 
     return true;
 }
