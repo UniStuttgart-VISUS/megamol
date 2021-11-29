@@ -26,6 +26,8 @@ private:
 
     void upload_pos_col_sep(data_package_t const& package);
 
+    void upload_no_sep(data_package_t const& package);
+
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;
 

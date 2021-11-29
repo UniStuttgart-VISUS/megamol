@@ -25,6 +25,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
     ep->SetTypePair(static_cast<method_ut>(method_e::TEX), "TEX");
+    ep->SetTypePair(static_cast<method_ut>(method_e::COPY), "COPY");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT), "SSBO_VERT");
@@ -39,8 +40,9 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep = new core::param::EnumParam(static_cast<upload_mode_ut>(upload_mode::FULL_SEP));
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::FULL_SEP), "FULL_SEP");
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::POS_COL_SEP), "POS_COL_SEP");
+    ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::VEC3_SEP), "VEC3_SEP");
+    ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::NO_SEP), "NO_SEP");
     upload_mode_slot_ << ep;
-    upload_mode_slot_.SetUpdateCallback(&SRTest::update_upload_setting);
     MakeSlotAvailable(&upload_mode_slot_);
 
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
@@ -61,6 +63,9 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_tex_options.addDefinition("__SRTEST_TEX__");
         auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
+        auto shdr_copy_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_copy_options.addDefinition("__SRTEST_SSBO__");
+        shdr_copy_options.addDefinition("__SRTEST_UPLOAD_COPY__");
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
@@ -69,13 +74,28 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
         auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
-        switch (static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value())) {
+        auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
+        switch (mode) {
         case upload_mode::FULL_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+        } break;
+        case upload_mode::VEC3_SEP: {
+            shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+        } break;
+        case upload_mode::NO_SEP: {
+            shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
         } break;
         case upload_mode::POS_COL_SEP:
         default: {
@@ -91,22 +111,26 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
 
         rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_unique<tex_rt>(shdr_tex_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(shdr_ssbo_options)));
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(shdr_ssbo_options)));
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(shdr_ssbo_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_unique<copy_rt>(shdr_copy_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(shdr_mesh_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(mode, shdr_ssbo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(mode, shdr_ssbo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(mode, shdr_ssbo_options)));
 
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(shdr_mesh_altn_options)));
-
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO, std::make_unique<mesh_geo_rt>(shdr_mesh_geo_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_TASK, std::make_unique<mesh_geo_task_rt>(shdr_mesh_geo_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(mode, shdr_mesh_options)));
 
         rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_ALTN, std::make_unique<mesh_geo_altn_rt>(shdr_mesh_geo_altn_options)));
+            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(mode, shdr_mesh_altn_options)));
+
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO, std::make_unique<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO_TASK, std::make_unique<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
+
+        rendering_tasks_.insert(std::make_pair(
+            method_e::MESH_GEO_ALTN, std::make_unique<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -119,7 +143,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
 }
 
 
-bool megamol::moldyn_gl::rendering::SRTest::update_upload_setting(core::param::ParamSlot& p) {
+bool megamol::moldyn_gl::rendering::SRTest::update_upload_setting() {
     rendering_tasks_.clear();
 
     return create_shaders();
@@ -217,11 +241,13 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         return false;
 
     bool new_data = false;
-    if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID()) {
+    if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID() || upload_mode_slot_.IsDirty()) {
         loadData(*in_call);
+        update_upload_setting();
         in_data_hash_ = in_call->DataHash();
         frame_id_ = in_call->FrameID();
         new_data = true;
+        upload_mode_slot_.ResetDirty();
     }
 
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
@@ -229,6 +255,13 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         new_data = true;
         method_slot_.ResetDirty();
     }
+
+    /*if (upload_mode_slot_.IsDirty()) {
+        update_upload_setting();
+        new_data = true;
+        upload_mode_slot_.ResetDirty();
+    }*/
+
 
     auto& rt = rendering_tasks_[method];
 
@@ -349,6 +382,8 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
 
 
 void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCall& in_data) {
+    core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Loading Data");
+
     auto const pl_count = in_data.GetParticleListCount();
 
     data_.positions.resize(pl_count);
@@ -369,6 +404,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
     data_.pl_data.use_global_radii.resize(pl_count);
     data_.pl_data.use_global_color.resize(pl_count);
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
+
+    auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = in_data.AccessParticles(pl_idx);
@@ -437,11 +474,21 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             positions.push_back(x_acc->Get_f(p_idx));
             positions.push_back(y_acc->Get_f(p_idx));
             positions.push_back(z_acc->Get_f(p_idx));
-            positions.push_back(rad_acc->Get_f(p_idx));
-            colors.push_back(cr_acc->Get_f(p_idx));
-            colors.push_back(cg_acc->Get_f(p_idx));
-            colors.push_back(cb_acc->Get_f(p_idx));
-            colors.push_back(ca_acc->Get_f(p_idx));
+            if (mode == upload_mode::POS_COL_SEP || mode == upload_mode::FULL_SEP) {
+                positions.push_back(rad_acc->Get_f(p_idx));
+                colors.push_back(cr_acc->Get_f(p_idx));
+                colors.push_back(cg_acc->Get_f(p_idx));
+                colors.push_back(cb_acc->Get_f(p_idx));
+                colors.push_back(ca_acc->Get_f(p_idx));
+            } else if (mode == upload_mode::VEC3_SEP) {
+                unsigned int col = glm::packUnorm4x8(
+                    glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
+                colors.push_back(*reinterpret_cast<float*>(&col));
+            } else if (mode == upload_mode::NO_SEP) {
+                unsigned int col = glm::packUnorm4x8(
+                    glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
+                positions.push_back(*reinterpret_cast<float*>(&col));
+            }
 
             X.push_back(x_acc->Get_f(p_idx));
             Y.push_back(y_acc->Get_f(p_idx));
@@ -532,49 +579,54 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
 }
 
 
-megamol::moldyn_gl::rendering::ssbo_rt::ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_points, "SRTestSSBO", options,
-              std::filesystem::path("srtest/srtest.vert.glsl"), std::filesystem::path("srtest/srtest.frag.glsl")) {}
+megamol::moldyn_gl::rendering::ssbo_rt::ssbo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+              std::filesystem::path("srtest/srtest.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::ssbo_geo_rt::ssbo_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_points, "SRTestSSBOGeo", options,
+megamol::moldyn_gl::rendering::ssbo_geo_rt::ssbo_geo_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_points, "SRTestSSBOGeo", options,
               std::filesystem::path("srtest/srtest_geo.vert.glsl"),
               std::filesystem::path("srtest/srtest_geo.geom.glsl"),
               std::filesystem::path("srtest/srtest_geo.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_verts, "SRTestSSBOVert", options,
+megamol::moldyn_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_verts, "SRTestSSBOVert", options,
               std::filesystem::path("srtest/srtest_vert.vert.glsl"),
               std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::mesh_rt::mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMesh", options,
-              std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
+megamol::moldyn_gl::rendering::mesh_rt::mesh_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMesh", options, std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::mesh_geo_altn_rt::mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshGeoAltn", options,
+megamol::moldyn_gl::rendering::mesh_geo_altn_rt::mesh_geo_altn_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMeshGeoAltn", options,
               std::filesystem::path("srtest/srtest_mesh_geo_altn.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo_altn.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::mesh_geo_rt::mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshGeo", options,
+megamol::moldyn_gl::rendering::mesh_geo_rt::mesh_geo_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMeshGeo", options,
               std::filesystem::path("srtest/srtest_mesh_geo.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(upload_mode::FULL_SEP, dc_mesh, "SRTestMeshAltn", options,
+megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMeshAltn", options,
               std::filesystem::path("srtest/srtest_mesh_altn.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_altn.frag.glsl")) {}
 
 
-megamol::moldyn_gl::rendering::mesh_geo_task_rt::mesh_geo_task_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+megamol::moldyn_gl::rendering::mesh_geo_task_rt::mesh_geo_task_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : mesh_shader_task("SRTestMeshGeoTask", options, std::filesystem::path("srtest/srtest_mesh_geo_task.task.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo_task.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
@@ -665,6 +717,148 @@ bool megamol::moldyn_gl::rendering::tex_rt::upload(data_package_t const& package
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
     pl_data_ = package.pl_data;
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task("SRTestCopy", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+              std::filesystem::path("srtest/srtest.frag.glsl")) {
+    try {
+        comp_program_ = core::utility::make_glowl_shader(
+            "SRTestCopyComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[copy_rt] Failed to create program");
+        throw;
+    }
+}
+
+
+bool megamol::moldyn_gl::rendering::copy_rt::render(GLuint ubo) {
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+
+        glDrawArrays(GL_POINTS, 0, num_prims);
+    }
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+    copy_bos_.resize(num_ssbos);
+    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+    xbos_.resize(num_ssbos);
+    glCreateBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+    ybos_.resize(num_ssbos);
+    glCreateBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+    zbos_.resize(num_ssbos);
+    glCreateBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+    radbos_.resize(num_ssbos);
+    glCreateBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+    rbos_.resize(num_ssbos);
+    glCreateBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+    gbos_.resize(num_ssbos);
+    glCreateBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+    bbos_.resize(num_ssbos);
+    glCreateBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+    abos_.resize(num_ssbos);
+    glCreateBuffers(abos_.size(), abos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
+
+        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
+            package.x[i].data(), 0);
+
+        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
+            package.y[i].data(), 0);
+
+        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
+            package.z[i].data(), 0);
+
+        glNamedBufferStorage(radbos_[i],
+            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
+            0);
+
+        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
+            package.r[i].data(), 0);
+
+        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
+            package.g[i].data(), 0);
+
+        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
+            package.b[i].data(), 0);
+
+        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
+            package.a[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+    comp_program_->use();
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+
+        glDispatchCompute(num_prims / 32 + 1, 1, 1);
+    }
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glUseProgram(0);
 
     return true;
 }

@@ -30,7 +30,11 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
         } break;
+        case upload_mode::NO_SEP: {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
+        } break;
         case upload_mode::POS_COL_SEP:
+        case upload_mode::VEC3_SEP:
         default:
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
@@ -55,7 +59,11 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::upload(data_package_t cons
     case upload_mode::FULL_SEP:
         upload_full_separate(package);
         break;
+    case upload_mode::NO_SEP:
+        upload_no_sep(package);
+        break;
     case upload_mode::POS_COL_SEP:
+    case upload_mode::VEC3_SEP:
     default:
         upload_pos_col_sep(package);
     }
@@ -153,6 +161,25 @@ void megamol::moldyn_gl::rendering::ssbo_shader_task::upload_pos_col_sep(data_pa
         glNamedBufferStorage(cbos_[i],
             package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
             package.colors[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+}
+
+
+void megamol::moldyn_gl::rendering::ssbo_shader_task::upload_no_sep(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+    vbos_.resize(num_ssbos);
+    glCreateBuffers(vbos_.size(), vbos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferStorage(vbos_[i],
+            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
+            package.positions[i].data(), 0);
     }
 
     pl_data_ = package.pl_data;

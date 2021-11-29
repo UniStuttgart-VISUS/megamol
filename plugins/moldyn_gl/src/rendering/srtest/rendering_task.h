@@ -62,7 +62,7 @@ struct param_package {
 
 using param_package_t = param_package;
 
-enum class upload_mode { POS_COL_SEP, FULL_SEP };
+enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP };
 
 using upload_mode_ut = std::underlying_type_t<upload_mode>;
 

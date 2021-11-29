@@ -51,62 +51,90 @@ private:
     per_list_package_t pl_data_;
 };
 
+class copy_rt : public rendering_task {
+public:
+    copy_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~copy_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> copy_bos_;
+
+    std::vector<GLuint> xbos_;
+    std::vector<GLuint> ybos_;
+    std::vector<GLuint> zbos_;
+    std::vector<GLuint> radbos_;
+    std::vector<GLuint> rbos_;
+    std::vector<GLuint> gbos_;
+    std::vector<GLuint> bbos_;
+    std::vector<GLuint> abos_;
+
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+
+    std::unique_ptr<glowl::GLSLProgram> comp_program_;
+};
+
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
 static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
 static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / 32 + 1); };
 
 class ssbo_rt : public ssbo_shader_task {
 public:
-    ssbo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    ssbo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_rt() = default;
 };
 
 class ssbo_geo_rt : public ssbo_shader_task {
 public:
-    ssbo_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    ssbo_geo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_geo_rt() = default;
 };
 
 class ssbo_vert_rt : public ssbo_shader_task {
 public:
-    ssbo_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    ssbo_vert_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_vert_rt() = default;
 };
 
 class mesh_rt : public ssbo_shader_task {
 public:
-    mesh_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    mesh_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_rt() = default;
 };
 
 class mesh_altn_rt : public ssbo_shader_task {
 public:
-    mesh_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    mesh_altn_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_altn_rt() = default;
 };
 
 class mesh_geo_rt : public ssbo_shader_task {
 public:
-    mesh_geo_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    mesh_geo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_rt() = default;
 };
 
 class mesh_geo_altn_rt : public ssbo_shader_task {
 public:
-    mesh_geo_altn_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    mesh_geo_altn_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_altn_rt() = default;
 };
 
 class mesh_geo_task_rt : public mesh_shader_task {
 public:
-    mesh_geo_task_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+    mesh_geo_task_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_task_rt() = default;
 };
@@ -159,6 +187,7 @@ private:
     enum class method_e : uint8_t {
         VAO,
         TEX,
+        COPY,
         SSBO,
         SSBO_GEO,
         SSBO_VERT,
@@ -179,7 +208,7 @@ private:
 
     bool create_shaders();
 
-    bool update_upload_setting(core::param::ParamSlot& p);
+    bool update_upload_setting();
 
     core::CallerSlot data_in_slot_;
 
