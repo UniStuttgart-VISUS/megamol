@@ -24,8 +24,8 @@ using namespace megamol::gui;
 GUIManager::GUIManager()
         : gui_hotkeys()
         , imgui_context(nullptr)
+        , render_backend()
         , implot_context(nullptr)
-        , imgui_initialized_rbnd(megamol::gui::ImGuiRenderBackend::NONE)
         , gui_state()
         , win_collection()
         , popup_collection()
@@ -60,7 +60,6 @@ GUIManager::GUIManager()
 
 GUIManager::~GUIManager() {
 
-    this->fbo.reset();
     this->destroy_context();
 }
 
@@ -101,95 +100,20 @@ void megamol::gui::GUIManager::init_state() {
 }
 
 
-bool GUIManager::CreateContext(ImGuiRenderBackend imgui_rbnd) {
+bool GUIManager::CreateContext(GUIRenderBackend backend) {
 
-    // Check prerequisities for requested API
-    switch (imgui_rbnd) {
-    case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-        bool prerequisities_given = true;
-#ifdef _WIN32 // Windows
-        HDC ogl_current_display = ::wglGetCurrentDC();
-        HGLRC ogl_current_context = ::wglGetCurrentContext();
-        if (ogl_current_display == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
-            prerequisities_given = false;
-        }
-        if (ogl_current_context == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
-            prerequisities_given = false;
-        }
-#else
-        /// XXX The following throws segfault if OpenGL is not loaded yet:
-        // Display* gl_current_display = ::glXGetCurrentDisplay();
-        // GLXContext ogl_current_context = ::glXGetCurrentContext();
-        /// XXX Is there a better way to check existing OpenGL context?
-        if (glXGetCurrentDisplay == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
-            prerequisities_given = false;
-        }
-        if (glXGetCurrentContext == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
-            prerequisities_given = false;
-        }
-#endif // _WIN32
-        if (!prerequisities_given) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n<<< HINT: Check if "
-                "project contains view module. >>>",
-                __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-#endif
-    } break;
-    case (ImGuiRenderBackend::CPU): {
-        /// TODO
-    } break;
-    default: {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    if (!this->render_backend.CheckPrerequisites(backend)) {
         return false;
-    } break;
     }
-
-    // Create ImGui Context
-    bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
+    bool previous_imgui_context_exists = (ImGui::GetCurrentContext() != nullptr);
     if (this->create_context()) {
-
-        // Initialize ImGui API
-        if (!other_context_exists) {
-            switch (imgui_rbnd) {
-            case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-                // Init OpenGL for ImGui
-                if (ImGui_ImplOpenGL3_Init(nullptr)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
-                } else {
-                    this->destroy_context();
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Unable to initialize OpenGL for ImGui. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                        __LINE__);
-                    return false;
-                }
-#endif
-            } break;
-            case (ImGuiRenderBackend::CPU): {
-                /// TODO
-            } break;
-            default: {
+        // If previous imgui context has been created, render backend already has been initialized.
+        if (!previous_imgui_context_exists) {
+            if (!this->render_backend.InitializeBackend(backend)) {
                 this->destroy_context();
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
-            } break;
             }
         }
-
-        this->imgui_initialized_rbnd = imgui_rbnd;
         megamol::gui::gui_context_count++;
         ImGui::SetCurrentContext(this->imgui_context);
         return true;
@@ -209,13 +133,11 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->gui_state.gui_visible = false;
     }
 
-    // Check for initialized imgui api
-    if (this->imgui_initialized_rbnd == ImGuiRenderBackend::NONE) {
+    if (!this->render_backend.IsBackendInitialized()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    // Check for existing imgui context
     if (this->imgui_context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -306,20 +228,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Start new ImGui frame --------------------------------------------------
-    switch (this->imgui_initialized_rbnd) {
-    case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-        ImGui_ImplOpenGL3_NewFrame();
-#endif
-    } break;
-    case (ImGuiRenderBackend::CPU): {
-        /// TODO
-    } break;
-    default: {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
-    }
+    this->render_backend.NewFrame();
     ImGui::NewFrame();
 
 /// DOCKING
@@ -347,13 +256,11 @@ bool GUIManager::PostDraw() {
 
     if (this->gui_state.gui_visible_post) {
 
-        // Check for initialized imgui api
-        if (this->imgui_initialized_rbnd == ImGuiRenderBackend::NONE) {
+        if (!this->render_backend.IsBackendInitialized()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] No render backend initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        // Check for existing imgui context
         if (this->imgui_context == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -368,47 +275,7 @@ bool GUIManager::PostDraw() {
         // Enable backend rendering
         auto width = static_cast<size_t>(io.DisplaySize.x);
         auto height = static_cast<size_t>(io.DisplaySize.y);
-        bool create_fbo = false;
-        if (this->fbo == nullptr) {
-            create_fbo = true;
-        } else if (((this->fbo->getWidth() != width) || (this->fbo->getHeight() != height)) && (width != 0) &&
-                   (height != 0)) {
-            create_fbo = true;
-        }
-        switch (this->imgui_initialized_rbnd) {
-        case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-            if (create_fbo) {
-                try {
-                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    this->fbo.reset();
-                    this->fbo = std::make_shared<glowl::FramebufferObject>(width, height);
-                    this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
-                    // TODO: check completness and throw if not?
-                } catch (glowl::FramebufferObjectException const& exc) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Unable to create framebuffer object: %s [%s, %s, line %d]\n", exc.what(), __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-            }
-            if (this->fbo == nullptr)
-                break;
-            this->fbo->bind();
-            // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            // glClearDepth(1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, width, height);
-            glEnable(GL_DEPTH_TEST);
-#endif
-        } break;
-        case (ImGuiRenderBackend::CPU): {
-            /// TODO
-        } break;
-        default: {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        } break;
-        }
+        this->render_backend.EnableRendering(width, height);
 
         ////////// DRAW GUI ///////////////////////////////////////////////////////
 
@@ -447,23 +314,8 @@ bool GUIManager::PostDraw() {
                 "[GUI] Invalid ImGui draw data pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
         // Actual backend rendering
-        switch (this->imgui_initialized_rbnd) {
-        case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-            ImGui_ImplOpenGL3_RenderDrawData(draw_data);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-        } break;
-        case (ImGuiRenderBackend::CPU): {
-            /// TODO
-        } break;
-        default: {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        } break;
-        }
+        this->render_backend.Render();
 
         // Loading new font -------------------------------------------------------
         // (after first imgui frame for default fonts being available)
@@ -482,21 +334,7 @@ bool GUIManager::PostDraw() {
 
                 if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
                         static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
-                    bool font_api_load_success = false;
-                    switch (this->imgui_initialized_rbnd) {
-                    case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-                        font_api_load_success = ImGui_ImplOpenGL3_CreateFontsTexture();
-#endif
-                    } break;
-                    case (ImGuiRenderBackend::CPU): {
-                        /// TODO
-                    } break;
-                    default: {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                    } break;
-                    }
+                    bool font_api_load_success = this->render_backend.CreateFont();
                     // Load last added font
                     if (font_api_load_success) {
                         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
@@ -1012,10 +850,10 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
 bool GUIManager::create_context() {
 
-    if (this->imgui_initialized_rbnd != ImGuiRenderBackend::NONE) {
+    if (this->imgui_context != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] ImGui context has alreday been created. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return true;
+            "[GUI] ImGui context has already been created. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
 
     // Check for existing context and share FontAtlas with new context (required by ImGui).
@@ -1120,7 +958,6 @@ bool GUIManager::create_context() {
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (other_context_exists) {
-
         // Fonts are already loaded
         if (default_font != nullptr) {
             io.FontDefault = default_font;
@@ -1130,7 +967,6 @@ bool GUIManager::create_context() {
             default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
             io.FontDefault = io.Fonts->Fonts[default_font_index];
         }
-
     } else {
         this->gui_state.load_default_fonts = true;
     }
@@ -1141,25 +977,14 @@ bool GUIManager::create_context() {
 
 bool GUIManager::destroy_context() {
 
-    if (this->imgui_initialized_rbnd != ImGuiRenderBackend::NONE) {
+    if (this->render_backend.IsBackendInitialized()) {
         if (this->imgui_context != nullptr) {
 
             // Handle multiple ImGui contexts.
             if (megamol::gui::gui_context_count < 2) {
                 ImGui::SetCurrentContext(this->imgui_context);
                 // Shutdown API only if only one context is left
-                switch (this->imgui_initialized_rbnd) {
-                case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-                    ImGui_ImplOpenGL3_Shutdown();
-#endif
-                } break;
-                case (ImGuiRenderBackend::CPU): {
-                    /// TODO
-                } break;
-                default:
-                    break;
-                }
+                this->render_backend.ShutdownBackend();
                 // Last context should delete font atlas
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
@@ -1172,7 +997,6 @@ bool GUIManager::destroy_context() {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
         this->imgui_context = nullptr;
-        this->imgui_initialized_rbnd = ImGuiRenderBackend::NONE;
     }
 
     return true;
@@ -1244,25 +1068,7 @@ void megamol::gui::GUIManager::load_default_fonts() {
         this->gui_state.font_load_size = static_cast<int>(default_font_size);
     }
 
-    switch (this->imgui_initialized_rbnd) {
-    case (ImGuiRenderBackend::NONE): {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Fonts can only be loaded after API was initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-    } break;
-    case (ImGuiRenderBackend::OPEN_GL): {
-#ifdef WITH_GL
-        ImGui_ImplOpenGL3_CreateFontsTexture();
-#endif
-    } break;
-    case (ImGuiRenderBackend::CPU): {
-        /// TODO
-    } break;
-    default: {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
-    }
+    this->render_backend.CreateFont();
 }
 
 

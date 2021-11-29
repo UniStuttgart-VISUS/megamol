@@ -25,10 +25,10 @@ class GUIManager;
 class GUI_Service final : public AbstractFrontendService {
 
 public:
-    enum ImGuiRenderBackend { OPEN_GL, CPU };
+    enum GUIRenderBackend { OPEN_GL, CPU };
 
     struct Config {
-        ImGuiRenderBackend imgui_rbnd = GUI_Service::ImGuiRenderBackend::OPEN_GL;
+        GUIRenderBackend imgui_rbnd = GUI_Service::GUIRenderBackend::OPEN_GL;
         megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;

@@ -312,11 +312,11 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
 
-    if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
+    if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::GUIRenderBackend::OPEN_GL) {
         // GL context is active and we need to use it
         frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
 
-        if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
+        if (this->m_gui->CreateContext(megamol::gui::GUIRenderBackend::OPEN_GL)) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "GUI_Service: initialized OpenGL backend successfully");
         } else {
@@ -325,7 +325,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         }
     } else {
         // no GL available
-        if (m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
+        if (m_config.imgui_rbnd == GUI_Service::GUIRenderBackend::OPEN_GL) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: no OpenGL_Context available");
             this->setShutdown();
         }
@@ -387,12 +387,12 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
     unsigned int fbo_color_buffer_gl_handle = 0;
     size_t fbo_width = 1;
     size_t fbo_height = 1;
-    gui_ptr->GetFBODataGL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
+    gui_ptr->GetFBOData_GL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
 
     result_image =
         megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 #else
-    auto fbo = gui_ptr->getFBOHandle();
+    auto fbo = gui_ptr->GetFBOData_CPU();
     result_image =
         megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
 #endif

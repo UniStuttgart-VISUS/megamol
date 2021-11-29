@@ -172,8 +172,6 @@ class InterfaceSlot;
 typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtr_t;
 typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
-/** Available ImGui APIs */
-enum class ImGuiRenderBackend { NONE, OPEN_GL, CPU };
 
 // Hotkeys
 enum HotkeyIndex : size_t {
