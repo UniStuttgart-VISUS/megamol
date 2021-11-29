@@ -63,7 +63,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename,
     std::vector<char> buf;
     size_t size = 0;
 
-    auto load_texture_from_file = [&](const std::string& fn, std::shared_ptr<CPUTexture2D>& tp) {
+    auto load_texture_from_file = [&](const std::string& fn, std::shared_ptr<CPUTexture2D<float>>& tp) {
         for (auto& resource_directory : megamol::gui::gui_resource_paths) {
             std::string filename_path =
                 megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, fn);

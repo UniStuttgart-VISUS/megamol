@@ -46,10 +46,12 @@ void PerformanceManager::cpu_timer::end() {
 }
 
 PerformanceManager::gl_timer::~gl_timer() {
+#ifdef WITH_GL
     for (auto& q_pair : query_ids) {
         glDeleteQueries(1, &q_pair.first);
         glDeleteQueries(1, &q_pair.second);
     }
+#endif
 }
 
 bool PerformanceManager::gl_timer::start(frame_type frame) {
@@ -58,18 +60,23 @@ bool PerformanceManager::gl_timer::start(frame_type frame) {
         query_index = 0;
     }
     last_query = assert_query(query_index).first;
+#ifdef WITH_GL
     glQueryCounter(last_query, GL_TIMESTAMP);
+#endif
     return new_frame;
 }
 
 void PerformanceManager::gl_timer::end() {
     Itimer::end();
     last_query = assert_query(query_index).second;
+#ifdef WITH_GL
     glQueryCounter(last_query, GL_TIMESTAMP);
+#endif
     query_index++;
 }
 
 void PerformanceManager::gl_timer::collect() {
+#ifdef WITH_GL
     GLuint64 start_time, end_time;
     for (uint32_t index = 0; index < query_index; ++index) {
         const auto& [start, end] = query_ids[index];
@@ -78,6 +85,7 @@ void PerformanceManager::gl_timer::collect() {
         regions.emplace_back(std::make_pair(
             time_point{std::chrono::nanoseconds(start_time)}, time_point{std::chrono::nanoseconds(end_time)}));
     }
+#endif
 }
 
 std::pair<uint32_t, uint32_t> PerformanceManager::gl_timer::assert_query(uint32_t index) {
@@ -87,7 +95,9 @@ std::pair<uint32_t, uint32_t> PerformanceManager::gl_timer::assert_query(uint32_
     }
     if (index == query_ids.size()) {
         std::array<uint32_t, 2> ids = {0, 0};
+#ifdef WITH_GL
         glGenQueries(2, ids.data());
+#endif
         query_ids.emplace_back(std::make_pair(ids[0], ids[1]));
     }
     return query_ids[index];
@@ -217,10 +227,12 @@ PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<It
 }
 
 void PerformanceManager::endFrame() {
+#ifdef WITH_GL
     int done = (gl_timer::last_query == 0);
     while (!done) {
         glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);
     }
+#endif
 
     frame_info this_frame;
     this_frame.frame = current_frame;
