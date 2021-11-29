@@ -7,7 +7,6 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "misc/ParticleInspector.h"
 #include "rendering/ArrowRenderer.h"
 #include "rendering/GlyphRenderer.h"
 #include "rendering/GrimRenderer.h"
@@ -32,7 +31,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::misc::ParticleInspector>();
     }
 };
 } // namespace megamol::moldyn_gl

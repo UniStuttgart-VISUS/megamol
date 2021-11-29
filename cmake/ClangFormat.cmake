@@ -17,7 +17,7 @@ function(add_clang_format TARGET)
 
   find_program(CLANG_FORMAT clang-format)
 
-  if(CLANG_FORMAT)
+  if(CLANG_FORMAT AND 0) # TODO Remove on merge
     # Query for version.
     execute_process(
       COMMAND ${CLANG_FORMAT} "--version"

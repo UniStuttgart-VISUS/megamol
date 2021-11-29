@@ -7,7 +7,7 @@
 #include "ModernTrisoupRenderer.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -49,7 +49,7 @@ ModernTrisoupRenderer::ModernTrisoupRenderer(void)
         , directionalLightBuffer_(nullptr)
         , vertexArray_(0) {
 
-    getDataSlot_.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
+    getDataSlot_.SetCompatibleCall<megamol::geocalls_gl::CallTriMeshDataGLDescription>();
     getDataSlot_.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&getDataSlot_);
 
@@ -184,7 +184,7 @@ void ModernTrisoupRenderer::release(void) {
 
 bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    auto ctmd = this->getDataSlot_.CallAs<geocalls::CallTriMeshData>();
+    auto ctmd = this->getDataSlot_.CallAs<geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
         return false;
     }
@@ -225,7 +225,8 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto lc = this->getLightsSlot_.CallAs<core::view::light::CallLight>();
     this->updateLights(lc, cam.getPose().direction);
 
-    megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot_.CallAs<megamol::geocalls::CallTriMeshData>();
+    megamol::geocalls_gl::CallTriMeshDataGL* ctmd =
+        this->getDataSlot_.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
         return false;
     }
@@ -320,10 +321,10 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         bool has_vertIds = false;
 
         switch (obj.GetVertexDataType()) {
-        case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+        case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
             std::memcpy(positions.data(), obj.GetVertexPointerFloat(), sizeof(float) * positions.size());
             break;
-        case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+        case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
             std::transform(obj.GetVertexPointerDouble(), obj.GetVertexPointerDouble() + positions.size(),
                 positions.data(), [](auto a) { return static_cast<float>(a); });
             break;
@@ -334,10 +335,10 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (obj.HasNormalPointer()) {
             has_normals = true;
             switch (obj.GetNormalDataType()) {
-            case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
                 std::memcpy(normals.data(), obj.GetNormalPointerFloat(), sizeof(float) * normals.size());
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
                 std::transform(obj.GetNormalPointerDouble(), obj.GetNormalPointerDouble() + normals.size(),
                     normals.data(), [](auto a) { return static_cast<float>(a); });
                 break;
@@ -349,14 +350,14 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (obj.HasColourPointer()) {
             has_colors = true;
             switch (obj.GetColourDataType()) {
-            case geocalls::CallTriMeshData::Mesh::DT_BYTE:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
                 std::transform(obj.GetColourPointerByte(), obj.GetColourPointerByte() + colors.size(), colors.data(),
                     [](auto a) { return static_cast<float>(a) / 255.0f; });
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
                 std::memcpy(colors.data(), obj.GetColourPointerFloat(), sizeof(float) * colors.size());
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
                 std::transform(obj.GetColourPointerDouble(), obj.GetColourPointerDouble() + colors.size(),
                     colors.data(), [](auto a) { return static_cast<float>(a); });
                 break;
@@ -368,10 +369,10 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (obj.HasTextureCoordinatePointer()) {
             has_texCoords = true;
             switch (obj.GetTextureCoordinateDataType()) {
-            case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
                 std::memcpy(texCoords.data(), obj.GetTextureCoordinatePointerFloat(), sizeof(float) * texCoords.size());
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
                 std::transform(obj.GetTextureCoordinatePointerDouble(),
                     obj.GetTextureCoordinatePointerDouble() + texCoords.size(), texCoords.data(),
                     [](auto a) { return static_cast<float>(a); });
@@ -384,15 +385,15 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (obj.HasTriIndexPointer()) {
             has_vertIds = true;
             switch (obj.GetTriDataType()) {
-            case geocalls::CallTriMeshData::Mesh::DT_BYTE:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
                 std::transform(obj.GetTriIndexPointerByte(), obj.GetTriIndexPointerByte() + vertIds.size(),
                     vertIds.data(), [](auto a) { return static_cast<uint32_t>(a); });
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_UINT16:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT16:
                 std::transform(obj.GetTriIndexPointerUInt16(), obj.GetTriIndexPointerUInt16() + vertIds.size(),
                     vertIds.data(), [](auto a) { return static_cast<uint32_t>(a); });
                 break;
-            case geocalls::CallTriMeshData::Mesh::DT_UINT32:
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT32:
                 std::memcpy(vertIds.data(), obj.GetTriIndexPointerUInt32(), sizeof(uint32_t) * vertIds.size());
                 break;
             }

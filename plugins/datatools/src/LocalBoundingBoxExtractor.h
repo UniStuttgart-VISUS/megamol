@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry_calls/CallTriMeshData.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -78,10 +78,11 @@ private:
     std::map<std::string, std::array<float, 6>> lineMap;
 
 
-    geocalls::CallTriMeshData::Mesh mesh;
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
     std::vector<float> allVerts;
     std::vector<float> allCols;
     std::vector<unsigned int> allIdx;
+    uint32_t mesh_version = 0;
 };
 
 } // namespace datatools

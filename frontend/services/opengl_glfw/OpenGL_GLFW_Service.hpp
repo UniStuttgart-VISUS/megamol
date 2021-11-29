@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "GL_STUB.h"
+
 #include "AbstractFrontendService.hpp"
 
 #include "Framebuffer_Events.h"
@@ -52,26 +54,27 @@ public:
         return "OpenGL_GLFW_Service";
     }
 
-    OpenGL_GLFW_Service() = default;
-    ~OpenGL_GLFW_Service() override;
+    OpenGL_GLFW_Service() GL_STUB();
+    ~OpenGL_GLFW_Service() override GL_STUB();
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-    bool init(const Config& config);
-    bool init(void* configPtr) override;
-    void close() override;
+    bool init(const Config& config) GL_STUB(true);
+    bool init(void* configPtr) override GL_STUB(true);
+    void close() override GL_STUB();
 
-    void updateProvidedResources() override;
-    void digestChangedRequestedResources() override;
-    void resetProvidedResources() override;
+    void updateProvidedResources() override GL_STUB();
+    void digestChangedRequestedResources() override GL_STUB();
+    void resetProvidedResources() override GL_STUB();
 
-    void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+    void preGraphRender() override GL_STUB(); // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void postGraphRender() override
+        GL_STUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    std::vector<FrontendResource>& getProvidedResources() override;
-    const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<FrontendResource> resources) override;
+    std::vector<FrontendResource>& getProvidedResources() override GL_STUB(m_renderResourceReferences);
+    const std::vector<std::string> getRequestedResourceNames() const override GL_STUB({});
+    void setRequestedResources(std::vector<FrontendResource> resources) override GL_STUB();
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
