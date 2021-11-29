@@ -17,7 +17,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget_gl.h"
+#include "widgets/ImageWidget.h"
 
 
 namespace megamol {
