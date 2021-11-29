@@ -1,5 +1,5 @@
 /*
- * FlagCall_GL.h
+ * FlagCallsGL.h
  *
  * Author: Guido Reina and others
  * Copyright (C) 2016-2021 by Universitaet Stuttgart (VISUS).
@@ -8,21 +8,24 @@
 
 #pragma once
 
-#include "FlagStorage.h"
 #include "mmcore/CallGeneric.h"
+#include "mmcore/FlagCollections.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
 
-class FlagCallRead_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
+namespace megamol {
+namespace core_gl {
+
+class MEGAMOLCORE_API FlagCallRead_GL
+        : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_GL>, core::EmptyMetaData> {
 public:
-    inline FlagCallRead_CPU() = default;
-    ~FlagCallRead_CPU() = default;
+    inline FlagCallRead_GL() = default;
+    ~FlagCallRead_GL() = default;
 
     static const char* ClassName(void) {
-        return "FlagCallRead_CPU";
+        return "FlagCallRead_GL";
     }
     static const char* Description(void) {
         return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
@@ -30,13 +33,14 @@ public:
     }
 };
 
-class FlagCallWrite_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
+class MEGAMOLCORE_API FlagCallWrite_GL
+        : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_GL>, core::EmptyMetaData> {
 public:
-    inline FlagCallWrite_CPU() = default;
-    ~FlagCallWrite_CPU() = default;
+    inline FlagCallWrite_GL() = default;
+    ~FlagCallWrite_GL() = default;
 
     static const char* ClassName(void) {
-        return "FlagCallWrite_CPU";
+        return "FlagCallWrite_GL";
     }
     static const char* Description(void) {
         return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
@@ -45,8 +49,8 @@ public:
 };
 
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<FlagCallRead_CPU> FlagCallRead_CPUDescription;
-typedef megamol::core::factories::CallAutoDescription<FlagCallWrite_CPU> FlagCallWrite_CPUDescription;
+typedef megamol::core::factories::CallAutoDescription<FlagCallRead_GL> FlagCallRead_GLDescription;
+typedef megamol::core::factories::CallAutoDescription<FlagCallWrite_GL> FlagCallWrite_GLDescription;
 
 } // namespace core
 } /* end namespace megamol */

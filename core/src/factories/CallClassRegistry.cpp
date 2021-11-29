@@ -14,7 +14,7 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/UniFlagCalls.h"
+#include "mmcore/FlagCalls.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"

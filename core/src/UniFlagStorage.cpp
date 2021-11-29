@@ -1,11 +1,12 @@
 #include "mmcore/UniFlagStorage.h"
 #include "json.hpp"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/UniFlagCalls.h"
+#include "mmcore/FlagCalls.h"
 #include "mmcore/param/StringParam.h"
 
 #ifdef WITH_GL
 #include "OpenGL_Context.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore/utility/ShaderFactory.h"
 #endif
 

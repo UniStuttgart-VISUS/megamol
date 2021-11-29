@@ -8,9 +8,9 @@
 #pragma once
 
 #ifdef WITH_GL
+//#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 
 #include "FlagCollections.h"
@@ -301,7 +301,7 @@ private:
 
 #ifdef WITH_GL
     std::unique_ptr<glowl::GLSLProgram> compressGPUFlagsProgram;
-    std::shared_ptr<FlagCollection_GL> theData;
+    std::shared_ptr<core_gl::FlagCollection_GL> theData;
 #endif
     std::shared_ptr<FlagCollection_CPU> theCPUData;
     bool cpu_stale = true, gpu_stale = true;
