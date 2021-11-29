@@ -5,12 +5,12 @@
  * All rights reserved.
  */
 
+#include "protein/ParticleDataCall.h"
 #include "stdafx.h"
-#include "ParticleDataCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -29,8 +29,7 @@ const unsigned int protein::ParticleDataCall::CallForGetExtent = 1;
 /*
  * protein::ParticleDataCall::ParticleDataCall
  */
-protein::ParticleDataCall::ParticleDataCall(void) : AbstractGetData3DCall(),
-        particleCount( 0), particles( 0) {
+protein::ParticleDataCall::ParticleDataCall(void) : AbstractGetData3DCall(), particleCount(0), particles(0) {
     // intentionally empty
 }
 
@@ -38,5 +37,4 @@ protein::ParticleDataCall::ParticleDataCall(void) : AbstractGetData3DCall(),
 /*
  * protein::ParticleDataCall::~ParticleDataCall
  */
-protein::ParticleDataCall::~ParticleDataCall(void) {
-}
+protein::ParticleDataCall::~ParticleDataCall(void) {}

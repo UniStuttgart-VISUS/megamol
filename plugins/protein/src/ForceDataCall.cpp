@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "ForceDataCall.h"
+#include "protein/ForceDataCall.h"
 
 using namespace megamol;
 using namespace protein;
@@ -20,7 +20,7 @@ const unsigned int protein::ForceDataCall::CallForGetForceData = 0;
 /*
  * ForceDataCall::ForceDataCall
  */
-ForceDataCall::ForceDataCall(void) : forceCount(0), forceAtomIDs(NULL), forceArray(NULL) { 
+ForceDataCall::ForceDataCall(void) : forceCount(0), forceAtomIDs(NULL), forceArray(NULL) {
     // intentionally empty
 }
 
@@ -34,7 +34,7 @@ ForceDataCall::~ForceDataCall(void) {
 /*
  * ForceDataCall::SetForces
  */
-void ForceDataCall::SetForces(unsigned int count, const unsigned int *atomIDs, const float *forces){
+void ForceDataCall::SetForces(unsigned int count, const unsigned int* atomIDs, const float* forces) {
     this->forceCount = count;
     this->forceAtomIDs = atomIDs;
     this->forceArray = forces;

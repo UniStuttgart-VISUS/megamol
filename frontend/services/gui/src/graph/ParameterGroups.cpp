@@ -79,10 +79,17 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 }
 
 
-megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
-
+megamol::gui::ParameterGroups::ParameterGroups()
+        : tooltip()
+        , animation_group()
+        , group_widgets()
+#ifdef WITH_GL
+        , cube_widget_group() {
     // Create/register available group widgets
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));
+#else
+{
+#endif
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->animation_group));
 }
 

@@ -1,25 +1,28 @@
 /*
-* KeyframeKeeper.cpp
-*
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
-* Alle Rechte vorbehalten.
-*/
+ * KeyframeKeeper.cpp
+ *
+ * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "KeyframeKeeper.h"
-#include "CallKeyframeKeeper.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/IntParam.h"
+#include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/EnumParam.h"
+#include "stdafx.h"
 
+#include <fstream>
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include "mmcore/CoreInstance.h"
 
 
 using namespace megamol;
@@ -30,77 +33,93 @@ using namespace vislib;
 using namespace vislib::math;
 
 
-KeyframeKeeper::KeyframeKeeper(void) : core::Module()
-    , keyframeCallSlot("keyframeData", "holds keyframe data")
-    , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
-    , undoChangesParam("undoChanges", "Undo changes.")
-    , redoChangesParam("redoChanges", "Redo changes.")
-    , deleteSelectedKeyframeParam("deleteKeyframe", "Deletes the currently selected keyframe.")
-    , setTotalAnimTimeParam("maxAnimTime", "The total timespan of the animation.")
-    , snapAnimFramesParam("snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames.")
-    , snapSimFramesParam("snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames.")
-    , simTangentParam("linearizeSimTime", "Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.")
-    , interpolTangentParam("interpolTangent", "Length of keyframe tangets affecting curvature of interpolation spline.")
-    , setKeyframesToSameSpeed("setSameSpeed", "Move keyframes to get same speed between all keyframes.")
-    , editCurrentAnimTimeParam("editSelected::animTime", "Edit animation time of the selected keyframe.")
-    , editCurrentSimTimeParam("editSelected::simTime", "Edit simulation time of the selected keyframe.")
-    , editCurrentPosParam("editSelected::positionVector", "Edit  position vector of the selected keyframe.")
-    , resetViewParam("editSelected::resetLookAt", "Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.")
-    , editCurrentViewParam("editSelected::lookAtVector", "Edit 'look at' vector of the selected keyframe.")
-    , editCurrentUpParam("editSelected::upVector", "Edit up vector direction relative to 'look at' vector of the selected keyframe.")
-    , editCurrentProjectionParam("editSelected::Projection", "Edit the camera projection of the selected keyframe.")
-    , editCurrentFovyParam("editSelected::Fovy", "Edit field of view y value of the selected keyframe (only for perspective perspective).")
-    , editCurrentFrustumHeightParam("editSelected::furstumHeight", "Edit the frustum height of the selected keyframe (only for orthographic perspective).")
-    , fileNameParam("storage::filename", "The name of the file to load or save keyframes.")
-    , saveKeyframesParam("storage::save", "Save keyframes to file.")
-    , loadKeyframesParam("storage::load", "Load keyframes from file.")
-    , cameraState()
-    , interpolCamPos()
-    , keyframes()
-    , selectedKeyframe()
-    , dragDropKeyframe()
-    , startCtrllPos()
-    , endCtrllPos()
-    , totalAnimTime(1.0f)
-    , totalSimTime(1.0f)
-    , interpolSteps(10)
-    , modelBboxCenter()
-    , fps(24)
-    , filename("keyframes.kf")
-    , simTangentStatus(false)
-    , splineTangentLength(0.5f)
-    , undoQueue()
-    , undoQueueIndex(0)
-    , pendingTotalAnimTime(-1.0f)
-    , frameId (0) {
+KeyframeKeeper::KeyframeKeeper(void)
+        : core::Module()
+        , keyframeCallSlot("keyframeData", "holds keyframe data")
+        , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
+        , undoChangesParam("undoChanges", "Undo changes.")
+        , redoChangesParam("redoChanges", "Redo changes.")
+        , deleteSelectedKeyframeParam("deleteKeyframe", "Deletes the currently selected keyframe.")
+        , setTotalAnimTimeParam("maxAnimTime", "The total timespan of the animation.")
+        , snapAnimFramesParam("snapAnimFrames", "Snap animation time of all keyframes to fixed animation frames.")
+        , snapSimFramesParam("snapSimFrames", "Snap simulation time of all keyframes to integer simulation frames.")
+        , simTangentParam("linearizeSimTime", "Linearize simulation time between two keyframes between currently "
+                                              "selected keyframe and subsequently selected keyframe.")
+        , interpolTangentParam(
+              "interpolTangent", "Length of keyframe tangets affecting curvature of interpolation spline.")
+        , setKeyframesToSameSpeed("setSameSpeed", "Move keyframes to get same speed between all keyframes.")
+        , editCurrentAnimTimeParam("editSelected::animTime", "Edit animation time of the selected keyframe.")
+        , editCurrentSimTimeParam("editSelected::simTime", "Edit simulation time of the selected keyframe.")
+        , editCurrentPosParam("editSelected::positionVector", "Edit  position vector of the selected keyframe.")
+        , resetViewParam("editSelected::resetLookAt",
+              "Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.")
+        , editCurrentViewParam("editSelected::lookAtVector", "Edit 'look at' vector of the selected keyframe.")
+        , editCurrentUpParam("editSelected::upVector",
+              "Edit up vector direction relative to 'look at' vector of the selected keyframe.")
+        , editCurrentProjectionParam("editSelected::Projection", "Edit the camera projection of the selected keyframe.")
+        , editCurrentFovyParam("editSelected::Fovy",
+              "Edit field of view y value of the selected keyframe (only for perspective perspective).")
+        , editCurrentFrustumHeightParam("editSelected::furstumHeight",
+              "Edit the frustum height of the selected keyframe (only for orthographic perspective).")
+        , fileNameParam("storage::filename", "The name of the file to load or save keyframes.")
+        , saveKeyframesParam("storage::save", "Save keyframes to file.")
+        , loadKeyframesParam("storage::load", "Load keyframes from file.")
+        , cameraState()
+        , interpolCamPos()
+        , keyframes()
+        , selectedKeyframe()
+        , dragDropKeyframe()
+        , startCtrllPos()
+        , endCtrllPos()
+        , totalAnimTime(1.0f)
+        , totalSimTime(1.0f)
+        , interpolSteps(10)
+        , modelBboxCenter()
+        , fps(24)
+        , filename("keyframes.kf")
+        , simTangentStatus(false)
+        , splineTangentLength(0.5f)
+        , undoQueue()
+        , undoQueueIndex(0)
+        , pendingTotalAnimTime(-1.0f)
+        , frameId(0) {
 
     // init callbacks
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetUpdatedKeyframeData),
+        &KeyframeKeeper::CallForGetUpdatedKeyframeData);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSimulationData),
+        &KeyframeKeeper::CallForSetSimulationData);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetInterpolCamPositions),
+        &KeyframeKeeper::CallForGetInterpolCamPositions);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSelectedKeyframe),
+        &KeyframeKeeper::CallForSetSelectedKeyframe);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime), &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime),
+        &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCameraForKeyframe),
+        &KeyframeKeeper::CallForSetCameraForKeyframe);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDragKeyframe), &KeyframeKeeper::CallForSetDragKeyframe);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDragKeyframe),
+        &KeyframeKeeper::CallForSetDragKeyframe);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDropKeyframe), &KeyframeKeeper::CallForSetDropKeyframe);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDropKeyframe),
+        &KeyframeKeeper::CallForSetDropKeyframe);
 
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
-        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCtrlPoints), &KeyframeKeeper::CallForSetCtrlPoints);
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCtrlPoints),
+        &KeyframeKeeper::CallForSetCtrlPoints);
 
     this->MakeSlotAvailable(&this->keyframeCallSlot);
 
@@ -108,13 +127,16 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->applyKeyframeParam);
 
-    this->undoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Y, core::view::Modifier::SHIFT)); // = z in german keyboard layout
+    this->undoChangesParam.SetParameter(
+        new param::ButtonParam(core::view::Key::KEY_Y, core::view::Modifier::SHIFT)); // = z in german keyboard layout
     this->MakeSlotAvailable(&this->undoChangesParam);
 
-    this->redoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Z, core::view::Modifier::SHIFT)); // = y in german keyboard layout
+    this->redoChangesParam.SetParameter(
+        new param::ButtonParam(core::view::Key::KEY_Z, core::view::Modifier::SHIFT)); // = y in german keyboard layout
     this->MakeSlotAvailable(&this->redoChangesParam);
 
-    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_D, core::view::Modifier::SHIFT));
+    this->deleteSelectedKeyframeParam.SetParameter(
+        new param::ButtonParam(core::view::Key::KEY_D, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
     this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 0.000001f));
@@ -138,12 +160,13 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentAnimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetAnimTime(), 0.0f));
     this->MakeSlotAvailable(&this->editCurrentAnimTimeParam);
 
-    this->editCurrentSimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetSimTime()*this->totalSimTime, 0.0f));
+    this->editCurrentSimTimeParam.SetParameter(
+        new param::FloatParam(this->selectedKeyframe.GetSimTime() * this->totalSimTime, 0.0f));
     this->MakeSlotAvailable(&this->editCurrentSimTimeParam);
 
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, -1.0f)));
     this->MakeSlotAvailable(&this->editCurrentPosParam);
-    
+
     this->editCurrentViewParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentViewParam);
 
@@ -160,13 +183,15 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     /// TODO Future use: this->MakeSlotAvailable(&this->editCurrentProjectionParam);
     pe = nullptr;
 
-    this->editCurrentFovyParam.SetParameter(new param::FloatParam(glm::radians(30.0f), 0.0f, glm::radians(180.0f))); // = 60° aperture angle
+    this->editCurrentFovyParam.SetParameter(
+        new param::FloatParam(glm::radians(30.0f), 0.0f, glm::radians(180.0f))); // = 60° aperture angle
     /// TODO Future use: this->MakeSlotAvailable(&this->editCurrentFovyParam);
 
     this->editCurrentFrustumHeightParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
     /// TODO Future use: this->MakeSlotAvailable(&this->editCurrentFrustumHeightParam);
 
-    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
+    this->fileNameParam.SetParameter(
+        new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
 
     this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::SHIFT));
@@ -194,20 +219,20 @@ bool KeyframeKeeper::create(void) {
 }
 
 
-void KeyframeKeeper::release(void) {
-
-}
+void KeyframeKeeper::release(void) {}
 
 
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     this->modelBboxCenter = ccc->GetBboxCenter();
     if (ccc->GetTotalSimTime() != this->totalSimTime) {
         this->totalSimTime = ccc->GetTotalSimTime();
-        this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(this->selectedKeyframe.GetSimTime() * this->totalSimTime, false);
+        this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(
+            this->selectedKeyframe.GetSimTime() * this->totalSimTime, false);
     }
     this->fps = ccc->GetFps();
 
@@ -218,7 +243,8 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     this->interpolSteps = ccc->GetInterpolationSteps();
     this->refreshInterpolCamPos(this->interpolSteps);
@@ -231,9 +257,10 @@ bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
-    bool appliedChanges = false; 
+    bool appliedChanges = false;
     float selAnimTime = ccc->GetSelectedKeyframe().GetAnimTime();
     for (unsigned int i = 0; i < this->keyframes.size(); i++) {
         if (this->keyframes[i].GetAnimTime() == selAnimTime) {
@@ -255,7 +282,8 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     // Update selected keyframe
     Keyframe prevSelKf = this->selectedKeyframe;
@@ -274,7 +302,8 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     this->cameraState = (*ccc->GetCameraState());
 
@@ -285,7 +314,8 @@ bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     // Checking if selected keyframe exists in keyframe array is done by caller.
     Keyframe skf = ccc->GetSelectedKeyframe();
@@ -300,7 +330,8 @@ bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     float t = ccc->GetDropAnimTime();
     t = (t < 0.0f) ? (0.0f) : (t);
@@ -316,14 +347,16 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     auto prev_StartCP = this->startCtrllPos;
     auto prev_EndCP = this->endCtrllPos;
     this->startCtrllPos = ccc->GetStartControlPointPosition();
     this->endCtrllPos = ccc->GetEndControlPointPosition();
     if ((prev_StartCP != this->startCtrllPos) || (prev_EndCP != this->endCtrllPos)) {
-        this->addControlPointUndoAction(KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
+        this->addControlPointUndoAction(KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY, this->startCtrllPos,
+            this->endCtrllPos, prev_StartCP, prev_EndCP);
         //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
     }
     this->refreshInterpolCamPos(this->interpolSteps);
@@ -336,7 +369,8 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
-    if (ccc == nullptr) return false;
+    if (ccc == nullptr)
+        return false;
 
     // UPDATE PARAMETERS
 
@@ -358,7 +392,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Try adding keyframe to array
         if (!this->addKeyframe(tmp_kf, true)) {
             if (!this->replaceKeyframe(this->selectedKeyframe, tmp_kf, true)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected "
+                    "keyframe.");
             }
         }
     }
@@ -397,18 +433,17 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->editCurrentAnimTimeParam.ResetDirty();
 
         // Clamp time value to allowed min max
-        float t = this->editCurrentAnimTimeParam.Param<param::FloatParam>()->Value(); 
+        float t = this->editCurrentAnimTimeParam.Param<param::FloatParam>()->Value();
         t = (t < 0.0f) ? (0.0f) : (t);
         t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
         // Get index of existing keyframe
-        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) { 
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             // If existing keyframe is selected, delete keyframe an add at the right position
             Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetAnimTime(t);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
-        }
-        else { // Else just change time of interpolated selected keyframe
+        } else { // Else just change time of interpolated selected keyframe
             this->selectedKeyframe = this->interpolateKeyframe(t);
         }
 
@@ -425,7 +460,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         // Get index of existing keyframe
 
-        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) { 
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             // If existing keyframe is selected, delete keyframe an add at the right position
             Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetSimTime(s / this->totalSimTime);
@@ -440,8 +475,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 pos_v = utility::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
-            std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
+            glm::vec3 pos_v = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            std::array<float, 3> pos = {pos_v.x, pos_v.y, pos_v.z};
             auto camera = this->selectedKeyframe.GetCamera();
             auto cam_pose = camera.get<view::Camera::Pose>();
             cam_pose.position = glm::vec3(pos[0], pos[1], pos[2]);
@@ -449,9 +484,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
             this->refreshInterpolCamPos(this->interpolSteps);
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
         }
     }
     // resetViewParam -------------------------------------------------------
@@ -460,7 +495,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-  
+
             view::Camera camera = this->selectedKeyframe.GetCamera();
             auto cam_pose = camera.get<view::Camera::Pose>();
 
@@ -474,9 +509,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentViewParam -------------------------------------------------
@@ -500,9 +535,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentUpParam -----------------------------------------------------
@@ -516,7 +551,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             auto cam_pose = camera.get<view::Camera::Pose>();
 
             auto vislib_up = this->editCurrentUpParam.Param<param::Vector3fParam>()->Value();
-            glm::vec3 new_up = glm::vec3(vislib_up.X(),vislib_up.Y(),vislib_up.Z());
+            glm::vec3 new_up = glm::vec3(vislib_up.X(), vislib_up.Y(), vislib_up.Z());
             new_up = glm::normalize(new_up);
 
             glm::quat new_orientation = glm::quat(cam_pose.direction, new_up);
@@ -526,16 +561,17 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
         }
     }
     // editCurrentProjectionParam -----------------------------------------------------
     if (this->editCurrentProjectionParam.IsDirty()) {
         this->editCurrentProjectionParam.ResetDirty();
 
-        auto proj = static_cast<view::Camera::ProjectionType>(this->editCurrentProjectionParam.Param<param::EnumParam>()->Value());
+        auto proj = static_cast<view::Camera::ProjectionType>(
+            this->editCurrentProjectionParam.Param<param::EnumParam>()->Value());
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
 
             Keyframe tmp_kf = this->selectedKeyframe;
@@ -549,15 +585,16 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
                 pers_intrinsics.near_plane = cam_intrinsics.near_plane;
                 pers_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
                 camera.setPerspectiveProjection(pers_intrinsics);
-            }
-             else if ((proj == view::Camera::ORTHOGRAPHIC) && (camera.getProjectionType() == view::Camera::PERSPECTIVE)) {
+            } else if ((proj == view::Camera::ORTHOGRAPHIC) &&
+                       (camera.getProjectionType() == view::Camera::PERSPECTIVE)) {
                 auto cam_intrinsics = camera.get<view::Camera::PerspectiveParameters>();
                 view::Camera::OrthographicParameters orth_intrinsics;
                 orth_intrinsics.aspect = cam_intrinsics.aspect;
                 orth_intrinsics.far_plane = cam_intrinsics.far_plane;
                 orth_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
                 orth_intrinsics.near_plane = cam_intrinsics.near_plane;
-                orth_intrinsics.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
+                orth_intrinsics.frustrum_height =
+                    this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
                 camera.setOrthographicProjection(orth_intrinsics);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -646,7 +683,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         for (unsigned int i = 0; i < this->keyframes.size(); i++) {
             this->snapKeyframe2SimFrame(this->keyframes[i]);
         }
-        this->snapKeyframe2SimFrame(this->selectedKeyframe);      
+        this->snapKeyframe2SimFrame(this->selectedKeyframe);
     }
     // simTangentParam --------------------------------------------------------
     if (this->simTangentParam.IsDirty()) {
@@ -678,13 +715,17 @@ bool KeyframeKeeper::addKeyframeUndoAction(KeyframeKeeper::Undo::Action act, Key
 }
 
 
-bool KeyframeKeeper::addControlPointUndoAction(KeyframeKeeper::Undo::Action act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint) {
+bool KeyframeKeeper::addControlPointUndoAction(KeyframeKeeper::Undo::Action act, glm::vec3 first_controlpoint,
+    glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint) {
 
-    return (this->addUndoAction(act, Keyframe(), Keyframe(), first_controlpoint, last_controlpoint, previous_first_controlpoint, previous_last_controlpoint));
+    return (this->addUndoAction(act, Keyframe(), Keyframe(), first_controlpoint, last_controlpoint,
+        previous_first_controlpoint, previous_last_controlpoint));
 }
 
 
-bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint) {
+bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf,
+    glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint,
+    glm::vec3 previous_last_controlpoint) {
 
     bool retVal = false;
 
@@ -695,12 +736,14 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
         }
     }
 
-    this->undoQueue.emplace_back(Undo(act, kf, prev_kf, first_controlpoint, last_controlpoint, previous_first_controlpoint, previous_last_controlpoint));
+    this->undoQueue.emplace_back(Undo(act, kf, prev_kf, first_controlpoint, last_controlpoint,
+        previous_first_controlpoint, previous_last_controlpoint));
     this->undoQueueIndex = (int)(this->undoQueue.size()) - 1;
     retVal = true;
 
     if (!retVal) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[KEYFRAME KEEPER] [addUndoAction] Failed to add new undo action.");
     }
 
     return retVal;
@@ -709,50 +752,52 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
 
 bool KeyframeKeeper::undoAction(void) {
 
-    bool retVal  = false;
+    bool retVal = false;
 
     if (!this->undoQueue.empty() && (this->undoQueueIndex >= 0)) {
 
         Undo currentUndo = this->undoQueue[this->undoQueueIndex];
 
         switch (currentUndo.action) {
-            case (KeyframeKeeper::Undo::Action::UNDO_NONE): 
-                break;
-            case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_ADD): 
-                // Revert adding a keyframe (= delete)
-                if (this->deleteKeyframe(currentUndo.keyframe, false)) {
-                    this->undoQueueIndex--;
-                    retVal = true;
-                }
-                break;
-            case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_DELETE):
-                // Revert deleting a keyframe (= add)
-                if (this->addKeyframe(currentUndo.keyframe, false)) {
-                    this->undoQueueIndex--;
-                    retVal = true; 
-                }
-                break;
-            case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY): 
-                // Revert changes made to a keyframe.
-                if (this->replaceKeyframe(currentUndo.keyframe, currentUndo.previous_keyframe, false)) {
-                    this->undoQueueIndex--;
-                    retVal = true;
-                }
-                break;
-            case (KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY):
-                // Revert changes made to the control points.
-                this->startCtrllPos = currentUndo.previous_first_controlpoint;
-                this->endCtrllPos   = currentUndo.previous_last_controlpoint;
+        case (KeyframeKeeper::Undo::Action::UNDO_NONE):
+            break;
+        case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_ADD):
+            // Revert adding a keyframe (= delete)
+            if (this->deleteKeyframe(currentUndo.keyframe, false)) {
                 this->undoQueueIndex--;
                 retVal = true;
-                break;
-            default: break;
+            }
+            break;
+        case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_DELETE):
+            // Revert deleting a keyframe (= add)
+            if (this->addKeyframe(currentUndo.keyframe, false)) {
+                this->undoQueueIndex--;
+                retVal = true;
+            }
+            break;
+        case (KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY):
+            // Revert changes made to a keyframe.
+            if (this->replaceKeyframe(currentUndo.keyframe, currentUndo.previous_keyframe, false)) {
+                this->undoQueueIndex--;
+                retVal = true;
+            }
+            break;
+        case (KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY):
+            // Revert changes made to the control points.
+            this->startCtrllPos = currentUndo.previous_first_controlpoint;
+            this->endCtrllPos = currentUndo.previous_last_controlpoint;
+            this->undoQueueIndex--;
+            retVal = true;
+            break;
+        default:
+            break;
         }
-    }    
+    }
     //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[KEYFRAME KEEPER] [undoAction] Failed to undo changes.");
     }
 
     return retVal;
@@ -794,16 +839,18 @@ bool KeyframeKeeper::redoAction(void) {
         case (KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY):
             // Revert changes made to the control points.
             this->startCtrllPos = currentUndo.first_controlpoint;
-            this->endCtrllPos   = currentUndo.last_controlpoint;
+            this->endCtrllPos = currentUndo.last_controlpoint;
             retVal = true;
             break;
-        default: break;
+        default:
+            break;
         }
     }
     //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Undo queue index: %d - Undo queue size: %d", this->undoQueueIndex, this->undoQueue.size());
 
     if (!retVal) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[KEYFRAME KEEPER] [redoAction] Failed to redo changes.");
     }
 
     return retVal;
@@ -815,11 +862,11 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
     // Linearize tangent between simTangentKf and currently selected keyframe by shifting all inbetween keyframe simulation times
     if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
         // Linearize tangent only between existing keyframes
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
-    }
-    else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
+    } else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
 
-        // Calculate liner equation between the two selected keyframes 
+        // Calculate liner equation between the two selected keyframes
         // f(x) = mx + b
         glm::vec2 p1 = glm::vec2(this->selectedKeyframe.GetAnimTime(), this->selectedKeyframe.GetSimTime());
         glm::vec2 p2 = glm::vec2(stkf.GetAnimTime(), stkf.GetSimTime());
@@ -846,10 +893,10 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
             // Add modification to undo queue
             this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[i], tmp_kf);
         }
-   
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
+
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
     }
 }
 
@@ -857,7 +904,9 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
 
     if (this->fps == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return;
     }
 
@@ -896,7 +945,9 @@ void KeyframeKeeper::setSameSpeed() {
         // Get total values
         float totTime = this->keyframes.back().GetAnimTime() - this->keyframes.front().GetAnimTime();
         if (totTime == 0.0f) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
             return;
         }
         float totDist = 0.0f;
@@ -909,7 +960,8 @@ void KeyframeKeeper::setSameSpeed() {
         float kfTime = 0.0f;
         float kfDist = 0.0f;
         for (unsigned int i = 0; i < this->interpolCamPos.size() - 2; i++) {
-            if ((i > 0) && (i % this->interpolSteps == 0)) {  // skip checking for first keyframe (last keyframe is skipped by prior loop)
+            if ((i > 0) && (i % this->interpolSteps ==
+                               0)) { // skip checking for first keyframe (last keyframe is skipped by prior loop)
                 kfTime = kfDist / totalVelocity;
 
                 unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
@@ -921,7 +973,8 @@ void KeyframeKeeper::setSameSpeed() {
                 // ADD UNDO
                 Keyframe tmp_kf = this->keyframes[index];
                 this->keyframes[index].SetAnimTime(t);
-                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[index], tmp_kf);
+                this->addKeyframeUndoAction(
+                    KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[index], tmp_kf);
             }
             // Add distance up to existing keyframe
             kfDist += glm::length(this->interpolCamPos[i + 1] - this->interpolCamPos[i]);
@@ -938,7 +991,10 @@ void KeyframeKeeper::setSameSpeed() {
 void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
     if (s == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero. [%s, %s, "
+            "line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -952,7 +1008,7 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
             deltaTimeStep = (this->keyframes[i + 1].GetAnimTime() - startTime) / (float)s;
 
             for (unsigned int j = 0; j < s; j++) {
-                kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
+                kf = this->interpolateKeyframe(startTime + deltaTimeStep * (float)j);
                 auto p = kf.GetCamera().get<view::Camera::Pose>().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
             }
@@ -991,9 +1047,9 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_un
                 // ADD UNDO
                 this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, newkf, oldkf);
             }
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [replace Keyframe] Could not find keyframe which should be replaced.");
             return false;
         }
     }
@@ -1019,7 +1075,9 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool add_undo) {
                     if (selIndex == 0) {
                         this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
-                    if (selIndex == this->keyframes.size()) { // Element is already removed so the index is now: (this->keyframes.size() - 1) + 1
+                    if (selIndex ==
+                        this->keyframes
+                            .size()) { // Element is already removed so the index is now: (this->keyframes.size() - 1) + 1
                         this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
                 }
@@ -1027,13 +1085,11 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool add_undo) {
             this->refreshInterpolCamPos(this->interpolSteps);
             if (selIndex > 0) {
                 this->selectedKeyframe = this->keyframes[selIndex - 1];
-            }
-            else if (selIndex < this->keyframes.size()) {
+            } else if (selIndex < this->keyframes.size()) {
                 this->selectedKeyframe = this->keyframes[selIndex];
             }
             this->updateEditParameters(this->selectedKeyframe);
-        }
-        else {
+        } else {
             //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [deleteKeyframe] No existing keyframe selected.");
             return false;
         }
@@ -1066,18 +1122,16 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
             this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
         this->keyframes.emplace_back(kf);
-    }
-    else if (time < this->keyframes.front().GetAnimTime()) {
+    } else if (time < this->keyframes.front().GetAnimTime()) {
         // Reset first/last control point position - ONLY if it is a "real" add and no replace
         if (add_undo) {
-             if (this->keyframes.empty()) {
+            if (this->keyframes.empty()) {
                 this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
             }
             this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
         this->keyframes.insert(this->keyframes.begin(), kf);
-    }
-    else { // Insert keyframe in-between existing keyframes
+    } else { // Insert keyframe in-between existing keyframes
         unsigned int insertIdx = 0;
         for (unsigned int i = 0; i < this->keyframes.size(); i++) {
             if (time < this->keyframes[i].GetAnimTime()) {
@@ -1088,7 +1142,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
         this->keyframes.insert(this->keyframes.begin() + insertIdx, kf);
     }
 
-    // ADD UNDO 
+    // ADD UNDO
     if (add_undo) {
         this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_ADD, kf, kf);
     }
@@ -1132,7 +1186,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         auto cam_pose = this->cameraState.get<view::Camera::Pose>();
         if (this->cameraState.getProjectionType() == view::Camera::PERSPECTIVE) {
             auto cam_intrinsics = this->cameraState.get<view::Camera::PerspectiveParameters>();
-            cam_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value(); 
+            cam_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
             kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
         } else if (this->cameraState.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
             auto cam_intrinsics = this->cameraState.get<view::Camera::OrthographicParameters>();
@@ -1143,18 +1197,15 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
                 "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
         return kf;
-    }
-    else if (t < this->keyframes.front().GetAnimTime()) {
+    } else if (t < this->keyframes.front().GetAnimTime()) {
         Keyframe kf = this->keyframes.front();
         kf.SetAnimTime(t);
         return kf;
-    }
-    else if (t > this->keyframes.back().GetAnimTime()) {
+    } else if (t > this->keyframes.back().GetAnimTime()) {
         Keyframe kf = this->keyframes.back();
         kf.SetAnimTime(t);
         return kf;
-    }
-    else { // if ((t > this->keyframes.front().GetAnimTime()) && (t < this->keyframes.back().GetAnimTime())) {
+    } else { // if ((t > this->keyframes.front().GetAnimTime()) && (t < this->keyframes.back().GetAnimTime())) {
 
         // New default keyframe
         Keyframe kf = Keyframe();
@@ -1164,7 +1215,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         // Nothing to do for animation time
         kf.SetAnimTime(t);
 
-        // Determine indices for interpolation 
+        // Determine indices for interpolation
         int i0 = 0;
         int i1 = 0;
         int i2 = 0;
@@ -1192,7 +1243,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         // Interpolate simulation time linear between i1 and i2
         float simT1 = this->keyframes[i1].GetSimTime();
         float simT2 = this->keyframes[i2].GetSimTime();
-        float simT = simT1 + (simT2 - simT1)*iT;
+        float simT = simT1 + (simT2 - simT1) * iT;
         kf.SetSimTime(simT);
 
         // ! Skip interpolation of camera parameters if they are equal for ?1 and ?2.
@@ -1212,15 +1263,14 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         }
         if (p1 == p2) {
             cam_kf_pose.position = p1;
-        }
-        else {
+        } else {
             glm::vec3 pk = this->vec3_interpolation(iT, p0, p1, p2, p3);
             cam_kf_pose.position = pk;
         }
 
         /// TODO XXX Check projection type of all involved keyframes?!
         if (cam_kf.getProjectionType() == view::Camera::PERSPECTIVE) {
-        // interpolate fovy ---------------------------------------------------
+            // interpolate fovy ---------------------------------------------------
 
             float a0 = c0.get<view::Camera::FieldOfViewY>();
             float a1 = c1.get<view::Camera::FieldOfViewY>();
@@ -1237,7 +1287,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
                 cam_kf.setPerspectiveProjection(cam_intrinsics);
             }
         } else if (cam_kf.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
-        // interpolate frustum height -----------------------------------------
+            // interpolate frustum height -----------------------------------------
 
             float a0 = c0.get<view::Camera::FrustrumHeight>();
             float a1 = c1.get<view::Camera::FrustrumHeight>();
@@ -1288,10 +1338,9 @@ float KeyframeKeeper::float_interpolation(float u, float f0, float f1, float f2,
     // Considering global tangent length
     // SOURCE: https://www.cs.cmu.edu/~462/projects/assn2/assn2/catmullRom.pdf
     float tl = this->splineTangentLength;
-    float f = (f1)+
-              (-(tl * f0) + (tl* f2)) * u +
-              ((2.0f*tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f*tl) * f2) - (tl* f3)) * u * u +
-              (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl* f3)) * u * u * u;
+    float f = (f1) + (-(tl * f0) + (tl * f2)) * u +
+              ((2.0f * tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f * tl) * f2) - (tl * f3)) * u * u +
+              (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl * f3)) * u * u * u;
 
     return f;
 }
@@ -1311,27 +1360,26 @@ glm::vec3 KeyframeKeeper::vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1
 bool KeyframeKeeper::saveKeyframes() {
 
     if (this->filename.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
-        time_t t = std::time(0);  // get time now
-        struct tm *now = nullptr;
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
+        time_t t = std::time(0); // get time now
+        struct tm* now = nullptr;
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
         struct tm nowdata;
         now = &nowdata;
         localtime_s(now, &t);
-#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+#else  /* defined(_WIN32) && (_MSC_VER >= 1400) */
         now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
         std::stringstream stream;
-        stream << "keyframes_" << (now->tm_year + 1900) << 
-            std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << 
-            std::setfill('0') << std::setw(2) << now->tm_mday << "-" << 
-            std::setfill('0') << std::setw(2) << now->tm_hour << 
-            std::setfill('0') << std::setw(2) << now->tm_min << 
-            std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
+        stream << "keyframes_" << (now->tm_year + 1900) << std::setfill('0') << std::setw(2) << (now->tm_mon + 1)
+               << std::setfill('0') << std::setw(2) << now->tm_mday << "-" << std::setfill('0') << std::setw(2)
+               << now->tm_hour << std::setfill('0') << std::setw(2) << now->tm_min << std::setfill('0') << std::setw(2)
+               << now->tm_sec << ".kf";
         this->filename = stream.str();
         this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
-    } 
+    }
 
     try {
         std::ofstream outfile;
@@ -1360,12 +1408,13 @@ bool KeyframeKeeper::saveKeyframes() {
         }
 
         // Dump with indent of 2 spaces and new lines.
-        outfile << json.dump(2); 
+        outfile << json.dump(2);
         outfile.close();
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
-    } 
-    catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
         return false;
     }
 
@@ -1378,15 +1427,15 @@ bool KeyframeKeeper::loadKeyframes() {
     if (this->filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
         return false;
-    }
-    else {
+    } else {
         try {
             this->keyframes.clear();
 
             std::ifstream infile;
             infile.open(this->filename.c_str());
             if (!infile.good()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[KEYFRAME KEEPER] Failed to open keyframe file.");
                 return false;
             }
 
@@ -1400,20 +1449,29 @@ bool KeyframeKeeper::loadKeyframes() {
             json = nlohmann::json::parse(content);
             if (!json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[KEYFRAME KEEPER] Given string is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[KEYFRAME KEEPER] Given string is no valid JSON object. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return false;
             }
 
             // Get general data
             bool valid = true;
-            valid &= megamol::core::utility::get_json_value<float>(json, { "total_animation_time" }, &this->totalAnimTime);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "spline_tangent_length" }, &this->splineTangentLength);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "x" }, &this->startCtrllPos.x);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "y" }, &this->startCtrllPos.y);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "z" }, &this->startCtrllPos.z);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "x" }, &this->startCtrllPos.x);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "y" }, &this->startCtrllPos.y);
-            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "z" }, &this->startCtrllPos.z);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"total_animation_time"}, &this->totalAnimTime);
+            valid &= megamol::core::utility::get_json_value<float>(
+                json, {"spline_tangent_length"}, &this->splineTangentLength);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"first_ctrl_point", "x"}, &this->startCtrllPos.x);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"first_ctrl_point", "y"}, &this->startCtrllPos.y);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"first_ctrl_point", "z"}, &this->startCtrllPos.z);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"last_ctrl_point", "x"}, &this->startCtrllPos.x);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"last_ctrl_point", "y"}, &this->startCtrllPos.y);
+            valid &=
+                megamol::core::utility::get_json_value<float>(json, {"last_ctrl_point", "z"}, &this->startCtrllPos.z);
 
             // Get keyframe data
             if (json.find("keyframes") != json.end()) {
@@ -1423,9 +1481,10 @@ bool KeyframeKeeper::loadKeyframes() {
                     for (size_t i = 0; i < keyframe_count; ++i) {
                         valid &= this->keyframes[i].Deserialise(json.at("keyframes").at(i));
                     }
-                }
-                else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                        __LINE__);
                     valid = false;
                 }
             }
@@ -1437,23 +1496,25 @@ bool KeyframeKeeper::loadKeyframes() {
                     this->refreshInterpolCamPos(this->interpolSteps);
                     this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->totalAnimTime, false);
                 }
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
                 return true;
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Failed to load keyframes from file: %s", this->filename.c_str());
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[KEYFRAME KEEPER] Failed to load keyframes from file: %s", this->filename.c_str());
             }
         } catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[KEYFRAME KEEPER] JSON TYPE ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                "[KEYFRAME KEEPER] JSON TYPE ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
+                __LINE__);
             return false;
         } catch (nlohmann::json::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[KEYFRAME KEEPER] JSON: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
-        }
-        catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to load keyframes to file: %s", this->filename.c_str());
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] Unknown Exception - Failed to load keyframes to file: %s", this->filename.c_str());
             return false;
         }
     }
@@ -1472,10 +1533,11 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     glm::vec3 up = cam_pose.up;
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
-    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
-    this->editCurrentProjectionParam.Param<param::EnumParam>()->SetValue(static_cast<int>(camera.getProjectionType()), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(up), false);
+    this->editCurrentProjectionParam.Param<param::EnumParam>()->SetValue(
+        static_cast<int>(camera.getProjectionType()), false);
     if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
         this->editCurrentFovyParam.Param<param::FloatParam>()->SetValue(
             camera.get<view::Camera::FieldOfViewY>(), false);
@@ -1484,8 +1546,7 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
             camera.get<view::Camera::FrustrumHeight>(), false);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     // Show or hide edit parameters for currently selected keyframe
@@ -1545,7 +1606,8 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
             if (!ImGui::IsPopupOpen(popup_label.c_str())) {
                 ImGui::OpenPopup(popup_label.c_str());
             }
-            if (ImGui::BeginPopupModal(popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            if (ImGui::BeginPopupModal(
+                    popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
                 ImGui::Text("Scale current animation time '%f' of keyframes \nwith new total animation time '%f'?",
                     this->totalAnimTime, this->pendingTotalAnimTime);
                 if (ImGui::Button("Yes")) {
@@ -1581,7 +1643,9 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
                 if (this->pendingTotalAnimTime < this->keyframes.back().GetAnimTime()) {
                     this->pendingTotalAnimTime = this->keyframes.back().GetAnimTime();
                     this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->pendingTotalAnimTime, false);
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last "
+                        "keyframe. Delete Keyframe(s) to reduce total time to desired value.");
                 }
             }
             this->totalAnimTime = this->pendingTotalAnimTime;

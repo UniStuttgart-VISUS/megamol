@@ -1,14 +1,14 @@
 /*
  * CallerSlot.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -17,8 +17,10 @@ using namespace megamol::core;
  * CallerSlot::CallerSlot
  */
 CallerSlot::CallerSlot(const vislib::StringA& name, const vislib::StringA& desc)
-        : AbstractSlot(name, desc), AbstractCallSlotPresentation(), 
-        call(NULL), compDesc() {
+        : AbstractSlot(name, desc)
+        , AbstractCallSlotPresentation()
+        , call(NULL)
+        , compDesc() {
     // intentionally empty
 }
 
@@ -39,8 +41,7 @@ bool CallerSlot::Call(unsigned int func) {
     if (this->call != NULL) {
         try {
             return (*this->call)(func);
-        } catch(...) {
-        }
+        } catch (...) {}
     }
     return false;
 }
@@ -49,7 +50,7 @@ bool CallerSlot::Call(unsigned int func) {
 /*
  * CallerSlot::IsConnectedTo
  */
-Call *CallerSlot::IsConnectedTo(CalleeSlot *target) {
+Call* CallerSlot::IsConnectedTo(CalleeSlot* target) {
     if ((this->call != NULL) && (this->call->PeekCalleeSlot() == target)) {
         return this->call;
     }
@@ -60,7 +61,7 @@ Call *CallerSlot::IsConnectedTo(CalleeSlot *target) {
 /*
  * CallerSlot::IsConnectedTo
  */
-const Call *CallerSlot::IsConnectedTo(const CalleeSlot *target) const {
+const Call* CallerSlot::IsConnectedTo(const CalleeSlot* target) const {
     if ((this->call != NULL) && (this->call->PeekCalleeSlot() == target)) {
         return this->call;
     }
@@ -72,11 +73,12 @@ const Call *CallerSlot::IsConnectedTo(const CalleeSlot *target) const {
  * CallerSlot::ClearCleanupMark
  */
 void CallerSlot::ClearCleanupMark(void) {
-    if (!this->CleanupMark()) return;
+    if (!this->CleanupMark())
+        return;
 
     AbstractNamedObject::ClearCleanupMark();
     if ((this->call != NULL) && (this->call->PeekCalleeSlot() != NULL)) {
-        const_cast<CalleeSlot *>(this->call->PeekCalleeSlot())->ClearCleanupMark();
+        const_cast<CalleeSlot*>(this->call->PeekCalleeSlot())->ClearCleanupMark();
     }
 }
 
@@ -99,9 +101,8 @@ void CallerSlot::DisconnectCalls(void) {
 /*
  * CallerSlot::IsParamRelevant
  */
-bool CallerSlot::IsParamRelevant(
-        vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool CallerSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+    const vislib::SmartPtr<param::AbstractParam>& param) const {
 
     if ((this->call != NULL) && (this->call->PeekCalleeSlot() != NULL)) {
         if (searched.Contains(this->call->PeekCalleeSlot())) {

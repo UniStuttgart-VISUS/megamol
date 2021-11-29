@@ -1,7 +1,7 @@
 /*
  * SplitMergeFeature.h
  *
- * Copyright (C) 2012 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2012 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -19,80 +19,79 @@
 namespace megamol {
 namespace protein_cuda {
 
+/**
+ * Split-Merge Feature
+ */
+class SplitMergeFeature : public protein_calls::SplitMergeCall::SplitMergeMappable {
+public:
+    SplitMergeFeature(float maxT, vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(0, 0, 0));
+    ~SplitMergeFeature(void);
+
+    virtual int GetDataCount() const;
+    virtual bool GetAbscissaValue(const SIZE_T index, float* value) const;
+    virtual float GetOrdinateValue(const SIZE_T index) const;
+    virtual vislib::Pair<float, float> GetAbscissaRange() const;
+    virtual vislib::Pair<float, float> GetOrdinateRange() const;
+
     /**
-     * Split-Merge Feature
+     * Append a value pair (abscissa and ordinate value) to the list of values.
+     *
+     * @param x The abscissa value.
+     * @param y The ordinate value.
      */
-	class SplitMergeFeature : public protein_calls::SplitMergeCall::SplitMergeMappable
-    {
-    public:
-        SplitMergeFeature( float maxT, vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(0, 0, 0));
-        ~SplitMergeFeature(void);
+    VISLIB_FORCEINLINE void AppendValue(float x, float y) {
+        this->AppendValue(vislib::Pair<float, float>(x, y));
+    }
 
-        virtual int GetDataCount() const;
-        virtual bool GetAbscissaValue(const SIZE_T index, float *value) const;
-        virtual float GetOrdinateValue(const SIZE_T index) const;
-        virtual vislib::Pair<float, float> GetAbscissaRange() const;
-        virtual vislib::Pair<float, float> GetOrdinateRange() const;
-        
-        /** 
-         * Append a value pair (abscissa and ordinate value) to the list of values.
-         *
-         * @param x The abscissa value.
-         * @param y The ordinate value.
-         */
-        VISLIB_FORCEINLINE void AppendValue( float x, float y) {
-            this->AppendValue( vislib::Pair<float, float>( x, y));
-        }
-        
-        /** 
-         * Append a value pair (abscissa and ordinate value) to the list of values.
-         *
-         * @param p The value pair.
-         */
-        void AppendValue( vislib::Pair<float, float> p);
-        
-        /** 
-         * Append a NULL value pair signaling a hole.
-         */
-        void AppendHole() {
-            this->data.Append( NULL);
-        };
-        
-        /** 
-         * Set the position of the feature (e.g. centroid).
-         *
-         * @param pos The position.
-         */
-        VISLIB_FORCEINLINE void SetPosition( vislib::math::Vector<float, 3> pos) {
-            this->position = pos;
-        }
-        
-        /** 
-         * Set the position of the feature (e.g. centroid).
-         *
-         * @param x The x component of the position.
-         * @param y The y component of the position.
-         * @param z The z component of the position.
-         */
-        VISLIB_FORCEINLINE void SetPosition( const float x, const float y, const float z) {
-            this->position.Set( x, y, z);
-        }
-        
-        /** 
-         * Get the position of the feature.
-         *
-         * @return The position.
-         */
-        VISLIB_FORCEINLINE vislib::math::Vector<float, 3> GetPosition() {
-            return this->position;
-        }
+    /**
+     * Append a value pair (abscissa and ordinate value) to the list of values.
+     *
+     * @param p The value pair.
+     */
+    void AppendValue(vislib::Pair<float, float> p);
 
-    private:
-        vislib::PtrArray<vislib::Pair<float, float> > data;
-        float maxTime;
-        float maxSurfaceArea;
-        vislib::math::Vector<float, 3> position;
+    /**
+     * Append a NULL value pair signaling a hole.
+     */
+    void AppendHole() {
+        this->data.Append(NULL);
     };
+
+    /**
+     * Set the position of the feature (e.g. centroid).
+     *
+     * @param pos The position.
+     */
+    VISLIB_FORCEINLINE void SetPosition(vislib::math::Vector<float, 3> pos) {
+        this->position = pos;
+    }
+
+    /**
+     * Set the position of the feature (e.g. centroid).
+     *
+     * @param x The x component of the position.
+     * @param y The y component of the position.
+     * @param z The z component of the position.
+     */
+    VISLIB_FORCEINLINE void SetPosition(const float x, const float y, const float z) {
+        this->position.Set(x, y, z);
+    }
+
+    /**
+     * Get the position of the feature.
+     *
+     * @return The position.
+     */
+    VISLIB_FORCEINLINE vislib::math::Vector<float, 3> GetPosition() {
+        return this->position;
+    }
+
+private:
+    vislib::PtrArray<vislib::Pair<float, float>> data;
+    float maxTime;
+    float maxSurfaceArea;
+    vislib::math::Vector<float, 3> position;
+};
 
 
 } /* end namespace protein_cuda */

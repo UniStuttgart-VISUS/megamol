@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/ColourParser.h"
 
@@ -25,17 +25,16 @@ ColorParam::ColorParam(float initR, float initG, float initB, float initA) : Abs
     this->SetValue({initR, initG, initB, initA});
 }
 
-ColorParam::ColorParam(const vislib::TString& initVal) : AbstractParam(), val() { 
+ColorParam::ColorParam(const vislib::TString& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::COLOR);
-    this->ParseValue(initVal);
+    this->ParseValue(initVal.PeekBuffer());
 }
 
-void ColorParam::Definition(vislib::RawStorage& outDef) const {
-    outDef.AssertSize(6);
-    memcpy(outDef.AsAt<char>(0), "MMCOLO", 6);
+std::string ColorParam::Definition() const {
+    return "MMCOLO";
 }
 
-bool ColorParam::ParseValue(vislib::TString const& v) {
+bool ColorParam::ParseValue(std::string const& v) {
 
     // Checked color syntax:
     // 1] #123 #1234 #123456 #12345678
@@ -43,25 +42,25 @@ bool ColorParam::ParseValue(vislib::TString const& v) {
     // 3] 'Named Colour', e.g. Red
     try {
         float vParsed[4];
-        if (core::utility::ColourParser::FromString(v, 4, vParsed)) {
-            ColorType vConverted = { vParsed[0], vParsed[1], vParsed[2], vParsed[3] };
+        if (core::utility::ColourParser::FromString(v.c_str(), 4, vParsed)) {
+            ColorType vConverted = {vParsed[0], vParsed[1], vParsed[2], vParsed[3]};
             this->SetValue(vConverted);
             return true;
         }
-    } catch (...) {
-    }
+    } catch (...) {}
 
     return false;
 }
 
-vislib::TString ColorParam::ValueString(void) const {
-    return core::utility::ColourParser::ToString(this->val[0], this->val[1], this->val[2], this->val[3]);
+std::string ColorParam::ValueString(void) const {
+    return core::utility::ColourParser::ToString(this->val[0], this->val[1], this->val[2], this->val[3]).PeekBuffer();
 }
 
 void ColorParam::SetValue(const ColorType& v, bool setDirty) {
     if (v != this->val) {
         this->val = v;
         this->indicateChange();
-        if (setDirty) this->setDirty();
+        if (setDirty)
+            this->setDirty();
     }
 }

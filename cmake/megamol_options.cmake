@@ -71,7 +71,14 @@ if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
+
+# OpenGL
+option(ENABLE_GL "Enable GL support" ON)
+if (ENABLE_GL)
+  add_compile_definitions(WITH_GL)
+  find_package(OpenGL REQUIRED)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
@@ -90,6 +97,3 @@ if(OPENMP_FOUND OR WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-# OpenGL
-find_package(OpenGL REQUIRED)

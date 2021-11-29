@@ -1,10 +1,10 @@
-#include "stdafx.h"
 #include "PhaseSeparator.h"
+#include "stdafx.h"
 
-#include <numeric>
 #include <cmath>
+#include <numeric>
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -14,16 +14,16 @@
 
 
 megamol::thermodyn::PhaseSeparator::PhaseSeparator()
-    : dataInSlot_("dataIn", "Input of particle data")
-    , dataOutSlot_("dataOut", "Ouput of boxes representing the phases")
-    , criticalTempSlot_("Tc", "Critical temperature of simulated material")
-    , ensembleTempSlot_("T", "Temperature set by the ensemble")
-    , fluidColorSlot_("fluidColor", "Color of the box representing the fluid")
-    , interfaceColorSlot_("interfaceColor", "Color of the box representing the interface")
-    , gasColorSlot_("gasColor", "Color of the box representing the gas")
-    , axisSlot_("axis", "Main axis for density analysis")
-    , numSlicesSlot_("numSlices", "Number of slices for density analysis") {
-    dataInSlot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+        : dataInSlot_("dataIn", "Input of particle data")
+        , dataOutSlot_("dataOut", "Ouput of boxes representing the phases")
+        , criticalTempSlot_("Tc", "Critical temperature of simulated material")
+        , ensembleTempSlot_("T", "Temperature set by the ensemble")
+        , fluidColorSlot_("fluidColor", "Color of the box representing the fluid")
+        , interfaceColorSlot_("interfaceColor", "Color of the box representing the interface")
+        , gasColorSlot_("gasColor", "Color of the box representing the gas")
+        , axisSlot_("axis", "Main axis for density analysis")
+        , numSlicesSlot_("numSlices", "Number of slices for density analysis") {
+    dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
     dataOutSlot_.SetCallback(BoxDataCall::ClassName(), BoxDataCall::FunctionName(0), &PhaseSeparator::getDataCallback);
@@ -60,10 +60,14 @@ megamol::thermodyn::PhaseSeparator::PhaseSeparator()
 }
 
 
-megamol::thermodyn::PhaseSeparator::~PhaseSeparator() { this->Release(); }
+megamol::thermodyn::PhaseSeparator::~PhaseSeparator() {
+    this->Release();
+}
 
 
-bool megamol::thermodyn::PhaseSeparator::create() { return true; }
+bool megamol::thermodyn::PhaseSeparator::create() {
+    return true;
+}
 
 
 void megamol::thermodyn::PhaseSeparator::release() {}
@@ -78,28 +82,33 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
     // Interface width
     auto const D = 1.720f * std::pow((Tc - T) / Tc, 1.89f) + 1.103 * std::pow((Tc - T) / Tc, -0.62f);
 
-    auto inCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (inCall == nullptr) return false;
+    auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (inCall == nullptr)
+        return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->FrameID(), true);
-    if (!(*inCall)(1)) return false;
-    if (!(*inCall)(0)) return false;
+    if (!(*inCall)(1))
+        return false;
+    if (!(*inCall)(0))
+        return false;
 
     if (inCall->DataHash() != inDataHash_ || inCall->FrameID() != frameID_) {
         auto const plc = inCall->GetParticleListCount();
         if (plc > 1) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: You have to select a specific list entry\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "PhaseSeparator: You have to select a specific list entry\n");
             return false;
         }
 
         auto const& bbox = inCall->AccessBoundingBoxes().ObjectSpaceBBox();
         auto const& parts = inCall->AccessParticles(0);
 
-        if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_DOUBLE_I) {
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_I &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::ColourDataType::COLDATA_DOUBLE_I) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: Require density as ICol stream\n");
             return false;
         }
@@ -111,7 +120,7 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         auto const& yAcc = store.GetYAcc();
         auto const& zAcc = store.GetZAcc();
         auto const& iAcc = store.GetCRAcc();
-        std::shared_ptr<core::moldyn::Accessor> pAcc;
+        std::shared_ptr<geocalls::Accessor> pAcc;
 
         auto const axis = axisSlot_.Param<core::param::EnumParam>()->Value();
         auto const numSlices = numSlicesSlot_.Param<core::param::IntParam>()->Value();
@@ -191,7 +200,8 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         auto first = rit;
         bool totalBreak = false;
         for (; rit != trend.crend(); ++rit) {
-            if (totalBreak) break;
+            if (totalBreak)
+                break;
             if (*rit > max - perc) {
                 first = rit;
                 for (; rit > trend.crbegin(); --rit) {
@@ -254,21 +264,21 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         fluid_be.box_ = fluidbox;
         fluid_be.name_ = std::string("fluid");
         auto const fluidColor = fluidColorSlot_.Param<core::param::StringParam>()->Value();
-        auto fluid_c = getColor(fluidColor);
+        auto fluid_c = getColor(fluidColor.c_str());
         memcpy(fluid_be.color_, fluid_c.data(), 4 * sizeof(float));
 
         BoxDataCall::box_entry_t interface_be;
         interface_be.box_ = interfacebox;
         interface_be.name_ = std::string("interface");
         auto const interfaceColor = interfaceColorSlot_.Param<core::param::StringParam>()->Value();
-        auto interface_c = getColor(interfaceColor);
+        auto interface_c = getColor(interfaceColor.c_str());
         memcpy(interface_be.color_, interface_c.data(), 4 * sizeof(float));
 
         BoxDataCall::box_entry_t gas_be;
         gas_be.box_ = gasbox;
         gas_be.name_ = std::string("gas");
         auto const gasColor = gasColorSlot_.Param<core::param::StringParam>()->Value();
-        auto gas_c = getColor(gasColor);
+        auto gas_c = getColor(gasColor.c_str());
         memcpy(gas_be.color_, gas_c.data(), 4 * sizeof(float));
 
         boxes_.clear();
@@ -291,13 +301,16 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
 
 
 bool megamol::thermodyn::PhaseSeparator::getExtentCallback(core::Call& c) {
-    auto inCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (inCall == nullptr) return false;
+    auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (inCall == nullptr)
+        return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
-    if (!(*inCall)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
 
     outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());

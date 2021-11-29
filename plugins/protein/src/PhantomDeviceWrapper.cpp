@@ -1,7 +1,7 @@
 /*
  * PhantomDeviceWrapper.cpp
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2011 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -14,20 +14,28 @@
 
 #include <stdio.h>
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Vector.h"
-#include "mmcore/utility/log/Log.h"
 
 /*
  * PhantomDeviceWrapper::PhantomDeviceWrapper
  */
-PhantomDeviceWrapper::PhantomDeviceWrapper(void) :
-    hDevice(HD_INVALID_HANDLE), hRenderingContext(NULL),
-    springForce(0), constantForce(0), motionInterrupts(false),
-    maxSpringForce(1.0), springGain(0.25), objectPositions(NULL), 
-    touch(false), dragging(false), objectPosSet(false), 
-    dragObject(-1), touchObject(-1), 
-    modelviewMatrix() {
+PhantomDeviceWrapper::PhantomDeviceWrapper(void)
+        : hDevice(HD_INVALID_HANDLE)
+        , hRenderingContext(NULL)
+        , springForce(0)
+        , constantForce(0)
+        , motionInterrupts(false)
+        , maxSpringForce(1.0)
+        , springGain(0.25)
+        , objectPositions(NULL)
+        , touch(false)
+        , dragging(false)
+        , objectPosSet(false)
+        , dragObject(-1)
+        , touchObject(-1)
+        , modelviewMatrix() {
     // intentionally empty
 }
 
@@ -55,7 +63,7 @@ bool PhantomDeviceWrapper::Initialize(void) {
     // Otherwise, make this device context the current one
     this->hRenderingContext = hlCreateContext(this->hDevice);
     hlMakeCurrent(this->hRenderingContext);
-    
+
     // Add all event callbacks except for motion (which must be manually set)
     hlAddEventCallback(HL_EVENT_TOUCH, HL_OBJECT_ANY, HL_COLLISION_THREAD, onTouch, this);
     hlAddEventCallback(HL_EVENT_UNTOUCH, HL_OBJECT_ANY, HL_COLLISION_THREAD, onTouch, this);
@@ -95,9 +103,9 @@ bool PhantomDeviceWrapper::Initialize(HDstring pConfigName) {
  */
 void PhantomDeviceWrapper::SetCursor(vislib::graphics::AbsoluteCursor3D* cursor3d) {
     this->cursor = cursor3d;
-    vislib::math::Vector <double, 3> init(0.0, 0.0, -1.0);
+    vislib::math::Vector<double, 3> init(0.0, 0.0, -1.0);
     this->cursor->SetInitialOrientation(init); // set the orientation that the rotation is applied to
-    this->hasCursor = true; // flag that the device has a cursor
+    this->hasCursor = true;                    // flag that the device has a cursor
 }
 
 
@@ -107,7 +115,7 @@ void PhantomDeviceWrapper::SetCursor(vislib::graphics::AbsoluteCursor3D* cursor3
 void PhantomDeviceWrapper::UpdateWorkspace(double* projection) {
     hlMatrixMode(HL_TOUCHWORKSPACE);
     hlLoadIdentity();
-    
+
     // Fit haptic workspace to view volume.
     hluFitWorkspace(projection);
 }
@@ -130,7 +138,7 @@ void PhantomDeviceWrapper::UpdateDevice(void) {
                 // put a spring force at the click position in device coordinates
                 this->StartSpringForce(this->ModelToWorkspaceTransform(this->springPoint));
                 dragging = true; // start dragging
-        
+
             } else {
                 // already dragging at object - update spring anchor point based on new object pos + offset
                 this->springPoint = this->currentObjectPos + this->objectToTouch;
@@ -151,7 +159,7 @@ void PhantomDeviceWrapper::UpdateDevice(void) {
                     //printf("Object not in array.\n"); // object wasn't in array, so just ignore it
                 } else {
                     // get point at object position
-                    vislib::math::Point<float, 3> objectPos(&this->objectPositions->positions[arrayIndex*3]);
+                    vislib::math::Point<float, 3> objectPos(&this->objectPositions->positions[arrayIndex * 3]);
 
                     // add offset vector to get new spring attach point
                     this->springPoint = objectPos + this->objectToTouch;
@@ -169,7 +177,7 @@ void PhantomDeviceWrapper::UpdateDevice(void) {
                     //printf("Object not in array.\n"); // object wasn't in array, so just ignore it
                 } else {
                     // get point at object position
-                    vislib::math::Point<float, 3> objectPos(&this->objectPositions->positions[arrayIndex*3]);
+                    vislib::math::Point<float, 3> objectPos(&this->objectPositions->positions[arrayIndex * 3]);
 
                     // set touch offset
                     this->objectToTouch = this->clickPosition - objectPos;
@@ -198,15 +206,15 @@ void PhantomDeviceWrapper::UpdateDevice(void) {
 /*
  * PhantomDeviceWrapper::StartSpringForce
  */
-void PhantomDeviceWrapper::StartSpringForce (vislib::math::Point<double, 3> force) {
+void PhantomDeviceWrapper::StartSpringForce(vislib::math::Point<double, 3> force) {
     // Check that the custom force has been assigned an identifier and give it one if not
     if (!hlIsEffect(this->springForce)) {
         this->springForce = hlGenEffects(1);
     }
 
     // Set the force components
-    hlEffectd(HL_EFFECT_PROPERTY_MAGNITUDE, this->maxSpringForce); // maximum spring force that will be applied
-    hlEffectd(HL_EFFECT_PROPERTY_GAIN, this->springGain); // spring gain (higher = tighter spring)
+    hlEffectd(HL_EFFECT_PROPERTY_MAGNITUDE, this->maxSpringForce);    // maximum spring force that will be applied
+    hlEffectd(HL_EFFECT_PROPERTY_GAIN, this->springGain);             // spring gain (higher = tighter spring)
     hlEffectdv(HL_EFFECT_PROPERTY_POSITION, force.PeekCoordinates()); // spring "attach point"
 
     // check if the force is already active - if so, just update it
@@ -225,7 +233,7 @@ void PhantomDeviceWrapper::StartSpringForce (vislib::math::Point<double, 3> forc
 /*
  * PhantomDeviceWrapper::StopSpringForce
  */
-void PhantomDeviceWrapper::StopSpringForce (void) {
+void PhantomDeviceWrapper::StopSpringForce(void) {
     if (!hlIsEffect(this->springForce)) {
         return; // force hasn't been allocated yet
     }
@@ -264,12 +272,12 @@ void PhantomDeviceWrapper::SetSpringAttributes(double maxForce, double gain) {
 /*
  * PhantomDeviceWrapper::StartConstantForce
  */
-void PhantomDeviceWrapper::StartConstantForce (vislib::math::Vector<double, 3> force) {
+void PhantomDeviceWrapper::StartConstantForce(vislib::math::Vector<double, 3> force) {
     // Check that the custom force has been assigned an identifier and give it one if not
     if (!hlIsEffect(this->constantForce)) {
         this->constantForce = hlGenEffects(1);
     }
-        
+
     // Get the magnitude of the force from the vector magnitude
     double magnitude = force.Normalise();
 
@@ -308,7 +316,7 @@ void PhantomDeviceWrapper::StartConstantForce (vislib::math::Vector<double, 3> f
 /*
  * PhantomDeviceWrapper::StopConstantForce
  */
-void PhantomDeviceWrapper::StopConstantForce (void) {
+void PhantomDeviceWrapper::StopConstantForce(void) {
     if (!hlIsEffect(this->constantForce)) {
         return; // force hasn't been allocated yet
     }
@@ -325,8 +333,7 @@ void PhantomDeviceWrapper::StopConstantForce (void) {
 /*
  * PhantomDeviceWrapper::GetCursorScale
  */
-double PhantomDeviceWrapper::GetCursorScale (double* modelMatrix,
-    double* projMatrix, int* viewport) {
+double PhantomDeviceWrapper::GetCursorScale(double* modelMatrix, double* projMatrix, int* viewport) {
     return hluScreenToModelScale(modelMatrix, projMatrix, viewport);
 }
 
@@ -340,7 +347,7 @@ void PhantomDeviceWrapper::SetLinearMotionTolerance(double distance) {
     this->EnableMotionInterrupts();
 }
 
-    
+
 /*
  * PhantomDeviceWrapper::SetAngularMotionTolerance
  */
@@ -418,27 +425,27 @@ vislib::math::Point<double, 3> PhantomDeviceWrapper::ModelToWorkspaceTransform(
 
     vislib::math::Point<double, 3> retval(0.0, 0.0, 0.0); // return value
     if (this->modelviewMatrix.IsIdentity()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "No Modelview matrix set in phantom device wrapper.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "No Modelview matrix set in phantom device wrapper.");
         return retval;
     }
 
-    double* modelToviewMatrix; // for gl model-to-viewspace matrix
-    double viewToTouchMatrix[16]; // for view-to-touchspace matrix
-    double touchToWorkspaceMatrix[16]; // for touch-to-workspace matrix
-    double modelToWorkspaceMatrix[16]; // to store composed model-to-workspace matrix
-    modelToviewMatrix = this->modelviewMatrix.PeekComponents(); // get modelview matrix
-    hlGetDoublev(HL_VIEWTOUCH_MATRIX, viewToTouchMatrix); // get view-to-touch matrix
+    double* modelToviewMatrix;                                      // for gl model-to-viewspace matrix
+    double viewToTouchMatrix[16];                                   // for view-to-touchspace matrix
+    double touchToWorkspaceMatrix[16];                              // for touch-to-workspace matrix
+    double modelToWorkspaceMatrix[16];                              // to store composed model-to-workspace matrix
+    modelToviewMatrix = this->modelviewMatrix.PeekComponents();     // get modelview matrix
+    hlGetDoublev(HL_VIEWTOUCH_MATRIX, viewToTouchMatrix);           // get view-to-touch matrix
     hlGetDoublev(HL_TOUCHWORKSPACE_MATRIX, touchToWorkspaceMatrix); // get touch-to-workspace matrix
-    hluModelToWorkspaceTransform(modelToviewMatrix, viewToTouchMatrix,
-        touchToWorkspaceMatrix, modelToWorkspaceMatrix); // get model-to-workspace matrix
+    hluModelToWorkspaceTransform(modelToviewMatrix, viewToTouchMatrix, touchToWorkspaceMatrix,
+        modelToWorkspaceMatrix); // get model-to-workspace matrix
 
     // create vislib form of model-to-workspace matrix
     vislib::math::Matrix<double, 4, vislib::math::COLUMN_MAJOR> mTWMatrix(modelToWorkspaceMatrix);
     // create 4D vector form of position (with 1 for homogeneous coordinate)
-    vislib::math::Vector<double, 4> positionVector( position.GetX(),
-        position.GetY(), position.GetZ(), 1.0);
+    vislib::math::Vector<double, 4> positionVector(position.GetX(), position.GetY(), position.GetZ(), 1.0);
     vislib::math::Vector<double, 4> result; // result vector
-    result = mTWMatrix * positionVector; // do the matrix math
+    result = mTWMatrix * positionVector;    // do the matrix math
 
     // Extract the x,y,z coordinates from the result
     retval.Set(result.GetX(), result.GetY(), result.GetZ());
@@ -449,12 +456,12 @@ vislib::math::Point<double, 3> PhantomDeviceWrapper::ModelToWorkspaceTransform(
 /*
  * PhantomDeviceWrapper::onTouch
  */
-void HLCALLBACK PhantomDeviceWrapper::onTouch(HLenum event,
-        HLuint object, HLenum thread, HLcache *cache, void *userdata) {
+void HLCALLBACK PhantomDeviceWrapper::onTouch(
+    HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata) {
 
-    PhantomDeviceWrapper *This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);
+    PhantomDeviceWrapper* This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);
 
-    if (event == HL_EVENT_UNTOUCH) { 
+    if (event == HL_EVENT_UNTOUCH) {
         // store the touch data
         This->touch = false;
     } else if (event == HL_EVENT_TOUCH) {
@@ -462,18 +469,18 @@ void HLCALLBACK PhantomDeviceWrapper::onTouch(HLenum event,
         // store the touch data
         This->touch = true;
         This->touchObject = object;
-    } 
+    }
 }
 
 
 /*
  * PhantomDeviceWrapper::onMotion
  */
-void HLCALLBACK PhantomDeviceWrapper::onMotion(HLenum event,
-        HLuint object, HLenum thread, HLcache *cache, void *userdata) {
+void HLCALLBACK PhantomDeviceWrapper::onMotion(
+    HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata) {
 
     double transform[16];
-    PhantomDeviceWrapper *This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);
+    PhantomDeviceWrapper* This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);
 
     // Get the transform matrix from the cache
     hlCacheGetDoublev(cache, HL_PROXY_TRANSFORM, transform);
@@ -487,17 +494,16 @@ void HLCALLBACK PhantomDeviceWrapper::onMotion(HLenum event,
 /*
  * PhantomDeviceWrapper::onButton
  */
-void HLCALLBACK PhantomDeviceWrapper::onButton(HLenum event,
-    HLuint object, HLenum thread, HLcache *cache, void *userdata) {
+void HLCALLBACK PhantomDeviceWrapper::onButton(
+    HLenum event, HLuint object, HLenum thread, HLcache* cache, void* userdata) {
 
-    PhantomDeviceWrapper* This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);    
-    if (event == HL_EVENT_1BUTTONDOWN) { 
+    PhantomDeviceWrapper* This = reinterpret_cast<PhantomDeviceWrapper*>(userdata);
+    if (event == HL_EVENT_1BUTTONDOWN) {
         // get the click position from the cache
         double position[3];
         hlCacheGetDoublev(cache, HL_PROXY_POSITION, position);
-        vislib::math::Point<float, 3> pointPosition(static_cast<float>(position[0]), 
-            static_cast<float>(position[1]), 
-            static_cast<float>(position[2]));
+        vislib::math::Point<float, 3> pointPosition(
+            static_cast<float>(position[0]), static_cast<float>(position[1]), static_cast<float>(position[2]));
 
         // store the button push data
         This->cursor->SetButtonState(0, true);

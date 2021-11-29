@@ -16,7 +16,7 @@
  * Struct to be returned by a plugin api holding compatibility informations
  */
 typedef struct _mmplg_compatibilityvalues_t {
-    size_t size; // number of bytes of this struct
+    size_t size;           // number of bytes of this struct
     const char* mmcoreRev; // MegaMol� core revision
     const char* vislibRev; // VISlib revision or zero if no vislib is used
 } mmplgCompatibilityValues;
@@ -26,24 +26,24 @@ typedef struct _mmplg_compatibilityvalues_t {
 /**
  * defines to control the export and import of functions
  */
-#   ifdef MEGAMOLCORE_EXPORTS
-#       define MEGAMOLCORE_API /*__declspec(dllexport)*/
-#       define MEGAMOLCORE_APIEXT
-#   else /* MEGAMOLCORE_EXPORTS */
-#       define MEGAMOLCORE_API /*__declspec(dllimport)*/
-#       define MEGAMOLCORE_APIEXT extern
-#   endif /* MEGAMOLCORE_EXPORTS */
-#   define MEGAMOLCORE_CALL __stdcall
-#   define MEGAMOLCORE_CALLBACK __stdcall
+#ifdef MEGAMOLCORE_EXPORTS
+#define MEGAMOLCORE_API /*__declspec(dllexport)*/
+#define MEGAMOLCORE_APIEXT
+#else                   /* MEGAMOLCORE_EXPORTS */
+#define MEGAMOLCORE_API /*__declspec(dllimport)*/
+#define MEGAMOLCORE_APIEXT extern
+#endif /* MEGAMOLCORE_EXPORTS */
+#define MEGAMOLCORE_CALL __stdcall
+#define MEGAMOLCORE_CALLBACK __stdcall
 #else /* _WIN32 */
-#   define MEGAMOLCORE_API
-#   ifdef MEGAMOLCORE_EXPORTS
-#       define MEGAMOLCORE_APIEXT
-#   else /* MEGAMOLCORE_EXPORTS */
-#       define MEGAMOLCORE_APIEXT extern
-#   endif /* MEGAMOLCORE_EXPORTS */
-#   define MEGAMOLCORE_CALL
-#   define MEGAMOLCORE_CALLBACK
+#define MEGAMOLCORE_API
+#ifdef MEGAMOLCORE_EXPORTS
+#define MEGAMOLCORE_APIEXT
+#else /* MEGAMOLCORE_EXPORTS */
+#define MEGAMOLCORE_APIEXT extern
+#endif /* MEGAMOLCORE_EXPORTS */
+#define MEGAMOLCORE_CALL
+#define MEGAMOLCORE_CALLBACK
 #endif /* _WIN32 */
 
 

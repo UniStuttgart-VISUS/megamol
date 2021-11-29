@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
@@ -23,12 +23,12 @@
 #include "vislib/String.h"
 #include <AbstractInputScope.h>
 
-#include "mmcore/view/CameraSerializer.h"
+#include "ScriptPaths.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/BoundingBoxes_2.h"
+#include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/TimeControl.h"
-#include "ScriptPaths.h"
 
 #include "ImageWrapper.h"
 
@@ -124,8 +124,13 @@ public:
     virtual void SetCamera(Camera camera, bool isMutable = true);
 
     /**
-    * ...
-    */
+     * Return the current camera
+     */
+    virtual Camera GetCamera() const;
+
+    /**
+     * ...
+     */
     virtual void CalcCameraClippingPlanes(float border);
 
     /**
@@ -170,7 +175,9 @@ public:
      *
      * @param hook The hook to unregister
      */
-    void UnregisterHook(Hooks* hook) { this->_hooks.RemoveAll(hook); }
+    void UnregisterHook(Hooks* hook) {
+        this->_hooks.RemoveAll(hook);
+    }
 
     /**
      * Callback requesting a rendering of this view
@@ -227,7 +234,6 @@ public:
     bool OnResetView(param::ParamSlot& p);
 
 protected:
-
     std::vector<std::string> requested_lifetime_resources() override {
         auto req = Module::requested_lifetime_resources();
         req.push_back("LuaScriptPaths");
@@ -242,14 +248,18 @@ protected:
      *
      * @return 'true' if hook code should be run
      */
-    inline bool doHookCode(void) const { return !this->_hooks.IsEmpty(); }
+    inline bool doHookCode(void) const {
+        return !this->_hooks.IsEmpty();
+    }
 
     /**
      * Gets an iterator to the list or registered hooks.
      *
      * @return An iterator to the list of registered hooks.
      */
-    inline HooksIterator getHookIterator(void) { return this->_hooks.GetIterator(); }
+    inline HooksIterator getHookIterator(void) {
+        return this->_hooks.GetIterator();
+    }
 
     /**
      * The code triggering the pre render hook
@@ -281,7 +291,7 @@ protected:
      */
     void afterRender();
 
-     /**
+    /**
      * Stores the current camera settings
      *
      * @param p Must be storeCameraSettingsSlot
@@ -338,7 +348,8 @@ protected:
     /** Slot activating or deactivating the override of already present camera settings */
     param::ParamSlot _overrideCamSettingsSlot;
 
-    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
+    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved
+     */
     param::ParamSlot _autoSaveCamSettingsSlot;
 
     /** Slot activating or deactivating the automatic load of camera parameters at program startup */

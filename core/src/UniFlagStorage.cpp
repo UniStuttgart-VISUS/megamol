@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/UniFlagCalls.h"
 #include "json.hpp"
@@ -6,28 +5,24 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ShaderFactory.h"
 
+#ifdef WITH_GL
+#include "OpenGL_Context.h"
+#endif
+
 using namespace megamol;
 using namespace megamol::core;
 
 
 UniFlagStorage::UniFlagStorage(void)
-        : readFlagsSlot("readFlags", "Provides flag data to clients.")
-        , writeFlagsSlot("writeFlags", "Accepts updated flag data from clients.")
-        , readCPUFlagsSlot("readCPUFlags", "Provides flag data to clients.")
+        :
+#ifdef WITH_GL
+        readGLFlagsSlot("readFlags", "Provides flag data to clients.")
+        , writeGLFlagsSlot("writeFlags", "Accepts updated flag data from clients.")
+        ,
+#endif
+        readCPUFlagsSlot("readCPUFlags", "Provides flag data to clients.")
         , writeCPUFlagsSlot("writeCPUFlags", "Accepts updated flag data from clients.")
         , serializedFlags("serializedFlags", "persists the flags in projects") {
-
-    this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
-        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetData), &UniFlagStorage::readDataCallback);
-    this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
-        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetMetaData), &UniFlagStorage::readMetaDataCallback);
-    this->MakeSlotAvailable(&this->readFlagsSlot);
-
-    this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &UniFlagStorage::writeDataCallback);
-    this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &UniFlagStorage::writeMetaDataCallback);
-    this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
         FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetData), &UniFlagStorage::readCPUDataCallback);
@@ -41,6 +36,21 @@ UniFlagStorage::UniFlagStorage(void)
         FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetMetaData), &UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeCPUFlagsSlot);
 
+#ifdef WITH_GL
+    this->readGLFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
+        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetData), &UniFlagStorage::readGLDataCallback);
+    this->readGLFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
+        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetMetaData), &UniFlagStorage::readMetaDataCallback);
+    this->MakeSlotAvailable(&this->readGLFlagsSlot);
+
+    this->writeGLFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &UniFlagStorage::writeGLDataCallback);
+    this->writeGLFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData),
+        &core::UniFlagStorage::writeMetaDataCallback);
+    this->MakeSlotAvailable(&this->writeGLFlagsSlot);
+#endif
+
     this->serializedFlags << new core::param::StringParam("");
     this->serializedFlags.SetUpdateCallback(&UniFlagStorage::onJSONChanged);
     this->MakeSlotAvailable(&this->serializedFlags);
@@ -53,14 +63,12 @@ UniFlagStorage::~UniFlagStorage(void) {
 
 
 bool UniFlagStorage::create(void) {
-    this->theData = std::make_shared<FlagCollection_GL>();
-    const int num = 10;
-    std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
-    this->theData->flags =
-        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
-    this->theCPUData = std::make_shared<FlagCollection_CPU>();
-    this->theCPUData->flags = std::make_shared<FlagStorage::FlagVectorType>(num, FlagStorage::ENABLED);
+#ifdef WITH_GL
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3))
+        return false;
 
+    // TODO beware this shader only compiles and has never been tested. It will probably release the kraken or something more sinister
     try {
         auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         compressGPUFlagsProgram = core::utility::make_glowl_shader(
@@ -70,6 +78,16 @@ bool UniFlagStorage::create(void) {
         return false;
     }
 
+    const int num = 10;
+    std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
+    this->theGLData->flags =
+        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
+
+#endif
+
+    this->theCPUData = std::make_shared<FlagCollection_CPU>();
+    this->theCPUData->flags = std::make_shared<FlagStorage::FlagVectorType>(num, FlagStorage::ENABLED);
+
     return true;
 }
 
@@ -78,7 +96,8 @@ void UniFlagStorage::release(void) {
     // intentionally empty
 }
 
-bool UniFlagStorage::readDataCallback(core::Call& caller) {
+bool UniFlagStorage::readGLDataCallback(core::Call& caller) {
+#ifdef WITH_GL
     auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
     if (fc == nullptr)
         return false;
@@ -93,10 +112,12 @@ bool UniFlagStorage::readDataCallback(core::Call& caller) {
     //serializeCPUData();
 
     fc->setData(this->theData, this->version);
+#endif
     return true;
 }
 
-bool UniFlagStorage::writeDataCallback(core::Call& caller) {
+bool UniFlagStorage::writeGLDataCallback(core::Call& caller) {
+#ifdef WITH_GL
     auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
     if (fc == nullptr)
         return false;
@@ -114,6 +135,7 @@ bool UniFlagStorage::writeDataCallback(core::Call& caller) {
         cpu_stale = false; // on purpose!
         serializeCPUData();
     }
+#endif
     return true;
 }
 
@@ -122,10 +144,12 @@ bool UniFlagStorage::readCPUDataCallback(core::Call& caller) {
     if (fc == nullptr)
         return false;
 
+#ifdef WITH_GL
     if (cpu_stale) {
         GL2CPUCopy();
         cpu_stale = false;
     }
+#endif
 
     fc->setData(this->theCPUData, this->version);
     return true;
@@ -159,7 +183,8 @@ bool UniFlagStorage::writeMetaDataCallback(core::Call& caller) {
     return true;
 }
 
-void UniFlagStorage::serializeData() {
+void UniFlagStorage::serializeGLData() {
+#ifdef WITH_GL
     this->theData->flags->bind();
     megamol::core::utility::log::Log::DefaultLog.WriteError(
         "UniFlagStorage::serializeData: not implemented! If you see this, you have a problem.");
@@ -168,6 +193,7 @@ void UniFlagStorage::serializeData() {
     // foreach bit: call compute shader, pray
     // only build onoff for the first bit!
     // download stuff
+#endif
 }
 
 void UniFlagStorage::check_bits(FlagStorage::FlagItemType flag_bit, index_vector& bit_starts, index_vector& bit_ends,
@@ -246,7 +272,7 @@ void UniFlagStorage::serializeCPUData() {
     index_vector selected_starts, selected_ends;
     index_type curr_enabled_start = -1, curr_filtered_start = -1, curr_selected_start = -1;
 
-#if 0
+#if 0 // serial version
     const auto startSerialTime = std::chrono::high_resolution_clock::now();
     for (index_type x = 0; x < cdata->size(); ++x) {
         check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, x, cdata);
@@ -323,14 +349,17 @@ void UniFlagStorage::deserializeCPUData() {
 }
 
 bool UniFlagStorage::onJSONChanged(param::ParamSlot& slot) {
+#ifdef WITH_GL    
     if (cpu_stale) {
         GL2CPUCopy();
     }
+#endif
     deserializeCPUData();
     gpu_stale = true;
     return true;
 }
 
+#ifdef WITH_GL
 void UniFlagStorage::CPU2GLCopy() {
     theData->validateFlagCount(theCPUData->flags->size());
     theData->flags->bufferSubData(*(theCPUData->flags));
@@ -342,3 +371,4 @@ void UniFlagStorage::GL2CPUCopy() {
     glGetNamedBufferSubData(
         theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
 }
+#endif

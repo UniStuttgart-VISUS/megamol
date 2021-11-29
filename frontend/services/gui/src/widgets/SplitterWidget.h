@@ -14,28 +14,28 @@ namespace megamol {
 namespace gui {
 
 
-    /** ************************************************************************
-     * Splitter widget
+/** ************************************************************************
+ * Splitter widget
+ */
+class SplitterWidget {
+public:
+    SplitterWidget();
+    ~SplitterWidget() = default;
+
+    enum FixedSplitterSide { LEFT, RIGHT };
+
+    /**
+     * Draw draggable splitter between two child windows, relative to parent window size.
+     * https://github.com/ocornut/imgui/issues/319
      */
-    class SplitterWidget {
-    public:
-        SplitterWidget();
-        ~SplitterWidget() = default;
+    bool Widget(FixedSplitterSide fixed_side, float& size_left, float& size_right);
 
-        enum FixedSplitterSide { LEFT, RIGHT };
+private:
+    // VARIABLES --------------------------------------------------------------
 
-        /**
-         * Draw draggable splitter between two child windows, relative to parent window size.
-         * https://github.com/ocornut/imgui/issues/319
-         */
-        bool Widget(FixedSplitterSide fixed_side, float& size_left, float& size_right);
-
-    private:
-        // VARIABLES --------------------------------------------------------------
-
-        /** Splitter width for restoring after collapsing.  */
-        float splitter_last_width;
-    };
+    /** Splitter width for restoring after collapsing.  */
+    float splitter_last_width;
+};
 
 
 } // namespace gui

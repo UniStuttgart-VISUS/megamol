@@ -3,13 +3,15 @@
 #include "DrawToScreen.h"
 
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
-        : Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , m_drawToScreen_prgm(nullptr)
         , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
         , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen")
@@ -20,7 +22,7 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_depth_texture_call);
 
-    m_input_flags_call.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    m_input_flags_call.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&m_input_flags_call);
 }
 
@@ -31,24 +33,25 @@ megamol::compositing::DrawToScreen::~DrawToScreen() {
 bool megamol::compositing::DrawToScreen::create() {
 
     // create shader program
-    vislib::graphics::gl::ShaderSource vert_shader_src;
-    vislib::graphics::gl::ShaderSource frag_shader_src;
+    vislib_gl::graphics::gl::ShaderSource vert_shader_src;
+    vislib_gl::graphics::gl::ShaderSource frag_shader_src;
 
     vislib::StringA shader_base_name("comp_drawToScreen");
     vislib::StringA vertShaderName = shader_base_name + "::vertex";
     vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-    this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+    ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
 
     try {
         m_drawToScreen_prgm = std::make_unique<GLSLShader>();
         m_drawToScreen_prgm->Create(
             vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         // return false;
     } catch (vislib::Exception e) {
@@ -64,8 +67,9 @@ bool megamol::compositing::DrawToScreen::create() {
     auto err = glGetError();
 
     glowl::TextureLayout depth_tx_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1);
-    std::array<float,1> dummy_depth_data = {-1.0f};
-    m_dummy_depth_tx = std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
+    std::array<float, 1> dummy_depth_data = {-1.0f};
+    m_dummy_depth_tx =
+        std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
 
     return true;
 }
@@ -74,13 +78,13 @@ void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& call) {
     // get lhs render call
-    megamol::core::view::CallRender3DGL* cr = &call;
+    megamol::core_gl::view::CallRender3DGL* cr = &call;
     if (cr == NULL)
         return false;
 
@@ -106,11 +110,12 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     if (input_texture == nullptr)
         return false;
 
-    auto readFlagsCall = m_input_flags_call.CallAs<core::FlagCallRead_GL>();
+    auto readFlagsCall = m_input_flags_call.CallAs<core_gl::FlagCallRead_GL>();
     if (readFlagsCall != nullptr) {
-        (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
+        (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
-        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) || readFlagsCall->hasUpdate()) {
+        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) ||
+            readFlagsCall->hasUpdate()) {
             readFlagsCall->getData()->validateFlagCount(input_texture->getWidth() * input_texture->getHeight());
             m_last_tex_size = glm::ivec2(input_texture->getWidth(), input_texture->getHeight());
         }
@@ -146,5 +151,4 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
-}
+void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {}

@@ -1,7 +1,7 @@
 /*
  * GUID.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -13,9 +13,9 @@
 #include <rpc.h>
 #endif /* _WIN32 */
 
+#include "vislib/StringConverter.h"
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
-#include "vislib/StringConverter.h"
 
 
 /*
@@ -34,7 +34,7 @@ vislib::GUID::GUID(const BYTE b[16]) {
     ASSERT(sizeof(this->guid) == 16 * sizeof(BYTE));
 #ifdef _WIN32
     ::memcpy(&this->guid, b, sizeof(this->guid));
-#else /* _WIN32 */
+#else  /* _WIN32 */
     ::memcpy(this->guid, b, sizeof(this->guid));
 #endif /* _WIN32 */
 }
@@ -43,12 +43,11 @@ vislib::GUID::GUID(const BYTE b[16]) {
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
-        const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
-        const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16) {
+vislib::GUID::GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4, const BYTE b5, const BYTE b6,
+    const BYTE b7, const BYTE b8, const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12, const BYTE b13,
+    const BYTE b14, const BYTE b15, const BYTE b16) {
 #ifdef _WIN32
-#define ASSIGN_BYTE(i) (reinterpret_cast<BYTE *>(&this->guid))[i - 1] = b##i
+#define ASSIGN_BYTE(i) (reinterpret_cast<BYTE*>(&this->guid))[i - 1] = b##i
 #else /* _WIN32 */
 #define ASSIGN_BYTE(i) (this->guid)[i - 1] = b##i
 #endif /* _WIN32 */
@@ -75,25 +74,24 @@ vislib::GUID::GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
-        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
-        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8) {
+vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2, const BYTE b1, const BYTE b2, const BYTE b3,
+    const BYTE b4, const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8) {
 #ifdef _WIN32
-    BYTE *g = reinterpret_cast<BYTE *>(&this->guid);
-#else /* _WIN32 */
-    BYTE *g = this->guid;
+    BYTE* g = reinterpret_cast<BYTE*>(&this->guid);
+#else  /* _WIN32 */
+    BYTE* g = this->guid;
 #endif /* _WIN32 */
-    const BYTE *in = reinterpret_cast<const BYTE *>(&i);
+    const BYTE* in = reinterpret_cast<const BYTE*>(&i);
     g[0] = in[0];
     g[1] = in[1];
     g[2] = in[2];
     g[3] = in[3];
 
-    in = reinterpret_cast<const BYTE *>(&s1);
+    in = reinterpret_cast<const BYTE*>(&s1);
     g[4] = in[0];
     g[5] = in[1];
 
-    in = reinterpret_cast<const BYTE *>(&s2);
+    in = reinterpret_cast<const BYTE*>(&s2);
     g[6] = in[0];
     g[7] = in[1];
 
@@ -108,29 +106,27 @@ vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
 }
 
 
-
 /*
  * vislib::GUID::GUID
  */
-vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
-        const BYTE b[8]) {
+vislib::GUID::GUID(const UINT32 i, const UINT16 s1, const UINT16 s2, const BYTE b[8]) {
     ASSERT(b != NULL);
 #ifdef _WIN32
-    BYTE *g = reinterpret_cast<BYTE *>(&this->guid);
-#else /* _WIN32 */
-    BYTE *g = this->guid;
+    BYTE* g = reinterpret_cast<BYTE*>(&this->guid);
+#else  /* _WIN32 */
+    BYTE* g = this->guid;
 #endif /* _WIN32 */
-    const BYTE *in = reinterpret_cast<const BYTE *>(&i);
+    const BYTE* in = reinterpret_cast<const BYTE*>(&i);
     g[0] = in[0];
     g[1] = in[1];
     g[2] = in[2];
     g[3] = in[3];
 
-    in = reinterpret_cast<const BYTE *>(&s1);
+    in = reinterpret_cast<const BYTE*>(&s1);
     g[4] = in[0];
     g[5] = in[1];
 
-    in = reinterpret_cast<const BYTE *>(&s2);
+    in = reinterpret_cast<const BYTE*>(&s2);
     g[6] = in[0];
     g[7] = in[1];
 
@@ -155,7 +151,7 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
         RPC_STATUS status = ::UuidCreate(&this->guid);
         return ((status == RPC_S_OK) || (status == RPC_S_UUID_LOCAL_ONLY));
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
         ::uuid_generate_random(this->guid);
         return true;
 #endif /* _WIN32 */
@@ -166,7 +162,7 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
         RPC_STATUS status = ::UuidCreateSequential(&this->guid);
         return ((status == RPC_S_OK) || (status == RPC_S_UUID_LOCAL_ONLY));
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
         ::uuid_generate_time(this->guid);
         return true;
 #endif /* _WIN32 */
@@ -179,9 +175,9 @@ bool vislib::GUID::Create(const bool doNotUseMacAddress) {
  */
 bool vislib::GUID::IsZero(void) const {
 #ifdef _WIN32
-    const BYTE *g = reinterpret_cast<const BYTE *>(&this->guid);
-#else /* _WIN32 */
-    const BYTE *g = this->guid;
+    const BYTE* g = reinterpret_cast<const BYTE*>(&this->guid);
+#else  /* _WIN32 */
+    const BYTE* g = this->guid;
 #endif /* _WIN32 */
 
     for (SIZE_T i = 0; i < sizeof(this->guid); i++) {
@@ -199,9 +195,9 @@ bool vislib::GUID::IsZero(void) const {
  */
 bool vislib::GUID::Parse(const StringA& str) {
 #ifdef _WIN32
-    return (::UuidFromStringA(reinterpret_cast<RPC_CSTR>(const_cast<char *>(
-        str.PeekBuffer())), &this->guid) == RPC_S_OK);
-#else /* _WIN32 */
+    return (
+        ::UuidFromStringA(reinterpret_cast<RPC_CSTR>(const_cast<char*>(str.PeekBuffer())), &this->guid) == RPC_S_OK);
+#else  /* _WIN32 */
     return (::uuid_parse(str.PeekBuffer(), this->guid) == 0);
 #endif /* _WIN32 */
 }
@@ -212,9 +208,9 @@ bool vislib::GUID::Parse(const StringA& str) {
  */
 bool vislib::GUID::Parse(const StringW& str) {
 #ifdef _WIN32
-    return (::UuidFromStringW(reinterpret_cast<RPC_WSTR>(const_cast<wchar_t *>(
-        str.PeekBuffer())), &this->guid) == RPC_S_OK);
-#else /* _WIN32 */
+    return (
+        ::UuidFromStringW(reinterpret_cast<RPC_WSTR>(const_cast<wchar_t*>(str.PeekBuffer())), &this->guid) == RPC_S_OK);
+#else  /* _WIN32 */
     return this->Parse(W2A(str));
 #endif /* _WIN32 */
 }
@@ -228,9 +224,9 @@ UINT32 vislib::GUID::HashCode(void) const {
     UINT32 hash = 0;
     BYTE c;
 #ifdef _WIN32
-    const BYTE *str = reinterpret_cast<const BYTE *>(&this->guid);
-#else /* _WIN32 */
-    const BYTE *str = this->guid;
+    const BYTE* str = reinterpret_cast<const BYTE*>(&this->guid);
+#else  /* _WIN32 */
+    const BYTE* str = this->guid;
 #endif /* _WIN32 */
 
     for (size_t i = 0; i < sizeof(this->guid); ++i) {
@@ -248,7 +244,7 @@ UINT32 vislib::GUID::HashCode(void) const {
 void vislib::GUID::SetZero(void) {
 #ifdef _WIN32
     ::ZeroMemory(&this->guid, sizeof(this->guid));
-#else /* _WIN32 */
+#else  /* _WIN32 */
     ::ZeroMemory(this->guid, sizeof(this->guid));
 #endif /* _WIN32 */
 }
@@ -260,14 +256,14 @@ void vislib::GUID::SetZero(void) {
 vislib::StringA vislib::GUID::ToStringA(void) const {
 #ifdef _WIN32
     RPC_CSTR str;
-    if (::UuidToStringA(const_cast<::GUID *>(&this->guid), &str) == RPC_S_OK) {
-        StringA retval(reinterpret_cast<char *>(str));
+    if (::UuidToStringA(const_cast<::GUID*>(&this->guid), &str) == RPC_S_OK) {
+        StringA retval(reinterpret_cast<char*>(str));
         ::RpcStringFreeA(&str);
         return retval;
     } else {
         throw std::bad_alloc();
     }
-#else /* _WIN32 */
+#else  /* _WIN32 */
     StringA retval;
     ::uuid_unparse(this->guid, retval.AllocateBuffer((36 + 1) * sizeof(char)));
     return retval;
@@ -281,15 +277,15 @@ vislib::StringA vislib::GUID::ToStringA(void) const {
 vislib::StringW vislib::GUID::ToStringW(void) const {
 #ifdef _WIN32
     RPC_WSTR str;
-    if (::UuidToStringW(const_cast<::GUID *>(&this->guid), &str) == RPC_S_OK) {
-        StringW retval(reinterpret_cast<wchar_t *>(str));
+    if (::UuidToStringW(const_cast<::GUID*>(&this->guid), &str) == RPC_S_OK) {
+        StringW retval(reinterpret_cast<wchar_t*>(str));
         ::RpcStringFreeW(&str);
         return retval;
     } else {
         throw std::bad_alloc();
     }
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
     return StringW(this->ToStringA());
 #endif /* _WIN32 */
 }
@@ -298,11 +294,11 @@ vislib::StringW vislib::GUID::ToStringW(void) const {
 /*
  * vislib::GUID::operator =
  */
-vislib::GUID& vislib::GUID::operator =(const GUID& rhs) {
+vislib::GUID& vislib::GUID::operator=(const GUID& rhs) {
     if (this != &rhs) {
 #ifdef _WIN32
         ::memcpy(&this->guid, &rhs.guid, sizeof(this->guid));
-#else /* _WIN32 */
+#else  /* _WIN32 */
         ::memcpy(this->guid, rhs.guid, sizeof(this->guid));
 #endif /* _WIN32 */
     }
@@ -315,7 +311,7 @@ vislib::GUID& vislib::GUID::operator =(const GUID& rhs) {
 /*
  * vislib::GUID::operator =
  */
-vislib::GUID& vislib::GUID::operator =(const ::GUID& rhs) {
+vislib::GUID& vislib::GUID::operator=(const ::GUID& rhs) {
     if (&this->guid != &rhs) {
         ::memcpy(&this->guid, &rhs, sizeof(this->guid));
     }
@@ -327,7 +323,7 @@ vislib::GUID& vislib::GUID::operator =(const ::GUID& rhs) {
 /*
  * vislib::GUID::operator =
  */
-vislib::GUID& vislib::GUID::operator =(const ::GUID *rhs) {
+vislib::GUID& vislib::GUID::operator=(const ::GUID* rhs) {
     if (&this->guid != rhs) {
         ::memcpy(&this->guid, rhs, sizeof(this->guid));
     }
@@ -335,11 +331,11 @@ vislib::GUID& vislib::GUID::operator =(const ::GUID *rhs) {
     return *this;
 }
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
 /*
  * vislib::GUID::operator =
  */
-vislib::GUID& vislib::GUID::operator =(const uuid_t& rhs) {
+vislib::GUID& vislib::GUID::operator=(const uuid_t& rhs) {
     if (this->guid != rhs) {
         ::memcpy(&this->guid, rhs, sizeof(this->guid));
     }

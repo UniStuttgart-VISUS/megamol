@@ -1,7 +1,7 @@
 /*
  * AutoLock.h
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -22,11 +22,11 @@
 namespace vislib {
 namespace sys {
 
-    /**
-     * AutoLock is intended for backward compatibility.
-     */
-    typedef ScopedLock<SyncObject> AutoLock;
-    
+/**
+ * AutoLock is intended for backward compatibility.
+ */
+typedef ScopedLock<SyncObject> AutoLock;
+
 } /* end namespace sys */
 } /* end namespace vislib */
 

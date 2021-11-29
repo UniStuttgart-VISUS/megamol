@@ -5,16 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "Contest2019DataLoader.h"
-#include <algorithm>
-#include <fstream>
 #include "astro/AstroDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <algorithm>
+#include <fstream>
 
 using namespace megamol::core;
 using namespace megamol::astro;
@@ -39,7 +39,8 @@ Contest2019DataLoader::Frame::~Frame(void) {
  * Contest2019DataLoader::Frame::LoadFrame
  */
 bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int frameIdx, float redshift) {
-    if (filepath.empty()) return false;
+    if (filepath.empty())
+        return false;
     this->frame = frameIdx;
     std::vector<SavedData> readDataVec;
 
@@ -320,7 +321,8 @@ void Contest2019DataLoader::Frame::buildParticleIDMap(const Frame* frame, std::m
  * Contest2019DataLoader::Frame::CalculateDerivativesBackwardDifferences
  */
 void Contest2019DataLoader::Frame::CalculateDerivativesBackwardDifferences(Contest2019DataLoader::Frame* frameBefore) {
-    if (this->particleIDs == nullptr) return;
+    if (this->particleIDs == nullptr)
+        return;
     std::map<int64_t, int64_t> mapBefore;
     this->buildParticleIDMap(frameBefore, mapBefore);
     int64_t idbefore;
@@ -351,7 +353,8 @@ void Contest2019DataLoader::Frame::CalculateDerivativesBackwardDifferences(Conte
  * Contest2019DataLoader::Frame::CalculateDerivativesForwardDifferences
  */
 void Contest2019DataLoader::Frame::CalculateDerivativesForwardDifferences(Contest2019DataLoader::Frame* frameAfter) {
-    if (this->particleIDs == nullptr) return;
+    if (this->particleIDs == nullptr)
+        return;
     std::map<int64_t, int64_t> mapAfter;
     this->buildParticleIDMap(frameAfter, mapAfter);
     int64_t idafter;
@@ -382,7 +385,8 @@ void Contest2019DataLoader::Frame::CalculateDerivativesForwardDifferences(Contes
  */
 void Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences(
     Contest2019DataLoader::Frame* frameBefore, Contest2019DataLoader::Frame* frameAfter) {
-    if (this->particleIDs == nullptr) return;
+    if (this->particleIDs == nullptr)
+        return;
     std::map<int64_t, int64_t> mapBefore, mapAfter;
     this->buildParticleIDMap(frameBefore, mapBefore);
     this->buildParticleIDMap(frameAfter, mapAfter);
@@ -450,9 +454,12 @@ void Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences(
  * Contest2019DataLoader::Frame::CalculateAGNDistances
  */
 void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
-    if (this->positions == nullptr) return;
-    if (this->isAGNFlags == nullptr) return;
-    if (this->agnDistances == nullptr) return;
+    if (this->positions == nullptr)
+        return;
+    if (this->isAGNFlags == nullptr)
+        return;
+    if (this->agnDistances == nullptr)
+        return;
 
     // get out all AGN Positions
     std::vector<glm::vec3> agnPositions;
@@ -475,13 +482,15 @@ void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
         }
     }
 
-    if (apos.size() == 0) return;
+    if (apos.size() == 0)
+        return;
     for (size_t i = 0; i < this->positions->size(); ++i) {
         float mindist = std::numeric_limits<float>::max();
         auto& myPos = this->positions->at(i);
         for (const auto& agnPos : apos) {
             float dist = glm::distance(myPos, agnPos);
-            if (dist < mindist) mindist = dist;
+            if (dist < mindist)
+                mindist = dist;
         }
         this->agnDistances->at(i) = mindist;
     }
@@ -491,19 +500,20 @@ void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
  * Contest2019DataLoader::Contest2019DataLoader
  */
 Contest2019DataLoader::Contest2019DataLoader(void)
-    : view::AnimDataModule()
-    , getDataSlot("getData", "Slot for handling the file loading requests")
-    , firstFilename("firstFilename", "The name of the first file to load")
-    , filesToLoad("filesToLoad",
-          "The total number of files that should be loaded. A value smaller than 0 means all available "
-          "ones from the first given are loaded.")
-    , calculateDerivatives("calculateDerivatives",
-          "Enables the calculation of derivatives of all relevant values. "
-          "This option increases the frame loading time significantly. The effect of this slot might be delayed as "
-          "already existing frames are not re-evaluated.")
-    , calculateAGNDistances("calculateAGNDistances",
-          "Enables the calculation of the distance to the AGNs. This option increases the frame loading time "
-          "significantly. The effect of this slot might be delayed as already existing frames are not re-evaluated.") {
+        : view::AnimDataModule()
+        , getDataSlot("getData", "Slot for handling the file loading requests")
+        , firstFilename("firstFilename", "The name of the first file to load")
+        , filesToLoad("filesToLoad",
+              "The total number of files that should be loaded. A value smaller than 0 means all available "
+              "ones from the first given are loaded.")
+        , calculateDerivatives("calculateDerivatives",
+              "Enables the calculation of derivatives of all relevant values. "
+              "This option increases the frame loading time significantly. The effect of this slot might be delayed as "
+              "already existing frames are not re-evaluated.")
+        , calculateAGNDistances("calculateAGNDistances",
+              "Enables the calculation of the distance to the AGNs. This option increases the frame loading time "
+              "significantly. The effect of this slot might be delayed as already existing frames are not "
+              "re-evaluated.") {
 
     this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
         AstroDataCall::FunctionName(AstroDataCall::CallForGetData), &Contest2019DataLoader::getDataCallback);
@@ -538,7 +548,9 @@ Contest2019DataLoader::Contest2019DataLoader(void)
 /*
  * Contest2019DataLoader::~Contest2019DataLoader
  */
-Contest2019DataLoader::~Contest2019DataLoader(void) { this->Release(); }
+Contest2019DataLoader::~Contest2019DataLoader(void) {
+    this->Release();
+}
 
 /*
  * Contest2019DataLoader::constructFrame
@@ -551,7 +563,9 @@ view::AnimDataModule::Frame* Contest2019DataLoader::constructFrame(void) const {
 /*
  * Contest2019DataLoader::create
  */
-bool Contest2019DataLoader::create(void) { return true; }
+bool Contest2019DataLoader::create(void) {
+    return true;
+}
 
 /*
  * Contest2019DataLoader::loadFrame
@@ -563,7 +577,8 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     // the parallel nature of the AnimDataModule makes this impossible
     Frame* fbefore = new Frame(*this);
     Frame* fafter = new Frame(*this);
-    if (f == nullptr) return;
+    if (f == nullptr)
+        return;
     unsigned int frameID = idx % this->FrameCount();
     unsigned int frameIDBefore = frameID > 0 ? (frameID - 1) : frameID;
     unsigned int frameIDAfter = frameID < this->redshiftsForFilename.size() - 1 ? (frameID + 1) : frameID;
@@ -616,7 +631,9 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
 /*
  * Contest2019DataLoader::release
  */
-void Contest2019DataLoader::release(void) { this->resetFrameCache(); }
+void Contest2019DataLoader::release(void) {
+    this->resetFrameCache();
+}
 
 /*
  * Contest2019DataLoader::filenameChangedCallback
@@ -631,8 +648,10 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     /* Note for all debugging purposes: The application will land here once on startup with only the default values
      * for the input parameters. This first call can be ignored.*/
 
-    if (firstfile.empty()) return false;
-    if (toLoadCount == 0) return false;
+    if (firstfile.empty())
+        return false;
+    if (toLoadCount == 0)
+        return false;
 
     auto lastPoint = firstfile.find_last_of('.');
     std::string prefix = firstfile.substr(0, lastPoint + 1);
@@ -690,10 +709,12 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
  */
 bool Contest2019DataLoader::getDataCallback(Call& caller) {
     AstroDataCall* ast = dynamic_cast<AstroDataCall*>(&caller);
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     Frame* f = dynamic_cast<Frame*>(this->requestLockedFrame(ast->FrameID(), ast->IsFrameForced()));
-    if (f == nullptr) return false;
+    if (f == nullptr)
+        return false;
     ast->SetUnlocker(new Unlocker(*f));
     ast->SetFrameID(f->FrameNumber());
     ast->SetDataHash(this->data_hash);
@@ -707,7 +728,8 @@ bool Contest2019DataLoader::getDataCallback(Call& caller) {
  */
 bool Contest2019DataLoader::getExtentCallback(Call& caller) {
     AstroDataCall* ast = dynamic_cast<AstroDataCall*>(&caller);
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     ast->SetFrameCount(this->FrameCount());
     ast->AccessBoundingBoxes().Clear();

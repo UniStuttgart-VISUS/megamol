@@ -7,28 +7,37 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
+#include "geometry_calls/CalloutImageCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "geometry_calls/LinesDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/ParticleRelistCall.h"
+#include "geometry_calls/QRCodeDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 namespace megamol::geocalls {
-    class GeometryCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(GeometryCallsPluginInstance)
+class GeometryCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(GeometryCallsPluginInstance)
 
-    public:
-        GeometryCallsPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "geometry_calls", "The geometry_calls plugin."){};
+public:
+    GeometryCallsPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("geometry_calls", "The geometry_calls plugin."){};
 
-        ~GeometryCallsPluginInstance() override = default;
+    ~GeometryCallsPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CallTriMeshData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::MultiParticleDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::EllipsoidalParticleDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::ParticleRelistCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::VolumetricDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::BezierCurvesListDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::QRCodeDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CalloutImageCall>();
+    }
+};
 } // namespace megamol::geocalls

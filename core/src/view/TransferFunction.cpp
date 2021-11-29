@@ -5,10 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/TransferFunction.h"
-
 #include "mmcore/param/TransferFunctionParam.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core;
@@ -16,18 +15,7 @@ using namespace megamol::core::view;
 using namespace megamol::core::param;
 
 
-TransferFunction::TransferFunction(void)
-    : Module()
-    , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
-    , texID(0)
-    , texSize(1)
-    , tex()
-    , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
-    , interpolMode(TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f})
-    , version(0)
-    , last_frame_id(0) {
+view::TransferFunction::TransferFunction(void) : Module(), AbstractTransferFunction() {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
@@ -38,28 +26,13 @@ TransferFunction::TransferFunction(void)
 }
 
 
-TransferFunction::~TransferFunction(void) { this->Release(); }
-
-
-bool TransferFunction::create(void) {
-
-    return true;
-}
-
-
-void TransferFunction::release(void) {
-
-    glDeleteTextures(1, &this->texID);
-    this->texID = 0;
-}
-
-
-bool TransferFunction::requestTF(Call& call) {
+bool TransferFunction::requestTF(core::Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
-    if (cgtf == nullptr) return false;
+    if (cgtf == nullptr)
+        return false;
 
-    if ((this->texID == 0) || this->tfParam.IsDirty()) {
+    if (this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
         // Check if range of initially loaded project value should be ignored
@@ -86,44 +59,22 @@ bool TransferFunction::requestTF(Call& call) {
 
         // Get current values from parameter string (Values are checked, too).
         TransferFunctionParam::NodeVector_t tmp_nodes;
-        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(), tmp_nodes, this->interpolMode, this->texSize, this->range)) {
+        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(),
+                tmp_nodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == TransferFunctionParam::InterpolationMode::LINEAR) {
             this->tex = TransferFunctionParam::LinearInterpolation(this->texSize, tmp_nodes);
-        }
-        else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
+        } else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
             this->tex = TransferFunctionParam::GaussInterpolation(this->texSize, tmp_nodes);
         }
 
-        if (this->texID != 0) {
-            glDeleteTextures(1, &this->texID);
-        }
-
-        bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
-        if (!t1de) glEnable(GL_TEXTURE_1D);
-        if (this->texID == 0) glGenTextures(1, &this->texID);
-
-        GLint otid = 0;
-        glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
-        glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
-
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, this->texFormat, GL_FLOAT, this->tex.data());
-
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-
-        glBindTexture(GL_TEXTURE_1D, otid);
-
-        if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
 
-    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
-        this->range, this->version);
+    cgtf->SetTexture(this->texSize, this->tex.data(), this->texFormat, this->range, this->version);
 
     return true;
 }

@@ -27,7 +27,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProteinAligner"; }
+    static const char* ClassName(void) {
+        return "ProteinAligner";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -44,7 +46,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ProteinAligner(void);
@@ -76,11 +80,10 @@ protected:
     bool getExtents(core::Call& call);
 
 private:
-
     /**
      * Aligns the atom positions of the input protein onto the reference protein
      * The result will be written to the alignedPositions vector
-     * 
+     *
      * @param input Call containing the input protein
      * @param ref Call containing the reference protein
      */

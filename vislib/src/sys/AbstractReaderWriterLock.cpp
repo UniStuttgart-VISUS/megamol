@@ -12,8 +12,7 @@
 /*
  * vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock
  */
-vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(void)
-        : SyncObject() {
+vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(void) : SyncObject() {
     // Intentionally empty
 }
 
@@ -45,19 +44,15 @@ void vislib::sys::AbstractReaderWriterLock::Unlock(void) {
 /*
  * vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock
  */
-vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(
-        const vislib::sys::AbstractReaderWriterLock& src) {
-    throw UnsupportedOperationException("AbstractReaderWriterLock::CopyCtor",
-        __FILE__, __LINE__);
+vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(const vislib::sys::AbstractReaderWriterLock& src) {
+    throw UnsupportedOperationException("AbstractReaderWriterLock::CopyCtor", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::sys::AbstractReaderWriterLock::operator=
  */
-vislib::sys::AbstractReaderWriterLock&
-vislib::sys::AbstractReaderWriterLock::operator=(
-        const vislib::sys::AbstractReaderWriterLock& rhs) {
-    throw UnsupportedOperationException("AbstractReaderWriterLock::operator=",
-        __FILE__, __LINE__);
+vislib::sys::AbstractReaderWriterLock& vislib::sys::AbstractReaderWriterLock::operator=(
+    const vislib::sys::AbstractReaderWriterLock& rhs) {
+    throw UnsupportedOperationException("AbstractReaderWriterLock::operator=", __FILE__, __LINE__);
 }

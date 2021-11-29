@@ -7,15 +7,14 @@
 
 #include "stdafx.h"
 #if (_MSC_VER > 1000)
-#    pragma warning(disable : 4996)
+#pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #if (_MSC_VER > 1000)
-#    pragma warning(default : 4996)
+#pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
@@ -32,6 +31,8 @@
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore/versioninfo.h"
@@ -42,18 +43,17 @@
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/functioncast.h"
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/net/Socket.h"
 #include "vislib/sys/AutoLock.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
+#include "mmcore/utility/log/Console.h"
+#include "mmcore/utility/log/Log.h"
 #include "png.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
@@ -65,10 +65,8 @@
 #include "vislib/Trace.h"
 #include "vislib/functioncast.h"
 #include "vislib/memutils.h"
-#include "mmcore/utility/log/Console.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
 
@@ -84,16 +82,16 @@
  * megamol::core::CoreInstance::PreInit::PreInit
  */
 megamol::core::CoreInstance::PreInit::PreInit()
-    : cfgFileSet(false)
-    , logFileSet(false)
-    , logLevelSet(false)
-    , logEchoLevelSet(false)
-    , cfgFile()
-    , logFile()
-    , logLevel(0)
-    , logEchoLevel(0)
-    , cfgOverrides()
-    , cfgOverridesSet(false) {
+        : cfgFileSet(false)
+        , logFileSet(false)
+        , logLevelSet(false)
+        , logEchoLevelSet(false)
+        , cfgFile()
+        , logFile()
+        , logLevel(0)
+        , logEchoLevel(0)
+        , cfgOverrides()
+        , cfgOverridesSet(false) {
     // atm intentionally empty
 }
 
@@ -122,32 +120,31 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void* data, megamol::core:
  * megamol::core::CoreInstance::CoreInstance
  */
 megamol::core::CoreInstance::CoreInstance(void)
-    : ApiHandle()
-    , factories::AbstractObjectFactoryInstance()
-    , preInit(new PreInit)
-    , config()
-    , shaderSourceFactory(config)
-    , lua(nullptr)
-    , builtinViewDescs()
-    , projViewDescs()
-    , builtinJobDescs()
-    , projJobDescs()
-    , pendingViewInstRequests()
-    , pendingJobInstRequests()
-    , namespaceRoot()
-    , pendingCallInstRequests()
-    , pendingCallDelRequests()
-    , pendingModuleInstRequests()
-    , pendingModuleDelRequests()
-    , pendingParamSetRequests()
-    , graphUpdateLock()
-    , loadedLuaProjects()
-    , timeOffset(0.0)
-    , paramUpdateListeners()
-    , plugins()
-    , all_call_descriptions()
-    , all_module_descriptions()
-    , parameterHash(1) {
+        : ApiHandle()
+        , factories::AbstractObjectFactoryInstance()
+        , preInit(new PreInit)
+        , config()
+        , lua(nullptr)
+        , builtinViewDescs()
+        , projViewDescs()
+        , builtinJobDescs()
+        , projJobDescs()
+        , pendingViewInstRequests()
+        , pendingJobInstRequests()
+        , namespaceRoot()
+        , pendingCallInstRequests()
+        , pendingCallDelRequests()
+        , pendingModuleInstRequests()
+        , pendingModuleDelRequests()
+        , pendingParamSetRequests()
+        , graphUpdateLock()
+        , loadedLuaProjects()
+        , timeOffset(0.0)
+        , paramUpdateListeners()
+        , plugins()
+        , all_call_descriptions()
+        , all_module_descriptions()
+        , parameterHash(1) {
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -159,9 +156,11 @@ megamol::core::CoreInstance::CoreInstance(void)
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
     factories::register_module_classes(this->module_descriptions);
-    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
-    for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
+    for (auto md : this->module_descriptions)
+        this->all_module_descriptions.Register(md);
+    for (auto cd : this->call_descriptions)
+        this->all_call_descriptions.Register(cd);
 
     // megamol::core::utility::LuaHostService::ID =
     //    this->InstallService<megamol::core::utility::LuaHostService>();
@@ -179,7 +178,8 @@ megamol::core::CoreInstance::CoreInstance(void)
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
     //#endif
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance created");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance created");
 
     // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
     // std::addressof(this->graphUpdateLock));
@@ -191,7 +191,8 @@ megamol::core::CoreInstance::CoreInstance(void)
  */
 megamol::core::CoreInstance::~CoreInstance(void) {
     SAFE_DELETE(this->preInit);
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance destroyed");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
     {
@@ -200,7 +201,8 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         while (true) {
             iter = this->namespaceRoot->ChildList_Begin();
             end = this->namespaceRoot->ChildList_End();
-            if (iter == end) break;
+            if (iter == end)
+                break;
             ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
             //        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
             this->closeViewJob(mn);
@@ -296,7 +298,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
                 this->config.logFilenameLocked = true;
             } else {
                 if (this->preInit->IsLogFileSet()) {
-                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
+                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(
+                        this->preInit->GetLogFile().c_str(), false);
                     this->config.logFilenameLocked = true;
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
@@ -318,7 +321,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     if (ok) {
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Lua execution is NOT OK and returned '%s'", result.c_str());
     }
     // lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
@@ -336,7 +340,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
             int pos = 0;
             int next = overrides.Find('\b', pos);
             do {
-                if (next == vislib::StringW::INVALID_POS) next = overrides.Length();
+                if (next == vislib::StringW::INVALID_POS)
+                    next = overrides.Length();
                 auto sub = overrides.Substring(pos, next - pos);
                 int split = sub.Find('\a');
                 if (split != vislib::StringW::INVALID_POS) {
@@ -376,9 +381,7 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
                 } else {
                     profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
                 }
-            } catch (...) {
-                profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-            }
+            } catch (...) { profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE); }
         }
     } else {
         // Do not profile on default
@@ -602,7 +605,8 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             if (type != MMC_TYPE_VOIDP) {
                 return MMC_ERR_TYPE;
             }
-            megamol::core::utility::log::Log** log = static_cast<megamol::core::utility::log::Log**>(const_cast<void*>(value));
+            megamol::core::utility::log::Log** log =
+                static_cast<megamol::core::utility::log::Log**>(const_cast<void*>(value));
             *log = &megamol::core::utility::log::Log::DefaultLog;
         } break;
         case MMC_INITVAL_LOGECHOFUNC:
@@ -623,7 +627,8 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             return MMC_ERR_UNKNOWN;
         }
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: exception during evaluation of initval");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "CoreInstance::SetInitValue: exception during evaluation of initval");
         return MMC_ERR_UNKNOWN;
     }
     return MMC_ERR_NO_ERROR;
@@ -667,8 +672,10 @@ void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction fu
  */
 std::shared_ptr<const megamol::core::JobDescription> megamol::core::CoreInstance::FindJobDescription(const char* name) {
     std::shared_ptr<const JobDescription> d;
-    if (!d) d = this->projJobDescs.Find(name);
-    if (!d) d = this->builtinJobDescs.Find(name);
+    if (!d)
+        d = this->projJobDescs.Find(name);
+    if (!d)
+        d = this->builtinJobDescs.Find(name);
     return d;
 }
 
@@ -707,8 +714,8 @@ void megamol::core::CoreInstance::RequestAllInstantiations() {
 void megamol::core::CoreInstance::RequestViewInstantiation(
     const megamol::core::ViewDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "View instantiation request aborted: name contains invalid character \":\"");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "View instantiation request aborted: name contains invalid character \":\"");
         return;
     }
     // could check here if the description is instantiable, but I do not want
@@ -731,8 +738,8 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
 void megamol::core::CoreInstance::RequestJobInstantiation(
     const megamol::core::JobDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Job instantiation request aborted: name contains invalid character \":\"");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Job instantiation request aborted: name contains invalid character \":\"");
         return;
     }
     // could check here if the description is instantiable, but I do not want
@@ -769,7 +776,7 @@ bool megamol::core::CoreInstance::RequestModuleInstantiation(
     factories::ModuleDescription::ptr md = this->GetModuleDescriptionManager().Find(vislib::StringA(className));
     if (md == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of module"
-                                                " \"%s\": class \"%s\" not found.",
+                                                                " \"%s\": class \"%s\" not found.",
             id.PeekBuffer(), className.PeekBuffer());
         return false;
     }
@@ -789,7 +796,7 @@ bool megamol::core::CoreInstance::RequestCallInstantiation(
     factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
     if (cd == NULL) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of "
-                                                " unknown call class \"%s\".",
+                                                                " unknown call class \"%s\".",
             className.PeekBuffer());
         return false;
     }
@@ -805,7 +812,7 @@ bool megamol::core::CoreInstance::RequestChainCallInstantiation(
     factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
     if (cd == NULL) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request chain instantiation of "
-                                                " unknown call class \"%s\".",
+                                                                " unknown call class \"%s\".",
             className.PeekBuffer());
         return false;
     }
@@ -834,7 +841,8 @@ bool megamol::core::CoreInstance::CreateParamGroup(const vislib::StringA& name, 
         pg.GroupSize = size;
         pg.Name = name;
         this->pendingGroupParamSetRequests[name] = pg;
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Created parameter group %s with size %i", name.PeekBuffer(), size);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "Created parameter group %s with size %i", name.PeekBuffer(), size);
         return true;
     }
 }
@@ -850,8 +858,8 @@ bool megamol::core::CoreInstance::RequestParamGroupValue(
                 "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
             return false;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(),
-                id.PeekBuffer(), value.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s",
+                group.PeekBuffer(), id.PeekBuffer(), value.PeekBuffer());
             g.Requests[id] = value;
         }
         return true;
@@ -930,8 +938,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                         std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
                     if (anoc) {
                         anoStack.push_back(anoc);
-                    }
-                    else {
+                    } else {
                         core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
                         if (callerSlot != nullptr) {
                             core::Call* call = callerSlot->CallAs<Call>();
@@ -1075,8 +1082,9 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 // remove mod
                 n->RemoveChild(mod);
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("PerformGraphUpdates:module \"%s\" has no parent of type "
-                                                        "ModuleNamespace. Deletion makes no sense.",
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "PerformGraphUpdates:module \"%s\" has no parent of type "
+                    "ModuleNamespace. Deletion makes no sense.",
                     mdr.PeekBuffer());
                 continue;
             }
@@ -1106,7 +1114,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
         if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
-                                                    " of class \"%s\".",
+                                                                    " of class \"%s\".",
                 mir.First().PeekBuffer(), mir.Second()->ClassName());
         }
     }
@@ -1130,7 +1138,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
         if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
-                                                    " from \"%s\" to \"%s\".",
+                                                                    " from \"%s\" to \"%s\".",
                 cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
         }
     }
@@ -1236,8 +1244,9 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         //        "connection: %s --%s-> %s", conn.fromFull.c_str(), conn.name.c_str(), conn.toFull.c_str());
         //}
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("chain call: trying to find slot for appending %s at the end of %s",
-            cir.Description()->ClassName(), cir.From().PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "chain call: trying to find slot for appending %s at the end of %s", cir.Description()->ClassName(),
+            cir.From().PeekBuffer());
         std::string currFrom = cir.From().PeekBuffer();
 
         std::string currTo = "";
@@ -1252,7 +1261,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 cir.Description()->ClassName());
             if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("chain call: cannot instantiate \"%s\" call"
-                                                        " from \"%s\" to \"%s\".",
+                                                                        " from \"%s\" to \"%s\".",
                     cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
             }
         } else {
@@ -1274,7 +1283,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 Module::ptr_type mod =
                     Module::dynamic_pointer_cast(this->namespaceRoot.get()->FindNamedObject(cand.c_str()));
                 if (!mod) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("chain call: cannot get module %s", cand.c_str());
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "chain call: cannot get module %s", cand.c_str());
                     continue;
                 }
 
@@ -1290,14 +1300,16 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                             if (connectedCall != connections.end()) {
                                 auto pos = connectedCall->toFull.find_last_of("::");
                                 candidateModules.push_back(connectedCall->toFull.substr(0, pos - 1));
-                                megamol::core::utility::log::Log::DefaultLog.WriteInfo("chaincall: %s is connected to %s, pushing.",
-                                    slot->FullName().PeekBuffer(), connectedCall->toFull.c_str());
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                                    "chaincall: %s is connected to %s, pushing.", slot->FullName().PeekBuffer(),
+                                    connectedCall->toFull.c_str());
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                                     "chain connection from slot %s", slot->FullName().PeekBuffer());
                                 if (this->InstantiateCall(slot->FullName(), cir.To(), cir.Description()) == nullptr) {
-                                    megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
-                                                                            " from \"%s\" to \"%s\".",
+                                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                        "cannot instantiate \"%s\" call"
+                                        " from \"%s\" to \"%s\".",
                                         cir.Description()->ClassName(), slot->FullName().PeekBuffer(),
                                         cir.To().PeekBuffer());
                                 }
@@ -1332,14 +1344,16 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::TString val;
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
-            if (!p->ParseValue(val)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.",
-                    psr.First().PeekBuffer(), psr.Second().PeekBuffer());
+            if (!p->ParseValue(val.PeekBuffer())) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Setting parameter \"%s\" to \"%s\": ParseValue failed.", psr.First().PeekBuffer(),
+                    psr.Second().PeekBuffer());
                 continue;
             } else {
                 if (psr.Second().Length() > 255) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\"[... (shortened)]\"%s\".",
-                        psr.First().PeekBuffer(), psr.Second().Substring(0, 10).PeekBuffer(),
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "Setting parameter \"%s\" to \"%s\"[... (shortened)]\"%s\".", psr.First().PeekBuffer(),
+                        psr.Second().Substring(0, 10).PeekBuffer(),
                         psr.Second().Substring(psr.Second().Length() - 11, 10).PeekBuffer());
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -1370,7 +1384,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
             ++counter;
 
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("parameter group %s is complete. executing:", pg.Name.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "parameter group %s is complete. executing:", pg.Name.PeekBuffer());
             auto pgi = pg.Requests.GetIterator();
             while (pgi.HasNext()) {
                 auto& pr = pgi.Next();
@@ -1380,7 +1395,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     vislib::TString val;
                     vislib::UTF8Encoder::Decode(val, pr.Value());
 
-                    if (!p->ParseValue(val)) {
+                    if (!p->ParseValue(val.PeekBuffer())) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Setting parameter \"%s\" to \"%s\": ParseValue failed.", pr.Key().PeekBuffer(),
                             pr.Value().PeekBuffer());
@@ -1409,7 +1424,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
  */
 vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
     vislib::sys::AutoLock l(this->graphUpdateLock);
-    if (this->pendingViewInstRequests.IsEmpty()) return nullptr;
+    if (this->pendingViewInstRequests.IsEmpty())
+        return nullptr;
     ViewInstanceRequest request = this->pendingViewInstRequests.First();
     return request.Name();
 }
@@ -1424,7 +1440,8 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
     vislib::sys::AutoLock l(this->graphUpdateLock);
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
-    if (this->pendingViewInstRequests.IsEmpty()) return NULL;
+    if (this->pendingViewInstRequests.IsEmpty())
+        return NULL;
 
     ViewInstanceRequest request = this->pendingViewInstRequests.First();
     this->pendingViewInstRequests.RemoveFirst();
@@ -1650,7 +1667,8 @@ megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePen
     vislib::sys::AutoLock l(this->graphUpdateLock);
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
-    if (this->pendingJobInstRequests.IsEmpty()) return NULL;
+    if (this->pendingJobInstRequests.IsEmpty())
+        return NULL;
 
     JobInstanceRequest request = this->pendingJobInstRequests.First();
     this->pendingJobInstRequests.RemoveFirst();
@@ -1788,7 +1806,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
     vislib::SmartPtr<core::param::AbstractParam> lastParam;
     while ((param = this->FindParameter(paramName, quiet)) != nullptr) {
         lastParam = param;
-        paramName = param->ValueString();
+        paramName = param->ValueString().c_str();
     }
     return lastParam;
 }
@@ -1823,7 +1841,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-                /*	if(create)
+                /*  if(create)
                     {
                         param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                         *slotNew << new param::StringParam("");
@@ -1843,7 +1861,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     Module::ptr_type mod = Module::dynamic_pointer_cast(mn->FindChild(modName));
     if (!mod) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
                 *slot << new param::StringParam("");
@@ -1863,7 +1881,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
     param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName).get());
     if (slot == NULL) {
-        /*	if(create)
+        /*  if(create)
             {
                 param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
                 *slotNew << new param::StringParam("");
@@ -1927,8 +1945,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         vislib::StringA content;
         std::string result;
         if (!vislib::sys::ReadTextFile(content, filename)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"", filename.PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
@@ -1941,7 +1959,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         }
     } else if (filename.EndsWith(".png")) {
         std::string result;
-        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename.PeekBuffer());
+        std::string content =
+            megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename.PeekBuffer());
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
@@ -1952,8 +1971,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
     } else {
         megamol::core::utility::xml::XmlReader reader;
         if (!reader.OpenFile(filename)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"", filename.PeekBuffer());
             return;
         }
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -1971,11 +1990,11 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         vislib::StringA content;
         std::string result;
         if (!vislib::sys::ReadTextFile(content, filename)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
-                vislib::StringA(filename).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"", vislib::StringA(filename).PeekBuffer());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
             if (!this->lua->RunString(content.PeekBuffer(), result)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", vislib::StringA(filename).PeekBuffer(), result.c_str());
@@ -1986,7 +2005,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         }
     } else if (filename.EndsWith(L".png")) {
         std::string result;
-        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(W2A(filename.PeekBuffer()));
+        std::string content =
+            megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(W2A(filename.PeekBuffer()));
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, W2A(filename.PeekBuffer()))) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
@@ -1997,12 +2017,12 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
     } else {
         megamol::core::utility::xml::XmlReader reader;
         if (!reader.OpenFile(filename)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
-                vislib::StringA(filename).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to open project file \"%s\"", vislib::StringA(filename).PeekBuffer());
             return;
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
         this->addProject(reader);
     }
 }
@@ -2031,15 +2051,17 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
             if (vi && vi->View()) {
                 std::string vin = vi->Name().PeekBuffer();
                 view_instances[vi->View()->FullName().PeekBuffer()] = vin;
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SerializeGraph: Found view instance \"%s\" with view \"%s\".",
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "SerializeGraph: Found view instance \"%s\" with view \"%s\".",
                     view_instances[vi->View()->FullName().PeekBuffer()].c_str(), vi->View()->FullName().PeekBuffer());
             }
             if (ji && ji->Job()) {
                 std::string jin = ji->Name().PeekBuffer();
                 // todo: find job module! WTF!
                 job_instances[jin] = std::string("job") + std::to_string(job_counter);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SerializeGraph: Found job instance \"%s\" with job \"%s\".",
-                    jin.c_str(), job_instances[jin].c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "SerializeGraph: Found job instance \"%s\" with job \"%s\".", jin.c_str(),
+                    job_instances[jin].c_str());
                 ++job_counter;
             }
         }
@@ -2060,7 +2082,7 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
                 if (slot) {
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
-                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        std::string val = slot->Parameter()->ValueString();
 
                         // Encode to UTF-8 string
                         vislib::StringA valueString;
@@ -2291,8 +2313,8 @@ void megamol::core::CoreInstance::Shutdown(void) {
  * megamol::core::CoreInstance::SetupGraphFromNetwork
  */
 void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
-    using vislib::net::AbstractSimpleMessage;
     using megamol::core::utility::log::Log;
+    using vislib::net::AbstractSimpleMessage;
 
     const AbstractSimpleMessage* dataPtr = static_cast<const AbstractSimpleMessage*>(data);
     const AbstractSimpleMessage& dat = *dataPtr;
@@ -2312,7 +2334,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
             vislib::StringA modName(dat.GetBodyAsAt<char>(pos));
             pos += modName.Length() + 1;
 
-            if (modClass.Equals(cluster::ClusterController::ClassName()) ) {
+            if (modClass.Equals(cluster::ClusterController::ClassName())) {
                 // these are infra structure modules and not to be synced
                 continue;
             }
@@ -2405,7 +2427,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
                     Log::LEVEL_WARN, "Unable to decode parameter value for %s\n", paramName.PeekBuffer());
                 continue;
             }
-            ps->Parameter()->ParseValue(value);
+            ps->Parameter()->ParseValue(value.PeekBuffer());
             // printf("    Param: %s to %s\n", paramName.PeekBuffer(), paramValue.PeekBuffer());
         }
         // printf("\n");
@@ -2452,7 +2474,8 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
     vislib::sys::FastFile outfile;
     if (!outfile.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to create state file file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to create state file file.");
         return false;
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -2603,7 +2626,8 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
 
 
             Call* c = caller->CallAs<Call>();
-            if (c == NULL) continue;
+            if (c == NULL)
+                continue;
             factories::CallDescription::ptr d;
             // CallDescriptionManager::DescriptionIterator i =
             //        CallDescriptionManager::Instance()->GetIterator();
@@ -2637,7 +2661,8 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
         }
 
         if (param != NULL) {
-            if (param->Parameter().IsNull()) continue;
+            if (param->Parameter().IsNull())
+                continue;
             //            printf("        PARAM %s = %s\n", param->FullName().PeekBuffer(),
             //                    param->Parameter()->ValueString().PeekBuffer());
 
@@ -2648,12 +2673,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
@@ -2661,12 +2686,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />\n");
             }
@@ -2801,7 +2826,8 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
 
     ModuleNamespace::ptr_type cns =
         ModuleNamespace::dynamic_pointer_cast(this->namespaceRoot->FindNamespace(dirs, true));
-    if (!cns) return Module::ptr_type(nullptr);
+    if (!cns)
+        return Module::ptr_type(nullptr);
 
     AbstractNamedObject::ptr_type ano = cns->FindChild(modName);
     if (ano) {
@@ -3068,13 +3094,13 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::p
     ViewInstance* vi = dynamic_cast<ViewInstance*>(obj.get());
     JobInstance* ji = dynamic_cast<JobInstance*>(obj.get());
     if (vi != NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_INFO + 50, "View instance %s terminating ...", vi->Name().PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+            "View instance %s terminating ...", vi->Name().PeekBuffer());
         vi->Terminate();
     }
     if (ji != NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_INFO + 50, "Job instance %s terminating ...", ji->Name().PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+            "Job instance %s terminating ...", ji->Name().PeekBuffer());
         ji->Terminate();
     }
 
@@ -3119,7 +3145,7 @@ void megamol::core::CoreInstance::applyConfigParams(
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Initializing parameter \"%s\" to \"%s\"", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
@@ -3140,9 +3166,9 @@ void megamol::core::CoreInstance::applyConfigParams(
 
         vislib::SmartPtr<param::AbstractParam> p = this->FindParameter(nameA, true);
         if (!p.IsNull()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Setting parameter \"%s\" to \"%s\"",
-                nameA.PeekBuffer(), vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                "Setting parameter \"%s\" to \"%s\"", nameA.PeekBuffer(), vislib::StringA(pvr.Second()).PeekBuffer());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
@@ -3155,7 +3181,8 @@ void megamol::core::CoreInstance::applyConfigParams(
 /*
  * megamol::core::CoreInstance::loadPlugin
  */
-void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
+void megamol::core::CoreInstance::loadPlugin(
+    const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
 
     // select log level for plugin loading errors
     unsigned int loadFailedLevel = megamol::core::utility::log::Log::LEVEL_ERROR;
@@ -3172,8 +3199,7 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
             } else {
                 loadFailedLevel = vislib::CharTraitsW::ParseInt(v.PeekBuffer());
             }
-        } catch (...) {
-        }
+        } catch (...) {}
     }
 
     try {
@@ -3187,30 +3213,32 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
 
         // report success
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin \"%s\" loaded: %u Modules, %u Calls",
-                                                               new_plugin->GetObjectFactoryName().c_str(),
-                                                               new_plugin->GetModuleDescriptionManager().Count(),
-                                                               new_plugin->GetCallDescriptionManager().Count());
+            new_plugin->GetObjectFactoryName().c_str(), new_plugin->GetModuleDescriptionManager().Count(),
+            new_plugin->GetCallDescriptionManager().Count());
 
         for (auto md : new_plugin->GetModuleDescriptionManager()) {
             try {
                 this->all_module_descriptions.Register(md);
             } catch (const std::invalid_argument&) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
         }
         for (auto cd : new_plugin->GetCallDescriptionManager()) {
             try {
                 this->all_call_descriptions.Register(cd);
             } catch (const std::invalid_argument&) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }
 
     } catch (const vislib::Exception& vex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s (%s, &d)",
-            vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            loadFailedLevel, "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: unknown exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            loadFailedLevel, "Unable to load Plugin: unknown exception");
     }
 }
 
@@ -3219,11 +3247,13 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
  * megamol::core::CoreInstance::mapCompare
  */
 bool megamol::core::CoreInstance::mapCompare(ParamHashMap_t& one, ParamHashMap_t& other) {
-    if (one.size() != other.size()) return false;
+    if (one.size() != other.size())
+        return false;
 
     for (auto& entry : one) {
         auto entry2 = other.find(entry.first);
-        if (entry2 == other.end() || entry.second != entry2->second) return false;
+        if (entry2 == other.end() || entry.second != entry2->second)
+            return false;
     }
 
     return true;
@@ -3336,7 +3366,8 @@ bool megamol::core::CoreInstance::quickConnectUp(
                     break;
                 }
             }
-            if (!add) continue;
+            if (!add)
+                continue;
             vislib::Array<quickStepInfo> newlist(list);
             newlist.Append(connInfo[i]);
             fifo.Append(newlist);
@@ -3383,7 +3414,8 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
                 //    CallDescription *cd = cdi.Next();
                 for (auto cd : this->GetCallDescriptionManager()) {
                     vislib::Pair<factories::CallDescription::ptr, vislib::StringA> cse(cd, callee->Name());
-                    if (inCalls.Contains(cse)) continue;
+                    if (inCalls.Contains(cse))
+                        continue;
                     if (callee->IsCallCompatible(cd)) {
                         inCalls.Add(cse);
                     }
@@ -3400,10 +3432,13 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
     // while (mdi.HasNext()) {
     //    ModuleDescription *md = mdi.Next();
     for (auto md : this->GetModuleDescriptionManager()) {
-        if (md == from) continue;
-        if (!md->IsVisibleForQuickstart()) continue;
+        if (md == from)
+            continue;
+        if (!md->IsVisibleForQuickstart())
+            continue;
         m = Module::ptr_type(md->CreateModule("quickstarttest"));
-        if (!m) continue;
+        if (!m)
+            continue;
 
         bool connectable = false;
         stack.Push(m);

@@ -3,23 +3,24 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TunnelToParticles.h"
+#include "stdafx.h"
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 
 /*
  * TunnelToParticles::TunnelToParticles
  */
 TunnelToParticles::TunnelToParticles(void)
-    : Module()
-    , dataOutSlot("getData", "Slot providing the tunnel data as particles")
-    , tunnelInSlot("tunnelIn", "Slot taking the tunnel data as input") {
+        : Module()
+        , dataOutSlot("getData", "Slot providing the tunnel data as particles")
+        , tunnelInSlot("tunnelIn", "Slot taking the tunnel data as input") {
 
     // caller slot
     this->tunnelInSlot.SetCompatibleCall<protein_calls::TunnelResidueDataCallDescription>();
@@ -38,12 +39,16 @@ TunnelToParticles::TunnelToParticles(void)
 /*
  * TunnelToParticles::~TunnelToParticles
  */
-TunnelToParticles::~TunnelToParticles(void) { this->Release(); }
+TunnelToParticles::~TunnelToParticles(void) {
+    this->Release();
+}
 
 /*
  * TunnelToParticles::create
  */
-bool TunnelToParticles::create(void) { return true; }
+bool TunnelToParticles::create(void) {
+    return true;
+}
 
 /*
  * TunnelToParticles::release
@@ -55,12 +60,15 @@ void TunnelToParticles::release(void) {}
  */
 bool TunnelToParticles::getData(Call& call) {
     MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     protein_calls::TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<protein_calls::TunnelResidueDataCall>();
-    if (trdc == nullptr) return false;
+    if (trdc == nullptr)
+        return false;
 
-    if (!(*trdc)(0)) return false;
+    if (!(*trdc)(0))
+        return false;
 
     mpdc->SetFrameCount(1); // TODO
     mpdc->SetParticleListCount(trdc->getTunnelNumber());
@@ -85,13 +93,17 @@ bool TunnelToParticles::getData(Call& call) {
  */
 bool TunnelToParticles::getExtent(Call& call) {
     MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     protein_calls::TunnelResidueDataCall* trdc = this->tunnelInSlot.CallAs<protein_calls::TunnelResidueDataCall>();
-    if (trdc == nullptr) return false;
+    if (trdc == nullptr)
+        return false;
 
-    if (!(*trdc)(1)) return false;
-    if (!(*trdc)(0)) return false;
+    if (!(*trdc)(1))
+        return false;
+    if (!(*trdc)(0))
+        return false;
     // the call to getData here is necessary because the loader cannot
     // know the number of tunnels before loading the whole file
 

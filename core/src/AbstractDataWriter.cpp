@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -17,16 +17,15 @@ using namespace megamol::core;
 /*
  * AbstractDataWriter::AbstractDataWriter
  */
-AbstractDataWriter::AbstractDataWriter(void) : Module(),
-        controlSlot("control", "Slot for incoming control commands"),
-        manualRunSlot("manualRun", "Slot fopr manual triggering of the run method.") {
+AbstractDataWriter::AbstractDataWriter(void)
+        : Module()
+        , controlSlot("control", "Slot for incoming control commands")
+        , manualRunSlot("manualRun", "Slot fopr manual triggering of the run method.") {
 
     this->controlSlot.SetCallback(DataWriterCtrlCall::ClassName(),
-        DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_RUN),
-        &AbstractDataWriter::onCallRun);
+        DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_RUN), &AbstractDataWriter::onCallRun);
     this->controlSlot.SetCallback(DataWriterCtrlCall::ClassName(),
-        DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_ABORT),
-        &AbstractDataWriter::onCallAbort);
+        DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_ABORT), &AbstractDataWriter::onCallAbort);
     this->controlSlot.SetCallback(DataWriterCtrlCall::ClassName(),
         DataWriterCtrlCall::FunctionName(DataWriterCtrlCall::CALL_GETCAPABILITIES),
         &AbstractDataWriter::onCallGetCapability);
@@ -57,7 +56,7 @@ bool AbstractDataWriter::abort(void) {
 /*
  * AbstractDataWriter::onCallRun
  */
-bool AbstractDataWriter::onCallRun(Call &call) {
+bool AbstractDataWriter::onCallRun(Call& call) {
     return this->run();
 }
 
@@ -65,8 +64,8 @@ bool AbstractDataWriter::onCallRun(Call &call) {
 /*
  * AbstractDataWriter::onCallGetCapability
  */
-bool AbstractDataWriter::onCallGetCapability(Call &call) {
-    DataWriterCtrlCall *dwcc = dynamic_cast<DataWriterCtrlCall*>(&call);
+bool AbstractDataWriter::onCallGetCapability(Call& call) {
+    DataWriterCtrlCall* dwcc = dynamic_cast<DataWriterCtrlCall*>(&call);
     return (dwcc != NULL) && this->getCapabilities(*dwcc);
 }
 
@@ -74,7 +73,7 @@ bool AbstractDataWriter::onCallGetCapability(Call &call) {
 /*
  * AbstractDataWriter::onCallAbort
  */
-bool AbstractDataWriter::onCallAbort(Call &call) {
+bool AbstractDataWriter::onCallAbort(Call& call) {
     return this->abort();
 }
 
@@ -86,8 +85,7 @@ bool AbstractDataWriter::triggerManualRun(param::ParamSlot& slot) {
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->manualRunSlot);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
-        "Manual start initiated ...");
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Manual start initiated ...");
 
     if (!this->run()) {
         return false;

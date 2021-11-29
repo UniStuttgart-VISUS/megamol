@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="imageviewer">
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="vertex_all" type="file">imageviewer/imageviewer.vert</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="fragment_all" type="file">imageviewer/imageviewer.frag</snippet>
+    </shader>
+</btf>

@@ -1,7 +1,7 @@
 /*
  * AbstractTriangle.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -21,62 +21,57 @@ namespace vislib {
 namespace math {
 
 
-    /**
-     * This class represents a triangle.
-	 *
-	 * The triangle can be instantiated for different built-in number
-	 * types T and storage classes S. For a triangle that holds its own 
-	 * vertices, use T[3] as storage class (this is the default). For a
-	 * triangle that does not own the storage (we call this "shallow 
-	 * triangle"), use T * for S.
-	 */
-	template<class T, class S> class AbstractTriangle 
-		: public AbstractTriangleImpl<T, S, AbstractTriangle> {
+/**
+ * This class represents a triangle.
+ *
+ * The triangle can be instantiated for different built-in number
+ * types T and storage classes S. For a triangle that holds its own
+ * vertices, use T[3] as storage class (this is the default). For a
+ * triangle that does not own the storage (we call this "shallow
+ * triangle"), use T * for S.
+ */
+template<class T, class S>
+class AbstractTriangle : public AbstractTriangleImpl<T, S, AbstractTriangle> {
 
-    public:
+public:
+    template<class Tf1, class Sf1, template<class Tf2, class Sf2> class Cf>
+    friend class AbstractTriangleImpl;
 
-        template<class Tf1, class Sf1, template<class Tf2, class Sf2> class Cf> 
-        friend class AbstractTriangleImpl;
+    /** Dtor. */
+    ~AbstractTriangle(void);
 
-        /** Dtor. */
-        ~AbstractTriangle(void);
-        
-    protected:
+protected:
+    /** Ctor. */
+    AbstractTriangle(void);
 
-		/** Ctor. */
-		AbstractTriangle(void);
+    AbstractTriangle& operator=(const AbstractTriangle& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        AbstractTriangle& operator =(const AbstractTriangle& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
+    template<class Tp, class Sp>
+    inline AbstractTriangle& operator=(const AbstractTriangle<Tp, Sp>& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        template<class Tp, class Sp>
-        inline AbstractTriangle& operator =(
-            const AbstractTriangle<Tp, Sp>& rhs) {
-                Super::operator =(rhs);
-                return *this;
-        }
-
-    private:
-		typedef AbstractTriangleImpl<T, S, vislib::math::AbstractTriangle> Super;
-    };
+private:
+    typedef AbstractTriangleImpl<T, S, vislib::math::AbstractTriangle> Super;
+};
 
 
-	/*
-     * vislib::math::AbstractTriangle<T>::AbstractTriangle
-     */
-    template<class T, class S>
-	AbstractTriangle<T, S>::AbstractTriangle(void) : Super() {
-	}
+/*
+ * vislib::math::AbstractTriangle<T>::AbstractTriangle
+ */
+template<class T, class S>
+AbstractTriangle<T, S>::AbstractTriangle(void) : Super() {}
 
 
-    /*
-     * vislib::math::AbstractTriangle<T>::~AbstractTriangle
-     */
-    template<class T, class S>
-	AbstractTriangle<T, S>::~AbstractTriangle(void) {
-	}
+/*
+ * vislib::math::AbstractTriangle<T>::~AbstractTriangle
+ */
+template<class T, class S>
+AbstractTriangle<T, S>::~AbstractTriangle(void) {}
 
 } /* end namespace math */
 } /* end namespace vislib */
@@ -85,4 +80,3 @@ namespace math {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTTRIANGLE_H_INCLUDED */
-
