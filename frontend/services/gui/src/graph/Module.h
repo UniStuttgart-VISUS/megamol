@@ -216,7 +216,6 @@ private:
 
     HoverToolTip gui_tooltip;
     PopUps gui_rename_popup;
-    ImageWidget gui_profiling_button;
 
 #ifdef PROFILING
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
@@ -226,6 +225,9 @@ private:
     void* profiling_parent_pointer;
     float profiling_window_height; // determine dynamically
     bool show_profiling_data;
+    ImageWidget gui_profiling_button;
+    ImageWidget gui_profiling_run_button;
+    bool pause_profiling_history_update;
 
     void draw_profiling_data(GraphItemsState_t& state);
 #endif // PROFILING

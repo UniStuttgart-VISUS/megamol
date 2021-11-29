@@ -39,7 +39,7 @@ public:
     }
 
     bool LoadTextureFromFile(
-        const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
+        const std::string& filename, const std::string& toggle_filename = "", GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
 
     /**
      * Draw texture as simple image.
@@ -50,7 +50,8 @@ public:
      * Draw texture as button.
      */
     bool Button(const std::string& tooltip_text, ImVec2 size);
-
+    bool ToggleButton(const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size);
+    
     /**
      * Return texture id for external usage.
      */
@@ -62,7 +63,10 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     std::shared_ptr<glowl::Texture2D> tex_ptr;
+    std::shared_ptr<glowl::Texture2D> toggle_tex_ptr;
 
+    bool toggle_button_toggled;
+    
     // Widgets
     HoverToolTip tooltip;
 };

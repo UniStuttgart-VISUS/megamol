@@ -14,7 +14,7 @@
 #include "ProfilingUtils.h"
 #include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (200.0f)
-#define CALL_PROFILING_WINDOW_WIDTH (350.0f)
+#define CALL_PROFILING_WINDOW_WIDTH (450.0f)
 #endif // PROFILING
 
 using namespace megamol;
@@ -41,6 +41,8 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , profiling_parent_pointer(nullptr)
         , profiling_window_height(1.0f)
         , show_profiling_data(false)
+        , gui_profiling_run_button()
+        , pause_profiling_history_update(false)
 #endif // PROFILING
 {
 
@@ -419,21 +421,27 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
-    // TODO: pause button to stop new samples from being stored?
-    switch (entry.api) {
-    case frontend_resources::PerformanceManager::query_api::CPU:
-        this->cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
-            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
-        break;
-    case frontend_resources::PerformanceManager::query_api::OPENGL:
-        this->gl_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
-            std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
-        break;
+    if (!pause_profiling_history_update) {
+        switch (entry.api) {
+        case frontend_resources::PerformanceManager::query_api::CPU:
+            this->cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
+                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+            break;
+        case frontend_resources::PerformanceManager::query_api::OPENGL:
+            this->gl_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
+                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+            break;
+        }
     }
 }
 
 
 void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
+
+    // Lazy loading of run button textures
+    if (!this->gui_profiling_run_button.IsLoaded()) {
+        this->gui_profiling_run_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+    }
 
     ImGui::BeginChild("call_profiling_info",
         ImVec2((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
@@ -443,6 +451,10 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback Name]");
+    ImGui::SameLine();
+    if (this->gui_profiling_run_button.ToggleButton("Pause", "Run", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
+        this->pause_profiling_history_update = !this->pause_profiling_history_update;
+    }
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
     auto func_cnt = this->cpu_perf_history.size();
     for (size_t i = 0; i < func_cnt; i++) {

@@ -34,8 +34,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     struct {
-        ImageWidget play;
-        ImageWidget pause;
+        ImageWidget play_pause;
         ImageWidget fastforward;
         ImageWidget fastrewind;
     } image_buttons;

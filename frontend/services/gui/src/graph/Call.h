@@ -129,6 +129,8 @@ private:
     void* profiling_parent_pointer;
     float profiling_window_height; // determine dynamically
     bool show_profiling_data;
+    ImageWidget gui_profiling_run_button;
+    bool pause_profiling_history_update;
 
     void draw_profiling_data(GraphItemsState_t& state);
 #endif // PROFILING
