@@ -1,12 +1,12 @@
 #include "mmcore/UniFlagStorage.h"
-#include "mmcore/UniFlagCalls.h"
 #include "json.hpp"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ShaderFactory.h"
 
 #ifdef WITH_GL
 #include "OpenGL_Context.h"
+#include "mmcore/utility/ShaderFactory.h"
 #endif
 
 using namespace megamol;
@@ -63,6 +63,8 @@ UniFlagStorage::~UniFlagStorage(void) {
 
 
 bool UniFlagStorage::create(void) {
+    const int num = 10;
+
 #ifdef WITH_GL
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isVersionGEQ(4, 3))
@@ -71,20 +73,19 @@ bool UniFlagStorage::create(void) {
     // TODO beware this shader only compiles and has never been tested. It will probably release the kraken or something more sinister
     try {
         auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        compressGPUFlagsProgram = core::utility::make_glowl_shader(
-            "compress_bitflags", shaderOptions, "core/compress_bitflags.comp.glsl");
+        compressGPUFlagsProgram =
+            core::utility::make_glowl_shader("compress_bitflags", shaderOptions, "core/compress_bitflags.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteError(("UniFlagStorage: could not compile compute shader: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(
+            ("UniFlagStorage: could not compile compute shader: " + std::string(e.what())).c_str());
         return false;
     }
 
-    const int num = 10;
     std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
     this->theGLData->flags =
         std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
 
 #endif
-
     this->theCPUData = std::make_shared<FlagCollection_CPU>();
     this->theCPUData->flags = std::make_shared<FlagStorage::FlagVectorType>(num, FlagStorage::ENABLED);
 
@@ -234,7 +235,7 @@ nlohmann::json UniFlagStorage::make_bit_array(const index_vector& bit_starts, co
 }
 
 void UniFlagStorage::array_to_bits(const nlohmann::json& json, FlagStorage::FlagItemType flag_bit) {
-    for (auto& j: json) {
+    for (auto& j : json) {
         if (j.is_array()) {
             index_type from, to;
             j[0].get_to(from);
@@ -251,7 +252,8 @@ void UniFlagStorage::array_to_bits(const nlohmann::json& json, FlagStorage::Flag
 }
 
 UniFlagStorage::index_type UniFlagStorage::array_max(const nlohmann::json& json) {
-    if (json.empty()) return 0;
+    if (json.empty())
+        return 0;
     auto& j = json.back();
     index_type end = 0;
     if (j.is_array()) {
@@ -314,7 +316,7 @@ void UniFlagStorage::serializeCPUData() {
 
 void UniFlagStorage::deserializeCPUData() {
     try {
-        auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value().PeekBuffer());
+        auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value());
         index_type num_flags = 10;
         // reset all flags
         if (j.contains("enabled")) {
@@ -349,7 +351,7 @@ void UniFlagStorage::deserializeCPUData() {
 }
 
 bool UniFlagStorage::onJSONChanged(param::ParamSlot& slot) {
-#ifdef WITH_GL    
+#ifdef WITH_GL
     if (cpu_stale) {
         GL2CPUCopy();
     }
@@ -368,7 +370,6 @@ void UniFlagStorage::CPU2GLCopy() {
 void UniFlagStorage::GL2CPUCopy() {
     auto const num = theData->flags->getByteSize() / sizeof(uint32_t);
     theCPUData->validateFlagCount(num);
-    glGetNamedBufferSubData(
-        theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
+    glGetNamedBufferSubData(theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
 }
 #endif

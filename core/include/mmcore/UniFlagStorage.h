@@ -19,6 +19,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include "tbb/tbb.h"
 
 namespace megamol {
