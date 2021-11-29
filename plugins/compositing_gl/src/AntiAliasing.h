@@ -137,13 +137,16 @@ private:
         const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
         std::shared_ptr<glowl::Texture2D> output,
         const std::vector<std::pair<const char*, int>>& uniforms,
-        bool blending_pass,
+        bool calc_weights_pass,
         const std::shared_ptr<glowl::BufferObject>& ssbo = nullptr);
 
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt,
         const std::shared_ptr<glowl::Texture2D>& src);
 
+    // timing variables
+    int m_cnt;
+    double m_totalTimeSpent;
 
     std::vector<unsigned char> m_area;
     std::vector<unsigned char> m_search;

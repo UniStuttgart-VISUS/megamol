@@ -7,6 +7,8 @@
 
 // TOOD: consistent naming (e.g. tex or tx2D, camelCasing or underscore)
 
+#define TIMER_ENABLED 0
+
 #include "stdafx.h"
 #include "AntiAliasing.h"
 
@@ -52,7 +54,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_camera_slot("Camera", "Connects the camera")
     , m_depth_tex_slot("DepthTexture", "Connects the depth texture")
     , m_settings_have_changed(false)
-{
+        , m_cnt(0), m_totalTimeSpent(0.0) {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
@@ -269,8 +271,8 @@ bool megamol::compositing::AntiAliasing::create() {
 
     //        size_t flip_id = x + (AREATEX_HEIGHT - 1 - y) * AREATEX_WIDTH;
 
-    //        m_area[2 * id + 0] = areaTexBytes[2 * flip_id + 0];     // R
-    //        m_area[2 * id + 1] = areaTexBytes[2 * flip_id + 1]; // R
+    //        m_area[2 * id + 0] = areaTexBytes[2 * flip_id + 0]; // R
+    //        m_area[2 * id + 1] = areaTexBytes[2 * flip_id + 1]; // G
     //    }
     //}
 
@@ -436,7 +438,7 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
     const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
     std::shared_ptr<glowl::Texture2D> output,
     const std::vector<std::pair<const char*, int>>& uniforms,
-    bool blending_pass,
+    bool calc_weights_pass,
     const std::shared_ptr<glowl::BufferObject>& ssbo) {
     prgm->Enable();
 
@@ -450,7 +452,7 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
         glUniform1i(prgm->ParameterLocation(uniform.first), uniform.second);
     }
 
-    if (blending_pass) {
+    if (calc_weights_pass) {
         // smaat2x enabled
         if (this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1) {
             glUniform4fv(prgm->ParameterLocation("g_subsampleIndices"), 1, glm::value_ptr(m_subsampleIndices[m_version % 2]));
@@ -636,6 +638,13 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
             // TODO: one program for all? one mega shader with barriers?
 
+#if TIMER_ENABLED
+            GLuint64 startTime, stopTime;
+            unsigned int queryID[2];
+            glGenQueries(2, queryID);
+            glQueryCounter(queryID[0], GL_TIMESTAMP);
+#endif
+
             if (temporal) {
                 m_cam = rhs_call_camera->getData();
                 glm::mat4 view_mx = m_cam.getViewMatrix();
@@ -715,15 +724,38 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             inputs.clear();
             inputs = {{m_edges_tex, "g_edgesTex"}, {m_area_tex, "g_areaTex"}, {m_search_tex, "g_searchTex"}};
 
-            dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, false, m_ssbo_constants);
+            dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, true, m_ssbo_constants);
 
             // final step: neighborhood blending
             inputs.clear();
             inputs = {{input_tx2D, "g_colorTex"}, {m_blend_tex, "g_blendingWeightsTex"}};
 
             dispatchComputeShader(
-                m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, true, m_ssbo_constants);
+                m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, false, m_ssbo_constants);
 
+#if TIMER_ENABLED
+            glQueryCounter(queryID[1], GL_TIMESTAMP);
+
+            GLint stopTimerAvailable = 0;
+            while (!stopTimerAvailable) {
+                glGetQueryObjectiv(queryID[1], GL_QUERY_RESULT_AVAILABLE, &stopTimerAvailable);
+            }
+
+            glGetQueryObjectui64v(queryID[0], GL_QUERY_RESULT, &startTime);
+            glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, &stopTime);
+
+            ++m_cnt;
+            m_totalTimeSpent += (double) (stopTime - startTime) / 1000000.0;
+
+            int numRuns = 1000;
+
+            if (m_cnt == numRuns) {
+                double avg = m_totalTimeSpent / (double) numRuns;
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Average time spent over the last %i runs: %fms", numRuns, avg);
+                m_cnt = 0;
+                m_totalTimeSpent = 0.0;
+            }
+#endif
 
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }

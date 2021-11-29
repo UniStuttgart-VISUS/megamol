@@ -331,7 +331,6 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsPrgm->Link())
                 return false;
 
-            // TODO: fix namespace from Compositing::SSAO to Compositing::assao
             Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))

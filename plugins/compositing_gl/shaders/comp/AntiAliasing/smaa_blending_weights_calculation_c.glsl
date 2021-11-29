@@ -78,8 +78,12 @@ float SMAASearchLength(sampler2D searchTex, vec2 e, float offset) {
     scale *= 1.0 / SMAA_SEARCHTEX_PACKED_SIZE;
     bias *= 1.0 / SMAA_SEARCHTEX_PACKED_SIZE;
 
+    // flip texcoord.y to account for DirectX-formatted texture
+    vec2 texcoord = fma(scale, e, bias);
+    //texcoord.y = 1.0 - texcoord.y;
+
     // Lookup the search texture:
-    return textureLod(searchTex, fma(scale, e, bias), 0.0).r;
+    return textureLod(searchTex, texcoord, 0.0).r;
 }
 
 
@@ -161,6 +165,9 @@ vec2 SMAAAreaDiag(sampler2D areaTex, vec2 dist, vec2 e, float offset) {
 
     // Move to proper place, according to the subpixel offset:
     texcoord.y += SMAA_AREATEX_SUBTEX_SIZE * offset;
+
+    // flip texcoord.y to account for DirectX-formatted texture
+    //texcoord.y = 1.0 - texcoord.y;
 
     // Do it!
     return textureLod(areaTex, texcoord, 0.0).rg;
@@ -319,6 +326,9 @@ vec2 SMAAArea(sampler2D areaTex, vec2 dist, float e1, float e2, float offset) {
 
     // Move to proper place, according to the subpixel offset:
     texcoord.y = fma(SMAA_AREATEX_SUBTEX_SIZE, offset, texcoord.y);
+
+    // flip texcoord.y to account for DirectX-formatted texture
+    //texcoord.y = 1.0 - texcoord.y;
 
     // Do it!
     return textureLod(areaTex, texcoord, 0.0).rg;
