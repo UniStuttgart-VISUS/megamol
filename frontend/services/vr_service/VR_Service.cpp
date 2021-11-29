@@ -208,8 +208,8 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     frontend_resources::EntryPoint* left_ep = nullptr;
     frontend_resources::EntryPoint* right_ep = nullptr;
 
-    frontend_resources::gl_texture left_ep_result{{}};
-    frontend_resources::gl_texture right_ep_result{{}};
+    frontend_resources::gl_texture left_ep_result;
+    frontend_resources::gl_texture right_ep_result;
 
     interop::TextureSender left_texturesender;
     interop::TextureSender right_texturesender;
