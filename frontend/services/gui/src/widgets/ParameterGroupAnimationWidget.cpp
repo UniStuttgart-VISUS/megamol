@@ -108,7 +108,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         // Load button textures (once) --------------------------------------------
         if (!this->image_buttons.play_pause.IsLoaded()) {
-            this->image_buttons.play_pause.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE);
+            this->image_buttons.play_pause.LoadTextureFromFile(
+                GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE);
         }
         if (!this->image_buttons.fastforward.IsLoaded()) {
             this->image_buttons.fastforward.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_FORWARD);
@@ -116,7 +117,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (!this->image_buttons.fastrewind.IsLoaded()) {
             this->image_buttons.fastrewind.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_REWIND);
         }
-        if ((!this->image_buttons.play_pause.IsLoaded()) || (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
+        if ((!this->image_buttons.play_pause.IsLoaded()) || (!this->image_buttons.fastforward.IsLoaded()) ||
+            (!this->image_buttons.fastrewind.IsLoaded())) {
             utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
                 __FILE__, __FUNCTION__, __LINE__);

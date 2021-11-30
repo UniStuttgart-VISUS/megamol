@@ -1,7 +1,7 @@
 #include "mmcore/MultiPerformanceHistory.h"
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 using namespace megamol::core;
 
@@ -32,7 +32,7 @@ void MultiPerformanceHistory::push_sample(frame_type frame, frame_index_type idx
 
 void MultiPerformanceHistory::reset() {
     next_index = 0;
-    for (auto& tb: time_buffer) {
+    for (auto& tb : time_buffer) {
         tb.reset();
     }
     num_samples = 0;
@@ -70,8 +70,8 @@ MultiPerformanceHistory::perf_type MultiPerformanceHistory::last_value(metric_ty
     return at(buffer_length - 1, metric);
 }
 
-std::array<MultiPerformanceHistory::perf_type, MultiPerformanceHistory::buffer_length> MultiPerformanceHistory::copyHistory(
-    metric_type metric) const {
+std::array<MultiPerformanceHistory::perf_type, MultiPerformanceHistory::buffer_length>
+MultiPerformanceHistory::copyHistory(metric_type metric) const {
     std::array<perf_type, buffer_length> ret{};
     auto trafo = [metric](const frame_statistics& fs) {
         switch (metric) {

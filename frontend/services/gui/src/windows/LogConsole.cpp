@@ -377,13 +377,15 @@ bool megamol::gui::LogConsole::Draw() {
     std::string popup_id = "autocomplete_selector";
     if (this->input_shared_data->open_autocomplete_popup) {
         ImGui::OpenPopup(popup_id.c_str());
-        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) + (ImVec2(2.0f, 2.0f) * style.ItemInnerSpacing));
+        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) +
+                                (ImVec2(2.0f, 2.0f) * style.ItemInnerSpacing));
         ImGui::SetNextWindowFocus();
         this->input_shared_data->open_autocomplete_popup = false;
     }
     if (ImGui::BeginPopup(popup_id.c_str())) {
         for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
-            bool selected_candidate = ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].c_str(), false, ImGuiSelectableFlags_AllowDoubleClick);
+            bool selected_candidate = ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].c_str(),
+                false, ImGuiSelectableFlags_AllowDoubleClick);
             // Keyboard selection can only be confirmed with 'space'. Also allow confirmation using 'enter'
             if (selected_candidate ||
                 (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {

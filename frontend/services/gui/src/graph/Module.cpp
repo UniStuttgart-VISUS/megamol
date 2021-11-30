@@ -730,7 +730,8 @@ void megamol::gui::Module::draw_profiling_data(GraphItemsState_t& state) {
 
     // Lazy loading of run button textures
     if (!this->gui_profiling_run_button.IsLoaded()) {
-        this->gui_profiling_run_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+        this->gui_profiling_run_button.LoadTextureFromFile(
+            GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
     }
 
     ImGui::BeginChild("module_profiling_info",
@@ -742,7 +743,8 @@ void megamol::gui::Module::draw_profiling_data(GraphItemsState_t& state) {
     ImGui::SameLine();
     ImGui::TextDisabled("[Region Name]");
     ImGui::SameLine();
-    if (this->gui_profiling_run_button.ToggleButton("Pause", "Run", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
+    if (this->gui_profiling_run_button.ToggleButton(
+            "Pause", "Run", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
         this->pause_profiling_history_update = !this->pause_profiling_history_update;
     }
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);

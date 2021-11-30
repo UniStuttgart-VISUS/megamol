@@ -22,16 +22,17 @@ megamol::gui::ImageWidget::ImageWidget() : toggle_button_toggled(false), tooltip
 
 #ifdef WITH_GL
 
-bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename, const std::string& toggle_filename, GLint tex_min_filter, GLint tex_max_filter) {
+bool megamol::gui::ImageWidget::LoadTextureFromFile(
+    const std::string& filename, const std::string& toggle_filename, GLint tex_min_filter, GLint tex_max_filter) {
 
     bool retval = true;
 
     auto load_texture_from_file = [&](const std::string& fn, std::shared_ptr<glowl::Texture2D>& tp) {
         for (auto& resource_directory : megamol::gui::gui_resource_paths) {
-            std::string filename_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, fn);
+            std::string filename_path = megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, fn);
             if (!filename_path.empty()) {
-                retval &= megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(tp, filename_path, tex_min_filter, tex_max_filter);
+                retval &= megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
+                    tp, filename_path, tex_min_filter, tex_max_filter);
                 break;
             }
         }
@@ -65,8 +66,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename,
 
     auto load_texture_from_file = [&](const std::string& fn, std::shared_ptr<CPUTexture2D<float>>& tp) {
         for (auto& resource_directory : megamol::gui::gui_resource_paths) {
-            std::string filename_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, fn);
+            std::string filename_path = megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, fn);
             if (!filename_path.empty()) {
                 if (megamol::core::utility::FileUtils::LoadRawFile(filename, buf)) {
                     if (pbc.Load(static_cast<void*>(buf.data()), buf.size())) {
@@ -81,8 +81,8 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename,
                         break;
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                            __LINE__);
                     }
                 }
             }
@@ -143,7 +143,7 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 s
     auto bg = style.Colors[ImGuiCol_Button];
     auto fg = style.Colors[ImGuiCol_Text];
 
-    bool retval = ImGui::ImageButton(this->getImTextureID(), size, ImVec2(0.0f, 0.0f),  ImVec2(1.0f, 1.0f), 1, bg, fg);
+    bool retval = ImGui::ImageButton(this->getImTextureID(), size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1, bg, fg);
     if (!tooltip_text.empty()) {
         this->tooltip.ToolTip(tooltip_text, ImGui::GetItemID(), 0.5f, 5.0f);
     }
@@ -152,7 +152,8 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 s
 }
 
 
-bool megamol::gui::ImageWidget::ToggleButton(const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size) {
+bool megamol::gui::ImageWidget::ToggleButton(
+    const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
