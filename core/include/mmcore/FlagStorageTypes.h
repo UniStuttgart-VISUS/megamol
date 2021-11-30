@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <vector>
 
+// nice idea from here https://wiggling-bits.net/using-enum-classes-as-type-safe-bitmasks/
+
 template<typename Enum>
 struct EnableBitMaskOperators {
     static const bool enable = false;
