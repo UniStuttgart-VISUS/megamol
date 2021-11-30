@@ -10,12 +10,12 @@
 #pragma once
 
 
-#include <memory>
-#include <glm/glm.hpp>
 #include "imgui.h"
-#include "imgui_sw.h"
 #include "imgui_impl_generic.h"
+#include "imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
+#include <glm/glm.hpp>
+#include <memory>
 
 #ifdef WITH_GL
 #include <glowl/FramebufferObject.hpp>
@@ -87,7 +87,6 @@ public:
 #endif // WITH_GL
 
 private:
-
     // VARIABLES --------------------------------------------------------------
 
     GUIRenderBackend initialized_backend;
@@ -99,7 +98,6 @@ private:
     std::shared_ptr<glowl::FramebufferObject> ogl_fbo = nullptr;
 #endif // WITH_GL
     std::shared_ptr<megamol::core::view::CPUFramebuffer> cpu_fbo = nullptr;
-
 };
 
 

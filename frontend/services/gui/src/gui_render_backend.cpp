@@ -16,8 +16,10 @@
 using namespace megamol::gui;
 
 
-gui_render_backend::gui_render_backend() : initialized_backend(GUIRenderBackend::NONE), sw_window({1280, 720, 0, 0}), sw_monitor({1920, 1080}) {
-}
+gui_render_backend::gui_render_backend()
+        : initialized_backend(GUIRenderBackend::NONE)
+        , sw_window({1280, 720, 0, 0})
+        , sw_monitor({1920, 1080}) {}
 
 
 gui_render_backend::~gui_render_backend() {
@@ -29,7 +31,7 @@ gui_render_backend::~gui_render_backend() {
 
 
 bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backend) {
-    
+
     switch (backend) {
     case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
@@ -39,11 +41,13 @@ bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backe
         HDC ogl_current_display = ::wglGetCurrentDC();
         HGLRC ogl_current_context = ::wglGetCurrentContext();
         if (ogl_current_display == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] There is no OpenGL rendering context available.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] There is no OpenGL rendering context available.");
             prerequisities_given = false;
         }
         if (ogl_current_context == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] There is no current OpenGL rendering context available from the calling thread.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
 #else
@@ -53,17 +57,21 @@ bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backe
         // GLXContext ogl_current_context = ::glXGetCurrentContext();
         /// XXX Is there a better way to check existing OpenGL context?
         if (glXGetCurrentDisplay == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] There is no OpenGL rendering context available.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] There is no OpenGL rendering context available.");
             prerequisities_given = false;
         }
         if (glXGetCurrentContext == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] There is no current OpenGL rendering context available from the calling thread.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
 #endif // _WIN32
 
         if (!prerequisities_given) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Missing prerequisities to initialize render backend OpenGL. [%s, %s, line %d]", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Missing prerequisities to initialize render backend OpenGL. [%s, %s, line %d]", __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
 #else
@@ -89,8 +97,7 @@ bool gui_render_backend::Init(GUIRenderBackend backend) {
 
     if (this->IsBackendInitialized()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Render backend is already initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
+            "[GUI] Render backend is already initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -101,8 +108,8 @@ bool gui_render_backend::Init(GUIRenderBackend backend) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui render backend for Open GL.");
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to initialize OpenGL render backend for ImGui. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
+                "[GUI] Unable to initialize OpenGL render backend for ImGui. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
 #endif
@@ -165,8 +172,8 @@ bool gui_render_backend::EnableRendering(unsigned int width, unsigned int height
         bool create_fbo = false;
         if (this->ogl_fbo == nullptr) {
             create_fbo = true;
-        } else if (((this->ogl_fbo->getWidth() != width_i) || (this->ogl_fbo->getHeight() != height_i)) && (width_i != 0) &&
-                   (height_i != 0)) {
+        } else if (((this->ogl_fbo->getWidth() != width_i) || (this->ogl_fbo->getHeight() != height_i)) &&
+                   (width_i != 0) && (height_i != 0)) {
             create_fbo = true;
         }
         if (create_fbo) {
@@ -239,7 +246,8 @@ bool gui_render_backend::Render(ImDrawData* draw_data) {
     } break;
     case (GUIRenderBackend::CPU): {
         std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
-        imgui_sw::paint_imgui(this->cpu_fbo->colorBuffer.data(), static_cast<int>(this->cpu_fbo->getWidth()), static_cast<int>(this->cpu_fbo->getHeight()));
+        imgui_sw::paint_imgui(this->cpu_fbo->colorBuffer.data(), static_cast<int>(this->cpu_fbo->getWidth()),
+            static_cast<int>(this->cpu_fbo->getHeight()));
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -262,7 +270,7 @@ bool megamol::gui::gui_render_backend::ShutdownBackend() {
     } break;
     default:
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);        
+            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         break;
     }
     this->initialized_backend = GUIRenderBackend::NONE;
@@ -275,16 +283,19 @@ bool gui_render_backend::CreateFont() {
     switch (this->initialized_backend) {
     case (GUIRenderBackend::NONE): {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Fonts can only be loaded after render backend was initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-    } break;        
+            "[GUI] Fonts can only be loaded after render backend was initialized. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    } break;
     case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
         return ImGui_ImplOpenGL3_CreateFontsTexture();
 #endif
     } break;
     case (GUIRenderBackend::CPU): {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] CPU rendering does not support painting with any other texture than the default font texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] CPU rendering does not support painting with any other texture than the default font texture. [%s, "
+            "%s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -293,4 +304,3 @@ bool gui_render_backend::CreateFont() {
     }
     return false;
 }
-

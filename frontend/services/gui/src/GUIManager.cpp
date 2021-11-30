@@ -228,7 +228,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Start new ImGui frame --------------------------------------------------
-    this->render_backend.NewFrame(framebuffer_size,  window_size);
+    this->render_backend.NewFrame(framebuffer_size, window_size);
     ImGui::NewFrame();
 
 /// DOCKING

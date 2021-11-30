@@ -168,7 +168,8 @@ public:
     }
 
 #ifdef WITH_GL
-    inline void GetFBOData_GL(unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) {
+    inline void GetFBOData_GL(
+        unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) {
         this->render_backend.GetFBOData_GL(out_fbo_color_buffer_gl_handle, out_fbo_width, out_fbo_height);
     }
 #else
