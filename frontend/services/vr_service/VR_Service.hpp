@@ -110,6 +110,8 @@ private:
         void preGraphRender() override;
         void postGraphRender() override;
 
+        void add_graph(void* ptr);
+
         struct PimplData;
         std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     };

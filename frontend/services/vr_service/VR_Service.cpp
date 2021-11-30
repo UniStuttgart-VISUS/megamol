@@ -19,8 +19,11 @@
 #include "mmcore_gl/view/View3DGL.h"
 #endif // WITH_VR_SERVICE_UNITY_KOLABBW
 
+#include "mmcore/MegaMolGraph.h"
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
+
 
 static const std::string service_name = "VR_Service: ";
 static void log(std::string const& text) {
@@ -57,6 +60,7 @@ bool VR_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
+        "MegaMolGraph",
 #ifdef WITH_VR_SERVICE_UNITY_KOLABBW
         "OpenGL_Context",
 #endif // WITH_VR_SERVICE_UNITY_KOLABBW
@@ -163,6 +167,13 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto {
         return std::nullopt;
     };
+
+    auto& megamol_graph = m_requestedResourceReferences[1].getResource<core::MegaMolGraph>();
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+    // Unity Kolab wants to manipulate graph modules like clipping plane or views
+    static_cast<VR_Service::KolabBW*>(m_vr_device_ptr.get())
+        ->add_graph(const_cast<core::MegaMolGraph*>(&megamol_graph));
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
 }
 
 void VR_Service::updateProvidedResources() {}
@@ -221,6 +232,79 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
 
     std::function<void()> update_entry_point_inputs;
 
+    core::MegaMolGraph* graph_ptr = nullptr;
+
+    interop::DataReceiver clip_plane_positionReceiver, clip_plane_normalReceiver, clip_plane_stateReceiver;
+    bool has_plane_position = false, has_plane_normal = false, has_plane_state = false;
+    interop::vec4 clip_plane_point, clip_plane_normal;
+    bool clip_plane_state = false;
+    core::Module* clip_module_ptr = nullptr;
+
+    std::function<core::param::ParamSlot*(std::string const&, core::Module*)> get_param_slot =
+        [&](std::string const& name, core::Module* module_ptr) -> core::param::ParamSlot* {
+        return dynamic_cast<core::param::ParamSlot*>(module_ptr->FindSlot(name.c_str()));
+    };
+
+    void update_clip_plane_state(interop::vec4 const& pos, interop::vec4 const& normal, bool const state) {
+        if (!graph_ptr)
+            return;
+
+        if (!clip_module_ptr) {
+            // find clip module
+            auto& modules = graph_ptr->ListModules();
+            auto find_it = std::find_if(modules.begin(), modules.end(),
+                [&](core::ModuleInstance_t const& module) { return module.request.className == "ClipPlane"; });
+
+            if (find_it != modules.end()) {
+                clip_module_ptr = find_it->modulePtr.get(); // if graph gets cleared we are in trouble
+                log("found and using ClipPlane module " + find_it->request.id);
+            }
+        }
+
+        if (!clip_module_ptr)
+            return;
+
+        auto* color_slot = get_param_slot("colour", clip_module_ptr);
+        auto* point_slot = get_param_slot("point", clip_module_ptr);
+        auto* normal_slot = get_param_slot("normal", clip_module_ptr);
+        auto* dist_slot = get_param_slot("dist", clip_module_ptr);
+        auto* enable_slot = get_param_slot("enable", clip_module_ptr);
+
+        if (!point_slot || !normal_slot || !enable_slot) {
+            log_error("could not find point or normal or enable Parameter slot(s) in ClipPlane module " +
+                      std::string{clip_module_ptr->FullName().PeekBuffer()});
+            return;
+        }
+
+        vislib::math::Vector<float, 3> point{pos.x, pos.y, pos.z};
+        vislib::math::Vector<float, 3> norml{normal.x, normal.y, normal.z};
+        norml.Normalise();
+
+        point_slot->Param<core::param::Vector3fParam>()->SetValue(point, true);
+        normal_slot->Param<core::param::Vector3fParam>()->SetValue(norml, true);
+        enable_slot->Param<core::param::BoolParam>()->SetValue(state, true);
+    }
+
+    interop::DataReceiver view_animation_stateReceiver;
+    bool view_animation_state = false;
+    bool has_animation_state = false;
+    core::Module* view_module_ptr = nullptr;
+
+    void update_view_animation_state(bool const state) {
+        if (!view_module_ptr)
+            return;
+
+        auto* play_slot = get_param_slot("anim::play", view_module_ptr);
+
+        if (!play_slot) {
+            log_error("could not find anim::play slot in view module " +
+                      std::string{view_module_ptr->FullName().PeekBuffer()});
+            return;
+        }
+
+        play_slot->Param<core::param::BoolParam>()->SetValue(state, true);
+    }
+
     void rig_ep_execution() {
         // when this gets called the entry points are not null
 
@@ -253,6 +337,12 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
             ptr->stereoCameraViewReceiver_relative.stop();
             ptr->bboxSender.stop();
 
+            ptr->clip_plane_positionReceiver.stop();
+            ptr->clip_plane_normalReceiver.stop();
+            ptr->clip_plane_stateReceiver.stop();
+
+            ptr->view_animation_stateReceiver.stop();
+
             ptr->left_texturesender.destroy();
             ptr->right_texturesender.destroy();
             //ptr->texturepackageSender.destroy();
@@ -265,13 +355,25 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
     pimpl.right_texturesender.init(default_name + "Right");
     pimpl.singlestereo_texturesender.init(default_name + "SingleStereo", 400, 600);
 
-
     pimpl.stereoCameraViewReceiver_relative.start("tcp://localhost:12345", "StereoCameraViewRelative");
     pimpl.cameraProjectionReceiver.start("tcp://localhost:12345", "CameraProjection");
     pimpl.bboxSender.start("tcp://127.0.0.1:12346", "BoundingBoxCorners");
+
+    pimpl.clip_plane_positionReceiver.start("tcp://localhost:12345", "CuttingPlanePoint");
+    pimpl.clip_plane_normalReceiver.start("tcp://localhost:12345", "CuttingPlaneNormal");
+    pimpl.clip_plane_stateReceiver.start("tcp://localhost:12345", "CuttingPlaneState");
+
+    pimpl.view_animation_stateReceiver.start("tcp://localhost:12345", "AnimationRemoteControl");
 }
 
 megamol::frontend::VR_Service::KolabBW::~KolabBW() {}
+
+void megamol::frontend::VR_Service::KolabBW::add_graph(void* ptr) {
+    if (!m_pimpl)
+        return;
+
+    pimpl.graph_ptr = static_cast<core::MegaMolGraph*>(ptr);
+}
 
 void megamol::frontend::VR_Service::KolabBW::receive_camera_data() {
     if (!pimpl.left_ep || !pimpl.right_ep)
@@ -283,6 +385,20 @@ void megamol::frontend::VR_Service::KolabBW::receive_camera_data() {
 
     if (!pimpl.ep_handles_installed && pimpl.has_camera_view && pimpl.has_camera_proj)
         pimpl.update_entry_point_inputs();
+
+
+    pimpl.has_plane_position |= pimpl.clip_plane_positionReceiver.getData<interop::vec4>(pimpl.clip_plane_point);
+    pimpl.has_plane_normal |= pimpl.clip_plane_normalReceiver.getData<interop::vec4>(pimpl.clip_plane_normal);
+    pimpl.has_plane_state |= pimpl.clip_plane_stateReceiver.getData<bool>(pimpl.clip_plane_state);
+
+    if (pimpl.has_plane_position && pimpl.has_plane_normal && pimpl.has_plane_state) {
+        pimpl.update_clip_plane_state(pimpl.clip_plane_point, pimpl.clip_plane_normal, pimpl.clip_plane_state);
+    }
+
+    pimpl.has_animation_state |= pimpl.view_animation_stateReceiver.getData<bool>(pimpl.view_animation_state);
+    if (pimpl.has_animation_state) {
+        pimpl.update_view_animation_state(pimpl.view_animation_state);
+    }
 }
 
 void megamol::frontend::VR_Service::KolabBW::send_image_data() {
@@ -360,6 +476,8 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
             " does not seem to be a supported View Type (View3D or View3DGL). Not using it for stereo rendering.");
         return false;
     }
+
+    pimpl.view_module_ptr = ptr;
 
     pimpl.left_ep = &ep_left.value().get();
     pimpl.right_ep = &ep_right.value().get();
