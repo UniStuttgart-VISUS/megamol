@@ -9,6 +9,7 @@
 #include "stdafx.h"
 
 #include "mmcore_gl/DeferredShading.h"
+#include "mmcore_gl/UniFlagStorage.h"
 #include "mmcore_gl/view/BoundingBoxRenderer.h"
 #include "mmcore_gl/view/ContextToGL.h"
 #include "mmcore_gl/view/HeadView.h"
@@ -56,6 +57,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<core_gl::view::SplitViewGL>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<core_gl::DeferredShading>();
+        this->module_descriptions.RegisterAutoDescription<core_gl::UniFlagStorage>();
 
         //////////////////////////////////////////////////////////////////////
         // Register all call descriptions here

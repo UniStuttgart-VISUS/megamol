@@ -12,7 +12,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallClipPlane.h"

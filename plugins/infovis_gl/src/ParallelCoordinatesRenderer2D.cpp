@@ -735,13 +735,20 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
 
 void ParallelCoordinatesRenderer2D::drawDiscrete(
     const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes) {
+
+    constexpr core::FlagStorageTypes::flag_item_type testMask = core::FlagStorageTypes::to_integral(
+        core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::FILTERED |
+        core::FlagStorageTypes::flag_bits::SELECTED);
+
     if (this->drawOtherItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
-            core::FlagStorage::ENABLED, otherColor, tfColorFactor, viewRes);
+        constexpr core::FlagStorageTypes::flag_item_type passMask =
+            core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED);
+        this->drawItemsDiscrete(testMask, passMask, otherColor, tfColorFactor, viewRes);
     }
     if (this->drawSelectedItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
-            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED, selectedColor, tfColorFactor, viewRes);
+        constexpr core::FlagStorageTypes::flag_item_type passMask = core::FlagStorageTypes::to_integral(
+            core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::SELECTED);
+        this->drawItemsDiscrete(testMask, passMask, selectedColor, tfColorFactor, viewRes);
     }
 }
 

@@ -9,9 +9,8 @@
 #pragma once
 
 #include "mmcore/CallGeneric.h"
-#include "mmcore/FlagCollections.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore/UniFlagStorage.h"
+#include "mmcore_gl/UniFlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 

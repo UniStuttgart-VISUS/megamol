@@ -305,7 +305,7 @@ private:
 
     core::utility::SSBOBufferArray valueSSBO;
 
-    core::FlagStorage::FlagVersionType flagsBufferVersion;
+    core::FlagStorageTypes::flag_version_type flagsBufferVersion;
 
     bool selectionNeedsUpdate = false;
     bool selectionNeedsReset = false;

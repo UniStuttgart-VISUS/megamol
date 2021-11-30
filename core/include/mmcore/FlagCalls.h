@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "FlagStorage.h"
 #include "mmcore/CallGeneric.h"
-#include "mmcore/UniFlagStorage.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {

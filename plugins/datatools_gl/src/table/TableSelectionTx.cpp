@@ -176,14 +176,16 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     flags->bind();
     glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData.data());
 
-    core::FlagStorage::FlagItemType testMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
-    core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;
+    core::FlagStorageTypes::flag_item_type testMask = core::FlagStorageTypes::to_integral(
+        core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::FILTERED);
+    constexpr core::FlagStorageTypes::flag_item_type passMask =
+        core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED);
 
     std::unique_lock<std::mutex> lock(selectedMutex_);
     selected_.clear();
     for (size_t i = 0; i < numberOfRows; ++i) {
         if ((flagsData[i] & testMask) == passMask) {
-            if (flagsData[i] & core::FlagStorage::SELECTED) {
+            if (flagsData[i] & core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED)) {
                 if (useColumnAsIndex) {
                     selected_.push_back(static_cast<uint64_t>(tableData[indexColumn + i * numberOfCols]));
                 } else {
@@ -253,13 +255,14 @@ bool TableSelectionTx::validateSelectionUpdate() {
 
     size_t numberOfRows = tableInCall->GetRowsCount();
 
-    std::vector<uint32_t> flags_data(numberOfRows, core::FlagStorage::ENABLED);
+    core::FlagStorageTypes::flag_vector_type flags_data(
+        numberOfRows, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
 
     if (!this->useColumnAsIndexParam.Param<core::param::BoolParam>()->Value()) {
         // Select received rows
         for (auto id : receivedSelection_) {
             if (id >= 0 && id < numberOfRows) {
-                flags_data[id] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+                flags_data[id] |= core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED);
             }
         }
     } else {
@@ -281,7 +284,7 @@ bool TableSelectionTx::validateSelectionUpdate() {
         for (size_t i = 0; i < numberOfRows; i++) {
             float value = tableData[indexColumn + i * numberOfCols];
             if (s.find(value) != s.end()) {
-                flags_data[i] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+                flags_data[i] |= core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED);
             }
         }
     }

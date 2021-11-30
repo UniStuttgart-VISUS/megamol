@@ -1,39 +1,32 @@
 /*
  * FlagStorage.h
  *
- * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_FLAGSTORAGE_H_INCLUDED
-#define MEGAMOL_FLAGSTORAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/FlagStorageBitsChecker.h"
+#include "mmcore/FlagStorageTypes.h"
 #include "mmcore/Module.h"
-#include <mutex>
-
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace core {
 
+class FlagCollection_CPU;
 
 /**
- * Class storing a stream of uints which contain flags that say something
+ * Class holding a buffer of uints which contain flags that say something
  * about a synchronized other piece of data (index equality).
  * Can be used for storing selection etc.
  */
 class MEGAMOLCORE_API FlagStorage : public core::Module {
 public:
-    enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2 };
-
-    typedef uint32_t FlagItemType;
-    typedef uint32_t FlagVersionType;
-
-    typedef std::vector<FlagItemType> FlagVectorType;
-
     /**
      * Answer the name of this module.
      *
@@ -49,7 +42,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description(void) {
-        return "Module holding an index-synced array of flag uints for other data";
+        return "Module representing an index-synced array of flag uints as a CPU buffer";
     }
 
     /**
@@ -67,6 +60,24 @@ public:
     /** Dtor. */
     virtual ~FlagStorage(void);
 
+    /**
+     * Access the metadata provided by the UniFlagStorage
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool readMetaDataCallback(core::Call& caller);
+
+    /**
+     * Write/update the metadata provided by the UniFlagStorage
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool writeMetaDataCallback(core::Call& caller);
+
 protected:
     /**
      * Implementation of 'Create'.
@@ -80,40 +91,56 @@ protected:
      */
     virtual void release(void);
 
-private:
     /**
-     * Gets the data from the source, locking and removing it.
+     * Access the flags provided by the UniFlagStorage
      *
      * @param caller The calling call.
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool mapFlagsCallback(core::Call& caller);
+    virtual bool readCPUDataCallback(core::Call& caller);
 
     /**
-     * Returns the data to the source, version in the call indicating
-     * whether it has changed. Then the data is unlocked for other
-     * threads to access.
+     * Write/update the flags provided by the UniFlagStorage
      *
      * @param caller The calling call.
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool unmapFlagsCallback(core::Call& caller);
+    virtual bool writeCPUDataCallback(core::Call& caller);
 
-    /** The slot for requesting data */
-    core::CalleeSlot getFlagsSlot;
+    static nlohmann::json make_bit_array(
+        const FlagStorageTypes::index_vector& bit_starts, const FlagStorageTypes::index_vector& bit_ends);
+    void array_to_bits(const nlohmann::json& json, FlagStorageTypes::flag_bits flag_bit);
+    static FlagStorageTypes::index_type array_max(const nlohmann::json& json);
+    void serializeCPUData();
+    void deserializeCPUData();
+    virtual bool onJSONChanged(param::ParamSlot& slot);
 
-    /** The data */
-    std::shared_ptr<FlagVectorType> flags;
+    /** The slot for reading the data */
+    core::CalleeSlot readCPUFlagsSlot;
 
-    FlagVersionType version;
+    /** The slot for writing the data */
+    core::CalleeSlot writeCPUFlagsSlot;
 
-    // std::recursive_mutex mut;
-    std::mutex mut;
+    core::param::ParamSlot serializedFlags;
+
+    std::shared_ptr<FlagCollection_CPU> theCPUData;
+    bool cpu_stale = true;
+    uint32_t version = 0;
+};
+
+class FlagCollection_CPU {
+public:
+    std::shared_ptr<FlagStorageTypes::flag_vector_type> flags;
+
+    void validateFlagCount(FlagStorageTypes::index_type num) {
+        if (flags->size() < num) {
+            flags->resize(num);
+            std::fill(flags->begin(), flags->end(), FlagStorageTypes::to_integral(FlagStorageTypes::flag_bits::ENABLED));
+        }
+    }
 };
 
 } // namespace core
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_FLAGSTORAGE_H_INCLUDED */
