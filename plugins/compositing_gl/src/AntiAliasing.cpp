@@ -660,10 +660,14 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 glActiveTexture(GL_TEXTURE1);
                 m_prev_depth_tx2D->bindTexture();
                 glUniform1i(m_smaa_velocity_prgm->ParameterLocation("g_prevDepthTex"), 1);
-                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currViewProjMx"),
-                    1, false, glm::value_ptr(curr_view_proj_mx));
-                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevViewProjMx"),
-                    1, false, glm::value_ptr(m_prev_view_proj_mx));
+                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currProjMx"),
+                    1, false, glm::value_ptr(proj_mx));
+                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currViewMx"), 1, false,
+                    glm::value_ptr(view_mx));
+                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevProjMx"),
+                    1, false, glm::value_ptr(m_prev_proj_mx));
+                glUniformMatrix4fv(
+                    m_smaa_velocity_prgm->ParameterLocation("prevViewMx"), 1, false, glm::value_ptr(m_prev_view_mx));
                 glUniform2fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, glm::value_ptr(m_jitter[m_version % 2]));
 
                 m_velocity_tex->bindImage(0, GL_WRITE_ONLY);
@@ -675,7 +679,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
                 glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
-                m_prev_view_proj_mx = curr_view_proj_mx;
+                m_prev_proj_mx = proj_mx;
+                m_prev_view_mx = view_mx;
                 glowl::Texture2D::copy(m_depth_tx2D.get(), m_prev_depth_tx2D.get());
 
 
@@ -756,8 +761,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_totalTimeSpent = 0.0;
             }
 #endif
-
-            // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }
         // fxaa
         else if (mode == 1) {

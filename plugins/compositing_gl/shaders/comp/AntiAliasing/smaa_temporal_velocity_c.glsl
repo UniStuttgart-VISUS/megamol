@@ -6,8 +6,10 @@
 
 layout(local_size_x = 8, local_size_y = 8) in;
 
-uniform mat4 prevViewProjMx;
-uniform mat4 currViewProjMx;
+uniform mat4 prevProjMx;
+uniform mat4 prevViewMx;
+uniform mat4 currProjMx;
+uniform mat4 currViewMx;
 
 uniform vec2 jitter;
 
@@ -23,30 +25,34 @@ void main() {
 
     vec2 texCoords = (2.f * inPos + vec2(1.f)) / (2.f * vec2(viewport));
 
+    // use texturefetch
     float currDepth = texture(g_currDepthtex, texCoords).r;
     float prevDepth = texture(g_prevDepthtex, texCoords).r;
 
-    vec4 currPos = vec4(inPos, currDepth, 1.0);
-    vec4 prevPos = vec4(inPos, prevDepth, 1.0);
+    vec4 currPos = vec4(inPos / viewport, currDepth, 1.0);
+    vec4 prevPos = vec4(inPos / viewport, prevDepth, 1.0);
 
     // ndc
     currPos.xy = currPos.xy * 2.0 - vec2(1.0);
     prevPos.xy = prevPos.xy * 2.0 - vec2(1.0);
 
-    //currPos = currPos / currW; ??
-    //prevPos = prevPos / prevW; ??
-
     // world space
-    currPos = inverse(currViewProjMx) * currPos;
-    prevPos = inverse(prevViewProjMx) * prevPos;
+    currPos = inverse(currProjMx) * currPos;
+    prevPos = inverse(prevProjMx) * prevPos;
+
+    currPos = currPos / currPos.w;
+    prevPos = prevPos / prevPos.w;
+
+    currPos = inverse(currViewMx) * currPos;
+    prevPos = inverse(prevViewMx) * prevPos;
 
     // translate according to jitter
     currPos.xy = currPos.xy + vec2(2.0 * jitter.x / viewport.x, 2.0 * jitter.y / viewport.y);
     prevPos.xy = prevPos.xy + vec2(2.0 * jitter.x / viewport.x, 2.0 * jitter.y / viewport.y);
 
     // re-project
-    currPos = currViewProjMx * vec4(currPos.xyz, 1.0);
-    prevPos = prevViewProjMx * vec4(prevPos.xyz, 1.0);
+    currPos = currProjMx * currViewMx * vec4(currPos.xyz, 1.0);
+    prevPos = prevProjMx * prevViewMx * vec4(prevPos.xyz, 1.0);
 
     // perspective division
     currPos = currPos / currPos.w;

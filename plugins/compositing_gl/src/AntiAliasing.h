@@ -173,7 +173,8 @@ private:
 
     /** Temporal smaa handles */
     core::view::Camera m_cam;
-    glm::mat4 m_prev_view_proj_mx;
+    glm::mat4 m_prev_proj_mx;
+    glm::mat4 m_prev_view_mx;
     glm::vec2 m_jitter[2] = { glm::vec2(0.25, -0.25), glm::vec2(-0.25, 0.25) };
     glm::vec4 m_subsampleIndices[2] =
     { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
