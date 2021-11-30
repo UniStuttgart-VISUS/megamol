@@ -22,13 +22,14 @@
 using namespace megamol::gui;
 
 
-gui_render_backend::gui_render_backend()
+megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
         , sw_window({1280, 720, 0, 0})
         , sw_monitor({1920, 1080}) {}
 
 
-gui_render_backend::~gui_render_backend() {
+megamol::gui::gui_render_backend::~gui_render_backend() {
+
 #ifdef WITH_GL
     this->ogl_fbo.reset();
 #endif // WITH_GL
@@ -99,7 +100,7 @@ bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backe
 }
 
 
-bool gui_render_backend::Init(GUIRenderBackend backend) {
+bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
 
     if (this->IsBackendInitialized()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -143,7 +144,7 @@ bool gui_render_backend::Init(GUIRenderBackend backend) {
 }
 
 
-void gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size) {
+void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size) {
 
     switch (this->initialized_backend) {
     case (GUIRenderBackend::OPEN_GL): {
@@ -168,7 +169,7 @@ void gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_s
 }
 
 
-bool gui_render_backend::EnableRendering(unsigned int width, unsigned int height) {
+bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsigned int height) {
 
     switch (this->initialized_backend) {
     case (GUIRenderBackend::OPEN_GL): {
@@ -241,7 +242,7 @@ bool gui_render_backend::EnableRendering(unsigned int width, unsigned int height
 }
 
 
-bool gui_render_backend::Render(ImDrawData* draw_data) {
+bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
 
     switch (this->initialized_backend) {
     case (GUIRenderBackend::OPEN_GL): {
@@ -284,7 +285,7 @@ bool megamol::gui::gui_render_backend::ShutdownBackend() {
 }
 
 
-bool gui_render_backend::CreateFont() {
+bool megamol::gui::gui_render_backend::CreateFont() {
 
     switch (this->initialized_backend) {
     case (GUIRenderBackend::NONE): {
