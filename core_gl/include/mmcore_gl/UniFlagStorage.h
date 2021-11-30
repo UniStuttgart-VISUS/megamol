@@ -151,8 +151,8 @@ public:
     std::shared_ptr<glowl::BufferObject> flags;
 
     void validateFlagCount(core::FlagStorageTypes::index_type num) {
-        if (flags->getByteSize() / sizeof(uint32_t) < num) {
-            std::vector<core::FlagStorageTypes::index_type> temp_data(
+        if (flags->getByteSize() / sizeof(core::FlagStorageTypes::flag_item_type) < num) {
+            core::FlagStorageTypes::flag_vector_type temp_data(
                 num, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
             std::shared_ptr<glowl::BufferObject> temp_buffer =
                 std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data, GL_DYNAMIC_DRAW);

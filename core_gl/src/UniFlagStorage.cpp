@@ -152,12 +152,12 @@ bool UniFlagStorage::onJSONChanged(core::param::ParamSlot& slot) {
 }
 
 void UniFlagStorage::CPU2GLCopy() {
-    theCPUData->validateFlagCount(theCPUData->flags->size());
+    theGLData->validateFlagCount(theCPUData->flags->size());
     theGLData->flags->bufferSubData(*(theCPUData->flags));
 }
 
 void UniFlagStorage::GL2CPUCopy() {
-    auto const num = theGLData->flags->getByteSize() / sizeof(uint32_t);
+    auto const num = theGLData->flags->getByteSize() / sizeof(core::FlagStorageTypes::flag_item_type);
     theCPUData->validateFlagCount(num);
     glGetNamedBufferSubData(theGLData->flags->getName(), 0, theGLData->flags->getByteSize(), theCPUData->flags->data());
 }
