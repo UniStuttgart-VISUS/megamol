@@ -77,7 +77,7 @@ bool MoleculeBallifier::getData(core::Call& c) {
 
     if ((*oc)(0)) {
         // Rewrite data if the frame number OR the datahash has changed
-        if ((this->inHash != oc->DataHash())||(this->frameOld = static_cast<int>(oc->FrameID()))) {
+        if ((this->inHash != oc->DataHash())||(this->frameOld != static_cast<int>(oc->FrameID()))) {
             this->inHash = oc->DataHash();
             this->frameOld = static_cast<int>(oc->FrameID());
             this->outHash++;
