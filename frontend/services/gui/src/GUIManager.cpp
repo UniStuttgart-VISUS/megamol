@@ -294,14 +294,16 @@ bool GUIManager::PostDraw() {
             if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
                 /// ! Only enabled in second frame if interaction objects are added during first frame !
                 this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
+
                 graph_ptr->DrawGlobalParameterWidgets(
                     this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
+
                 this->picking_buffer.DisableInteraction();
             }
 
         } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
 
         ///////////////////////////////////////////////////////////////////////////
@@ -309,12 +311,7 @@ bool GUIManager::PostDraw() {
         // Render the current ImGui frame
         ImGui::Render();
         auto draw_data = ImGui::GetDrawData();
-        if (draw_data == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid ImGui draw data pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        // Actual backend rendering
+        // Backend rendering
         this->render_backend.Render(draw_data);
 
         // Loading new font -------------------------------------------------------

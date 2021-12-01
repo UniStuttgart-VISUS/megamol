@@ -40,10 +40,9 @@ megamol::gui::gui_render_backend::~gui_render_backend() {
 bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backend) {
 
     switch (backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         bool prerequisities_given = true;
-
 #ifdef _WIN32 // Windows
         HDC ogl_current_display = ::wglGetCurrentDC();
         HGLRC ogl_current_context = ::wglGetCurrentContext();
@@ -74,26 +73,22 @@ bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backe
             prerequisities_given = false;
         }
 #endif // _WIN32
-
         if (!prerequisities_given) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Missing prerequisities to initialize render backend OpenGL. [%s, %s, line %d]", __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
         }
-#else
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Render backend OpenGL is not available.");
-        return false;
-#endif // WITH_GL
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         /// nothing to check for CPU rendering ...
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    } break;
+    }
     }
 
     return true;
@@ -109,8 +104,8 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     }
 
     switch (backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         if (ImGui_ImplOpenGL3_Init(nullptr)) { // "#version 130"
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui render backend for Open GL.");
         } else {
@@ -119,8 +114,8 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
                 __FUNCTION__, __LINE__);
             return false;
         }
-#endif
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         if (ImGui_ImplGeneric_Init(&this->sw_window)) { /// XXX How is sw_window used?
             imgui_sw::bind_imgui_painting();
@@ -134,9 +129,9 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    } break;
+    }
     }
 
     this->initialized_backend = backend;
@@ -147,11 +142,12 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
 void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size) {
 
     switch (this->initialized_backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_NewFrame();
-#endif
+
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         this->sw_window.width = static_cast<int>(window_size.x);
         this->sw_window.height = static_cast<int>(window_size.y);
@@ -163,7 +159,7 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     } break;
     }
 }
@@ -172,8 +168,8 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
 bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsigned int height) {
 
     switch (this->initialized_backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         auto width_i = static_cast<int>(width);
         auto height_i = static_cast<int>(height);
         bool create_fbo = false;
@@ -194,6 +190,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to create framebuffer object: %s [%s, %s, line %d]\n", exc.what(), __FILE__,
                     __FUNCTION__, __LINE__);
+                return false;
             }
         }
         if (this->ogl_fbo == nullptr) {
@@ -201,16 +198,14 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
                 "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-
         this->ogl_fbo->bind();
-        // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        // glClearDepth(1.0f);
+        /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        /// glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, width, height);
         glEnable(GL_DEPTH_TEST);
-        return true;
-#endif
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         bool create_fbo = false;
         if (this->cpu_fbo == nullptr) {
@@ -231,26 +226,33 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
             this->cpu_fbo->width = width;
             this->cpu_fbo->height = height;
         }
-        return true;
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-    return false;
+    }
+
+    return true;
 }
 
 
 bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
 
+    if (draw_data == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Invalid ImGui draw data pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     switch (this->initialized_backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_RenderDrawData(draw_data);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
         imgui_sw::paint_imgui(this->cpu_fbo->colorBuffer.data(), static_cast<int>(this->cpu_fbo->getWidth()),
@@ -258,28 +260,34 @@ bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
+    }
+
+    return true;
 }
 
 
 bool megamol::gui::gui_render_backend::ShutdownBackend() {
 
     switch (this->initialized_backend) {
-    case (GUIRenderBackend::OPEN_GL): {
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_Shutdown();
-#endif
+
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         ImGui_ImplGeneric_Shutdown();
     } break;
-    default:
+    default:{
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        break;
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
+    }
+
     this->initialized_backend = GUIRenderBackend::NONE;
     return true;
 }
@@ -292,22 +300,26 @@ bool megamol::gui::gui_render_backend::CreateFont() {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Fonts can only be loaded after render backend was initialized. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
-    } break;
-    case (GUIRenderBackend::OPEN_GL): {
+        return false;
+    }
 #ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
         return ImGui_ImplOpenGL3_CreateFontsTexture();
-#endif
     } break;
+#endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] CPU rendering does not support painting with any other texture than the default font texture. [%s, "
             "%s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-    } break;
+        return false;
+    }
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown render backend... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    } break;
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
-    return false;
+    }
+
+    return true;
 }

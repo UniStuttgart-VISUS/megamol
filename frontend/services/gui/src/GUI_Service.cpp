@@ -302,33 +302,23 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 
 void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
-    // (Called only once)
+    /// (Called only once)
 
     this->m_requestedResourceReferences = resources;
     if (this->m_gui == nullptr) {
         return;
     }
 
+    // Check render backend prerequisites
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
-
-    if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::GUIRenderBackend::OPEN_GL) {
-        // GL context is active and we need to use it
-        frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
-
-        if (this->m_gui->CreateContext(megamol::gui::GUIRenderBackend::OPEN_GL)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "GUI_Service: initialized OpenGL backend successfully");
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: error creating OpenGL backend");
-            this->setShutdown();
-        }
-    } else {
-        // no GL available
-        if (m_config.imgui_rbnd == GUI_Service::GUIRenderBackend::OPEN_GL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: no OpenGL_Context available");
-            this->setShutdown();
-        }
+    if (!maybe_opengl_context.has_value() && (m_config.backend == megamol::gui::GUIRenderBackend::OPEN_GL)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
+        m_config.backend = megamol::gui::GUIRenderBackend::CPU;
+    }
+    // Create GUI context
+    if (!this->m_gui->CreateContext(m_config.backend)) {
+        this->setShutdown();
     }
 
     /// MegaMolGraph = resource index 0
@@ -359,10 +349,9 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     bool view_presentation_ok = image_presentation.add_entry_point(
         "GUI Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
                            std::function{get_gui_runtime_resources_requests}});
-
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
+            "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
     }
 }
 

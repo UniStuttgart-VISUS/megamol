@@ -1,5 +1,5 @@
 /*
- * Picking_gl.h
+ * Picking.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.

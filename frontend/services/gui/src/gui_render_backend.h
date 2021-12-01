@@ -26,7 +26,7 @@ namespace megamol {
 namespace gui {
 
 
-enum class GUIRenderBackend { NONE, OPEN_GL, CPU };
+enum class GUIRenderBackend { NONE, CPU , OPEN_GL };
 
 
 /** ************************************************************************
