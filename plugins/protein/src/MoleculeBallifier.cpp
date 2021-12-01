@@ -5,6 +5,7 @@
  * All rights reserved.
  */
 
+
 #include "MoleculeBallifier.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ColorParam.h"
@@ -35,8 +36,6 @@ MoleculeBallifier::MoleculeBallifier(void)
         , inHash(0)
         , outHash(0)
         , data()
-        , colMin(0.0f)
-        , colMax(1.0f)
         , frameOld(-1) {
 
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -114,7 +113,6 @@ bool MoleculeBallifier::getData(core::Call& c) {
 
     // Transfer frame ID plus force flag
     oc->SetFrameID(ic->FrameID(), ic->IsFrameForced());
-
     curColoringMode0_ = static_cast<Color::ColoringMode>(coloringModeParam0_.Param<core::param::EnumParam>()->Value());
     curColoringMode1_ = static_cast<Color::ColoringMode>(coloringModeParam1_.Param<core::param::EnumParam>()->Value());
 
@@ -179,7 +177,6 @@ bool MoleculeBallifier::getData(core::Call& c) {
             p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->data.At(0), sizeof(float) * 7);
             p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB, this->data.At(sizeof(float) * 4),
                 sizeof(float) * 7);
-            //p.SetColourMapIndexValues(this->colMin, this->colMax);
         }
     }
 
