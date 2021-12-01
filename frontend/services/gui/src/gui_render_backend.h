@@ -60,7 +60,7 @@ public:
 
     bool ShutdownBackend();
 
-    bool CreateFont();
+    bool CreateFontsTexture();
 
 #ifdef WITH_GL
 

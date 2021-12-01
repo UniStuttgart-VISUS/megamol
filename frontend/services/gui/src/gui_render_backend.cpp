@@ -293,7 +293,7 @@ bool megamol::gui::gui_render_backend::ShutdownBackend() {
 }
 
 
-bool megamol::gui::gui_render_backend::CreateFont() {
+bool megamol::gui::gui_render_backend::CreateFontsTexture() {
 
     switch (this->initialized_backend) {
     case (GUIRenderBackend::NONE): {

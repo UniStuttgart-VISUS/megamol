@@ -331,7 +331,7 @@ bool GUIManager::PostDraw() {
 
                 if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
                         static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
-                    bool font_api_load_success = this->render_backend.CreateFont();
+                    bool font_api_load_success = this->render_backend.CreateFontsTexture();
                     // Load last added font
                     if (font_api_load_success) {
                         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
@@ -1065,7 +1065,7 @@ void megamol::gui::GUIManager::load_default_fonts() {
         this->gui_state.font_load_size = static_cast<int>(default_font_size);
     }
 
-    this->render_backend.CreateFont();
+    this->render_backend.CreateFontsTexture();
 }
 
 
