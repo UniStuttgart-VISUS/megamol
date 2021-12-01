@@ -354,16 +354,30 @@ public:
     }
 
     /**
-     * Returns true if both strings equal each other case insensitively.
+     * Returns true if both strings have same length(!) and equal each other case insensitively.
+     *
+     * @param source   One string.
+     * @param search   Second string.
+     */
+    static bool CaseInsensitiveStringEqual(std::string const& str1, std::string const& str2) {
+
+        return ((str1.size() == str2.size()) &&
+                std::equal(str1.begin(), str1.end(), str2.begin(),
+                    [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
+    }
+
+    /**
+     * Returns true if both strings equal each other case insensitively up to position of shorter string.
      *
      * @param source   One string.
      * @param search   Second string.
      */
     static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
 
-        return ((str1.size() == str2.size()) &&
-                std::equal(str1.begin(), str1.end(), str2.begin(),
-                    [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
+        auto short_str = (str1.size() < str2.size()) ?(str1) : (str2);
+        auto longer_str = (str1.size() >= str2.size()) ?(str1) : (str2);
+        return  std::equal(short_str.begin(), short_str.end(), longer_str.begin(),
+                    [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); });
     }
 
     /*

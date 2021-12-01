@@ -53,10 +53,12 @@ public:
     using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
 
     struct InputSharedData {
-        bool autocomplete_appended;
-        std::vector<std::string> commands;
-        std::vector<std::string> autocomplete_candidates;
+        bool move_cursor_to_end;
+        std::vector<std::pair<std::string, std::string>> commands; // command, parameter hint
+        std::vector<std::pair<std::string, std::string>> autocomplete_candidates;
         bool open_autocomplete_popup;
+        std::vector<std::string> history;
+        size_t history_index;
     };
 
     explicit LogConsole(const std::string& window_name);
@@ -96,7 +98,8 @@ private:
     std::string input_buffer;
     // where would I get this from? and the autocomplete stuff?
     lua_func_type* input_lua_func;
-    bool input_is_popup_open;
+    bool is_autocomplete_popup_open;
+    std::string param_hint;
 
     // FUNCTIONS --------------------------------------------------------------
     bool connect_log();

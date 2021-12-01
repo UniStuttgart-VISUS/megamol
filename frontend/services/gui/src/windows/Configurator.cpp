@@ -72,7 +72,7 @@ bool Configurator::Update() {
                 std::string module_full_name = module_ptr->FullName();
                 for (auto& param : module_ptr->Parameters()) {
                     std::string param_full_name = param.FullNameProject();
-                    if (gui_utils::CaseInsensitiveStringCompare(tf_param_connect_request, param_full_name) &&
+                    if (gui_utils::CaseInsensitiveStringEqual(tf_param_connect_request, param_full_name) &&
                         (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                         win_tfeditor_ptr->SetConnectedParameter(&param, param_full_name);
                         param.TransferFunctionEditor_ConnectExternal(this->win_tfeditor_ptr, true);
