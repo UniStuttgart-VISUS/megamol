@@ -81,7 +81,8 @@ public:
      * Draw texture as button.
      */
     bool Button(const std::string& tooltip_text, ImVec2 size);
-    bool ToggleButton(const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size);
+    bool ToggleButton(
+        bool& toggle, const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -92,8 +93,6 @@ private:
     std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
     std::shared_ptr<CPUTexture2D<float>> cpu_toggle_tex_ptr = nullptr;
 #endif
-
-    bool toggle_button_toggled;
 
     // Widgets
     HoverToolTip tooltip;

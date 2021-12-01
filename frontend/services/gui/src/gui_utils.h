@@ -269,6 +269,7 @@ typedef struct _interact_state_ {
     bool parameters_extended_mode; // in
 
     bool graph_is_running; // in
+    bool pause_profiling_update; // in out
 
 } GraphItemsInteract_t;
 

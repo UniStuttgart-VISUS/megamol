@@ -421,7 +421,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
-    if (!pause_profiling_history_update) {
+    if (!this->pause_profiling_history_update) {
         switch (entry.api) {
         case frontend_resources::PerformanceManager::query_api::CPU:
             this->cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
@@ -453,10 +453,9 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback Name]");
     ImGui::SameLine();
-    if (this->gui_profiling_run_button.ToggleButton(
-            "Pause", "Run", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
-        this->pause_profiling_history_update = !this->pause_profiling_history_update;
-    }
+    this->pause_profiling_history_update = state.interact.pause_profiling_update;
+    this->gui_profiling_run_button.ToggleButton(state.interact.pause_profiling_update, "Pause update of profiling values globally", "Continue updating of profiling values", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
     auto func_cnt = this->cpu_perf_history.size();
     for (size_t i = 0; i < func_cnt; i++) {

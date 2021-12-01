@@ -346,7 +346,7 @@ bool megamol::gui::LogConsole::Draw() {
 
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Input");
-    this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/Arrwo down] Browse command history.");
+    this->tooltip.Marker("[TAB] Activate autocomplete suggestions.\n[Arrow up/Arrow down] Browse command history.");
     ImGui::SameLine();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeightWithSpacing());
     auto popup_pos = ImGui::GetCursorScreenPos();

@@ -158,9 +158,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         std::string button_label;
 
         /// PLAY - PAUSE
-        if (this->image_buttons.play_pause.ToggleButton("Play", "Pause", button_size)) {
-            play = !play;
-        }
+        this->image_buttons.play_pause.ToggleButton(play, "Play", "Pause", button_size);
         ImGui::SameLine();
 
         /// SLOWER

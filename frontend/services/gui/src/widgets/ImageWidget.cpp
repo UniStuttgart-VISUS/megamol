@@ -17,7 +17,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::ImageWidget::ImageWidget() : toggle_button_toggled(false), tooltip() {}
+megamol::gui::ImageWidget::ImageWidget() : tooltip() {}
 
 
 #ifdef WITH_GL
@@ -153,7 +153,7 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 s
 
 
 bool megamol::gui::ImageWidget::ToggleButton(
-    const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size) {
+    bool& toggle, const std::string& tooltip_text, const std::string& toggle_tooltip_text, ImVec2 size) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -170,12 +170,12 @@ bool megamol::gui::ImageWidget::ToggleButton(
     bool retval = false;
     auto button_tooltip_text = tooltip_text;
     auto im_texture_id = this->getImTextureID();
-    if (this->toggle_button_toggled) {
+    if (toggle) {
         button_tooltip_text = toggle_tooltip_text;
         im_texture_id = this->getToggleImTextureID();
     }
     if (ImGui::ImageButton(im_texture_id, size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 1, bg, fg)) {
-        this->toggle_button_toggled = !this->toggle_button_toggled;
+        toggle = !toggle;
         retval = true;
     }
     if (!button_tooltip_text.empty()) {

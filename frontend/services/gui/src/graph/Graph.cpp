@@ -97,6 +97,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
 
     this->gui_graph_state.interact.parameters_extended_mode = false;
     this->gui_graph_state.interact.graph_is_running = false;
+    this->gui_graph_state.interact.pause_profiling_update = false;
+
     this->gui_graph_state.groups.clear();
     // this->gui_graph_state.hotkeys are already initialized
 }
