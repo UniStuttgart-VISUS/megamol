@@ -1,4 +1,4 @@
-#include "MarchingCubeTables.h"
+#include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "stdafx.h"
 
 using namespace megamol;

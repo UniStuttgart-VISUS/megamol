@@ -44,8 +44,18 @@ ImageWrapper megamol::frontend_resources::wrap_image(
 }
 
 ImageWrapper megamol::frontend_resources::wrap_image(
-    ImageWrapper::ImageSize size, std::vector<unsigned char> const& byte_texture, ImageWrapper::DataChannels channels) {
+    ImageWrapper::ImageSize size, std::vector<byte> const& byte_texture, ImageWrapper::DataChannels channels) {
     return wrap_image<WrappedImageType::ByteArray>(size, &byte_texture, channels);
+}
+
+ImageWrapper megamol::frontend_resources::wrap_image(
+    ImageWrapper::ImageSize size, std::vector<uint32_t> const& byte_texture, ImageWrapper::DataChannels channels) {
+    return wrap_image(size, reinterpret_cast<std::vector<byte> const&>(byte_texture), channels);
+}
+
+ImageWrapper megamol::frontend_resources::wrap_image(
+    ImageWrapper::ImageSize size, std::vector<float> const& byte_texture, ImageWrapper::DataChannels channels) {
+    return wrap_image(size, reinterpret_cast<std::vector<byte> const&>(byte_texture), channels);
 }
 
 size_t megamol::frontend_resources::channels_count(ImageWrapper::DataChannels channels) {

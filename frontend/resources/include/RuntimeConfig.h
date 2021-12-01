@@ -31,6 +31,7 @@ struct RuntimeConfig {
     std::vector<std::string> configuration_file_contents = {};
     std::vector<StringPair> cli_options_from_configs = {}; // mmSetCliOption - set config/option values accepted in CLI
     std::vector<std::string> configuration_file_contents_as_cli = {};
+    Path megamol_executable_directory = "";      // mmGetMegaMolExecutableDirectory
     Path application_directory = "";             // mmSetAppDir
     std::vector<Path> resource_directories = {}; // mmAddResourceDir
     std::vector<Path> shader_directories = {};   // mmAddShaderDir
@@ -43,11 +44,18 @@ struct RuntimeConfig {
 
     // detailed and service-specific configurations
     // every CLI option can be set via the config file using mmSetConfigValue
-    // e.g. "--window 100x200" => mmSetConfigValue("window", "100x200")
-    //      "--fullscreen"     => mmSetConfigValue("fullscreen", "on")
+    // e.g. "--window 100x200" => mmSetCliOption("window", "100x200")
+    //      "--fullscreen"     => mmSetCliOption("fullscreen", "on")
     bool interactive = false;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
+    // Different default values for a present openGL
+    // In the WITH_GL not defined case, the user cannot overwrite the default
+#ifdef WITH_GL
+    bool no_opengl = false;
+#else
+    bool no_opengl = true;
+#endif
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
@@ -103,6 +111,7 @@ struct RuntimeConfig {
 
         // clang-format off
         return std::string("RuntimeConfig values: "  ) +
+            std::string("\n\tExecutable directory: "   ) + "\n\t\t" + megamol_executable_directory +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
             std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +

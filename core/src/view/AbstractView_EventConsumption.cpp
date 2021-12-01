@@ -22,9 +22,7 @@ using namespace megamol::frontend_resources;
 // shorthand notation to unpack a FrontendResource to some type.
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
 // note that when using this macro there is no visible opening bracket { for the if statements because it is hidden inside the macro
-#define GET_RESOURCE(TYPENAME) \
-    {                          \
-        TYPENAME const& events = resource.getResource<TYPENAME>();
+#define GET_RESOURCE(TYPENAME) TYPENAME const& events = resource.getOptionalResource<TYPENAME>().value().get();
 
 
 void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
@@ -35,10 +33,10 @@ void view_consume_keyboard_events(AbstractView& view, megamol::frontend::Fronten
     for (auto& e : events.codepoint_events)
         view.OnChar(e);
 }
-}
+
 
 void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(MouseEvents) //{
+    GET_RESOURCE(MouseEvents)
     for (auto& e : events.buttons_events)
         view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
 
@@ -50,13 +48,12 @@ void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendRe
 
     //for (auto& e: events.enter_events) {}
 }
-}
 
 void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(WindowEvents) //{
+    GET_RESOURCE(WindowEvents)
     events.is_focused_events;
 }
-}
+
 
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
@@ -116,7 +113,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
 }
 
 std::vector<std::string> get_view_runtime_resources_requests() {
-    return {"ViewRenderInputs", "KeyboardEvents", "MouseEvents", "WindowEvents"};
+    return {"ViewRenderInputs", "optional<KeyboardEvents>", "optional<MouseEvents>", "optional<WindowEvents>"};
 }
 
 bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources,
@@ -132,9 +129,11 @@ bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::F
     megamol::core::view::AbstractView& view = *view_ptr;
 
     // resources are in order of initial requests from get_view_runtime_resources_requests()
-    megamol::core::view::view_consume_keyboard_events(view, resources[1]);
-    megamol::core::view::view_consume_mouse_events(view, resources[2]);
-    megamol::core::view::view_consume_window_events(view, resources[3]);
+    if (resources[1].getOptionalResource<KeyboardEvents>().has_value()) {
+        megamol::core::view::view_consume_keyboard_events(view, resources[1]);
+        megamol::core::view::view_consume_mouse_events(view, resources[2]);
+        megamol::core::view::view_consume_window_events(view, resources[3]);
+    }
     megamol::core::view::view_poke_rendering(
         view, resources[0].getResource<megamol::frontend_resources::RenderInput>(), result_image);
 

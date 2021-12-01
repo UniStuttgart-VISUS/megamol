@@ -26,8 +26,6 @@
 #include "io/VisIttDataSource.h"
 #include "io/XYZLoader.h"
 
-#include "misc/ParticleWorker.h"
-
 #include "DataGridder.h"
 #include "moldyn/ParticleGridDataCall.h"
 
@@ -54,7 +52,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VisIttDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VTFDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VTFResDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::moldyn::misc::ParticleWorker>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::XYZLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::TclMolSelectionLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn::BrickStatsDataSource>();

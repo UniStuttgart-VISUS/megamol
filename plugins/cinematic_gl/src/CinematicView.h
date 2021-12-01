@@ -15,8 +15,8 @@
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "mmcore_gl/view/View3DGL.h"
 
-#include "cinematic/CinematicUtils.h"
 #include "cinematic/Keyframe.h"
+#include "cinematic_gl/CinematicUtils.h"
 
 #include <glm/gtx/quaternion.hpp>
 #include <png.h>
@@ -114,7 +114,7 @@ private:
     };
 
     PngData png_data;
-    cinematic::CinematicUtils utils;
+    CinematicUtils utils;
     clock_t deltaAnimTime;
     cinematic::Keyframe shownKeyframe;
     bool playAnim;

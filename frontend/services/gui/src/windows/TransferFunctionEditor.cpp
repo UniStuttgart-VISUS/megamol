@@ -578,6 +578,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             texture_data =
                 TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
         }
+#ifdef WITH_GL
         if (!this->flip_legend) {
             this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
             this->image_widget_nearest.LoadTextureFromData(
@@ -587,6 +588,15 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             this->image_widget_nearest.LoadTextureFromData(
                 1, this->texture_size, texture_data.data(), GL_NEAREST, GL_NEAREST);
         }
+#else
+        if (!this->flip_legend) {
+            this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
+            this->image_widget_nearest.LoadTextureFromData(this->texture_size, 1, texture_data.data());
+        } else {
+            this->image_widget_linear.LoadTextureFromData(1, this->texture_size, texture_data.data());
+            this->image_widget_nearest.LoadTextureFromData(1, this->texture_size, texture_data.data());
+        }
+#endif
         this->reload_texture = false;
     }
 
