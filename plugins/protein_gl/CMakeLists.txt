@@ -16,3 +16,9 @@ megamol_plugin(protein_gl
     glad
     nanoflann)
 
+if (protein_gl_PLUGIN_ENABLED)
+  if (WIN32)
+    # special case for the MSMS-related files
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
+  endif ()
+endif ()

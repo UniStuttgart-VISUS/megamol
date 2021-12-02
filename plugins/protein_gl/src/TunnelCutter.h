@@ -9,7 +9,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ProteinHelpers.h"
+#include "protein/ProteinHelpers.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,13 +17,13 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 class TunnelCutter : public core::Module {
 public:
@@ -96,7 +96,7 @@ private:
      * @param bsCall The call containing the binding site data.
      * @return True on success, false otherwise.
      */
-    bool cutMeshEqually(geocalls::CallTriMeshData* meshCall, geocalls::CallTriMeshData* cavityMeshCall,
+    bool cutMeshEqually(geocalls_gl::CallTriMeshDataGL* meshCall, geocalls_gl::CallTriMeshDataGL* cavityMeshCall,
         protein_calls::TunnelResidueDataCall* tunnelCall, protein_calls::MolecularDataCall* molCall,
         protein_calls::BindingSiteCall* bsCall);
 
@@ -137,7 +137,7 @@ private:
     core::CalleeSlot cutMeshOutSlot;
 
     /** Vector containing the modified mesh data */
-    std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
+    std::vector<geocalls_gl::CallTriMeshDataGL::Mesh> meshVector;
 
     /** Vector containing the information for each vertex whether to keep it or not */
     std::vector<bool> vertexKeepFlags;
@@ -167,7 +167,7 @@ private:
     bool dirt;
 };
 
-} // namespace protein
+} // namespace protein_gl
 } /* end namespace megamol */
 
 

@@ -28,6 +28,12 @@
 #include "SplitMergeRenderer.h"
 #include "VolumeSliceRenderer.h"
 
+// modules depending on GL calls
+#include "MSMSCavityFinder.h"
+#include "MSMSGenus0Generator.h"
+#include "MSMSMeshLoader.h"
+#include "TunnelCutter.h"
+
 #include "vislib/Trace.h"
 
 namespace megamol::protein_gl {
@@ -68,6 +74,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UncertaintyCartoonRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MSMSCavityFinder>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MSMSGenus0Generator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MSMSMeshLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::TunnelCutter>();
 
         // register calls
     }

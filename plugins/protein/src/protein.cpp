@@ -51,16 +51,14 @@
 #include "ColorModule.h"
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
-#include "MSMSCavityFinder.h"
-#include "MSMSGenus0Generator.h"
-#include "MSMSMeshLoader.h"
 #include "MolecularNeighborhood.h"
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 #include "ProteinAligner.h"
 #include "ProteinExploder.h"
 #include "SolventCounter.h"
-#include "TunnelCutter.h"
+#include "TunnelToBFactor.h"
+#include "TunnelToParticles.h"
 
 #include "vislib/Trace.h"
 
@@ -123,12 +121,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventCounter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSGenus0Generator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinAligner>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToBFactor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToParticles>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::protein::UncertaintyDataLoader>();
 

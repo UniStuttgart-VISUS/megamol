@@ -10,7 +10,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
@@ -28,8 +28,8 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::geocalls;
-using namespace megamol::protein;
+using namespace megamol::geocalls_gl;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 
 /*
@@ -87,16 +87,16 @@ MSMSCavityFinder::MSMSCavityFinder(void)
 
     // Callee slot
     this->cutMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &MSMSCavityFinder::getData);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(0), &MSMSCavityFinder::getData);
     this->cutMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &MSMSCavityFinder::getExtent);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(1), &MSMSCavityFinder::getExtent);
     this->MakeSlotAvailable(&this->cutMeshOutSlot);
 
     // Caller slots
-    this->innerMeshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->innerMeshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->innerMeshInSlot);
 
-    this->outerMeshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->outerMeshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->outerMeshInSlot);
 
     // Parameter slots
@@ -130,7 +130,7 @@ void MSMSCavityFinder::release(void) {}
  * MSMSCavityFinder::getData
  */
 bool MSMSCavityFinder::getData(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
@@ -138,11 +138,11 @@ bool MSMSCavityFinder::getData(Call& call) {
     auto timebegin = std::chrono::steady_clock::now();
 #endif
 
-    CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inInnerCall == nullptr)
         return false;
 
-    CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inOuterCall == nullptr)
         return false;
 
@@ -164,7 +164,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         return false;
     auto innerObj = &inInnerCall->Objects()[0];
     // TODO implement branches for other data types
-    if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+    if (innerObj->GetVertexDataType() != CallTriMeshDataGL::Mesh::DT_FLOAT)
         return false;
 
     // only recompute vertex distances if something has changed
@@ -191,7 +191,7 @@ bool MSMSCavityFinder::getData(Call& call) {
             return false;
         auto outerObj = &inOuterCall->Objects()[0];
         // TODO implement branches for other data types
-        if (outerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+        if (outerObj->GetVertexDataType() != CallTriMeshDataGL::Mesh::DT_FLOAT)
             return false;
         PointCloud<float> pointCloud;
         pointCloud.pts.resize(outerObj->GetVertexCount());
@@ -214,7 +214,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
         innerObj = &inInnerCall->Objects()[0];
         // TODO implement branches for other data types
-        if (innerObj->GetVertexDataType() != CallTriMeshData::Mesh::DT_FLOAT)
+        if (innerObj->GetVertexDataType() != CallTriMeshDataGL::Mesh::DT_FLOAT)
             return false;
         this->vertexIndex.clear();
         this->vertexIndex.resize(innerObj->GetVertexCount());
@@ -239,7 +239,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         this->cavityMesh = *innerObj;
         unsigned int triaCnt = this->cavityMesh.GetTriCount();
         // TODO implement branches for other data types
-        if (this->cavityMesh.GetTriDataType() != CallTriMeshData::Mesh::DT_UINT32)
+        if (this->cavityMesh.GetTriDataType() != CallTriMeshDataGL::Mesh::DT_UINT32)
             return false;
         triaIndices.SetCount(0);
         triaIndices.AssertCapacity(triaCnt * 3);
@@ -416,15 +416,15 @@ bool MSMSCavityFinder::getData(Call& call) {
  * MSMSCavityFinder::getExtent
  */
 bool MSMSCavityFinder::getExtent(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
-    CallTriMeshData* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inInnerCall = this->innerMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inInnerCall == nullptr)
         return false;
 
-    CallTriMeshData* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inOuterCall = this->outerMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inOuterCall == nullptr)
         return false;
 

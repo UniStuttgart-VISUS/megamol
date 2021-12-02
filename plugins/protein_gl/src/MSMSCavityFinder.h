@@ -9,7 +9,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ProteinHelpers.h"
+#include "protein/ProteinHelpers.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,14 +17,14 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 class MSMSCavityFinder : public core::Module {
 public:
@@ -106,9 +106,9 @@ private:
     SIZE_T lastHashOuter;
     std::vector<size_t> vertexIndex;
     std::vector<float> distanceToMesh;
-    megamol::geocalls::CallTriMeshData::Mesh cavityMesh;
+    megamol::geocalls_gl::CallTriMeshDataGL::Mesh cavityMesh;
     vislib::Array<unsigned int> triaIndices;
-    vislib::Array<megamol::geocalls::CallTriMeshData::Mesh> cavitySubmeshes;
+    vislib::Array<megamol::geocalls_gl::CallTriMeshDataGL::Mesh> cavitySubmeshes;
 };
 
 } /* end namespace protein */

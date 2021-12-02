@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -22,7 +22,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 /**
  * Class for loading MSMS mesh data
  */
@@ -157,7 +157,7 @@ private:
     /** the index of the vertex attribute */
     unsigned int attIdx;
 
-    vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
+    vislib::Array<geocalls_gl::CallTriMeshDataGL::Mesh*> obj;
 
     int prevTime;
 };

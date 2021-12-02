@@ -9,7 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
@@ -22,8 +22,8 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::geocalls;
-using namespace megamol::protein;
+using namespace megamol::geocalls_gl;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 
 /*
@@ -45,16 +45,16 @@ TunnelCutter::TunnelCutter(void)
 
     // Callee slot
     this->cutMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &TunnelCutter::getData);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(0), &TunnelCutter::getData);
     this->cutMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &TunnelCutter::getExtent);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(1), &TunnelCutter::getExtent);
     this->MakeSlotAvailable(&this->cutMeshOutSlot);
 
     // Caller slots
-    this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->meshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->meshInSlot);
 
-    this->cavityMeshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->cavityMeshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->cavityMeshInSlot);
 
     this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
@@ -106,15 +106,15 @@ void TunnelCutter::release(void) {}
  * TunnelCutter::getData
  */
 bool TunnelCutter::getData(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCall == nullptr)
         return false;
 
-    CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCav == nullptr)
         return false;
 
@@ -176,15 +176,15 @@ bool TunnelCutter::getData(Call& call) {
  * TunnelCutter::getExtent
  */
 bool TunnelCutter::getExtent(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCall == nullptr)
         return false;
 
-    CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCav == nullptr)
         return false;
 
@@ -238,7 +238,7 @@ bool TunnelCutter::getExtent(Call& call) {
 /*
  * TunnelCutter::cutMeshEqually
  */
-bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* cavityMeshCall,
+bool TunnelCutter::cutMeshEqually(CallTriMeshDataGL* meshCall, CallTriMeshDataGL* cavityMeshCall,
     TunnelResidueDataCall* tunnelCall, MolecularDataCall* molCall, BindingSiteCall* bsCall) {
 
     if (meshCall->Count() > 0 && cavityMeshCall->Count() > 0) {
@@ -301,7 +301,8 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     bool found = false;
     if (atCnt != 0) {
         for (attIdx = 0; attIdx < atCnt; attIdx++) {
-            if (meshCall->Objects()[0].GetVertexAttribDataType(attIdx) == CallTriMeshData::Mesh::DataType::DT_UINT32) {
+            if (meshCall->Objects()[0].GetVertexAttribDataType(attIdx) ==
+                CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                 found = true;
                 break;
             }
@@ -471,7 +472,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
         return false;
     }
 
-    auto bspos = EstimateBindingSitePosition(molCall, bsCall);
+    auto bspos = protein::EstimateBindingSitePosition(molCall, bsCall);
 
     // search for the vertex closest to the given position
     float minDist = FLT_MAX;
