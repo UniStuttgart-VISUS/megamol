@@ -82,8 +82,8 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         if (user_data->autocomplete_candidates.size() == 0) {
             // No match
         } else if (user_data->autocomplete_candidates.size() == 1) {
-            // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
-            data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+            // Single match. Delete the complete current input and replace it entirely so we've got nice casing.
+            data->DeleteChars(0,data->BufTextLen);
             data->InsertChars(data->CursorPos, user_data->autocomplete_candidates[0].first.data());
             data->InsertChars(data->CursorPos, "()");
             data->CursorPos--;
@@ -407,7 +407,7 @@ bool megamol::gui::LogConsole::Draw() {
     if (!this->input_shared_data->param_hint.empty()) {
         const std::string t = "Parameter(s): " + this->input_shared_data->param_hint;
         ImGui::SameLine();
-        ImGui::TextDisabled(t.c_str());
+        ImGui::TextUnformatted(t.c_str());
     }
 
     std::string popup_id = "autocomplete_selector";
