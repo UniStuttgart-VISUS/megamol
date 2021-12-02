@@ -281,7 +281,7 @@ bool megamol::gui::gui_render_backend::ShutdownBackend() {
     case (GUIRenderBackend::CPU): {
         ImGui_ImplGeneric_Shutdown();
     } break;
-    default:{
+    default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

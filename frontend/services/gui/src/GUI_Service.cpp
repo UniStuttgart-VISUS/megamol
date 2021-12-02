@@ -313,7 +313,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
     if (!maybe_opengl_context.has_value() && (m_config.backend == megamol::gui::GUIRenderBackend::OPEN_GL)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
         m_config.backend = megamol::gui::GUIRenderBackend::CPU;
     }
     // Create GUI context

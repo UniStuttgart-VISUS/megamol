@@ -13,9 +13,9 @@
 #include "AbstractFrontendService.hpp"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
+#include "gui_render_backend.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "gui_render_backend.h"
 
 
 namespace megamol {
@@ -28,7 +28,6 @@ class GUIManager;
 class GUI_Service final : public AbstractFrontendService {
 
 public:
-
     struct Config {
         megamol::gui::GUIRenderBackend backend = megamol::gui::GUIRenderBackend::CPU;
         megamol::core::CoreInstance* core_instance = nullptr;
