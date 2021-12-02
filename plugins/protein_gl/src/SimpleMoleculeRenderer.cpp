@@ -11,8 +11,6 @@
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-#include <GL/glu.h>
-#include <omp.h>
 #include "SimpleMoleculeRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
@@ -35,6 +33,8 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include <GL/glu.h>
+#include <omp.h>
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"

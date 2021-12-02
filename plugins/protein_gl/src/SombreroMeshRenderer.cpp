@@ -5,6 +5,7 @@
  */
 
 #include "stdafx.h"
+
 #include "SombreroMeshRenderer.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/BoolParam.h"
