@@ -268,7 +268,7 @@ typedef struct _interact_state_ {
 
     bool parameters_extended_mode; // in
 
-    bool graph_is_running; // in
+    bool graph_is_running;       // in
     bool pause_profiling_update; // in out
 
 } GraphItemsInteract_t;
@@ -374,10 +374,10 @@ public:
      */
     static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
 
-        auto short_str = (str1.size() < str2.size()) ?(str1) : (str2);
-        auto longer_str = (str1.size() >= str2.size()) ?(str1) : (str2);
-        return  std::equal(short_str.begin(), short_str.end(), longer_str.begin(),
-                    [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); });
+        auto short_str = (str1.size() < str2.size()) ? (str1) : (str2);
+        auto longer_str = (str1.size() >= str2.size()) ? (str1) : (str2);
+        return std::equal(short_str.begin(), short_str.end(), longer_str.begin(),
+            [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); });
     }
 
     /*
