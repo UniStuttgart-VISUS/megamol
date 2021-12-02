@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "ParticlesToTable.h"
+#include "stdafx.h"
 
 #include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -9,15 +9,15 @@
 #include "mmcore/utility/ColourParser.h"
 
 #define GLM_FORCE_SWIZZLE
-#include <glm/gtx/string_cast.hpp>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "vislib/Trace.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
+#include "vislib/Trace.h"
+#include "vislib/sys/PerformanceCounter.h"
+#include <glm/gtx/string_cast.hpp>
 
 using namespace megamol::datatools;
 using namespace megamol;
@@ -26,17 +26,15 @@ using namespace megamol;
  * TableToParticles::ParticlesToTable
  */
 ParticlesToTable::ParticlesToTable(void)
-    : Module()
-    , slotTableOut("floattable", "Provides the data as table.")
-    , slotParticlesIn("particles", "Particle input call") {
+        : Module()
+        , slotTableOut("floattable", "Provides the data as table.")
+        , slotParticlesIn("particles", "Particle input call") {
 
     /* Register parameters. */
 
     /* Register calls. */
-    this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetData", &ParticlesToTable::getTableData);
-    this->slotTableOut.SetCallback(
-        table::TableDataCall::ClassName(), "GetHash", &ParticlesToTable::getTableHash);
+    this->slotTableOut.SetCallback(table::TableDataCall::ClassName(), "GetData", &ParticlesToTable::getTableData);
+    this->slotTableOut.SetCallback(table::TableDataCall::ClassName(), "GetHash", &ParticlesToTable::getTableHash);
 
     this->MakeSlotAvailable(&this->slotTableOut);
 
@@ -49,7 +47,9 @@ ParticlesToTable::ParticlesToTable(void)
 /*
  * TableToParticles::~TableToParticles
  */
-ParticlesToTable::~ParticlesToTable(void) { this->Release(); }
+ParticlesToTable::~ParticlesToTable(void) {
+    this->Release();
+}
 
 
 /*
@@ -59,12 +59,14 @@ bool ParticlesToTable::create(void) {
     return true;
 }
 
-bool ParticlesToTable::assertMPDC(geocalls::MultiParticleDataCall *in, table::TableDataCall *tc) {
+bool ParticlesToTable::assertMPDC(geocalls::MultiParticleDataCall* in, table::TableDataCall* tc) {
     in->SetFrameID(tc->GetFrameID(), true);
     do {
-        if (!(*in)(1)) return false;
-        if (!(*in)(0)) return false;
-    } while(in->FrameID() != tc->GetFrameID());
+        if (!(*in)(1))
+            return false;
+        if (!(*in)(0))
+            return false;
+    } while (in->FrameID() != tc->GetFrameID());
 
     if (in->DataHash() != inHash || in->FrameID() != inFrameID) {
         auto lc = in->GetParticleListCount();
@@ -143,7 +145,8 @@ bool ParticlesToTable::getTableData(core::Call& call) {
     auto* e = this->slotParticlesIn.CallAs<geocalls::EllipsoidalParticleDataCall>();
 
     auto* ft = dynamic_cast<table::TableDataCall*>(&call);
-    if (ft == nullptr) return false;
+    if (ft == nullptr)
+        return false;
 
     if (c != nullptr) {
         assertMPDC(c, ft);
@@ -160,15 +163,18 @@ bool ParticlesToTable::getTableHash(core::Call& call) {
     auto* e = this->slotParticlesIn.CallAs<geocalls::EllipsoidalParticleDataCall>();
 
     auto* ft = dynamic_cast<table::TableDataCall*>(&call);
-    if (ft == nullptr) return false;
+    if (ft == nullptr)
+        return false;
 
     if (c != nullptr) {
-        if (!(*c)(1)) return false;
+        if (!(*c)(1))
+            return false;
         ft->SetDataHash(c->DataHash());
         ft->SetFrameCount(c->FrameCount());
         return true;
     } else if (e != nullptr) {
-        if (!(*e)(1)) return false;
+        if (!(*e)(1))
+            return false;
         ft->SetDataHash(e->DataHash());
         ft->SetFrameCount(e->FrameCount());
         return true;

@@ -383,13 +383,19 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
 
     auto gui_ptr = static_cast<megamol::gui::GUIManager*>(void_ptr);
 
+#ifdef WITH_GL
     unsigned int fbo_color_buffer_gl_handle = 0;
     size_t fbo_width = 1;
     size_t fbo_height = 1;
-    gui_ptr->GetFBOData(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
+    gui_ptr->GetFBODataGL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
 
     result_image =
         megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
+#else
+    auto fbo = gui_ptr->getFBOHandle();
+    result_image =
+        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
+#endif
 
     return true;
 }

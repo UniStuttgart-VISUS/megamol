@@ -78,7 +78,7 @@ protected:
     megamol::core::CallerSlot m_mesh_slot;
 };
 
-} // namespace mesh
+} // namespace mesh_gl
 } // namespace megamol
 
 #endif // !ABSTRACT_RENDER_TASK_DATA_SOURCE_H_INCLUDED

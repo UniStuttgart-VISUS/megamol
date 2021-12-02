@@ -4,8 +4,8 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleRelaxationModule.h"
+#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;
@@ -15,9 +15,12 @@ using namespace megamol;
  * datatools::ParticleRelaxationModule::ParticleRelaxationModule
  */
 datatools::ParticleRelaxationModule::ParticleRelaxationModule(void)
-        : AbstractParticleManipulator("outData", "indata"),
-        dataHash(0), frameId(0), outDataHash(0), bbox(), cbox() {
-}
+        : AbstractParticleManipulator("outData", "indata")
+        , dataHash(0)
+        , frameId(0)
+        , outDataHash(0)
+        , bbox()
+        , cbox() {}
 
 
 /*
@@ -49,7 +52,7 @@ bool datatools::ParticleRelaxationModule::manipulateExtent(
     outData.SetDataHash(this->outDataHash);
     outData.AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
     outData.AccessBoundingBoxes().SetObjectSpaceClipBox(this->cbox);
-   return true;
+    return true;
 }
 
 
@@ -69,23 +72,35 @@ bool datatools::ParticleRelaxationModule::manipulateData(
         // first simply copy the data
         uint64_t cnt = 0;
         for (unsigned int li = 0; li < inData.GetParticleListCount(); li++) {
-            if (inData.AccessParticles(li).GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE) continue;
+            if (inData.AccessParticles(li).GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE)
+                continue;
             cnt += inData.AccessParticles(li).GetCount();
         }
-        this->data.EnforceSize(static_cast<SIZE_T>(cnt * 4 * sizeof(float))); // new particle position data (including radii)
-        float *vert = this->data.As<float>();
+        this->data.EnforceSize(
+            static_cast<SIZE_T>(cnt * 4 * sizeof(float))); // new particle position data (including radii)
+        float* vert = this->data.As<float>();
         for (unsigned int li = 0; li < inData.GetParticleListCount(); li++) {
             MultiParticleDataCall::Particles& p = inData.AccessParticles(li);
-            const uint8_t *vd = static_cast<const uint8_t*>(p.GetVertexData());
+            const uint8_t* vd = static_cast<const uint8_t*>(p.GetVertexData());
             size_t vds = p.GetVertexDataStride();
             bool isFloat = true;
             bool hasRadius = false;
             switch (p.GetVertexDataType()) {
-            case MultiParticleDataCall::Particles::VERTDATA_NONE: continue;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: hasRadius = true; vds = std::max<size_t>(vds, 16); break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vds = std::max<size_t>(vds, 12); break;
-            case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: isFloat = false; vds = std::max<size_t>(vds, 6); break;
-            default: throw std::exception();
+            case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                continue;
+            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                hasRadius = true;
+                vds = std::max<size_t>(vds, 16);
+                break;
+            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                vds = std::max<size_t>(vds, 12);
+                break;
+            case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                isFloat = false;
+                vds = std::max<size_t>(vds, 6);
+                break;
+            default:
+                throw std::exception();
             }
             float gr = p.GetGlobalRadius();
 
@@ -97,7 +112,7 @@ bool datatools::ParticleRelaxationModule::manipulateData(
                 }
             } else {
                 for (uint64_t pi = 0; pi < p.GetCount(); pi++, vert += 4, vd += vds) {
-                    const uint16_t * v = reinterpret_cast<const uint16_t*>(vd);
+                    const uint16_t* v = reinterpret_cast<const uint16_t*>(vd);
                     vert[0] = static_cast<float>(v[0]);
                     vert[1] = static_cast<float>(v[1]);
                     vert[2] = static_cast<float>(v[2]);
@@ -112,7 +127,7 @@ bool datatools::ParticleRelaxationModule::manipulateData(
 
         // finally compute new bounding boxes
         if (cnt > 0) {
-            float *vert = this->data.As<float>();
+            float* vert = this->data.As<float>();
             this->bbox.Set(vert[0], vert[1], vert[2], vert[0], vert[1], vert[2]);
             float r = vert[3];
             for (uint64_t pi = 1; pi < cnt; pi++, vert += 4) {
@@ -126,10 +141,9 @@ bool datatools::ParticleRelaxationModule::manipulateData(
             this->bbox = inData.AccessBoundingBoxes().ObjectSpaceBBox();
             this->cbox = inData.AccessBoundingBoxes().ObjectSpaceClipBox();
         }
-
     }
 
-    outData = inData; // also transfers the unlocker to 'outData'
+    outData = inData;                   // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 
@@ -139,9 +153,9 @@ bool datatools::ParticleRelaxationModule::manipulateData(
     uint64_t cnt = 0;
     for (unsigned int li = 0; li < outData.GetParticleListCount(); li++) {
         MultiParticleDataCall::Particles& p = outData.AccessParticles(li);
-        if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE) continue;
-        p.SetVertexData(
-            MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+        if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE)
+            continue;
+        p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
             this->data.At(static_cast<SIZE_T>(cnt * sizeof(float) * 4)));
         cnt += p.GetCount();
     }

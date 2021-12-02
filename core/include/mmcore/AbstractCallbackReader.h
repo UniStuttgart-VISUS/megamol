@@ -20,99 +20,99 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Abstract class for implementing a reader based on a callback.
+ *
+ * @author Alexander Straub
+ */
+template<typename CallT, typename... ContentT>
+class AbstractCallbackReader : public core::Module {
+
+public:
+    using FunctionT = std::function<bool(ContentT...)>;
+
+    static_assert(std::is_base_of<AbstractCallbackCall<FunctionT>, CallT>::value,
+        "Call not derived from AbstractCallbackCall, or using wrong template parameter.");
+
     /**
-    * Abstract class for implementing a reader based on a callback.
-    *
-    * @author Alexander Straub
-    */
-    template <typename CallT, typename... ContentT>
-    class AbstractCallbackReader : public core::Module {
+     * Constructor
+     */
+    AbstractCallbackReader()
+            : outputSlot("output", "Slot for providing a callback")
+            , filePathSlot("inputFile", "Path to file which should be read from") {
 
-    public:
-        using FunctionT = std::function<bool(ContentT...)>;
+        this->outputSlot.SetCallback(CallT::ClassName(), CallT::FunctionName(0), &AbstractCallbackReader::SetCallback);
+        this->MakeSlotAvailable(&this->outputSlot);
 
-        static_assert(std::is_base_of<AbstractCallbackCall<FunctionT>, CallT>::value,
-            "Call not derived from AbstractCallbackCall, or using wrong template parameter.");
+        this->filePathSlot << new param::FilePathParam("");
+        this->MakeSlotAvailable(&this->filePathSlot);
+    }
 
-        /**
-        * Constructor
-        */
-        AbstractCallbackReader() :
-            outputSlot("output", "Slot for providing a callback"),
-            filePathSlot("inputFile", "Path to file which should be read from") {
-            
-            this->outputSlot.SetCallback(CallT::ClassName(), CallT::FunctionName(0), &AbstractCallbackReader::SetCallback);
-            this->MakeSlotAvailable(&this->outputSlot);
+    /**
+     * Destructor
+     */
+    virtual ~AbstractCallbackReader() {
+        this->Release();
+    }
 
-            this->filePathSlot << new param::FilePathParam("");
-            this->MakeSlotAvailable(&this->filePathSlot);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create() = 0;
+
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release() = 0;
+
+    /**
+     * Callback function for writing data to file.
+     *
+     * @param path Output file path
+     * @param content Content to write
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool read(const std::string& path, ContentT... content) = 0;
+
+    /**
+     * Callback for handling the callback request.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    bool SetCallback(Call& call) {
+        auto* callbackCall = dynamic_cast<AbstractCallbackCall<FunctionT>*>(&call);
+
+        if (callbackCall != nullptr) {
+            auto proxy = [this](ContentT... content) -> bool { return Read(content...); };
+            callbackCall->SetCallback(proxy);
         }
 
-        /**
-        * Destructor
-        */
-        virtual ~AbstractCallbackReader() {
-            this->Release();
-        }
+        return true;
+    }
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create() = 0;
+private:
+    /**
+     * Callback function for reading data from file.
+     *
+     * @param content Content to fill
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    bool Read(ContentT... content) {
+        return read(
+            static_cast<std::string>(this->filePathSlot.template Param<param::FilePathParam>()->Value()), content...);
+    }
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release() = 0;
+    /** Output slot */
+    CalleeSlot outputSlot;
 
-        /**
-        * Callback function for writing data to file.
-        *
-        * @param path Output file path
-        * @param content Content to write
-        *
-        * @return 'true' on success, 'false' otherwise.
-        */
-        virtual bool read(const std::string& path, ContentT... content) = 0;
+    /** File path parameter */
+    param::ParamSlot filePathSlot;
+};
 
-        /**
-         * Callback for handling the callback request.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        bool SetCallback(Call& call) {
-            auto* callbackCall = dynamic_cast<AbstractCallbackCall<FunctionT>*>(&call);
-
-            if (callbackCall != nullptr)
-            {
-                auto proxy = [this](ContentT... content) -> bool { return Read(content...); };
-                callbackCall->SetCallback(proxy);
-            }
-
-            return true;
-        }
-
-    private:
-        /**
-        * Callback function for reading data from file.
-        *
-        * @param content Content to fill
-        *
-        * @return 'true' on success, 'false' otherwise.
-        */
-        bool Read(ContentT... content) {
-            return read(static_cast<std::string>(this->filePathSlot.template Param<param::FilePathParam>()->Value()), content...);
-        }
-
-        /** Output slot */
-        CalleeSlot outputSlot;
-
-        /** File path parameter */
-        param::ParamSlot filePathSlot;
-    };
-
-}
-}
+} // namespace core
+} // namespace megamol

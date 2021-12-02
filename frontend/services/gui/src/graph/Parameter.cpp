@@ -7,6 +7,10 @@
 
 
 #include "Parameter.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "imgui_stdlib.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -22,7 +26,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "widgets/ButtonWidgets.h"
-#include "widgets/ImageWidget_gl.h"
+#include "widgets/ImageWidget.h"
 
 
 using namespace megamol;

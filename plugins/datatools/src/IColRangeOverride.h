@@ -12,30 +12,33 @@
 namespace megamol {
 namespace datatools {
 
-    class IColRangeOverride : public datatools::AbstractParticleManipulator {
-    public:
-        static const char *ClassName(void) { return "IColRangeOverride"; }
-        static const char *Description(void) { return "Sets the ICol min and max values"; }
-        static bool IsAvailable(void) { return true; }
+class IColRangeOverride : public datatools::AbstractParticleManipulator {
+public:
+    static const char* ClassName(void) {
+        return "IColRangeOverride";
+    }
+    static const char* Description(void) {
+        return "Sets the ICol min and max values";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        IColRangeOverride();
-        virtual ~IColRangeOverride();
+    IColRangeOverride();
+    virtual ~IColRangeOverride();
 
-    protected:
+protected:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+private:
+    core::param::ParamSlot overrideSlot;
+    core::param::ParamSlot inValsSlot;
+    core::param::ParamSlot minValSlot;
+    core::param::ParamSlot maxValSlot;
+    size_t hash;
+    unsigned int frameID;
+    float minCol, maxCol;
+};
 
-    private:
-
-        core::param::ParamSlot overrideSlot;
-        core::param::ParamSlot inValsSlot;
-        core::param::ParamSlot minValSlot;
-        core::param::ParamSlot maxValSlot;
-        size_t hash;
-        unsigned int frameID;
-        float minCol, maxCol;
-    };
-
-}
-}
+} // namespace datatools
+} // namespace megamol

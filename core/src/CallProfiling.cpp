@@ -4,12 +4,9 @@
 using namespace megamol;
 using namespace core;
 
-CallProfiling::CallProfiling() {
-}
+CallProfiling::CallProfiling() {}
 
-CallProfiling::~CallProfiling() {
-
-}
+CallProfiling::~CallProfiling() {}
 
 uint32_t CallProfiling::GetSampleHistoryLength() {
     return PerformanceHistory::buffer_length;
@@ -36,8 +33,7 @@ uint32_t CallProfiling::GetNumCPUSamples(uint32_t func) const {
         return 0;
 }
 
-std::array<double, PerformanceHistory::buffer_length> CallProfiling::GetCPUHistory(
-    uint32_t func) const {
+std::array<double, PerformanceHistory::buffer_length> CallProfiling::GetCPUHistory(uint32_t func) const {
     if (func < parent_call->GetCallbackCount())
         return cpu_history[func].copyHistory();
     else
@@ -65,8 +61,7 @@ uint32_t CallProfiling::GetNumGPUSamples(uint32_t func) const {
         return 0;
 }
 
-std::array<double, PerformanceHistory::buffer_length> CallProfiling::GetGPUHistory(
-    uint32_t func) const {
+std::array<double, PerformanceHistory::buffer_length> CallProfiling::GetGPUHistory(uint32_t func) const {
     if (func < parent_call->GetCallbackCount())
         return gpu_history[func].copyHistory();
     else

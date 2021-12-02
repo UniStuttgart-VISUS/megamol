@@ -5,10 +5,7 @@
  * Copyright (C) 2015 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "MSMSMeshLoader.h"
-#include <fstream>
-#include "protein/Color.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -16,12 +13,14 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "protein/Color.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
+#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-
+#include <fstream>
 
 
 using namespace megamol;

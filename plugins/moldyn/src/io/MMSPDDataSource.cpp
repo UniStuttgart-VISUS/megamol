@@ -5,30 +5,30 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/MMSPDDataSource.h"
-#include "mmcore/param/FilePathParam.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/ArrayAllocator.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "vislib/sys/AutoLock.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/File.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/ArrayAllocator.h"
+#include "vislib/MissingImplementationException.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "vislib/sys/sysfunctions.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemoryFile.h"
-#include "vislib/memutils.h"
-#include "vislib/MissingImplementationException.h"
 #include "vislib/UTF8Encoder.h"
-#include "vislib/utils.h"
 #include "vislib/VersionNumber.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/memutils.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/MemoryFile.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/utils.h"
 
 using namespace megamol;
 using namespace megamol::moldyn::io;
@@ -48,7 +48,8 @@ using namespace megamol::moldyn::io;
  * MMSPDDataSource::Frame::Frame
  */
 MMSPDDataSource::Frame::Frame(core::view::AnimDataModule& owner)
-        : MMSPDFrameData(), core::view::AnimDataModule::Frame(owner) {
+        : MMSPDFrameData()
+        , core::view::AnimDataModule::Frame(owner) {
     // intentionally empty
 }
 
@@ -64,11 +65,10 @@ MMSPDDataSource::Frame::~Frame() {
 /*
  * MMSPDDataSource::Frame::LoadFrame
  */
-bool MMSPDDataSource::Frame::LoadFrame(
-        vislib::sys::File *file, unsigned int idx, UINT64 size,
-        const MMSPDHeader& header, bool isBinary, bool isBigEndian) {
+bool MMSPDDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int idx, UINT64 size,
+    const MMSPDHeader& header, bool isBinary, bool isBigEndian) {
     this->frame = idx;
-    char *buf = new char[static_cast<SIZE_T>(size)];
+    char* buf = new char[static_cast<SIZE_T>(size)];
     try {
         if (file->Read(buf, size) != size) {
             throw vislib::Exception("Frame data truncated", __FILE__, __LINE__);
@@ -98,27 +98,46 @@ bool MMSPDDataSource::Frame::LoadFrame(
             if (isDot || isSphere || isEllipsoid || isCylinder) {
                 std::vector<int> idx;
                 idx.resize(18);
-                for (int i = 0; i < idx.size(); i++) idx[i] = -1;
+                for (int i = 0; i < idx.size(); i++)
+                    idx[i] = -1;
 
                 for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
-                    if (type.GetFields()[fi].GetName().Equals("x"))  idx[0] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("y"))  idx[1] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("z"))  idx[2] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("cr")) idx[3] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("cg")) idx[4] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("cb")) idx[5] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("r"))  idx[6] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("rx")) idx[7] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("ry")) idx[8] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("rz")) idx[9] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("dx")) idx[10] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("dy")) idx[11] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("dz")) idx[12] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("qr")) idx[13] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("qi")) idx[14] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("qj")) idx[15] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("qk")) idx[16] = static_cast<int>(fi);
-                    if (type.GetFields()[fi].GetName().Equals("ca")) idx[17] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("x"))
+                        idx[0] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("y"))
+                        idx[1] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("z"))
+                        idx[2] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cr"))
+                        idx[3] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cg"))
+                        idx[4] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("cb"))
+                        idx[5] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("r"))
+                        idx[6] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("rx"))
+                        idx[7] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("ry"))
+                        idx[8] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("rz"))
+                        idx[9] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dx"))
+                        idx[10] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dy"))
+                        idx[11] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("dz"))
+                        idx[12] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qr"))
+                        idx[13] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qi"))
+                        idx[14] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qj"))
+                        idx[15] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("qk"))
+                        idx[16] = static_cast<int>(fi);
+                    if (type.GetFields()[fi].GetName().Equals("ca"))
+                        idx[17] = static_cast<int>(fi);
                 }
 
                 if ((idx[0] >= 0) && (idx[1] >= 0) && (idx[2] >= 0)) {
@@ -137,7 +156,8 @@ bool MMSPDDataSource::Frame::LoadFrame(
                     remFields += 3;
                 }
 
-                if ((isSphere || isCylinder || (isEllipsoid && ((idx[7] < 0) || (idx[8] < 0) || (idx[9] < 0)))) && (idx[6] >= 0)) {
+                if ((isSphere || isCylinder || (isEllipsoid && ((idx[7] < 0) || (idx[8] < 0) || (idx[9] < 0)))) &&
+                    (idx[6] >= 0)) {
                     // r found
                     parts.FieldMap()[remFields] = idx[6];
                     remFields += 1;
@@ -171,7 +191,6 @@ bool MMSPDDataSource::Frame::LoadFrame(
                         remFields++;
                     }
                 }
-
             }
 
             if (remFields < fieldCnt) {
@@ -183,12 +202,12 @@ bool MMSPDDataSource::Frame::LoadFrame(
                             break;
                         }
                     }
-                    if (found) continue; // field already stored
+                    if (found)
+                        continue; // field already stored
                     parts.FieldMap()[remFields] = static_cast<unsigned int>(fi);
                     remFields++;
                 }
             }
-
         }
 
         // now actually load the data
@@ -206,15 +225,15 @@ bool MMSPDDataSource::Frame::LoadFrame(
             MMSPDFrameData::Particles& parts = this->Data()[ti];
             SIZE_T ps = header.GetTypes()[ti].GetFields().Count() * sizeof(float);
             // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
-            if (header.HasIDs()) ps += 8;
+            if (header.HasIDs())
+                ps += 8;
             ASSERT((parts.GetData().GetSize() % ps) == 0);
             parts.SetCount(parts.GetData().GetSize() / ps);
             if ((parts.Count() > 1) && (header.HasIDs())) {
                 // we sort particles here!
-                ::qsort(parts.Data(), parts.GetData().GetSize() / ps, ps,
-                    [](const void* a, const void* b) -> int {
-                        return static_cast<int>(static_cast<const uint64_t*>(a)[0] - static_cast<const uint64_t*>(b)[0]);
-                    });
+                ::qsort(parts.Data(), parts.GetData().GetSize() / ps, ps, [](const void* a, const void* b) -> int {
+                    return static_cast<int>(static_cast<const uint64_t*>(a)[0] - static_cast<const uint64_t*>(b)[0]);
+                });
             }
         }
 
@@ -233,26 +252,40 @@ bool MMSPDDataSource::Frame::LoadFrame(
 /*
  * MMSPDDataSource::Frame::SetData
  */
-void MMSPDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call,
-        const MMSPDHeader& header) {
+void MMSPDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call, const MMSPDHeader& header) {
     call.SetParticleListCount(static_cast<unsigned int>(this->Data().Count()));
     for (SIZE_T pi = 0; pi < this->Data().Count(); pi++) {
-        geocalls::MultiParticleDataCall::Particles &pts = call.AccessParticles(static_cast<unsigned int>(pi));
-        const MMSPDHeader::TypeDefinition &typeDef = header.GetTypes()[pi];
-        MMSPDFrameData::Particles &parts = this->Data()[pi];
+        geocalls::MultiParticleDataCall::Particles& pts = call.AccessParticles(static_cast<unsigned int>(pi));
+        const MMSPDHeader::TypeDefinition& typeDef = header.GetTypes()[pi];
+        MMSPDFrameData::Particles& parts = this->Data()[pi];
 
-        bool hasX = false, hasY = false, hasZ = false, hasR = false, hasCR = false, hasCG = false, hasCB = false, hasCA = false;
+        bool hasX = false, hasY = false, hasZ = false, hasR = false, hasCR = false, hasCG = false, hasCB = false,
+             hasCA = false;
         unsigned int rIdx = -1, cIdx = -1, pIdx = -1;
         for (SIZE_T fi = 0; fi < typeDef.GetFields().Count(); fi++) {
             const vislib::StringA& fn = typeDef.GetFields()[fi].GetName();
-            if (fn.Equals("x")) { hasX = true; pIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("y")) hasY = true;
-            if (fn.Equals("z")) hasZ = true;
-            if (fn.Equals("r")) { hasR = true; rIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("cr")) { hasCR = true; cIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("cg")) hasCG = true;
-            if (fn.Equals("cb")) hasCB = true;
-            if (fn.Equals("ca")) hasCA = true;
+            if (fn.Equals("x")) {
+                hasX = true;
+                pIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("y"))
+                hasY = true;
+            if (fn.Equals("z"))
+                hasZ = true;
+            if (fn.Equals("r")) {
+                hasR = true;
+                rIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("cr")) {
+                hasCR = true;
+                cIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("cg"))
+                hasCG = true;
+            if (fn.Equals("cb"))
+                hasCB = true;
+            if (fn.Equals("ca"))
+                hasCA = true;
         }
 
         if (hasR && (parts.FieldMap()[rIdx] != 3)) {
@@ -264,12 +297,17 @@ void MMSPDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call,
         pts.SetGlobalRadius(0.5f);
         unsigned int cr = 191, cg = 191, cb = 191, ca = 255;
         for (SIZE_T fi = 0; fi < typeDef.GetConstFields().Count(); fi++) {
-            const MMSPDHeader::ConstField &f = typeDef.GetConstFields()[fi];
-            if (f.GetName().Equals("r")) pts.SetGlobalRadius(f.GetAsFloat());
-            if (f.GetName().Equals("cr")) pts.SetGlobalColour(cr = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cg, cb);
-            if (f.GetName().Equals("cg")) pts.SetGlobalColour(cr, cg = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cb);
-            if (f.GetName().Equals("cb")) pts.SetGlobalColour(cr, cg, cb = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
-            if (f.GetName().Equals("ca")) pts.SetGlobalColour(cr, cg, cb, ca = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
+            const MMSPDHeader::ConstField& f = typeDef.GetConstFields()[fi];
+            if (f.GetName().Equals("r"))
+                pts.SetGlobalRadius(f.GetAsFloat());
+            if (f.GetName().Equals("cr"))
+                pts.SetGlobalColour(cr = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cg, cb);
+            if (f.GetName().Equals("cg"))
+                pts.SetGlobalColour(cr, cg = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cb);
+            if (f.GetName().Equals("cb"))
+                pts.SetGlobalColour(cr, cg, cb = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
+            if (f.GetName().Equals("ca"))
+                pts.SetGlobalColour(cr, cg, cb, ca = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
         }
 
         // now use some because-I-know-magic:
@@ -285,13 +323,12 @@ void MMSPDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call,
             // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
             if (header.HasIDs()) {
                 off += 8;
-                pts.SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT64,
-                    parts.Data().At(0),
+                pts.SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT64, parts.Data().At(0),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             }
 
             pts.SetVertexData(hasR ? geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR
-                : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                                   : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 parts.Data().At(off + pIdx * sizeof(float)),
                 static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             //printf("%lu\n", parts.Count());
@@ -310,40 +347,56 @@ void MMSPDDataSource::Frame::SetData(geocalls::MultiParticleDataCall& call,
             } else {
                 pts.SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
             }
-
         }
-
     }
-
 }
 
 
 /*
  * MMSPDDataSource::Frame::SetDirData
  */
-void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call,
-    const MMSPDHeader& header) {
+void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call, const MMSPDHeader& header) {
     call.SetParticleListCount(static_cast<unsigned int>(this->Data().Count()));
     for (SIZE_T pi = 0; pi < this->Data().Count(); pi++) {
-        auto &pts = call.AccessParticles(static_cast<unsigned int>(pi));
-        const MMSPDHeader::TypeDefinition &typeDef = header.GetTypes()[pi];
-        MMSPDFrameData::Particles &parts = this->Data()[pi];
+        auto& pts = call.AccessParticles(static_cast<unsigned int>(pi));
+        const MMSPDHeader::TypeDefinition& typeDef = header.GetTypes()[pi];
+        MMSPDFrameData::Particles& parts = this->Data()[pi];
 
-        bool hasX = false, hasY = false, hasZ = false, hasR = false, hasCR = false, hasCG = false, hasCB = false, hasCA = false, hasDX = false, hasDY = false, hasDZ = false;
+        bool hasX = false, hasY = false, hasZ = false, hasR = false, hasCR = false, hasCG = false, hasCB = false,
+             hasCA = false, hasDX = false, hasDY = false, hasDZ = false;
         unsigned int rIdx = -1, cIdx = -1, dIdx = -1, pIdx = -1;
         for (SIZE_T fi = 0; fi < typeDef.GetFields().Count(); fi++) {
             const vislib::StringA& fn = typeDef.GetFields()[fi].GetName();
-            if (fn.Equals("x")) { hasX = true; pIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("y")) hasY = true;
-            if (fn.Equals("z")) hasZ = true;
-            if (fn.Equals("r")) { hasR = true; rIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("cr")) { hasCR = true; cIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("cg")) hasCG = true;
-            if (fn.Equals("cb")) hasCB = true;
-            if (fn.Equals("ca")) hasCA = true;
-            if (fn.Equals("dx")) { hasDX = true; dIdx = static_cast<unsigned int>(fi); }
-            if (fn.Equals("dy")) hasDY = true;
-            if (fn.Equals("dz")) hasDZ = true;
+            if (fn.Equals("x")) {
+                hasX = true;
+                pIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("y"))
+                hasY = true;
+            if (fn.Equals("z"))
+                hasZ = true;
+            if (fn.Equals("r")) {
+                hasR = true;
+                rIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("cr")) {
+                hasCR = true;
+                cIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("cg"))
+                hasCG = true;
+            if (fn.Equals("cb"))
+                hasCB = true;
+            if (fn.Equals("ca"))
+                hasCA = true;
+            if (fn.Equals("dx")) {
+                hasDX = true;
+                dIdx = static_cast<unsigned int>(fi);
+            }
+            if (fn.Equals("dy"))
+                hasDY = true;
+            if (fn.Equals("dz"))
+                hasDZ = true;
         }
 
         if (hasR && (parts.FieldMap()[rIdx] != 3)) {
@@ -355,17 +408,22 @@ void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call,
         pts.SetGlobalRadius(0.5f);
         unsigned int cr = 191, cg = 191, cb = 191, ca = 255;
         for (SIZE_T fi = 0; fi < typeDef.GetConstFields().Count(); fi++) {
-            const MMSPDHeader::ConstField &f = typeDef.GetConstFields()[fi];
-            if (f.GetName().Equals("r")) pts.SetGlobalRadius(f.GetAsFloat());
-            if (f.GetName().Equals("cr")) pts.SetGlobalColour(cr = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cg, cb);
-            if (f.GetName().Equals("cg")) pts.SetGlobalColour(cr, cg = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cb);
-            if (f.GetName().Equals("cb")) pts.SetGlobalColour(cr, cg, cb = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
-            if (f.GetName().Equals("ca")) pts.SetGlobalColour(cr, cg, cb, ca = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
+            const MMSPDHeader::ConstField& f = typeDef.GetConstFields()[fi];
+            if (f.GetName().Equals("r"))
+                pts.SetGlobalRadius(f.GetAsFloat());
+            if (f.GetName().Equals("cr"))
+                pts.SetGlobalColour(cr = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cg, cb);
+            if (f.GetName().Equals("cg"))
+                pts.SetGlobalColour(cr, cg = static_cast<unsigned int>(f.GetAsFloat() * 255.0f), cb);
+            if (f.GetName().Equals("cb"))
+                pts.SetGlobalColour(cr, cg, cb = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
+            if (f.GetName().Equals("ca"))
+                pts.SetGlobalColour(cr, cg, cb, ca = static_cast<unsigned int>(f.GetAsFloat() * 255.0f));
         }
 
         // now use some because-I-know-magic:
         unsigned int off = 0;
-        
+
         if (!hasX || !hasY || !hasZ || parts.Count() == 0) {
             // too empty
             pts.SetCount(0);
@@ -377,8 +435,7 @@ void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call,
             // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
             if (header.HasIDs()) {
                 off += 8;
-                pts.SetIDData(geocalls::SimpleSphericalParticles::IDDATA_UINT64,
-                    parts.Data().At(0),
+                pts.SetIDData(geocalls::SimpleSphericalParticles::IDDATA_UINT64, parts.Data().At(0),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             }
 
@@ -392,8 +449,7 @@ void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call,
                     parts.Data().At(off + dIdx * sizeof(float)),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             } else {
-                pts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE,
-                    nullptr);
+                pts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
             }
 
             //printf("%lu\n", parts.Count());
@@ -412,29 +468,30 @@ void MMSPDDataSource::Frame::SetDirData(geocalls::MultiParticleDataCall& call,
             } else {
                 pts.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_NONE, NULL);
             }
-
         }
-
     }
-
 }
 
 
 /*
  * MMSPDDataSource::Frame::loadFrameText
  */
-void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSPDHeader& header) {
+void MMSPDDataSource::Frame::loadFrameText(char* buffer, UINT64 size, const MMSPDHeader& header) {
     // We don't have to brother with unicode here, because there is no string data allowed.
     // All characters must be white space, line breaks, '>' and characters forming numbers (digits, dots, plus, minus, 'e').
     vislib::sys::MemoryFile mem;
     mem.Open(static_cast<void*>(buffer), static_cast<SIZE_T>(size), vislib::sys::File::READ_ONLY);
     vislib::sys::ASCIIFileBuffer txt(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
-    if (!txt.LoadFile(mem)) throw vislib::Exception(__FILE__, __LINE__);
+    if (!txt.LoadFile(mem))
+        throw vislib::Exception(__FILE__, __LINE__);
 
-    if (txt.Count() <= 0) throw vislib::Exception("Unable to load frame data", __FILE__, __LINE__);
-    if (txt.Line(0).Count() < 2) throw vislib::Exception("Illegal time frame marker", __FILE__, __LINE__);
+    if (txt.Count() <= 0)
+        throw vislib::Exception("Unable to load frame data", __FILE__, __LINE__);
+    if (txt.Line(0).Count() < 2)
+        throw vislib::Exception("Illegal time frame marker", __FILE__, __LINE__);
     UINT64 partCnt = vislib::CharTraitsA::ParseUInt64(txt.Line(0).Word(1));
-    if (txt.Count() < partCnt + 1) throw vislib::Exception("Data frame truncated", __FILE__, __LINE__);
+    if (txt.Count() < partCnt + 1)
+        throw vislib::Exception("Data frame truncated", __FILE__, __LINE__);
 
     SIZE_T typeCnt = header.GetTypes().Count();
     vislib::PtrArray<vislib::RawStorageWriter> typeData;
@@ -442,44 +499,50 @@ void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSP
     for (SIZE_T i = 0; i < typeCnt; i++) {
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt)),
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt) / (2 * typeCnt)),
             1024 * 1024));
     }
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
+    if (typeCnt > 1)
+        idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
     SIZE_T type = 0;
     for (UINT64 pi = 0; pi < partCnt; pi++) {
-        const vislib::sys::ASCIIFileBuffer::LineBuffer &line = txt.Line(static_cast<SIZE_T>(1 + pi));
+        const vislib::sys::ASCIIFileBuffer::LineBuffer& line = txt.Line(static_cast<SIZE_T>(1 + pi));
         unsigned int off = 0;
         if (typeCnt > 1) {
             if (header.HasIDs()) {
-                if (line.Count() < 2) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+                if (line.Count() < 2)
+                    throw vislib::Exception("line truncated", __FILE__, __LINE__);
                 type = static_cast<SIZE_T>(vislib::CharTraitsA::ParseInt(line.Word(1)));
-                if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+                if (type >= typeCnt)
+                    throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
                 typeData[type]->Write(vislib::CharTraitsA::ParseUInt64(line.Word(0)));
                 off = 2;
             } else {
-                if (line.Count() < 1) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+                if (line.Count() < 1)
+                    throw vislib::Exception("line truncated", __FILE__, __LINE__);
                 type = static_cast<SIZE_T>(vislib::CharTraitsA::ParseInt(line.Word(0)));
-                if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+                if (type >= typeCnt)
+                    throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
                 off = 1;
             }
         } else if (header.HasIDs()) {
             // type remains 0
-            if (line.Count() < 1) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+            if (line.Count() < 1)
+                throw vislib::Exception("line truncated", __FILE__, __LINE__);
             typeData[type]->Write(vislib::CharTraitsA::ParseUInt64(line.Word(0)));
             off = 1;
         }
 
-        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
-            this->IndexReconstructionData(), irdLastType, irdLastCount);
+        this->addIndexForReconstruction(
+            static_cast<UINT32>(type), idxRecDat, this->IndexReconstructionData(), irdLastType, irdLastCount);
 
         SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
-        if (line.Count() < fieldCnt + off) throw vislib::Exception("line truncated", __FILE__, __LINE__);
+        if (line.Count() < fieldCnt + off)
+            throw vislib::Exception("line truncated", __FILE__, __LINE__);
 
         for (SIZE_T fi = 0; fi < fieldCnt; fi++) {
             //float val = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(off + this->GetData()[type].FieldMap()[fi])));
@@ -495,7 +558,6 @@ void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSP
             //megamol::core::utility::log::Log::DefaultLog.WriteInfo("read: %f", val);
             typeData[type]->Write(val);
         }
-
     }
 
     for (SIZE_T i = 0; i < typeCnt; i++) {
@@ -508,8 +570,8 @@ void MMSPDDataSource::Frame::loadFrameText(char *buffer, UINT64 size, const MMSP
 /*
  * MMSPDDataSource::Frame::loadFrameBinary
  */
-void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MMSPDHeader& header) {
-    UINT64 &partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
+void MMSPDDataSource::Frame::loadFrameBinary(char* buffer, UINT64 size, const MMSPDHeader& header) {
+    UINT64& partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
     SIZE_T pos = 8;
     SIZE_T typeCnt = header.GetTypes().Count();
     vislib::PtrArray<vislib::RawStorageWriter> typeData;
@@ -519,13 +581,13 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt)),
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt) / (2 * typeCnt)),
             1024 * 1024));
     }
-    vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
+    vislib::SmartPtr<float, vislib::ArrayAllocator<float>> values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
+    if (typeCnt > 1)
+        idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -533,11 +595,13 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
         // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos) [#128]
-        if (header.HasIDs()) pos += 8;
+        if (header.HasIDs())
+            pos += 8;
 
         if (typeCnt > 1) {
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
-            if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+            if (type >= typeCnt)
+                throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
             if (header.HasIDs()) {
                 typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
             }
@@ -548,8 +612,8 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
             }
         }
 
-        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
-            this->IndexReconstructionData(), irdLastType, irdLastCount);
+        this->addIndexForReconstruction(
+            static_cast<UINT32>(type), idxRecDat, this->IndexReconstructionData(), irdLastType, irdLastCount);
 
         SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
 
@@ -557,8 +621,7 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
             MMSPDHeader::Field::TypeID typeID = header.GetTypes()[type].GetFields()[fi].GetType();
             switch (typeID) {
             case MMSPDHeader::Field::TYPE_BYTE:
-                values.operator->()[fi] = static_cast<float>(
-                    *reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
+                values.operator->()[fi] = static_cast<float>(*reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
                 pos += 1;
                 break;
             case MMSPDHeader::Field::TYPE_FLOAT:
@@ -566,8 +629,7 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
                 pos += 4;
                 break;
             case MMSPDHeader::Field::TYPE_DOUBLE:
-                values.operator->()[fi] = static_cast<float>(
-                    *reinterpret_cast<double*>(&buffer[pos]));
+                values.operator->()[fi] = static_cast<float>(*reinterpret_cast<double*>(&buffer[pos]));
                 pos += 8;
                 break;
             }
@@ -577,22 +639,20 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
             //typeData[type]->Write(values.operator->()[this->GetData()[type].FieldMap()[fi]]);
             typeData[type]->Write(values.operator->()[fi]);
         }
-
     }
 
     for (SIZE_T i = 0; i < typeCnt; i++) {
         this->Data()[i].Data().EnforceSize(typeData[i]->End(), true);
     }
     this->IndexReconstructionData().EnforceSize(idxRecDat.End(), true);
-
 }
 
 
 /*
  * MMSPDDataSource::Frame::loadFrameBinaryBE
  */
-void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const MMSPDHeader& header) {
-    UINT64 &partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
+void MMSPDDataSource::Frame::loadFrameBinaryBE(char* buffer, UINT64 size, const MMSPDHeader& header) {
+    UINT64& partCnt = *reinterpret_cast<UINT64*>(&buffer[0]);
     SIZE_T pos = 8;
     SIZE_T typeCnt = header.GetTypes().Count();
     vislib::PtrArray<vislib::RawStorageWriter> typeData;
@@ -602,13 +662,13 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
         typeData[i] = new vislib::RawStorageWriter(this->Data()[i].Data());
         valuesCount = vislib::math::Max(valuesCount, header.GetTypes()[i].GetFields().Count());
         typeData[i]->SetIncrement(vislib::math::Max<SIZE_T>(
-            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt)
-            / (2 * typeCnt)),
+            static_cast<SIZE_T>((header.GetTypes()[i].GetFields().Count() * sizeof(float) * partCnt) / (2 * typeCnt)),
             1024 * 1024));
     }
-    vislib::SmartPtr<float, vislib::ArrayAllocator<float> > values = new float[valuesCount];
+    vislib::SmartPtr<float, vislib::ArrayAllocator<float>> values = new float[valuesCount];
     vislib::RawStorageWriter idxRecDat(this->IndexReconstructionData());
-    if (typeCnt > 1) idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
+    if (typeCnt > 1)
+        idxRecDat.SetIncrement(vislib::math::Max<SIZE_T>(static_cast<SIZE_T>(partCnt / 10), 10 * 1024));
     UINT32 irdLastType = static_cast<UINT32>(typeCnt);
     UINT64 irdLastCount;
 
@@ -616,13 +676,15 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
         // see loadframe
-        if (header.HasIDs()) pos += 8;
+        if (header.HasIDs())
+            pos += 8;
 
         if (typeCnt > 1) {
             vislib::Swap(buffer[pos + 0], buffer[pos + 3]);
             vislib::Swap(buffer[pos + 1], buffer[pos + 2]);
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
-            if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
+            if (type >= typeCnt)
+                throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
             // see loadframe
             if (header.HasIDs()) {
                 vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
@@ -642,8 +704,8 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
             }
         }
 
-        this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
-            this->IndexReconstructionData(), irdLastType, irdLastCount);
+        this->addIndexForReconstruction(
+            static_cast<UINT32>(type), idxRecDat, this->IndexReconstructionData(), irdLastType, irdLastCount);
 
         SIZE_T fieldCnt = header.GetTypes()[type].GetFields().Count();
 
@@ -651,8 +713,7 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
             MMSPDHeader::Field::TypeID typeID = header.GetTypes()[type].GetFields()[fi].GetType();
             switch (typeID) {
             case MMSPDHeader::Field::TYPE_BYTE:
-                values.operator->()[fi] = static_cast<float>(
-                    *reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
+                values.operator->()[fi] = static_cast<float>(*reinterpret_cast<unsigned char*>(&buffer[pos])) / 255.0f;
                 pos += 1;
                 break;
             case MMSPDHeader::Field::TYPE_FLOAT:
@@ -666,8 +727,7 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
                 vislib::Swap(buffer[pos + 1], buffer[pos + 6]);
                 vislib::Swap(buffer[pos + 2], buffer[pos + 5]);
                 vislib::Swap(buffer[pos + 3], buffer[pos + 4]);
-                values.operator->()[fi] = static_cast<float>(
-                    *reinterpret_cast<double*>(&buffer[pos]));
+                values.operator->()[fi] = static_cast<float>(*reinterpret_cast<double*>(&buffer[pos]));
                 pos += 8;
                 break;
             }
@@ -677,23 +737,20 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
             //typeData[type]->Write(values.operator->()[this->GetData()[type].FieldMap()[fi]]);
             typeData[type]->Write(values.operator->()[fi]);
         }
-
     }
 
     for (SIZE_T i = 0; i < typeCnt; i++) {
         this->Data()[i].Data().EnforceSize(typeData[i]->End(), true);
     }
     this->IndexReconstructionData().EnforceSize(idxRecDat.End(), true);
-
 }
 
 
 /*
  * MMSPDDataSource::Frame::addIndexForReconstruction
  */
-void MMSPDDataSource::Frame::addIndexForReconstruction(UINT32 type,
-        class vislib::RawStorageWriter& wrtr, class vislib::RawStorage& data,
-        UINT32 &lastType, UINT64 &lastCount) {
+void MMSPDDataSource::Frame::addIndexForReconstruction(UINT32 type, class vislib::RawStorageWriter& wrtr,
+    class vislib::RawStorage& data, UINT32& lastType, UINT64& lastCount) {
     unsigned char dat[10];
     unsigned int datLen;
 
@@ -701,21 +758,22 @@ void MMSPDDataSource::Frame::addIndexForReconstruction(UINT32 type,
         lastType = type;
         lastCount = 1;
         datLen = 10;
-        if (!vislib::UIntRLEEncode(dat, datLen, type)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!vislib::UIntRLEEncode(dat, datLen, type))
+            throw vislib::Exception(__FILE__, __LINE__);
         wrtr.Write(dat, datLen);
         datLen = 10;
-        if (!vislib::UIntRLEEncode(dat, datLen, lastCount)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!vislib::UIntRLEEncode(dat, datLen, lastCount))
+            throw vislib::Exception(__FILE__, __LINE__);
         wrtr.Write(dat, datLen);
 
     } else {
         wrtr.SetPosition(wrtr.Position() - vislib::UIntRLELength(lastCount));
         datLen = 10;
         lastCount++;
-        if (!vislib::UIntRLEEncode(dat, datLen, lastCount)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!vislib::UIntRLEEncode(dat, datLen, lastCount))
+            throw vislib::Exception(__FILE__, __LINE__);
         wrtr.Write(dat, datLen);
-
     }
-
 }
 
 /*****************************************************************************/
@@ -724,12 +782,11 @@ void MMSPDDataSource::Frame::addIndexForReconstruction(UINT32 type,
  * MMSPDDataSource::FileFormatAutoDetect
  */
 float MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize) {
-    return (((dataSize >= 6)
-        && ((::memcmp(data, "MMSPDb", 6) == 0)
-            || (::memcmp(data, "MMSPDa", 6) == 0)
-            || (::memcmp(data, "MMSPDu", 6) == 0)))
-        || ((dataSize >= 9)
-        && (::memcmp(data, "\xEF\xBB\xBFMMSPDu", 9) == 0))) ? 1.0f : 0.0f;
+    return (((dataSize >= 6) && ((::memcmp(data, "MMSPDb", 6) == 0) || (::memcmp(data, "MMSPDa", 6) == 0) ||
+                                    (::memcmp(data, "MMSPDu", 6) == 0))) ||
+               ((dataSize >= 9) && (::memcmp(data, "\xEF\xBB\xBFMMSPDu", 9) == 0)))
+               ? 1.0f
+               : 0.0f;
 }
 
 
@@ -737,15 +794,20 @@ float MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T da
  * MMSPDDataSource::MMSPDDataSource
  */
 MMSPDDataSource::MMSPDDataSource(void)
-    : core::view::AnimDataModule()
-    , filename("filename", "The path to the MMSPD file to load.")
-    , getData("getdata", "Slot to request data from this data source.")
-    , getDirData("getdirdata", "(optional) Slot to request directional data from this data source.")
-    , dataHeader(), file(NULL), frameIdx(NULL)
-    , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), isBinaryFile(true)
-    , isBigEndian(false), frameIdxLock(), frameIdxEvent(true)
-    , frameIdxThread(&MMSPDDataSource::buildFrameIndex)
-    , dataHash(0) {
+        : core::view::AnimDataModule()
+        , filename("filename", "The path to the MMSPD file to load.")
+        , getData("getdata", "Slot to request data from this data source.")
+        , getDirData("getdirdata", "(optional) Slot to request directional data from this data source.")
+        , dataHeader()
+        , file(NULL)
+        , frameIdx(NULL)
+        , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , isBinaryFile(true)
+        , isBigEndian(false)
+        , frameIdxLock()
+        , frameIdxEvent(true)
+        , frameIdxThread(&MMSPDDataSource::buildFrameIndex)
+        , dataHash(0) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&MMSPDDataSource::filenameChanged);
@@ -756,11 +818,9 @@ MMSPDDataSource::MMSPDDataSource(void)
     this->MakeSlotAvailable(&this->getData);
 
     this->getDirData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-        geocalls::MultiParticleDataCall::FunctionName(0),
-        &MMSPDDataSource::getDirDataCallback);
+        geocalls::MultiParticleDataCall::FunctionName(0), &MMSPDDataSource::getDirDataCallback);
     this->getDirData.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
-        geocalls::MultiParticleDataCall::FunctionName(1),
-        &MMSPDDataSource::getExtentCallback);
+        geocalls::MultiParticleDataCall::FunctionName(1), &MMSPDDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDirData);
 
     this->setFrameCount(1);
@@ -780,7 +840,7 @@ MMSPDDataSource::~MMSPDDataSource(void) {
  * MMSPDDataSource::constructFrame
  */
 core::view::AnimDataModule::Frame* MMSPDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<MMSPDDataSource*>(this));
+    Frame* f = new Frame(*const_cast<MMSPDDataSource*>(this));
     return f;
 }
 
@@ -796,11 +856,11 @@ bool MMSPDDataSource::create(void) {
 /*
  * MMSPDDataSource::loadFrame
  */
-void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame,
-        unsigned int idx) {
+void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
     using megamol::core::utility::log::Log;
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == NULL)
+        return;
     if (this->file == NULL) {
         //f->Clear();
         return;
@@ -834,27 +894,26 @@ void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame *frame,
         if ((fromSeek == 0) || (toSeek == 0)) {
             this->frameIdxEvent.Wait();
         }
-
     }
 
     this->file->Seek(fromSeek);
     bool res = false;
     vislib::StringA errMsg;
     try {
-        res = f->LoadFrame(this->file, idx, toSeek - fromSeek,
-            this->dataHeader, this->isBinaryFile, this->isBigEndian);
-        if (!res) errMsg = "Unknown error";
-    } catch(vislib::Exception e) {
+        res = f->LoadFrame(this->file, idx, toSeek - fromSeek, this->dataHeader, this->isBinaryFile, this->isBigEndian);
+        if (!res)
+            errMsg = "Unknown error";
+    } catch (vislib::Exception e) {
         errMsg.Format("%s [%s:%d]", e.GetMsgA(), e.GetFile(), e.GetLine());
         res = false;
-    } catch(...) {
+    } catch (...) {
         errMsg = "Unknown exception";
         res = false;
     }
     if (!res) {
         // failed
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMSPD file: %s",
-            idx, errMsg.PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to read frame %d from MMSPD file: %s", idx, errMsg.PeekBuffer());
     }
 }
 
@@ -866,7 +925,7 @@ void MMSPDDataSource::release(void) {
     this->clearData();
     this->resetFrameCache();
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
@@ -878,33 +937,37 @@ void MMSPDDataSource::release(void) {
 /*
  *MMSPDDataSource::buildFrameIndex
  */
-DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
-    MMSPDDataSource *that = static_cast<MMSPDDataSource *>(userdata);
+DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
+    MMSPDDataSource* that = static_cast<MMSPDDataSource*>(userdata);
     vislib::sys::File f;
     if (!f.Open(that->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         that->frameIdxLock.Lock();
         that->frameIdx[0] = 0;
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open data file a second time for frame index generation");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to open data file a second time for frame index generation");
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
         return 0;
     }
-    f.Seek(that->frameIdx[0]); // lock not required, because i know the main thread is currently waiting to load the first frame
+    f.Seek(that->frameIdx
+               [0]); // lock not required, because i know the main thread is currently waiting to load the first frame
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
 
     const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
-    char *buffer = new char[MAX_BUFFER_SIZE];
+    char* buffer = new char[MAX_BUFFER_SIZE];
     unsigned int frameCount = that->dataHeader.GetTimeCount();
     unsigned int frame = 0;
     vislib::StringA token;
 
     // sizes of a particle in binary files
-    unsigned int *typeSizes = new unsigned int[that->dataHeader.GetTypes().Count()];
+    unsigned int* typeSizes = new unsigned int[that->dataHeader.GetTypes().Count()];
     for (int i = 0; i < static_cast<int>(that->dataHeader.GetTypes().Count()); i++) {
         typeSizes[i] = that->dataHeader.GetTypes()[i].GetDataSize();
-        if (that->dataHeader.HasIDs()) typeSizes[i] += 8;
-        if (that->dataHeader.GetTypes().Count() > 1) typeSizes[i] += 4;
+        if (that->dataHeader.HasIDs())
+            typeSizes[i] += 8;
+        if (that->dataHeader.GetTypes().Count() > 1)
+            typeSizes[i] += 4;
     }
 
     try {
@@ -915,7 +978,10 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
 
             for (frame = 0; frame < frameCount; frame++) {
                 that->frameIdxLock.Lock();
-                if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                if (that->frameIdx == NULL) {
+                    that->frameIdxLock.Unlock();
+                    throw vislib::Exception("aborted", __FILE__, __LINE__);
+                }
                 that->frameIdx[frame] = static_cast<UINT64>(f.Tell());
                 that->frameIdxEvent.Set();
                 that->frameIdxLock.Unlock();
@@ -928,10 +994,9 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                     that->frameIdxEvent.Set();
                     that->frameIdxLock.Unlock();
                     break;
-
                 }
                 if (that->isBigEndian) {
-                    unsigned char *fac = reinterpret_cast<unsigned char*>(&partCnt);
+                    unsigned char* fac = reinterpret_cast<unsigned char*>(&partCnt);
                     vislib::Swap(fac[0], fac[7]);
                     vislib::Swap(fac[1], fac[6]);
                     vislib::Swap(fac[2], fac[5]);
@@ -939,16 +1004,20 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                 }
 
                 if ((partCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
-                    throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                    throw new vislib::Exception(
+                        "Particle count changed between frames even the header already defined the count", __FILE__,
+                        __LINE__);
                 }
 
                 // now skip the actual data
                 f.Seek(partCnt * typeSizes[0], vislib::sys::File::CURRENT);
-
             }
 
             that->frameIdxLock.Lock();
-            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+            if (that->frameIdx == NULL) {
+                that->frameIdxLock.Unlock();
+                throw vislib::Exception("aborted", __FILE__, __LINE__);
+            }
             that->frameIdx[frame] = static_cast<UINT64>(f.Tell());
             that->frameIdxEvent.Set();
             that->frameIdxLock.Unlock();
@@ -969,7 +1038,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
 
                     while (!loadNext) {
                         switch (parserState) {
-                        case 0: { // reading particle count
+                        case 0: {                         // reading particle count
                             if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
                                 if (f.IsEOF()) {
                                     that->frameIdxLock.Lock();
@@ -986,22 +1055,28 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                             }
 
                             that->frameIdxLock.Lock();
-                            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                            if (that->frameIdx == NULL) {
+                                that->frameIdxLock.Unlock();
+                                throw vislib::Exception("aborted", __FILE__, __LINE__);
+                            }
                             that->frameIdx[frame++] = bufPos + bufIdx;
                             that->frameIdxEvent.Set();
                             that->frameIdxLock.Unlock();
 
                             framePartCnt = *reinterpret_cast<UINT64*>(&buffer[bufIdx]);
                             if (that->isBigEndian) {
-                                unsigned char *fac = reinterpret_cast<unsigned char*>(&framePartCnt);
+                                unsigned char* fac = reinterpret_cast<unsigned char*>(&framePartCnt);
                                 vislib::Swap(fac[0], fac[7]);
                                 vislib::Swap(fac[1], fac[6]);
                                 vislib::Swap(fac[2], fac[5]);
                                 vislib::Swap(fac[3], fac[4]);
                             }
                             bufIdx += 8;
-                            if ((framePartCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
-                                throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                            if ((framePartCnt != that->dataHeader.GetParticleCount()) &&
+                                (that->dataHeader.GetParticleCount() != 0)) {
+                                throw new vislib::Exception(
+                                    "Particle count changed between frames even the header already defined the count",
+                                    __FILE__, __LINE__);
                             }
                             partIdx = 0;
                             if (framePartCnt > 0) {
@@ -1010,7 +1085,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
 
                         } break;
 
-                        case 1: { // reading a particle ID
+                        case 1: {                         // reading a particle ID
                             if ((bufSize - bufIdx) < 8) { // insufficient data in buffer
                                 if (f.IsEOF()) {
                                     that->frameIdxLock.Lock();
@@ -1030,7 +1105,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
 
                         } break;
 
-                        case 2: { // reading a particle type
+                        case 2: {                         // reading a particle type
                             if ((bufSize - bufIdx) < 4) { // insufficient data in buffer
                                 if (f.IsEOF()) {
                                     that->frameIdxLock.Lock();
@@ -1047,19 +1122,21 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                             }
                             unsigned int type = *reinterpret_cast<UINT32*>(&buffer[bufIdx]);
                             if (that->isBigEndian) {
-                                unsigned char *fac = reinterpret_cast<unsigned char*>(&type);
+                                unsigned char* fac = reinterpret_cast<unsigned char*>(&type);
                                 vislib::Swap(fac[0], fac[3]);
                                 vislib::Swap(fac[1], fac[2]);
                             }
                             if (type >= that->dataHeader.GetTypes().Count()) {
                                 vislib::StringA msg;
-                                msg.Format("Illegal type value %u/%u read", type, static_cast<unsigned int>(that->dataHeader.GetTypes().Count()));
+                                msg.Format("Illegal type value %u/%u read", type,
+                                    static_cast<unsigned int>(that->dataHeader.GetTypes().Count()));
                                 throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
                             }
                             bufIdx += 4;
 
                             unsigned int size = typeSizes[type] - 4; // -4 for the type
-                            if (that->dataHeader.HasIDs()) size -= 8;
+                            if (that->dataHeader.HasIDs())
+                                size -= 8;
 
                             // now skip 'size' bytes
                             if ((bufIdx + size) < bufSize) {
@@ -1075,7 +1152,10 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                             if (partIdx == framePartCnt) {
                                 if (frame == frameCount) {
                                     that->frameIdxLock.Lock();
-                                    if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                                    if (that->frameIdx == NULL) {
+                                        that->frameIdxLock.Unlock();
+                                        throw vislib::Exception("aborted", __FILE__, __LINE__);
+                                    }
                                     that->frameIdx[frame++] = bufPos + bufIdx;
                                     that->frameIdxEvent.Set();
                                     that->frameIdxLock.Unlock();
@@ -1087,7 +1167,6 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                             }
 
                         } break;
-
                         }
                     }
 
@@ -1098,12 +1177,15 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                 } else {
                     // text, everything is lost
                     for (; bufIdx < bufSize; bufIdx++) {
-                        switch(parserState) {
+                        switch (parserState) {
                         case 0: { // seeking '>'
                             if (buffer[bufIdx] == '>') {
 
                                 that->frameIdxLock.Lock();
-                                if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                                if (that->frameIdx == NULL) {
+                                    that->frameIdxLock.Unlock();
+                                    throw vislib::Exception("aborted", __FILE__, __LINE__);
+                                }
                                 that->frameIdx[frame++] = bufPos + bufIdx;
                                 that->frameIdxEvent.Set();
                                 that->frameIdxLock.Unlock();
@@ -1120,19 +1202,21 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                         case 2: { // particle number
                             if (!vislib::CharTraitsA::IsDigit(buffer[bufIdx])) {
                                 framePartCnt = vislib::CharTraitsA::ParseUInt64(token);
-                                if ((framePartCnt != that->dataHeader.GetParticleCount()) && (that->dataHeader.GetParticleCount() != 0)) {
-                                    throw new vislib::Exception("Particle count changed between frames even the header already defined the count", __FILE__, __LINE__);
+                                if ((framePartCnt != that->dataHeader.GetParticleCount()) &&
+                                    (that->dataHeader.GetParticleCount() != 0)) {
+                                    throw new vislib::Exception("Particle count changed between frames even the header "
+                                                                "already defined the count",
+                                        __FILE__, __LINE__);
                                 }
                                 partIdx = 0;
-                                parserState = (framePartCnt > 0) ? 
-                                    ((buffer[bufIdx] == 0x0A) ? 4 : 3)
-                                    : 0;
+                                parserState = (framePartCnt > 0) ? ((buffer[bufIdx] == 0x0A) ? 4 : 3) : 0;
                             } else {
                                 token.Append(buffer[bufIdx]);
                             }
                         } break;
                         case 3: { // linebreak after particle number
-                            if (buffer[bufIdx] == 0x0A) parserState = 4;
+                            if (buffer[bufIdx] == 0x0A)
+                                parserState = 4;
                         } break;
                         case 4: { // particle line
                             if (buffer[bufIdx] == 0x0A) {
@@ -1147,7 +1231,10 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                     if (f.IsEOF()) {
                         if (frame == that->dataHeader.GetTimeCount()) {
                             that->frameIdxLock.Lock();
-                            if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+                            if (that->frameIdx == NULL) {
+                                that->frameIdxLock.Unlock();
+                                throw vislib::Exception("aborted", __FILE__, __LINE__);
+                            }
                             that->frameIdx[frame] = f.Tell();
                             that->frameIdxEvent.Set();
                             that->frameIdxLock.Unlock();
@@ -1162,21 +1249,22 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
                         }
                     }
                 }
-
             }
-
         }
 
         that->frameIdxLock.Lock();
-        if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
+        if (that->frameIdx == NULL) {
+            that->frameIdxLock.Unlock();
+            throw vislib::Exception("aborted", __FILE__, __LINE__);
+        }
         UINT64 begin = that->frameIdx[0];
         UINT64 end = that->frameIdx[frameCount];
         that->frameIdxLock.Unlock();
         if ((begin == 0) || (end == 0)) {
             throw vislib::Exception("Frame index incomplete", __FILE__, __LINE__);
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index of %u frames completed with ~%u bytes per frame",
-                static_cast<unsigned int>(frameCount),
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(50,
+                "Frame index of %u frames completed with ~%u bytes per frame", static_cast<unsigned int>(frameCount),
                 static_cast<unsigned int>((end - begin) / frameCount));
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -1187,23 +1275,25 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
             //}
             //that->frameIdxLock.Unlock();
 #endif /* DEBUG || _DEBUG */
-
         }
 
-    } catch(vislib::Exception e) {
+    } catch (vislib::Exception e) {
         // sort of failed ...
         that->frameIdxLock.Lock();
-        if (that->frameIdx != NULL) that->frameIdx[0] = 0;
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to generated frame index: %s [%s:%d]",
-            e.GetMsgA(), e.GetFile(), e.GetLine());
+        if (that->frameIdx != NULL)
+            that->frameIdx[0] = 0;
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to generated frame index: %s [%s:%d]", e.GetMsgA(), e.GetFile(), e.GetLine());
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
 
-    } catch(...) {
+    } catch (...) {
         // sort of failed ...
         that->frameIdxLock.Lock();
-        if (that->frameIdx != NULL) that->frameIdx[0] = 0;
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to generated frame index: unexpected exception");
+        if (that->frameIdx != NULL)
+            that->frameIdx[0] = 0;
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to generated frame index: unexpected exception");
         that->frameIdxLock.Unlock();
         that->frameIdxEvent.Set();
     }
@@ -1257,9 +1347,9 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
-            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", 
+    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -1269,22 +1359,45 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-        SAFE_DELETE(this->file); \
-        this->clearData(); \
-        return true; }
-#define _ASSERT_READFILE(BUFFER, BUFFERSIZE) { if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
-        _ERROR_OUT("Unable to read MMSPD file: seems truncated"); \
-    } }
-#define _ASSERT_READSTRINGBINARY(STRING) { (STRING).Clear(); while(true) { char c; _ASSERT_READFILE(&c, 1) if (c == 0) break; (STRING).Append(c); } }
-#define _ASSERT_READLINE(STRING) { (STRING).Clear(); while(true) { char c; _ASSERT_READFILE(&c, 1) (STRING).Append(c); if (c == 0x0A) break; } }
+#define _ERROR_OUT(MSG)                                  \
+    {                                                    \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
+        SAFE_DELETE(this->file);                         \
+        this->clearData();                               \
+        return true;                                     \
+    }
+#define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                            \
+    {                                                                   \
+        if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \
+            _ERROR_OUT("Unable to read MMSPD file: seems truncated");   \
+        }                                                               \
+    }
+#define _ASSERT_READSTRINGBINARY(STRING)               \
+    {                                                  \
+        (STRING).Clear();                              \
+        while (true) {                                 \
+            char c;                                    \
+            _ASSERT_READFILE(&c, 1) if (c == 0) break; \
+            (STRING).Append(c);                        \
+        }                                              \
+    }
+#define _ASSERT_READLINE(STRING)                       \
+    {                                                  \
+        (STRING).Clear();                              \
+        while (true) {                                 \
+            char c;                                    \
+            _ASSERT_READFILE(&c, 1)(STRING).Append(c); \
+            if (c == 0x0A)                             \
+                break;                                 \
+        }                                              \
+    }
 
     // reading format marker
     BYTE headerID[9];
     _ASSERT_READFILE(headerID, 9);
     bool jmpBk, text, unicode, bigEndian = false;
-    
-    // scharnkn: I'm pretty sure the code below does not work due to the short 
+
+    // scharnkn: I'm pretty sure the code below does not work due to the short
     // circuit evaluation of conditional statements in C++. The execution stops
     // once the result of the conditional statement is clear, meaning for
     // headerID == "MMSPDb", jmpBk is not set to true and consequently the file
@@ -1351,16 +1464,17 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         ::memcpy(&minorVer, &buf[8], 2);
         if ((majorVer != 1) && (minorVer != 0)) {
             vislib::StringA msg;
-            msg.Format("Version %d.%d found. Supporting only version 1.0", static_cast<int>(majorVer), static_cast<int>(minorVer));
+            msg.Format("Version %d.%d found. Supporting only version 1.0", static_cast<int>(majorVer),
+                static_cast<int>(minorVer));
             _ERROR_OUT(msg);
         }
         version.Set(majorVer, minorVer);
         for (int i = 10; i < 14; i++) {
             if (buf[i] < 128) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("MMSPD file format marker binary guard byte %d illegal", (i - 9));
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "MMSPD file format marker binary guard byte %d illegal", (i - 9));
             }
         }
-
     }
     // file format marker successfully read
     // file pointer is a the start of the next line/data block
@@ -1382,10 +1496,11 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         if (tokens.Count() < 10) {
             _ERROR_OUT("Header line incomplete");
         } else if (tokens.Count() > 10) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Trailing information on header line will be ignored");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "Trailing information on header line will be ignored");
         }
 
-        const char *fieldName = "unknown";
+        const char* fieldName = "unknown";
         try {
             fieldName = "hasIDs";
             bool hasIDs = vislib::CharTraitsA::ParseBool(tokens[0]);
@@ -1414,7 +1529,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
             this->dataHeader.SetTimeCount(timeCount);
             this->dataHeader.Types().SetCount(typeCount);
 
-        } catch(...) {
+        } catch (...) {
             vislib::StringA msg;
             msg.Format("Failed to parse header line file \"%s\"", fieldName);
             _ERROR_OUT(fieldName);
@@ -1423,7 +1538,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         // reading particle types
         // Note: This is the only place where 'unicode' is really relevant!
         for (UINT32 typeIdx = 0; typeIdx < this->dataHeader.Types().Count(); typeIdx++) {
-            MMSPDHeader::TypeDefinition &type = this->dataHeader.Types()[typeIdx];
+            MMSPDHeader::TypeDefinition& type = this->dataHeader.Types()[typeIdx];
             UINT32 constFieldCnt, fieldCnt;
             vislib::StringA str;
 
@@ -1447,7 +1562,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
             try {
                 constFieldCnt = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[1]));
-            } catch(...) {
+            } catch (...) {
                 vislib::StringA msg;
                 msg.Format("Failed to parse fixFieldCount of particle line %d", static_cast<int>(typeIdx));
                 _ERROR_OUT(msg);
@@ -1455,7 +1570,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
             try {
                 fieldCnt = static_cast<UINT32>(vislib::CharTraitsA::ParseUInt64(tokens[2]));
-            } catch(...) {
+            } catch (...) {
                 vislib::StringA msg;
                 msg.Format("Failed to parse varFieldCount of particle line %d", static_cast<int>(typeIdx));
                 _ERROR_OUT(msg);
@@ -1466,70 +1581,81 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 msg.Format("Particle line %d incomplete", static_cast<int>(typeIdx));
                 _ERROR_OUT(msg);
             } else if (tokens.Count() > 3 + constFieldCnt * 3 + fieldCnt * 2) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Trailing information on particle line %d will be ignored", static_cast<int>(typeIdx));
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "Trailing information on particle line %d will be ignored", static_cast<int>(typeIdx));
             }
 
             type.SetBaseType(tokens[0]);
             type.ConstFields().SetCount(constFieldCnt);
             type.Fields().SetCount(fieldCnt);
             int pos = 3;
-            
-            for (UINT32 fieldIdx = 0; fieldIdx < constFieldCnt; fieldIdx++, pos += 3) {
-                MMSPDHeader::ConstField &field = type.ConstFields()[fieldIdx];
 
-                if (tokens[pos].Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
-                if (tokens[pos].Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
-                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
-                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
-                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+            for (UINT32 fieldIdx = 0; fieldIdx < constFieldCnt; fieldIdx++, pos += 3) {
+                MMSPDHeader::ConstField& field = type.ConstFields()[fieldIdx];
+
+                if (tokens[pos].Equals("id"))
+                    _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (tokens[pos].Equals("type"))
+                    _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
                 else {
                     str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
                         tokens[pos + 1].PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
-                   _ERROR_OUT(str);
+                    _ERROR_OUT(str);
                 }
                 field.SetName(tokens[pos]);
                 try {
                     switch (field.GetType()) {
-                        case MMSPDHeader::Field::TYPE_BYTE: {
-                            int i = vislib::CharTraitsA::ParseInt(tokens[pos + 2]);
-                            if ((i < 0) || (i > 255)) {
-                                str.Format("Byte value of field \"%s\" of type %d out of range\n",
-                                    tokens[pos].PeekBuffer(), static_cast<int>(typeIdx));
-                               _ERROR_OUT(str);
-                            }
-                            field.SetByte(static_cast<unsigned char>(i));
-                        } break;
-                        case MMSPDHeader::Field::TYPE_FLOAT: {
-                            field.SetFloat(static_cast<float>(vislib::CharTraitsA::ParseDouble(tokens[pos + 2])));
-                        } break;
-                        case MMSPDHeader::Field::TYPE_DOUBLE: {
-                            field.SetDouble(vislib::CharTraitsA::ParseDouble(tokens[pos + 2]));
-                        } break;
-                        default: _ERROR_OUT("Internal Error!");
+                    case MMSPDHeader::Field::TYPE_BYTE: {
+                        int i = vislib::CharTraitsA::ParseInt(tokens[pos + 2]);
+                        if ((i < 0) || (i > 255)) {
+                            str.Format("Byte value of field \"%s\" of type %d out of range\n", tokens[pos].PeekBuffer(),
+                                static_cast<int>(typeIdx));
+                            _ERROR_OUT(str);
+                        }
+                        field.SetByte(static_cast<unsigned char>(i));
+                    } break;
+                    case MMSPDHeader::Field::TYPE_FLOAT: {
+                        field.SetFloat(static_cast<float>(vislib::CharTraitsA::ParseDouble(tokens[pos + 2])));
+                    } break;
+                    case MMSPDHeader::Field::TYPE_DOUBLE: {
+                        field.SetDouble(vislib::CharTraitsA::ParseDouble(tokens[pos + 2]));
+                    } break;
+                    default:
+                        _ERROR_OUT("Internal Error!");
                     }
-                } catch(...) {
-                    str.Format("Failed to parse value for field \"%s\" of type %d\n",
-                        tokens[pos].PeekBuffer(), static_cast<int>(typeIdx));
-                   _ERROR_OUT(str);
+                } catch (...) {
+                    str.Format("Failed to parse value for field \"%s\" of type %d\n", tokens[pos].PeekBuffer(),
+                        static_cast<int>(typeIdx));
+                    _ERROR_OUT(str);
                 }
             }
 
             for (UINT32 fieldIdx = 0; fieldIdx < fieldCnt; fieldIdx++, pos += 2) {
-                MMSPDHeader::Field &field = type.Fields()[fieldIdx];
+                MMSPDHeader::Field& field = type.Fields()[fieldIdx];
 
-                if (tokens[pos].Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
-                if (tokens[pos].Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
-                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
-                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
-                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                if (tokens[pos].Equals("id"))
+                    _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (tokens[pos].Equals("type"))
+                    _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (tokens[pos + 1].Equals("b") || tokens[pos + 1].Equals("byte", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (tokens[pos + 1].Equals("f") || tokens[pos + 1].Equals("float", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (tokens[pos + 1].Equals("d") || tokens[pos + 1].Equals("double", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
                 else {
                     str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
                         tokens[pos + 1].PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
-                   _ERROR_OUT(str);
+                    _ERROR_OUT(str);
                 }
                 field.SetName(tokens[pos]);
             }
-
         }
 
     } else {
@@ -1550,7 +1676,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         _ASSERT_READFILE(&timeCount, 4);
         _ASSERT_READFILE(&typeCount, 4);
         _ASSERT_READFILE(&partCount, 8);
-        
+
 
         // now I am confident enough to start setting data
         this->dataHeader.BoundingBox().Set(minX, minY, minZ, maxX, maxY, maxZ);
@@ -1561,20 +1687,20 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
         // reading particle types
         for (UINT32 typeIdx = 0; typeIdx < typeCount; typeIdx++) {
-            MMSPDHeader::TypeDefinition &type = this->dataHeader.Types()[typeIdx];
+            MMSPDHeader::TypeDefinition& type = this->dataHeader.Types()[typeIdx];
             vislib::StringA str;
             UINT32 constFieldCnt, fieldCnt;
 
             _ASSERT_READSTRINGBINARY(str);
             _ASSERT_READFILE(&constFieldCnt, 4);
             if (bigEndian) {
-                unsigned char *fac = reinterpret_cast<unsigned char*>(&constFieldCnt);
+                unsigned char* fac = reinterpret_cast<unsigned char*>(&constFieldCnt);
                 vislib::Swap(fac[0], fac[3]);
                 vislib::Swap(fac[1], fac[2]);
             }
             _ASSERT_READFILE(&fieldCnt, 4);
             if (bigEndian) {
-                unsigned char *fac = reinterpret_cast<unsigned char*>(&fieldCnt);
+                unsigned char* fac = reinterpret_cast<unsigned char*>(&fieldCnt);
                 vislib::Swap(fac[0], fac[3]);
                 vislib::Swap(fac[1], fac[2]);
             }
@@ -1585,74 +1711,83 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
             for (UINT32 fieldIdx = 0; fieldIdx < constFieldCnt; fieldIdx++) {
                 vislib::StringA typeStr;
-                MMSPDHeader::ConstField &field = type.ConstFields()[fieldIdx];
+                MMSPDHeader::ConstField& field = type.ConstFields()[fieldIdx];
 
                 _ASSERT_READSTRINGBINARY(str);
-                if (str.Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
-                if (str.Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (str.Equals("id"))
+                    _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (str.Equals("type"))
+                    _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
                 _ASSERT_READSTRINGBINARY(typeStr);
-                if (typeStr.Equals("b") || typeStr.Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
-                else if (typeStr.Equals("f") || typeStr.Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
-                else if (typeStr.Equals("d") || typeStr.Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                if (typeStr.Equals("b") || typeStr.Equals("byte", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (typeStr.Equals("f") || typeStr.Equals("float", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (typeStr.Equals("d") || typeStr.Equals("double", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
                 else {
-                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
-                        typeStr.PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
-                   _ERROR_OUT(str);
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown", typeStr.PeekBuffer(),
+                        static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                    _ERROR_OUT(str);
                 }
                 field.SetName(str);
                 switch (field.GetType()) {
-                    case MMSPDHeader::Field::TYPE_BYTE: {
-                        unsigned char b;
-                        _ASSERT_READFILE(&b, 1);
-                        field.SetByte(b);
-                    } break;
-                    case MMSPDHeader::Field::TYPE_FLOAT: {
-                        float f;
-                        _ASSERT_READFILE(&f, 4);
-                        if (bigEndian) {
-                            unsigned char *fac = reinterpret_cast<unsigned char*>(&f);
-                            vislib::Swap(fac[0], fac[3]);
-                            vislib::Swap(fac[1], fac[2]);
-                        }
-                        field.SetFloat(f);
-                    } break;
-                    case MMSPDHeader::Field::TYPE_DOUBLE: {
-                        double d;
-                        _ASSERT_READFILE(&d, 8);
-                        if (bigEndian) {
-                            unsigned char *fac = reinterpret_cast<unsigned char*>(&d);
-                            vislib::Swap(fac[0], fac[7]);
-                            vislib::Swap(fac[1], fac[6]);
-                            vislib::Swap(fac[2], fac[5]);
-                            vislib::Swap(fac[3], fac[4]);
-                        }
-                        field.SetDouble(d);
-                    } break;
-                    default: _ERROR_OUT("Internal Error!");
+                case MMSPDHeader::Field::TYPE_BYTE: {
+                    unsigned char b;
+                    _ASSERT_READFILE(&b, 1);
+                    field.SetByte(b);
+                } break;
+                case MMSPDHeader::Field::TYPE_FLOAT: {
+                    float f;
+                    _ASSERT_READFILE(&f, 4);
+                    if (bigEndian) {
+                        unsigned char* fac = reinterpret_cast<unsigned char*>(&f);
+                        vislib::Swap(fac[0], fac[3]);
+                        vislib::Swap(fac[1], fac[2]);
+                    }
+                    field.SetFloat(f);
+                } break;
+                case MMSPDHeader::Field::TYPE_DOUBLE: {
+                    double d;
+                    _ASSERT_READFILE(&d, 8);
+                    if (bigEndian) {
+                        unsigned char* fac = reinterpret_cast<unsigned char*>(&d);
+                        vislib::Swap(fac[0], fac[7]);
+                        vislib::Swap(fac[1], fac[6]);
+                        vislib::Swap(fac[2], fac[5]);
+                        vislib::Swap(fac[3], fac[4]);
+                    }
+                    field.SetDouble(d);
+                } break;
+                default:
+                    _ERROR_OUT("Internal Error!");
                 }
             }
 
             for (UINT32 fieldIdx = 0; fieldIdx < fieldCnt; fieldIdx++) {
                 vislib::StringA typeStr;
-                MMSPDHeader::Field &field = type.Fields()[fieldIdx];
+                MMSPDHeader::Field& field = type.Fields()[fieldIdx];
 
                 _ASSERT_READSTRINGBINARY(str);
-                if (str.Equals("id")) _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
-                if (str.Equals("type")) _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
+                if (str.Equals("id"))
+                    _ERROR_OUT("Field \"id\" is reserved for internal use and must not be used!");
+                if (str.Equals("type"))
+                    _ERROR_OUT("Field \"type\" is reserved for internal use and must not be used!");
                 _ASSERT_READSTRINGBINARY(typeStr);
-                if (typeStr.Equals("b") || typeStr.Equals("byte", false)) field.SetType(MMSPDHeader::Field::TYPE_BYTE);
-                else if (typeStr.Equals("f") || typeStr.Equals("float", false)) field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
-                else if (typeStr.Equals("d") || typeStr.Equals("double", false)) field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
+                if (typeStr.Equals("b") || typeStr.Equals("byte", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_BYTE);
+                else if (typeStr.Equals("f") || typeStr.Equals("float", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_FLOAT);
+                else if (typeStr.Equals("d") || typeStr.Equals("double", false))
+                    field.SetType(MMSPDHeader::Field::TYPE_DOUBLE);
                 else {
-                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown",
-                        typeStr.PeekBuffer(), static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
-                   _ERROR_OUT(str);
+                    str.Format("Type \"%s\" of field \"%d\" of type definition \"%d\" is unknown", typeStr.PeekBuffer(),
+                        static_cast<int>(fieldIdx), static_cast<int>(typeIdx));
+                    _ERROR_OUT(str);
                 }
                 field.SetName(str);
             }
-
         }
-
     }
     this->isBinaryFile = !text;
     this->isBigEndian = bigEndian;
@@ -1661,7 +1796,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
 
     // reading frames
-     
+
     //  index generation and size estimation
     this->frameIdx = new UINT64[this->dataHeader.GetTimeCount() + 1];
     ZeroMemory(this->frameIdx, sizeof(UINT64) * (this->dataHeader.GetTimeCount() + 1));
@@ -1684,17 +1819,25 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         for (SIZE_T i = 0; i < this->dataHeader.GetTypes().Count(); i++) {
             SIZE_T fs = 0;
             SIZE_T ms = 0;
-            const MMSPDHeader::TypeDefinition &type = this->dataHeader.GetTypes()[i];
+            const MMSPDHeader::TypeDefinition& type = this->dataHeader.GetTypes()[i];
             if (maxFields < type.GetFields().Count()) {
                 maxFields = type.GetFields().Count();
             }
             for (SIZE_T j = 0; j < type.GetFields().Count(); j++) {
                 ms += sizeof(float);
                 switch (type.GetFields()[j].GetType()) {
-                case MMSPDHeader::Field::TYPE_BYTE: fs += 1; break;
-                case MMSPDHeader::Field::TYPE_FLOAT: fs += 4; break;
-                case MMSPDHeader::Field::TYPE_DOUBLE: fs += 8; break;
-                default: fs += 0; break;
+                case MMSPDHeader::Field::TYPE_BYTE:
+                    fs += 1;
+                    break;
+                case MMSPDHeader::Field::TYPE_FLOAT:
+                    fs += 4;
+                    break;
+                case MMSPDHeader::Field::TYPE_DOUBLE:
+                    fs += 8;
+                    break;
+                default:
+                    fs += 0;
+                    break;
                 }
             }
             double typeGrowth = static_cast<double>(ms) / static_cast<double>(fs);
@@ -1715,7 +1858,10 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
             fLs[0] = this->frameIdx[0];
             fLs[1] = this->frameIdx[1];
             fLs[2] = this->frameIdx[2];
-            if (this->dataHeader.GetTimeCount() > 2) fLs[3] = this->frameIdx[3]; else fLs[3] = fLs[2];
+            if (this->dataHeader.GetTimeCount() > 2)
+                fLs[3] = this->frameIdx[3];
+            else
+                fLs[3] = fLs[2];
             this->frameIdxLock.Unlock();
 
             if (fLs[0] == 0) {
@@ -1730,8 +1876,8 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         } while ((fLs[1] == 0) || (fLs[2] == 0) || (fLs[3] == 0));
 
         if (this->isBinaryFile) {
-            double maxFrameSize = static_cast<double>(vislib::math::Max(
-                vislib::math::Max(fLs[1] - fLs[0], fLs[2] - fLs[1]), fLs[3] - fLs[2]));
+            double maxFrameSize = static_cast<double>(
+                vislib::math::Max(vislib::math::Max(fLs[1] - fLs[0], fLs[2] - fLs[1]), fLs[3] - fLs[2]));
             dataSizeInMem = static_cast<SIZE_T>(maxFrameSize * maxTypeGrowth);
 
         } else {
@@ -1751,13 +1897,10 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 try {
                     UINT64 pc = vislib::CharTraitsA::ParseUInt64(ln);
                     pcnt = vislib::math::Max(pcnt, pc);
-                } catch(...) {
-                    _ERROR_OUT("Frame marker error");
-                }
+                } catch (...) { _ERROR_OUT("Frame marker error"); }
             }
 
             dataSizeInMem = static_cast<SIZE_T>(pcnt * maxFields * sizeof(float));
-
         }
 
         if (dataSizeInMem == 0) {
@@ -1774,18 +1917,17 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         }
 
         if (cacheSize > CACHE_SIZE_MAX) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame cache size %u requested limited to %d",
-                cacheSize, static_cast<int>(CACHE_SIZE_MAX));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "Frame cache size %u requested limited to %d", cacheSize, static_cast<int>(CACHE_SIZE_MAX));
             cacheSize = CACHE_SIZE_MAX;
         }
         if (cacheSize < CACHE_SIZE_MIN) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Frame cache size forced to %d. Calculated size was %u.\n",
-                static_cast<int>(CACHE_SIZE_MIN), cacheSize);
+                "Frame cache size forced to %d. Calculated size was %u.\n", static_cast<int>(CACHE_SIZE_MIN),
+                cacheSize);
             cacheSize = CACHE_SIZE_MIN;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame cache size set to %u.\n",
-                cacheSize);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame cache size set to %u.\n", cacheSize);
         }
         this->initFrameCache(cacheSize);
     }
@@ -1805,16 +1947,19 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * MMSPDDataSource::getDataCallback
  */
 bool MMSPDDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
-    Frame *f = NULL;
+    Frame* f = NULL;
     if (c2 != NULL) {
         //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
         do {
-            f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() && (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
-        if (f == NULL) return false;
+            f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID()));
+        } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() &&
+                 (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
+        if (f == NULL)
+            return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
@@ -1831,15 +1976,18 @@ bool MMSPDDataSource::getDataCallback(core::Call& caller) {
  */
 bool MMSPDDataSource::getDirDataCallback(core::Call& caller) {
     geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (c2 == nullptr) return false;
+    if (c2 == nullptr)
+        return false;
 
-    Frame *f = nullptr;
+    Frame* f = nullptr;
     if (c2 != nullptr) {
         //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: got a request for frame %u", c2->FrameID());
         do {
-            f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() && (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
-        if (f == nullptr) return false;
+            f = dynamic_cast<Frame*>(this->requestLockedFrame(c2->FrameID()));
+        } while (c2->IsFrameForced() && f->FrameNumber() != c2->FrameID() &&
+                 (f->Unlock(), true)); // either the frame is irrelevant, or the frame is okay, or we need to unlock!
+        if (f == nullptr)
+            return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         //megamol::core::utility::log::Log::DefaultLog.WriteInfo("MMSPDDataSource: providing frame %u", f->FrameNumber());
@@ -1855,7 +2003,7 @@ bool MMSPDDataSource::getDirDataCallback(core::Call& caller) {
  * MMSPDDataSource::getExtentCallback
  */
 bool MMSPDDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(vislib::math::Max(1u, this->dataHeader.GetTimeCount()));

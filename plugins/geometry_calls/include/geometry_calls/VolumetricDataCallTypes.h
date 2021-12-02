@@ -5,7 +5,7 @@
  * Alle rechte vorbehalten.
  */
 
-#    pragma once
+#pragma once
 
 #include <cstring>
 
@@ -127,11 +127,10 @@ struct VolumetricMetadata_t {
      */
     double* MaxValues;
 
-	/**
-	 * (Physical) memory location of the volume data.
-	 */
-	enum MemoryLocation	MemLoc;
+    /**
+     * (Physical) memory location of the volume data.
+     */
+    enum MemoryLocation MemLoc;
 };
 
-} /* end namespace  */
-
+} // namespace megamol::geocalls

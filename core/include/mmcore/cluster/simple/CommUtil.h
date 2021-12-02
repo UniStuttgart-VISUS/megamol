@@ -20,24 +20,24 @@ namespace cluster {
 namespace simple {
 
 
-    /**
-     * Answer the default port used for simple cluster datagram communication
-     *
-     * @param cfg The configuration to load the port info from
-     *
-     * @return The default port for simple datagram communication
-     */
-    unsigned int GetDatagramPort(const utility::Configuration *cfg = NULL);
+/**
+ * Answer the default port used for simple cluster datagram communication
+ *
+ * @param cfg The configuration to load the port info from
+ *
+ * @return The default port for simple datagram communication
+ */
+unsigned int GetDatagramPort(const utility::Configuration* cfg = NULL);
 
 
-    /**
-     * Answer the default port used for simple cluster TCP stream communication
-     *
-     * @param cfg The configuration to load the port info from
-     *
-     * @return The default port for simple TCP stream communication
-     */
-    unsigned int GetStreamPort(const utility::Configuration *cfg = NULL);
+/**
+ * Answer the default port used for simple cluster TCP stream communication
+ *
+ * @param cfg The configuration to load the port info from
+ *
+ * @return The default port for simple TCP stream communication
+ */
+unsigned int GetStreamPort(const utility::Configuration* cfg = NULL);
 
 #define MSG_CONNECTTOSERVER 1
 #define MSG_SHUTDOWN 2
@@ -49,10 +49,10 @@ namespace simple {
 
 #define MSG_TIMESYNC 5
 #define TIMESYNCDATACOUNT 10
-    typedef struct _timesyncdata_t {
-        unsigned short cnt;
-        double time[TIMESYNCDATACOUNT];
-    } TimeSyncData;
+typedef struct _timesyncdata_t {
+    unsigned short cnt;
+    double time[TIMESYNCDATACOUNT];
+} TimeSyncData;
 
 #define MSG_MODULGRAPH 6
 #define MSG_VIEWCONNECT 7
@@ -63,43 +63,43 @@ namespace simple {
 #define MSG_TCUPDATE 12
 #define MSG_MODULGRAPH_LUA 13
 
-    /**
-     * Struct layout a simple cluster datagram
-     */
-    typedef struct _datagram_t {
+/**
+ * Struct layout a simple cluster datagram
+ */
+typedef struct _datagram_t {
 
-        /** The datagram message */
-        unsigned short msg;
+    /** The datagram message */
+    unsigned short msg;
 
-        /** The number of times this message should be echoed */
-        unsigned char cntEchoed;
+    /** The number of times this message should be echoed */
+    unsigned char cntEchoed;
 
-        /** The payload data */
-        union _payload_t {
+    /** The payload data */
+    union _payload_t {
 
-            /** raw data */
-            char data[256];
+        /** raw data */
+        char data[256];
 
-            /** a string pair */
-            struct _strings_t {
+        /** a string pair */
+        struct _strings_t {
 
-                /** The length (max 127 bytes!) */
-                unsigned char len1;
+            /** The length (max 127 bytes!) */
+            unsigned char len1;
 
-                /** The string 1 data (terminating zero optional!!!) */
-                char str1[127];
+            /** The string 1 data (terminating zero optional!!!) */
+            char str1[127];
 
-                /** The length (max 127 bytes!) */
-                unsigned char len2;
+            /** The length (max 127 bytes!) */
+            unsigned char len2;
 
-                /** The string 2 data (terminating zero optional!!!) */
-                char str2[127];
+            /** The string 2 data (terminating zero optional!!!) */
+            char str2[127];
 
-            } Strings;
+        } Strings;
 
-        } payload;
+    } payload;
 
-    } Datagram;
+} Datagram;
 
 
 } /* end namespace simple */

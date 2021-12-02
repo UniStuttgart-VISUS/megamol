@@ -3,22 +3,22 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "TunnelCutter.h"
+#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 
+#include "geometry_calls/CallTriMeshData.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/TunnelResidueDataCall.h"
 #include <cfloat>
 #include <chrono>
 #include <climits>
 #include <iostream>
 #include <iterator>
 #include <set>
-#include "geometry_calls/CallTriMeshData.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/TunnelResidueDataCall.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -30,17 +30,18 @@ using namespace megamol::protein_calls;
  * TunnelCutter::TunnelCutter
  */
 TunnelCutter::TunnelCutter(void)
-    : Module()
-    , meshInSlot("dataIn", "Receives the input mesh")
-    , cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh")
-    , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
-    , tunnelInSlot("tunnelIn", "Receives the input tunnel data")
-    , moleculeInSlot("molIn", "Receives the input molecular data")
-    , bindingSiteInSlot("bsIn", "Receives the input binding site data")
-    , growSizeParam("growSize", "The number of steps for the region growing")
-    , isActiveParam("isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE")
-    , tunnelIdParam(
-          "tunnelID", "The id of the used tunnel. If no such tunnel is present, the first available one is used") {
+        : Module()
+        , meshInSlot("dataIn", "Receives the input mesh")
+        , cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh")
+        , cutMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+        , tunnelInSlot("tunnelIn", "Receives the input tunnel data")
+        , moleculeInSlot("molIn", "Receives the input molecular data")
+        , bindingSiteInSlot("bsIn", "Receives the input binding site data")
+        , growSizeParam("growSize", "The number of steps for the region growing")
+        , isActiveParam(
+              "isActive", "Activates and deactivates the cutting performed by this Module. CURRENTLY NOT IN USE")
+        , tunnelIdParam(
+              "tunnelID", "The id of the used tunnel. If no such tunnel is present, the first available one is used") {
 
     // Callee slot
     this->cutMeshOutSlot.SetCallback(
@@ -85,12 +86,16 @@ TunnelCutter::TunnelCutter(void)
 /*
  * TunnelCutter::~TunnelCutter
  */
-TunnelCutter::~TunnelCutter(void) { this->Release(); }
+TunnelCutter::~TunnelCutter(void) {
+    this->Release();
+}
 
 /*
  * TunnelCutter::create
  */
-bool TunnelCutter::create(void) { return true; }
+bool TunnelCutter::create(void) {
+    return true;
+}
 
 /*
  * TunnelCutter::release
@@ -102,33 +107,44 @@ void TunnelCutter::release(void) {}
  */
 bool TunnelCutter::getData(Call& call) {
     CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
-    if (inCav == nullptr) return false;
+    if (inCav == nullptr)
+        return false;
 
     TunnelResidueDataCall* tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (tc == nullptr) return false;
+    if (tc == nullptr)
+        return false;
 
     MolecularDataCall* mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     BindingSiteCall* bsc = this->bindingSiteInSlot.CallAs<BindingSiteCall>();
-    if (bsc == nullptr) return false;
+    if (bsc == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->FrameID());
     inCav->SetFrameID(outCall->FrameID());
     tc->SetFrameID(outCall->FrameID());
     mdc->SetFrameID(outCall->FrameID());
 
-    if (!(*inCall)(0)) return false;
-    if (!(*inCav)(0)) return false;
-    if (!(*tc)(0)) return false;
-    if (!(*mdc)(0)) return false;
-    if (!(*bsc)(0)) return false;
+    if (!(*inCall)(0))
+        return false;
+    if (!(*inCav)(0))
+        return false;
+    if (!(*tc)(0))
+        return false;
+    if (!(*mdc)(0))
+        return false;
+    if (!(*bsc)(0))
+        return false;
 
     if (this->dirt) {
         if (this->isActiveParam.Param<param::BoolParam>()->Value()) {
@@ -161,29 +177,38 @@ bool TunnelCutter::getData(Call& call) {
  */
 bool TunnelCutter::getExtent(Call& call) {
     CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     CallTriMeshData* inCav = this->cavityMeshInSlot.CallAs<CallTriMeshData>();
-    if (inCav == nullptr) return false;
+    if (inCav == nullptr)
+        return false;
 
     TunnelResidueDataCall* tc = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (tc == nullptr) return false;
+    if (tc == nullptr)
+        return false;
 
     MolecularDataCall* mdc = this->moleculeInSlot.CallAs<MolecularDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->FrameID());
     inCav->SetFrameID(outCall->FrameID());
     tc->SetFrameID(outCall->FrameID());
     mdc->SetFrameID(outCall->FrameID());
 
-    if (!(*inCall)(1)) return false;
-    if (!(*inCav)(1)) return false;
-    if (!(*tc)(1)) return false;
-    if (!(*mdc)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
+    if (!(*inCav)(1))
+        return false;
+    if (!(*tc)(1))
+        return false;
+    if (!(*mdc)(1))
+        return false;
 
     if (this->growSizeParam.IsDirty() || this->isActiveParam.IsDirty() || this->tunnelIdParam.IsDirty()) {
         this->hashOffset++;
@@ -527,8 +552,10 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
 
         // set the candidate field
         for (size_t i = 0; i < this->vertexKeepFlags.size(); i++) {
-            if (!this->vertexKeepFlags[i]) continue; // skip all non-kept vertices
-            if (vertexDistances[i] == 0) continue;   // skip all vertices with a level that is already 0
+            if (!this->vertexKeepFlags[i])
+                continue; // skip all non-kept vertices
+            if (vertexDistances[i] == 0)
+                continue; // skip all vertices with a level that is already 0
 
             auto ownlvl = vertexDistances[i];
 
@@ -564,8 +591,10 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
         }
 
         for (size_t i = 0; i < this->vertexKeepFlags.size(); i++) {
-            if (!this->vertexKeepFlags[i]) continue; // skip all non-kept vertices
-            if (vertexDistances[i] == 0) continue;   // skip all vertices with a level that is already 0
+            if (!this->vertexKeepFlags[i])
+                continue; // skip all non-kept vertices
+            if (vertexDistances[i] == 0)
+                continue; // skip all vertices with a level that is already 0
 
             auto ownlvl = vertexDistances[i];
 

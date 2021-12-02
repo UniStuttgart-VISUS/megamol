@@ -9,24 +9,19 @@
 #include "vislib/net/AbstractCommEndPoint.h"
 
 
+/*
+ * vislib::net::AbstractCommEndPoint::AbstractCommEndPoint
+ */
+vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(void) : Super() {}
+
 
 /*
  * vislib::net::AbstractCommEndPoint::AbstractCommEndPoint
  */
-vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(void) : Super() {
-}
-
-
-/* 
- * vislib::net::AbstractCommEndPoint::AbstractCommEndPoint
- */
-vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(
-        const AbstractCommEndPoint& rhs) : Super(rhs) {
-}
+vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(const AbstractCommEndPoint& rhs) : Super(rhs) {}
 
 
 /*
  * vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint
  */
-vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint(void) {
-}
+vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint(void) {}

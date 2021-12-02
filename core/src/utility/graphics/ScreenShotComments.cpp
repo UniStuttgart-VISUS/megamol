@@ -1,11 +1,12 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
-#include "mmcore/versioninfo.h"
 #include "mmcore/utility/DateTime.h"
+#include "mmcore/versioninfo.h"
 
 namespace mcu_graphics = megamol::core::utility::graphics;
 
-mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_configuration, const std::optional<comments_storage_map> &additional_comments) {
+mcu_graphics::ScreenShotComments::ScreenShotComments(
+    std::string const& project_configuration, const std::optional<comments_storage_map>& additional_comments) {
 
     the_comments["Title"] = "MegaMol Screen Shot " + utility::DateTime::CurrentDateTimeFormatted();
     //the_comments["Author"] = "";
@@ -13,7 +14,8 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
     the_comments["MegaMol project"] = project_configuration;
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
-    the_comments["Software"] = "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." + std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV;
+    the_comments["Software"] = "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." +
+                               std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV;
     //the_comments["Disclaimer"] = "";
     //the_comments["Warning"] = "";
     //the_comments["Source"] = "";
@@ -45,7 +47,8 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
     std::string content;
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("ScreenShotComments::GetProjectFromPNG: Unable to create png struct");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "ScreenShotComments::GetProjectFromPNG: Unable to create png struct");
     } else {
 #ifdef _MSC_VER
         FILE* fp = _wfopen(filename.native().c_str(), L"rb");
@@ -54,11 +57,13 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
 #endif
         if (fp == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"", filename.generic_u8string().c_str());
+                "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"",
+                filename.generic_u8string().c_str());
         } else {
             png_infop info = png_create_info_struct(png);
             if (!info) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("ScreenShotComments::GetProjectFromPNG: Unable to create png info struct");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ScreenShotComments::GetProjectFromPNG: Unable to create png info struct");
             } else {
                 setjmp(png_jmpbuf(png));
                 png_init_io(png, fp);
@@ -85,7 +90,8 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
                     }
                 }
                 if (!found) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("LoadProject: Unable to extract png text or exif data");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "LoadProject: Unable to extract png text or exif data");
                 }
                 png_destroy_info_struct(png, &info);
             }
@@ -99,13 +105,15 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
 
 bool megamol::core::utility::graphics::ScreenShotComments::EndsWith(
     const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size()) return false;
+    if (suffix.size() > filename.size())
+        return false;
     return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin());
 }
 
 bool megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
     const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size()) return false;
+    if (suffix.size() > filename.size())
+        return false;
     return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin(),
         [](const char a, const char b) { return tolower(a) == tolower(b); });
 }

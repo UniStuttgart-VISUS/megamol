@@ -1,12 +1,13 @@
-#include "stdafx.h"
 #include "AddParticleColors.h"
+#include "stdafx.h"
 
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 
 megamol::datatools::AddParticleColors::AddParticleColors(void)
-        : AbstractParticleManipulator("outData", "indata"), _tf_slot("inTF", "") {
-    _tf_slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+        : AbstractParticleManipulator("outData", "indata")
+        , _tf_slot("inTF", "") {
+    _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&_tf_slot);
 }
 
@@ -40,7 +41,7 @@ glm::vec4 megamol::datatools::AddParticleColors::sample_tf(
 bool megamol::datatools::AddParticleColors::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf = _tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf == nullptr)
         return false;
     if (!(*cgtf)())
@@ -94,8 +95,7 @@ bool megamol::datatools::AddParticleColors::manipulateData(
         if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
             parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)
             continue;
-        parts.SetColourData(
-            geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
+        parts.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, _colors[plidx].data());
     }
 
     outData.SetDataHash(_out_data_hash);

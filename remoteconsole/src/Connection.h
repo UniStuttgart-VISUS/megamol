@@ -1,23 +1,35 @@
 #pragma once
-#include <zmq.hpp>
-#include <string>
 #include <cctype>
-#include <vector>
-#include <thread>
 #include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+#include <zmq.hpp>
 
 class Connection {
 public:
     Connection(zmq::socket_t& socket, const int timeOut);
     ~Connection();
 
-    inline zmq::socket_t& Socket() { return socket; }
-    inline zmq::socket_t const & Socket() const { return socket; }
-    inline operator zmq::socket_t&() { return socket; }
-    inline operator zmq::socket_t const &() const { return socket; }
+    inline zmq::socket_t& Socket() {
+        return socket;
+    }
+    inline zmq::socket_t const& Socket() const {
+        return socket;
+    }
+    inline operator zmq::socket_t&() {
+        return socket;
+    }
+    inline operator zmq::socket_t const &() const {
+        return socket;
+    }
 
-    inline std::string& ActiveHost() { return activeHost; }
-    inline const std::string& ActiveHost() const { return activeHost; }
+    inline std::string& ActiveHost() {
+        return activeHost;
+    }
+    inline const std::string& ActiveHost() const {
+        return activeHost;
+    }
 
     inline bool Disconnect() {
         if (!activeHost.empty()) {
@@ -49,14 +61,15 @@ public:
         }
     }
 
-    inline bool Connect(const std::string &host) {
-        if (!activeHost.empty()) return false;
+    inline bool Connect(const std::string& host) {
+        if (!activeHost.empty())
+            return false;
         //socket.setsockopt(ZMQ_SNDHWM, 0);
         socket.connect(host);
         if (!socket.connected()) {
             throw std::runtime_error("Not connected after \"connect\" returned");
         }
-        
+
         activeHost = host;
         return true;
     }
@@ -66,4 +79,3 @@ private:
     std::string activeHost;
     int timeOut = 0;
 };
-

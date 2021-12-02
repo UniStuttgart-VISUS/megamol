@@ -1,23 +1,32 @@
 /*
-* SSBOStreamer.cpp
-*
-* Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
-*/
+ * SSBOStreamer.cpp
+ *
+ * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
-#include <algorithm>
+#include "stdafx.h"
 #include "vislib/assert.h"
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
 using namespace megamol::core::utility;
 
 SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
-    : theSSBO(0), bufferSize(0), numBuffers(0), srcStride(0), dstStride(0), theData(nullptr),
-      mappedMem(nullptr), numItems(0), numChunks(0), currIdx(0), numThr(omp_get_max_threads()), debugLabel(debugLabel) {
-}
+        : theSSBO(0)
+        , bufferSize(0)
+        , numBuffers(0)
+        , srcStride(0)
+        , dstStride(0)
+        , theData(nullptr)
+        , mappedMem(nullptr)
+        , numItems(0)
+        , numChunks(0)
+        , currIdx(0)
+        , numThr(omp_get_max_threads())
+        , debugLabel(debugLabel) {}
 
 SSBOStreamer::~SSBOStreamer() {
     if (this->mappedMem != nullptr && this->theSSBO != 0) {
@@ -26,18 +35,17 @@ SSBOStreamer::~SSBOStreamer() {
     if (this->theSSBO != 0) {
         glDeleteBuffers(1, &this->theSSBO);
     }
-    for (auto &x : fences) {
+    for (auto& x : fences) {
         if (x) {
             glDeleteSync(x);
         }
     }
 }
 
-GLuint SSBOStreamer::SetDataWithSize(const void *data, GLuint srcStride, GLuint dstStride,
-        size_t numItems, GLuint numBuffers, GLuint bufferSize) {
+GLuint SSBOStreamer::SetDataWithSize(
+    const void* data, GLuint srcStride, GLuint dstStride, size_t numItems, GLuint numBuffers, GLuint bufferSize) {
 
-    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 ||
-            numBuffers == 0 || bufferSize == 0) {
+    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 || numBuffers == 0 || bufferSize == 0) {
         theData = nullptr;
         return 0;
     }
@@ -59,13 +67,13 @@ GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up
     if (this->offsetAlignment == 0) {
         glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*)&this->offsetAlignment);
     }
-	// Rounding the number of items per chunk is important for alignment and thus performance.
-	// That means, if we synchronize with another buffer that has tiny items, we have to make 
-	// sure that we do not get non-aligned chunks with due to the number of items.
-	// For modern GPUs, we use GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT (which for NVidia results in 32),
+    // Rounding the number of items per chunk is important for alignment and thus performance.
+    // That means, if we synchronize with another buffer that has tiny items, we have to make
+    // sure that we do not get non-aligned chunks with due to the number of items.
+    // For modern GPUs, we use GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT (which for NVidia results in 32),
     // i.e., we upload in multiples of eight to get 8 * 4 = 32 (no data shorter than uint32_t is allowed).
     const GLuint multiRound = this->offsetAlignment / 4;
-    return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound; 
+    return (((numItemsPerChunk) / multiRound) + (up ? 1 : 0)) * multiRound;
 }
 
 void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
@@ -75,32 +83,31 @@ void SSBOStreamer::genBufferAndMap(GLuint numBuffers, GLuint bufferSize) {
 #if _DEBUG
         glObjectLabel(GL_BUFFER, this->theSSBO, debugLabel.length(), debugLabel.c_str());
 #endif
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     if (bufferSize != this->bufferSize || numBuffers != this->numBuffers) {
         if (this->mappedMem != nullptr && this->theSSBO != 0) {
             glUnmapNamedBuffer(this->theSSBO);
         }
         const size_t mapSize = bufferSize * numBuffers;
-        glNamedBufferStorage(this->theSSBO, mapSize, nullptr,
-                             GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
-        this->mappedMem = glMapNamedBufferRange(this->theSSBO, 0,
-                                                mapSize,
-                                                GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+        glNamedBufferStorage(this->theSSBO, mapSize, nullptr, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+        this->mappedMem = glMapNamedBufferRange(
+            this->theSSBO, 0, mapSize, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
         if (this->mappedMem == nullptr) {
-	    std::stringstream err;
-	    err << std::string("SSBOStreamer: could not map memory (") << mapSize << std::string(" bytes)") << std::endl;
-	    throw std::runtime_error(err.str());
+            std::stringstream err;
+            err << std::string("SSBOStreamer: could not map memory (") << mapSize << std::string(" bytes)")
+                << std::endl;
+            throw std::runtime_error(err.str());
         }
         this->bufferSize = bufferSize;
         this->numBuffers = numBuffers;
     }
 }
 
-GLuint SSBOStreamer::SetDataWithItems(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
-        GLuint numBuffers, GLuint numItemsPerChunk) {
-    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 ||
-        numBuffers == 0 || numItemsPerChunk == 0) {
+GLuint SSBOStreamer::SetDataWithItems(
+    const void* data, GLuint srcStride, GLuint dstStride, size_t numItems, GLuint numBuffers, GLuint numItemsPerChunk) {
+    if (data == nullptr || srcStride == 0 || dstStride == 0 || numItems == 0 || numBuffers == 0 ||
+        numItemsPerChunk == 0) {
         theData = nullptr;
         return 0;
     }
@@ -121,17 +128,18 @@ GLuint SSBOStreamer::SetDataWithItems(const void *data, GLuint srcStride, GLuint
 
 void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync, GLsizeiptr& dstOffset,
     GLsizeiptr& dstLength, const std::function<void(void*, const void*)>& copyOp) {
-    if (theData == nullptr || idx > this->numChunks - 1) return;
-    
+    if (theData == nullptr || idx > this->numChunks - 1)
+        return;
+
     // we did not succeed doing anything yet
     numItems = sync = 0;
 
     dstOffset = this->bufferSize * this->currIdx;
     GLsizeiptr srcOffset = this->numItemsPerChunk * this->srcStride * idx;
-    char *dst = static_cast<char*>(this->mappedMem) + dstOffset;
-    const char *src = static_cast<const char*>(this->theData) + srcOffset;
-    const size_t itemsThisTime = std::min<unsigned int>(
-        this->numItems - idx * this->numItemsPerChunk, this->numItemsPerChunk);
+    char* dst = static_cast<char*>(this->mappedMem) + dstOffset;
+    const char* src = static_cast<const char*>(this->theData) + srcOffset;
+    const size_t itemsThisTime =
+        std::min<unsigned int>(this->numItems - idx * this->numItemsPerChunk, this->numItemsPerChunk);
     dstLength = itemsThisTime * this->dstStride;
 
     //printf("going to upload %llu x %u bytes to offset %lld from %lld\n", itemsThisTime,
@@ -151,8 +159,7 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
         memcpy(dst, src, itemsThisTime * this->srcStride);
     }
 
-    glFlushMappedNamedBufferRange(this->theSSBO, 
-        dstOffset, itemsThisTime * this->dstStride);
+    glFlushMappedNamedBufferRange(this->theSSBO, dstOffset, itemsThisTime * this->dstStride);
     numItems = itemsThisTime;
 
     sync = currIdx;

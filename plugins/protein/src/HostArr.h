@@ -18,9 +18,8 @@ template<class T>
 class HostArr {
 
 public:
-
     /** Ctor */
-    HostArr() : size(0),  count(0), pt(NULL) {}
+    HostArr() : size(0), count(0), pt(nullptr) {}
 
     /** Dtor */
     ~HostArr() {
@@ -50,7 +49,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline T *Peek() {
+    inline T* Peek() {
         return this->pt;
     }
 
@@ -59,7 +58,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline const T *PeekConst() const {
+    inline const T* PeekConst() const {
         return this->pt;
     }
 
@@ -67,12 +66,12 @@ public:
      * Deallocates the memory of the array and inits size with zero.
      */
     inline void Release() {
-        if (this->pt != NULL) {
+        if (this->pt != nullptr) {
             //delete[] this->pt;
             free(this->pt);
         }
         this->size = 0;
-        this->pt = NULL;
+        this->pt = nullptr;
         this->count = 0;
     }
 
@@ -82,7 +81,7 @@ public:
      * @param c The byte value
      */
     void Set(char c) {
-        memset((char*)(this->pt), c, this->GetSize()*sizeof(T));
+        memset((char*)(this->pt), c, this->GetSize() * sizeof(T));
     }
 
     /**
@@ -92,17 +91,16 @@ public:
      * @param sizeNew The desired amount of elements.
      */
     inline void Validate(size_t sizeNew) {
-        if ((this->pt == NULL) || (sizeNew > this->size)) {
+        if ((this->pt == nullptr) || (sizeNew > this->size)) {
             this->Release();
             //this->pt = new T[sizeNew];
-            this->pt = (T*)malloc(sizeNew*sizeof(T));
+            this->pt = (T*)malloc(sizeNew * sizeof(T));
             this->size = sizeNew;
         }
         this->count = sizeNew;
     }
 
 private:
-
     /// The amount of allocated memory in sizeof(T)
     size_t size;
 
@@ -110,7 +108,7 @@ private:
     size_t count;
 
     /// The pointer to the device memory
-    T *pt;
+    T* pt;
 };
 
 } // namespace protein

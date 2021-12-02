@@ -94,7 +94,7 @@ void main(void) {
             
         // Get center pixel 3d coords in screen space
         ////vec3 vSamplePos = vec3(gl_TexCoord[0].st, sceneDepthP);
-		vec3 vSamplePos = vec3(gl_FragCoord.x / winSize.x, gl_FragCoord.y / winSize.y, sceneDepthP);
+        vec3 vSamplePos = vec3(gl_FragCoord.x / winSize.x, gl_FragCoord.y / winSize.y, sceneDepthP);
         
         // Shift coords by offset vector (range convert and width depth vector)
         vSamplePos += vec3(vRotatedOffset.xy, vRotatedOffset.z * sceneDepthP * 2);

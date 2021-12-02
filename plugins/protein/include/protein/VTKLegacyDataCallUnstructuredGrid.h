@@ -11,12 +11,12 @@
 #ifndef MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
 #define MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "protein_calls/Interpol.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
@@ -44,21 +44,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "VTKLegacyDataCallUnstructuredGrid"; }
+    static const char* ClassName(void) {
+        return "VTKLegacyDataCallUnstructuredGrid";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call for VTK unstructured grid data."; }
+    static const char* Description(void) {
+        return "Call for VTK unstructured grid data.";
+    }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return core::AbstractGetData3DCall::FunctionCount(); }
+    static unsigned int FunctionCount(void) {
+        return core::AbstractGetData3DCall::FunctionCount();
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -66,37 +72,51 @@ public:
      * @param idx The index of the function to return it's name.
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return core::AbstractGetData3DCall::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) {
+        return core::AbstractGetData3DCall::FunctionName(idx);
+    }
 
     /**
      * Answer the call time
      *
      * @return the call time
      */
-    float GetCalltime(void) const { return this->calltime; }
+    float GetCalltime(void) const {
+        return this->calltime;
+    }
 
     /**
      * Sets the call time to request data for.
      *
      * @param call time The call time to request data for.
      */
-    void SetCalltime(float calltime) { this->calltime = calltime; }
+    void SetCalltime(float calltime) {
+        this->calltime = calltime;
+    }
 
     /**
      * Sets the pointer to the data.
      *
      * @param Pointer to the data.
      */
-    void SetData(const VTKLegacyDataUnstructuredGrid* data) { this->data = data; }
+    void SetData(const VTKLegacyDataUnstructuredGrid* data) {
+        this->data = data;
+    }
 
     /** TODO */
-    const float* PeekPoints() const { return this->data->PeekPoints(); }
+    const float* PeekPoints() const {
+        return this->data->PeekPoints();
+    }
 
     /** TODO */
-    const int* PeekCells() const { return this->data->PeekCells(); }
+    const int* PeekCells() const {
+        return this->data->PeekCells();
+    }
 
     /** TODO */
-    inline size_t GetPointDataCount() const { return this->data->GetPointDataCount(); }
+    inline size_t GetPointDataCount() const {
+        return this->data->GetPointDataCount();
+    }
 
     /**
      * Answers the pointer to the cell types
@@ -145,7 +165,9 @@ public:
      * @param The piece's index.
      * @return A pointer to the requested data array or NULL.
      */
-    const char* GetCellDataByName(vislib::StringA id) const { return this->data->PeekCellDataByName(id); }
+    const char* GetCellDataByName(vislib::StringA id) const {
+        return this->data->PeekCellDataByName(id);
+    }
 
     /**
      * Get cell data array according to the array's index and the piece's
@@ -155,7 +177,9 @@ public:
      * @param The piece's index.
      * @return A pointer to the requested data array or NULL.
      */
-    const char* GetCellDataByIdx(unsigned int arrayIdx) const { return this->data->PeekCellDataByIndex(arrayIdx); }
+    const char* GetCellDataByIdx(unsigned int arrayIdx) const {
+        return this->data->PeekCellDataByIndex(arrayIdx);
+    }
 
     /**
      * Answers the number of data arrays present in the point data.
@@ -240,13 +264,19 @@ public:
     //    }
 
     /** TODO */
-    size_t GetNumberOfPoints() const { return this->data->GetNumberOfPoints(); }
+    size_t GetNumberOfPoints() const {
+        return this->data->GetNumberOfPoints();
+    }
 
     /** TODO */
-    size_t GetCellDataSize() const { return this->data->GetCellDataSize(); }
+    size_t GetCellDataSize() const {
+        return this->data->GetCellDataSize();
+    }
 
     /** TODO */
-    size_t GetNumberOfCells() const { return this->data->GetNumberOfCells(); }
+    size_t GetNumberOfCells() const {
+        return this->data->GetNumberOfCells();
+    }
 
 private:
     float calltime;  ///> The exact requested/stored call time

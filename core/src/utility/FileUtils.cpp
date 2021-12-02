@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/FileUtils.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core::utility;
@@ -85,7 +85,8 @@ bool megamol::core::utility::FileUtils::ReadFile(
 }
 
 
-bool megamol::core::utility::FileUtils::LoadRawFile(const std::filesystem::path& filename, std::vector<char>& out_data) {
+bool megamol::core::utility::FileUtils::LoadRawFile(
+    const std::filesystem::path& filename, std::vector<char>& out_data) {
 
     out_data.clear();
     try {

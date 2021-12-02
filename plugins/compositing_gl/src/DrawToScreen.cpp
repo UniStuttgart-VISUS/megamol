@@ -67,8 +67,9 @@ bool megamol::compositing::DrawToScreen::create() {
     auto err = glGetError();
 
     glowl::TextureLayout depth_tx_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1);
-    std::array<float,1> dummy_depth_data = {-1.0f};
-    m_dummy_depth_tx = std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
+    std::array<float, 1> dummy_depth_data = {-1.0f};
+    m_dummy_depth_tx =
+        std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
 
     return true;
 }
@@ -113,7 +114,8 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     if (readFlagsCall != nullptr) {
         (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
-        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) || readFlagsCall->hasUpdate()) {
+        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) ||
+            readFlagsCall->hasUpdate()) {
             readFlagsCall->getData()->validateFlagCount(input_texture->getWidth() * input_texture->getHeight());
             m_last_tex_size = glm::ivec2(input_texture->getWidth(), input_texture->getHeight());
         }
@@ -149,5 +151,4 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {
-}
+void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {}

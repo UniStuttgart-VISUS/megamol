@@ -1,56 +1,56 @@
 /*
  * ParticleBoxGeneratorDataSource.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ParticleBoxGeneratorDataSource.h"
-#include <climits>
-#include <random>
-#include <cmath>
-#include <algorithm>
-#include <chrono>
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/IntParam.h"
+#include "stdafx.h"
+#include <algorithm>
+#include <chrono>
+#include <climits>
+#include <cmath>
+#include <random>
 
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 namespace {
-    enum MyColorType : int {
-        COLOR_NONE = 0,
-        COLOR_RGBu8,
-        COLOR_RGBAu8,
-        COLOR_If,
-        COLOR_RGBf,
-        COLOR_RGBAf
-    };
+enum MyColorType : int { COLOR_NONE = 0, COLOR_RGBu8, COLOR_RGBAu8, COLOR_If, COLOR_RGBf, COLOR_RGBAf };
 }
 
 
 /*
  * ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource
  */
-ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void) : core::Module(),
-        dataSlot("data", "publishes the generated data"),
-        randomSeedSlot("random::seed", "The random generator seed value"),
-        randomReseedSlot("random::reseed", "Picks a new random seed value based on the current time"),
-        particleCountSlot("count", "Number of particles to be generated"),
-        radiusPerParticleSlot("store::explicitRadius", "Flag to explicitly store radii at each particle"),
-        colorDataSlot("store::color", "Type of color information to be generated"),
-        interleavePosAndColorSlot("store::interleaved", "Flag to interleave position and color information"),
-        radiusScaleSlot("radiusScale", "Scale factor for particle radii"),
-        positionNoiseSlot("positionNoise", "Amount of noise for the position values"),
-        dataHash(0),
-        cnt(0), data(), rad(0.0f),
-        vdt(Particles::VERTDATA_NONE), vdp(nullptr), vds(0),
-        cdt(Particles::COLDATA_NONE), cdp(nullptr), cds(0) {
+ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void)
+        : core::Module()
+        , dataSlot("data", "publishes the generated data")
+        , randomSeedSlot("random::seed", "The random generator seed value")
+        , randomReseedSlot("random::reseed", "Picks a new random seed value based on the current time")
+        , particleCountSlot("count", "Number of particles to be generated")
+        , radiusPerParticleSlot("store::explicitRadius", "Flag to explicitly store radii at each particle")
+        , colorDataSlot("store::color", "Type of color information to be generated")
+        , interleavePosAndColorSlot("store::interleaved", "Flag to interleave position and color information")
+        , radiusScaleSlot("radiusScale", "Scale factor for particle radii")
+        , positionNoiseSlot("positionNoise", "Amount of noise for the position values")
+        , dataHash(0)
+        , cnt(0)
+        , data()
+        , rad(0.0f)
+        , vdt(Particles::VERTDATA_NONE)
+        , vdp(nullptr)
+        , vds(0)
+        , cdt(Particles::COLDATA_NONE)
+        , cdp(nullptr)
+        , cds(0) {
 
     dataSlot.SetCallback("MultiParticleDataCall", "GetData", &ParticleBoxGeneratorDataSource::getDataCallback);
     dataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &ParticleBoxGeneratorDataSource::getExtentCallback);
@@ -62,7 +62,7 @@ ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void) : core::Mod
     radiusPerParticleSlot.SetParameter(new core::param::BoolParam(false));
     MakeSlotAvailable(&radiusPerParticleSlot);
 
-    core::param::EnumParam *colType = new core::param::EnumParam(0);
+    core::param::EnumParam* colType = new core::param::EnumParam(0);
     colType->SetTypePair(COLOR_NONE, "none");
     colType->SetTypePair(COLOR_RGBu8, "RGB (bytes)");
     colType->SetTypePair(COLOR_RGBAu8, "RGBA (bytes)");
@@ -95,7 +95,7 @@ ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void) : core::Mod
  * ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource
  */
 ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource(void) {
-   this->Release();
+    this->Release();
 }
 
 
@@ -120,10 +120,11 @@ void ParticleBoxGeneratorDataSource::release(void) {
  * ParticleBoxGeneratorDataSource::reseed
  */
 bool ParticleBoxGeneratorDataSource::reseed(core::param::ParamSlot& p) {
-    std::mt19937 rnd_engine(static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+    std::mt19937 rnd_engine(
+        static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
     std::uniform_int_distribution<int> rnd_uni_int(0, 1024 * 1024);
 
-    randomSeedSlot.Param<core::param::IntParam>()->SetValue( rnd_uni_int(rnd_engine) );
+    randomSeedSlot.Param<core::param::IntParam>()->SetValue(rnd_uni_int(rnd_engine));
 
     return true; // reset dirty flag
 }
@@ -133,11 +134,12 @@ bool ParticleBoxGeneratorDataSource::reseed(core::param::ParamSlot& p) {
  * ParticleBoxGeneratorDataSource::getDataCallback
  */
 bool ParticleBoxGeneratorDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == nullptr) return false;
-    if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty()
-            || interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty()
-            || randomSeedSlot.IsDirty()) {
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == nullptr)
+        return false;
+    if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty() ||
+        interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty() ||
+        randomSeedSlot.IsDirty()) {
         this->assertData();
     }
 
@@ -163,11 +165,12 @@ bool ParticleBoxGeneratorDataSource::getDataCallback(core::Call& caller) {
  * ParticleBoxGeneratorDataSource::getExtentCallback
  */
 bool ParticleBoxGeneratorDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == nullptr) return false;
-    if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty()
-            || interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty()
-            || randomSeedSlot.IsDirty()) {
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == nullptr)
+        return false;
+    if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty() ||
+        interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty() ||
+        randomSeedSlot.IsDirty()) {
         this->assertData();
     }
 
@@ -237,30 +240,30 @@ void ParticleBoxGeneratorDataSource::assertData(void) {
         vdt = Particles::VERTDATA_FLOAT_XYZ;
     }
     switch (colType) {
-    case COLOR_NONE: 
+    case COLOR_NONE:
         cdt = Particles::COLDATA_NONE;
         break;
-    case COLOR_RGBu8: 
+    case COLOR_RGBu8:
         cdt = Particles::COLDATA_UINT8_RGB;
         bpc = 3;
         break;
-    case COLOR_RGBAu8: 
+    case COLOR_RGBAu8:
         cdt = Particles::COLDATA_UINT8_RGBA;
         bpc = 4;
         break;
-    case COLOR_If: 
+    case COLOR_If:
         cdt = Particles::COLDATA_FLOAT_I;
         bpc = 4;
         break;
-    case COLOR_RGBf: 
+    case COLOR_RGBf:
         cdt = Particles::COLDATA_FLOAT_RGB;
         bpc = 12;
         break;
-    case COLOR_RGBAf: 
+    case COLOR_RGBAf:
         cdt = Particles::COLDATA_FLOAT_RGBA;
         bpc = 16;
         break;
-    default: 
+    default:
         cdt = Particles::COLDATA_NONE;
         colType = COLOR_NONE;
         break;
@@ -277,24 +280,16 @@ void ParticleBoxGeneratorDataSource::assertData(void) {
         vds = bpv;
         cds = bpc;
     }
-    unsigned char *vertDatPtr = static_cast<unsigned char*>(vdp);
-    unsigned char *colDatPtr = static_cast<unsigned char*>(cdp);
+    unsigned char* vertDatPtr = static_cast<unsigned char*>(vdp);
+    unsigned char* colDatPtr = static_cast<unsigned char*>(cdp);
 
     // Compute box layout
     uint32_t xcnt, ycnt, zcnt;
     float yzcnt;
-    xcnt = static_cast<uint32_t>(
-        std::ceil(
-        static_cast<float>(std::pow(static_cast<double>(pcnt), 1.0 / 3.0))
-        )
-        );
+    xcnt = static_cast<uint32_t>(std::ceil(static_cast<float>(std::pow(static_cast<double>(pcnt), 1.0 / 3.0))));
     yzcnt = std::ceil(static_cast<float>(pcnt) / static_cast<float>(xcnt));
-    ycnt = static_cast<uint32_t>(
-        std::ceil(std::sqrt(yzcnt))
-        );
-    zcnt = static_cast<uint32_t>(
-        std::ceil(yzcnt / static_cast<float>(ycnt))
-        );
+    ycnt = static_cast<uint32_t>(std::ceil(std::sqrt(yzcnt)));
+    zcnt = static_cast<uint32_t>(std::ceil(yzcnt / static_cast<float>(ycnt)));
     //std::cout << "Boxing: " << xcnt << " x " << ycnt << " x " << zcnt << std::endl;
 
     float x_a = 2.0f / static_cast<float>(xcnt);
@@ -320,7 +315,8 @@ void ParticleBoxGeneratorDataSource::assertData(void) {
                 vertDat[0] = px + (rnd_uni(rnd_engine) * 2.0f - 1.0f) * pn;
                 vertDat[1] = py + (rnd_uni(rnd_engine) * 2.0f - 1.0f) * pn;
                 vertDat[2] = pz + (rnd_uni(rnd_engine) * 2.0f - 1.0f) * pn;
-                if (radAtPart) vertDat[3] = rad;
+                if (radAtPart)
+                    vertDat[3] = rad;
 
                 // color
                 switch (colType) {
@@ -363,5 +359,4 @@ void ParticleBoxGeneratorDataSource::assertData(void) {
     }
 
     cnt = pcnt;
-
 }

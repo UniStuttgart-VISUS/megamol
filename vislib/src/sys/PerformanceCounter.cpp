@@ -13,11 +13,11 @@
 #include <sys/time.h>
 #endif /* _WIN32 */
 
+#include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/sys/error.h"
 #include "vislib/memutils.h"
 #include "vislib/sys/SystemException.h"
-#include "vislib/Trace.h"
+#include "vislib/sys/error.h"
 
 
 /*
@@ -29,7 +29,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 
     if (!::QueryPerformanceCounter(&timerCount)) {
         VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
-            "vislib::sys::PerformanceCounter::Query\n");
+                                    "vislib::sys::PerformanceCounter::Query\n");
         throw SystemException(__FILE__, __LINE__);
     }
 
@@ -64,7 +64,7 @@ UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
 
     if (!::QueryPerformanceFrequency(&timerFreq)) {
         VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
-            "vislib::sys::PerformanceCounter::Query\n");
+                                    "vislib::sys::PerformanceCounter::Query\n");
         throw SystemException(__FILE__, __LINE__);
     }
 
@@ -80,8 +80,7 @@ UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
 /*
  * vislib::sys::PerformanceCounter::operator =
  */
-vislib::sys::PerformanceCounter& vislib::sys::PerformanceCounter::operator =(
-        const PerformanceCounter& rhs) {
+vislib::sys::PerformanceCounter& vislib::sys::PerformanceCounter::operator=(const PerformanceCounter& rhs) {
     if (this != &rhs) {
         this->mark = rhs.mark;
         this->isUsingFullPrecisionMark = rhs.isUsingFullPrecisionMark;

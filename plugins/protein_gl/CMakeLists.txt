@@ -10,7 +10,7 @@ megamol_plugin(protein_gl
     protein
     trisoup
     protein_calls
-    geometry_calls
+    geometry_calls_gl
     compositing_gl
   DEPENDS_EXTERNALS
     glad

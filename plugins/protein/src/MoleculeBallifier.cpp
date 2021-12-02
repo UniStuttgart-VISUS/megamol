@@ -5,7 +5,7 @@
  * All rights reserved.
  */
 
-
+#include "stdafx.h"
 #include "MoleculeBallifier.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ColorParam.h"
@@ -88,19 +88,35 @@ MoleculeBallifier::MoleculeBallifier(void)
     Color::MakeRainbowColorTable(100, rainbowColors_);
 }
 
+
+/*
+ * 
+ */
 MoleculeBallifier::~MoleculeBallifier(void) {
     this->Release();
 }
 
+
+/*
+ * 
+ */
 bool MoleculeBallifier::create(void) {
     // intentionally empty
     return true;
 }
 
+
+/*
+ * 
+ */
 void MoleculeBallifier::release(void) {
     // intentionally empty
 }
 
+
+/*
+ * 
+ */
 bool MoleculeBallifier::getData(core::Call& c) {
     using geocalls::MultiParticleDataCall;
     MultiParticleDataCall* ic = dynamic_cast<MultiParticleDataCall*>(&c);
@@ -183,6 +199,10 @@ bool MoleculeBallifier::getData(core::Call& c) {
     return true;
 }
 
+
+/*
+ * 
+ */
 bool MoleculeBallifier::getExt(core::Call& c) {
     using geocalls::MultiParticleDataCall;
     MultiParticleDataCall* ic = dynamic_cast<MultiParticleDataCall*>(&c);

@@ -4,33 +4,35 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "factories/ModuleClassRegistry.h"
+#include "stdafx.h"
 
-#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
 
+#include "job/TickSwitch.h"
+#include "mmcore/FileStreamProvider.h"
+#include "mmcore/FlagStorage.h"
+#include "mmcore/ResourceTestModule.h"
+#include "mmcore/UniFlagStorage.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
-#include "mmcore/special/StubModule.h"
-#include "mmcore/view/ClipPlane.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
+#include "mmcore/param/GenericParamModule.h"
+#include "mmcore/special/StubModule.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
+#include "mmcore/view/ClipPlane.h"
+#include "mmcore/view/TransferFunction.h"
+#include "mmcore/view/View3D.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/HDRILight.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "job/TickSwitch.h"
-#include "mmcore/FileStreamProvider.h"
-#include "mmcore/FlagStorage.h"
-#include "mmcore/UniFlagStorage.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore/ResourceTestModule.h"
-#include "mmcore/param/GenericParamModule.h"
+
 
 using namespace megamol::core;
 
@@ -65,4 +67,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<ResourceTestModule>();
     instance.RegisterAutoDescription<param::FloatParamModule>();
     instance.RegisterAutoDescription<param::IntParamModule>();
+    instance.RegisterAutoDescription<view::TransferFunction>();
 }

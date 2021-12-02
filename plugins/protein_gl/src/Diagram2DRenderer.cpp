@@ -9,7 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <math.h>
 #include "Diagram2DRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
@@ -18,6 +17,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
+#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;

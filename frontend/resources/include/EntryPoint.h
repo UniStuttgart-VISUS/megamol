@@ -7,24 +7,22 @@
 
 #pragma once
 
-#include "ImageWrapper.h"
 #include "FrontendResource.h"
+#include "ImageWrapper.h"
 
 namespace megamol {
 namespace frontend_resources {
 
 struct RenderInputsUpdate {
     virtual ~RenderInputsUpdate(){};
-    virtual void update() {};
-    virtual frontend::FrontendResource get_resource() { return {}; };
+    virtual void update(){};
+    virtual frontend::FrontendResource get_resource() {
+        return {};
+    };
 };
 
 using EntryPointExecutionCallback =
-    std::function<bool(
-          void*
-        , std::vector<megamol::frontend::FrontendResource> const&
-        , ImageWrapper&
-        )>;
+    std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, ImageWrapper&)>;
 
 struct EntryPoint {
     std::string moduleName;

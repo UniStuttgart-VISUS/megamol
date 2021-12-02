@@ -18,7 +18,8 @@ namespace datatools {
 /**
  * Abstract class data manipulators for calls with getData/getExtent interface
  */
-template <class C> class AbstractManipulator : public megamol::core::Module {
+template<class C>
+class AbstractManipulator : public megamol::core::Module {
 public:
     /**
      * Ctor
@@ -89,11 +90,11 @@ private:
 };
 
 
-template <class C>
+template<class C>
 AbstractManipulator<C>::AbstractManipulator(const char* outSlotName, const char* inSlotName)
-    : megamol::core::Module()
-    , outDataSlot(outSlotName, "providing access to the manipulated data")
-    , inDataSlot(inSlotName, "accessing the original data") {
+        : megamol::core::Module()
+        , outDataSlot(outSlotName, "providing access to the manipulated data")
+        , inDataSlot(inSlotName, "accessing the original data") {
 
     this->outDataSlot.SetCallback(C::ClassName(), "GetData", &AbstractManipulator::getDataCallback);
     this->outDataSlot.SetCallback(C::ClassName(), "GetExtent", &AbstractManipulator::getExtentCallback);
@@ -104,38 +105,51 @@ AbstractManipulator<C>::AbstractManipulator(const char* outSlotName, const char*
 }
 
 
-template <class C> AbstractManipulator<C>::~AbstractManipulator() { this->Release(); }
+template<class C>
+AbstractManipulator<C>::~AbstractManipulator() {
+    this->Release();
+}
 
 
-template <class C> bool AbstractManipulator<C>::create() { return true; }
+template<class C>
+bool AbstractManipulator<C>::create() {
+    return true;
+}
 
 
-template <class C> void AbstractManipulator<C>::release() {}
+template<class C>
+void AbstractManipulator<C>::release() {}
 
 
-template <class C> bool AbstractManipulator<C>::manipulateData(C& outData, C& inData) {
+template<class C>
+bool AbstractManipulator<C>::manipulateData(C& outData, C& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
 }
 
 
-template <class C> bool AbstractManipulator<C>::manipulateExtent(C& outData, C& inData) {
+template<class C>
+bool AbstractManipulator<C>::manipulateExtent(C& outData, C& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
 }
 
 
-template <class C> bool AbstractManipulator<C>::getDataCallback(megamol::core::Call& c) {
+template<class C>
+bool AbstractManipulator<C>::getDataCallback(megamol::core::Call& c) {
     auto outMpdc = dynamic_cast<C*>(&c);
-    if (outMpdc == NULL) return false;
+    if (outMpdc == NULL)
+        return false;
 
     auto inMpdc = this->inDataSlot.template CallAs<C>();
-    if (inMpdc == NULL) return false;
+    if (inMpdc == NULL)
+        return false;
 
     *inMpdc = *outMpdc; // to get the correct request time
-    if (!(*inMpdc)(0)) return false;
+    if (!(*inMpdc)(0))
+        return false;
 
     if (!this->manipulateData(*outMpdc, *inMpdc)) {
         inMpdc->Unlock();
@@ -148,15 +162,19 @@ template <class C> bool AbstractManipulator<C>::getDataCallback(megamol::core::C
 }
 
 
-template <class C> bool AbstractManipulator<C>::getExtentCallback(megamol::core::Call& c) {
+template<class C>
+bool AbstractManipulator<C>::getExtentCallback(megamol::core::Call& c) {
     auto outMpdc = dynamic_cast<C*>(&c);
-    if (outMpdc == NULL) return false;
+    if (outMpdc == NULL)
+        return false;
 
     auto inMpdc = this->inDataSlot.template CallAs<C>();
-    if (inMpdc == NULL) return false;
+    if (inMpdc == NULL)
+        return false;
 
     *inMpdc = *outMpdc; // to get the correct request time
-    if (!(*inMpdc)(1)) return false;
+    if (!(*inMpdc)(1))
+        return false;
 
     if (!this->manipulateExtent(*outMpdc, *inMpdc)) {
         inMpdc->Unlock();

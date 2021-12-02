@@ -15,56 +15,59 @@
 namespace megamol {
 namespace datatools {
 
+/**
+ * Module overriding global colors of multi particle lists
+ */
+class ParticleInstantiator : public AbstractParticleManipulator {
+public:
+    static const char* ClassName(void) {
+        return "ParticleInstantiator";
+    }
+    static const char* Description(void) {
+        return "makes instances of particles by xyz repetition";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    ParticleInstantiator(void);
+    virtual ~ParticleInstantiator(void);
+
+protected:
+    bool InterfaceIsDirty(void);
+    void InterfaceResetDirty();
+
     /**
-     * Module overriding global colors of multi particle lists
+     * Manipulates the particle data
+     *
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
      */
-    class ParticleInstantiator : public AbstractParticleManipulator {
-    public:
+    virtual bool manipulateData(
+        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
-        static const char *ClassName(void) { return "ParticleInstantiator"; }
-        static const char *Description(void) { return "makes instances of particles by xyz repetition"; }
-        static bool IsAvailable(void) { return true; }
+    virtual bool manipulateExtent(
+        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
-        ParticleInstantiator(void);
-        virtual ~ParticleInstantiator(void);
+private:
+    megamol::core::param::ParamSlot numInstancesParam;
+    megamol::core::param::ParamSlot instanceOffsetParam;
 
-    protected:
+    megamol::core::param::ParamSlot setFromClipboxParam;
+    megamol::core::param::ParamSlot setFromBoundingboxParam;
 
-        bool InterfaceIsDirty(void);
-        void InterfaceResetDirty();
-
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
-
-        virtual bool manipulateExtent(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
-
-    private:
-
-        megamol::core::param::ParamSlot numInstancesParam;
-        megamol::core::param::ParamSlot instanceOffsetParam;
-
-        megamol::core::param::ParamSlot setFromClipboxParam;
-        megamol::core::param::ParamSlot setFromBoundingboxParam;
-
-        SIZE_T in_hash = -1;
-        unsigned int in_frameID = -1;
-        SIZE_T my_hash = 0;
-        std::vector<std::vector<float>> vertData;
-        std::vector<std::vector<uint8_t>> colData;
-        std::vector<std::vector<float>> dirData;
-        std::vector<bool> has_global_radius;
-    };
+    SIZE_T in_hash = -1;
+    unsigned int in_frameID = -1;
+    SIZE_T my_hash = 0;
+    std::vector<std::vector<float>> vertData;
+    std::vector<std::vector<uint8_t>> colData;
+    std::vector<std::vector<float>> dirData;
+    std::vector<bool> has_global_radius;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */

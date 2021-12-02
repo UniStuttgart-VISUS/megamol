@@ -15,95 +15,92 @@
 
 
 #include "vislib/Exception.h"
-#include "vislib/types.h"
 #include "vislib/sys/SystemMessage.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
 namespace sys {
 
+/**
+ * This exception class represents a system error. It is instantiated with
+ * a system error code and retrieves the error message from the system.
+ *
+ * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
+ */
+class SystemException : public Exception {
+
+public:
     /**
-     * This exception class represents a system error. It is instantiated with 
-     * a system error code and retrieves the error message from the system.
+     * Ctor.
      *
-     * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
+     * @param errorCode A system dependent error code.
+     * @param file      The file the exception was thrown in.
+     * @param line      The line the exception was thrown in.
      */
-    class SystemException : public Exception {
+    SystemException(const DWORD errorCode, const char* file, const int line);
 
-    public:
+    /**
+     * Create a SystemException with the current error code retrieved using
+     * ::GetLastError().
+     *
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
+     */
+    SystemException(const char* file, const int line);
 
-        /**
-         * Ctor.
-         *
-         * @param errorCode A system dependent error code.
-         * @param file      The file the exception was thrown in.
-         * @param line      The line the exception was thrown in.
-         */
-        SystemException(const DWORD errorCode, const char *file,
-            const int line);
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    SystemException(const SystemException& rhs);
 
-        /**
-         * Create a SystemException with the current error code retrieved using
-         * ::GetLastError().
-         *
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        SystemException(const char *file, const int line);
+    /** Dtor. */
+    virtual ~SystemException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        SystemException(const SystemException& rhs);
+    /**
+     * Answer the system dependent error code associated with this
+     * exception.
+     *
+     * @return The system error code.
+     */
+    inline DWORD GetErrorCode(void) const {
+        return this->sysMsg.GetErrorCode();
+    }
 
-        /** Dtor. */
-        virtual ~SystemException(void);
+    /**
+     * Answer the file the exception description text. Behaves like
+     * Exception::GetMsgA.
+     *
+     * @return The exception message.
+     */
+    virtual const char* GetMsgA(void) const;
 
-        /**
-         * Answer the system dependent error code associated with this 
-         * exception.
-         *
-         * @return The system error code.
-         */
-        inline DWORD GetErrorCode(void) const {
-            return this->sysMsg.GetErrorCode();
-        }
+    /**
+     * Answer the file the exception description text. Behaves like
+     * Exception::GetMsgW.
+     *
+     * @return The exception message.
+     */
+    virtual const wchar_t* GetMsgW(void) const;
 
-        /**
-         * Answer the file the exception description text. Behaves like
-         * Exception::GetMsgA.
-         *
-         * @return The exception message.
-         */
-        virtual const char *GetMsgA(void) const;
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    SystemException& operator=(const SystemException& rhs);
 
-        /**
-         * Answer the file the exception description text. Behaves like
-         * Exception::GetMsgW.
-         *
-         * @return The exception message.
-         */
-        virtual const wchar_t *GetMsgW(void) const;
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        SystemException& operator =(const SystemException& rhs);
-
-    private:
-
-        /** 
-         * The system message for the error code. This member is used instead
-         * of Exception::msg.
-         */
-        SystemMessage sysMsg;
-    };
+private:
+    /**
+     * The system message for the error code. This member is used instead
+     * of Exception::msg.
+     */
+    SystemMessage sysMsg;
+};
 
 } /* end namespace sys */
 } /* end namespace vislib */

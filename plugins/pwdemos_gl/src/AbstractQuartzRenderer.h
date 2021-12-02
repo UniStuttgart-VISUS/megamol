@@ -15,57 +15,53 @@
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * AbstractQuartzRenderer
+ */
+class AbstractQuartzRenderer : public AbstractQuartzModule {
+public:
     /**
-     * AbstractQuartzRenderer
+     * Ctor
      */
-    class AbstractQuartzRenderer : public AbstractQuartzModule{
-    public:
+    AbstractQuartzRenderer(void);
 
-        /**
-         * Ctor
-         */
-        AbstractQuartzRenderer(void);
+    /**
+     * Dtor
+     */
+    virtual ~AbstractQuartzRenderer(void);
 
-        /**
-         * Dtor
-         */
-        virtual ~AbstractQuartzRenderer(void);
+protected:
+    /**
+     * Updates the grain colour if necessary
+     */
+    void assertGrainColour(void);
 
-    protected:
+    /**
+     * Answer the clipping plane from the connected module
+     *
+     * @return The clipping plane from the connected module or NULL if no
+     *         data could be received
+     */
+    core::view::CallClipPlane* getClipPlaneData(void);
 
-        /**
-         * Updates the grain colour if necessary
-         */
-        void assertGrainColour(void);
+    /** Slot connecting to the clipping plane provider */
+    core::CallerSlot clipPlaneSlot;
 
-        /**
-         * Answer the clipping plane from the connected module
-         *
-         * @return The clipping plane from the connected module or NULL if no
-         *         data could be received
-         */
-        core::view::CallClipPlane *getClipPlaneData(void);
+    /** The call for light sources */
+    core::CallerSlot lightsSlot;
 
-        /** Slot connecting to the clipping plane provider */
-        core::CallerSlot clipPlaneSlot;
+    /** Shows/Hides the bounding box polygon of the clipping plane */
+    core::param::ParamSlot showClipPlanePolySlot;
 
-        /** The call for light sources */
-        core::CallerSlot lightsSlot;
+    /** The colour to be used for the crystalites */
+    core::param::ParamSlot grainColSlot;
 
-        /** Shows/Hides the bounding box polygon of the clipping plane */
-        core::param::ParamSlot showClipPlanePolySlot;
+    /** The grain colour */
+    float grainCol[3];
 
-        /** The colour to be used for the crystalites */
-        core::param::ParamSlot grainColSlot;
+    /** Activate correct handling of periodic boundary conditions */
+    core::param::ParamSlot correctPBCSlot;
+};
 
-        /** The grain colour */
-        float grainCol[3];
-
-        /** Activate correct handling of periodic boundary conditions */
-        core::param::ParamSlot correctPBCSlot;
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */
-

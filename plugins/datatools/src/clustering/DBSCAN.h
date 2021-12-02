@@ -67,7 +67,7 @@ inline cluster_result_t DBSCAN(std::shared_ptr<kd_tree_t<T, DIM>> const& D, T ep
 
     for (std::remove_const_t<decltype(num_points)> idx = 0; idx < num_points; ++idx) {
         if (visited[idx] > 0)
-            continue; 
+            continue;
         visited[idx] = 1;
         auto query = data.get_position(idx);
         auto const N = D->radiusSearch(query, eps, tmp_res, params);

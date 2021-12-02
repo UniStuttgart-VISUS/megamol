@@ -31,4 +31,4 @@ public:
         // register calls
     }
 };
-} // namespace megamol::volume
+} // namespace megamol::volume_gl

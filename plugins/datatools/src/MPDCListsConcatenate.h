@@ -16,9 +16,15 @@ namespace datatools {
 
 class MPDCListsConcatenate : public core::Module {
 public:
-    static const char* ClassName(void) { return "MPDCListsConcatenate"; }
-    static const char* Description(void) { return "Concatenates the particle lists from two MPDCs"; }
-    static bool IsAvailable(void) { return true; }
+    static const char* ClassName(void) {
+        return "MPDCListsConcatenate";
+    }
+    static const char* Description(void) {
+        return "Concatenates the particle lists from two MPDCs";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
     MPDCListsConcatenate();
     virtual ~MPDCListsConcatenate();
 

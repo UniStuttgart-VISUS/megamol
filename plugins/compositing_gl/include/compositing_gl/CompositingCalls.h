@@ -19,14 +19,17 @@
 namespace megamol {
 namespace compositing {
 
-class CallTexture2D
-    : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData> {
+class CallTexture2D : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData> {
 public:
     inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData>() {}
     ~CallTexture2D() = default;
 
-    static const char* ClassName(void) { return "CallTexture2D"; }
-    static const char* Description(void) { return "Transports a shared pointer to an OpenGL texture object"; }
+    static const char* ClassName(void) {
+        return "CallTexture2D";
+    }
+    static const char* Description(void) {
+        return "Transports a shared pointer to an OpenGL texture object";
+    }
 };
 
 class CallCamera : public core::GenericVersionedCall<core::view::Camera, core::EmptyMetaData> {
@@ -34,8 +37,12 @@ public:
     inline CallCamera() : GenericVersionedCall<core::view::Camera, core::EmptyMetaData>() {}
     ~CallCamera() = default;
 
-    static const char* ClassName(void) { return "CallCamera"; }
-    static const char* Description(void) { return "Transports a camera (copy)"; }
+    static const char* ClassName(void) {
+        return "CallCamera";
+    }
+    static const char* Description(void) {
+        return "Transports a camera (copy)";
+    }
 };
 
 class CallFramebufferGL
@@ -45,8 +52,12 @@ public:
             : GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData>() {}
     ~CallFramebufferGL() = default;
 
-    static const char* ClassName(void) { return "CallFramebufferGL"; }
-    static const char* Description(void) { return "Transports a framebuffer object"; }
+    static const char* ClassName(void) {
+        return "CallFramebufferGL";
+    }
+    static const char* Description(void) {
+        return "Transports a framebuffer object";
+    }
 };
 
 /** Description class typedef */

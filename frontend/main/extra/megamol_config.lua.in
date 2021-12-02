@@ -17,8 +17,8 @@ print("Default MegaMol Frontend 3000 Configuration:")
 --   mmSetCliOption(string option,  string argument)
 --   mmSetGlobalValue(string key, string value)
 --
---   mmSetLogLevel(sring level)
---   mmSetEchoLevel(sring level)
+--   mmSetLogLevel(string level)
+--   mmSetEchoLevel(string level)
 --   mmSetLogFile(string file_path)
 --
 --   mmSetAppDir(string dir_path)
@@ -32,7 +32,8 @@ print("Default MegaMol Frontend 3000 Configuration:")
 -- The key and value strings must not contain space, = or : characters
 mmSetGlobalValue("MegaMol", "Frontend3000") -- CLI: --global=MegaMol:Frontend3000
  
-basePath = "${CMAKE_INSTALL_PREFIX}/"
+exeutableDirPath = mmGetMegaMolExecutableDirectory()
+basePath = exeutableDirPath .. "../"
 
 -- Log Levels: 0=None, 1=Error, 100=Warn, 200=INFO, *=ALL
 -- You can provide an integer (as string) 

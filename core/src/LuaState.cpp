@@ -7,36 +7,36 @@
 
 #include "stdafx.h"
 #if (_MSC_VER > 1000)
-#    pragma warning(disable : 4996)
+#pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
 #if (_MSC_VER > 1000)
-#    pragma warning(default : 4996)
+#pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
 
-#include <algorithm>
-#include <fstream>
-#include <map>
-#include <sstream>
-#include <string>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaState.h"
 #include "mmcore/utility/Configuration.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <sstream>
+#include <string>
 
 #include "lua.hpp"
 
 #ifdef _WIN32
-#    include <Windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
-#    include <unistd.h>
+#include <unistd.h>
 #endif /* _WIN32 */
 
 //#define LUA_FULL_ENVIRONMENT

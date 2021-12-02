@@ -5,8 +5,8 @@
  * Alle rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "geometry_calls/VolumetricMetadataStore.h"
+#include "stdafx.h"
 
 #include <cassert>
 #include <iterator>
@@ -15,10 +15,10 @@ namespace megamol::geocalls {
 /*
  * VolumetricMetadataStore::VolumetricMetadataStore
  */
-VolumetricMetadataStore::VolumetricMetadataStore(
-        const VolumetricMetadataStore& rhs)
-    : maxValues(rhs.maxValues), minValues(rhs.minValues),
-        sliceDists(rhs.sliceDists) {
+VolumetricMetadataStore::VolumetricMetadataStore(const VolumetricMetadataStore& rhs)
+        : maxValues(rhs.maxValues)
+        , minValues(rhs.minValues)
+        , sliceDists(rhs.sliceDists) {
     this->rewrire();
 }
 
@@ -26,10 +26,10 @@ VolumetricMetadataStore::VolumetricMetadataStore(
 /*
  * VolumetricMetadataStore::VolumetricMetadataStore
  */
-VolumetricMetadataStore::VolumetricMetadataStore(
-        VolumetricMetadataStore&& rhs) noexcept
-    : maxValues(std::move(rhs.maxValues)), minValues(std::move(rhs.minValues)),
-        sliceDists(std::move(rhs.sliceDists)) {
+VolumetricMetadataStore::VolumetricMetadataStore(VolumetricMetadataStore&& rhs) noexcept
+        : maxValues(std::move(rhs.maxValues))
+        , minValues(std::move(rhs.minValues))
+        , sliceDists(std::move(rhs.sliceDists)) {
     this->rewrire();
     rhs.rewrire();
     assert(rhs.MinValues == nullptr);
@@ -40,8 +40,7 @@ VolumetricMetadataStore::VolumetricMetadataStore(
 /*
  * VolumetricMetadataStore::VolumetricMetadataStore
  */
-VolumetricMetadataStore::VolumetricMetadataStore(
-        const VolumetricMetadata_t& rhs) {
+VolumetricMetadataStore::VolumetricMetadataStore(const VolumetricMetadata_t& rhs) {
     *this = rhs;
 }
 
@@ -49,9 +48,7 @@ VolumetricMetadataStore::VolumetricMetadataStore(
 /*
  * VolumetricMetadataStore::operator =
  */
-VolumetricMetadataStore&
-VolumetricMetadataStore::operator =(
-        const VolumetricMetadataStore& rhs) {
+VolumetricMetadataStore& VolumetricMetadataStore::operator=(const VolumetricMetadataStore& rhs) {
     if (this != std::addressof(rhs)) {
         ::memcpy(this, std::addressof(rhs), sizeof(VolumetricMetadata_t));
         this->rewrire();
@@ -63,9 +60,7 @@ VolumetricMetadataStore::operator =(
 /*
  * VolumetricMetadataStore::operator =
  */
-VolumetricMetadataStore&
-VolumetricMetadataStore::operator =(
-        VolumetricMetadataStore&& rhs) noexcept {
+VolumetricMetadataStore& VolumetricMetadataStore::operator=(VolumetricMetadataStore&& rhs) noexcept {
     if (this != std::addressof(rhs)) {
         ::memcpy(this, std::addressof(rhs), sizeof(VolumetricMetadata_t));
         this->rewrire();
@@ -80,9 +75,7 @@ VolumetricMetadataStore::operator =(
 /*
  * VolumetricMetadataStore::operator =
  */
-VolumetricMetadataStore&
-VolumetricMetadataStore::operator =(
-        const VolumetricMetadata_t& rhs) {
+VolumetricMetadataStore& VolumetricMetadataStore::operator=(const VolumetricMetadata_t& rhs) {
     if (this != std::addressof(rhs)) {
         ::memcpy(this, std::addressof(rhs), sizeof(VolumetricMetadata_t));
 
@@ -99,28 +92,27 @@ VolumetricMetadataStore::operator =(
         }
 
         switch (this->GridType) {
-            case CARTESIAN:
-                for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {
-                    this->sliceDists[i].resize(1);
-                    this->sliceDists[i][0] = rhs.SliceDists[i][0];
-                }
-                break;
+        case CARTESIAN:
+            for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {
+                this->sliceDists[i].resize(1);
+                this->sliceDists[i][0] = rhs.SliceDists[i][0];
+            }
+            break;
 
-            case RECTILINEAR:
-                for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {
-                    this->sliceDists[i].clear();
-                    auto cnt = rhs.Resolution[i] - 1;
-                    this->sliceDists[i].reserve(cnt);
-                    std::copy(rhs.SliceDists[i], rhs.SliceDists[i] + cnt,
-                        std::back_inserter(this->sliceDists[i]));
-                }
-                break;
+        case RECTILINEAR:
+            for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {
+                this->sliceDists[i].clear();
+                auto cnt = rhs.Resolution[i] - 1;
+                this->sliceDists[i].reserve(cnt);
+                std::copy(rhs.SliceDists[i], rhs.SliceDists[i] + cnt, std::back_inserter(this->sliceDists[i]));
+            }
+            break;
 
-            default:
-                for (auto& s : this->sliceDists) {
-                    s.clear();
-                }
-                break;
+        default:
+            for (auto& s : this->sliceDists) {
+                s.clear();
+            }
+            break;
         }
 
         this->rewrire();
@@ -134,16 +126,10 @@ VolumetricMetadataStore::operator =(
  * VolumetricMetadataStore::rewrire
  */
 void VolumetricMetadataStore::rewrire(void) {
-    this->MaxValues = this->maxValues.empty()
-        ? nullptr
-        : this->maxValues.data();
-    this->MinValues = this->minValues.empty()
-        ? nullptr
-        : this->minValues.data();
+    this->MaxValues = this->maxValues.empty() ? nullptr : this->maxValues.data();
+    this->MinValues = this->minValues.empty() ? nullptr : this->minValues.data();
     for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {
-        this->SliceDists[i] = this->sliceDists[i].empty()
-            ? nullptr :
-            this->sliceDists[i].data();
+        this->SliceDists[i] = this->sliceDists[i].empty() ? nullptr : this->sliceDists[i].data();
     }
 }
-}
+} // namespace megamol::geocalls

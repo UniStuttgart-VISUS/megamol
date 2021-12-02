@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "AbstractSimpleParticleDataSource.h"
 #include "mmcore/param/FilePathParam.h"
+#include "stdafx.h"
 
 namespace megamol::datatools::io {
 
@@ -15,15 +15,18 @@ namespace megamol::datatools::io {
 /*
  * AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource
  */
-AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource(void) : Module(),
-        filenameSlot("filename", "Full path to the file to load"),
-        getDataSlot("getdata", "Publishes data for other modules") {
+AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource(void)
+        : Module()
+        , filenameSlot("filename", "Full path to the file to load")
+        , getDataSlot("getdata", "Publishes data for other modules") {
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &AbstractSimpleParticleDataSource::getDataCallback);
-    this->getDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &AbstractSimpleParticleDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback(
+        "MultiParticleDataCall", "GetData", &AbstractSimpleParticleDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(
+        "MultiParticleDataCall", "GetExtent", &AbstractSimpleParticleDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 }
 
@@ -40,8 +43,9 @@ AbstractSimpleParticleDataSource::~AbstractSimpleParticleDataSource(void) {
  * AbstractSimpleParticleDataSource::getDataCallback
  */
 bool AbstractSimpleParticleDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&caller);
-    if (mpdc == NULL) return false;
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == NULL)
+        return false;
     return this->getData(*mpdc);
 }
 
@@ -50,8 +54,9 @@ bool AbstractSimpleParticleDataSource::getDataCallback(core::Call& caller) {
  * AbstractSimpleParticleDataSource::getDataCallback
  */
 bool AbstractSimpleParticleDataSource::getExtentCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&caller);
-    if (mpdc == NULL) return false;
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    if (mpdc == NULL)
+        return false;
     return this->getExtent(*mpdc);
 }
-}
+} // namespace megamol::datatools::io

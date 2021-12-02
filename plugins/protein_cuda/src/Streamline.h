@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/math/Vector.h"
-#include "vislib/Array.h"
 #include "VecField3f.h"
+#include "vislib/Array.h"
+#include "vislib/math/Vector.h"
 //#include "vislib_vector_typedefs.h"
 
 namespace megamol {
@@ -21,17 +21,14 @@ namespace protein_cuda {
 
 class Streamline {
 public:
-
     /// Enum describing possible integration directions
-    enum Direction {FORWARD=1, BACKWARD, BIDIRECTIONAL};
+    enum Direction { FORWARD = 1, BACKWARD, BIDIRECTIONAL };
 
     /** CTor */
-    Streamline() {
-    }
+    Streamline() {}
 
     /** DTor */
-    ~Streamline() {
-    }
+    ~Streamline() {}
 
     /**
      * Answer the starting point position of the streamline.
@@ -58,7 +55,7 @@ public:
      * @return The length of the streamline.
      */
     SIZE_T GetLength() {
-        return this->vertexArr.Count()/3;
+        return this->vertexArr.Count() / 3;
     }
 
     /**
@@ -74,15 +71,14 @@ public:
      * @param eps       Value at which the field is defined to be 'vanishing'
      * @param dir       The direction of the integration
      */
-    void IntegrateRK4(Vec3f start, VecField3f &v, unsigned int maxLength,
-            float step, float eps, Direction dir);
+    void IntegrateRK4(Vec3f start, VecField3f& v, unsigned int maxLength, float step, float eps, Direction dir);
 
     /**
      * Returns a pointer to the array containing the vertex positions.
      *
      * @return A pointer to the array containing the vertex positions
      */
-    const float *PeekVertexArr() {
+    const float* PeekVertexArr() {
         return this->vertexArr.PeekElements();
     }
 
@@ -91,7 +87,7 @@ public:
      *
      * @return A pointer to the array containing the vertex tangents
      */
-    const float *PeekTangentArr() {
+    const float* PeekTangentArr() {
         return this->tangentArr.PeekElements();
     }
 
@@ -100,7 +96,7 @@ public:
      *
      * @return A pointer to the array containing the texture coordinates
      */
-    const float *PeekTexCoordArr() {
+    const float* PeekTexCoordArr() {
         return this->texCoordArr.PeekElements();
     }
 
@@ -112,12 +108,10 @@ public:
      * @return True if this and rhs are equal
      */
     bool operator==(const Streamline& rhs) const {
-        return (this->startPos == rhs.startPos)
-            && (this->endPos == rhs.endPos);
+        return (this->startPos == rhs.startPos) && (this->endPos == rhs.endPos);
     }
 
 private:
-
     /// Array containing the vertex positions
     vislib::Array<float> vertexArr;
 
@@ -129,7 +123,6 @@ private:
 
     /// Starting and ending positions of the streamline
     Vec3f startPos, endPos;
-
 };
 
 } // end namespace protein_cuda

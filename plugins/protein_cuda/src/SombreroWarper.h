@@ -6,7 +6,7 @@
 #ifndef MMSOMBREROSPLUGIN_SOMBREROWARPER_H_INCLUDED
 #define MMSOMBREROSPLUGIN_SOMBREROWARPER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
@@ -35,7 +35,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SombreroWarper"; }
+    static const char* ClassName(void) {
+        return "SombreroWarper";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -51,7 +53,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     SombreroWarper(void);
@@ -104,13 +108,18 @@ private:
             this->v2 = v2;
             this->v3 = v3;
             // sort the vertices ascending
-            if (this->v1 > this->v3) std::swap(this->v1, this->v3);
-            if (this->v1 > this->v2) std::swap(this->v1, this->v2);
-            if (this->v2 > this->v3) std::swap(this->v2, this->v3);
+            if (this->v1 > this->v3)
+                std::swap(this->v1, this->v3);
+            if (this->v1 > this->v2)
+                std::swap(this->v1, this->v2);
+            if (this->v2 > this->v3)
+                std::swap(this->v2, this->v3);
         }
 
         /** equality operator overload */
-        inline bool operator==(Triangle& o) { return this->v1 == o.v1 && this->v2 == o.v2 && this->v3 == o.v3; }
+        inline bool operator==(Triangle& o) {
+            return this->v1 == o.v1 && this->v2 == o.v2 && this->v3 == o.v3;
+        }
     };
 
     /**

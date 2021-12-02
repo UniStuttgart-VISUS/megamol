@@ -3,8 +3,8 @@
  * Based on project "ospray-module-pkd" files "PartiKD.h" and "PartiKD.cpp" (Apache License 2.0)
  */
 
-#include "stdafx.h"
 #include "Pkd.h"
+#include "stdafx.h"
 #include <iostream>
 #include <stdint.h>
 #include <thread>
@@ -14,17 +14,19 @@
 using namespace megamol;
 
 
-
 ospray::PkdBuilder::PkdBuilder()
-    : megamol::datatools::AbstractParticleManipulator("outData", "inData")
-    , inDataHash(std::numeric_limits<size_t>::max())
-    , outDataHash(0)
-    /*, numParticles(0)
-    , numInnerNodes(0)*/ {
+        : megamol::datatools::AbstractParticleManipulator("outData", "inData")
+        , inDataHash(std::numeric_limits<size_t>::max())
+        , outDataHash(0)
+/*, numParticles(0)
+, numInnerNodes(0)*/
+{
     //model = std::make_shared<ParticleModel>();
 }
 
-ospray::PkdBuilder::~PkdBuilder() { Release(); }
+ospray::PkdBuilder::~PkdBuilder() {
+    Release();
+}
 
 bool ospray::PkdBuilder::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
@@ -64,7 +66,7 @@ bool ospray::PkdBuilder::manipulateData(
         }
 
         outData.SetUnlocker(nullptr, false);
-    }    
+    }
 
     return true;
 }
@@ -74,7 +76,7 @@ void ospray::Pkd::setDim(size_t ID, int dim) const {
 #if DIM_FROM_DEPTH
     return;
 #else
-    rkcommon::math::vec3f& particle = (rkcommon::math::vec3f&) this->model->position[ID];
+    rkcommon::math::vec3f& particle = (rkcommon::math::vec3f&)this->model->position[ID];
     int& pxAsInt = (int&)particle.x;
     pxAsInt = (pxAsInt & ~3) | dim;
 #endif
@@ -153,7 +155,8 @@ void ospray::Pkd::buildRec(const size_t nodeID, const rkcommon::math::box3f& bou
         // child on the left. see if we have to swap, but otherwise
         // nothing to do.
         size_t lChild = leftChildOf(nodeID);
-        if (POS(lChild, dim) > POS(nodeID, dim)) swap(nodeID, lChild);
+        if (POS(lChild, dim) > POS(nodeID, dim))
+            swap(nodeID, lChild);
         // and done
         setDim(nodeID, dim);
         return;
@@ -172,8 +175,10 @@ void ospray::Pkd::buildRec(const size_t nodeID, const rkcommon::math::box3f& bou
         float rootPos = POS(nodeID, dim);
         while (1) {
 
-            while (isValidNode(l, N) && (POS(l, dim) <= rootPos)) ++l;
-            while (isValidNode(r, N) && (POS(r, dim) >= rootPos)) ++r;
+            while (isValidNode(l, N) && (POS(l, dim) <= rootPos))
+                ++l;
+            while (isValidNode(r, N) && (POS(r, dim) >= rootPos))
+                ++r;
 
             if (isValidNode(l, N)) {
                 if (isValidNode(r, N)) {
@@ -246,4 +251,3 @@ void ospray::Pkd::buildRec(const size_t nodeID, const rkcommon::math::box3f& bou
         buildRec(rightChildOf(nodeID), rBounds, depth + 1);
     }
 }
-

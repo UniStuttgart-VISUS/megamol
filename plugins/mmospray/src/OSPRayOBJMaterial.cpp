@@ -1,27 +1,28 @@
 /*
-* OSPRayOBJMaterial.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * OSPRayOBJMaterial.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "OSPRayOBJMaterial.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol::ospray;
 
 
-OSPRayOBJMaterial::OSPRayOBJMaterial(void) :
-    AbstractOSPRayMaterial(),
-    // Distant light parameters
-    // OBJMATERIAL
+OSPRayOBJMaterial::OSPRayOBJMaterial(void)
+        : AbstractOSPRayMaterial()
+        ,
+        // Distant light parameters
+        // OBJMATERIAL
 
-    Kd("DiffuseColor", "Diffuse color"),
-    Ks("SpecularColor", "Specular color"),
-    Ns("Shininess", "Phong exponent"),
-    d("Opacity", "Opacity"),
-    Tf("TransparencyFilterColor", "Transparency filter color") {
+        Kd("DiffuseColor", "Diffuse color")
+        , Ks("SpecularColor", "Specular color")
+        , Ns("Shininess", "Phong exponent")
+        , d("Opacity", "Opacity")
+        , Tf("TransparencyFilterColor", "Transparency filter color") {
 
     this->Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
     this->Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
@@ -57,13 +58,7 @@ void OSPRayOBJMaterial::readParams() {
 }
 
 bool OSPRayOBJMaterial::InterfaceIsDirty() {
-    if (
-        this->Kd.IsDirty() ||
-        this->Ks.IsDirty() ||
-        this->Ns.IsDirty() ||
-        this->d.IsDirty() ||
-        this->Tf.IsDirty()
-        ) {
+    if (this->Kd.IsDirty() || this->Ks.IsDirty() || this->Ns.IsDirty() || this->d.IsDirty() || this->Tf.IsDirty()) {
         this->Kd.ResetDirty();
         this->Ks.ResetDirty();
         this->Ns.ResetDirty();
