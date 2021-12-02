@@ -156,6 +156,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     this->gui_state.gui_visible_post = this->gui_state.gui_visible;
     // Early exit when pre step should be omitted
     if (!this->gui_state.gui_visible) {
+        this->render_backend.Clear();
         return true;
     }
 

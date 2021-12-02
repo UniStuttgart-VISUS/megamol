@@ -325,6 +325,31 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
         return false;
     }
     }
+}
 
-    return true;
+
+void megamol::gui::gui_render_backend::Clear() {
+
+    switch (this->initialized_backend) {
+#ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
+        if (this->ogl_fbo != nullptr) {
+            this->ogl_fbo->bind();
+            /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            /// glClearDepth(1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+    } break;
+#endif // WITH_GL
+    case (GUIRenderBackend::CPU): {
+        if (this->cpu_fbo != nullptr) {
+            std::fill(this->cpu_fbo->colorBuffer.begin(), this->cpu_fbo->colorBuffer.end(), 0);
+        }
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    } break;
+    }
 }

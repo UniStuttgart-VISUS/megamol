@@ -52,6 +52,8 @@ public:
 
     bool Init(GUIRenderBackend backend);
 
+    void Clear();
+
     void NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size);
 
     bool EnableRendering(unsigned int width, unsigned int height);
