@@ -367,7 +367,8 @@ bool megamol::gui::LogConsole::Draw() {
                 auto match_str = (*i).str();
                 auto bracket_pos = match_str.find('(');
                 auto command = match_str.substr(0, bracket_pos);
-                auto param_hint = match_str.substr(bracket_pos+1, (match_str.length() - bracket_pos - 2)); // omit brackets
+                auto param_hint =
+                    match_str.substr(bracket_pos + 1, (match_str.length() - bracket_pos - 2)); // omit brackets
                 this->input_shared_data->commands.push_back({command, param_hint});
             }
         }
