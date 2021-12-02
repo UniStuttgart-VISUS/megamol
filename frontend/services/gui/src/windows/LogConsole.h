@@ -59,6 +59,8 @@ public:
         bool open_autocomplete_popup;
         std::vector<std::string> history;
         size_t history_index;
+        std::string param_hint;
+        size_t last_input_length;
     };
 
     explicit LogConsole(const std::string& window_name);
@@ -99,7 +101,6 @@ private:
     // where would I get this from? and the autocomplete stuff?
     lua_func_type* input_lua_func;
     bool is_autocomplete_popup_open;
-    std::string param_hint;
 
     // FUNCTIONS --------------------------------------------------------------
     bool connect_log();
