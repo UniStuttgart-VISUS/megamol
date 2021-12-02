@@ -76,6 +76,19 @@
 #define GUI_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
 
 
+#ifdef WITH_GL
+
+#define GUI_GL_CHECK_ERROR                                                                    \
+    {                                                                                             \
+        auto err = glGetError();                                                                  \
+        if (err != GL_NO_ERROR)                                                                             \
+            megamol::core::utility::log::Log::DefaultLog.WriteError(                              \
+                "OpenGL Error: %i. [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__); \
+    }
+
+#endif // WITH_GL
+
+
 namespace megamol {
 namespace gui {
 

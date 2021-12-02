@@ -7,7 +7,6 @@
 
 
 #include "ImageWidget.h"
-
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/FileUtils.h"
 #include "vislib/graphics/BitmapImage.h"
@@ -20,6 +19,7 @@ using namespace megamol::gui;
 megamol::gui::ImageWidget::ImageWidget() : tooltip() {}
 
 #ifdef WITH_GL
+
 bool megamol::gui::ImageWidget::LoadTextureFromFile(
     const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
     for (auto& resource_directory : megamol::gui::gui_resource_paths) {
@@ -32,6 +32,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(
     }
     return false;
 }
+
 #else
 
 bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename) {
@@ -78,7 +79,9 @@ bool megamol::gui::ImageWidget::LoadTextureFromData(int width, int height, float
     cpu_tex_ptr->data = std::move(data_vec);
     return true;
 }
+
 #endif
+
 
 void megamol::gui::ImageWidget::Widget(ImVec2 size, ImVec2 uv0, ImVec2 uv1) {
 

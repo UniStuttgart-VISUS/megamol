@@ -103,6 +103,11 @@ public:
      */
     static bool CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
         const std::string& fragment_code);
+    static bool CreateShader(
+        glowl::GLSLProgram** out_shader_ptr, const std::string& vertex_code, const std::string& fragment_code);
+
+    static std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> createShaderSource(
+        const std::string& vertex_code, const std::string& fragment_code);
 
     // LOCAL functions -------------------------------------------------------
 

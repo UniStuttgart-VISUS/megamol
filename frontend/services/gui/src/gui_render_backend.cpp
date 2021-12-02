@@ -5,6 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "gui_utils.h"
 #include "gui_render_backend.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -170,6 +171,8 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
     switch (this->initialized_backend) {
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
+        GUI_GL_CHECK_ERROR
+
         auto width_i = static_cast<int>(width);
         auto height_i = static_cast<int>(height);
         bool create_fbo = false;
@@ -204,6 +207,8 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, width, height);
         glEnable(GL_DEPTH_TEST);
+
+        GUI_GL_CHECK_ERROR
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {

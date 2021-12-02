@@ -4,12 +4,19 @@
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
+/// Implementation see mmcore/utility/Picking.cpp and mmcore_gl/utility/Picking_gl.cpp
 
 #ifndef MEGAMOL_GUI_PICKING_INCLUDED
 #define MEGAMOL_GUI_PICKING_INCLUDED
 #pragma once
 
+
 #include "GL_STUB.h"
+#include "mmcore/view/InputCall.h"
+#include <glm/glm.hpp>
+#include <map>
+#include <vector>
+
 
 // forward declaration
 namespace glowl {
@@ -19,10 +26,6 @@ class GLSLProgram;
 
 #define PICKING_INTERACTION_TUPLE_INIT \
     { false, -1, FLT_MAX }
-#include "mmcore/view/InputCall.h"
-#include <glm/glm.hpp>
-#include <map>
-#include <vector>
 
 
 namespace megamol {
@@ -95,7 +98,6 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     double cursor_x, cursor_y;
-    glm::ivec2 viewport_dim;
 
     /**
      * Set to true if cursor is on interactable object during current frame with respective obj id as second value
@@ -112,12 +114,13 @@ private:
 
     std::map<unsigned int, std::vector<Interaction>> available_interactions;
     ManipVector_t pending_manipulations;
+    bool enabled;
+
 #ifdef WITH_GL
     int prev_fbo = 0;
     glowl::FramebufferObject* fbo = nullptr;
-    glowl::GLSLProgram* fbo_shader = nullptr;
+    glowl::GLSLProgram* shader = nullptr;
 #endif
-    bool enabled;
 
     // FUNCTIONS --------------------------------------------------------------
 
