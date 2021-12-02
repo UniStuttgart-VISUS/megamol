@@ -8,8 +8,6 @@
 
 #include "OverlayRenderer.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,6 +19,8 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -30,7 +30,7 @@ using namespace megamol::cinematic_gl;
 
 OverlayRenderer::OverlayRenderer()
         : view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
-        , megamol::core::utility::RenderUtils()
+        , megamol::core_gl::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
@@ -101,7 +101,7 @@ OverlayRenderer::OverlayRenderer()
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, { "png" });
+    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, {"png"});
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
@@ -180,12 +180,6 @@ void OverlayRenderer::release() {
 
 bool OverlayRenderer::create() {
 
-    if (!this->InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     return this->onToggleMode(this->paramMode);
 }
 
@@ -240,7 +234,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
                 this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
                                               .PeekBuffer());
-            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
+            if (!this->LoadTextureFromFile(
+                    this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
                 return false;
             }
         }

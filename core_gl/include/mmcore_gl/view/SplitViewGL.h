@@ -8,17 +8,17 @@
 #ifndef MEGAMOLCORE_SPLITVIEW_H_INCLUDED
 #define MEGAMOLCORE_SPLITVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/TimeControl.h"
 #include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-#include "mmcore/view/TimeControl.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace core_gl {
@@ -35,14 +35,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "SplitViewGL"; }
+    static const char* ClassName() {
+        return "SplitViewGL";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "A view embedding two other views separated by a splitter"; }
+    static const char* Description() {
+        return "A view embedding two other views separated by a splitter";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -63,7 +67,9 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart() { return false; }
+    static bool SupportQuickstart() {
+        return false;
+    }
 
     /** Ctor. */
     SplitViewGL();
@@ -111,11 +117,13 @@ public:
      */
     bool OnRenderView(core::Call& call) override;
 
-    bool OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
+    bool OnKey(
+        frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
 
     bool OnChar(unsigned int codePoint) override;
 
-    bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) override;
+    bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
+        frontend_resources::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 
@@ -143,14 +151,18 @@ private:
      *
      * @return The renderer 1 call
      */
-    inline CallRenderViewGL* render1() const { return this->_render1Slot.CallAs<CallRenderViewGL>(); }
+    inline CallRenderViewGL* render1() const {
+        return this->_render1Slot.CallAs<CallRenderViewGL>();
+    }
 
     /**
      * Answer the renderer 2 call
      *
      * @return The renderer 2 call
      */
-    inline CallRenderViewGL* render2() const { return this->_render2Slot.CallAs<CallRenderViewGL>(); }
+    inline CallRenderViewGL* render2() const {
+        return this->_render2Slot.CallAs<CallRenderViewGL>();
+    }
 
     /**
      * Returns the focused (keyboard input) renderer.
@@ -233,7 +245,7 @@ private:
 
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_SPLITVIEW_H_INCLUDED */

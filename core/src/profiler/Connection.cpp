@@ -4,9 +4,9 @@
  * Copyright (C) 2013 by TU Dresden
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/profiler/Connection.h"
 #include "mmcore/profiler/Manager.h"
+#include "stdafx.h"
 #include "vislib/memutils.h"
 
 using namespace megamol;
@@ -50,9 +50,9 @@ void profiler::Connection::begin_measure(void) {
  * profiler::Connection::end_measure
  */
 void profiler::Connection::end_measure(void) {
-    this->values[this->values_pos].SetSecond(
-        Manager::Instance().Now() - this->values[this->values_pos].First());
-    if (this->values_cnt <= this->values_pos) this->values_cnt = this->values_pos + 1;
+    this->values[this->values_pos].SetSecond(Manager::Instance().Now() - this->values[this->values_pos].First());
+    if (this->values_cnt <= this->values_pos)
+        this->values_cnt = this->values_pos + 1;
 }
 
 

@@ -5,16 +5,16 @@
  */
 
 
-#include "stdafx.h"
 #include "protein/ReducedSurface.h"
-#include <ctime>
-#include <iostream>
-#include <math.h>
+#include "stdafx.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/sys/File.h"
+#include <ctime>
+#include <iostream>
+#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -30,7 +30,9 @@ using namespace megamol::protein_calls;
  * ReducedSurface::ReducedSurface
  */
 ReducedSurface::ReducedSurface(MolecularDataCall* mol, float probeRad)
-        : molecule(mol), globalRS(true), zeroVec3(0, 0, 0) {
+        : molecule(mol)
+        , globalRS(true)
+        , zeroVec3(0, 0, 0) {
     // set the first atom index to 0
     this->firstAtomIdx = 0;
     // set the number of atoms to the total number of protein atoms
@@ -56,7 +58,9 @@ ReducedSurface::ReducedSurface(MolecularDataCall* mol, float probeRad)
 }
 
 ReducedSurface::ReducedSurface(unsigned int molId, MolecularDataCall* mol, float probeRad)
-        : molecule(mol), globalRS(false), zeroVec3(0, 0, 0) {
+        : molecule(mol)
+        , globalRS(false)
+        , zeroVec3(0, 0, 0) {
     // check if the chain exists
     if (molId < this->molecule->MoleculeCount()) {
         // set the first atom index
@@ -147,17 +151,17 @@ void ReducedSurface::ComputeReducedSurface() {
     this->bBox = this->molecule->AccessBoundingBoxes().ObjectSpaceBBox();
     // set voxel lenght --> diameter of the probe + maximum atom diameter
     this->voxelLength = 2 * this->probeRadius + 2 * 3.0f;
-    unsigned int tmpSize = (unsigned int) ceilf(this->bBox.Width() / this->voxelLength);
+    unsigned int tmpSize = (unsigned int)ceilf(this->bBox.Width() / this->voxelLength);
     this->voxelMap.clear();
     this->voxelMapProbes.clear();
     this->voxelMap.resize(tmpSize);
     this->voxelMapProbes.resize(tmpSize);
     for (cnt1 = 0; cnt1 < this->voxelMap.size(); ++cnt1) {
-        this->voxelMap[cnt1].resize((unsigned int) ceilf(this->bBox.Height() / this->voxelLength));
-        this->voxelMapProbes[cnt1].resize((unsigned int) ceilf(this->bBox.Height() / this->voxelLength));
+        this->voxelMap[cnt1].resize((unsigned int)ceilf(this->bBox.Height() / this->voxelLength));
+        this->voxelMapProbes[cnt1].resize((unsigned int)ceilf(this->bBox.Height() / this->voxelLength));
         for (cnt2 = 0; cnt2 < this->voxelMap[cnt1].size(); ++cnt2) {
-            this->voxelMap[cnt1][cnt2].resize((unsigned int) ceilf(this->bBox.Depth() / this->voxelLength));
-            this->voxelMapProbes[cnt1][cnt2].resize((unsigned int) ceilf(this->bBox.Depth() / this->voxelLength));
+            this->voxelMap[cnt1][cnt2].resize((unsigned int)ceilf(this->bBox.Depth() / this->voxelLength));
+            this->voxelMapProbes[cnt1][cnt2].resize((unsigned int)ceilf(this->bBox.Depth() / this->voxelLength));
         }
     }
     std::cout << "time for resizing voxel maps:  " << (double(clock() - t) / double(CLOCKS_PER_SEC)) << std::endl;
@@ -177,33 +181,33 @@ void ReducedSurface::ComputeReducedSurface() {
         this->rsVertex.push_back(new RSVertex(tmpVec1, radius, cnt1));
 
         // add RS-vertex to voxel map cell
-        this->voxelMap[(unsigned int) std::min((unsigned int) this->voxelMap.size() - 1,
-            (unsigned int) std::max(0, (int) floorf((tmpVec1.GetX() - bBox.Left()) / voxelLength)))]
-                      [(unsigned int) std::min((unsigned int) this->voxelMap[0].size() - 1,
-                          (unsigned int) std::max(0, (int) floorf((tmpVec1.GetY() - bBox.Bottom()) / voxelLength)))]
-                      [(unsigned int) std::min((unsigned int) this->voxelMap[0][0].size() - 1,
-                           (unsigned int) std::max(0, (int) floorf((tmpVec1.GetZ() - bBox.Back()) / voxelLength)))]
+        this->voxelMap[(unsigned int)std::min((unsigned int)this->voxelMap.size() - 1,
+            (unsigned int)std::max(0, (int)floorf((tmpVec1.GetX() - bBox.Left()) / voxelLength)))]
+                      [(unsigned int)std::min((unsigned int)this->voxelMap[0].size() - 1,
+                          (unsigned int)std::max(0, (int)floorf((tmpVec1.GetY() - bBox.Bottom()) / voxelLength)))]
+                      [(unsigned int)std::min((unsigned int)this->voxelMap[0][0].size() - 1,
+                           (unsigned int)std::max(0, (int)floorf((tmpVec1.GetZ() - bBox.Back()) / voxelLength)))]
                           .push_back(this->rsVertex.back());
         // if this is the first atom OR the x-value is larger than the current smallest x
         // --> store cnt as xIdx
         if (this->rsVertex.size() > 0 ||
             (this->rsVertex[xIdx]->GetPosition().GetX() - this->rsVertex[xIdx]->GetRadius()) >
                 (this->rsVertex.back()->GetPosition().GetX() - this->rsVertex.back()->GetRadius())) {
-            xIdx = (unsigned int) this->rsVertex.size() - 1;
+            xIdx = (unsigned int)this->rsVertex.size() - 1;
         }
         // if this is the first atom OR the y-value is larger than the current smallest y
         // --> store cnt as yIdx
         if (this->rsVertex.size() > 0 ||
             (this->rsVertex[yIdx]->GetPosition().GetY() - this->rsVertex[yIdx]->GetRadius()) >
                 (this->rsVertex.back()->GetPosition().GetY() - this->rsVertex.back()->GetRadius())) {
-            yIdx = (unsigned int) this->rsVertex.size() - 1;
+            yIdx = (unsigned int)this->rsVertex.size() - 1;
         }
         // if this is the first atom OR the z-value is larger than the current smallest z
         // --> store cnt as zIdx
         if (this->rsVertex.size() > 0 ||
             (this->rsVertex[zIdx]->GetPosition().GetZ() - this->rsVertex[zIdx]->GetRadius()) >
                 (this->rsVertex.back()->GetPosition().GetZ() - this->rsVertex.back()->GetRadius())) {
-            zIdx = (unsigned int) this->rsVertex.size() - 1;
+            zIdx = (unsigned int)this->rsVertex.size() - 1;
         }
     }
 
@@ -314,7 +318,7 @@ void ReducedSurface::ComputeRSFace(unsigned int edgeIdx) {
     unsigned int cnt;
     int result = -1;
     // the angle between two faces
-    float angle = (float) vislib::math::PI_DOUBLE * 5.0f;
+    float angle = (float)vislib::math::PI_DOUBLE * 5.0f;
     float alpha;
     // names of the variables according to: Connolly "Analytical Molecular Surface Calculation", 1983
     vislib::math::Vector<float, 3> ai = edge->GetVertex1()->GetPosition();
@@ -633,13 +637,12 @@ void ReducedSurface::ComputeRSFace(unsigned int edgeIdx) {
             }
             // add probe position to voxel map cell
             face->SetProbeIndex(
-                std::min((unsigned int) this->voxelMapProbes.size() - 1,
-                    (unsigned int) std::max(0, (int) floorf((probeCenterNewFace.GetX() - bBox.Left()) / voxelLength))),
-                std::min((unsigned int) this->voxelMapProbes[0].size() - 1,
-                    (unsigned int) std::max(
-                        0, (int) floorf((probeCenterNewFace.GetY() - bBox.Bottom()) / voxelLength))),
-                std::min((unsigned int) this->voxelMapProbes[0][0].size() - 1,
-                    (unsigned int) std::max(0, (int) floorf((probeCenterNewFace.GetZ() - bBox.Back()) / voxelLength))));
+                std::min((unsigned int)this->voxelMapProbes.size() - 1,
+                    (unsigned int)std::max(0, (int)floorf((probeCenterNewFace.GetX() - bBox.Left()) / voxelLength))),
+                std::min((unsigned int)this->voxelMapProbes[0].size() - 1,
+                    (unsigned int)std::max(0, (int)floorf((probeCenterNewFace.GetY() - bBox.Bottom()) / voxelLength))),
+                std::min((unsigned int)this->voxelMapProbes[0][0].size() - 1,
+                    (unsigned int)std::max(0, (int)floorf((probeCenterNewFace.GetZ() - bBox.Back()) / voxelLength))));
             this->voxelMapProbes[face->GetProbeIndex().GetX()][face->GetProbeIndex().GetY()]
                                 [face->GetProbeIndex().GetZ()]
                                     .push_back(face);
@@ -715,7 +718,7 @@ float ReducedSurface::ComputeAngleBetweenProbes(vislib::math::Vector<float, 3> t
     angle = acos(cosinus);
     // correct angle if the new probe lies in the back of the plane
     if ((dist1 < 0.0f && dist2 > 0.0f) || (dist1 > 0.0f && dist2 < 0.0f))
-        angle = 2.0f * (float) vislib::math::PI_DOUBLE - angle;
+        angle = 2.0f * (float)vislib::math::PI_DOUBLE - angle;
     return angle;
 }
 
@@ -795,12 +798,12 @@ bool ReducedSurface::ComputeFirstFixedProbePos(RSVertex* vI, RSVertex* vJ, RSVer
             this->rsEdge[this->rsEdge.size() - 2], this->rsEdge[this->rsEdge.size() - 1], uijk, pijk1));
         // add probe position to voxel map cell
         this->rsFace.back()->SetProbeIndex(
-            std::min((unsigned int) this->voxelMapProbes.size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk1.GetX() - bBox.Left()) / voxelLength))),
-            std::min((unsigned int) this->voxelMapProbes[0].size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk1.GetY() - bBox.Bottom()) / voxelLength))),
-            std::min((unsigned int) this->voxelMapProbes[0][0].size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk1.GetZ() - bBox.Back()) / voxelLength))));
+            std::min((unsigned int)this->voxelMapProbes.size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk1.GetX() - bBox.Left()) / voxelLength))),
+            std::min((unsigned int)this->voxelMapProbes[0].size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk1.GetY() - bBox.Bottom()) / voxelLength))),
+            std::min((unsigned int)this->voxelMapProbes[0][0].size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk1.GetZ() - bBox.Back()) / voxelLength))));
         this->voxelMapProbes[this->rsFace.back()->GetProbeIndex().GetX()][this->rsFace.back()->GetProbeIndex().GetY()]
                             [this->rsFace.back()->GetProbeIndex().GetZ()]
                                 .push_back(this->rsFace.back());
@@ -829,12 +832,12 @@ bool ReducedSurface::ComputeFirstFixedProbePos(RSVertex* vI, RSVertex* vJ, RSVer
             this->rsEdge[this->rsEdge.size() - 2], this->rsEdge[this->rsEdge.size() - 1], uijk * (-1.0f), pijk2));
         // add probe position to voxel map cell
         this->rsFace.back()->SetProbeIndex(
-            std::min((unsigned int) this->voxelMapProbes.size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk2.GetX() - bBox.Left()) / voxelLength))),
-            std::min((unsigned int) this->voxelMapProbes[0].size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk2.GetY() - bBox.Bottom()) / voxelLength))),
-            std::min((unsigned int) this->voxelMapProbes[0][0].size() - 1,
-                (unsigned int) std::max(0, (int) floorf((pijk2.GetZ() - bBox.Back()) / voxelLength))));
+            std::min((unsigned int)this->voxelMapProbes.size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk2.GetX() - bBox.Left()) / voxelLength))),
+            std::min((unsigned int)this->voxelMapProbes[0].size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk2.GetY() - bBox.Bottom()) / voxelLength))),
+            std::min((unsigned int)this->voxelMapProbes[0][0].size() - 1,
+                (unsigned int)std::max(0, (int)floorf((pijk2.GetZ() - bBox.Back()) / voxelLength))));
         this->voxelMapProbes[this->rsFace.back()->GetProbeIndex().GetX()][this->rsFace.back()->GetProbeIndex().GetY()]
                             [this->rsFace.back()->GetProbeIndex().GetZ()]
                                 .push_back(this->rsFace.back());
@@ -859,17 +862,17 @@ void ReducedSurface::ComputeVicinity(vislib::math::Vector<float, 3> m, float rad
     // maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
     // maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
     // maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-    maxXId = (unsigned int) this->voxelMap.size() - 1;
-    maxYId = (unsigned int) this->voxelMap[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMap[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMap.size() - 1;
+    maxYId = (unsigned int)this->voxelMap[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMap[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
-    xId = (unsigned int) std::max(0, (int) floorf((m.GetX() - bBox.Left()) / voxelLength));
-    xId = (unsigned int) std::min(maxXId, xId);
-    yId = (unsigned int) std::max(0, (int) floorf((m.GetY() - bBox.Bottom()) / voxelLength));
-    yId = (unsigned int) std::min(maxYId, yId);
-    zId = (unsigned int) std::max(0, (int) floorf((m.GetZ() - bBox.Back()) / voxelLength));
-    zId = (unsigned int) std::min(maxZId, zId);
+    xId = (unsigned int)std::max(0, (int)floorf((m.GetX() - bBox.Left()) / voxelLength));
+    xId = (unsigned int)std::min(maxXId, xId);
+    yId = (unsigned int)std::max(0, (int)floorf((m.GetY() - bBox.Bottom()) / voxelLength));
+    yId = (unsigned int)std::min(maxYId, yId);
+    zId = (unsigned int)std::max(0, (int)floorf((m.GetZ() - bBox.Back()) / voxelLength));
+    zId = (unsigned int)std::min(maxZId, zId);
 
     float distance;
     // float threshold;
@@ -891,7 +894,7 @@ void ReducedSurface::ComputeVicinity(vislib::math::Vector<float, 3> m, float rad
                     // if distance < threshold --> add atom 'cnt' to vicinity
                     // if( distance <= threshold )
                     //{
-                    //	this->vicinity.push_back( this->voxelMap[xId+cntX][yId+cntY][zId+cntZ][cnt]);
+                    //    this->vicinity.push_back( this->voxelMap[xId+cntX][yId+cntY][zId+cntZ][cnt]);
                     //}
                     this->vicinity.push_back(this->voxelMap[xId + cntX][yId + cntY][zId + cntZ][cnt]);
                 }
@@ -929,17 +932,17 @@ void ReducedSurface::ComputeVicinity(vislib::math::Vector<float, 3> m, float rad
 void ReducedSurface::ComputeVicinityEdge(RSEdge* edge) {
     unsigned int cnt, xId, yId, zId, maxXId, maxYId, maxZId;
 
-    maxXId = (unsigned int) this->voxelMap.size() - 1;
-    maxYId = (unsigned int) this->voxelMap[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMap[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMap.size() - 1;
+    maxYId = (unsigned int)this->voxelMap[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMap[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
     xId = std::min(
-        maxXId, (unsigned int) std::max(0, (int) floorf((edge->GetTorusCenter().GetX() - bBox.Left()) / voxelLength)));
-    yId = std::min(maxYId,
-        (unsigned int) std::max(0, (int) floorf((edge->GetTorusCenter().GetY() - bBox.Bottom()) / voxelLength)));
+        maxXId, (unsigned int)std::max(0, (int)floorf((edge->GetTorusCenter().GetX() - bBox.Left()) / voxelLength)));
+    yId = std::min(
+        maxYId, (unsigned int)std::max(0, (int)floorf((edge->GetTorusCenter().GetY() - bBox.Bottom()) / voxelLength)));
     zId = std::min(
-        maxZId, (unsigned int) std::max(0, (int) floorf((edge->GetTorusCenter().GetZ() - bBox.Back()) / voxelLength)));
+        maxZId, (unsigned int)std::max(0, (int)floorf((edge->GetTorusCenter().GetZ() - bBox.Back()) / voxelLength)));
 
     float distance, threshold;
     // clear old vicinity indices
@@ -982,17 +985,17 @@ void ReducedSurface::ComputeVicinityVertex(RSVertex* vertex) {
     // maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
     // maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
     // maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-    maxXId = (unsigned int) this->voxelMap.size() - 1;
-    maxYId = (unsigned int) this->voxelMap[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMap[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMap.size() - 1;
+    maxYId = (unsigned int)this->voxelMap[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMap[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
-    xId = (unsigned int) std::max(0, (int) floorf((vertex->GetPosition().GetX() - bBox.Left()) / voxelLength));
-    xId = (unsigned int) std::min(maxXId, xId);
-    yId = (unsigned int) std::max(0, (int) floorf((vertex->GetPosition().GetY() - bBox.Bottom()) / voxelLength));
-    yId = (unsigned int) std::min(maxYId, yId);
-    zId = (unsigned int) std::max(0, (int) floorf((vertex->GetPosition().GetZ() - bBox.Back()) / voxelLength));
-    zId = (unsigned int) std::min(maxZId, zId);
+    xId = (unsigned int)std::max(0, (int)floorf((vertex->GetPosition().GetX() - bBox.Left()) / voxelLength));
+    xId = (unsigned int)std::min(maxXId, xId);
+    yId = (unsigned int)std::max(0, (int)floorf((vertex->GetPosition().GetY() - bBox.Bottom()) / voxelLength));
+    yId = (unsigned int)std::min(maxYId, yId);
+    zId = (unsigned int)std::max(0, (int)floorf((vertex->GetPosition().GetZ() - bBox.Back()) / voxelLength));
+    zId = (unsigned int)std::min(maxZId, zId);
 
     float distance, threshold;
     // clear old vicinity indices
@@ -1031,9 +1034,9 @@ std::vector<ReducedSurface::RSFace*> ReducedSurface::GetProbesCutEdge(RSEdge* ed
     // maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
     // maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
     // maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-    maxXId = (unsigned int) this->voxelMapProbes.size() - 1;
-    maxYId = (unsigned int) this->voxelMapProbes[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMapProbes[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMapProbes.size() - 1;
+    maxYId = (unsigned int)this->voxelMapProbes[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMapProbes[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
     vislib::math::Vector<float, 3> v1, v2, center, probe, dir21;
@@ -1047,9 +1050,9 @@ std::vector<ReducedSurface::RSFace*> ReducedSurface::GetProbesCutEdge(RSEdge* ed
     // normalize dir21
     dir21.Normalise();
     // compute voxel indices for edge center
-    xId = std::min((unsigned int) std::max(0, (int) floorf((center.GetX() - bBox.Left()) / voxelLength)), maxXId);
-    yId = std::min((unsigned int) std::max(0, (int) floorf((center.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
-    zId = std::min((unsigned int) std::max(0, (int) floorf((center.GetZ() - bBox.Back()) / voxelLength)), maxZId);
+    xId = std::min((unsigned int)std::max(0, (int)floorf((center.GetX() - bBox.Left()) / voxelLength)), maxXId);
+    yId = std::min((unsigned int)std::max(0, (int)floorf((center.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
+    zId = std::min((unsigned int)std::max(0, (int)floorf((center.GetZ() - bBox.Back()) / voxelLength)), maxZId);
 
     float dist1, dist2, edgeLen, lenH;
     edgeLen = (v1 - v2).Length();
@@ -1091,9 +1094,9 @@ void ReducedSurface::WriteProbesCutEdge(RSEdge* edge) {
     // maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
     // maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
     // maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-    maxXId = (unsigned int) this->voxelMapProbes.size() - 1;
-    maxYId = (unsigned int) this->voxelMapProbes[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMapProbes[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMapProbes.size() - 1;
+    maxYId = (unsigned int)this->voxelMapProbes[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMapProbes[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
     vislib::math::Vector<float, 3> v1, v2, center, probe, dir21;
@@ -1107,9 +1110,9 @@ void ReducedSurface::WriteProbesCutEdge(RSEdge* edge) {
     // normalize dir21
     dir21.Normalise();
     // compute voxel indices for edge center
-    xId = std::min((unsigned int) std::max(0, (int) floorf((center.GetX() - bBox.Left()) / voxelLength)), maxXId);
-    yId = std::min((unsigned int) std::max(0, (int) floorf((center.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
-    zId = std::min((unsigned int) std::max(0, (int) floorf((center.GetZ() - bBox.Back()) / voxelLength)), maxZId);
+    xId = std::min((unsigned int)std::max(0, (int)floorf((center.GetX() - bBox.Left()) / voxelLength)), maxXId);
+    yId = std::min((unsigned int)std::max(0, (int)floorf((center.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
+    zId = std::min((unsigned int)std::max(0, (int)floorf((center.GetZ() - bBox.Back()) / voxelLength)), maxZId);
 
     float dist1, dist2, edgeLen, lenH;
     edgeLen = (v1 - v2).Length();
@@ -1149,18 +1152,18 @@ void ReducedSurface::ComputeProbeCutVertex(RSVertex* vertex) {
     // maxXId = (unsigned int)floorf( this->bBox.Width() / this->voxelLength);
     // maxYId = (unsigned int)floorf( this->bBox.Height() / this->voxelLength);
     // maxZId = (unsigned int)floorf( this->bBox.Depth() / this->voxelLength);
-    maxXId = (unsigned int) this->voxelMap.size() - 1;
-    maxYId = (unsigned int) this->voxelMap[0].size() - 1;
-    maxZId = (unsigned int) this->voxelMap[0][0].size() - 1;
+    maxXId = (unsigned int)this->voxelMap.size() - 1;
+    maxYId = (unsigned int)this->voxelMap[0].size() - 1;
+    maxZId = (unsigned int)this->voxelMap[0][0].size() - 1;
     int cntX, cntY, cntZ;
 
     vislib::math::Vector<float, 3> v1, probe;
     // first vertex of the edge
     v1 = vertex->GetPosition();
     // compute voxel indices for edge center
-    xId = std::min((unsigned int) std::max(0, (int) floorf((v1.GetX() - bBox.Left()) / voxelLength)), maxXId);
-    yId = std::min((unsigned int) std::max(0, (int) floorf((v1.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
-    zId = std::min((unsigned int) std::max(0, (int) floorf((v1.GetZ() - bBox.Back()) / voxelLength)), maxZId);
+    xId = std::min((unsigned int)std::max(0, (int)floorf((v1.GetX() - bBox.Left()) / voxelLength)), maxXId);
+    yId = std::min((unsigned int)std::max(0, (int)floorf((v1.GetY() - bBox.Bottom()) / voxelLength)), maxYId);
+    zId = std::min((unsigned int)std::max(0, (int)floorf((v1.GetZ() - bBox.Back()) / voxelLength)), maxZId);
 
     float dist;
     // clear old face list
@@ -1301,27 +1304,27 @@ bool ReducedSurface::UpdateData(const float lowerThreshold, const float upperThr
             // the lower threshold is exceeded
             lowerThresholdExceeded = true;
             // compute old voxel map index
-            oldVoxelMapIdxX = (unsigned int) std::max(
-                0, (int) floorf((this->rsVertex[cnt3]->GetPosition().GetX() - bBox.Left()) / voxelLength));
-            oldVoxelMapIdxX = std::min(oldVoxelMapIdxX, (unsigned int) this->voxelMap.size() - 1);
-            oldVoxelMapIdxY = (unsigned int) std::max(
-                0, (int) floorf((this->rsVertex[cnt3]->GetPosition().GetY() - bBox.Bottom()) / voxelLength));
-            oldVoxelMapIdxY = std::min(oldVoxelMapIdxY, (unsigned int) this->voxelMap[oldVoxelMapIdxX].size() - 1);
-            oldVoxelMapIdxZ = (unsigned int) std::max(
-                0, (int) floorf((this->rsVertex[cnt3]->GetPosition().GetZ() - bBox.Back()) / voxelLength));
+            oldVoxelMapIdxX = (unsigned int)std::max(
+                0, (int)floorf((this->rsVertex[cnt3]->GetPosition().GetX() - bBox.Left()) / voxelLength));
+            oldVoxelMapIdxX = std::min(oldVoxelMapIdxX, (unsigned int)this->voxelMap.size() - 1);
+            oldVoxelMapIdxY = (unsigned int)std::max(
+                0, (int)floorf((this->rsVertex[cnt3]->GetPosition().GetY() - bBox.Bottom()) / voxelLength));
+            oldVoxelMapIdxY = std::min(oldVoxelMapIdxY, (unsigned int)this->voxelMap[oldVoxelMapIdxX].size() - 1);
+            oldVoxelMapIdxZ = (unsigned int)std::max(
+                0, (int)floorf((this->rsVertex[cnt3]->GetPosition().GetZ() - bBox.Back()) / voxelLength));
             oldVoxelMapIdxZ =
-                std::min(oldVoxelMapIdxZ, (unsigned int) this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY].size() - 1);
+                std::min(oldVoxelMapIdxZ, (unsigned int)this->voxelMap[oldVoxelMapIdxX][oldVoxelMapIdxY].size() - 1);
             // compute new voxel map index --> make sure the index is within bounds
             newVoxelMapIdxX =
-                (unsigned int) std::max(0, (int) floorf((tmpVec1.GetX() - bBox.Left()) / this->voxelLength));
-            newVoxelMapIdxX = std::min(newVoxelMapIdxX, (unsigned int) this->voxelMap.size() - 1);
+                (unsigned int)std::max(0, (int)floorf((tmpVec1.GetX() - bBox.Left()) / this->voxelLength));
+            newVoxelMapIdxX = std::min(newVoxelMapIdxX, (unsigned int)this->voxelMap.size() - 1);
             newVoxelMapIdxY =
-                (unsigned int) std::max(0, (int) floorf((tmpVec1.GetY() - bBox.Bottom()) / this->voxelLength));
-            newVoxelMapIdxY = std::min(newVoxelMapIdxY, (unsigned int) this->voxelMap[newVoxelMapIdxX].size() - 1);
+                (unsigned int)std::max(0, (int)floorf((tmpVec1.GetY() - bBox.Bottom()) / this->voxelLength));
+            newVoxelMapIdxY = std::min(newVoxelMapIdxY, (unsigned int)this->voxelMap[newVoxelMapIdxX].size() - 1);
             newVoxelMapIdxZ =
-                (unsigned int) std::max(0, (int) floorf((tmpVec1.GetZ() - bBox.Back()) / this->voxelLength));
+                (unsigned int)std::max(0, (int)floorf((tmpVec1.GetZ() - bBox.Back()) / this->voxelLength));
             newVoxelMapIdxZ =
-                std::min(newVoxelMapIdxZ, (unsigned int) this->voxelMap[newVoxelMapIdxX][newVoxelMapIdxY].size() - 1);
+                std::min(newVoxelMapIdxZ, (unsigned int)this->voxelMap[newVoxelMapIdxX][newVoxelMapIdxY].size() - 1);
             // if the new atom position lies in another voxel --> remove old and add new position
             if ((oldVoxelMapIdxX != newVoxelMapIdxX) || (oldVoxelMapIdxY != newVoxelMapIdxY) ||
                 (oldVoxelMapIdxZ != newVoxelMapIdxZ)) {

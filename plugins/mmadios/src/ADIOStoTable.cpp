@@ -8,14 +8,11 @@
 #include "mmadios/CallADIOSData.h"
 
 
-
 namespace megamol {
 namespace adios {
 
 
-ADIOStoTable::ADIOStoTable() : Module()
-    , _getDataSlot("getData", "")
-    , _deployTableSlot("deployTable", "") {
+ADIOStoTable::ADIOStoTable() : Module(), _getDataSlot("getData", ""), _deployTableSlot("deployTable", "") {
 
     this->_deployTableSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
         datatools::table::TableDataCall::FunctionName(0), &ADIOStoTable::getData);
@@ -27,22 +24,30 @@ ADIOStoTable::ADIOStoTable() : Module()
     this->MakeSlotAvailable(&this->_getDataSlot);
 }
 
-ADIOStoTable::~ADIOStoTable() { this->Release(); }
+ADIOStoTable::~ADIOStoTable() {
+    this->Release();
+}
 
-bool ADIOStoTable::create() { return true; }
+bool ADIOStoTable::create() {
+    return true;
+}
 
 void ADIOStoTable::release() {}
 
-bool ADIOStoTable::InterfaceIsDirty() { return false; }
+bool ADIOStoTable::InterfaceIsDirty() {
+    return false;
+}
 
 
 bool ADIOStoTable::getData(core::Call& call) {
 
     datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
-    if (ctd == nullptr) return false;
+    if (ctd == nullptr)
+        return false;
 
     adios::CallADIOSData* cad = this->_getDataSlot.CallAs<adios::CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     auto availVars = cad->getAvailableVars();
     // maybe get meta data was not called jet
@@ -55,10 +60,11 @@ bool ADIOStoTable::getData(core::Call& call) {
 
     if ((cad->getFrameIDtoLoad() != _currentFrame) || dathashChanged) {
 
-        
+
         for (auto var : availVars) {
             if (!cad->inquireVar(var)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
             }
         }
 
@@ -93,8 +99,8 @@ bool ADIOStoTable::getData(core::Call& call) {
             _colinfo[i].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
         }
 
-        _floatBlob.resize(_rows*_cols);
-        #pragma omp parallel for
+        _floatBlob.resize(_rows * _cols);
+#pragma omp parallel for
         for (int i = 0; i < _rows; ++i) {
             for (int j = 0; j < _cols; ++j) {
                 if (i >= raw_data[j].size()) {
@@ -106,7 +112,8 @@ bool ADIOStoTable::getData(core::Call& call) {
         }
     }
 
-    if (_floatBlob.empty()) return false;
+    if (_floatBlob.empty())
+        return false;
 
     _currentFrame = ctd->GetFrameID();
     ctd->Set(_cols, _rows, _colinfo.data(), _floatBlob.data());
@@ -117,15 +124,18 @@ bool ADIOStoTable::getData(core::Call& call) {
 bool ADIOStoTable::getMetaData(core::Call& call) {
 
     datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
-    if (ctd == nullptr) return false;
+    if (ctd == nullptr)
+        return false;
 
     adios::CallADIOSData* cad = this->_getDataSlot.CallAs<adios::CallADIOSData>();
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     // get metadata from adios
     cad->setFrameIDtoLoad(ctd->GetFrameID());
 
-    if (!(*cad)(1)) return false;
+    if (!(*cad)(1))
+        return false;
 
     // put metadata in table call
     ctd->SetFrameCount(cad->getFrameCount());

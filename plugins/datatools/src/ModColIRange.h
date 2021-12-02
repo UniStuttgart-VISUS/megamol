@@ -7,39 +7,41 @@
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
-#include <vector>
 #include "datatools/GraphDataCall.h"
-#include "vislib/math/Vector.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Vector.h"
+#include <vector>
 
 namespace megamol {
 namespace datatools {
 
-    class ModColIRange : public datatools::AbstractParticleManipulator {
-    public:
-        static const char *ClassName(void) { return "ModIColRange"; }
-        static const char *Description(void) { return "Mapps IColRange values periodically into the specified range."; }
-        static bool IsAvailable(void) { return true; }
+class ModColIRange : public datatools::AbstractParticleManipulator {
+public:
+    static const char* ClassName(void) {
+        return "ModIColRange";
+    }
+    static const char* Description(void) {
+        return "Mapps IColRange values periodically into the specified range.";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        ModColIRange();
-        virtual ~ModColIRange();
+    ModColIRange();
+    virtual ~ModColIRange();
 
-    protected:
+protected:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+private:
+    core::param::ParamSlot rangeSlot;
 
-    private:
+    size_t inDataHash;
+    size_t outDataHash;
+    unsigned int frameID;
+    std::vector<float> colors;
+    float minCol, maxCol;
+};
 
-        core::param::ParamSlot rangeSlot;
-
-        size_t inDataHash;
-        size_t outDataHash;
-        unsigned int frameID;
-        std::vector<float> colors;
-        float minCol, maxCol;
-
-    };
-
-}
-}
+} // namespace datatools
+} // namespace megamol

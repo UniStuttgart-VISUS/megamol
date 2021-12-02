@@ -5,17 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "CinematicView.h"
 #include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "stdafx.h"
 
 
 using namespace megamol;
@@ -153,11 +153,12 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     "[CINEMATIC VIEW] [Render] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
                     __FUNCTION__, __LINE__);
             }
-        } 
+        }
 
         if (ccc_success && utils_success) {
 
-            ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+            ccc->SetBboxCenter(
+                core_gl::utility::vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
             ccc->SetTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
             ccc->SetFps(this->fps);
 
@@ -239,8 +240,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     clock_t tmpTime = clock();
                     clock_t cTime = tmpTime - this->deltaAnimTime;
                     this->deltaAnimTime = tmpTime;
-                    float animTime =
-                        ccc->GetSelectedKeyframe().GetAnimTime() + static_cast<float>(cTime) / static_cast<float>(CLOCKS_PER_SEC);
+                    float animTime = ccc->GetSelectedKeyframe().GetAnimTime() +
+                                     static_cast<float>(cTime) / static_cast<float>(CLOCKS_PER_SEC);
                     if ((animTime < 0.0f) ||
                         (animTime > ccc->GetTotalAnimTime())) { // Reset time if max animation time is reached
                         animTime = 0.0f;
@@ -262,7 +263,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Load current simulation time to this views animTimeParam = simulation time.
                 /// TODO XXX One frame dealy due to propagation in GetExtends in following frame?!
                 float simTime = skf.GetSimTime();
-                param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2)); // animTimeSlot
+                param::ParamSlot* animTimeParam =
+                    static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2)); // animTimeSlot
                 auto frame_count = cr3d->TimeFramesCount();
                 animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(frame_count), true);
 
@@ -320,7 +322,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                                 "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                                 __LINE__);
                         }
-                    } 
+                    }
                 }
 
                 // Apply showing skybox side ONLY if new camera parameters are set.
@@ -484,17 +486,17 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Render Decoration ------------------------------------------
                 this->_fbo->bind();
 
-                // Set letter box background 
+                // Set letter box background
                 auto bgcol = this->BkgndColour();
                 this->utils.SetBackgroundColor(bgcol);
-                bgcol = this->utils.Color(cinematic::CinematicUtils::Colors::LETTER_BOX);
+                bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
                 this->utils.SetBackgroundColor(bgcol);
                 glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
                 glClearDepth(1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glViewport(0, 0, vp_fw, vp_fh);
 
-                // Push fbo texture 
+                // Push fbo texture
                 float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
                 float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
                 float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
@@ -506,7 +508,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 this->utils.Push2DColorTexture(this->cinematicFbo->getColorAttachment(0)->getName(), pos_bottom_left,
                     pos_upper_left, pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
 
-                // Push menu 
+                // Push menu
                 std::string leftLabel = " CINEMATIC ";
                 std::string midLabel = "";
                 if (this->rendering) {
@@ -517,7 +519,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 std::string rightLabel = "";
                 this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh), 1.0f);
 
-                // Draw 2D 
+                // Draw 2D
                 this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -539,10 +541,9 @@ bool CinematicView::render_to_file_setup() {
     // init png data struct
     if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGB) {
         this->png_data.bpp = 3;
-    }  else if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGBA) {
+    } else if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGBA) {
         this->png_data.bpp = 4;
-    }
-    else {
+    } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[CINEMATIC VIEW] [render_to_file_setup] Unknown color attachment format. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
@@ -560,7 +561,7 @@ bool CinematicView::render_to_file_setup() {
     unsigned int firstFrame = static_cast<unsigned int>(this->firstRenderFrameParam.Param<param::IntParam>()->Value());
     unsigned int lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
 
-    unsigned int maxFrame = (unsigned int) (ccc->GetTotalAnimTime() * (float) this->fps);
+    unsigned int maxFrame = (unsigned int)(ccc->GetTotalAnimTime() * (float)this->fps);
     if (firstFrame > maxFrame) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render_to_file_setup] Max frame count exceeded. Limiting first frame to maximum frame "
@@ -577,11 +578,11 @@ bool CinematicView::render_to_file_setup() {
     }
 
     this->png_data.cnt = firstFrame;
-    this->png_data.animTime = (float) this->png_data.cnt / (float) this->fps;
+    this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->png_data.exp_frame_cnt = 1;
-    float frameCnt = (float) (this->fps) * ccc->GetTotalAnimTime();
+    float frameCnt = (float)(this->fps) * ccc->GetTotalAnimTime();
     while (frameCnt > 1.0f) {
         frameCnt /= 10.0f;
         this->png_data.exp_frame_cnt++;
@@ -595,7 +596,7 @@ bool CinematicView::render_to_file_setup() {
     struct tm nowdata;
     now = &nowdata;
     localtime_s(now, &t);
-#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
+#else  /* defined(_WIN32) && (_MSC_VER >= 1400) */
     now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday,
@@ -620,7 +621,8 @@ bool CinematicView::render_to_file_setup() {
     param::ParamSlot* animParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(0)); // animPlaySlot
     animParam->Param<param::BoolParam>()->SetValue(false);
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Started rendering of complete animation...");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "[CINEMATIC VIEW] Started rendering of complete animation...");
 
     return true;
 }
@@ -688,7 +690,8 @@ bool CinematicView::render_to_file_write() {
         }
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);
-        png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
+        png_set_text(
+            this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
@@ -751,7 +754,7 @@ bool CinematicView::render_to_file_write() {
 
         // Next frame/time step
         this->png_data.cnt++;
-        this->png_data.animTime = (float) this->png_data.cnt / (float) this->fps;
+        this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
         // Fit animTime to exact full seconds (removing rounding error)
         if (std::abs(this->png_data.animTime - std::round(this->png_data.animTime)) < (fpsFrac / 2.0)) {

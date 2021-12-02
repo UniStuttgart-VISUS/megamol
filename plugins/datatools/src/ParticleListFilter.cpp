@@ -1,41 +1,45 @@
 /*
  * ParticleListFilter.cpp
  *
- * Copyright (C) 2013 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2013 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "ParticleListFilter.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/BoolParam.h"
-#include <climits>
-#include <cfloat>
+#include "stdafx.h"
 #include "vislib/StringTokeniser.h"
-#include "geometry_calls/MultiParticleDataCall.h"
+#include <cfloat>
+#include <climits>
 
 namespace megamol::datatools {
 
 /*
  * ParticleListFilter::ParticleListFilter
  */
-ParticleListFilter::ParticleListFilter(void) : Module(),
-        inParticlesDataSlot("inPartData", "Input for (oriented) particle data"),
-        outParticlesDataSlot("outPartData", "Output of (oriented) particle data"),
-        includedListsSlot("includedTypes", "Comma-separated list of particle types to include"),
-        includeAllSlot("includeAll", "Button to populate includedLists from available data"),
-        globalColorMapComputationSlot("globalMap", "Compute color map min/max from all particle lists (false: compute them per list)"),
-        includeHiddenInColorMapSlot("includeHidden", "Include hidden particle lists in color map min/max computation"),
-        datahashParticlesIn(0), datahashParticlesOut(0),
-        frameID(0) {
+ParticleListFilter::ParticleListFilter(void)
+        : Module()
+        , inParticlesDataSlot("inPartData", "Input for (oriented) particle data")
+        , outParticlesDataSlot("outPartData", "Output of (oriented) particle data")
+        , includedListsSlot("includedTypes", "Comma-separated list of particle types to include")
+        , includeAllSlot("includeAll", "Button to populate includedLists from available data")
+        , globalColorMapComputationSlot(
+              "globalMap", "Compute color map min/max from all particle lists (false: compute them per list)")
+        , includeHiddenInColorMapSlot("includeHidden", "Include hidden particle lists in color map min/max computation")
+        , datahashParticlesIn(0)
+        , datahashParticlesOut(0)
+        , frameID(0) {
 
     //this->inParticlesDataSlot.SetCompatibleCall<DirectionalParticleDataCallDescription>();
     this->inParticlesDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetData", &ParticleListFilter::getDataCallback);
-    this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &ParticleListFilter::getExtentCallback);
+    this->outParticlesDataSlot.SetCallback(
+        "MultiParticleDataCall", "GetExtent", &ParticleListFilter::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesDataSlot);
 
     this->includedListsSlot << new core::param::StringParam("");
@@ -79,7 +83,7 @@ vislib::Array<unsigned int> ParticleListFilter::getSelectedLists() {
     vislib::StringA str = this->includedListsSlot.Param<megamol::core::param::StringParam>()->Value().c_str();
     vislib::StringTokeniserA sta(str, ',');
     vislib::Array<unsigned int> result;
-    while(sta.HasNext()) {
+    while (sta.HasNext()) {
         vislib::StringA t = sta.Next();
         if (t.IsEmpty()) {
             continue;
@@ -94,22 +98,24 @@ vislib::Array<unsigned int> ParticleListFilter::getSelectedLists() {
  */
 bool ParticleListFilter::getDataCallback(core::Call& call) {
 
-    geocalls::MultiParticleDataCall *outMpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (outMpdc == NULL) return false;
+    geocalls::MultiParticleDataCall* outMpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (outMpdc == NULL)
+        return false;
 
     bool doStuff = false;
     if (this->globalColorMapComputationSlot.IsDirty()) {
         this->globalColorMapComputationSlot.ResetDirty();
         doStuff = true;
     }
-    if (this->includeHiddenInColorMapSlot.IsDirty()) { 
+    if (this->includeHiddenInColorMapSlot.IsDirty()) {
         this->includeHiddenInColorMapSlot.ResetDirty();
         doStuff = true;
     }
 
     if (outMpdc != NULL) {
-        geocalls::MultiParticleDataCall *inMpdc = this->inParticlesDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-        if (inMpdc == NULL) return false;
+        geocalls::MultiParticleDataCall* inMpdc = this->inParticlesDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+        if (inMpdc == NULL)
+            return false;
 
         if (this->includeAllSlot.IsDirty()) {
             this->includeAllSlot.ResetDirty();
@@ -165,11 +171,13 @@ bool ParticleListFilter::getDataCallback(core::Call& call) {
         float globalMin = FLT_MAX;
         float globalMax = -FLT_MAX;
         for (unsigned int i = 0; i < cnt; i++) {
-            if (this->includeHiddenInColorMapSlot.Param<megamol::core::param::BoolParam>()->Value()
-                || included.Count() == 0
-                || (included.Count() > 0 && included.Contains(inMpdc->AccessParticles(i).GetGlobalType()))) {
-                if (inMpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin) globalMin = inMpdc->AccessParticles(i).GetMinColourIndexValue();
-                if (inMpdc->AccessParticles(i).GetMaxColourIndexValue() > globalMax) globalMax = inMpdc->AccessParticles(i).GetMaxColourIndexValue();
+            if (this->includeHiddenInColorMapSlot.Param<megamol::core::param::BoolParam>()->Value() ||
+                included.Count() == 0 ||
+                (included.Count() > 0 && included.Contains(inMpdc->AccessParticles(i).GetGlobalType()))) {
+                if (inMpdc->AccessParticles(i).GetMinColourIndexValue() < globalMin)
+                    globalMin = inMpdc->AccessParticles(i).GetMinColourIndexValue();
+                if (inMpdc->AccessParticles(i).GetMaxColourIndexValue() > globalMax)
+                    globalMax = inMpdc->AccessParticles(i).GetMaxColourIndexValue();
             }
             if (included.Count() > 0 && !included.Contains(inMpdc->AccessParticles(i).GetGlobalType())) {
                 continue;
@@ -186,7 +194,7 @@ bool ParticleListFilter::getDataCallback(core::Call& call) {
             //outMpdc->AccessParticles(outCnt).SetColourMapIndexValues(inMpdc->AccessParticles(i).GetMinColourIndexValue(),
             //    inMpdc->AccessParticles(i).GetMaxColourIndexValue());
 
-            const unsigned char *col = inMpdc->AccessParticles(i).GetGlobalColour();
+            const unsigned char* col = inMpdc->AccessParticles(i).GetGlobalColour();
             outMpdc->AccessParticles(outCnt).SetGlobalColour(col[0], col[1], col[2], col[3]);
             outMpdc->AccessParticles(outCnt).SetGlobalRadius(inMpdc->AccessParticles(i).GetGlobalRadius());
             outMpdc->AccessParticles(outCnt).SetGlobalType(inMpdc->AccessParticles(i).GetGlobalType());
@@ -200,14 +208,14 @@ bool ParticleListFilter::getDataCallback(core::Call& call) {
             if (this->globalColorMapComputationSlot.Param<megamol::core::param::BoolParam>()->Value()) {
                 outMpdc->AccessParticles(outCnt).SetColourMapIndexValues(globalMin, globalMax);
             } else {
-                outMpdc->AccessParticles(outCnt).SetColourMapIndexValues(inMpdc->AccessParticles(i).GetMinColourIndexValue(),
+                outMpdc->AccessParticles(outCnt).SetColourMapIndexValues(
+                    inMpdc->AccessParticles(i).GetMinColourIndexValue(),
                     inMpdc->AccessParticles(i).GetMaxColourIndexValue());
             }
             outCnt++;
         }
         this->datahashParticlesOut++;
         outMpdc->SetDataHash(this->datahashParticlesOut);
-
     }
 #if 0
     else if (outDpdc != NULL) {
@@ -322,12 +330,14 @@ bool ParticleListFilter::getDataCallback(core::Call& call) {
  * DirPartColModulate::getExtent
  */
 bool ParticleListFilter::getExtentCallback(core::Call& call) {
-    geocalls::MultiParticleDataCall *outMpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
-    if (outMpdc == NULL) return false;
+    geocalls::MultiParticleDataCall* outMpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (outMpdc == NULL)
+        return false;
 
     if (outMpdc != NULL) {
-        geocalls::MultiParticleDataCall *inMpdc = this->inParticlesDataSlot.CallAs<geocalls::MultiParticleDataCall>();
-        if (inMpdc == NULL) return false;
+        geocalls::MultiParticleDataCall* inMpdc = this->inParticlesDataSlot.CallAs<geocalls::MultiParticleDataCall>();
+        if (inMpdc == NULL)
+            return false;
         // this is the devil. don't do it.
         //*inMpdc = *outMpdc;
         // this is better but still not good.
@@ -341,4 +351,4 @@ bool ParticleListFilter::getExtentCallback(core::Call& call) {
     }
     return false;
 }
-}
+} // namespace megamol::datatools

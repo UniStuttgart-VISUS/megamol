@@ -1,28 +1,34 @@
 #pragma once
 
-#include "mmcore/Module.h"
+#include "geometry_calls/LinesDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "geometry_calls/LinesDataCall.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "geometry_calls/CallTriMeshData.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 #include <map>
 
 namespace megamol {
 namespace datatools {
 
-class LocalBoundingBoxExtractor: public core::Module {
+class LocalBoundingBoxExtractor : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "LocalBoundingBoxExtractor"; }
+    static const char* ClassName(void) {
+        return "LocalBoundingBoxExtractor";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Module extracting the local bounding box of MultiParticleDataCalls"; }
+    static const char* Description(void) {
+        return "Module extracting the local bounding box of MultiParticleDataCalls";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     LocalBoundingBoxExtractor(void);
@@ -31,7 +37,6 @@ public:
     ~LocalBoundingBoxExtractor(void);
 
 protected:
-
     /** Lazy initialization of the module */
     bool create(void);
 
@@ -70,15 +75,15 @@ private:
     core::param::ParamSlot colorSlot;
 
     std::vector<geocalls::LinesDataCall::Lines> lines;
-    std::map<std::string, std::array<float,6>> lineMap;
-    
-    
-    geocalls::CallTriMeshData::Mesh mesh;
+    std::map<std::string, std::array<float, 6>> lineMap;
+
+
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
     std::vector<float> allVerts;
     std::vector<float> allCols;
     std::vector<unsigned int> allIdx;
-
-    };
+    uint32_t mesh_version = 0;
+};
 
 } // namespace datatools
 } // namespace megamol

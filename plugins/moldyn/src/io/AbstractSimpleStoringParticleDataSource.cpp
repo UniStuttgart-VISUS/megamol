@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "AbstractSimpleStoringParticleDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 namespace megamol::datatools::io {
 
@@ -16,10 +16,19 @@ namespace megamol::datatools::io {
 /*
  * AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource
  */
-AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource(void) : AbstractSimpleParticleDataSource(),
-        posData(), posDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE),
-        colData(), colDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE),
-        bbox(), cbox(), defCol(192, 192, 192, 255), defRad(0.5f), minColVal(0.0f), maxColVal(1.0f), datahash(0) {
+AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource(void)
+        : AbstractSimpleParticleDataSource()
+        , posData()
+        , posDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE)
+        , colData()
+        , colDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE)
+        , bbox()
+        , cbox()
+        , defCol(192, 192, 192, 255)
+        , defRad(0.5f)
+        , minColVal(0.0f)
+        , maxColVal(1.0f)
+        , datahash(0) {
     this->filenameSlot.ForceSetDirty();
 }
 
@@ -46,11 +55,10 @@ void AbstractSimpleStoringParticleDataSource::assertData(bool needLoad) {
                 throw vislib::Exception("Failed to load data from file", __FILE__, __LINE__);
             }
             this->datahash++;
-        } catch(vislib::Exception ex) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Exception: %s [%s, %d]\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch(...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception");
-        }
+        } catch (vislib::Exception ex) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Exception: %s [%s, %d]\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception"); }
     }
 }
 
@@ -70,17 +78,25 @@ bool AbstractSimpleStoringParticleDataSource::getData(geocalls::MultiParticleDat
     call.SetFrameCount(1);
     call.SetFrameID(0);
 
-    if (this->posData.IsEmpty()) return false;
+    if (this->posData.IsEmpty())
+        return false;
 
     call.SetParticleListCount(1);
-    geocalls::SimpleSphericalParticles &p = call.AccessParticles(0);
+    geocalls::SimpleSphericalParticles& p = call.AccessParticles(0);
 
     SIZE_T size;
     switch (this->posDataType) {
-    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: size = sizeof(float) * 3; break;
-    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: size = sizeof(float) * 4; break;
-    case geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ: size = sizeof(unsigned short) * 3; break;
-    default: return false;
+    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        size = sizeof(float) * 3;
+        break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        size = sizeof(float) * 4;
+        break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
+        size = sizeof(unsigned short) * 3;
+        break;
+    default:
+        return false;
     }
 
     p.SetCount(this->posData.GetSize() / size);
@@ -115,4 +131,4 @@ bool AbstractSimpleStoringParticleDataSource::getExtent(geocalls::MultiParticleD
 
     return !this->posData.IsEmpty();
 }
-}
+} // namespace megamol::datatools::io

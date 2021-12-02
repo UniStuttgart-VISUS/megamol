@@ -67,7 +67,7 @@ bool megamol::frontend::Remote_Service::MpiNode::init(int broadcast_rank) {
     broadcast_rank_ = broadcast_rank;
     comm_ = MPI_COMM_NULL;
     rank_ = 0;
- 
+
     auto init_status = MPI_Init(NULL, NULL);
     if (init_status != MPI_SUCCESS) {
         log_error("Failed to initialize MPI");
@@ -132,4 +132,3 @@ void megamol::frontend::Remote_Service::MpiNode::sync_barrier() {
 }
 
 #endif // WITH_MPI
-

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
@@ -14,9 +13,9 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib/math/ShallowMatrix.h"
 
-#include <sstream>
 #include "delaunator.hpp"
 #include "mmcore_gl/UniFlagCallsGL.h"
+#include <sstream>
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
@@ -301,8 +300,8 @@ bool ScatterplotMatrixRenderer2D::create() {
             "splom_point", shader_options, "infovis_gl/splom.vert.glsl", "infovis_gl/splom_point.frag.glsl");
         lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis_gl/splom.vert.glsl",
             "infovis_gl/splom_line.geom.glsl", "infovis_gl/splom_line.frag.glsl");
-        triangleShader = core::utility::make_glowl_shader(
-            "splom_triangle", shader_options, "infovis_gl/splom_triangle.vert.glsl", "infovis_gl/splom_triangle.frag.glsl");
+        triangleShader = core::utility::make_glowl_shader("splom_triangle", shader_options,
+            "infovis_gl/splom_triangle.vert.glsl", "infovis_gl/splom_triangle.frag.glsl");
         pickIndicatorShader = core::utility::make_glowl_shader("splom_pick_indicator", shader_options,
             "infovis_gl/splom_pick_indicator.vert.glsl", "infovis_gl/splom_pick_indicator.frag.glsl");
         screenShader = core::utility::make_glowl_shader(

@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "geometry_calls/BezierCurvesListDataCall.h"
+#include "stdafx.h"
 
 namespace megamol::geocalls {
 
@@ -15,9 +15,14 @@ namespace megamol::geocalls {
  * BezierCurvesListDataCall::Curves::Curves
  */
 BezierCurvesListDataCall::Curves::Curves(void)
-        : layout(DATALAYOUT_NONE), data(NULL), data_memory_ownership(false),
-        data_cnt(0), index(NULL), index_memory_ownership(false), index_cnt(0),
-        rad(0.5f) {
+        : layout(DATALAYOUT_NONE)
+        , data(NULL)
+        , data_memory_ownership(false)
+        , data_cnt(0)
+        , index(NULL)
+        , index_memory_ownership(false)
+        , index_cnt(0)
+        , rad(0.5f) {
     this->col[0] = this->col[1] = this->col[2] = 128;
 }
 
@@ -25,11 +30,15 @@ BezierCurvesListDataCall::Curves::Curves(void)
 /*
  * BezierCurvesListDataCall::Curves::Curves
  */
-BezierCurvesListDataCall::Curves::Curves(
-        const BezierCurvesListDataCall::Curves& src)
-        : layout(DATALAYOUT_NONE), data(NULL), data_memory_ownership(false),
-        data_cnt(0), index(NULL), index_memory_ownership(false), index_cnt(0),
-        rad(0.5f) {
+BezierCurvesListDataCall::Curves::Curves(const BezierCurvesListDataCall::Curves& src)
+        : layout(DATALAYOUT_NONE)
+        , data(NULL)
+        , data_memory_ownership(false)
+        , data_cnt(0)
+        , index(NULL)
+        , index_memory_ownership(false)
+        , index_cnt(0)
+        , rad(0.5f) {
     // not very nice, but the best way, I believe
     this->Set(const_cast<Curves&>(src), true);
 }
@@ -66,7 +75,6 @@ void BezierCurvesListDataCall::Curves::Clear(void) {
     // values
     this->rad = 0.5f;
     this->col[0] = this->col[1] = this->col[2] = 128;
-
 }
 
 
@@ -74,7 +82,10 @@ void BezierCurvesListDataCall::Curves::Clear(void) {
  * BezierCurvesListDataCall::BezierCurvesListDataCall
  */
 BezierCurvesListDataCall::BezierCurvesListDataCall(void)
-        : AbstractGetData3DCall(), curves(), count(), static_indices(false) {
+        : AbstractGetData3DCall()
+        , curves()
+        , count()
+        , static_indices(false) {
     // intentionally empty
 }
 
@@ -88,4 +99,4 @@ BezierCurvesListDataCall::~BezierCurvesListDataCall(void) {
     this->count = 0;
     this->static_indices = false;
 }
-}
+} // namespace megamol::geocalls

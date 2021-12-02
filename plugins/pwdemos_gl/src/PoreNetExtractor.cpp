@@ -6,29 +6,31 @@
  */
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
+#include "OpenGL_Context.h"
 #include "PoreNetExtractor.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/Array.h"
-#include "vislib/assert.h"
-#include "vislib/Exception.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
-#include "vislib/math/Point.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "vislib/Array.h"
+#include "vislib/Exception.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/assert.h"
+#include "vislib/math/Point.h"
 #include "vislib/math/Vector.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <climits>
 #include <cmath>
-#include "OpenGL_Context.h"
+
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
 namespace megamol {
@@ -38,19 +40,34 @@ namespace demos_gl {
 /*
  * PoreNetExtractor::PoreNetExtractor
  */
-PoreNetExtractor::PoreNetExtractor(void) : core_gl::view::Renderer3DModuleGL(), AbstractQuartzModule(),
-typeTexture(0), bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0), cbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0),
-filenameSlot("filename", "The file name of the pore network data file"),
-streamSaveSlot("streamSave", "Saves the data to the pore network data file while extracting"),
-extractDirSlot("extractDir", "The extraction direction"),
-extractSizeSlot("extractSize", "The size of the extraction volume"),
-extractTileSizeSlot("extractTileSize", "The size of a single rendering tile used for extraction"),
-saveBtnSlot("save", "Saves the pore network data to the data file"),
-loadBtnSlot("load", "Loads the pore network data from the data file"),
-extractBtnSlot("extract", "Extractes the pore network data from the connected data modules"),
-sizeX(1024), sizeY(1024), sizeZ(1024), edir(EXTDIR_X), saveFile(NULL), tile(NULL),
-tileBuffer(NULL), slicesBuffers(), loopBuffers(), slice(UINT_MAX),
-cryShader(), sliceProcessor(), meshProcessor(), debugLoopDataEntryObject() {
+PoreNetExtractor::PoreNetExtractor(void)
+        : core_gl::view::Renderer3DModuleGL()
+        , AbstractQuartzModule()
+        , typeTexture(0)
+        , bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
+        , cbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
+        , filenameSlot("filename", "The file name of the pore network data file")
+        , streamSaveSlot("streamSave", "Saves the data to the pore network data file while extracting")
+        , extractDirSlot("extractDir", "The extraction direction")
+        , extractSizeSlot("extractSize", "The size of the extraction volume")
+        , extractTileSizeSlot("extractTileSize", "The size of a single rendering tile used for extraction")
+        , saveBtnSlot("save", "Saves the pore network data to the data file")
+        , loadBtnSlot("load", "Loads the pore network data from the data file")
+        , extractBtnSlot("extract", "Extractes the pore network data from the connected data modules")
+        , sizeX(1024)
+        , sizeY(1024)
+        , sizeZ(1024)
+        , edir(EXTDIR_X)
+        , saveFile(NULL)
+        , tile(NULL)
+        , tileBuffer(NULL)
+        , slicesBuffers()
+        , loopBuffers()
+        , slice(UINT_MAX)
+        , cryShader()
+        , sliceProcessor()
+        , meshProcessor()
+        , debugLoopDataEntryObject() {
 
     //this->sizeX = 256;
     //this->sizeY = 256;
@@ -65,7 +82,7 @@ cryShader(), sliceProcessor(), meshProcessor(), debugLoopDataEntryObject() {
     this->streamSaveSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->streamSaveSlot);
 
-    core::param::EnumParam *dir = new core::param::EnumParam(static_cast<int>(this->edir));
+    core::param::EnumParam* dir = new core::param::EnumParam(static_cast<int>(this->edir));
     dir->SetTypePair(static_cast<int>(EXTDIR_X), "x");
     dir->SetTypePair(static_cast<int>(EXTDIR_Y), "y");
     dir->SetTypePair(static_cast<int>(EXTDIR_Z), "z");
@@ -130,8 +147,7 @@ bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
 bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
-    }
-    else if (this->saveFile) {
+    } else if (this->saveFile) {
         this->closeFile(*this->saveFile);
         this->saveFile->Flush();
         this->saveFile->Close();
@@ -144,7 +160,7 @@ bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ::glEnableClientState(GL_VERTEX_ARRAY);
     //::glColor3ub(255, 128, 0);
-    PoreMeshProcessor::SliceLoops *i = this->debugLoopDataEntryObject.next;
+    PoreMeshProcessor::SliceLoops* i = this->debugLoopDataEntryObject.next;
     unsigned int c = 0;
     while (i != NULL) {
         ::glColor3ub(0, c, 255);
@@ -163,8 +179,8 @@ bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
  * PoreNetExtractor::create
  */
 bool PoreNetExtractor::create(void) {
-    using vislib_gl::graphics::gl::GLSLShader;
     using megamol::core::utility::log::Log;
+    using vislib_gl::graphics::gl::GLSLShader;
     using vislib_gl::graphics::gl::ShaderSource;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -176,23 +192,22 @@ bool PoreNetExtractor::create(void) {
     }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::fragfaced", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::fragfaced", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
         }
-    }
-    catch (vislib::Exception ex) {
+    } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
-    }
-    catch (...) {
+    } catch (...) {
         Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
@@ -215,7 +230,6 @@ void PoreNetExtractor::release(void) {
     this->cryShader.Release();
 
     // TODO: Implement
-
 }
 
 
@@ -232,13 +246,13 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
 
     Log::DefaultLog.WriteInfo("Pore network extraction requested");
 
-    CrystalDataCall * cdc = this->getCrystaliteData();
+    CrystalDataCall* cdc = this->getCrystaliteData();
     if (cdc == NULL) {
         Log::DefaultLog.WriteError("Crystal data not available\n");
         Log::DefaultLog.WriteError("Extraction aborted");
         return true;
     }
-    ParticleGridDataCall *pgdc = this->getParticleData();
+    ParticleGridDataCall* pgdc = this->getParticleData();
     if (pgdc == NULL) {
         cdc->Unlock();
         Log::DefaultLog.WriteError("Particle data not available\n");
@@ -262,31 +276,31 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     if (hit.Count() == 3) {
         try {
             int x = vislib::TCharTraits::ParseInt(hit[0]);
-            if (x < 1) throw vislib::Exception("x size must be 1 or larger", __FILE__, __LINE__);
+            if (x < 1)
+                throw vislib::Exception("x size must be 1 or larger", __FILE__, __LINE__);
             int y = vislib::TCharTraits::ParseInt(hit[1]);
-            if (y < 1) throw vislib::Exception("y size must be 1 or larger", __FILE__, __LINE__);
+            if (y < 1)
+                throw vislib::Exception("y size must be 1 or larger", __FILE__, __LINE__);
             int z = vislib::TCharTraits::ParseInt(hit[2]);
-            if (z < 1) throw vislib::Exception("z size must be 1 or larger", __FILE__, __LINE__);
+            if (z < 1)
+                throw vislib::Exception("z size must be 1 or larger", __FILE__, __LINE__);
             this->sizeX = static_cast<unsigned int>(x);
             this->sizeY = static_cast<unsigned int>(y);
             this->sizeZ = static_cast<unsigned int>(z);
-        }
-        catch (vislib::Exception ex) {
+        } catch (vislib::Exception ex) {
             pgdc->Unlock();
             cdc->Unlock();
             Log::DefaultLog.WriteError("Unable to parse \"extractSize\": %s", ex.GetMsgA());
             Log::DefaultLog.WriteError("Extraction aborted");
             return true;
-        }
-        catch (...) {
+        } catch (...) {
             pgdc->Unlock();
             cdc->Unlock();
             Log::DefaultLog.WriteError("Unable to parse \"extractSize\"");
             Log::DefaultLog.WriteError("Extraction aborted");
             return true;
         }
-    }
-    else {
+    } else {
         pgdc->Unlock();
         cdc->Unlock();
         Log::DefaultLog.WriteError("Unable to parse \"extractSize\"");
@@ -302,30 +316,31 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
             int texSize = 256;
             ::glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
             int x = vislib::TCharTraits::ParseInt(hit[0]);
-            if (x < 1) throw vislib::Exception("width must be 1 or larger", __FILE__, __LINE__);
-            if (x > texSize) throw vislib::Exception("OpenGL texture size limit reached", __FILE__, __LINE__);
+            if (x < 1)
+                throw vislib::Exception("width must be 1 or larger", __FILE__, __LINE__);
+            if (x > texSize)
+                throw vislib::Exception("OpenGL texture size limit reached", __FILE__, __LINE__);
             int y = vislib::TCharTraits::ParseInt(hit[1]);
-            if (y < 1) throw vislib::Exception("height must be 1 or larger", __FILE__, __LINE__);
-            if (y > texSize) throw vislib::Exception("OpenGL texture size limit reached", __FILE__, __LINE__);
+            if (y < 1)
+                throw vislib::Exception("height must be 1 or larger", __FILE__, __LINE__);
+            if (y > texSize)
+                throw vislib::Exception("OpenGL texture size limit reached", __FILE__, __LINE__);
             tileW = static_cast<unsigned int>(x);
             tileH = static_cast<unsigned int>(y);
-        }
-        catch (vislib::Exception ex) {
+        } catch (vislib::Exception ex) {
             pgdc->Unlock();
             cdc->Unlock();
             Log::DefaultLog.WriteError("Unable to parse \"extractTileSize\": %s", ex.GetMsgA());
             Log::DefaultLog.WriteError("Extraction aborted");
             return true;
-        }
-        catch (...) {
+        } catch (...) {
             pgdc->Unlock();
             cdc->Unlock();
             Log::DefaultLog.WriteError("Unable to parse \"extractTileSize\"");
             Log::DefaultLog.WriteError("Extraction aborted");
             return true;
         }
-    }
-    else {
+    } else {
         pgdc->Unlock();
         cdc->Unlock();
         Log::DefaultLog.WriteError("Unable to parse \"extractTileSize\"");
@@ -338,15 +353,15 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
         val = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
         if (val.IsEmpty()) {
             Log::DefaultLog.WriteWarn("Cannot stream-save extracted data: no data file path was specified");
-        }
-        else {
+        } else {
             if (vislib::sys::File::Exists(val)) {
                 Log::DefaultLog.WriteWarn("File specified for stream-save already exists and will be overwritten");
             }
-            if (this->saveFile != NULL) delete this->saveFile;
+            if (this->saveFile != NULL)
+                delete this->saveFile;
             this->saveFile = new vislib::sys::MemmappedFile();
-            if (!this->saveFile->Open(val, vislib::sys::File::WRITE_ONLY,
-                vislib::sys::File::SHARE_READ, vislib::sys::File::CREATE_OVERWRITE)) {
+            if (!this->saveFile->Open(val, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
+                    vislib::sys::File::CREATE_OVERWRITE)) {
                 Log::DefaultLog.WriteError("Unable to open file for stream-save");
                 SAFE_DELETE(this->saveFile);
             }
@@ -379,7 +394,8 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
         cdc->Unlock();
         Log::DefaultLog.WriteError("Unable to create rendering tile");
         SAFE_DELETE(this->tile);
-        if (this->saveFile != NULL) SAFE_DELETE(this->saveFile);
+        if (this->saveFile != NULL)
+            SAFE_DELETE(this->saveFile);
         Log::DefaultLog.WriteError("Extraction aborted");
         return true;
     }
@@ -416,7 +432,8 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
         cdc->Unlock();
         Log::DefaultLog.WriteError("Internal infernal error #7");
         SAFE_DELETE(this->tile);
-        if (this->saveFile != NULL) SAFE_DELETE(this->saveFile);
+        if (this->saveFile != NULL)
+            SAFE_DELETE(this->saveFile);
         Log::DefaultLog.WriteError("Extraction aborted");
         return true;
     }
@@ -436,8 +453,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     if ((*pgdc)(ParticleGridDataCall::CallForGetExtent)) {
         this->bbox = pgdc->AccessBoundingBoxes().ObjectSpaceBBox();
         this->cbox = pgdc->AccessBoundingBoxes().ObjectSpaceClipBox();
-    }
-    else {
+    } else {
         this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     }
@@ -503,8 +519,8 @@ bool PoreNetExtractor::onSaveBtnClicked(core::param::ParamSlot& slot) {
  * PoreNetExtractor::isExtractionRunning
  */
 bool PoreNetExtractor::isExtractionRunning(void) {
-    return (this->tile != NULL) || (this->tileBuffer != NULL) || (this->slice < UINT_MAX)
-        || this->sliceProcessor.IsRunning() || this->meshProcessor.IsRunning();
+    return (this->tile != NULL) || (this->tileBuffer != NULL) || (this->slice < UINT_MAX) ||
+           this->sliceProcessor.IsRunning() || this->meshProcessor.IsRunning();
 }
 
 
@@ -593,7 +609,8 @@ void PoreNetExtractor::performExtraction(void) {
     default:
         Log::DefaultLog.WriteError("Internal infernal error #7");
         SAFE_DELETE(this->tile);
-        if (this->saveFile != NULL) SAFE_DELETE(this->saveFile);
+        if (this->saveFile != NULL)
+            SAFE_DELETE(this->saveFile);
         Log::DefaultLog.WriteError("Extraction aborted");
         return;
     }
@@ -601,8 +618,12 @@ void PoreNetExtractor::performExtraction(void) {
     if ((this->slice < UINT_MAX) && ((this->slice >= bz) || (this->tile == NULL) || (this->tileBuffer == NULL))) {
         Log::DefaultLog.WriteInfo("Slice rendering complete");
         this->slice = UINT_MAX;
-        if (this->tile != NULL) { SAFE_DELETE(this->tile); }
-        if (this->tileBuffer != NULL) { ARY_SAFE_DELETE(this->tileBuffer); }
+        if (this->tile != NULL) {
+            SAFE_DELETE(this->tile);
+        }
+        if (this->tileBuffer != NULL) {
+            ARY_SAFE_DELETE(this->tileBuffer);
+        }
         this->releaseTypeTexture();
         // Done with the rendering
         this->slicesBuffers.EndOfDataClose();
@@ -633,13 +654,13 @@ void PoreNetExtractor::performExtraction(void) {
         ArxelBuffer::Initialize(*buffer, dummy, iv);
     }
 
-    CrystalDataCall * cdc = this->getCrystaliteData();
+    CrystalDataCall* cdc = this->getCrystaliteData();
     if (cdc == NULL) {
         Log::DefaultLog.WriteError("Crystal data not available\n");
         this->abortExtraction();
         return;
     }
-    ParticleGridDataCall *pgdc = this->getParticleData();
+    ParticleGridDataCall* pgdc = this->getParticleData();
     if (pgdc == NULL) {
         cdc->Unlock();
         Log::DefaultLog.WriteError("Particle data not available\n");
@@ -708,10 +729,12 @@ void PoreNetExtractor::performExtraction(void) {
 
     for (unsigned int y = 0; y < by; y += this->tile->GetHeight()) {
         unsigned int h = this->tile->GetHeight();
-        if (y + h > by) h = by - y;
+        if (y + h > by)
+            h = by - y;
         for (unsigned int x = 0; x < bx; x += this->tile->GetWidth()) {
             unsigned int w = this->tile->GetWidth();
-            if (x + w > bx) w = bx - x;
+            if (x + w > bx)
+                w = bx - x;
             this->tile->Enable();
 
             ::glViewport(0, 0, w, h);
@@ -729,8 +752,10 @@ void PoreNetExtractor::performExtraction(void) {
             //::glEnd();
 
             ::glTranslatef(-1.0f, -1.0f, -1.0f);
-            ::glScalef(static_cast<float>(bx) / static_cast<float>(w), static_cast<float>(by) / static_cast<float>(h), 1.0f);
-            ::glTranslatef(-2.0f * static_cast<float>(x) / static_cast<float>(bx), -2.0f * static_cast<float>(y) / static_cast<float>(by), 0.0f);
+            ::glScalef(
+                static_cast<float>(bx) / static_cast<float>(w), static_cast<float>(by) / static_cast<float>(h), 1.0f);
+            ::glTranslatef(-2.0f * static_cast<float>(x) / static_cast<float>(bx),
+                -2.0f * static_cast<float>(y) / static_cast<float>(by), 0.0f);
             ::glScalef(2.0f / brect.Width(), 2.0f / brect.Height(), 1.0f);
             ::glTranslatef(-brect.Left(), -brect.Bottom(), 0.0f);
 
@@ -760,17 +785,22 @@ void PoreNetExtractor::performExtraction(void) {
             this->tile->Disable();
             GLenum datatypetype;
             switch (sizeof(ArxelBuffer::ArxelType)) {
-            case 1: datatypetype = GL_UNSIGNED_BYTE; break;
-            case 2: datatypetype = GL_UNSIGNED_SHORT; break;
-            case 4: datatypetype = GL_FLOAT; break;
+            case 1:
+                datatypetype = GL_UNSIGNED_BYTE;
+                break;
+            case 2:
+                datatypetype = GL_UNSIGNED_SHORT;
+                break;
+            case 4:
+                datatypetype = GL_FLOAT;
+                break;
             }
             GLenum rv = this->tile->GetColourTexture(this->tileBuffer, 0, GL_LUMINANCE, datatypetype);
             if (rv != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("Pixel-Fetch-Error: %d\n", static_cast<int>(rv));
             }
             for (unsigned int ly = 0; ly < h; ly++) {
-                ::memcpy(buffer->Data() + ((y + ly) * bx + x),
-                    this->tileBuffer + (ly * this->tile->GetWidth()),
+                ::memcpy(buffer->Data() + ((y + ly) * bx + x), this->tileBuffer + (ly * this->tile->GetWidth()),
                     w * sizeof(ArxelBuffer::ArxelType));
             }
         }
@@ -869,7 +899,8 @@ void PoreNetExtractor::clear(void) {
  * PoreNetExtractor::assertTypeTexture
  */
 void PoreNetExtractor::assertTypeTexture(CrystalDataCall& types) {
-    if ((this->typesDataHash != 0) && (this->typesDataHash == types.DataHash())) return; // all up to date
+    if ((this->typesDataHash != 0) && (this->typesDataHash == types.DataHash()))
+        return; // all up to date
     this->typesDataHash = types.DataHash();
 
     if (types.GetCount() == 0) {
@@ -888,7 +919,7 @@ void PoreNetExtractor::assertTypeTexture(CrystalDataCall& types) {
         }
     }
 
-    float *dat = new float[types.GetCount() * mfc * 4];
+    float* dat = new float[types.GetCount() * mfc * 4];
 
     for (unsigned int y = 0; y < types.GetCount(); y++) {
         const CrystalDataCall::Crystal& c = types.GetCrystals()[y];
@@ -933,8 +964,7 @@ void PoreNetExtractor::releaseTypeTexture(void) {
 /*
  * PoreNetExtractor::drawParticles
  */
-void PoreNetExtractor::drawParticles(ParticleGridDataCall *pgdc,
-    CrystalDataCall *tdc, core::view::CallClipPlane *ccp) {
+void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall* tdc, core::view::CallClipPlane* ccp) {
     ASSERT(pgdc != NULL);
     ASSERT(tdc != NULL);
     ASSERT(ccp != NULL);
@@ -944,23 +974,23 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall *pgdc,
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     ::glPointSize(static_cast<float>(vislib::math::Max(this->sizeX, vislib::math::Max(this->sizeY, this->sizeZ))));
 
-    ::glEnableClientState(GL_VERTEX_ARRAY); // xyzr
+    ::glEnableClientState(GL_VERTEX_ARRAY);        // xyzr
     ::glEnableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 
     float planeZ = ccp->GetPlane().Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
-    vislib::math::Point<float, 3> bboxmin(
-        vislib::math::Min(this->bbox.Left(), this->bbox.Right()),
+    vislib::math::Point<float, 3> bboxmin(vislib::math::Min(this->bbox.Left(), this->bbox.Right()),
         vislib::math::Min(this->bbox.Bottom(), this->bbox.Top()),
         vislib::math::Min(this->bbox.Back(), this->bbox.Front()));
-    vislib::math::Point<float, 3> bboxmax(
-        vislib::math::Max(this->bbox.Left(), this->bbox.Right()),
+    vislib::math::Point<float, 3> bboxmax(vislib::math::Max(this->bbox.Left(), this->bbox.Right()),
         vislib::math::Max(this->bbox.Bottom(), this->bbox.Top()),
         vislib::math::Max(this->bbox.Back(), this->bbox.Front()));
     const bool fixPBC(true);
@@ -1019,8 +1049,7 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall *pgdc,
                 }
                 GL_VERIFY(this->cryShader.SetParameter("posoffset", xoff, yoff, zoff));
 
-                unsigned int cellIdx = static_cast<unsigned int>(ccx
-                    + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
+                unsigned int cellIdx = static_cast<unsigned int>(ccx + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
 
                 const ParticleGridDataCall::Cell& cell = pgdc->Cells()[cellIdx];
 
@@ -1030,53 +1059,60 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall *pgdc,
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightTopFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightTopBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightBottomFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightBottomBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftTopFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftTopBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftBottomFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftBottomBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
-                if (!hasPos || !hasNeg) continue; // not visible cell
+                if (!hasPos || !hasNeg)
+                    continue; // not visible cell
 
                 for (unsigned int listIdx = 0; listIdx < cell.Count(); listIdx++) {
                     const ParticleGridDataCall::List& list = cell.Lists()[listIdx];
 
-                    this->cryShader.SetParameter("typeInfo",
-                        static_cast<int>(list.Type()),
+                    this->cryShader.SetParameter("typeInfo", static_cast<int>(list.Type()),
                         static_cast<int>(tdc->GetCrystals()[list.Type()].GetFaceCount()));
-                    this->cryShader.SetParameter("outerRad",
-                        tdc->GetCrystals()[list.Type()].GetBoundingRadius());
+                    this->cryShader.SetParameter("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
                     ::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
                     ::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
@@ -1088,10 +1124,9 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall *pgdc,
 
     this->cryShader.Disable();
     ::glBindTexture(GL_TEXTURE_2D, 0);
-    ::glDisableClientState(GL_VERTEX_ARRAY); // xyzr
+    ::glDisableClientState(GL_VERTEX_ARRAY);        // xyzr
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
-
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

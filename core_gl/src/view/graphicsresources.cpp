@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/graphicsresources.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
@@ -14,15 +14,14 @@ namespace megamol {
 namespace core {
 namespace view {
 
-    /*
-     * __openGLInfoFont
-     */
-    static const vislib::graphics::AbstractFont& __openGLVerdanaOutline(void) {
-        const static vislib_gl::graphics::gl::OutlineFont font(
-            vislib_gl::graphics::gl::FontInfo_Verdana,
-            vislib_gl::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
-        return font;
-    }
+/*
+ * __openGLInfoFont
+ */
+static const vislib::graphics::AbstractFont& __openGLVerdanaOutline(void) {
+    const static vislib_gl::graphics::gl::OutlineFont font(
+        vislib_gl::graphics::gl::FontInfo_Verdana, vislib_gl::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
+    return font;
+}
 
 } /* end namespace view */
 } /* end namespace core */
@@ -31,11 +30,14 @@ namespace view {
 /*
  * megamol::core::view::GetGlobalFont
  */
-MEGAMOLCORE_API const vislib::graphics::AbstractFont&
-megamol::core::view::GetGlobalFont(megamol::core::view::FontPurpose purpose) {
+MEGAMOLCORE_API const vislib::graphics::AbstractFont& megamol::core::view::GetGlobalFont(
+    megamol::core::view::FontPurpose purpose) {
     switch (purpose) {
-        case FONTPURPOSE_OPENGL_DEFAULT: return __openGLVerdanaOutline();
-        case FONTPURPISE_OPENGL_INFO_HQ: return __openGLVerdanaOutline();
-        default: return __openGLVerdanaOutline();
+    case FONTPURPOSE_OPENGL_DEFAULT:
+        return __openGLVerdanaOutline();
+    case FONTPURPISE_OPENGL_INFO_HQ:
+        return __openGLVerdanaOutline();
+    default:
+        return __openGLVerdanaOutline();
     }
 }

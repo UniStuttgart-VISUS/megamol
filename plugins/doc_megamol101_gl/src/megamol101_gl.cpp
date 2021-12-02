@@ -34,4 +34,4 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::megamol101_gl::CallSpheres>();
     }
 };
-} // namespace megamol::megamol101
+} // namespace megamol::megamol101_gl

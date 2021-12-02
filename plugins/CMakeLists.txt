@@ -19,6 +19,11 @@ function(megamol_plugin PLUGIN_NAME)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  # Validate plugin name
+  if (NOT "${PLUGIN_NAME}" MATCHES "^[A-Za-z0-9_]+$")
+    message(FATAL_ERROR "Plugin name is only allowed to contain letters, numbers and underscore, found: ${PLUGIN_NAME}.")
+  endif ()
+
   # Upper case plugin name
   string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
 
@@ -61,17 +66,34 @@ function(megamol_plugin PLUGIN_NAME)
       set(MMPLUGIN_ARGS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 
+    # Common dirs
+    set(MMPLUGIN_DIR_INCLUDE "${MMPLUGIN_ARGS_DIR}/include")
+    set(MMPLUGIN_DIR_SRC "${MMPLUGIN_ARGS_DIR}/src")
+
+    # Validate include dir (if present) only contains a single dir "<plugin-name>".
+    if (IS_DIRECTORY "${MMPLUGIN_DIR_INCLUDE}")
+      file(GLOB include_subdirs RELATIVE "${MMPLUGIN_DIR_INCLUDE}" "${MMPLUGIN_DIR_INCLUDE}/*")
+      list(LENGTH include_subdirs list_size)
+      if ((NOT list_size EQUAL 1) OR (NOT PLUGIN_NAME IN_LIST include_subdirs) OR (NOT IS_DIRECTORY "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}"))
+        message(FATAL_ERROR "\"${MMPLUGIN_DIR_INCLUDE}\" must contain exactly one subdirectory \"${PLUGIN_NAME}\".")
+      endif ()
+    endif ()
+
     # Collect files within default plugin structure
-    file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "include/*.h")
-    file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.h")
-    file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.cpp")
-    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "shaders/*")
+    file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}/*.h")
+    file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_SRC}/*.h")
+    file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_SRC}/*.cpp")
+    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_ARGS_DIR}/shaders/*")
 
     # Target definition
     add_library(${PLUGIN_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
     target_include_directories(${PLUGIN_NAME}
-      PUBLIC $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
-      PRIVATE $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
+      PUBLIC $<BUILD_INTERFACE:${MMPLUGIN_DIR_INCLUDE}>
+      PRIVATE $<BUILD_INTERFACE:${MMPLUGIN_DIR_SRC}>)
+
+    add_clang_format(${PLUGIN_NAME}
+      STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
+      FILES ${public_header_files} ${header_files} ${source_files})
 
     # List of reserved words in plugins or externals dependencies lists.
     # This keywords are passed to target_link_libraries, but are ignored on other processing.
@@ -115,10 +137,10 @@ function(megamol_plugin PLUGIN_NAME)
     # Grouping in Visual Studio
     set_target_properties(${PLUGIN_NAME} PROPERTIES
       FOLDER plugins)
-    source_group("Public Header Files" FILES ${public_header_files})
-    source_group("Header Files" FILES ${header_files})
-    source_group("Source Files" FILES ${source_files})
-    source_group("Shaders" FILES ${shader_files})
+    source_group(TREE "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}" PREFIX "Public Header Files" FILES ${public_header_files})
+    source_group(TREE "${MMPLUGIN_DIR_SRC}" PREFIX "Header Files" FILES ${header_files})
+    source_group(TREE "${MMPLUGIN_DIR_SRC}" PREFIX "Source Files" FILES ${source_files})
+    source_group(TREE "${MMPLUGIN_ARGS_DIR}/shaders" PREFIX "Shader Files" FILES ${shader_files})
 
     # Register plugin
     target_link_libraries(plugins INTERFACE ${PLUGIN_NAME})

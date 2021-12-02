@@ -5,9 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/IMDAtomDataSource.h"
-#include <climits>
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -17,7 +15,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
+#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/PtrArray.h"
 #include "vislib/String.h"
@@ -27,9 +27,9 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/FastFile.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/SystemMessage.h"
 #include "vislib/sys/sysfunctions.h"
+#include <climits>
 
 
 namespace {
@@ -249,9 +249,7 @@ private:
             this->pos = 0;
             try {
                 return (this->file.Read(dst, size) == size);
-            } catch (...) {
-                return false;
-            }
+            } catch (...) { return false; }
         }
 
         try {
@@ -289,9 +287,7 @@ private:
             try {
                 this->file.Seek(size, vislib::sys::File::CURRENT);
                 return true;
-            } catch (...) {
-                return false;
-            }
+            } catch (...) { return false; }
         }
 
         try { // read into buffer
@@ -357,9 +353,7 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<UINT32>(vislib::CharTraitsA::ParseInt(c));
-        } catch (...) {
-            fail = true;
-        }
+        } catch (...) { fail = true; }
         return 0;
     }
 
@@ -375,9 +369,7 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<float>(vislib::CharTraitsA::ParseDouble(c));
-        } catch (...) {
-            fail = true;
-        }
+        } catch (...) { fail = true; }
         return 0.0f;
     }
 
@@ -387,7 +379,9 @@ public:
      * @param fail The fail flag is not changed if the method succeeds.
      *             If the method fails the flag is set to 'true'.
      */
-    VISLIB_FORCEINLINE void SkipInt(bool& fail) { /*const char *c =*/this->sift(fail); }
+    VISLIB_FORCEINLINE void SkipInt(bool& fail) { /*const char *c =*/
+        this->sift(fail);
+    }
 
     /**
      * Skips an float in the input data
@@ -395,7 +389,9 @@ public:
      * @param fail The fail flag is not changed if the method succeeds.
      *             If the method fails the flag is set to 'true'.
      */
-    VISLIB_FORCEINLINE void SkipFloat(bool& fail) { /*const char *c =*/this->sift(fail); }
+    VISLIB_FORCEINLINE void SkipFloat(bool& fail) { /*const char *c =*/
+        this->sift(fail);
+    }
 };
 
 
@@ -459,7 +455,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipInt(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 
     /**
@@ -469,7 +466,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipFloat(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 };
 
@@ -534,7 +532,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipInt(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 
     /**
@@ -544,7 +543,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipFloat(bool& fail) {
-        if (!this->skipData(8)) fail = true;
+        if (!this->skipData(8))
+            fail = true;
     }
 };
 
@@ -613,7 +613,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipInt(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 
     /**
@@ -623,7 +624,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipFloat(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 };
 
@@ -692,7 +694,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipInt(bool& fail) {
-        if (!this->skipData(4)) fail = true;
+        if (!this->skipData(4))
+            fail = true;
     }
 
     /**
@@ -702,7 +705,8 @@ public:
      *             If the method fails the flag is set to 'true'.
      */
     VISLIB_FORCEINLINE void SkipFloat(bool& fail) {
-        if (!this->skipData(8)) fail = true;
+        if (!this->skipData(8))
+            fail = true;
     }
 };
 
@@ -720,9 +724,11 @@ float IMDAtomDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T 
     line.Replace('\t', ' ');
     vislib::Array<vislib::StringA> lines = vislib::StringTokeniserA::Split(line, "\n", true);
     for (SIZE_T i = 0; i < lines.Count(); i++) {
-        if (!lines[i].StartsWith("#F ")) continue;
+        if (!lines[i].StartsWith("#F "))
+            continue;
         vislib::Array<vislib::StringA> tokens = vislib::StringTokeniserA::Split(lines[i], ' ', true);
-        if (tokens.Count() != 8) continue;
+        if (tokens.Count() != 8)
+            continue;
 
         // now I'm almost sure
         if (tokens[1].Equals("A") || tokens[1].Equals("B") || tokens[1].Equals("b") || tokens[1].Equals("L") ||
@@ -741,55 +747,56 @@ float IMDAtomDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T 
  * IMDAtomDataSource::IMDAtomDataSource
  */
 IMDAtomDataSource::IMDAtomDataSource(void)
-    : core::Module()
-    , filenameSlot("filename", "The path of the IMD file to read")
-    , bboxEnabledSlot("bbox::enable", "")
-    , bboxMinSlot("bbox::min", "")
-    , bboxMaxSlot("bbox::max", "")
-    , getDataSlot("getdata", "The slot exposing the loaded data")
-    , radiusSlot("radius", "The radius to be used for the data")
-    , colourModeSlot("colmode", "The colouring option")
-    , colourSlot("col", "The default colour to be used for the \"const\" colour mode")
-    , colourColumnSlot("colcolumn", "The data column used for the \"column\" colour mode")
-    , autoColumnRangeSlot("autoColumnRange", "Whether or not to automatically calculate the column value range")
-    , minColumnValSlot("minColumnValue", "The minimum value for the colour mapping of the column")
-    , maxColumnValSlot("maxColumnValue", "The maximum value for the colour mapping of the column")
-    , typeColumnSlot("typecolumn", "The data column used for determining the particle type")
-    , posXFilterNow("filter::posXFilter", "")
-    , posXFilter("filter::posX", "")
-    , posXMinFilter("filter::posXMin", "")
-    , posXMaxFilter("filter::posXMax", "")
-    , splitLoadDiredDataSlot("dir::split", "")
-    , dirXColNameSlot("dir::x", "")
-    , dirYColNameSlot("dir::y", "")
-    , dirZColNameSlot("dir::z", "")
-    , dircolourModeSlot("dir::colmode", "The colouring option")
-    , dircolourSlot("dir::col", "The default colour to be used for the \"const\" colour mode")
-    , dircolourColumnSlot("dir::colcolumn", "The data column used for the \"column\" colour mode")
-    , dirautoColumnRangeSlot("dir::autoColumnRange", "Whether or not to automatically calculate the column value range")
-    , dirminColumnValSlot("dir::minColumnValue", "The minimum value for the colour mapping of the column")
-    , dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column")
-    , dirradiusSlot("dir::radius", "The radius to be used for the data")
-    , dirNormDirSlot("dir::normalise", "")
-    , posData()
-    , colData()
-    , headerMinX(0.0f)
-    , headerMinY(0.0f)
-    , headerMinZ(0.0f)
-    , headerMaxX(1.0f)
-    , headerMaxY(1.0f)
-    , headerMaxZ(1.0f)
-    , minX(0.0f)
-    , minY(0.0f)
-    , minZ(0.0f)
-    , maxX(1.0f)
-    , maxY(1.0f)
-    , maxZ(1.0f)
-    , minC()
-    , maxC()
-    , datahash(0)
-    , allDirData()
-    , typeData() {
+        : core::Module()
+        , filenameSlot("filename", "The path of the IMD file to read")
+        , bboxEnabledSlot("bbox::enable", "")
+        , bboxMinSlot("bbox::min", "")
+        , bboxMaxSlot("bbox::max", "")
+        , getDataSlot("getdata", "The slot exposing the loaded data")
+        , radiusSlot("radius", "The radius to be used for the data")
+        , colourModeSlot("colmode", "The colouring option")
+        , colourSlot("col", "The default colour to be used for the \"const\" colour mode")
+        , colourColumnSlot("colcolumn", "The data column used for the \"column\" colour mode")
+        , autoColumnRangeSlot("autoColumnRange", "Whether or not to automatically calculate the column value range")
+        , minColumnValSlot("minColumnValue", "The minimum value for the colour mapping of the column")
+        , maxColumnValSlot("maxColumnValue", "The maximum value for the colour mapping of the column")
+        , typeColumnSlot("typecolumn", "The data column used for determining the particle type")
+        , posXFilterNow("filter::posXFilter", "")
+        , posXFilter("filter::posX", "")
+        , posXMinFilter("filter::posXMin", "")
+        , posXMaxFilter("filter::posXMax", "")
+        , splitLoadDiredDataSlot("dir::split", "")
+        , dirXColNameSlot("dir::x", "")
+        , dirYColNameSlot("dir::y", "")
+        , dirZColNameSlot("dir::z", "")
+        , dircolourModeSlot("dir::colmode", "The colouring option")
+        , dircolourSlot("dir::col", "The default colour to be used for the \"const\" colour mode")
+        , dircolourColumnSlot("dir::colcolumn", "The data column used for the \"column\" colour mode")
+        , dirautoColumnRangeSlot(
+              "dir::autoColumnRange", "Whether or not to automatically calculate the column value range")
+        , dirminColumnValSlot("dir::minColumnValue", "The minimum value for the colour mapping of the column")
+        , dirmaxColumnValSlot("dir::maxColumnValue", "The maximum value for the colour mapping of the column")
+        , dirradiusSlot("dir::radius", "The radius to be used for the data")
+        , dirNormDirSlot("dir::normalise", "")
+        , posData()
+        , colData()
+        , headerMinX(0.0f)
+        , headerMinY(0.0f)
+        , headerMinZ(0.0f)
+        , headerMaxX(1.0f)
+        , headerMaxY(1.0f)
+        , headerMaxZ(1.0f)
+        , minX(0.0f)
+        , minY(0.0f)
+        , minZ(0.0f)
+        , maxX(1.0f)
+        , maxY(1.0f)
+        , maxZ(1.0f)
+        , minC()
+        , maxC()
+        , datahash(0)
+        , allDirData()
+        , typeData() {
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -885,7 +892,9 @@ IMDAtomDataSource::IMDAtomDataSource(void)
 /*
  * IMDAtomDataSource::~IMDAtomDataSource
  */
-IMDAtomDataSource::~IMDAtomDataSource(void) { this->Release(); }
+IMDAtomDataSource::~IMDAtomDataSource(void) {
+    this->Release();
+}
 
 
 /*
@@ -900,7 +909,9 @@ bool IMDAtomDataSource::create(void) {
 /*
  * IMDAtomDataSource::release
  */
-void IMDAtomDataSource::release(void) { this->clear(); }
+void IMDAtomDataSource::release(void) {
+    this->clear();
+}
 
 
 /*
@@ -908,7 +919,8 @@ void IMDAtomDataSource::release(void) { this->clear(); }
  */
 bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == NULL) return false;
+    if (mpdc == NULL)
+        return false;
     this->assertData();
 
     if (this->colourSlot.IsDirty()) {
@@ -998,8 +1010,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                         mpdc->AccessParticles(idx).SetColourData(
                             geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     }
-                    mpdc->AccessParticles(idx).SetDirData(
-                        geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    mpdc->AccessParticles(idx).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->allDirData[idx]->At(
                             ((dircolMode == 1) ? 4 : ((dircolMode == 2) ? 6 : 3)) * sizeof(float)),
                         fpp * sizeof(float));
@@ -1019,8 +1030,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                             this->maxColumnValSlot.Param<core::param::FloatParam>()->Value());
                     }
                     mpdc->AccessParticles(idx).SetColourData(
-                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                        this->colData[idx]->As<void>());
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->colData[idx]->As<void>());
                     break;
                 default:
                     mpdc->AccessParticles(idx).SetColourData( // some internal error
@@ -1038,8 +1048,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             }
         }
         mpdc->SetUnlocker(nullptr);
-
-    } 
+    }
     return true;
 }
 
@@ -1049,7 +1058,8 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
  */
 bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    if (mpdc == NULL) return false;
+    if (mpdc == NULL)
+        return false;
     this->assertData();
 
     float rad = this->radiusSlot.Param<core::param::FloatParam>()->Value();
@@ -1073,7 +1083,6 @@ bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
             mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->minX - rad, this->minY - rad, this->minZ - rad,
                 this->maxX + rad, this->maxY + rad, this->maxZ + rad);
         }
-
     }
 
     return true;
@@ -1128,8 +1137,8 @@ void IMDAtomDataSource::assertData(void) {
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     //    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
-    if (!file.Open(
-            filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+    if (!file.Open(filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
+            vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open imd file %s\n", filename.generic_u8string().c_str());
         return;
     }
@@ -1237,8 +1246,8 @@ void IMDAtomDataSource::assertData(void) {
  * IMDAtomDataSource::readHeader
  */
 bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::HeaderData& header) {
-    using vislib::sys::File;
     using megamol::core::utility::log::Log;
+    using vislib::sys::File;
     vislib::StringA line;
     bool windowsNewline = false;
     char nlb[2];
@@ -1373,9 +1382,12 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
 
                 if (!header.captions.IsEmpty()) {
                     int cnt = 0;
-                    if (header.id) cnt++;
-                    if (header.type) cnt++;
-                    if (header.mass) cnt++;
+                    if (header.id)
+                        cnt++;
+                    if (header.type)
+                        cnt++;
+                    if (header.mass)
+                        cnt++;
                     cnt += header.pos + header.vel + header.dat;
                     int hcnt = static_cast<int>(header.captions.Count());
                     if (hcnt < cnt) {
@@ -1398,14 +1410,13 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
 
     } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: %s\n", ex.GetMsgA());
-    } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: unexpected exception\n");
-    }
+    } catch (...) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: unexpected exception\n"); }
 
     return false;
 }
 
-template <typename T> void IMDAtomDataSource::readToIntColumn(T& reader, bool& fail, unsigned int* column, ...) {
+template<typename T>
+void IMDAtomDataSource::readToIntColumn(T& reader, bool& fail, unsigned int* column, ...) {
     const int numKnownColumns = 6;
     float* out;
     unsigned int col;
@@ -1426,7 +1437,8 @@ template <typename T> void IMDAtomDataSource::readToIntColumn(T& reader, bool& f
     (*column)++;
 }
 
-template <typename T> void IMDAtomDataSource::readToFloatColumn(T& reader, bool& fail, unsigned int* column, ...) {
+template<typename T>
+void IMDAtomDataSource::readToFloatColumn(T& reader, bool& fail, unsigned int* column, ...) {
     const int numKnownColumns = 6;
     float* out;
     unsigned int col;
@@ -1450,7 +1462,7 @@ template <typename T> void IMDAtomDataSource::readToFloatColumn(T& reader, bool&
 /*
  * IMDAtomDataSource::readData
  */
-template <typename T>
+template<typename T>
 bool IMDAtomDataSource::readData(
     vislib::sys::File& file, const IMDAtomDataSource::HeaderData& header, bool loadDir, bool splitDir) {
     T reader(file);
@@ -1520,14 +1532,12 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     typecolumn = UINT_MAX;
                 }
-            } catch (...) {
-                typecolumn = UINT_MAX;
-            }
+            } catch (...) { typecolumn = UINT_MAX; }
         }
 
         if (typecolumn == UINT_MAX) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Failed to parse type column selection: %s\n", typecolname.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Failed to parse type column selection: %s\n", typecolname.PeekBuffer());
         }
     }
 
@@ -1563,9 +1573,7 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     colcolumn = UINT_MAX;
                 }
-            } catch (...) {
-                colcolumn = UINT_MAX;
-            }
+            } catch (...) { colcolumn = UINT_MAX; }
         }
 
         if (colcolumn == UINT_MAX) {
@@ -1603,9 +1611,7 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     dircolcolumn = UINT_MAX;
                 }
-            } catch (...) {
-                dircolcolumn = UINT_MAX;
-            }
+            } catch (...) { dircolcolumn = UINT_MAX; }
         }
         if (dircolcolumn == UINT_MAX) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -1670,37 +1676,57 @@ bool IMDAtomDataSource::readData(
         for (int i = 0; i < header.pos; i++) {
             if (i == 0) {
                 x = reader.ReadFloat(fail);
-                if (column == colcolumn) c = x;
-                if (column == dirXCol) dx = x;
-                if (column == dirYCol) dy = x;
-                if (column == dirZCol) dz = x;
-                if (column == dircolcolumn) dc = x;
+                if (column == colcolumn)
+                    c = x;
+                if (column == dirXCol)
+                    dx = x;
+                if (column == dirYCol)
+                    dy = x;
+                if (column == dirZCol)
+                    dz = x;
+                if (column == dircolcolumn)
+                    dc = x;
             }
             if (i == 1) {
                 y = reader.ReadFloat(fail);
-                if (column == colcolumn) c = y;
-                if (column == dirXCol) dx = y;
-                if (column == dirYCol) dy = y;
-                if (column == dirZCol) dz = y;
-                if (column == dircolcolumn) dc = y;
+                if (column == colcolumn)
+                    c = y;
+                if (column == dirXCol)
+                    dx = y;
+                if (column == dirYCol)
+                    dy = y;
+                if (column == dirZCol)
+                    dz = y;
+                if (column == dircolcolumn)
+                    dc = y;
             }
             if (i == 2) {
                 z = reader.ReadFloat(fail);
-                if (column == colcolumn) c = z;
-                if (column == dirXCol) dx = z;
-                if (column == dirYCol) dy = z;
-                if (column == dirZCol) dz = z;
-                if (column == dircolcolumn) dc = z;
+                if (column == colcolumn)
+                    c = z;
+                if (column == dirXCol)
+                    dx = z;
+                if (column == dirYCol)
+                    dy = z;
+                if (column == dirZCol)
+                    dz = z;
+                if (column == dircolcolumn)
+                    dc = z;
             }
             if (i >= 3) {
                 if ((column == colcolumn) || (column == dirXCol) || (column == dirYCol) || (column == dirZCol) ||
                     (column == dircolcolumn)) {
                     float f = reader.ReadFloat(fail);
-                    if (column == colcolumn) c = f;
-                    if (column == dirXCol) dx = f;
-                    if (column == dirYCol) dy = f;
-                    if (column == dirZCol) dz = f;
-                    if (column == dircolcolumn) dc = f;
+                    if (column == colcolumn)
+                        c = f;
+                    if (column == dirXCol)
+                        dx = f;
+                    if (column == dirYCol)
+                        dy = f;
+                    if (column == dirZCol)
+                        dz = f;
+                    if (column == dircolcolumn)
+                        dc = f;
                 } else {
                     reader.SkipFloat(fail);
                 }
@@ -1811,7 +1837,8 @@ bool IMDAtomDataSource::readData(
                 if (splitDir && vislib::math::IsEqual(dx, 0.0f) && vislib::math::IsEqual(dy, 0.0f) &&
                     vislib::math::IsEqual(dz, 0.0f)) {
                     *posWriters[rawIdx] << x << y << z;
-                    if (colcolumn != UINT_MAX) *colWriters[rawIdx] << c;
+                    if (colcolumn != UINT_MAX)
+                        *colWriters[rawIdx] << c;
                     // TODO type column??? vermutlich net
                 } else {
                     *dirWriters[rawIdx] << x << y << z;
@@ -1849,7 +1876,8 @@ bool IMDAtomDataSource::readData(
                 }
             } else {
                 *posWriters[rawIdx] << x << y << z;
-                if (colcolumn != UINT_MAX) *colWriters[rawIdx] << c;
+                if (colcolumn != UINT_MAX)
+                    *colWriters[rawIdx] << c;
             }
         }
     }

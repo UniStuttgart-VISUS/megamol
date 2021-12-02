@@ -1,28 +1,28 @@
 /*
  * VIMDataSource.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/VIMDataSource.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/StringParam.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/error.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/Path.h"
+#include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
-#include "vislib/math/ShallowPoint.h"
-#include "vislib/math/ShallowQuaternion.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/sysfunctions.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/ShallowQuaternion.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/error.h"
+#include "vislib/sys/sysfunctions.h"
 #include <cassert>
 
 using namespace megamol;
@@ -43,9 +43,12 @@ using namespace megamol::moldyn::io;
  * VIMDataSource::Frame::Frame
  */
 VIMDataSource::Frame::Frame(core::view::AnimDataModule& owner)
-        : core::view::AnimDataModule::Frame(owner), typeCnt(0), partCnt(NULL),
-        pos(NULL), quat(NULL), radii() {
-}
+        : core::view::AnimDataModule::Frame(owner)
+        , typeCnt(0)
+        , partCnt(NULL)
+        , pos(NULL)
+        , quat(NULL)
+        , radii() {}
 
 
 /*
@@ -74,8 +77,8 @@ void VIMDataSource::Frame::Clear(void) {
 /*
  * VIMDataSource::Frame::LoadFrame
  */
-bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file, 
-        unsigned int idx, VIMDataSource::SimpleType *types, float /*scaling*/) {
+bool VIMDataSource::Frame::LoadFrame(
+    vislib::sys::File* file, unsigned int idx, VIMDataSource::SimpleType* types, float /*scaling*/) {
 
     float lScale = 1.0f;
 
@@ -89,14 +92,14 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
     vislib::StringA startLine = vislib::sys::ReadLineFromFileA(*file);
 
     if (startLine[0] != '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Invalid Start Line Parsed");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Invalid Start Line Parsed");
         return false;
     }
 
     if (startLine[1] == '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-            "Unexpected End of Data");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "Unexpected End of Data");
         return false;
     }
 
@@ -104,11 +107,8 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
     startLine.TrimSpacesBegin();
 
     try {
-        lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(
-            startLine.PeekBuffer()));
-    } catch(...) {
-        lScale = 1.0f;
-    }
+        lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(startLine.PeekBuffer()));
+    } catch (...) { lScale = 1.0f; }
 
     this->frame = idx;
 
@@ -135,9 +135,8 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
             float x, y, z, qx, qy, qz, qw;
             try {
                 this->parseParticleLine(line, type, x, y, z, qx, qy, qz, qw);
-            } catch(...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50,
-                    "Unable to parse particle line");
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Unable to parse particle line");
                 continue;
             }
             unsigned int idx = 0;
@@ -148,7 +147,9 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
                 }
             }
             unsigned int h = this->partCnt[idx] + 1;
-            if (h % 50) { h += 50 - h % 50; }
+            if (h % 50) {
+                h += 50 - h % 50;
+            }
 
             int oldTraceLvl = vislib::Trace::GetInstance().GetLevel();
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
@@ -162,7 +163,6 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
             // frame done
             break;
         }
-
     }
 
     for (unsigned int i = 0; i < this->typeCnt; i++) {
@@ -172,7 +172,8 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
         // de-quantize positions
         float maxVal = 0.0f;
         for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
-            if (maxVal < *this->pos[i].AsAt<float>(j)) maxVal = *this->pos[i].AsAt<float>(j);
+            if (maxVal < *this->pos[i].AsAt<float>(j))
+                maxVal = *this->pos[i].AsAt<float>(j);
         }
         float deQuant = lScale;
         if (maxVal >= 1000) {
@@ -183,7 +184,6 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
         for (SIZE_T j = 0; j < this->pos[i].GetSize(); j += sizeof(float)) {
             *this->pos[i].AsAt<float>(j) *= deQuant;
         }
-
     }
     VLTRACE(VISLIB_TRCELVL_INFO, "Frame %u loaded\n", this->frame);
 
@@ -212,7 +212,7 @@ void VIMDataSource::Frame::SetTypeCount(unsigned int cnt) {
 /*
  * VIMDataSource::Frame::PartPoss
  */
-const float *VIMDataSource::Frame::PartPoss(unsigned int type) const {
+const float* VIMDataSource::Frame::PartPoss(unsigned int type) const {
     ASSERT(type < this->typeCnt);
     return this->pos[type].As<float>();
 }
@@ -221,7 +221,7 @@ const float *VIMDataSource::Frame::PartPoss(unsigned int type) const {
 /*
  * VIMDataSource::Frame::PartQuats
  */
-const float *VIMDataSource::Frame::PartQuats(unsigned int type) const {
+const float* VIMDataSource::Frame::PartQuats(unsigned int type) const {
     ASSERT(type < this->typeCnt);
     return this->quat[type].As<float>();
 }
@@ -230,7 +230,7 @@ const float *VIMDataSource::Frame::PartQuats(unsigned int type) const {
 /*
  * VIMDataSource::Frame::PartRadii
  */
-const float *VIMDataSource::Frame::PartRadii(unsigned int type, SimpleType& t) const {
+const float* VIMDataSource::Frame::PartRadii(unsigned int type, SimpleType& t) const {
     if (this->radii.size() <= type) {
         // must reconstruct radii data
         this->radii.resize(this->typeCnt);
@@ -248,7 +248,7 @@ const float *VIMDataSource::Frame::PartRadii(unsigned int type, SimpleType& t) c
         radi[2] = 0.333f * t.Radius();
 
         for (unsigned int p_i = 0; p_i < this->partCnt[type]; ++p_i) {
-            float *f = this->radii[type].AsAt<float>(sizeof(float) * 3 * p_i);
+            float* f = this->radii[type].AsAt<float>(sizeof(float) * 3 * p_i);
             memcpy(f, radi, sizeof(float) * 3);
         }
     }
@@ -273,18 +273,19 @@ SIZE_T VIMDataSource::Frame::SizeOf(void) const {
 /*
  * VIMDataSource::Frame::MakeInterpolationFrame
  */
-const VIMDataSource::Frame *
-VIMDataSource::Frame::MakeInterpolationFrame(float alpha,
-        const VIMDataSource::Frame &a,
-        const VIMDataSource::Frame &b) {
+const VIMDataSource::Frame* VIMDataSource::Frame::MakeInterpolationFrame(
+    float alpha, const VIMDataSource::Frame& a, const VIMDataSource::Frame& b) {
     ASSERT(a.typeCnt == b.typeCnt);
 
-    if (alpha < 0.0000001f) return &a;
-    if (alpha > 0.9999999f) return &b;
+    if (alpha < 0.0000001f)
+        return &a;
+    if (alpha > 0.9999999f)
+        return &b;
     float beta = 1.0f - alpha;
 
     for (unsigned int t = 0; t < a.typeCnt; t++) {
-        if (a.partCnt[t] != b.partCnt[t]) return &a;
+        if (a.partCnt[t] != b.partCnt[t])
+            return &a;
         this->partCnt[t] = a.partCnt[t];
         this->pos[t].AssertSize(this->partCnt[t] * 3 * sizeof(float));
         this->quat[t].AssertSize(this->partCnt[t] * 4 * sizeof(float));
@@ -292,29 +293,20 @@ VIMDataSource::Frame::MakeInterpolationFrame(float alpha,
 
     for (unsigned int t = 0; t < a.typeCnt; t++) {
         for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-            vislib::math::ShallowPoint<float, 3>
-                av(a.pos[t].As<float>() + i * 3);
-            vislib::math::ShallowPoint<float, 3>
-                bv(b.pos[t].As<float>() + i * 3);
-            vislib::math::ShallowPoint<float, 3>
-                tv(this->pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> av(a.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> bv(b.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> tv(this->pos[t].As<float>() + i * 3);
 
             if (av.SquareDistance(bv) > 0.01) {
                 tv = (alpha < 0.5f) ? av : bv;
             } else {
-                tv.Set(av.X() * beta + bv.X() * alpha, 
-                    av.Y() * beta + bv.Y() * alpha, 
-                    av.Z() * beta + bv.Z() * alpha);
+                tv.Set(av.X() * beta + bv.X() * alpha, av.Y() * beta + bv.Y() * alpha, av.Z() * beta + bv.Z() * alpha);
             }
         }
         for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-            vislib::math::ShallowQuaternion<float>(
-                this->quat[t].As<float>() + i * 4).Slerp(alpha, 
-                vislib::math::ShallowQuaternion<float>(
-                    a.quat[t].As<float>() + i * 4), 
-                vislib::math::ShallowQuaternion<float>(
-                    b.quat[t].As<float>() + i * 4));
-
+            vislib::math::ShallowQuaternion<float>(this->quat[t].As<float>() + i * 4)
+                .Slerp(alpha, vislib::math::ShallowQuaternion<float>(a.quat[t].As<float>() + i * 4),
+                    vislib::math::ShallowQuaternion<float>(b.quat[t].As<float>() + i * 4));
         }
     }
 
@@ -325,16 +317,14 @@ VIMDataSource::Frame::MakeInterpolationFrame(float alpha,
 /*
  * VIMDataSource::Frame::parseParticleLine
  */
-void VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
-        int &outType, float &outX, float &outY, float &outZ, float &outQX,
-        float &outQY, float &outQZ, float &outQW) {
-#define MAPPED_Q1 outQW 
+void VIMDataSource::Frame::parseParticleLine(vislib::StringA& line, int& outType, float& outX, float& outY, float& outZ,
+    float& outQX, float& outQY, float& outQZ, float& outQW) {
+#define MAPPED_Q1 outQW
 #define MAPPED_Q2 outQX
 #define MAPPED_Q3 outQY
 #define MAPPED_Q4 outQZ
 
-    vislib::Array<vislib::StringA> shreds
-        = vislib::StringTokeniserA::Split(line, ' ', true);
+    vislib::Array<vislib::StringA> shreds = vislib::StringTokeniserA::Split(line, ' ', true);
     if ((shreds.Count() != 9) && (shreds.Count() != 5)) {
         throw 0; // invalid line separations
     }
@@ -347,16 +337,15 @@ void VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
     outY = float(vislib::CharTraitsA::ParseInt(shreds[3]));
     outZ = float(vislib::CharTraitsA::ParseInt(shreds[4]));
     if (shreds.Count() == 9) {
-        MAPPED_Q1 = float(vislib::CharTraitsA::ParseInt(shreds[5])); // quaternions are automatically de-quantized thru normalization
+        MAPPED_Q1 = float(
+            vislib::CharTraitsA::ParseInt(shreds[5])); // quaternions are automatically de-quantized thru normalization
         MAPPED_Q2 = float(vislib::CharTraitsA::ParseInt(shreds[6]));
         MAPPED_Q3 = float(vislib::CharTraitsA::ParseInt(shreds[7]));
         MAPPED_Q4 = float(vislib::CharTraitsA::ParseInt(shreds[8]));
 
         // normalize quaternion
-        double ql = sqrt(double(outQX) * double(outQX)
-            + double(outQY) * double(outQY) 
-            + double(outQZ) * double(outQZ)
-            + double(outQW) * double(outQW));
+        double ql = sqrt(double(outQX) * double(outQX) + double(outQY) * double(outQY) + double(outQZ) * double(outQZ) +
+                         double(outQW) * double(outQW));
         if (fabs(ql) < 0.001) {
             outQX = 0.0f;
             outQY = 0.0f;
@@ -387,11 +376,16 @@ void VIMDataSource::Frame::parseParticleLine(vislib::StringA &line,
 /*
  * VIMDataSource::VIMDataSource
  */
-VIMDataSource::VIMDataSource(void) : core::view::AnimDataModule(),
-        filename("filename", "The path to the trisoup file to load."),
-        getData("getdata", "Slot to request data from this data source."),
-        file(NULL), typeCnt(0), types(NULL), frameIdx(NULL), boxScaling(1.0f),
-        datahash(0) {
+VIMDataSource::VIMDataSource(void)
+        : core::view::AnimDataModule()
+        , filename("filename", "The path to the trisoup file to load.")
+        , getData("getdata", "Slot to request data from this data source.")
+        , file(NULL)
+        , typeCnt(0)
+        , types(NULL)
+        , frameIdx(NULL)
+        , boxScaling(1.0f)
+        , datahash(0) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VIMDataSource::filenameChanged);
@@ -399,8 +393,10 @@ VIMDataSource::VIMDataSource(void) : core::view::AnimDataModule(),
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData", &VIMDataSource::getDataCallback);
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &VIMDataSource::getExtentCallback);
-    this->getData.SetCallback(geocalls::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
-    this->getData.SetCallback(geocalls::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
+    this->getData.SetCallback(
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
+    this->getData.SetCallback(
+        geocalls::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
@@ -419,9 +415,8 @@ VIMDataSource::~VIMDataSource(void) {
 /*
  * VIMDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame*
-VIMDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<VIMDataSource*>(this));
+core::view::AnimDataModule::Frame* VIMDataSource::constructFrame(void) const {
+    Frame* f = new Frame(*const_cast<VIMDataSource*>(this));
     f->SetTypeCount(this->typeCnt);
     return f;
 }
@@ -438,10 +433,10 @@ bool VIMDataSource::create(void) {
 /*
  * VIMDataSource::loadFrame
  */
-void VIMDataSource::loadFrame(core::view::AnimDataModule::Frame *frame,
-        unsigned int idx) {
-    Frame *f = dynamic_cast<Frame*>(frame);
-    if (f == NULL) return;
+void VIMDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
+    Frame* f = dynamic_cast<Frame*>(frame);
+    if (f == NULL)
+        return;
     if (this->file == NULL) {
         f->Clear();
         return;
@@ -459,7 +454,7 @@ void VIMDataSource::loadFrame(core::view::AnimDataModule::Frame *frame,
 void VIMDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
@@ -478,7 +473,7 @@ void VIMDataSource::buildFrameTable(void) {
 
     vislib::SingleLinkedList<vislib::sys::File::FileSize> framePoss;
     const unsigned int bufSize = 1024 * 1024;
-    char *buf = new char[bufSize];
+    char* buf = new char[bufSize];
     unsigned int size = 1;
     char lCh1 = 0, lCh2 = 0;
     vislib::sys::File::FileSize pos = 0;
@@ -508,8 +503,8 @@ void VIMDataSource::buildFrameTable(void) {
                 if (buf[i + 1] == '#') {
                     break; // end of data
                 }
-                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A)))
-                        || ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
+                if (((i == 0) && ((lCh1 == 0x0D) || (lCh1 == 0x0A))) ||
+                    ((i > 0) && ((buf[i - 1] == 0x0D) || (buf[i - 1] == 0x0A)))) {
                     framePoss.Add(pos + i);
                     frameCnt++;
                 }
@@ -538,8 +533,7 @@ void VIMDataSource::buildFrameTable(void) {
 
     this->frameIdx = new vislib::sys::File::FileSize[frameCnt];
     frameCnt = 0;
-    vislib::SingleLinkedList<vislib::sys::File::FileSize>::Iterator
-        iter = framePoss.GetIterator();
+    vislib::SingleLinkedList<vislib::sys::File::FileSize>::Iterator iter = framePoss.GetIterator();
     while (iter.HasNext()) {
         this->frameIdx[frameCnt++] = iter.Next();
     }
@@ -567,8 +561,7 @@ void VIMDataSource::calcBoundingBox(void) {
             if (scale > this->boxScaling) {
                 this->boxScaling = scale;
             }
-        } catch(...) {
-        }
+        } catch (...) {}
     }
 
     if (vislib::math::IsEqual(this->boxScaling, 0.0f)) {
@@ -638,8 +631,7 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
-        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
-            CACHE_SIZE_MIN, cacheSize);
+        msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
@@ -657,13 +649,8 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
 /*
  * VIMDataSource::parseTypeLine
  */
-VIMDataSource::SimpleType* 
-VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
-    enum ElementType {
-        TYPE_UNKNOWN,
-        TYPE_SPHERE,
-        TYPE_CYLINDER
-    };
+VIMDataSource::SimpleType* VIMDataSource::parseTypeLine(vislib::StringA& line, int& outType) {
+    enum ElementType { TYPE_UNKNOWN, TYPE_SPHERE, TYPE_CYLINDER };
     const UINT32 ittColourTable[] = {
         0xFFB2B2B2, //  0 weisz
         0xFF191919, //  1 schwarz
@@ -680,18 +667,16 @@ VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
         0xFFFF00FF, // 12 magenta
         0xFF8000FF, // 13 kirsch
         0xFFC0C0C0, // 14 gray
-        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
+        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
+        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
+        0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
         0xFFFFC080, // 42 MegaMol-blue
-        0xFF404040 // default gray
+        0xFF404040  // default gray
     };
 
     vislib::Array<vislib::StringA> shreds = vislib::StringTokeniserA::Split(line, ' ', true);
     ElementType type = TYPE_UNKNOWN;
-    SimpleType *retval = NULL;
+    SimpleType* retval = NULL;
 
     if (shreds.Count() < 3) {
         throw 0; // far too few elements
@@ -711,62 +696,64 @@ VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
     }
 
     switch (type) {
-        case TYPE_UNKNOWN:
-            throw 0; // unknown element type.
-        case TYPE_SPHERE: {
-            if ((shreds.Count() != 8) && (shreds.Count() != 10)) {
-                throw 0; // wrong substring count
-            }
-            SimpleType *sphere = new SimpleType();
-            sphere->SetID(outType);
-            //sphere->SetPosition(
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
-            sphere->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[6])));
-            if (shreds.Count() == 8) {
-                int idx = vislib::CharTraitsA::ParseInt(shreds[7]);
-                if (idx < 0) idx = 0;
-                int colours = sizeof(ittColourTable) / sizeof(UINT32);
-                if (idx >= colours) idx = colours - 1;
-                sphere->SetColour(ittColourTable[idx]);
-            } else {
-                sphere->SetColour(
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[7])),
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[8])),
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[9])));
-            }
-            retval = sphere;
-        } break;
-        case TYPE_CYLINDER: {
-            if ((shreds.Count() != 11) && (shreds.Count() != 13)) {
-                throw 0; // wrong substring count
-            }
-            SimpleType *cyl = new SimpleType();
-            cyl->SetID(outType);
-            //cyl->SetPosition(
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
-            //cyl->SetSecondPosition(
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[6])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[7])),
-            //    float(vislib::CharTraitsA::ParseDouble(shreds[8])));
-            cyl->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[9])));
-            if (shreds.Count() == 11) {
-                int idx = vislib::CharTraitsA::ParseInt(shreds[10]);
-                if (idx < 0) idx = 0;
-                int colours = sizeof(ittColourTable) / sizeof(UINT32);
-                if (idx >= colours) idx = colours - 1;
-                cyl->SetColour(ittColourTable[idx]);
-            } else {
-                cyl->SetColour(
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[10])),
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[11])),
-                    static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[12])));
-            }
-            retval = cyl;
-        } break;
+    case TYPE_UNKNOWN:
+        throw 0; // unknown element type.
+    case TYPE_SPHERE: {
+        if ((shreds.Count() != 8) && (shreds.Count() != 10)) {
+            throw 0; // wrong substring count
+        }
+        SimpleType* sphere = new SimpleType();
+        sphere->SetID(outType);
+        //sphere->SetPosition(
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
+        sphere->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[6])));
+        if (shreds.Count() == 8) {
+            int idx = vislib::CharTraitsA::ParseInt(shreds[7]);
+            if (idx < 0)
+                idx = 0;
+            int colours = sizeof(ittColourTable) / sizeof(UINT32);
+            if (idx >= colours)
+                idx = colours - 1;
+            sphere->SetColour(ittColourTable[idx]);
+        } else {
+            sphere->SetColour(static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[7])),
+                static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[8])),
+                static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[9])));
+        }
+        retval = sphere;
+    } break;
+    case TYPE_CYLINDER: {
+        if ((shreds.Count() != 11) && (shreds.Count() != 13)) {
+            throw 0; // wrong substring count
+        }
+        SimpleType* cyl = new SimpleType();
+        cyl->SetID(outType);
+        //cyl->SetPosition(
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[3])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[4])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[5])));
+        //cyl->SetSecondPosition(
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[6])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[7])),
+        //    float(vislib::CharTraitsA::ParseDouble(shreds[8])));
+        cyl->SetRadius(0.5f * float(vislib::CharTraitsA::ParseDouble(shreds[9])));
+        if (shreds.Count() == 11) {
+            int idx = vislib::CharTraitsA::ParseInt(shreds[10]);
+            if (idx < 0)
+                idx = 0;
+            int colours = sizeof(ittColourTable) / sizeof(UINT32);
+            if (idx >= colours)
+                idx = colours - 1;
+            cyl->SetColour(ittColourTable[idx]);
+        } else {
+            cyl->SetColour(static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[10])),
+                static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[11])),
+                static_cast<unsigned char>(vislib::CharTraitsA::ParseInt(shreds[12])));
+        }
+        retval = cyl;
+    } break;
     }
 
     return retval;
@@ -791,8 +778,8 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
             continue;
 
         } else if (line[0] == '~') {
-            SimpleType *element = NULL;
-            try {// a type line!
+            SimpleType* element = NULL;
+            try { // a type line!
                 int type;
                 element = this->parseTypeLine(line, type);
                 if (element == NULL) {
@@ -814,9 +801,7 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
                     types.Last() = *element;
                 }
                 element = NULL;
-            } catch(...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Error parsing type line.");
-            }
+            } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Error parsing type line."); }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {
             // very extream file redirection
@@ -827,9 +812,8 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
             vnfn = vislib::sys::Path::Resolve(vnfn, base);
 
             this->file->Close();
-            if (!this->file->Open(vnfn, vislib::sys::File::READ_ONLY, 
-                    vislib::sys::File::SHARE_READ, 
-                    vislib::sys::File::OPEN_ONLY)) {
+            if (!this->file->Open(
+                    vnfn, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
 
                 SAFE_DELETE(this->file);
                 return false;
@@ -846,7 +830,7 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
 
     this->typeCnt = static_cast<unsigned int>(types.Count());
     this->types = new SimpleType[this->typeCnt];
-    for(unsigned int i = 0; i < this->typeCnt; i++) {
+    for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->types[i] = types[i];
     }
 
@@ -858,27 +842,29 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
  * VIMDataSource::getDataCallback
  */
 bool VIMDataSource::getDataCallback(core::Call& caller) {
-    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
-    geocalls::EllipsoidalParticleDataCall *c3 = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&caller);
-    if ((c2 == nullptr) && (c3 == nullptr)) return false;
+    geocalls::MultiParticleDataCall* c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
+    geocalls::EllipsoidalParticleDataCall* c3 = dynamic_cast<geocalls::EllipsoidalParticleDataCall*>(&caller);
+    if ((c2 == nullptr) && (c3 == nullptr))
+        return false;
 
     unsigned int fid = (c2 != nullptr) ? c2->FrameID() : c3->FrameID();
-    Frame *f = dynamic_cast<Frame *>(this->requestLockedFrame(fid));
-    if (f == NULL) return false;
+    Frame* f = dynamic_cast<Frame*>(this->requestLockedFrame(fid));
+    if (f == NULL)
+        return false;
 
     if (c2 != nullptr) {
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount(this->typeCnt);
         for (unsigned int i = 0; i < this->typeCnt; i++) {
-            c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
+            c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius() /* / this->boxScaling*/);
             c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
             c2->AccessParticles(i).SetCount(f->PartCnt(i));
             c2->AccessParticles(i).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
-            const float *vd = f->PartPoss(i);
+            const float* vd = f->PartPoss(i);
             c2->AccessParticles(i).SetVertexData((vd == NULL)
-                ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
-                : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                                                     ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
+                                                     : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
         }
     } else {
@@ -888,22 +874,24 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
         c3->SetParticleListCount(this->typeCnt);
         for (unsigned int i = 0; i < this->typeCnt; i++) {
 
-//            c3->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
+            //            c3->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
 
             c3->AccessParticles(i).SetCount(f->PartCnt(i));
 
             c3->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
             c3->AccessParticles(i).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
 
-            const float *vd = f->PartPoss(i);
-            const float *qd = f->PartQuats(i);
-            const float *rd = f->PartRadii(i, this->types[i]);
+            const float* vd = f->PartPoss(i);
+            const float* qd = f->PartQuats(i);
+            const float* rd = f->PartRadii(i, this->types[i]);
             c3->AccessParticles(i).SetVertexData((vd == NULL)
-                ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
-                : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                                                     ? geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE
+                                                     : geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
-            if (qd) c3->AccessParticles(i).SetQuatData(qd);
-            if (rd) c3->AccessParticles(i).SetRadData(rd);
+            if (qd)
+                c3->AccessParticles(i).SetQuatData(qd);
+            if (rd)
+                c3->AccessParticles(i).SetRadData(rd);
         }
     }
 
@@ -915,21 +903,22 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
  * VIMDataSource::getExtentCallback
  */
 bool VIMDataSource::getExtentCallback(core::Call& caller) {
-    core::AbstractGetData3DCall *c2 = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
+    core::AbstractGetData3DCall* c2 = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
     float border = 0.0f;
 
     if (c2 != NULL) {
         for (unsigned int i = 0; i < this->typeCnt; i++) {
-            float r = this->types[i].Radius();// / this->boxScaling;
-            if (r > border) border = r;
+            float r = this->types[i].Radius(); // / this->boxScaling;
+            if (r > border)
+                border = r;
         }
 
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetFrameCount(this->FrameCount());
         c2->AccessBoundingBoxes().Clear();
         c2->AccessBoundingBoxes().SetObjectSpaceBBox(0, 0, 0, this->boxScaling, this->boxScaling, this->boxScaling);
-        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(-border, -border, -border,
-            this->boxScaling + border, this->boxScaling + border, this->boxScaling + border);
+        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(
+            -border, -border, -border, this->boxScaling + border, this->boxScaling + border, this->boxScaling + border);
         return true;
     }
 

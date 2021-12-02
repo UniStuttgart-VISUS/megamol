@@ -6,7 +6,7 @@
 #ifndef MMPROTEINPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
 #define MMPROTEINPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
@@ -28,7 +28,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "TunnelToBFactor"; }
+    static const char* ClassName(void) {
+        return "TunnelToBFactor";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -44,7 +46,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     TunnelToBFactor(void);

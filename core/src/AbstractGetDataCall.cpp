@@ -1,12 +1,12 @@
 /*
  * AbstractGetDataCall.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/AbstractGetDataCall.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -30,8 +30,7 @@ AbstractGetDataCall::~AbstractGetDataCall(void) {
 /*
  * AbstractGetDataCall::operator=
  */
-AbstractGetDataCall& AbstractGetDataCall::operator=(
-        const AbstractGetDataCall& rhs) {
+AbstractGetDataCall& AbstractGetDataCall::operator=(const AbstractGetDataCall& rhs) {
     this->datahash = rhs.datahash;
     this->unlocker = rhs.unlocker; // this is dangerous but documented!
     return *this;

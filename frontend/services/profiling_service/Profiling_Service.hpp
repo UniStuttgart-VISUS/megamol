@@ -10,7 +10,6 @@
 #include <fstream>
 
 #include "AbstractFrontendService.hpp"
-#include "mmcore_gl/CallProfiling.h"
 #include "PerformanceManager.h"
 
 namespace megamol {
@@ -18,12 +17,13 @@ namespace frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
 public:
-
     struct Config {
         std::string log_file;
     };
 
-    std::string serviceName() const override { return "Profiling_Service"; }
+    std::string serviceName() const override {
+        return "Profiling_Service";
+    }
     bool init(void* configPtr) override;
     void close() override;
     void updateProvidedResources() override;
@@ -33,8 +33,12 @@ public:
 
     void preGraphRender() override {}
     void postGraphRender() override {}
-    std::vector<FrontendResource>& getProvidedResources() override { return _providedResourceReferences; }
-    const std::vector<std::string> getRequestedResourceNames() const override { return _requestedResourcesNames; }
+    std::vector<FrontendResource>& getProvidedResources() override {
+        return _providedResourceReferences;
+    }
+    const std::vector<std::string> getRequestedResourceNames() const override {
+        return _requestedResourcesNames;
+    }
     void setRequestedResources(std::vector<FrontendResource> resources) override {}
 
     std::vector<FrontendResource> _providedResourceReferences;

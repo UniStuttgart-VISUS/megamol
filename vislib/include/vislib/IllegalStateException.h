@@ -19,57 +19,53 @@
 
 namespace vislib {
 
+/**
+ * This exception indicates that an object would enter an illegal state when
+ * calling a method or is already in an illegal state.
+ *
+ * @author Christoph Mueller
+ */
+class IllegalStateException : public Exception {
+
+public:
     /**
-     * This exception indicates that an object would enter an illegal state when
-     * calling a method or is already in an illegal state.
+     * Ctor.
      *
-     * @author Christoph Mueller
+     * @param msg  The exception detail message.
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
      */
-    class IllegalStateException : public Exception {
+    IllegalStateException(const char* msg, const char* file, const int line);
 
-    public:
+    /**
+     * Ctor.
+     *
+     * @param msg  The exception detail message.
+     * @param file The file the exception was thrown in.
+     * @param line The line the exception was thrown in.
+     */
+    IllegalStateException(const wchar_t* msg, const char* file, const int line);
 
-        /**
-         * Ctor.
-         *
-         * @param msg  The exception detail message.
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        IllegalStateException(const char *msg, const char *file, 
-            const int line);
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    IllegalStateException(const IllegalStateException& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param msg  The exception detail message.
-         * @param file The file the exception was thrown in.
-         * @param line The line the exception was thrown in.
-         */
-        IllegalStateException(const wchar_t *msg, const char *file, 
-            const int line);
+    /** Dtor. */
+    virtual ~IllegalStateException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        IllegalStateException(const IllegalStateException& rhs);
-
-        /** Dtor. */
-        virtual ~IllegalStateException(void);
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        virtual IllegalStateException& operator =(
-            const IllegalStateException& rhs);
-    };
-}
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    virtual IllegalStateException& operator=(const IllegalStateException& rhs);
+};
+} // namespace vislib
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

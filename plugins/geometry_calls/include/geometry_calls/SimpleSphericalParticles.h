@@ -34,9 +34,8 @@ public:
     };
 
     const inline static std::array<std::string, 5> VertexDataTypeNames = {
-            "VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"
-    };
-    const inline static std::array<uint32_t, 5> VertexDataTypeComponents = { 0, 3, 4, 3, 3 };
+        "VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"};
+    const inline static std::array<uint32_t, 5> VertexDataTypeComponents = {0, 3, 4, 3, 3};
 
     /** possible values for the colour data */
     enum ColourDataType {
@@ -53,19 +52,19 @@ public:
     const inline static std::array<std::string, 8> ColourDataTypeNames = {"COLDATA_NONE", "COLDATA_UINT8_RGB",
         "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_FLOAT_I", "COLDATA_USHORT_RGBA",
         "COLDATA_DOUBLE_I"};
-    const inline static std::array<uint32_t, 8> ColorDataTypeComponents = { 0, 3, 4, 3, 4, 1, 4, 1 };
+    const inline static std::array<uint32_t, 8> ColorDataTypeComponents = {0, 3, 4, 3, 4, 1, 4, 1};
 
     /** possible values for the direction data */
     enum DirDataType { DIRDATA_NONE = 0, DIRDATA_FLOAT_XYZ = 1 };
 
     const inline static std::array<std::string, 2> DirDataTypeNames = {"DIRDATA_NONE", "DIRDATA_FLOAT_XYZ"};
-    const inline static std::array<uint32_t, 2> DirDataTypeComponents = { 0, 3 };
+    const inline static std::array<uint32_t, 2> DirDataTypeComponents = {0, 3};
 
     /** possible values for the id data */
     enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
 
     const inline static std::array<std::string, 3> IDDataTypeNames = {"IDDATA_NONE", "IDDATA_UINT32", "IDDATA_UINT32"};
-    const inline static std::array<uint32_t, 3> IDDataTypeComponents = { 0, 1, 1 };
+    const inline static std::array<uint32_t, 3> IDDataTypeComponents = {0, 1, 1};
 
     /**
      * This class holds the accessors to the current data.
@@ -201,39 +200,65 @@ public:
                 this->id_acc_ = std::make_shared<Accessor_Impl<uint64_t>>(reinterpret_cast<char const*>(p), s);
             } break;
             case SimpleSphericalParticles::IDDATA_NONE:
-            default: { this->id_acc_ = std ::make_shared<Accessor_0>(); }
+            default: {
+                this->id_acc_ = std ::make_shared<Accessor_0>();
+            }
             }
         }
 
-        std::shared_ptr<Accessor> const& GetXAcc() const { return this->x_acc_; }
+        std::shared_ptr<Accessor> const& GetXAcc() const {
+            return this->x_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetYAcc() const { return this->y_acc_; }
+        std::shared_ptr<Accessor> const& GetYAcc() const {
+            return this->y_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetZAcc() const { return this->z_acc_; }
+        std::shared_ptr<Accessor> const& GetZAcc() const {
+            return this->z_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetRAcc() const { return this->r_acc_; }
+        std::shared_ptr<Accessor> const& GetRAcc() const {
+            return this->r_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetCRAcc() const { return this->cr_acc_; }
+        std::shared_ptr<Accessor> const& GetCRAcc() const {
+            return this->cr_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetCGAcc() const { return this->cg_acc_; }
+        std::shared_ptr<Accessor> const& GetCGAcc() const {
+            return this->cg_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetCBAcc() const { return this->cb_acc_; }
+        std::shared_ptr<Accessor> const& GetCBAcc() const {
+            return this->cb_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetCAAcc() const { return this->ca_acc_; }
+        std::shared_ptr<Accessor> const& GetCAAcc() const {
+            return this->ca_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetDXAcc() const { return this->dx_acc_; }
+        std::shared_ptr<Accessor> const& GetDXAcc() const {
+            return this->dx_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetDYAcc() const { return this->dy_acc_; }
+        std::shared_ptr<Accessor> const& GetDYAcc() const {
+            return this->dy_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetDZAcc() const { return this->dz_acc_; }
+        std::shared_ptr<Accessor> const& GetDZAcc() const {
+            return this->dz_acc_;
+        }
 
-        std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
+        std::shared_ptr<Accessor> const& GetIDAcc() const {
+            return this->id_acc_;
+        }
 
     private:
-        std::shared_ptr<Accessor> x_acc_  = std::make_shared<Accessor_0>();
-        std::shared_ptr<Accessor> y_acc_  = std::make_shared<Accessor_0>();
-        std::shared_ptr<Accessor> z_acc_  = std::make_shared<Accessor_0>();
-        std::shared_ptr<Accessor> r_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> x_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> y_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> z_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> r_acc_ = std::make_shared<Accessor_0>();
         std::shared_ptr<Accessor> cr_acc_ = std::make_shared<Accessor_0>();
         std::shared_ptr<Accessor> cg_acc_ = std::make_shared<Accessor_0>();
         std::shared_ptr<Accessor> cb_acc_ = std::make_shared<Accessor_0>();
@@ -278,14 +303,18 @@ public:
      *
      * @return The colour data type
      */
-    inline ColourDataType GetColourDataType(void) const { return this->colDataType; }
+    inline ColourDataType GetColourDataType(void) const {
+        return this->colDataType;
+    }
 
     /**
      * Answer the colour data pointer
      *
      * @return The colour data pointer
      */
-    inline const void* GetColourData(void) const { return this->colPtr; }
+    inline const void* GetColourData(void) const {
+        return this->colPtr;
+    }
 
     /**
      * Answer the colour data stride.
@@ -302,14 +331,18 @@ public:
      *
      * @return The direction data type
      */
-    inline DirDataType GetDirDataType(void) const { return this->dirDataType; }
+    inline DirDataType GetDirDataType(void) const {
+        return this->dirDataType;
+    }
 
     /**
      * Answer the direction data pointer
      *
      * @return The direction data pointer
      */
-    inline const void* GetDirData(void) const { return this->dirPtr; }
+    inline const void* GetDirData(void) const {
+        return this->dirPtr;
+    }
 
     /**
      * Answer the direction data stride
@@ -325,7 +358,9 @@ public:
      *
      * @return The number of stored objects
      */
-    inline UINT64 GetCount(void) const { return this->count; }
+    inline UINT64 GetCount(void) const {
+        return this->count;
+    }
 
     /**
      * Answer the global colour
@@ -333,49 +368,63 @@ public:
      * @return The global colour as a pointer to four unsigned bytes
      *         storing the RGBA colour components
      */
-    inline const unsigned char* GetGlobalColour(void) const { return this->col; }
+    inline const unsigned char* GetGlobalColour(void) const {
+        return this->col;
+    }
 
     /**
      * Answer the global radius
      *
      * @return The global radius
      */
-    inline float GetGlobalRadius(void) const { return this->radius; }
+    inline float GetGlobalRadius(void) const {
+        return this->radius;
+    }
 
     /**
      * Answer the global particle type
      *
      * @return the global type
      */
-    inline unsigned int GetGlobalType(void) const { return this->particleType; }
+    inline unsigned int GetGlobalType(void) const {
+        return this->particleType;
+    }
 
     /**
      * Answer the maximum colour index value to be mapped
      *
      * @return The maximum colour index value to be mapped
      */
-    inline float GetMaxColourIndexValue(void) const { return this->maxColI; }
+    inline float GetMaxColourIndexValue(void) const {
+        return this->maxColI;
+    }
 
     /**
      * Answer the minimum colour index value to be mapped
      *
      * @return The minimum colour index value to be mapped
      */
-    inline float GetMinColourIndexValue(void) const { return this->minColI; }
+    inline float GetMinColourIndexValue(void) const {
+        return this->minColI;
+    }
 
     /**
      * Answer the vertex data type
      *
      * @return The vertex data type
      */
-    inline VertexDataType GetVertexDataType(void) const { return this->vertDataType; }
+    inline VertexDataType GetVertexDataType(void) const {
+        return this->vertDataType;
+    }
 
     /**
      * Answer the vertex data pointer
      *
      * @return The vertex data pointer
      */
-    inline const void* GetVertexData(void) const { return this->vertPtr; }
+    inline const void* GetVertexData(void) const {
+        return this->vertPtr;
+    }
 
     /**
      * Answer the vertex data stride.
@@ -392,14 +441,18 @@ public:
      *
      * @return The id data type
      */
-    inline IDDataType GetIDDataType(void) const { return this->idDataType; }
+    inline IDDataType GetIDDataType(void) const {
+        return this->idDataType;
+    }
 
     /**
      * Answer the id data pointer
      *
      * @return The id data pointer
      */
-    inline const void* GetIDData(void) const { return this->idPtr; }
+    inline const void* GetIDData(void) const {
+        return this->idPtr;
+    }
 
     /**
      * Answer the id data stride.
@@ -514,7 +567,9 @@ public:
      *
      * @param t The global type
      */
-    void SetGlobalType(unsigned int t) { this->particleType = t; }
+    void SetGlobalType(unsigned int t) {
+        this->particleType = t;
+    }
 
     /**
      * Sets the vertex data
@@ -555,7 +610,9 @@ public:
      *
      * @return true, if the particles have IDs.
      */
-    inline bool HasID() const { return this->idDataType != IDDATA_NONE; }
+    inline bool HasID() const {
+        return this->idDataType != IDDATA_NONE;
+    }
 
     /**
      * Assignment operator
@@ -580,25 +637,33 @@ public:
      *
      * @return Instance of particle store.
      */
-    ParticleStore const& GetParticleStore() const { return *this->par_store_; }
+    ParticleStore const& GetParticleStore() const {
+        return *this->par_store_;
+    }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
      * @param disable flag to disable/enable the checks
      */
-    void disableNullChecksForVAOs(bool disable = true) { disabledNullChecks = disable; }
+    void disableNullChecksForVAOs(bool disable = true) {
+        disabledNullChecks = disable;
+    }
 
     /**
      * Defines wether we transport VAOs instead of real data
      * @param vao flag to disable/enable the checks
      */
-    void SetIsVAO(bool vao) { this->isVAO = vao; }
+    void SetIsVAO(bool vao) {
+        this->isVAO = vao;
+    }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
      * @param disable flag to disable/enable the checks
      */
-    bool IsVAO() { return this->isVAO; }
+    bool IsVAO() {
+        return this->isVAO;
+    }
 
     /**
      * If we handle clusters this could be useful
@@ -618,12 +683,16 @@ public:
     /**
      * Sets the local ClusterInfos-struct
      */
-    void SetClusterInfos(ClusterInfos* infos) { this->clusterInfos = infos; }
+    void SetClusterInfos(ClusterInfos* infos) {
+        this->clusterInfos = infos;
+    }
 
     /**
      * gets the local ClusterInfos-struct
      */
-    ClusterInfos* GetClusterInfos() { return this->clusterInfos; }
+    ClusterInfos* GetClusterInfos() {
+        return this->clusterInfos;
+    }
 
     /**
      * Sets the VertexArrayObject, VertexBuffer and ColorBuffer used
@@ -644,9 +713,13 @@ public:
     }
 
     /** Gets the world-space minmax bounding box of the list data */
-    vislib::math::Cuboid<float> GetBBox() const { return this->wsBBox; }
+    vislib::math::Cuboid<float> GetBBox() const {
+        return this->wsBBox;
+    }
 
-    void SetBBox(vislib::math::Cuboid<float> const& bbox) { this->wsBBox = bbox; }
+    void SetBBox(vislib::math::Cuboid<float> const& bbox) {
+        this->wsBBox = bbox;
+    }
 
 private:
     /** The global colour */

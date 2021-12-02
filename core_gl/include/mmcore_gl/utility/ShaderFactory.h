@@ -23,33 +23,32 @@ glowl::GLSLProgram::ShaderSourceList::value_type make_glowl_shader_source(
     msf::LineTranslator& translator);
 
 namespace {
-    template<bool Shared>
-    using program_ptr_t =
-        std::conditional_t<Shared, std::shared_ptr<glowl::GLSLProgram>, std::unique_ptr<glowl::GLSLProgram>>;
+template<bool Shared>
+using program_ptr_t =
+    std::conditional_t<Shared, std::shared_ptr<glowl::GLSLProgram>, std::unique_ptr<glowl::GLSLProgram>>;
 
-    template<bool Shared, typename... Paths>
-    program_ptr_t<Shared> make_glowl_shader_impl(
-        std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths) {
-        msf::LineTranslator translator;
-        try {
-            program_ptr_t<Shared> program;
-            if constexpr (Shared) {
-                program = std::make_shared<glowl::GLSLProgram>(
-                    glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
-
-            } else {
-                program = std::make_unique<glowl::GLSLProgram>(
-                    glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
-            }
-            program->setDebugLabel(label);
-            return program;
-        } catch (glowl::GLSLProgramException const& ex) {
-            throw glowl::GLSLProgramException(
-                "Error building shader program \"" + label + "\":\n" + translator.translateErrorLog(ex.what()));
-        } catch (std::runtime_error const& ex) {
-            throw glowl::GLSLProgramException("Error parsing shader program \"" + label + "\":\n" + ex.what());
+template<bool Shared, typename... Paths>
+program_ptr_t<Shared> make_glowl_shader_impl(
+    std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths) {
+    msf::LineTranslator translator;
+    try {
+        program_ptr_t<Shared> program;
+        if constexpr (Shared) {
+            program = std::make_shared<glowl::GLSLProgram>(
+                glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
+        } else {
+            program = std::make_unique<glowl::GLSLProgram>(
+                glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
         }
+        program->setDebugLabel(label);
+        return program;
+    } catch (glowl::GLSLProgramException const& ex) {
+        throw glowl::GLSLProgramException(
+            "Error building shader program \"" + label + "\":\n" + translator.translateErrorLog(ex.what()));
+    } catch (std::runtime_error const& ex) {
+        throw glowl::GLSLProgramException("Error parsing shader program \"" + label + "\":\n" + ex.what());
     }
+}
 } // namespace
 
 template<typename... Paths>

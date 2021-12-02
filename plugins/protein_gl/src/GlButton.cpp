@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "GlButton.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
@@ -31,7 +31,7 @@ void GlButton::press() {
 void GlButton::render() {
     glBegin(GL_POLYGON);
     glColor3f(this->r, this->g, this->b);
-    /*	if(this->pressedDown)
+    /*      if(this->pressedDown)
                     glColor3f(1.0f, 1.0f, 0.7f);
             else
                     glColor3f(0.8f, 1.0f, 0.5f);

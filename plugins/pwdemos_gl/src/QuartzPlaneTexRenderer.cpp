@@ -5,17 +5,18 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "QuartzPlaneTexRenderer.h"
+#include "OpenGL_Context.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
-#include "vislib/assert.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/graphicsfunctions.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "stdafx.h"
+#include "vislib/assert.h"
+#include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/math/Vector.h"
-#include "OpenGL_Context.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -23,10 +24,11 @@ namespace demos_gl {
 /*
  * QuartzPlaneTexRenderer::QuartzPlaneTexRenderer
  */
-QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void) : core_gl::view::Renderer2DModuleGL(),
-AbstractTexQuartzRenderer(),
-useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains"),
-cryShader() {
+QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void)
+        : core_gl::view::Renderer2DModuleGL()
+        , AbstractTexQuartzRenderer()
+        , useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains")
+        , cryShader() {
 
     this->useClipColSlot << new core::param::BoolParam(false);
 
@@ -37,7 +39,6 @@ cryShader() {
     this->MakeSlotAvailable(&this->showClipPlanePolySlot);
     this->MakeSlotAvailable(&this->useClipColSlot);
     this->MakeSlotAvailable(&this->correctPBCSlot);
-
 }
 
 
@@ -53,8 +54,8 @@ QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer(void) {
  * QuartzPlaneTexRenderer::create
  */
 bool QuartzPlaneTexRenderer::create(void) {
-    using vislib_gl::graphics::gl::GLSLShader;
     using megamol::core::utility::log::Log;
+    using vislib_gl::graphics::gl::GLSLShader;
     using vislib_gl::graphics::gl::ShaderSource;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -65,23 +66,22 @@ bool QuartzPlaneTexRenderer::create(void) {
     }
 
     ShaderSource vert, frag;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
             throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
         }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
+        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::frag", frag)) {
             throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
         }
         if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
         }
-    }
-    catch (vislib::Exception ex) {
+    } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
-    }
-    catch (...) {
+    } catch (...) {
         Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
@@ -95,17 +95,16 @@ bool QuartzPlaneTexRenderer::create(void) {
  * QuartzPlaneTexRenderer::GetExtents
  */
 bool QuartzPlaneTexRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
-    ParticleGridDataCall *pgdc = this->getParticleData();
-    core::view::CallClipPlane *ccp = this->getClipPlaneData();
+    ParticleGridDataCall* pgdc = this->getParticleData();
+    core::view::CallClipPlane* ccp = this->getClipPlaneData();
     if ((pgdc != NULL) && (ccp != NULL)) {
         if ((*pgdc)(ParticleGridDataCall::CallForGetExtent)) {
             if ((*ccp)()) {
                 vislib::math::Vector<float, 3> cx, cy, p;
                 float minX, minY, maxX, maxY, x, y;
-                const vislib::math::Cuboid<float>& bbox =
-                    pgdc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
-                    ? pgdc->AccessBoundingBoxes().ObjectSpaceBBox()
-                    : pgdc->AccessBoundingBoxes().ClipBox();
+                const vislib::math::Cuboid<float>& bbox = pgdc->AccessBoundingBoxes().IsObjectSpaceBBoxValid()
+                                                              ? pgdc->AccessBoundingBoxes().ObjectSpaceBBox()
+                                                              : pgdc->AccessBoundingBoxes().ClipBox();
                 ccp->CalcPlaneSystem(cx, cy);
 
                 p = bbox.GetLeftBottomBack();
@@ -117,58 +116,86 @@ bool QuartzPlaneTexRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
                 p = bbox.GetLeftBottomFront();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetLeftTopBack();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetLeftTopFront();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetRightBottomBack();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetRightBottomFront();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetRightTopBack();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 p = bbox.GetRightTopFront();
                 x = cx.Dot(p);
                 y = cy.Dot(p);
-                if (minX > x) minX = x;
-                if (maxX < x) maxX = x;
-                if (minY > y) minY = y;
-                if (maxY < y) maxY = y;
+                if (minX > x)
+                    minX = x;
+                if (maxX < x)
+                    maxX = x;
+                if (minY > y)
+                    minY = y;
+                if (maxY < y)
+                    maxY = y;
 
                 call.AccessBoundingBoxes().SetBoundingBox(minX, minY, 0, maxX, maxY, 0);
 
@@ -196,12 +223,14 @@ void QuartzPlaneTexRenderer::release(void) {
  * QuartzPlaneTexRenderer::Render
  */
 bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
-    ParticleGridDataCall *pgdc = this->getParticleData();
-    CrystalDataCall *tdc = this->getCrystaliteData();
-    core::view::CallClipPlane *ccp = this->getClipPlaneData();
+    ParticleGridDataCall* pgdc = this->getParticleData();
+    CrystalDataCall* tdc = this->getCrystaliteData();
+    core::view::CallClipPlane* ccp = this->getClipPlaneData();
     if ((pgdc == NULL) || (tdc == NULL) || (ccp == NULL)) {
-        if (pgdc != NULL) pgdc->Unlock();
-        if (tdc != NULL) tdc->Unlock();
+        if (pgdc != NULL)
+            pgdc->Unlock();
+        if (tdc != NULL)
+            tdc->Unlock();
         return false;
     }
     this->assertGrainColour();
@@ -218,34 +247,31 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     float shaderPointSize = vislib::math::Max(viewportStuff[2], viewportStuff[3]);
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     ::glPointSize(shaderPointSize);
 
-    ::glEnableClientState(GL_VERTEX_ARRAY); // xyzr
+    ::glEnableClientState(GL_VERTEX_ARRAY);        // xyzr
     ::glEnableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 
     if (this->useClipColSlot.Param<core::param::BoolParam>()->Value()) {
         ::glColor3ubv(ccp->GetColour());
-    }
-    else {
+    } else {
         ::glColor3fv(this->grainCol);
     }
 
     float planeZ = ccp->GetPlane().Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
     vislib::math::Cuboid<float> bbox(pgdc->GetBoundingBoxes().ObjectSpaceBBox());
-    vislib::math::Point<float, 3> bboxmin(
-        vislib::math::Min(bbox.Left(), bbox.Right()),
-        vislib::math::Min(bbox.Bottom(), bbox.Top()),
-        vislib::math::Min(bbox.Back(), bbox.Front()));
-    vislib::math::Point<float, 3> bboxmax(
-        vislib::math::Max(bbox.Left(), bbox.Right()),
-        vislib::math::Max(bbox.Bottom(), bbox.Top()),
-        vislib::math::Max(bbox.Back(), bbox.Front()));
+    vislib::math::Point<float, 3> bboxmin(vislib::math::Min(bbox.Left(), bbox.Right()),
+        vislib::math::Min(bbox.Bottom(), bbox.Top()), vislib::math::Min(bbox.Back(), bbox.Front()));
+    vislib::math::Point<float, 3> bboxmax(vislib::math::Max(bbox.Left(), bbox.Right()),
+        vislib::math::Max(bbox.Bottom(), bbox.Top()), vislib::math::Max(bbox.Back(), bbox.Front()));
     bool fixPBC = this->correctPBCSlot.Param<core::param::BoolParam>()->Value();
     if (!fixPBC) {
         bboxmin.Set(0.0f, 0.0f, 0.0f);
@@ -304,8 +330,7 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 }
                 GL_VERIFY(this->cryShader.SetParameter("posoffset", xoff, yoff, zoff));
 
-                unsigned int cellIdx = static_cast<unsigned int>(ccx
-                    + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
+                unsigned int cellIdx = static_cast<unsigned int>(ccx + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
 
                 const ParticleGridDataCall::Cell& cell = pgdc->Cells()[cellIdx];
 
@@ -315,54 +340,61 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightTopFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightTopBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightBottomFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetRightBottomBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftTopFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftTopBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftBottomFront()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
                 if (ccp->GetPlane().Halfspace(ccbox.GetLeftBottomBack()) ==
                     vislib::math::Plane<float>::POSITIVE_HALFSPACE) {
                     hasPos = true;
+                } else {
+                    hasNeg = true;
                 }
-                else { hasNeg = true; }
-                if (!hasPos || !hasNeg) continue; // not visible cell
+                if (!hasPos || !hasNeg)
+                    continue; // not visible cell
 
                 for (unsigned int listIdx = 0; listIdx < cell.Count(); listIdx++) {
                     const ParticleGridDataCall::List& list = cell.Lists()[listIdx];
                     //if (list.Type() != 0) continue; // DEBUG!
 
-                    this->cryShader.SetParameter("typeInfo",
-                        static_cast<int>(list.Type()),
+                    this->cryShader.SetParameter("typeInfo", static_cast<int>(list.Type()),
                         static_cast<int>(tdc->GetCrystals()[list.Type()].GetFaceCount()));
-                    this->cryShader.SetParameter("outerRad",
-                        tdc->GetCrystals()[list.Type()].GetBoundingRadius());
+                    this->cryShader.SetParameter("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
                     ::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
                     ::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
@@ -374,7 +406,7 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     this->cryShader.Disable();
     ::glBindTexture(GL_TEXTURE_2D, 0);
-    ::glDisableClientState(GL_VERTEX_ARRAY); // xyzr
+    ::glDisableClientState(GL_VERTEX_ARRAY);        // xyzr
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 
     if (this->showClipPlanePolySlot.Param<core::param::BoolParam>()->Value()) {
@@ -392,21 +424,33 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
         vislib::math::Plane<float> nz(0.0f, 0.0f, -1.0f, bbox.Back());
         const vislib::math::Plane<float>& cp(ccp->GetPlane());
         vislib::math::Point<float, 3> p;
-        vislib::Array<vislib::math::Point<float, 3> > poly;
+        vislib::Array<vislib::math::Point<float, 3>> poly;
         bbox.Grow(bbox.LongestEdge() * 0.001f);
 
-        if (px.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (px.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (nx.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (py.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (py.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (ny.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p)) poly.Add(p);
-        if (ny.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p)) poly.Add(p);
+        if (px.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (px.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(py, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(ny, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (nx.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (py.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (py.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (ny.CalcIntersectionPoint(pz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
+        if (ny.CalcIntersectionPoint(nz, cp, p) && bbox.Contains(p))
+            poly.Add(p);
 
         if (poly.Count() > 0) {
             vislib::graphics::FlatPolygonSort(poly);
@@ -427,5 +471,5 @@ bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

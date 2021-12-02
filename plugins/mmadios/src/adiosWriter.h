@@ -1,14 +1,14 @@
 #pragma once
 
-#include <adios2.h>
+#include "mmadios/CallADIOSData.h"
+#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmadios/CallADIOSData.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "vislib/String.h"
+#include <adios2.h>
 #ifdef WITH_MPI
-#    include <mpi.h>
+#include <mpi.h>
 #endif
 
 namespace megamol {
@@ -21,21 +21,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "adiosWriter"; }
+    static const char* ClassName(void) {
+        return "adiosWriter";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data writer module for ADIOS-based IO."; }
+    static const char* Description(void) {
+        return "Data writer module for ADIOS-based IO.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     adiosWriter(void);
@@ -48,7 +54,7 @@ public:
 protected:
     void release(void);
 
-        /**
+    /**
      * The main function
      *
      * @return True on success
@@ -80,7 +86,7 @@ private:
     /** Param Slots */
     core::param::ParamSlot filename;
     core::param::ParamSlot outputPatternSlot;
-    core::param::ParamSlot encodingSlot;    
+    core::param::ParamSlot encodingSlot;
 
     /** The slot asking for data */
     core::CallerSlot getData;
@@ -89,12 +95,7 @@ private:
     adios2::ADIOS adiosInst;
     std::shared_ptr<adios2::IO> io;
     adios2::Engine writer;
-
 };
-
-
-
-
 
 
 } /* end namespace adios */

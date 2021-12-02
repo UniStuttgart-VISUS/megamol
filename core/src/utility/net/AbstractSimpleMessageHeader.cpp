@@ -7,8 +7,8 @@
 
 #include "mmcore/utility/net/AbstractSimpleMessageHeader.h"
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/assert.h"
 
 #include <cstring>
 
@@ -16,85 +16,77 @@
 /*
  * vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader
  */
-vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader(void) {
-}
+vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader(void) {}
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::SetMessageID
  */
-void vislib::net::AbstractSimpleMessageHeader::SetMessageID(
-		const SimpleMessageID messageID, bool isSystemID) {
+void vislib::net::AbstractSimpleMessageHeader::SetMessageID(const SimpleMessageID messageID, bool isSystemID) {
 
-	if (isSystemID && (messageID < VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-		throw IllegalParamException("messageID", __FILE__, __LINE__);
-	} else if (!isSystemID && (messageID >= VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
-		throw IllegalParamException("messageID", __FILE__, __LINE__);
-	}
+    if (isSystemID && (messageID < VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
+        throw IllegalParamException("messageID", __FILE__, __LINE__);
+    } else if (!isSystemID && (messageID >= VLSNP1_FIRST_RESERVED_MESSAGE_ID)) {
+        throw IllegalParamException("messageID", __FILE__, __LINE__);
+    }
 
-	this->PeekData()->MessageID = messageID;
+    this->PeekData()->MessageID = messageID;
 }
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::operator =
  */
-vislib::net::AbstractSimpleMessageHeader& 
-vislib::net::AbstractSimpleMessageHeader::operator =(
-		const AbstractSimpleMessageHeader& rhs) {
+vislib::net::AbstractSimpleMessageHeader& vislib::net::AbstractSimpleMessageHeader::operator=(
+    const AbstractSimpleMessageHeader& rhs) {
 
-	if (this != &rhs) {
-		std::memcpy(this->PeekData(), rhs.PeekData(), this->GetHeaderSize());
-	}
+    if (this != &rhs) {
+        std::memcpy(this->PeekData(), rhs.PeekData(), this->GetHeaderSize());
+    }
 
-	return *this;
+    return *this;
 }
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::operator =
  */
-vislib::net::AbstractSimpleMessageHeader& 
-vislib::net::AbstractSimpleMessageHeader::operator =(
-		const SimpleMessageHeaderData& rhs) {
+vislib::net::AbstractSimpleMessageHeader& vislib::net::AbstractSimpleMessageHeader::operator=(
+    const SimpleMessageHeaderData& rhs) {
 
-	if (this->PeekData() != &rhs) {
-		std::memcpy(this->PeekData(), &rhs, this->GetHeaderSize());
-	}
+    if (this->PeekData() != &rhs) {
+        std::memcpy(this->PeekData(), &rhs, this->GetHeaderSize());
+    }
 
-	return *this;
+    return *this;
 }
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::operator =
  */
-vislib::net::AbstractSimpleMessageHeader& 
-vislib::net::AbstractSimpleMessageHeader::operator =(
-		const SimpleMessageHeaderData *rhs) {
-	ASSERT(rhs != NULL);
+vislib::net::AbstractSimpleMessageHeader& vislib::net::AbstractSimpleMessageHeader::operator=(
+    const SimpleMessageHeaderData* rhs) {
+    ASSERT(rhs != NULL);
 
-	if (this->PeekData() != rhs) {
-		std::memcpy(this->PeekData(), rhs, this->GetHeaderSize());
-	}
+    if (this->PeekData() != rhs) {
+        std::memcpy(this->PeekData(), rhs, this->GetHeaderSize());
+    }
 
-	return *this;
+    return *this;
 }
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::operator ==
  */
-bool vislib::net::AbstractSimpleMessageHeader::operator ==(
-		const AbstractSimpleMessageHeader& rhs) const {
+bool vislib::net::AbstractSimpleMessageHeader::operator==(const AbstractSimpleMessageHeader& rhs) const {
 
-	return (std::memcmp(this->PeekData(), rhs.PeekData(),
-		this->GetHeaderSize()) == 0);
+    return (std::memcmp(this->PeekData(), rhs.PeekData(), this->GetHeaderSize()) == 0);
 }
 
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader
  */
-vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader(void) {
-}
+vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader(void) {}

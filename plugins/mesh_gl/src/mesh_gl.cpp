@@ -44,4 +44,4 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPURenderTaskData>();
     }
 };
-} // namespace megamol::mesh
+} // namespace megamol::mesh_gl

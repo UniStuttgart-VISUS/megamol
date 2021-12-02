@@ -9,11 +9,11 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <math.h>
 #include "VolumeSliceRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;

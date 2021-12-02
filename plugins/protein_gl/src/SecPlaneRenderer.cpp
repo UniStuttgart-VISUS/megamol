@@ -183,7 +183,7 @@ bool SecPlaneRenderer::create(void) {
 
     // Create random noise texture for LIC
 
-    srand((unsigned) time(0)); // Init random number generator
+    srand((unsigned)time(0)); // Init random number generator
     if (!this->initLIC()) {
         return false;
     }
@@ -227,7 +227,7 @@ bool SecPlaneRenderer::initLIC() {
     // Create randbuffer
     float* randBuff = new float[32 * 32 * 32];
     for (int i = 0; i < 32 * 32 * 32; ++i) {
-        float randVal = (float) rand() / float(RAND_MAX);
+        float randVal = (float)rand() / float(RAND_MAX);
         randBuff[i] = randVal;
     }
 

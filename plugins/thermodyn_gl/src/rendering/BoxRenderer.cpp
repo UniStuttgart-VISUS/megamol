@@ -1,8 +1,8 @@
-#include "stdafx.h"
 #include "BoxRenderer.h"
+#include "stdafx.h"
 
-#include "mmcore/CoreInstance.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
@@ -17,10 +17,10 @@
 
 
 megamol::thermodyn_gl::rendering::BoxRenderer::BoxRenderer()
-    : dataInSlot_("dataIn", "Input of boxes to render")
-    , calculateGlobalBoundingBoxParam("calcBoundingBoxEachFrame",
-          "Recalculate the global bounding box each frame. This is resource instensive and "
-          "might lead to bad frame rates") {
+        : dataInSlot_("dataIn", "Input of boxes to render")
+        , calculateGlobalBoundingBoxParam("calcBoundingBoxEachFrame",
+              "Recalculate the global bounding box each frame. This is resource instensive and "
+              "might lead to bad frame rates") {
     dataInSlot_.SetCompatibleCall<thermodyn::BoxDataCallDescription>();
     dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
@@ -30,7 +30,9 @@ megamol::thermodyn_gl::rendering::BoxRenderer::BoxRenderer()
 }
 
 
-megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() { this->Release(); }
+megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() {
+    this->Release();
+}
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
@@ -38,7 +40,8 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
-    core_gl::utility::ShaderSourceFactory& factory = this->GetCoreInstance()->ShaderSourceFactory();
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    core_gl::utility::ShaderSourceFactory& factory = *ssf;
 
     try {
         vislib_gl::graphics::gl::ShaderSource vert, frag;
@@ -85,7 +88,8 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::vie
     geocalls::MultiParticleDataCall* inParCall = nullptr;
     bool dirty = false;
     if ((inBoxCall = dataInSlot_.CallAs<thermodyn::BoxDataCall>()) != nullptr) {
-        if (!(*inBoxCall)(0)) return false;
+        if (!(*inBoxCall)(0))
+            return false;
 
         boxes = *inBoxCall->GetBoxes();
         if (this->inDataHash_ != inBoxCall->DataHash()) {
@@ -93,7 +97,8 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::vie
             this->inDataHash_ = inBoxCall->DataHash();
         }
     } else if ((inParCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>()) != nullptr) {
-        if (!(*inParCall)(1)) return false;
+        if (!(*inParCall)(1))
+            return false;
 
         boxes.emplace_back(thermodyn::BoxDataCall::box_entry_t{
             inParCall->AccessBoundingBoxes().ObjectSpaceBBox(), "bbox", {1.0f, 1.0f, 1.0f, 0.5f}});
@@ -112,7 +117,8 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::vie
 
     // upload data
     glBindVertexArray(vao_);
-    if (dirty) prepareData(boxes, this->drawData);
+    if (dirty)
+        prepareData(boxes, this->drawData);
     glBindBuffer(GL_ARRAY_BUFFER, vvbo_);
     if (dirty) {
         glBufferData(
@@ -159,12 +165,14 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(core_gl::view::Ca
     thermodyn::BoxDataCall* inBoxCall = nullptr;
     geocalls::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<thermodyn::BoxDataCall>()) != nullptr) {
-        if (!(*inBoxCall)(1)) return false;
+        if (!(*inBoxCall)(1))
+            return false;
         call.AccessBoundingBoxes().SetBoundingBox(inBoxCall->AccessBoundingBoxes().ObjectSpaceBBox());
         call.AccessBoundingBoxes().SetClipBox(inBoxCall->AccessBoundingBoxes().ObjectSpaceClipBox());
 
         if (this->calculateGlobalBoundingBoxParam.Param<core::param::BoolParam>()->Value()) {
-            if (!(*inBoxCall)(0)) return false;
+            if (!(*inBoxCall)(0))
+                return false;
             auto const boxes = inBoxCall->GetBoxes();
 
             if (boxes == nullptr || boxes->empty()) {
@@ -182,7 +190,8 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(core_gl::view::Ca
             }
         }
     } else if ((inParCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>()) != nullptr) {
-        if (!(*inParCall)(1)) return false;
+        if (!(*inParCall)(1))
+            return false;
 
         call.AccessBoundingBoxes().SetBoundingBox(inParCall->AccessBoundingBoxes().ObjectSpaceBBox());
         call.AccessBoundingBoxes().SetClipBox(inParCall->AccessBoundingBoxes().ObjectSpaceClipBox());

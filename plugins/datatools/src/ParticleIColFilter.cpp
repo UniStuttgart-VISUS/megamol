@@ -4,11 +4,11 @@
  * Copyright (C) 2015-2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleIColFilter.h"
-#include <algorithm>
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector2fParam.h"
+#include "stdafx.h"
+#include <algorithm>
 
 using namespace megamol;
 

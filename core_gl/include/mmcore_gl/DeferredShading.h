@@ -8,8 +8,8 @@
 #ifndef Deferred_SHADING_H_INCLUDED
 #define Deferred_SHADING_H_INCLUDED
 
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -31,14 +31,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "DeferredShading"; }
+    static const char* ClassName(void) {
+        return "DeferredShading";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "...TODO..."; }
+    static const char* Description(void) {
+        return "...TODO...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -102,7 +106,7 @@ private:
     /** Shader program for deferred shading pass */
     std::unique_ptr<GLSLShader> m_deferred_shading_prgm;
 
-    /** 
+    /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):
      * surface albedo - RGB 16bit per channel
      * normals - RGB 16bit per channel
@@ -122,7 +126,7 @@ private:
     core::param::ParamSlot m_btf_filename_slot;
 };
 
-} // namespace core
+} // namespace core_gl
 } // namespace megamol
 
 #endif

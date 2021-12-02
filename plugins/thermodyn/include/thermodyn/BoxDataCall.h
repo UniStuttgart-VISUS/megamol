@@ -26,21 +26,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "BoxDataCall"; }
+    static const char* ClassName(void) {
+        return "BoxDataCall";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Transports boxes."; }
+    static const char* Description(void) {
+        return "Transports boxes.";
+    }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return AbstractGetData3DCall::FunctionCount(); }
+    static unsigned int FunctionCount(void) {
+        return AbstractGetData3DCall::FunctionCount();
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -49,11 +55,17 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return AbstractGetData3DCall::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) {
+        return AbstractGetData3DCall::FunctionName(idx);
+    }
 
-    std::vector<box_entry_t>* GetBoxes() const { return boxes_; }
+    std::vector<box_entry_t>* GetBoxes() const {
+        return boxes_;
+    }
 
-    void SetBoxes(std::vector<box_entry_t>* const boxes) { boxes_ = boxes; }
+    void SetBoxes(std::vector<box_entry_t>* const boxes) {
+        boxes_ = boxes;
+    }
 
 private:
     std::vector<box_entry_t>* boxes_ = nullptr;

@@ -4,13 +4,13 @@
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore_gl/view/SplitViewGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
@@ -303,7 +303,8 @@ bool view::SplitViewGL::OnRenderView(core::Call& call) {
     return true;
 }
 
-bool view::SplitViewGL::OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
+bool view::SplitViewGL::OnKey(
+    frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -361,7 +362,8 @@ bool view::SplitViewGL::OnChar(unsigned int codePoint) {
     return false;
 }
 
-bool view::SplitViewGL::OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) {
+bool view::SplitViewGL::OnMouseButton(frontend_resources::MouseButton button,
+    frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();

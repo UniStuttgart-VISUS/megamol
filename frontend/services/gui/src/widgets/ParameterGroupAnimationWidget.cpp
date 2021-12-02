@@ -18,7 +18,9 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), image_buttons(), tooltip() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , image_buttons()
+        , tooltip() {
 
     this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
@@ -44,7 +46,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 
 
 bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, core_gl::utility::PickingBuffer* inout_picking_buffer,
+    megamol::gui::Parameter::WidgetScope in_scope, core::utility::PickingBuffer* inout_picking_buffer,
     ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
@@ -105,20 +107,18 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         /// else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
         // Load button textures (once) --------------------------------------------
-        if (!this->image_buttons.play.IsLoaded()) {
-            this->image_buttons.play.LoadTextureFromFile(GUI_TRANSPORT_ICON_PLAY);
-        }
-        if (!this->image_buttons.pause.IsLoaded()) {
-            this->image_buttons.pause.LoadTextureFromFile(GUI_TRANSPORT_ICON_PAUSE);
+        if (!this->image_buttons.play_pause.IsLoaded()) {
+            this->image_buttons.play_pause.LoadTextureFromFile(
+                GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE);
         }
         if (!this->image_buttons.fastforward.IsLoaded()) {
-            this->image_buttons.fastforward.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_FORWARD);
+            this->image_buttons.fastforward.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_FORWARD);
         }
         if (!this->image_buttons.fastrewind.IsLoaded()) {
-            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_REWIND);
+            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_REWIND);
         }
-        if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
-            (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
+        if ((!this->image_buttons.play_pause.IsLoaded()) || (!this->image_buttons.fastforward.IsLoaded()) ||
+            (!this->image_buttons.fastrewind.IsLoaded())) {
             utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
                 __FILE__, __FUNCTION__, __LINE__);
@@ -158,15 +158,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         std::string button_label;
 
         /// PLAY - PAUSE
-        if (!play) {
-            if (this->image_buttons.play.Button("Play", button_size)) {
-                play = !play;
-            }
-        } else {
-            if (this->image_buttons.pause.Button("Pause", button_size)) {
-                play = !play;
-            }
-        }
+        this->image_buttons.play_pause.ToggleButton(play, "Play", "Pause", button_size);
         ImGui::SameLine();
 
         /// SLOWER

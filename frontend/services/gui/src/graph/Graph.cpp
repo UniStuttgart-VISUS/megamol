@@ -97,6 +97,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
 
     this->gui_graph_state.interact.parameters_extended_mode = false;
     this->gui_graph_state.interact.graph_is_running = false;
+    this->gui_graph_state.interact.pause_profiling_update = false;
+
     this->gui_graph_state.groups.clear();
     // this->gui_graph_state.hotkeys are already initialized
 }
@@ -312,6 +314,17 @@ megamol::gui::ModulePtr_t megamol::gui::Graph::GetModule(ImGuiID module_uid) {
             if (module_ptr->UID() == module_uid) {
                 return module_ptr;
             }
+        }
+    }
+    return nullptr;
+}
+
+
+ModulePtr_t megamol::gui::Graph::GetModule(const std::string& module_fullname) {
+
+    for (auto& module_ptr : this->modules) {
+        if (module_ptr->FullName() == module_fullname) {
+            return module_ptr;
         }
     }
     return nullptr;
@@ -569,6 +582,29 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
             "[GUI] Unable to create call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+}
+
+
+CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::string const& callee_fullname) {
+
+    for (auto& call_ptr : this->calls) {
+        std::string tmp_caller_fullname;
+        std::string tmp_callee_fullname;
+        auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
+        auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
+        if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            if (caller_ptr->GetParentModule() != nullptr) {
+                tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+            }
+            if (callee_ptr->GetParentModule() != nullptr) {
+                tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+            }
+            if ((tmp_caller_fullname == caller_fullname) && (tmp_callee_fullname == callee_fullname)) {
+                return call_ptr;
+            }
+        }
+    }
+    return nullptr;
 }
 
 
@@ -1873,8 +1909,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 }
 
 
-void Graph::DrawGlobalParameterWidgets(megamol::core_gl::utility::PickingBuffer& picking_buffer,
-    std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
+void Graph::DrawGlobalParameterWidgets(
+    megamol::core::utility::PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
 
     for (auto& module_ptr : this->Modules()) {
         module_ptr->DrawParameters(
@@ -2218,6 +2254,8 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
+    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in
+    /// profiling diagrams
     if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming ||
         this->gui_increment_zooming || this->gui_decrement_zooming) {
 
@@ -2256,8 +2294,10 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
                 }
             }
             // Limit zooming
-            this->gui_graph_state.canvas.zooming =
-                (this->gui_graph_state.canvas.zooming <= 0.0f) ? 0.000001f : (this->gui_graph_state.canvas.zooming);
+            const float zooming_minimum = 0.01f;
+            this->gui_graph_state.canvas.zooming = (this->gui_graph_state.canvas.zooming <= zooming_minimum)
+                                                       ? zooming_minimum
+                                                       : (this->gui_graph_state.canvas.zooming);
             // Compensate zooming shift of origin
             ImVec2 scrolling_diff = (this->gui_graph_state.canvas.scrolling * last_zooming) -
                                     (this->gui_graph_state.canvas.scrolling * this->gui_graph_state.canvas.zooming);
@@ -2408,7 +2448,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            auto* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
+            auto* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,

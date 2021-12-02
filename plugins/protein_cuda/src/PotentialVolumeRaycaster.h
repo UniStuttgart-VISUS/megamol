@@ -14,18 +14,18 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/CallRender3D.h"
-#include "protein_calls/VTIDataCall.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
-#include "slicing.h"
-#include <GL/glu.h>
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "slicing.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include <GL/glu.h>
 //#include "vislib_vector_typedefs.h"
 typedef vislib::math::Vector<int, 2> Vec2i;
 typedef vislib::math::Vector<double, 3> Vec3d;
@@ -38,13 +38,12 @@ namespace protein_cuda {
 
 class PotentialVolumeRaycaster : public core::view::Renderer3DModuleDS {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "PotentialVolumeRaycaster";
     }
 
@@ -59,7 +58,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers volume rendering textured by potential map.";
     }
 
@@ -69,20 +68,19 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if(!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
+        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
             return false;
         return true;
     }
 
 protected:
-
     /**
      * (Re-)computes the density maps using CUDA.
      *
      * @param mol The data call containing the particles
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(const megamol::protein_calls::MolecularDataCall *mol);
+    bool computeDensityMap(const megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Implementation of 'create'.
@@ -122,7 +120,7 @@ protected:
      * @param cmd The data call with the potential map
      * @return 'True' on success, 'false' otherwise
      */
-	bool initPotential(protein_calls::VTIDataCall *cmd);
+    bool initPotential(protein_calls::VTIDataCall* cmd);
 
     /**
      * Implementation of 'release'.
@@ -147,8 +145,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool renderSlices(GLuint densityTex, GLuint potentialTex,
-            gridParams potGrid, gridParams densGrid);
+    bool renderSlices(GLuint densityTex, GLuint potentialTex, gridParams potGrid, gridParams densGrid);
 
     /**
      * Render cube for volume rendering.
@@ -165,8 +162,6 @@ protected:
     bool updateParams();
 
 private:
-
-
     /* Caller slots */
 
     /// Data caller slot for the potential map
@@ -335,7 +330,7 @@ private:
     GLuint potentialTex;
 
     /// The density map
-    float *volume;
+    float* volume;
 
     /// View slicing object to draw view aligned plane
     ViewSlicing viewSlicing;
@@ -344,7 +339,7 @@ private:
     /* Volume generation */
 
     /// Pointer to CUDAQuickSurf object
-    void *cudaqsurf;
+    void* cudaqsurf;
 
 
     /* The data */
@@ -387,8 +382,6 @@ private:
 
     /// Shader for slice rendering
     vislib::graphics::gl::GLSLShader sliceShader;
-
-
 };
 
 } // namespace protein_cuda

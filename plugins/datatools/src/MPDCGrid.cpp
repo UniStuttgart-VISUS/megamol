@@ -1,16 +1,16 @@
-#include "stdafx.h"
 #include "MPDCGrid.h"
+#include "stdafx.h"
 
 #include "mmcore/param/IntParam.h"
 
 
 megamol::datatools::MPDCGrid::MPDCGrid()
-    : data_out_slot_("dataOut", "")
-    , data_in_slot_("dataIn", "")
-    , max_size_slot_("maxSize", "Maximum size of each cell")
-    , data_out_hash_(std::numeric_limits<size_t>::max())
-    , data_in_hash_(std::numeric_limits<size_t>::max())
-    , out_frame_id_(-1) {
+        : data_out_slot_("dataOut", "")
+        , data_in_slot_("dataIn", "")
+        , max_size_slot_("maxSize", "Maximum size of each cell")
+        , data_out_hash_(std::numeric_limits<size_t>::max())
+        , data_in_hash_(std::numeric_limits<size_t>::max())
+        , out_frame_id_(-1) {
     data_out_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &MPDCGrid::getDataCallback);
     data_out_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
@@ -25,10 +25,14 @@ megamol::datatools::MPDCGrid::MPDCGrid()
 }
 
 
-megamol::datatools::MPDCGrid::~MPDCGrid() { this->Release(); }
+megamol::datatools::MPDCGrid::~MPDCGrid() {
+    this->Release();
+}
 
 
-bool megamol::datatools::MPDCGrid::create() { return true; }
+bool megamol::datatools::MPDCGrid::create() {
+    return true;
+}
 
 
 void megamol::datatools::MPDCGrid::release() {}
@@ -37,16 +41,19 @@ void megamol::datatools::MPDCGrid::release() {}
 bool megamol::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 
     auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    if (outData == nullptr) return false;
+    if (outData == nullptr)
+        return false;
 
     auto inData = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();
-    if (inData == nullptr) return false;
+    if (inData == nullptr)
+        return false;
 
     if (data_in_hash_ != inData->DataHash() || out_frame_id_ != inData->FrameID()) {
         data_in_hash_ = inData->DataHash();
         out_frame_id_ = inData->FrameID();
 
-        if (!(*inData)(0)) return false;
+        if (!(*inData)(0))
+            return false;
 
         auto const plc = inData->GetParticleListCount();
         auto const cbbox = inData->AccessBoundingBoxes().ObjectSpaceClipBox();
@@ -105,13 +112,16 @@ bool megamol::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 
 bool megamol::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    if (outData == nullptr) return false;
+    if (outData == nullptr)
+        return false;
 
     auto inData = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();
-    if (inData == nullptr) return false;
+    if (inData == nullptr)
+        return false;
 
     inData->SetFrameID(outData->FrameID(), outData->IsFrameForced());
-    if (!(*inData)(1)) return false;
+    if (!(*inData)(1))
+        return false;
 
     outData->SetFrameCount(inData->FrameCount());
     outData->SetFrameID(inData->FrameID());
@@ -120,14 +130,14 @@ bool megamol::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     outData->AccessBoundingBoxes().SetObjectSpaceClipBox(inData->AccessBoundingBoxes().ObjectSpaceClipBox());
 
     outData->SetDataHash(data_out_hash_);
-    
+
     return true;
 }
 
 
 std::vector<megamol::datatools::MPDCGrid::BrickLet> megamol::datatools::MPDCGrid::gridify(
-    std::vector<megamol::datatools::MPDCGrid::Particle>& particles, Box const& bbox, size_t maxSize,
-    size_t begin, size_t end) {
+    std::vector<megamol::datatools::MPDCGrid::Particle>& particles, Box const& bbox, size_t maxSize, size_t begin,
+    size_t end) {
     auto const pcount = end - begin;
 
     std::vector<BrickLet> ret;
