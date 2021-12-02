@@ -454,7 +454,9 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
     ImGui::TextDisabled("[Callback Name]");
     ImGui::SameLine();
     this->pause_profiling_history_update = state.interact.pause_profiling_update;
-    this->gui_profiling_run_button.ToggleButton(state.interact.pause_profiling_update, "Pause update of profiling values globally", "Continue updating of profiling values", ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+    this->gui_profiling_run_button.ToggleButton(state.interact.pause_profiling_update,
+        "Pause update of profiling values globally", "Continue updating of profiling values",
+        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
 
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
     auto func_cnt = this->cpu_perf_history.size();

@@ -184,7 +184,7 @@ std::string PerformanceManager::lookup_name(handle_type h) {
     return timers[h]->get_conf().name;
 }
 
-const PerformanceManager::timer_config PerformanceManager::loopup_config(handle_type h) {
+const PerformanceManager::timer_config PerformanceManager::lookup_config(handle_type h) {
     return timers[h]->get_conf();
 }
 
@@ -196,6 +196,14 @@ PerformanceManager::handle_vector PerformanceManager::lookup_timers(void* parent
         }
     }
     return vec;
+}
+
+void PerformanceManager::set_transient_comment(handle_type h, std::string comment) {
+    if (timers.find(h) != timers.end()) {
+        timers[h]->set_comment(comment);
+    } else {
+        core::utility::log::Log::DefaultLog.WriteError("PerformanceManager: cannot find timer with handle %u", h);
+    }
 }
 
 void PerformanceManager::subscribe_to_updates(update_callback cb) {
