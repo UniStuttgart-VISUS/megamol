@@ -39,9 +39,38 @@ public:
 
     enum class query_api { CPU, OPENGL }; // TODO: CUDA, OpenCL, Vulkan, whatnot
 
+    static constexpr const char* query_api_string(query_api api) {
+        switch (api) {
+        case query_api::CPU:
+            return "CPU";
+        case query_api::OPENGL:
+            return "OpenGL";
+        }
+    }
+
     enum class entry_type { START, END, DURATION };
 
+    static constexpr const char* entry_type_string(entry_type type) {
+        switch (type) {
+        case entry_type::START:
+            return "Start";
+        case entry_type::END:
+            return "End";
+        case entry_type::DURATION:
+            return "Duration";
+        }
+    }
+
     enum class parent_type { CALL, MODULE };
+
+    static constexpr const char* parent_type_string(parent_type parent) {
+        switch (parent) {
+        case parent_type::CALL:
+            return "Call";
+        case parent_type::MODULE:
+            return "Module";
+        }
+    }
 
     struct basic_timer_config {
         std::string name = "unnamed";
@@ -52,6 +81,7 @@ public:
     struct timer_config : public basic_timer_config {
         PerformanceManager::parent_type parent_type = parent_type::CALL;
         void* parent_pointer = nullptr;
+        std::string comment;
     };
 
     struct timer_entry {
@@ -96,6 +126,10 @@ public:
         }
         [[nodiscard]] frame_type get_start_frame() const {
             return start_frame;
+        }
+
+        void set_comment(std::string comment) {
+            conf.comment = comment;
         }
 
     protected:
@@ -170,10 +204,12 @@ public:
     std::string lookup_name(handle_type h);
 
     // hint: this is not for free, so don't call this all the time
-    const timer_config loopup_config(handle_type h);
+    const timer_config lookup_config(handle_type h);
 
     // hint: this is not for free, so don't call this all the time
     handle_vector lookup_timers(void* parent);
+
+    void set_transient_comment(handle_type h, std::string comment);
 
     void subscribe_to_updates(update_callback cb);
 

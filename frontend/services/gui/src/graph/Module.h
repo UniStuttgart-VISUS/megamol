@@ -161,7 +161,7 @@ public:
 
         auto handles = perf_manager->lookup_timers(ptr);
         for (auto& h : handles) {
-            auto& conf = perf_manager->loopup_config(h);
+            auto& conf = perf_manager->lookup_config(h);
             switch (conf.api) {
             case frontend_resources::PerformanceManager::query_api::CPU:
                 this->cpu_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
