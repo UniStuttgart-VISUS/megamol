@@ -345,7 +345,7 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
 
             ptr->left_texturesender.destroy();
             ptr->right_texturesender.destroy();
-            //ptr->texturepackageSender.destroy();
+            ptr->singlestereo_texturesender.destroy();
 
             delete ptr;
         }));
