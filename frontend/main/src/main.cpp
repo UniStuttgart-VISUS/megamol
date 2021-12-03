@@ -153,6 +153,7 @@ int main(const int argc, const char** argv) {
     imagepresentation_service.setPriority(3);
 
     megamol::frontend::Command_Service command_service;
+    command_service.setPriority(24); // Should be applied after gui service to process only keyboard events not used by gui.
 #ifdef PROFILING
     megamol::frontend::Profiling_Service profiling_service;
 #endif

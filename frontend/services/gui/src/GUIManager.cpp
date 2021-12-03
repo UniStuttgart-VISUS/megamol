@@ -535,7 +535,7 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
-    if (io.WantTextInput || io.WantCaptureKeyboard) {
+    if (io.WantTextInput) {
         return true;
     }
 
