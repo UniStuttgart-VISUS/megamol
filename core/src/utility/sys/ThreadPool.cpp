@@ -1,7 +1,7 @@
 /*
  * ThreadPool.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -12,21 +12,24 @@
 #include <sched.h>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
-#include "vislib/sys/AutoLock.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/sys/AutoLock.h"
 
 
 /*
  * vislib::sys::ThreadPool::ThreadPool
  */
-vislib::sys::ThreadPool::ThreadPool(void) : cntActiveThreads(0), 
-        cntTotalThreads(0), evtAllCompleted(true), isQueueOpen(true), 
-        semBlockWorker(0l, LONG_MAX) {
+vislib::sys::ThreadPool::ThreadPool(void)
+        : cntActiveThreads(0)
+        , cntTotalThreads(0)
+        , evtAllCompleted(true)
+        , isQueueOpen(true)
+        , semBlockWorker(0l, LONG_MAX) {
     // Nothing to do.
 }
 
@@ -65,7 +68,7 @@ SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
 /*
  * vislib::sys::ThreadPool::AddListener
  */
-void vislib::sys::ThreadPool::AddListener(ThreadPoolListener *listener) {
+void vislib::sys::ThreadPool::AddListener(ThreadPoolListener* listener) {
     ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
@@ -115,8 +118,7 @@ SIZE_T vislib::sys::ThreadPool::CountUserWorkItems(void) const {
 /*
  * vislib::sys::ThreadPool::QueueUserWorkItem
  */
-void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable *runnable, 
-        void *userData, const bool createDefaultThreads) {
+void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable* runnable, void* userData, const bool createDefaultThreads) {
     WorkItem workItem;
     workItem.runnable = runnable;
     workItem.runnableFunction = NULL;
@@ -129,8 +131,8 @@ void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable *runnable,
 /*
  * vislib::sys::ThreadPool::QueueUserWorkItem
  */
-void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable::Function runnable, 
-        void *userData, const bool createDefaultThreads) {
+void vislib::sys::ThreadPool::QueueUserWorkItem(
+    Runnable::Function runnable, void* userData, const bool createDefaultThreads) {
     WorkItem workItem;
     workItem.runnable = NULL;
     workItem.runnableFunction = runnable;
@@ -143,14 +145,13 @@ void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable::Function runnable,
 /*
  * vislib::sys::ThreadPool::RemoveListener
  */
-void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener *listener) {
+void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener* listener) {
     ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
     this->listeners.RemoveAll(listener);
     this->lockListeners.Unlock();
 }
-
 
 
 /*
@@ -161,7 +162,8 @@ void vislib::sys::ThreadPool::SetThreadCount(const SIZE_T threadCount) {
 
     if (threadCount < this->cntTotalThreads) {
         throw IllegalParamException("The number of threads in the thread pool "
-            "cannot be reduced.", __FILE__, __LINE__);
+                                    "cannot be reduced.",
+            __FILE__, __LINE__);
     }
 
     for (; this->cntTotalThreads < threadCount; this->cntTotalThreads++) {
@@ -229,18 +231,19 @@ vislib::sys::ThreadPool::Worker::~Worker(void) {
 /*
  * DWORD vislib::sys::ThreadPool::Worker::Run
  */
-DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
+DWORD vislib::sys::ThreadPool::Worker::Run(void* pool) {
     ASSERT(pool != NULL);
-    this->pool = static_cast<ThreadPool *>(pool);
+    this->pool = static_cast<ThreadPool*>(pool);
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
-        Thread::CurrentID());
+    VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", Thread::CurrentID());
 
     while (true) {
 
         /* Wait for work. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is waiting for "
-            "work ...\n", Thread::CurrentID());
+        VLTRACE(Trace::LEVEL_VL_INFO,
+            "ThreadPool thread [%u] is waiting for "
+            "work ...\n",
+            Thread::CurrentID());
         this->pool->semBlockWorker.Lock();
 
         /* Acquire locks. */
@@ -252,8 +255,10 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
          * thread and it does not find any work to do, it should exit.
          */
         if (this->pool->queue.IsEmpty()) {
-            VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is "
-                "exiting ...\n", Thread::CurrentID());
+            VLTRACE(Trace::LEVEL_VL_INFO,
+                "ThreadPool thread [%u] is "
+                "exiting ...\n",
+                Thread::CurrentID());
             if (--this->pool->cntTotalThreads == 0) {
                 this->pool->evtAllCompleted.Set();
             }
@@ -274,23 +279,22 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Unlock();
 
         /* Do the work. */
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
-            Thread::CurrentID());
-        ASSERT((workItem.runnable != NULL) 
-            || (workItem.runnableFunction != NULL));
-        DWORD exitCode = (workItem.runnable != NULL)
-            ? workItem.runnable->Run(workItem.userData)
-            : workItem.runnableFunction(workItem.userData);
-        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
-            "item with exit code %u\n", Thread::CurrentID(), exitCode);
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n", Thread::CurrentID());
+        ASSERT((workItem.runnable != NULL) || (workItem.runnableFunction != NULL));
+        DWORD exitCode = (workItem.runnable != NULL) ? workItem.runnable->Run(workItem.userData)
+                                                     : workItem.runnableFunction(workItem.userData);
+        VLTRACE(Trace::LEVEL_VL_INFO,
+            "ThreadPool thread [%u] completed work "
+            "item with exit code %u\n",
+            Thread::CurrentID(), exitCode);
 
         this->pool->fireUserWorkItemCompleted(workItem, exitCode);
 
         /* Mark the thread as inactive and signal event if necessary. */
         this->pool->lockQueue.Lock();
         this->pool->lockThreadCounters.Lock();
-        if ((--this->pool->cntActiveThreads == 0)   // SFX. Must be first!
-                && this->pool->queue.IsEmpty()) {
+        if ((--this->pool->cntActiveThreads == 0) // SFX. Must be first!
+            && this->pool->queue.IsEmpty()) {
             this->pool->evtAllCompleted.Set();
         }
         this->pool->lockThreadCounters.Unlock();
@@ -303,8 +307,7 @@ DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
  * vislib::sys::ThreadPool::ThreadPool
  */
 vislib::sys::ThreadPool::ThreadPool(const ThreadPool& rhs) {
-    throw UnsupportedOperationException("ThreadPool::ThreadPool", __FILE__, 
-        __LINE__);
+    throw UnsupportedOperationException("ThreadPool::ThreadPool", __FILE__, __LINE__);
 }
 
 
@@ -314,18 +317,15 @@ vislib::sys::ThreadPool::ThreadPool(const ThreadPool& rhs) {
 void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
     AutoLock lock(this->lockListeners);
 
-    SingleLinkedList<ThreadPoolListener *>::Iterator it 
-        = this->listeners.GetIterator();
+    SingleLinkedList<ThreadPoolListener*>::Iterator it = this->listeners.GetIterator();
     if (workItem.runnable != NULL) {
         while (it.HasNext()) {
-            it.Next()->OnUserWorkItemAborted(*this, workItem.runnable, 
-                workItem.userData);
+            it.Next()->OnUserWorkItemAborted(*this, workItem.runnable, workItem.userData);
         }
     } else {
         ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
-            it.Next()->OnUserWorkItemAborted(*this, workItem.runnableFunction,
-                workItem.userData);
+            it.Next()->OnUserWorkItemAborted(*this, workItem.runnableFunction, workItem.userData);
         }
     }
 }
@@ -334,22 +334,18 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
 /*
  * vislib::sys::ThreadPool::fireUserWorkItemCompleted
  */
-void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
-                                                        const DWORD exitCode) {
+void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem, const DWORD exitCode) {
     AutoLock lock(this->lockListeners);
 
-    SingleLinkedList<ThreadPoolListener *>::Iterator it 
-        = this->listeners.GetIterator();
+    SingleLinkedList<ThreadPoolListener*>::Iterator it = this->listeners.GetIterator();
     if (workItem.runnable != NULL) {
         while (it.HasNext()) {
-            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnable, 
-                workItem.userData, exitCode);
+            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnable, workItem.userData, exitCode);
         }
     } else {
         ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
-            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnableFunction,
-                workItem.userData, exitCode);
+            it.Next()->OnUserWorkItemCompleted(*this, workItem.runnableFunction, workItem.userData, exitCode);
         }
     }
 }
@@ -358,8 +354,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
 /*
  * vislib::sys::ThreadPool::queueUserWorkItem
  */
-void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
-        const bool createDefaultThreads) {
+void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem, const bool createDefaultThreads) {
     /* Sanity checks. */
     if ((workItem.runnable == NULL) && (workItem.runnableFunction == NULL)) {
         throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
@@ -372,8 +367,8 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
     this->lockQueue.Lock();
     if (this->isQueueOpen) {
         this->queue.Append(workItem);
-        this->evtAllCompleted.Reset();  // Signal unfinished work.
-        this->semBlockWorker.Unlock();  // Wake workers.
+        this->evtAllCompleted.Reset(); // Signal unfinished work.
+        this->semBlockWorker.Unlock(); // Wake workers.
         this->lockQueue.Unlock();
 #ifndef _WIN32
         // Linux has the most crap scheduler I have ever seen ...
@@ -382,7 +377,8 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
     } else {
         this->lockQueue.Unlock();
         throw IllegalStateException("The user work item queue has been closed, "
-            "because the thread pool is being terminated.", __FILE__, __LINE__);
+                                    "because the thread pool is being terminated.",
+            __FILE__, __LINE__);
     }
 
     /* Create threads if requested. */
@@ -397,8 +393,7 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
 /*
  * vislib::sys::ThreadPool::operator =
  */
-vislib::sys::ThreadPool& vislib::sys::ThreadPool::operator =(
-        const ThreadPool& rhs) {
+vislib::sys::ThreadPool& vislib::sys::ThreadPool::operator=(const ThreadPool& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ParamUpdateListener.h"
+#include "stdafx.h"
 
 using namespace megamol::core::param;
 

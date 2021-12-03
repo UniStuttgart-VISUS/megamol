@@ -42,9 +42,9 @@ layout(std430, binding = 0) buffer Header
     <!--
 struct Puxel
 {
-    uint 	c;
+    uint c;
     vec3 normal;
-    float 	z;
+    float z;
 };
 
 Puxel makePuxel(uint c, vec3 n, float z)
@@ -68,13 +68,13 @@ bool comparePuxel(Puxel a, Puxel b)
     <!--
 struct PuxelEntry
 {
-    Puxel	  puxel;
+    Puxel   puxel;
     uint    prev, next;
 };
       
 layout(binding = 1) buffer Data
 {
-	PuxelEntry puxel[];
+    PuxelEntry puxel[];
 };
     -->
   </snippet>
@@ -111,10 +111,10 @@ uniform unsigned int height;
 
 #line 113
 
-#define ITEM(i)			  puxel[i]
-#define ITEM_COMP(i)	puxel[i].puxel.z
-#define ITEM_NEXT(i)	puxel[i].prev
-#define ITEM_PREV(i)	puxel[i].next
+#define ITEM(i)         puxel[i]
+#define ITEM_COMP(i)    puxel[i].puxel.z
+#define ITEM_NEXT(i)    puxel[i].prev
+#define ITEM_PREV(i)    puxel[i].next
 
 /*
 INSERTIONSORT(A)
@@ -128,46 +128,46 @@ INSERTIONSORT(A)
 */
 void insertsort(unsigned int start)
 {
-	unsigned int v = ITEM_NEXT(start);
+    unsigned int v = ITEM_NEXT(start);
 
-	unsigned int next = start;
-	unsigned int last = 0;
+    unsigned int next = start;
+    unsigned int last = 0;
 
-	while(next > 0)
-	{
-		ITEM_PREV(next) = last;
-		last = next;
-		next = ITEM_NEXT(next);
-	}
+    while(next > 0)
+    {
+        ITEM_PREV(next) = last;
+        last = next;
+        next = ITEM_NEXT(next);
+    }
 
-	PuxelEntry pux, puxj, puxj1;
+    PuxelEntry pux, puxj, puxj1;
 
-	while(v > 0)
-	{
-		pux = ITEM(v);
-		unsigned int  j = v;
+    while(v > 0)
+    {
+        pux = ITEM(v);
+        unsigned int  j = v;
 
-		unsigned int  j1 = ITEM_PREV(j);
-		puxj1 = ITEM(j1);
-		while(j1 > 0 && comparePuxel(puxj1.puxel, pux.puxel))
-		{
-			puxel[j].puxel = puxj1.puxel;
+        unsigned int  j1 = ITEM_PREV(j);
+        puxj1 = ITEM(j1);
+        while(j1 > 0 && comparePuxel(puxj1.puxel, pux.puxel))
+        {
+            puxel[j].puxel = puxj1.puxel;
 
-			j = j1;
-			j1 = ITEM_PREV(j);
-			puxj1 = ITEM(j1);
-		}
+            j = j1;
+            j1 = ITEM_PREV(j);
+            puxj1 = ITEM(j1);
+        }
 
-		puxel[j].puxel = pux.puxel;
-		v = ITEM_NEXT(v);
-	}
+        puxel[j].puxel = pux.puxel;
+        v = ITEM_NEXT(v);
+    }
 }
 
 void main(void)
 {
-	uint id = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
-	if(id < width * height)
-	  insertsort(entry[id]);
+    uint id = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+    if(id < width * height)
+      insertsort(entry[id]);
 }
       -->
     </snippet>
@@ -197,7 +197,7 @@ void puxels_store(Puxel payload)
     puxel[newEntryId % dataBufferSize].puxel = payload;
   }
   else
-		discard;
+        discard;
 }
       -->
   </snippet>
@@ -230,14 +230,14 @@ void main()
     if(next != 0)
     {
       vec4 finalColor=vec4(0.0);
-	    while(next > 0)
-	    {
+        while(next > 0)
+        {
         vec4 col = unpackUnorm4x8(puxel[next].puxel.c);
         
         col.rgb = col.rgb * col.a;
         finalColor = finalColor+col*(1.0f-finalColor.a);
 
-		    next = puxel[next].prev;
+            next = puxel[next].prev;
       }
 
       gl_FragColor = finalColor+vec4(1.0)*(1.0f-finalColor.a);

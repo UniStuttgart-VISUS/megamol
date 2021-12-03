@@ -1,12 +1,11 @@
-#include "stdafx.h"
 #include "DepthFunction.h"
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include <Eigen/LU>
 #include "HD/HD.h"
+#include <Eigen/LU>
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -258,14 +257,14 @@ DepthFunction::DepthFunction(void)
         , randomSeed("randomSeed", "The random seed (functional depth only)") {
 
     // Data input slot
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
     // Data output slot
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &DepthFunction::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &DepthFunction::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(0), &DepthFunction::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(1), &DepthFunction::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     // Parameters
@@ -309,13 +308,12 @@ void DepthFunction::release(void) {}
 
 bool DepthFunction::getDataCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -349,13 +347,12 @@ bool DepthFunction::getDataCallback(core::Call& c) {
 
 bool DepthFunction::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -374,7 +371,7 @@ bool DepthFunction::getHashCallback(core::Call& c) {
     return true;
 }
 
-void megamol::infovis::DepthFunction::assertData(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+void megamol::infovis::DepthFunction::assertData(megamol::datatools::table::TableDataCall* inCall) {
     auto columnCountIn = inCall->GetColumnsCount();
     auto columnCountOut = inCall->GetColumnsCount();
     auto rowsCount = inCall->GetRowsCount();
@@ -404,7 +401,7 @@ void megamol::infovis::DepthFunction::paramsResetDirty() {
     }
 }
 
-bool megamol::infovis::DepthFunction::apply(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::DepthFunction::apply(megamol::datatools::table::TableDataCall* inCall) {
     // Test if input data or parameters have changed.
     if (this->dataInHash == inCall->DataHash() && !paramsIsDirty()) {
         // Do nothing since parameters are the same as before
@@ -413,7 +410,7 @@ bool megamol::infovis::DepthFunction::apply(megamol::stdplugin::datatools::table
 
     assertData(inCall);
 
-    std::string columnGroupsString(this->columnGroupsSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+    std::string columnGroupsString(this->columnGroupsSlot.Param<core::param::StringParam>()->Value());
     std::vector<std::vector<int>> columnGroups = parseColumnGroups(columnGroupsString);
 
     // Default to one group, containing all columns, if empty.
@@ -471,7 +468,7 @@ bool megamol::infovis::DepthFunction::apply(megamol::stdplugin::datatools::table
         }
         this->columnInfos[group]
             .SetName(name)
-            .SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
+            .SetType(megamol::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
             .SetMinimumValue(depths.minCoeff())
             .SetMaximumValue(depths.maxCoeff());
     }

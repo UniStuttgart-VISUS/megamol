@@ -15,7 +15,7 @@
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
 #include "SSAO.h"
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 #include "AntiAliasing.h"
 #include "PNGDataSource.h"
 

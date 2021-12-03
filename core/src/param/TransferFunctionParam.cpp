@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/TransferFunctionParam.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core::param;
@@ -30,16 +30,14 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : A
 }
 
 
-void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
-    outDef.AssertSize(6);
-    memcpy(outDef.AsAt<char>(0), "MMTFFC", 6);
+std::string TransferFunctionParam::Definition() const {
+    return "MMTFFC";
 }
 
 
-bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
-
+bool TransferFunctionParam::ParseValue(std::string const& v) {
     try {
-        this->SetValue(std::string(v.PeekBuffer()));
+        this->SetValue(v);
         return true;
     } catch (...) {}
     return false;
@@ -53,15 +51,15 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
             this->val = v;
             this->hash = std::hash<std::string>()(this->val);
             this->indicateChange();
-            if (setDirty) this->setDirty();
+            if (setDirty)
+                this->setDirty();
         }
     }
 }
 
 
-vislib::TString TransferFunctionParam::ValueString(void) const {
-
-    return vislib::TString(this->val.c_str());
+std::string TransferFunctionParam::ValueString(void) const {
+    return this->val;
 }
 
 
@@ -77,7 +75,8 @@ bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON Error - Unable to read flag 'IgnoreProjectRange' from transfer function JSON string. [%s, %s, line "
-            "%d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "%d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         ;
     }
     return ignore_project_range;
@@ -118,14 +117,13 @@ bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_
             for (size_t i = 0; i < node_count; ++i) {
                 json.at("Nodes")[i].get_to(tmp_nodes[i]);
             }
-        }
-        catch (...) {
+        } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unknown Error - Unable to read transfer function from JSON string. [%s, %s, line %d]\n", __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
         }
-    } 
+    }
 
     if (!TransferFunctionParam::CheckTransferFunctionData(tmp_nodes, tmp_interpolmode, tmp_texsize, tmp_range)) {
         return false;
@@ -168,24 +166,23 @@ bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, cons
         json["IgnoreProjectRange"] = in_ignore_project_range;
 
         out_tfs = json.dump(2); // Dump with indent of 2 spaces and new lines.
-    }
-    catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    } catch (nlohmann::json::type_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    }
-    catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    } catch (nlohmann::json::invalid_iterator& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    }
-    catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    } catch (nlohmann::json::out_of_range& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    }
-    catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    } catch (nlohmann::json::other_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
-    }
-    catch (...) {
+    } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unknown Error - Unable to write transfer function to JSON string. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
@@ -196,7 +193,8 @@ bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, cons
 }
 
 
-bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t &nodes, InterpolationMode interpolmode, unsigned int texsize, const std::array<float, 2>& range) {
+bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t& nodes, InterpolationMode interpolmode,
+    unsigned int texsize, const std::array<float, 2>& range) {
 
     bool check = true;
 
@@ -291,7 +289,8 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
                     } else {
                         if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "Entries of 'Nodes' should be arrays of size %d. [%s, %s, line %d]\n", TFP_VAL_CNT,  __FILE__, __FUNCTION__, __LINE__);
+                                "Entries of 'Nodes' should be arrays of size %d. [%s, %s, line %d]\n", TFP_VAL_CNT,
+                                __FILE__, __FUNCTION__, __LINE__);
                             check = false;
                         } else {
                             for (unsigned int k = 0; k < TFP_VAL_CNT; ++k) {
@@ -333,27 +332,25 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
                     "Couldn't read 'ValueRange' as array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 check = false;
             }
-        }
-        catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::invalid_iterator& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::out_of_range& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::other_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (...) {
+        } catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
+                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
+        } catch (nlohmann::json::invalid_iterator& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
+        } catch (nlohmann::json::out_of_range& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
+        } catch (nlohmann::json::other_error& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -437,7 +434,8 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
 }
 
 
- bool megamol::core::param::TransferFunctionParam::GetTextureData(const std::string & in_tfs, std::vector<float>& out_tex_data, int & out_width, int & out_height)  {
+bool megamol::core::param::TransferFunctionParam::GetTextureData(
+    const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height) {
 
     out_tex_data.clear();
     unsigned int tmp_texture_size = 0;
@@ -445,18 +443,18 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
     megamol::core::param::TransferFunctionParam::NodeVector_t tmp_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
 
-    if (!megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range)) {
+    if (!megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(
+            in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not parse transfer function.");
         return false;
     }
     if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
         out_tex_data = param::TransferFunctionParam::LinearInterpolation(tmp_texture_size, tmp_nodes);
-    }
-    else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+    } else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
         out_tex_data = param::TransferFunctionParam::GaussInterpolation(tmp_texture_size, tmp_nodes);
     }
     out_width = static_cast<int>(tmp_texture_size);
     out_height = 1;
 
     return true;
- }
+}

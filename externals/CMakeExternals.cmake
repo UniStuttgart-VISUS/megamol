@@ -92,9 +92,9 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "2efb220d36e72c3b9d3d028cc83b921bda9ebcd8"
+      GIT_TAG "054925f7c932c3061a0d347a6946a9d6fcce6ae6"
       INCLUDE_DIR "include")
-    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
   # json
   elseif(NAME STREQUAL "json")
@@ -323,9 +323,7 @@ function(require_external NAME)
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DFMT_TEST=OFF)
 
     add_external_library(fmt
       LIBRARY ${FMT_LIB}
@@ -342,7 +340,7 @@ function(require_external NAME)
     if(WIN32)
       set(GLAD_LIB "lib/glad.lib")
     else()
-      set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
     endif()
 
     add_external_project(glad STATIC
@@ -425,8 +423,13 @@ function(require_external NAME)
       return()
     endif()
 
-    require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    if (ENABLE_GL)
+      require_external(glfw)
+      external_get_property(glfw INSTALL_DIR)
+      set(glfw_include_dir "${INSTALL_DIR}/include")
+      set(glad_include_dir "${CMAKE_SOURCE_DIR}/externals/glad/include")
+      set(glfw_dep "glfw")
+    endif()
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
@@ -441,11 +444,24 @@ function(require_external NAME)
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_sw.cpp"
+        "<SOURCE_DIR>/imgui_sw.cpp"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_sw.h"
+        "<SOURCE_DIR>/imgui_sw.h"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_impl_generic.cpp"
+        "<SOURCE_DIR>/backends/imgui_impl_generic.cpp"
+      COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/imgui_impl_generic.h"
+        "<SOURCE_DIR>/backends/imgui_impl_generic.h"
       DEPENDS
-        glfw
+        ${glfw_dep}
       CMAKE_ARGS
-        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
-        -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
+        -DGLAD_INCLUDE_DIR:PATH=${glad_include_dir}
+        -DGLFW_INCLUDE_DIR:PATH=${glfw_include_dir}
+        -DENABLE_GL=${ENABLE_GL})
 
     add_external_library(imgui
       LIBRARY ${IMGUI_LIB})
@@ -666,7 +682,7 @@ function(require_external NAME)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "v0.4"
+        GIT_TAG "v0.5"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         DEPENDS glad)
@@ -677,7 +693,7 @@ function(require_external NAME)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
-      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # obj-io
   elseif (NAME STREQUAL "obj-io")
@@ -732,10 +748,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(quickhull
       LIBRARY ${QUICKHULL_LIB})
@@ -792,9 +805,7 @@ function(require_external NAME)
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
         -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR}
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -Dfmt_DIR=${BINARY_DIR})
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
@@ -819,10 +830,7 @@ function(require_external NAME)
     add_external_project(tinyobjloader STATIC
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
-      CMAKE_ARGS
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
 
     add_external_library(tinyobjloader
       LIBRARY ${TINYOBJLOADER_LIB})
@@ -847,9 +855,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
       DEBUG_SUFFIX d
       CMAKE_ARGS
-        -DSHARED_LIB=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
+        -DSHARED_LIB=OFF)
 
     add_external_library(tinyply
       LIBRARY ${TNY_LIB}
@@ -977,8 +983,8 @@ function(require_external NAME)
       GIT_TAG "v${VTKM_VER}.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${VTKM_CONT_LIB}"
-	    "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
-	    "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
+        "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+        "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DBUILD_TESTING:BOOL=OFF

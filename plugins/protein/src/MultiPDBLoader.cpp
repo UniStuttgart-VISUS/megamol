@@ -6,21 +6,21 @@
  */
 
 
-#include "stdafx.h"
 #include "MultiPDBLoader.h"
 #include "PDBLoader.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/mathfunctions.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
-#include "vislib/types.h"
-#include "vislib/sys/sysfunctions.h"
+#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/types.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -28,29 +28,26 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
 
-
-MultiPDBLoader::MultiPDBLoader(void) : Module(),
-        filenameSlot("filename", "The file name"),
-        molecularDataOutSlot( "dataout", "The slot providing the loaded data"),
-        dataHash(0) {
+MultiPDBLoader::MultiPDBLoader(void)
+        : Module()
+        , filenameSlot("filename", "The file name")
+        , molecularDataOutSlot("dataout", "The slot providing the loaded data")
+        , dataHash(0) {
     // filename slot
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
-    
-    // data out slot for molecular data
-    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(),
-            MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData),
-            &MultiPDBLoader::getData);
-    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(),
-            MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent),
-            &MultiPDBLoader::getExtent);
-    this->MakeSlotAvailable( &this->molecularDataOutSlot);
 
+    // data out slot for molecular data
+    this->molecularDataOutSlot.SetCallback(MolecularDataCall::ClassName(),
+        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &MultiPDBLoader::getData);
+    this->molecularDataOutSlot.SetCallback(MolecularDataCall::ClassName(),
+        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &MultiPDBLoader::getExtent);
+    this->MakeSlotAvailable(&this->molecularDataOutSlot);
 }
 
 
 MultiPDBLoader::~MultiPDBLoader(void) {
-    this->Release ();
+    this->Release();
 }
 
 bool MultiPDBLoader::create(void) {
@@ -58,43 +55,46 @@ bool MultiPDBLoader::create(void) {
     return true;
 }
 
-void MultiPDBLoader::release(void) { 
+void MultiPDBLoader::release(void) {
     // clear data arrays
     this->datacall.Clear();
     this->pdb.Clear();
 }
 
 bool MultiPDBLoader::getExtent(core::Call& call) {
-    MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>( &call );
-    if ( dc == NULL ) return false;
+    MolecularDataCall* dc = dynamic_cast<MolecularDataCall*>(&call);
+    if (dc == NULL)
+        return false;
     // load aquaria query
     this->assertData();
 
-    if (!this->pdb.Count()) return false;
-    
+    if (!this->pdb.Count())
+        return false;
+
     unsigned int frame = dc->FrameID();
     unsigned int i = frame % this->pdb.Count();
-    
+
     dc->SetFrameID(frame);
     dc->SetFrameCount((unsigned int)this->pdb.Count());
     dc->AccessBoundingBoxes() = this->datacall[i]->AccessBoundingBoxes();
-	dc->SetDataHash(this->dataHash);
+    dc->SetDataHash(this->dataHash);
 
     return true;
-
 }
 
 bool MultiPDBLoader::getData(core::Call& caller) {
-    MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>(&caller);
-    if ( dc == NULL ) return false;
+    MolecularDataCall* dc = dynamic_cast<MolecularDataCall*>(&caller);
+    if (dc == NULL)
+        return false;
     // load all pdb files
     this->assertData();
 
-    if (this->pdb.Count() == 0) return false;
+    if (this->pdb.Count() == 0)
+        return false;
 
     unsigned int frame = dc->FrameID();
     unsigned int i = frame % this->pdb.Count();
-    
+
     // copy call
     *dc = *this->datacall[i];
     dc->SetFrameID(frame);
@@ -107,13 +107,14 @@ bool MultiPDBLoader::getData(core::Call& caller) {
 void MultiPDBLoader::assertData(void) {
     using megamol::core::utility::log::Log;
 
-    if (!this->filenameSlot.IsDirty()) return;  // nothing to do
-    this->filenameSlot.ResetDirty();    
-    
+    if (!this->filenameSlot.IsDirty())
+        return; // nothing to do
+    this->filenameSlot.ResetDirty();
+
     // clear data arrays
     this->datacall.Clear();
     this->pdb.Clear();
-    
+
     // temp variables
     vislib::StringA line;
 

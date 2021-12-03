@@ -1,23 +1,23 @@
 /*
  * FilePathParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/FileUtils.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core::param;
 
 
 FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts)
-    : AbstractParam()
-    , flags(flags)
-    , extensions(exts)
-    , value() {
+        : AbstractParam()
+        , flags(flags)
+        , extensions(exts)
+        , value() {
 
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
     this->SetValue(initVal);
@@ -25,33 +25,24 @@ FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags
 
 
 FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
-        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
-};
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){};
 
 
-FilePathParam::FilePathParam(const char * initVal, Flags_t flags, const Extensions_t& exts)
-        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
-};
+FilePathParam::FilePathParam(const char* initVal, Flags_t flags, const Extensions_t& exts)
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){};
 
 
-void FilePathParam::Definition(vislib::RawStorage& outDef) const {
-
-    outDef.AssertSize(6);
-#if defined(UNICODE) || defined(_UNICODE)
-    memcpy(outDef.AsAt<char>(0), "MMFILW", 6);
-#else  /* defined(UNICODE) || defined(_UNICODE) */
-    memcpy(outDef.AsAt<char>(0), "MMFILA", 6);
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+std::string FilePathParam::Definition() const {
+    return "MMFILA";
 }
 
 
-bool FilePathParam::ParseValue(const vislib::TString& v) {
+bool FilePathParam::ParseValue(std::string const& v) {
 
     try {
-        this->SetValue(std::string(v.PeekBuffer()));
+        this->SetValue(v);
         return true;
-    } catch(...) {
-    }
+    } catch (...) {}
     return false;
 }
 
@@ -65,11 +56,13 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.generic_u8string().c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.",
+                    new_value.generic_u8string().c_str());
             }
             if (error_flags & Flag_Directory) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.generic_u8string().c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.",
+                    new_value.generic_u8string().c_str());
             }
             if (error_flags & Flag_NoExistenceCheck) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -81,7 +74,8 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                     log_exts += "'." + ext + "' ";
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. File does not have required extension: %s", new_value.generic_u8string().c_str(), log_exts.c_str());
+                    "[FilePathParam] Omitting value '%s'. File does not have required extension: %s",
+                    new_value.generic_u8string().c_str(), log_exts.c_str());
             }
             if (error_flags == 0) {
                 this->value = new_value;
@@ -113,7 +107,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 
     try {
         FilePathParam::Flags_t retval = 0;
-        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) { 
+        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) {
             retval |= FilePathParam::Flag_File;
         }
         if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
@@ -134,8 +128,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
             }
         }
         return retval;
-    }
-    catch (std::filesystem::filesystem_error& e) {
+    } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return 0;

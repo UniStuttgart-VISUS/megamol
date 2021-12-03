@@ -7,10 +7,10 @@
 #ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
 #define MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
 
-#include "mmcore/Module.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace core {
@@ -39,7 +39,7 @@ public:
      */
     static const char* Description(void) {
         return "Stub module which accepts all ingoing (inSlot) and outgoing (outSlot) calls "
-            "for debugging and test purposes.";
+               "for debugging and test purposes.";
     }
 
     /**
@@ -56,6 +56,7 @@ public:
 
     /** dtor */
     virtual ~StubModule(void);
+
 protected:
     /**
      * Implementation of 'Create'.
@@ -68,6 +69,7 @@ protected:
      * Implementation of 'Release'.
      */
     virtual void release(void);
+
 private:
     /** Outbound connection */
     CalleeSlot outSlot;

@@ -31,9 +31,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
-
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -303,46 +302,42 @@ bool megamol::compositing::SSAO::create() {
             m_nonSmartApplyPrgm = std::make_unique<GLSLComputeShader>();
             m_nonSmartHalfApplyPrgm = std::make_unique<GLSLComputeShader>();
 
-            m_naiveSSAOPrgm = std::make_unique<GLSLComputeShader>();
-            m_naiveSSAOBlurPrgm = std::make_unique<GLSLComputeShader>();
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepths;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsHalf;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormals;
+            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormalsHalf;
+            std::vector<vislib_gl::graphics::gl::ShaderSource> csPrepareDepthMip(SSAODepth_MIP_LEVELS - 1);
+            std::vector<vislib_gl::graphics::gl::ShaderSource> csGenerate(5);
+            vislib_gl::graphics::gl::ShaderSource csSmartBlur;
+            vislib_gl::graphics::gl::ShaderSource csSmartBlur_wide;
+            vislib_gl::graphics::gl::ShaderSource csApply;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartBlur;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartApply;
+            vislib_gl::graphics::gl::ShaderSource csNonSmartHalfApply;
 
-            vislib::graphics::gl::ShaderSource csPrepareDepths;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsHalf;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsAndNormals;
-            vislib::graphics::gl::ShaderSource csPrepareDepthsAndNormalsHalf;
-            std::vector<vislib::graphics::gl::ShaderSource> csPrepareDepthMip(SSAODepth_MIP_LEVELS - 1);
-            std::vector<vislib::graphics::gl::ShaderSource> csGenerate(5);
-            vislib::graphics::gl::ShaderSource csSmartBlur;
-            vislib::graphics::gl::ShaderSource csSmartBlur_wide;
-            vislib::graphics::gl::ShaderSource csApply;
-            vislib::graphics::gl::ShaderSource csNonSmartBlur;
-            vislib::graphics::gl::ShaderSource csNonSmartApply;
-            vislib::graphics::gl::ShaderSource csNonSmartHalfApply;
+            vislib_gl::graphics::gl::ShaderSource csNaiveSSAO;
+            vislib_gl::graphics::gl::ShaderSource csNaiveSSAOBlur;
 
-            vislib::graphics::gl::ShaderSource csNaiveSSAO;
-            vislib::graphics::gl::ShaderSource csNaiveSSAOBlur;
-
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepths");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepths", csPrepareDepths))
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepths\n";
+            auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
+                instance()->Configuration().ShaderDirectories());
+            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepths", csPrepareDepths))
                 return false;
             if (!m_prepareDepthsPrgm->Compile(csPrepareDepths.Code(), csPrepareDepths.Count()))
                 return false;
             if (!m_prepareDepthsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsHalf\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Compile(csPrepareDepthsHalf.Code(), csPrepareDepthsHalf.Count()))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormals");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormals\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
                 return false;
             if (!m_prepareDepthsAndNormalsPrgm->Compile(
                     csPrepareDepthsAndNormals.Code(), csPrepareDepthsAndNormals.Count()))
@@ -350,8 +345,8 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsAndNormalsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf\n";
+            if (!ssf->MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
                 return false;
             if (!m_prepareDepthsAndNormalsHalfPrgm->Compile(
@@ -363,11 +358,9 @@ bool megamol::compositing::SSAO::create() {
             for (int i = 0; i < SSAODepth_MIP_LEVELS - 1; ++i) {
                 Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i+1);
                 std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                        identifier.c_str(), csPrepareDepthMip[i]))
+                if (!ssf->MakeShaderSource(identifier.c_str(), csPrepareDepthMip[i]))
                     return false;
-                if (!m_prepareDepthMipPrgms[i]->Compile(
-                        csPrepareDepthMip[i].Code(), csPrepareDepthMip[i].Count()))
+                if (!m_prepareDepthMipPrgms[i]->Compile(csPrepareDepthMip[i].Code(), csPrepareDepthMip[i].Count()))
                     return false;
                 if (!m_prepareDepthMipPrgms[i]->Link())
                     return false;
@@ -380,7 +373,7 @@ bool megamol::compositing::SSAO::create() {
                 if (i >= 4)
                     identifier = "Compositing::assao::CSGenerateQ3Base";
 
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(identifier.c_str(), csGenerate[i]))
+                if (!ssf->MakeShaderSource(identifier.c_str(), csGenerate[i]))
                     return false;
                 if (!m_generatePrgms[i]->Compile(csGenerate[i].Code(), csGenerate[i].Count()))
                     return false;
@@ -388,52 +381,48 @@ bool megamol::compositing::SSAO::create() {
                     return false;
             }
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlur");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
+            std::cout << "Compiling: Compositing::assao::CSSmartBlur\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
                 return false;
             if (!m_smartBlurPrgm->Compile(csSmartBlur.Code(), csSmartBlur.Count()))
                 return false;
             if (!m_smartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlurWide");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
+            std::cout << "Compiling: Compositing::assao::CSSmartBlurWide\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
                 return false;
             if (!m_smartBlurWidePrgm->Compile(csSmartBlur_wide.Code(), csSmartBlur_wide.Count()))
                 return false;
             if (!m_smartBlurWidePrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartBlur");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
+            std::cout << "Compiling: Compositing::assao::CSNonSmartBlur\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
                 return false;
             if (!m_nonSmartBlurPrgm->Compile(csNonSmartBlur.Code(), csNonSmartBlur.Count()))
                 return false;
             if (!m_nonSmartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSApply");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSApply", csApply))
+            std::cout << "Compiling: Compositing::assao::CSApply\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSApply", csApply))
                 return false;
             if (!m_applyPrgm->Compile(csApply.Code(), csApply.Count()))
                 return false;
             if (!m_applyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartApply");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartApply", csNonSmartApply))
+            std::cout << "Compiling: Compositing::assao::CSNonSmartApply\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartApply", csNonSmartApply))
                 return false;
             if (!m_nonSmartApplyPrgm->Compile(csNonSmartApply.Code(), csNonSmartApply.Count()))
                 return false;
             if (!m_nonSmartApplyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartHalfApply");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
+            std::cout << "Compiling: Compositing::assao::CSNonSmartHalfApply\n";
+            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
                 return false;
             if (!m_nonSmartHalfApplyPrgm->Compile(csNonSmartHalfApply.Code(), csNonSmartHalfApply.Count()))
                 return false;
@@ -441,20 +430,22 @@ bool megamol::compositing::SSAO::create() {
                 return false;
 
             Log::DefaultLog.WriteInfo("Compiling: Compositing::ssao");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", csNaiveSSAO)) return false;
+            if (!ssf->MakeShaderSource("Compositing::ssao", csNaiveSSAO))
+                return false;
             if (!m_naiveSSAOPrgm->Compile(csNaiveSSAO.Code(), csNaiveSSAO.Count())) return false;
             if (!m_naiveSSAOPrgm->Link()) return false;
 
             Log::DefaultLog.WriteInfo("Compiling: Compositing::simpleBlur");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", csNaiveSSAOBlur))
+            if (!ssf->MakeShaderSource("Compositing::blur", csNaiveSSAOBlur))
                 return false;
             if (!m_naiveSSAOBlurPrgm->Compile(csNaiveSSAOBlur.Code(), csNaiveSSAOBlur.Count())) return false;
             if (!m_naiveSSAOBlurPrgm->Link()) return false;
         }
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile shader (@%s): %s\n",
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -479,8 +470,8 @@ bool megamol::compositing::SSAO::create() {
         m_halfDepthsMipViews[j].resize(SSAODepth_MIP_LEVELS);
         for (int i = 0; i < m_halfDepthsMipViews[j].size(); ++i) {
             m_halfDepthsMipViews[j][i] =
-                std::make_shared<glowl::Texture2DView>(
-                "m_halfDepthsMipViews" + std::to_string(i), *m_halfDepths[j], m_depthBufferViewspaceLinearLayout, 0, 1, 0, 1);
+                std::make_shared<glowl::Texture2DView>("m_halfDepthsMipViews" + std::to_string(i), *m_halfDepths[j],
+                    m_depthBufferViewspaceLinearLayout, 0, 1, 0, 1);
         }
     }
     m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", m_depthBufferViewspaceLinearLayout, nullptr);
@@ -520,12 +511,10 @@ bool megamol::compositing::SSAO::create() {
     m_samplerStateLinearClamp = std::make_shared<glowl::Sampler>("samplerStateLinearClamp", intParams);
 
     intParams.clear();
-    intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
-        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+    intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
 
-    m_samplerStateViewspaceDepthTap =
-        std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", intParams);
+    m_samplerStateViewspaceDepthTap = std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", intParams);
 
 
     // naive ssao stuff
@@ -569,8 +558,9 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     auto callDepth = m_depthTexSlot.CallAs<CallTexture2D>();
     auto callCamera = m_cameraSlot.CallAs<CallCamera>();
 
-    if (lhsTc == NULL) return false;
-    
+    if (lhsTc == NULL)
+        return false;
+
     if ((callDepth != NULL) && (callCamera != NULL)) {
 
         bool generateNormals = false;
@@ -606,11 +596,8 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
         bool cameraUpdate = callCamera->hasUpdate();
 
         bool somethingHasChanged =
-            (callNormal != NULL ? normalUpdate : false) || 
-            (callDepth != NULL ? depthUpdate : false) || 
-            (callCamera != NULL ? cameraUpdate : false) ||
-            m_updateCausedByNormalSlotChange ||
-            m_settingsHaveChanged;
+            (callNormal != NULL ? normalUpdate : false) || (callDepth != NULL ? depthUpdate : false) ||
+            (callCamera != NULL ? cameraUpdate : false) || m_updateCausedByNormalSlotChange || m_settingsHaveChanged;
 
         if (somethingHasChanged) {
             ++m_version;
@@ -638,11 +625,11 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
                 m_normals = callNormal->getData();
-                txResNormal = {(int) m_normals->getWidth(), (int) m_normals->getHeight()};
+                txResNormal = {(int)m_normals->getWidth(), (int)m_normals->getHeight()};
             }
 
             auto depthTx2D = callDepth->getData();
-            std::array<int, 2> txResDepth = {(int) depthTx2D->getWidth(), (int) depthTx2D->getHeight()};
+            std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
 
             setupOutputTexture(depthTx2D, m_finalOutput);
 
@@ -750,7 +737,6 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                 m_naiveSSAOBlurPrgm->Disable();
             }
         }
-
     }
 
     if (lhsTc->version() < m_version) {
@@ -762,14 +748,14 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::compositing::SSAO::prepareDepths(
-    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
+void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
     std::shared_ptr<glowl::Texture2D> normalTexture) {
     bool generateNormals = inputs->GenerateNormals;
 
     std::vector<TextureSamplerTuple> inputTextures(1);
-    inputTextures[0] = { depthTexture, (std::string) "g_DepthSource", nullptr };
-    
+    inputTextures[0] = {depthTexture, (std::string) "g_DepthSource", nullptr};
+
 
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
@@ -801,14 +787,14 @@ void megamol::compositing::SSAO::prepareDepths(
     // only do mipmaps for higher quality levels (not beneficial on quality level 1, and detrimental on quality level 0)
     if (settings.QualityLevel > 1) {
 
-        #ifdef MEGAMOL_ASSAO_MANUAL_MIPS
+#ifdef MEGAMOL_ASSAO_MANUAL_MIPS
         for (int i = 1; i < m_depthMipLevels; ++i) {
             std::vector<TextureViewSamplerTuple> inputFourDepthMipsM1 = {
-                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource" , nullptr},
+                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource", nullptr},
                 {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1", nullptr},
                 {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2", nullptr},
                 {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3", nullptr}};
-            
+
             std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputFourDepthMips = {
                 {m_halfDepthsMipViews[0][i], 0}, {m_halfDepthsMipViews[1][i], 1}, {m_halfDepthsMipViews[2][i], 2},
                 {m_halfDepthsMipViews[3][i], 3}};
@@ -816,13 +802,13 @@ void megamol::compositing::SSAO::prepareDepths(
             fullscreenPassDraw<TextureViewSamplerTuple, glowl::Texture2DView>(
                 m_prepareDepthMipPrgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
         }
-        #else
+#else
         for (int i = 0; i < 4; ++i) {
             m_halfDepths[i]->bindTexture();
             m_halfDepths[i]->updateMipmaps();
         }
         glBindTexture(GL_TEXTURE_2D, 0);
-        #endif
+#endif
     }
 }
 
@@ -856,7 +842,7 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
                 blurPasses = Max(1, blurPasses);
         } else
 #endif
-        if (settings.QualityLevel <= 0) {
+            if (settings.QualityLevel <= 0) {
             // just one blur pass allowed for minimum quality
             // MM simply uses one blur pass
             blurPasses = std::min(1, settings.BlurPassCount);
@@ -869,7 +855,8 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
             std::vector<TextureSamplerTuple> inputTextures(3);
             inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
             inputTextures[1] = {normalTexture, "g_NormalmapSource", nullptr};
-            inputTextures[2] = {m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
+            inputTextures[2] = {
+                m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
 
             // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
@@ -886,18 +873,16 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
             if (blurPasses == 0) {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
                     {m_finalResultsArrayViews[pass], binding}};
-            
+
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
                     m_generatePrgms[shaderIndex], inputTextures, outputTextures);
             } else {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                     {m_pingPongHalfResultA, binding}};
-            
+
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                     m_generatePrgms[shaderIndex], inputTextures, outputTextures);
             }
-
-            
         }
 
         // Blur
@@ -1014,27 +999,28 @@ void megamol::compositing::SSAO::updateConstants(
     bool generateNormals = inputs->GenerateNormals;
 
     // update constants
-    ASSAO_Constants& consts = m_constants;// = *((ASSAOConstants*) mappedResource.pData);
+    ASSAO_Constants& consts = m_constants; // = *((ASSAOConstants*) mappedResource.pData);
 
     const glm::mat4& proj = inputs->ProjectionMatrix;
 
-    consts.ViewportPixelSize = glm::vec2(1.0f / (float) m_size.x, 1.0f / (float) m_size.y);
-    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float) m_halfSize.x, 1.0f / (float) m_halfSize.y);
+    consts.ViewportPixelSize = glm::vec2(1.0f / (float)m_size.x, 1.0f / (float)m_size.y);
+    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float)m_halfSize.x, 1.0f / (float)m_halfSize.y);
 
     consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
     consts.Viewport2xPixelSize_x_025 =
         glm::vec2(consts.Viewport2xPixelSize.x * 0.25f, consts.Viewport2xPixelSize.y * 0.25f);
 
     // requires proj matrix to be in column-major order
-    float depthLinearizeMul = proj[3][2]; // float depthLinearizeMul = -( 2.0 * clipFar * clipNear ) / ( clipFar - clipNear );
-    float depthLinearizeAdd = proj[2][2];  // float depthLinearizeAdd = -(clipFar + clipNear) / ( clipFar - clipNear );
-    
+    float depthLinearizeMul =
+        proj[3][2]; // float depthLinearizeMul = -( 2.0 * clipFar * clipNear ) / ( clipFar - clipNear );
+    float depthLinearizeAdd = proj[2][2]; // float depthLinearizeAdd = -(clipFar + clipNear) / ( clipFar - clipNear );
+
     // correct the handedness issue. need to make sure this below is correct, but I think it is.
     if (depthLinearizeMul * depthLinearizeAdd < 0)
         depthLinearizeAdd = -depthLinearizeAdd;
     //consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
     consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
-    
+
     float tanHalfFOVX = 1.0f / proj[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
     float tanHalfFOVY = 1.0f / proj[1][1]; // = tanf( drawContext.Camera.GetYFOV( ) * 0.5f );
 
@@ -1068,7 +1054,7 @@ void megamol::compositing::SSAO::updateConstants(
 
     // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
     // PSPostprocessImportanceMapB for performance reasons
-    consts.LoadCounterAvgDiv = 9.0f / (float) (m_quarterSize.x * m_quarterSize.y * 255.0);
+    consts.LoadCounterAvgDiv = 9.0f / (float)(m_quarterSize.x * m_quarterSize.y * 255.0);
 
     // Special settings for lowest quality level - just nerf the effect a tiny bit
     if (settings.QualityLevel <= 0) {
@@ -1091,11 +1077,11 @@ void megamol::compositing::SSAO::updateConstants(
 
     consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
     consts.PassIndex = pass;
-    consts.QuarterResPixelSize = glm::vec2(1.0f / (float) m_quarterSize.x, 1.0f / (float) m_quarterSize.y);
+    consts.QuarterResPixelSize = glm::vec2(1.0f / (float)m_quarterSize.x, 1.0f / (float)m_quarterSize.y);
 
     float additionalAngleOffset =
         settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
-                                                    // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
+                                                   // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
     float additionalRadiusScale =
         settings.TemporalSupersamplingRadiusOffset; // if using temporal supersampling approach (like "Progressive
                                                     // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
@@ -1108,13 +1094,13 @@ void megamol::compositing::SSAO::updateConstants(
         b = spmap[subPass];
 
         float ca, sa;
-        float angle0 = ((float) a + (float) b / (float) subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
+        float angle0 = ((float)a + (float)b / (float)subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
         angle0 += additionalAngleOffset;
 
         ca = ::cosf(angle0);
         sa = ::sinf(angle0);
 
-        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
+        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float)subPassCount) * 0.07f;
         scale *= additionalRadiusScale;
 
         // all values are within [-1, 1]
@@ -1157,8 +1143,7 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
         if (generateMipMaps) {
             desc.levels = SSAODepth_MIP_LEVELS;
             tex->reload(desc, nullptr, true, true);
-        }
-        else
+        } else
             tex->reload(desc, nullptr);
     }
 
@@ -1219,31 +1204,31 @@ bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
     return true;
 }
 
-bool megamol::compositing::SSAO::equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
-    bool depth            = lhs.depth == rhs.depth;
+bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
+    const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+    bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
-    bool format           = lhs.format == rhs.format;
-    bool internal_format  = lhs.internal_format == rhs.internal_format;
-    bool int_parameters   = lhs.int_parameters == rhs.int_parameters;
-    bool levels           = lhs.levels == rhs.levels;
-    bool type             = lhs.type == rhs.type;
+    bool format = lhs.format == rhs.format;
+    bool internal_format = lhs.internal_format == rhs.internal_format;
+    bool int_parameters = lhs.int_parameters == rhs.int_parameters;
+    bool levels = lhs.levels == rhs.levels;
+    bool type = lhs.type == rhs.type;
 
-    return depth && float_parameters && format && internal_format && int_parameters && levels &&
-           type;
+    return depth && float_parameters && format && internal_format && int_parameters && levels && type;
 }
 
 bool megamol::compositing::SSAO::equalLayouts(
     const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
-    bool format           = lhs.format == rhs.format;
-    bool height           = lhs.height == rhs.height;
-    bool internal_format  = lhs.internal_format == rhs.internal_format;
-    bool int_parameters   = lhs.int_parameters == rhs.int_parameters;
-    bool levels           = lhs.levels == rhs.levels;
-    bool type             = lhs.type == rhs.type;
-    bool width            = lhs.width == rhs.width;
+    bool format = lhs.format == rhs.format;
+    bool height = lhs.height == rhs.height;
+    bool internal_format = lhs.internal_format == rhs.internal_format;
+    bool int_parameters = lhs.int_parameters == rhs.int_parameters;
+    bool levels = lhs.levels == rhs.levels;
+    bool type = lhs.type == rhs.type;
+    bool width = lhs.width == rhs.width;
 
-    return depth && float_parameters && format && height && internal_format && int_parameters && levels &&
-           type && width;
+    return depth && float_parameters && format && height && internal_format && int_parameters && levels && type &&
+           width;
 }

@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 
-#include "AbstractVTKLegacyData.h"
+#include "protein/AbstractVTKLegacyData.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -18,16 +18,10 @@ using namespace megamol::protein;
 /*
  * VTKLegacyData::VTKLegacyData
  */
-AbstractVTKLegacyData::AbstractVTKLegacyData() {
-}
+AbstractVTKLegacyData::AbstractVTKLegacyData() {}
 
 
 /*
  * VTKLegacyData::~VTKLegacyData
  */
-AbstractVTKLegacyData::~AbstractVTKLegacyData() {
-}
-
-
-
-
+AbstractVTKLegacyData::~AbstractVTKLegacyData() {}

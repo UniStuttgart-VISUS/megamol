@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "mmcore/FlagCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -16,11 +16,13 @@ const unsigned int FlagCall::CallMapFlags = 0;
 const unsigned int FlagCall::CallUnmapFlags = 1;
 
 /*
- *	IntSelectionCall:IntSelectionCall
+ * IntSelectionCall:IntSelectionCall
  */
 FlagCall::FlagCall(void) : flags() {}
 
 /*
- *	IntSelectionCall::~IntSelectionCall
+ * IntSelectionCall::~IntSelectionCall
  */
-FlagCall::~FlagCall(void) { flags = nullptr; }
+FlagCall::~FlagCall(void) {
+    flags = nullptr;
+}

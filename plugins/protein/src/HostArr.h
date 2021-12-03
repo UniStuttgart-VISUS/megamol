@@ -18,9 +18,8 @@ template<class T>
 class HostArr {
 
 public:
-
     /** Ctor */
-    HostArr() : size(0),  count(0), pt(NULL) {}
+    HostArr() : size(0), count(0), pt(NULL) {}
 
     /** Dtor */
     ~HostArr() {
@@ -50,7 +49,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline T *Peek() {
+    inline T* Peek() {
         return this->pt;
     }
 
@@ -59,7 +58,7 @@ public:
      *
      * @return The pointer to the device memory.
      */
-    inline const T *PeekConst() const {
+    inline const T* PeekConst() const {
         return this->pt;
     }
 
@@ -82,7 +81,7 @@ public:
      * @param c The byte value
      */
     void Set(char c) {
-        memset((char*)(this->pt), c, this->GetSize()*sizeof(T));
+        memset((char*)(this->pt), c, this->GetSize() * sizeof(T));
     }
 
     /**
@@ -95,14 +94,13 @@ public:
         if ((this->pt == NULL) || (sizeNew > this->size)) {
             this->Release();
             //this->pt = new T[sizeNew];
-            this->pt = (T*)malloc(sizeNew*sizeof(T));
+            this->pt = (T*)malloc(sizeNew * sizeof(T));
             this->size = sizeNew;
         }
         this->count = sizeNew;
     }
 
 private:
-
     /// The amount of allocated memory in sizeof(T)
     size_t size;
 
@@ -110,7 +108,7 @@ private:
     size_t count;
 
     /// The pointer to the device memory
-    T *pt;
+    T* pt;
 };
 
 } // namespace protein

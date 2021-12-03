@@ -1,33 +1,35 @@
-#include "stdafx.h"
 #include "ScreenSpaceEffect.h"
+#include "stdafx.h"
 
 #include <array>
 #include <random>
 
-#include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/glm.hpp>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect() : core::Module()
-    , m_version(0)
-    , m_output_texture(nullptr)
-    , m_output_texture_hash(0)
-    , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
-    , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
-    , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_input_tex_slot("InputTexture", "Connects an optional input texture")
-    , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
-    , m_depth_tex_slot("DepthTexture", "Connects the depth render target texture")
-    , m_camera_slot("Camera", "Connects a (copy of) camera state") {
+megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
+        : core::Module()
+        , m_version(0)
+        , m_output_texture(nullptr)
+        , m_output_texture_hash(0)
+        , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
+        , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
+        , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
+        , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+        , m_input_tex_slot("InputTexture", "Connects an optional input texture")
+        , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
+        , m_depth_tex_slot("DepthTexture", "Connects the depth render target texture")
+        , m_camera_slot("Camera", "Connects a (copy of) camera state") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SSAO");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
@@ -57,7 +59,9 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect() : core::Module()
     this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
-megamol::compositing::ScreenSpaceEffect::~ScreenSpaceEffect() { this->Release(); }
+megamol::compositing::ScreenSpaceEffect::~ScreenSpaceEffect() {
+    this->Release();
+}
 
 bool megamol::compositing::ScreenSpaceEffect::create() {
     try {
@@ -66,26 +70,37 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         m_ssao_blur_prgm = std::make_unique<GLSLComputeShader>();
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_ssao_src;
-        vislib::graphics::gl::ShaderSource compute_ssao_blur_src;
-        vislib::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_src;
+        vislib_gl::graphics::gl::ShaderSource compute_ssao_blur_src;
+        vislib_gl::graphics::gl::ShaderSource compute_fxaa_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", compute_ssao_src)) return false;
-        if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
-        if (!m_ssao_prgm->Link()) return false;
-
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::ssao", compute_ssao_src))
             return false;
-        if (!m_ssao_blur_prgm->Compile(compute_ssao_blur_src.Code(), compute_ssao_blur_src.Count())) return false;
-        if (!m_ssao_blur_prgm->Link()) return false;
+        if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count()))
+            return false;
+        if (!m_ssao_prgm->Link())
+            return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
-        if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count())) return false;
-        if (!m_fxaa_prgm->Link()) return false;
+        if (!ssf->MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
+            return false;
+        if (!m_ssao_blur_prgm->Compile(compute_ssao_blur_src.Code(), compute_ssao_blur_src.Count()))
+            return false;
+        if (!m_ssao_blur_prgm->Link())
+            return false;
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+        if (!ssf->MakeShaderSource("Compositing::fxaa", compute_fxaa_src))
+            return false;
+        if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count()))
+            return false;
+        if (!m_fxaa_prgm->Link())
+            return false;
+
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile shader (@%s): %s\n",
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -141,19 +156,31 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
     auto call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
     auto call_camera = m_camera_slot.CallAs<CallCamera>();
 
-    if (lhs_tc == NULL) return false;
-    
-    if(call_input != NULL) { if (!(*call_input)(0)) return false; }
-    if(call_normal != NULL) { if (!(*call_normal)(0)) return false; }
-    if(call_depth != NULL) { if (!(*call_depth)(0)) return false; }
-    if(call_camera != NULL) { if (!(*call_camera)(0)) return false; }
+    if (lhs_tc == NULL)
+        return false;
+
+    if (call_input != NULL) {
+        if (!(*call_input)(0))
+            return false;
+    }
+    if (call_normal != NULL) {
+        if (!(*call_normal)(0))
+            return false;
+    }
+    if (call_depth != NULL) {
+        if (!(*call_depth)(0))
+            return false;
+    }
+    if (call_camera != NULL) {
+        if (!(*call_camera)(0))
+            return false;
+    }
 
     // something has changed in the neath...
-    bool something_has_changed =
-        (call_input != NULL ? call_input->hasUpdate() : false) || 
-        (call_normal != NULL ? call_normal->hasUpdate() : false )|| 
-        (call_depth != NULL ? call_depth->hasUpdate() : false) || 
-        (call_camera != NULL ? call_camera->hasUpdate() : false);
+    bool something_has_changed = (call_input != NULL ? call_input->hasUpdate() : false) ||
+                                 (call_normal != NULL ? call_normal->hasUpdate() : false) ||
+                                 (call_depth != NULL ? call_depth->hasUpdate() : false) ||
+                                 (call_camera != NULL ? call_camera->hasUpdate() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -175,9 +202,12 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
             m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(true);
             m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(true);
 
-            if (call_normal == NULL) return false;
-            if (call_depth == NULL) return false;
-            if (call_camera == NULL) return false;
+            if (call_normal == NULL)
+                return false;
+            if (call_depth == NULL)
+                return false;
+            if (call_camera == NULL)
+                return false;
 
             auto normal_tx2D = call_normal->getData();
             auto depth_tx2D = call_depth->getData();
@@ -194,8 +224,10 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
 
             m_ssao_samples->bind(1);
 
-            glUniform1f(m_ssao_prgm->ParameterLocation("radius"), m_ssao_radius.Param<core::param::FloatParam>()->Value());
-            glUniform1i(m_ssao_prgm->ParameterLocation("sample_cnt"), m_ssao_sample_cnt.Param<core::param::IntParam>()->Value());
+            glUniform1f(
+                m_ssao_prgm->ParameterLocation("radius"), m_ssao_radius.Param<core::param::FloatParam>()->Value());
+            glUniform1i(m_ssao_prgm->ParameterLocation("sample_cnt"),
+                m_ssao_sample_cnt.Param<core::param::IntParam>()->Value());
 
             glActiveTexture(GL_TEXTURE0);
             normal_tx2D->bindTexture();
@@ -237,12 +269,12 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
 
             m_ssao_blur_prgm->Disable();
 
-        } 
-        else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
             m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(false);
             m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(false);
 
-            if (call_input == NULL) return false;
+            if (call_input == NULL)
+                return false;
 
             auto input_tx2D = call_input->getData();
 
@@ -270,4 +302,6 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
     return true;
 }
 
-bool megamol::compositing::ScreenSpaceEffect::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::compositing::ScreenSpaceEffect::getMetaDataCallback(core::Call& caller) {
+    return true;
+}

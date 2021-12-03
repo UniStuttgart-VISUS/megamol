@@ -8,20 +8,20 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
-#include <algorithm>
-#include <cmath>
-#include <ctype.h>
-#include <sstream>
-#include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/sys/File.h"
 #include "mmcore/utility/log/Log.h"
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
+#include "stdafx.h"
+#include "vislib/sys/File.h"
+#include <algorithm>
+#include <cmath>
+#include <ctype.h>
+#include <sstream>
 
 
 using namespace megamol;
@@ -41,20 +41,21 @@ using namespace megamol::core::utility::log;
  * VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid
  */
 VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid()
-    : core::view::AnimDataModule()
-    , dataOutSlot("dataOut", "The slot providing the loaded data")
-    , filenameSlot("vtkPath", "The path to the first VTK data file to be loaded")
-    , maxFramesSlot("maxFrames", "The maximum number of frames to be loaded")
-    , frameStartSlot("frameStart", "The first frame to be loaded")
-    , maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache")
-    , mpdcAttributeSlot("mpdcAttribute", "The name of the point data attribute to be sent with MultiParticleDataCall")
-    , globalRadiusParam("globalRadius", "The global radius to be sent with MultiParticleDataCall")
-    , hash(0)
-    , filenamesDigits(0)
-    , nFrames(0)
-    , readPointData(false)
-    , readCellData(false)
-    , bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
+        : core::view::AnimDataModule()
+        , dataOutSlot("dataOut", "The slot providing the loaded data")
+        , filenameSlot("vtkPath", "The path to the first VTK data file to be loaded")
+        , maxFramesSlot("maxFrames", "The maximum number of frames to be loaded")
+        , frameStartSlot("frameStart", "The first frame to be loaded")
+        , maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache")
+        , mpdcAttributeSlot(
+              "mpdcAttribute", "The name of the point data attribute to be sent with MultiParticleDataCall")
+        , globalRadiusParam("globalRadius", "The global radius to be sent with MultiParticleDataCall")
+        , hash(0)
+        , filenamesDigits(0)
+        , nFrames(0)
+        , readPointData(false)
+        , readCellData(false)
+        , bbox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) {
 
     // Unstructured grid data
     this->dataOutSlot.SetCallback(VTKLegacyDataCallUnstructuredGrid::ClassName(),
@@ -65,10 +66,10 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid()
         &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
 
     // Multi stream particle data
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &VTKLegacyDataLoaderUnstructuredGrid::getData);
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &VTKLegacyDataLoaderUnstructuredGrid::getData);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -94,13 +95,17 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid()
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::~VTKLegacyDataLoaderUnstructuredGrid
  */
-VTKLegacyDataLoaderUnstructuredGrid::~VTKLegacyDataLoaderUnstructuredGrid() { this->Release(); }
+VTKLegacyDataLoaderUnstructuredGrid::~VTKLegacyDataLoaderUnstructuredGrid() {
+    this->Release();
+}
 
 
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::create
  */
-bool VTKLegacyDataLoaderUnstructuredGrid::create(void) { return true; }
+bool VTKLegacyDataLoaderUnstructuredGrid::create(void) {
+    return true;
+}
 
 
 /*
@@ -167,7 +172,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
         // printf("Frame loaded: %u\n", fr->FrameNumber()); // DEBUG
     } else {
         // Try to get pointer to unstructured grid call
-        core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpdc != NULL) {
 
             // Request the frame
@@ -222,10 +227,9 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
 //#define CONTEST2016
 #ifndef CONTEST2016
             // Set attribute array as float 'color' value
-            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().IsEmpty()) {
-                mpdc->AccessParticles(0).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
-                    fr->PeekPointDataByName(this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())
-                        ->PeekData(),
+            if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().empty()) {
+                mpdc->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                    fr->PeekPointDataByName(this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().c_str()),
                     0);
             }
 #else
@@ -252,10 +256,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                 }*/
             }
             mpdc->AccessParticles(0).SetColourData(
-                core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
+                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
 #endif
             // Set vertex positions
-            mpdc->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+            mpdc->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 (const void*)(fr->GetData()->PeekPoints()));
 
             mpdc->SetUnlocker(new VTKUnlocker(*fr));
@@ -328,7 +332,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
         dc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
     } else {
         // Try to get pointer to unstructured grid call
-        core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpdc != NULL) {
             // Set frame count
             mpdc->SetFrameCount((unsigned int)std::min(
@@ -397,11 +401,11 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
             // Try to open frame files
 #if defined(VERBOSE)
             vislib::StringA frameFileShortPath;
-#    if defined(_WIN32)
+#if defined(_WIN32)
             frameFileShortPath = frameFile.Substring(frameFile.FindLast('\\') + 1, frameFile.Length() - 1);
-#    else
+#else
             frameFileShortPath = frameFile.Substring(frameFile.FindLast('/') + 1, frameFile.Length() - 1);
-#    endif
+#endif
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: checking for  '%s'", this->ClassName(),
                 frameFileShortPath.PeekBuffer()); // DEBUG
 #endif                                            // defined(VERBOSE)
@@ -457,7 +461,8 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 
     // Read data file to char buffer
     char* buffer = new char[(unsigned int)fileSize];
-    file.Open(frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
+    file.Open(
+        frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
 
@@ -753,11 +758,11 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
 
 #if defined(VERBOSE)
     vislib::StringA frameFileShortPath;
-#    if defined(_WIN32)
+#if defined(_WIN32)
     frameFileShortPath = frameFile.Substring(frameFile.FindLast('\\') + 1, frameFile.Length() - 1);
-#    else
+#else
     frameFileShortPath = frameFile.Substring(frameFile.FindLast('/') + 1, frameFile.Length() - 1);
-#    endif
+#endif
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: done loading '%s' (%u Bytes, %f s)", this->ClassName(),
         frameFileShortPath.PeekBuffer(), fileSize,
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
@@ -1068,7 +1073,8 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(
         // TODO: (gralkapk) This looks like hazard
         // TODO: For binary files, there will be no \n at the end of an field
         // TODO: Added fr->GetEncoding() == AbstractVTKLegacyData::ASCII as possible fix
-        if (fr->GetEncoding() == AbstractVTKLegacyData::ASCII && a != numArrays - 1) this->seekNextLine(buffPt);
+        if (fr->GetEncoding() == AbstractVTKLegacyData::ASCII && a != numArrays - 1)
+            this->seekNextLine(buffPt);
     }
 }
 
@@ -1151,7 +1157,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::swapBytes(char* buffPt, size_t stride,
  * VTKLegacyDataLoaderUnstructuredGrid::Frame::Frame
  */
 VTKLegacyDataLoaderUnstructuredGrid::Frame::Frame(megamol::core::view::AnimDataModule& owner)
-    : core::view::AnimDataModule::Frame(owner) {}
+        : core::view::AnimDataModule::Frame(owner) {}
 
 
 /*

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <array>
 #include <algorithm>
+#include <array>
+#include <cstdint>
 
 namespace megamol {
 namespace core {
@@ -62,5 +63,5 @@ private:
     uint32_t num_samples = 0;
 };
 
-}
-}
+} // namespace core
+} // namespace megamol

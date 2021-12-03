@@ -31,10 +31,10 @@
 #ifndef THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
+#pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/manipulator_base.h"
@@ -48,7 +48,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class translate_manipulator : public manipulator_base<T> {
+template<class T>
+class translate_manipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -76,7 +77,9 @@ public:
     /**
      * Move the camera in view direction.
      */
-    inline void move_forward(void) { this->move_forward(this->stepSize); }
+    inline void move_forward(void) {
+        this->move_forward(this->stepSize);
+    }
 
     /**
      * Move the camera along its x-axis.
@@ -86,7 +89,9 @@ public:
     /**
      * Move the camera along its x-axis.
      */
-    inline void move_horizontally(void) { this->move_horizontally(this->stepSize); }
+    inline void move_horizontally(void) {
+        this->move_horizontally(this->stepSize);
+    }
 
     /**
      * Move the camera along its up vector proportinaly to the mouse y coordinate delta
@@ -105,12 +110,14 @@ public:
     /**
      * Move the camera along its up vector.
      */
-    inline void move_vertically(void) { this->move_horizontally(this->stepSize); }
+    inline void move_vertically(void) {
+        this->move_horizontally(this->stepSize);
+    }
 
     /**
      * Move the camera along its up vector proportinaly to the mouse y coordinate delta
      */
-    inline void move_vertically(const screen_type y) { 
+    inline void move_vertically(const screen_type y) {
         screen_type dy = y - this->m_last_sy;
         this->m_last_sy = y;
         move_vertically(this->stepSize * static_cast<world_type>(dy));
@@ -121,14 +128,18 @@ public:
      *
      * @param stepSize The new translation step size.
      */
-    inline void set_step_size(const world_type stepSize) { this->stepSize = stepSize; }
+    inline void set_step_size(const world_type stepSize) {
+        this->stepSize = stepSize;
+    }
 
     /**
      * Gets a new step size in world units.
      *
      * @return The translation step size.
      */
-    inline world_type step_size(void) const { return this->stepSize; }
+    inline world_type step_size(void) const {
+        return this->stepSize;
+    }
 
     /**
      * Set manipulator active, i.e. set manipulating flag true and store mouse coords at time of activation
@@ -144,12 +155,14 @@ public:
     /**
      * Set manipulator inactive, i.e. set manipulating flag false
      */
-    inline void setInactive() { this->end_manipulation(); }
+    inline void setInactive() {
+        this->end_manipulation();
+    }
 
 private:
     world_type stepSize;
 
-     /** The x-coordinate of the last clicked screen position */
+    /** The x-coordinate of the last clicked screen position */
     screen_type m_last_sx;
 
     /** The y-coordinate of the last clicked screen position */
@@ -163,6 +176,6 @@ private:
 #include "mmcore/thecam/translate_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(pop)
+#pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED */

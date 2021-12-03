@@ -6,12 +6,12 @@
 
 #include "vislib/sys/BufferedFile.h"
 
-#include "vislib/assert.h"
-#include "vislib/sys/error.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/sys/IOException.h"
-#include "vislib/memutils.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
+#include "vislib/sys/IOException.h"
+#include "vislib/sys/error.h"
 
 #ifdef _WIN32
 #include <WinError.h>
@@ -23,28 +23,30 @@
 /*
  * vislib::sys::BufferedFile::defBufferSize
  */
-static vislib::sys::File::FileSize
-__vl_bufferedfile_defaultBufferSize 
-//    = vislib::sys::SystemInformation::PageSize();
+static vislib::sys::File::FileSize __vl_bufferedfile_defaultBufferSize
+    //    = vislib::sys::SystemInformation::PageSize();
     = 64 * 1024;
 
 
 /*
  * vislib::sys::BufferedFile::defBufferSize
  */
-vislib::sys::File::FileSize& vislib::sys::BufferedFile::defaultBufferSize(
-    __vl_bufferedfile_defaultBufferSize);
+vislib::sys::File::FileSize& vislib::sys::BufferedFile::defaultBufferSize(__vl_bufferedfile_defaultBufferSize);
 
 
 /*
  * vislib::sys::BufferedFile::BufferedFile
  */
 vislib::sys::BufferedFile::BufferedFile(void)
-        : File(), buffer(NULL), bufferOffset(0),
-        bufferSize(BufferedFile::defaultBufferSize), bufferStart(0),
-        dirtyBuffer(false), fileMode(File::READ_WRITE), validBufferSize(0) {
-    this->buffer = new unsigned char[
-        static_cast<unsigned int>(this->bufferSize)];
+        : File()
+        , buffer(NULL)
+        , bufferOffset(0)
+        , bufferSize(BufferedFile::defaultBufferSize)
+        , bufferStart(0)
+        , dirtyBuffer(false)
+        , fileMode(File::READ_WRITE)
+        , validBufferSize(0) {
+    this->buffer = new unsigned char[static_cast<unsigned int>(this->bufferSize)];
 }
 
 
@@ -90,10 +92,8 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::GetSize(void) const {
 /*
  * vislib::sys::BufferedFile::Open
  */
-bool vislib::sys::BufferedFile::Open(const char *filename,
-        const vislib::sys::File::AccessMode accessMode,
-        const vislib::sys::File::ShareMode shareMode,
-        const vislib::sys::File::CreationMode creationMode) {
+bool vislib::sys::BufferedFile::Open(const char* filename, const vislib::sys::File::AccessMode accessMode,
+    const vislib::sys::File::ShareMode shareMode, const vislib::sys::File::CreationMode creationMode) {
 
     if (File::Open(filename, accessMode, shareMode, creationMode)) {
 
@@ -104,7 +104,6 @@ bool vislib::sys::BufferedFile::Open(const char *filename,
 
     } else {
         return false;
-
     }
 }
 
@@ -112,10 +111,8 @@ bool vislib::sys::BufferedFile::Open(const char *filename,
 /*
  * vislib::sys::BufferedFile::Open
  */
-bool vislib::sys::BufferedFile::Open(const wchar_t *filename,
-        const vislib::sys::File::AccessMode accessMode,
-        const vislib::sys::File::ShareMode shareMode,
-        const vislib::sys::File::CreationMode creationMode) {
+bool vislib::sys::BufferedFile::Open(const wchar_t* filename, const vislib::sys::File::AccessMode accessMode,
+    const vislib::sys::File::ShareMode shareMode, const vislib::sys::File::CreationMode creationMode) {
 
     if (File::Open(filename, accessMode, shareMode, creationMode)) {
 
@@ -126,7 +123,6 @@ bool vislib::sys::BufferedFile::Open(const wchar_t *filename,
 
     } else {
         return false;
-
     }
 }
 
@@ -134,22 +130,21 @@ bool vislib::sys::BufferedFile::Open(const wchar_t *filename,
 /*
  * vislib::sys::BufferedFile::Read
  */
-vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
-        const vislib::sys::File::FileSize bufSize) {
+vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void* outBuf, const vislib::sys::File::FileSize bufSize) {
     // check for compatible file mode
-    if ((this->fileMode != File::READ_WRITE) 
-            && (this->fileMode != File::READ_ONLY)) {
+    if ((this->fileMode != File::READ_WRITE) && (this->fileMode != File::READ_ONLY)) {
         throw IOException(
 #ifdef _WIN32
-            E_ACCESSDENIED  /* access denied: wrong access mode */
-#else /* _WIN32 */
-            EINVAL          /* invalid file: file not open for read */
-#endif /* _WIN32 */
-            , __FILE__, __LINE__);
+            E_ACCESSDENIED /* access denied: wrong access mode */
+#else                      /* _WIN32 */
+            EINVAL /* invalid file: file not open for read */
+#endif                     /* _WIN32 */
+            ,
+            __FILE__, __LINE__);
     }
 
     File::FileSize amount;
-    unsigned char *outBuffer = static_cast<unsigned char *>(outBuf);
+    unsigned char* outBuffer = static_cast<unsigned char*>(outBuf);
     File::FileSize outBufferSize = bufSize;
 
     // first copy from buffer
@@ -157,8 +152,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
     if (amount > outBufferSize) {
         amount = outBufferSize;
     }
-    memcpy(outBuffer, this->buffer + this->bufferOffset,
-        static_cast<unsigned int>(amount));
+    memcpy(outBuffer, this->buffer + this->bufferOffset, static_cast<unsigned int>(amount));
     this->bufferOffset += amount;
     outBufferSize -= amount;
 
@@ -213,26 +207,24 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
  * vislib::sys::BufferedFile::Seek
  */
 vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(
-        const vislib::sys::File::FileOffset offset,
-        const vislib::sys::File::SeekStartPoint from) {
+    const vislib::sys::File::FileOffset offset, const vislib::sys::File::SeekStartPoint from) {
 
     File::FileSize pos; // absolute file position to seek to
     switch (from) {
-        case File::BEGIN :
-            pos = offset;
-            break;
-        case File::CURRENT :
-            pos = this->Tell() + offset;
-            break;
-        case File::END :
-            pos = this->GetSize() + offset;
-            break;
-        default:
-            throw vislib::IllegalParamException("from", __FILE__, __LINE__);
+    case File::BEGIN:
+        pos = offset;
+        break;
+    case File::CURRENT:
+        pos = this->Tell() + offset;
+        break;
+    case File::END:
+        pos = this->GetSize() + offset;
+        break;
+    default:
+        throw vislib::IllegalParamException("from", __FILE__, __LINE__);
     }
 
-    if ((pos >= this->bufferStart) 
-            && (pos < this->bufferStart + this->validBufferSize)) {
+    if ((pos >= this->bufferStart) && (pos < this->bufferStart + this->validBufferSize)) {
         // we seek inside the buffer
         this->bufferOffset = pos - this->bufferStart;
         return pos;
@@ -253,8 +245,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(
 /*
  * vislib::sys::BufferedFile::SetBufferSize
  */
-void vislib::sys::BufferedFile::SetBufferSize(
-        vislib::sys::File::FileSize newSize) {
+void vislib::sys::BufferedFile::SetBufferSize(vislib::sys::File::FileSize newSize) {
 
     if (newSize < 1) {
         throw vislib::IllegalParamException("newSize", __FILE__, __LINE__);
@@ -264,8 +255,7 @@ void vislib::sys::BufferedFile::SetBufferSize(
     this->resetBuffer();
     delete[] this->buffer;
     this->bufferSize = newSize;
-    this->buffer = new unsigned char[
-        static_cast<unsigned int>(this->bufferSize)];
+    this->buffer = new unsigned char[static_cast<unsigned int>(this->bufferSize)];
 }
 
 
@@ -280,22 +270,21 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Tell(void) const {
 /*
  * vislib::sys::BufferedFile::Write
  */
-vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
-        const vislib::sys::File::FileSize bufSize) {
+vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(
+    const void* buf, const vislib::sys::File::FileSize bufSize) {
     // check for compatible file mode
-    if ((this->fileMode != File::READ_WRITE) 
-            && (this->fileMode != File::WRITE_ONLY)) {
+    if ((this->fileMode != File::READ_WRITE) && (this->fileMode != File::WRITE_ONLY)) {
         throw IOException(
 #ifdef _WIN32
-            E_ACCESSDENIED  /* access denied: wrong access mode */
-#else /* _WIN32 */
-            EINVAL          /* invalid file: file not open for writing */
-#endif /* _WIN32 */
-            , __FILE__, __LINE__);
+            E_ACCESSDENIED /* access denied: wrong access mode */
+#else                      /* _WIN32 */
+            EINVAL /* invalid file: file not open for writing */
+#endif                     /* _WIN32 */
+            ,
+            __FILE__, __LINE__);
     }
 
-    const unsigned char *inBuffer 
-        = static_cast<const unsigned char *>(buf);
+    const unsigned char* inBuffer = static_cast<const unsigned char*>(buf);
     File::FileSize inBufferSize = bufSize;
     File::FileSize amount;
 
@@ -304,8 +293,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
     if (amount > inBufferSize) {
         amount = inBufferSize;
     }
-    memcpy(this->buffer + this->bufferOffset, inBuffer,
-        static_cast<unsigned int>(amount));
+    memcpy(this->buffer + this->bufferOffset, inBuffer, static_cast<unsigned int>(amount));
     inBufferSize -= amount;
     this->bufferOffset += amount;
     if (this->validBufferSize < this->bufferOffset) {
@@ -343,14 +331,12 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
         return written;
     }
 
-    memcpy(this->buffer, inBuffer,
-        static_cast<unsigned int>(inBufferSize));
+    memcpy(this->buffer, inBuffer, static_cast<unsigned int>(inBufferSize));
     this->bufferOffset = inBufferSize;
     this->validBufferSize = inBufferSize;
     this->dirtyBuffer = true;
 
     return amount + inBufferSize;
-
 }
 
 
@@ -358,16 +344,14 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
  * vislib::sys::BufferedFile::BufferedFile copy ctor
  */
 vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
-    throw UnsupportedOperationException("vislib::sys::File::File",
-        __FILE__, __LINE__);
+    throw UnsupportedOperationException("vislib::sys::File::File", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::sys::BufferedFile::operator =
  */
-vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator =(
-        const vislib::sys::BufferedFile& rhs) {
+vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator=(const vislib::sys::BufferedFile& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
@@ -379,8 +363,7 @@ vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator =(
  * vislib::sys::BufferedFile::flush
  */
 void vislib::sys::BufferedFile::flush(bool fileFlush) {
-    if (this->IsOpen() && ((this->fileMode == File::WRITE_ONLY)
-            || (this->fileMode == File::READ_WRITE))) {
+    if (this->IsOpen() && ((this->fileMode == File::WRITE_ONLY) || (this->fileMode == File::READ_WRITE))) {
 
         if ((this->validBufferSize > 0) && this->dirtyBuffer) {
 
@@ -392,13 +375,12 @@ void vislib::sys::BufferedFile::flush(bool fileFlush) {
                 if (w == 0) {
 #ifdef _WIN32
                     throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
-#else /* _WIN32 */
+#else  /* _WIN32 */
                     throw IOException(EIO, __FILE__, __LINE__);
 #endif /* _WIN32 */
                 }
                 r += w;
             }
-
         }
 
         if (fileFlush) {

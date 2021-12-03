@@ -17,12 +17,13 @@ namespace frontend {
 
 class Screenshot_Service final : public AbstractFrontendService {
 public:
-
     struct Config {
         bool show_privacy_note;
     };
 
-    std::string serviceName() const override { return "Screenshot_Service"; }
+    std::string serviceName() const override {
+        return "Screenshot_Service";
+    }
 
     Screenshot_Service();
     ~Screenshot_Service();
@@ -42,23 +43,27 @@ public:
 
     void resetProvidedResources() override;
 
-    void preGraphRender() override;  
+    void preGraphRender() override;
     void postGraphRender() override;
 
-    // from AbstractFrontendService 
-    // you inherit the following functions 
+    // from AbstractFrontendService
+    // you inherit the following functions
     //
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
-    // 
+    //
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    static unsigned char default_alpha_value;
+
 private:
     megamol::frontend_resources::GLScreenshotSource m_frontbufferSource_resource;
-    megamol::frontend_resources::ImageDataToPNGWriter m_toFileWriter_resource;
+    megamol::frontend_resources::ScreenshotImageDataToPNGWriter m_toFileWriter_resource;
 
     std::function<bool(std::filesystem::path const&)> m_frontbufferToPNG_trigger;
+    std::function<bool(megamol::frontend_resources::ImageWrapper const&, std::filesystem::path const&)>
+        m_imagewrapperToPNG_trigger;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;

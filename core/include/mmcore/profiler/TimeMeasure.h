@@ -31,7 +31,6 @@ namespace profiler {
     private:
         std::chrono::steady_clock::time_point m_start;
         std::chrono::steady_clock::time_point m_end;
-        double m_duration;
     };
 
 } // namespace profiler

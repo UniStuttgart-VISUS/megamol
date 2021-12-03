@@ -14,19 +14,21 @@
 
 #include <array>
 #include <random>
+#include <chrono>
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/PerformanceQueryManager.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 #include "SMAAAreaTex.h"
 #include "SMAASearchTex.h"
+
 
 megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_version(0)
@@ -167,67 +169,73 @@ bool megamol::compositing::AntiAliasing::create() {
         m_smaa_temporal_resolving_prgm = std::make_unique<GLSLComputeShader>();
         m_copy_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_fxaa_src;
-        vislib::graphics::gl::ShaderSource compute_smaa_velocity_src;
-        vislib::graphics::gl::ShaderSource compute_smaa_edge_detection_src;
-        vislib::graphics::gl::ShaderSource compute_smaa_blending_weights_src;
-        vislib::graphics::gl::ShaderSource compute_smaa_neighborhood_blending_src;
-        vislib::graphics::gl::ShaderSource compute_smaa_temporal_resolving_src;
-        vislib::graphics::gl::ShaderSource compute_copy_src;
+        vislib_gl::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib_gl::graphics::gl::ShaderSource compute_smaa_velocity_src;
+        vislib_gl::graphics::gl::ShaderSource compute_smaa_edge_detection_src;
+        vislib_gl::graphics::gl::ShaderSource compute_smaa_blending_weights_src;
+        vislib_gl::graphics::gl::ShaderSource compute_smaa_neighborhood_blending_src;
+        vislib_gl::graphics::gl::ShaderSource compute_smaa_temporal_resolving_src;
+        vislib_gl::graphics::gl::ShaderSource compute_copy_src;
 
-        // TODO: look into and use new shaderfactory (see e.g. simplstsphererenderer)
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::copy", compute_copy_src))
+        auto ssf = std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(
+            instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::copy", compute_copy_src))
             return false;
         if (!m_copy_prgm->Compile(compute_copy_src.Code(), compute_copy_src.Count()))
             return false;
         if (!m_copy_prgm->Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src))
+        if (!ssf->MakeShaderSource("Compositing::fxaa", compute_fxaa_src))
             return false;
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count()))
             return false;
         if (!m_fxaa_prgm->Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
+        if (!ssf->MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
             return false;
         if (!m_smaa_velocity_prgm->Compile(compute_smaa_velocity_src.Code(), compute_smaa_velocity_src.Count()))
             return false;
         if (!m_smaa_velocity_prgm->Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
+        if (!ssf->MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
             return false;
-        if (!m_smaa_edge_detection_prgm->Compile(compute_smaa_edge_detection_src.Code(), compute_smaa_edge_detection_src.Count()))
+        if (!m_smaa_edge_detection_prgm->Compile(
+                compute_smaa_edge_detection_src.Code(), compute_smaa_edge_detection_src.Count()))
             return false;
         if (!m_smaa_edge_detection_prgm->Link())
             return false;
-        
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::blendingWeightsCalculationCS", compute_smaa_blending_weights_src))
+
+        if (!ssf->MakeShaderSource(
+                "Compositing::smaa::blendingWeightsCalculationCS", compute_smaa_blending_weights_src))
             return false;
-        if (!m_smaa_blending_weight_calculation_prgm->Compile(compute_smaa_blending_weights_src.Code(), compute_smaa_blending_weights_src.Count()))
+        if (!m_smaa_blending_weight_calculation_prgm->Compile(
+                compute_smaa_blending_weights_src.Code(), compute_smaa_blending_weights_src.Count()))
             return false;
         if (!m_smaa_blending_weight_calculation_prgm->Link())
             return false;
-        
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::neighborhoodBlendingCS", compute_smaa_neighborhood_blending_src))
+
+        if (!ssf->MakeShaderSource("Compositing::smaa::neighborhoodBlendingCS", compute_smaa_neighborhood_blending_src))
             return false;
-        if (!m_smaa_neighborhood_blending_prgm->Compile(compute_smaa_neighborhood_blending_src.Code(), compute_smaa_neighborhood_blending_src.Count()))
+        if (!m_smaa_neighborhood_blending_prgm->Compile(
+                compute_smaa_neighborhood_blending_src.Code(), compute_smaa_neighborhood_blending_src.Count()))
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::temporalResolvingCS", compute_smaa_temporal_resolving_src))
+        if (!ssf->MakeShaderSource("Compositing::smaa::temporalResolvingCS", compute_smaa_temporal_resolving_src))
             return false;
-        if (!m_smaa_temporal_resolving_prgm->Compile(compute_smaa_temporal_resolving_src.Code(), compute_smaa_temporal_resolving_src.Count()))
+        if (!m_smaa_temporal_resolving_prgm->Compile(
+                compute_smaa_temporal_resolving_src.Code(), compute_smaa_temporal_resolving_src.Count()))
             return false;
         if (!m_smaa_temporal_resolving_prgm->Link())
             return false;
         
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -752,14 +760,14 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             ++m_cnt;
             m_totalTimeSpent += (double) (stopTime - startTime) / 1000000.0;
 
-            int numRuns = 1000;
+            std::chrono::steady_clock::time_point tp_start =
+                std::chrono::steady_clock::time_point{std::chrono::nanoseconds(startTime)};
+            std::chrono::steady_clock::time_point tp_end =
+                std::chrono::steady_clock::time_point{std::chrono::nanoseconds(stopTime)};
 
-            if (m_cnt == numRuns) {
-                double avg = m_totalTimeSpent / (double) numRuns;
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Average time spent over the last %i runs: %fms", numRuns, avg);
-                m_cnt = 0;
-                m_totalTimeSpent = 0.0;
-            }
+            std::chrono::duration<double, std::milli> dur_ms = tp_end - tp_start;
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "Time spent for last frame: %fms", dur_ms.count());
 #endif
         }
         // fxaa

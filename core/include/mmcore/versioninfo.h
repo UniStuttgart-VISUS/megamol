@@ -27,7 +27,7 @@ MEGAMOLCORE_API extern char const* MEGAMOL_GIT_HASH;
 
 #define MEGAMOL_CORE_MAJOR_VER (megamol::core::MEGAMOL_VERSION_MAJOR)
 #define MEGAMOL_CORE_MINOR_VER (megamol::core::MEGAMOL_VERSION_MINOR)
-#define MEGAMOL_CORE_COMP_REV  (megamol::core::MEGAMOL_GIT_HASH)
+#define MEGAMOL_CORE_COMP_REV (megamol::core::MEGAMOL_GIT_HASH)
 #define MEGAMOL_CORE_MAJOR_REV ""
 #define MEGAMOL_CORE_MINOR_REV ""
 
@@ -43,9 +43,10 @@ MEGAMOLCORE_API extern char const* MEGAMOL_GIT_HASH;
 #define MEGAMOL_CORE_VERSION MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_COMP_REV
 #define MEGAMOL_CORE_VERSION_STR MEGAMOL_STRINGIZE(MEGAMOL_CORE_VERSION)
 
-#define MEGAMOL_CORE_COPYRIGHT "Copyright (c) 2006 - " MEGAMOL_STRINGIZE(MEGAMOL_CORE_LCYEAR) " by " MEGAMOL_PRODUCT_COMPANY "\n" \
-    "Alle Rechte vorbehalten.\n" \
-    "All rights reserved.\n" MEGAMOL_CORE_DIRTYTEXT
+#define MEGAMOL_CORE_COPYRIGHT                                                                         \
+    "Copyright (c) 2006 - " MEGAMOL_STRINGIZE(MEGAMOL_CORE_LCYEAR) " by " MEGAMOL_PRODUCT_COMPANY "\n" \
+                                                                   "Alle Rechte vorbehalten.\n"        \
+                                                                   "All rights reserved.\n" MEGAMOL_CORE_DIRTYTEXT
 
 #define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core"
 

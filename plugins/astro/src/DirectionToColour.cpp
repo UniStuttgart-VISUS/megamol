@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "DirectionToColour.h"
+#include "stdafx.h"
 
 #include <cassert>
 #include <limits>
@@ -21,31 +21,29 @@
 #include "mmcore/utility/log/Log.h"
 
 
-
 /*
  * megamol::astro::DirectionToColour::DirectionToColour
  */
-megamol::astro::DirectionToColour::DirectionToColour(void) : Module(),
-        frameID(0),
-        hashData((std::numeric_limits<std::size_t>::max)()),
-        hashState((std::numeric_limits<std::size_t>::max)()),
-        paramColour1("colour1", "Sets the base colour for saturation-based colouring."),
-        paramColour2("colour2", "Sets the second colour for two-colour mode."),
-        paramMode("mode", "Changes the colouring mode for mapping direction to colour."),
-        slotInput("input", "Obtains the input particle data."),
-        slotOutput("output", "Output of the coloured data.") {
-    using namespace core::moldyn;
+megamol::astro::DirectionToColour::DirectionToColour(void)
+        : Module()
+        , frameID(0)
+        , hashData((std::numeric_limits<std::size_t>::max)())
+        , hashState((std::numeric_limits<std::size_t>::max)())
+        , paramColour1("colour1", "Sets the base colour for saturation-based colouring.")
+        , paramColour2("colour2", "Sets the second colour for two-colour mode.")
+        , paramMode("mode", "Changes the colouring mode for mapping direction to colour.")
+        , slotInput("input", "Obtains the input particle data.")
+        , slotOutput("output", "Output of the coloured data.") {
+    using namespace geocalls;
 
     /* Configure and publish the slots. */
     this->slotInput.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->slotInput);
 
-    this->slotOutput.SetCallback(MultiParticleDataCall::ClassName(),
-        MultiParticleDataCall::FunctionName(0),
-        &DirectionToColour::getData);
-    this->slotOutput.SetCallback(MultiParticleDataCall::ClassName(),
-        MultiParticleDataCall::FunctionName(1),
-        &DirectionToColour::getExtent);
+    this->slotOutput.SetCallback(
+        MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(0), &DirectionToColour::getData);
+    this->slotOutput.SetCallback(
+        MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &DirectionToColour::getExtent);
     this->MakeSlotAvailable(&this->slotOutput);
 
     /* Configure and publish parameters. */
@@ -89,18 +87,17 @@ bool megamol::astro::DirectionToColour::create(void) {
 /*
  * megamol::astro::DirectionToColour::release
  */
-void megamol::astro::DirectionToColour::release(void) { }
+void megamol::astro::DirectionToColour::release(void) {}
 
 
 /*
  * megamol::astro::DirectionToColour::angle
  */
-float megamol::astro::DirectionToColour::angle(const glm::vec2& v1,
-        const glm::vec2& v2) {
+float megamol::astro::DirectionToColour::angle(const glm::vec2& v1, const glm::vec2& v2) {
     // Non-shitty version of angle between two vectors from
     // https://math.stackexchange.com/questions/878785/how-to-find-an-angle-in-range0-360-between-2-vectors
     auto dot = glm::dot(v1, v2);
-    auto det = v1.x * v2.y - v1.y * v2.x;   // cross for vec2 seems to be missing.
+    auto det = v1.x * v2.y - v1.y * v2.x; // cross for vec2 seems to be missing.
     return std::atan2(det, dot);
 }
 
@@ -108,19 +105,19 @@ float megamol::astro::DirectionToColour::angle(const glm::vec2& v1,
 /*
  * megamol::astro::DirectionToColour::getDirections
  */
-const std::uint8_t *megamol::astro::DirectionToColour::getDirections(
-        const core::moldyn::SimpleSphericalParticles& particles) {
-    using core::moldyn::SimpleSphericalParticles;
+const std::uint8_t* megamol::astro::DirectionToColour::getDirections(
+    const geocalls::SimpleSphericalParticles& particles) {
+    using geocalls::SimpleSphericalParticles;
     using megamol::core::utility::log::Log;
 
     switch (particles.GetDirDataType()) {
-        case SimpleSphericalParticles::DIRDATA_FLOAT_XYZ:
-            return static_cast<const std::uint8_t *>(particles.GetDirData());
+    case SimpleSphericalParticles::DIRDATA_FLOAT_XYZ:
+        return static_cast<const std::uint8_t*>(particles.GetDirData());
 
-        default:
-            Log::DefaultLog.WriteWarn("The input particles do not have "
-                "directional information.");
-            return nullptr;
+    default:
+        Log::DefaultLog.WriteWarn("The input particles do not have "
+                                  "directional information.");
+        return nullptr;
     }
 }
 
@@ -128,8 +125,7 @@ const std::uint8_t *megamol::astro::DirectionToColour::getDirections(
 /*
  * megamol::astro::DirectionToColour::hsl2Rgb
  */
-void megamol::astro::DirectionToColour::hsl2Rgb(float *dst, const float h,
-        const float s, const float l) {
+void megamol::astro::DirectionToColour::hsl2Rgb(float* dst, const float h, const float s, const float l) {
     assert(dst != nullptr);
     auto a = s * (std::min)(l, 1.0f - l);
     auto f = [a, h, l](const int n) {
@@ -146,17 +142,15 @@ void megamol::astro::DirectionToColour::hsl2Rgb(float *dst, const float h,
 /*
  * megamol::astro::DirectionToColour::makeComplementaryColouring
  */
-std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring(
-        const std::uint8_t *directions, const std::uint64_t cntParticles,
-        const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
-        const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1,
-        const glm::vec3& z2, const bool mix) {
+std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring(const std::uint8_t* directions,
+    const std::uint64_t cntParticles, const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
+    const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1, const glm::vec3& z2, const bool mix) {
     assert(directions != nullptr);
 
     std::vector<float> retval(3 * cntParticles);
 
     for (UINT64 i = 0; i < cntParticles; ++i, directions += stride) {
-        auto ptr = reinterpret_cast<const float *>(directions);
+        auto ptr = reinterpret_cast<const float*>(directions);
         glm::vec3 dir(ptr[0], ptr[1], ptr[2]);
         auto len = glm::length(dir);
 
@@ -182,11 +176,9 @@ std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring
                 auto y = glm::mix(y1, y2, dir.y);
                 auto z = glm::mix(z1, z2, dir.z);
                 hsl = dir.x * +dir.y * y + dir.z * z;
-
             }
 
-            DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hsl.x, hsl.y,
-                hsl.z);
+            DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hsl.x, hsl.y, hsl.z);
 
         } else {
             /* Zero-length vectors are black. */
@@ -201,11 +193,9 @@ std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring
 /*
  * megamol::astro::DirectionToColour::makeHslColouring
  */
-std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
-        const std::uint8_t *directions, const std::uint64_t cntParticles,
-        const std::size_t stride, const Mode mode,
-        const std::array<float, 4> & baseColour1,
-        const std::array<float, 4> & baseColour2) {
+std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(const std::uint8_t* directions,
+    const std::uint64_t cntParticles, const std::size_t stride, const Mode mode,
+    const std::array<float, 4>& baseColour1, const std::array<float, 4>& baseColour2) {
     assert(directions != nullptr);
     static constexpr const auto PI = glm::pi<float>();
     static constexpr const auto SCALE = 0.8f;
@@ -216,7 +206,7 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
     std::vector<float> retval(3 * cntParticles);
 
     for (UINT64 i = 0; i < cntParticles; ++i, directions += stride) {
-        auto ptr = reinterpret_cast<const float *>(directions);
+        auto ptr = reinterpret_cast<const float*>(directions);
         glm::vec3 dir(ptr[0], ptr[1], ptr[2]);
         auto len = glm::length(dir);
 
@@ -244,25 +234,22 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
             assert(hue >= 0.0f);
 
             switch (mode) {
-                case Mode::SaturationLightness:
-                    hue /= (2.0f * PI);
-                    assert(hue <= 2.0f * PI);
-                    DirectionToColour::hsl2Rgb(retval.data() + 3 * i,
-                        BASE_HUE1, hue, lightness);
-                    break;
+            case Mode::SaturationLightness:
+                hue /= (2.0f * PI);
+                assert(hue <= 2.0f * PI);
+                DirectionToColour::hsl2Rgb(retval.data() + 3 * i, BASE_HUE1, hue, lightness);
+                break;
 
-                case Mode::HuesLightness:
-                    hue /= (2.0f * PI);
-                    hue = glm::mix(BASE_HUE1, BASE_HUE2, hue);
-                    DirectionToColour::hsl2Rgb(retval.data() + 3 * i,
-                        hue, 1.0f, lightness);
-                    break;
+            case Mode::HuesLightness:
+                hue /= (2.0f * PI);
+                hue = glm::mix(BASE_HUE1, BASE_HUE2, hue);
+                DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hue, 1.0f, lightness);
+                break;
 
-                default:
-                    hue = glm::degrees(hue);
-                    DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hue, 1.0f,
-                        lightness);
-                    break;
+            default:
+                hue = glm::degrees(hue);
+                DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hue, 1.0f, lightness);
+                break;
             }
 
         } else {
@@ -278,8 +265,7 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
 /*
  * megamol::astro::DirectionToColour::rgb2Hsl
  */
-std::array<float, 3> megamol::astro::DirectionToColour::rgb2Hsl(const float r,
-        const float g, const float b) {
+std::array<float, 3> megamol::astro::DirectionToColour::rgb2Hsl(const float r, const float g, const float b) {
     const auto minRgb = (std::min)((std::min)(r, g), b);
     const auto maxRgb = (std::max)((std::max)(r, g), b);
     const auto delta = maxRgb - minRgb;
@@ -291,9 +277,7 @@ std::array<float, 3> megamol::astro::DirectionToColour::rgb2Hsl(const float r,
         retval[0] = retval[1] = 0.0f;
 
     } else {
-        retval[1] = (retval[2] <= 0.5)
-            ? (delta / (maxRgb + minRgb))
-            : (delta / (2 - maxRgb - minRgb));
+        retval[1] = (retval[2] <= 0.5) ? (delta / (maxRgb + minRgb)) : (delta / (2 - maxRgb - minRgb));
 
         float hue;
 
@@ -323,47 +307,40 @@ std::array<float, 3> megamol::astro::DirectionToColour::rgb2Hsl(const float r,
  * megamol::astro::DirectionToColour::getData
  */
 bool megamol::astro::DirectionToColour::getData(core::Call& call) {
-    using core::moldyn::MultiParticleDataCall;
-    using core::moldyn::SimpleSphericalParticles;
     using core::param::ColorParam;
     using core::param::EnumParam;
+    using geocalls::MultiParticleDataCall;
+    using geocalls::SimpleSphericalParticles;
     using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();
-    auto dst = dynamic_cast<MultiParticleDataCall *>(&call);
-    const auto isLocalChange = this->paramColour1.IsDirty()
-        || this->paramColour2.IsDirty()
-        || this->paramMode.IsDirty();
+    auto dst = dynamic_cast<MultiParticleDataCall*>(&call);
+    const auto isLocalChange =
+        this->paramColour1.IsDirty() || this->paramColour2.IsDirty() || this->paramMode.IsDirty();
 
     /* Sanity checks. */
     if (src == nullptr) {
-        Log::DefaultLog.WriteError("The input slot of %hs is invalid.",
-            DirectionToColour::ClassName());
+        Log::DefaultLog.WriteError("The input slot of %hs is invalid.", DirectionToColour::ClassName());
         return false;
     }
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError("The output slot of %hs is invalid.",
-            DirectionToColour::ClassName());
+        Log::DefaultLog.WriteError("The output slot of %hs is invalid.", DirectionToColour::ClassName());
         return false;
     }
 
     /* Request the source data. */
     *src = *dst;
     if (!(*src)(0)) {
-        Log::DefaultLog.WriteError("The call to %hs failed in %hs.",
-            MultiParticleDataCall::FunctionName(0),
+        Log::DefaultLog.WriteError("The call to %hs failed in %hs.", MultiParticleDataCall::FunctionName(0),
             MultiParticleDataCall::ClassName());
         return false;
     }
     *dst = *src;
 
     /* Generate the colours. */
-    if (isLocalChange
-            || (this->hashData != src->DataHash())
-            || (this->frameID != src->FrameID())) {
-        const auto mode = static_cast<Mode>(this->paramMode.Param<EnumParam>()
-            ->Value());
+    if (isLocalChange || (this->hashData != src->DataHash()) || (this->frameID != src->FrameID())) {
+        const auto mode = static_cast<Mode>(this->paramMode.Param<EnumParam>()->Value());
         this->colours.clear();
 
         for (UINT i = 0; i < dst->GetParticleListCount(); ++i) {
@@ -372,60 +349,42 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
 
             if (directions != nullptr) {
                 switch (mode) {
-                    case Mode::HelmholtzComplementary:
-                    case Mode::MaxHelmholtzComplementary:
-                        this->colours.emplace_back(
-                            DirectionToColour::makeComplementaryColouring(
-                                directions,
-                                particles.GetCount(),
-                                particles.GetDirDataStride(),
-                                glm::vec3(0.0f, 1.0f, 0.5f),    // red
-                                glm::vec3(180.0f, 1.0f, 0.5f),  // cyan
-                                glm::vec3(120.0f, 1.0f, 0.5f),  // green
-                                glm::vec3(300.0f, 1.0f, 0.5f),  // magenta
-                                glm::vec3(240.0f, 1.0f, 0.5f),  // blue
-                                glm::vec3(60.0f, 1.0f, 0.5f),   // yellow
-                                mode == Mode::HelmholtzComplementary));
-                        break;
+                case Mode::HelmholtzComplementary:
+                case Mode::MaxHelmholtzComplementary:
+                    this->colours.emplace_back(DirectionToColour::makeComplementaryColouring(directions,
+                        particles.GetCount(), particles.GetDirDataStride(), glm::vec3(0.0f, 1.0f, 0.5f), // red
+                        glm::vec3(180.0f, 1.0f, 0.5f),                                                   // cyan
+                        glm::vec3(120.0f, 1.0f, 0.5f),                                                   // green
+                        glm::vec3(300.0f, 1.0f, 0.5f),                                                   // magenta
+                        glm::vec3(240.0f, 1.0f, 0.5f),                                                   // blue
+                        glm::vec3(60.0f, 1.0f, 0.5f),                                                    // yellow
+                        mode == Mode::HelmholtzComplementary));
+                    break;
 
-                    case Mode::IttenComplementary:
-                    case Mode::MaxIttenComplementary:
-                        this->colours.emplace_back(
-                            DirectionToColour::makeComplementaryColouring(
-                                directions,
-                                particles.GetCount(),
-                                particles.GetDirDataStride(),
-                                glm::vec3(0.0f, 1.0f, 0.5f),    // red
-                                glm::vec3(120.0f, 1.0f, 0.5f),  // green
-                                glm::vec3(240, 1.0f, 0.5f),     // blue
-                                glm::vec3(30.0f, 1.0f, 0.5f),   // orange
-                                glm::vec3(60.0f, 1.0f, 0.5f),   // yellow
-                                glm::vec3(270.0f, 1.0f, 0.5f),  // violet
-                                mode == Mode::IttenComplementary));
-                        break;
+                case Mode::IttenComplementary:
+                case Mode::MaxIttenComplementary:
+                    this->colours.emplace_back(DirectionToColour::makeComplementaryColouring(directions,
+                        particles.GetCount(), particles.GetDirDataStride(), glm::vec3(0.0f, 1.0f, 0.5f), // red
+                        glm::vec3(120.0f, 1.0f, 0.5f),                                                   // green
+                        glm::vec3(240, 1.0f, 0.5f),                                                      // blue
+                        glm::vec3(30.0f, 1.0f, 0.5f),                                                    // orange
+                        glm::vec3(60.0f, 1.0f, 0.5f),                                                    // yellow
+                        glm::vec3(270.0f, 1.0f, 0.5f),                                                   // violet
+                        mode == Mode::IttenComplementary));
+                    break;
 
-                    case Mode::SaturationLightness:
-                        this->colours.emplace_back(
-                            DirectionToColour::makeHslColouring(
-                                directions,
-                                particles.GetCount(),
-                                particles.GetDirDataStride(),
-                                mode,
-                                this->paramColour1.Param<ColorParam>()->Value(),
-                                this->paramColour2.Param<ColorParam>()->Value()));
-                        break;
+                case Mode::SaturationLightness:
+                    this->colours.emplace_back(DirectionToColour::makeHslColouring(directions, particles.GetCount(),
+                        particles.GetDirDataStride(), mode, this->paramColour1.Param<ColorParam>()->Value(),
+                        this->paramColour2.Param<ColorParam>()->Value()));
+                    break;
 
-                    case Mode::Hsl:
-                    default:
-                        this->colours.emplace_back(
-                            DirectionToColour::makeHslColouring(
-                                directions,
-                                particles.GetCount(),
-                                particles.GetDirDataStride(),
-                                mode,
-                                this->paramColour1.Param<ColorParam>()->Value(),
-                                this->paramColour2.Param<ColorParam>()->Value()));
-                        break;
+                case Mode::Hsl:
+                default:
+                    this->colours.emplace_back(DirectionToColour::makeHslColouring(directions, particles.GetCount(),
+                        particles.GetDirDataStride(), mode, this->paramColour1.Param<ColorParam>()->Value(),
+                        this->paramColour2.Param<ColorParam>()->Value()));
+                    break;
                 }
 
             } else {
@@ -451,8 +410,7 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
 
         if (!this->colours[i].empty()) {
             particles.SetColourData(
-                SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB,
-                this->colours[i].data());
+                SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB, this->colours[i].data());
         }
     }
 
@@ -466,22 +424,20 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
  * megamol::astro::DirectionToColour::getExtent
  */
 bool megamol::astro::DirectionToColour::getExtent(core::Call& call) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     using megamol::core::utility::log::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();
-    auto dst = dynamic_cast<MultiParticleDataCall *>(&call);
+    auto dst = dynamic_cast<MultiParticleDataCall*>(&call);
 
     /* Sanity checks. */
     if (src == nullptr) {
-        Log::DefaultLog.WriteError("The input slot of %hs is invalid.",
-            DirectionToColour::ClassName());
+        Log::DefaultLog.WriteError("The input slot of %hs is invalid.", DirectionToColour::ClassName());
         return false;
     }
 
     if (dst == nullptr) {
-        Log::DefaultLog.WriteError("The output slot of %hs is invalid.",
-            DirectionToColour::ClassName());
+        Log::DefaultLog.WriteError("The output slot of %hs is invalid.", DirectionToColour::ClassName());
         return false;
     }
 

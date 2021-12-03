@@ -11,145 +11,140 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "vislib/Array.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/Cuboid.h"
+#include "protein/SphereDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "SphereDataCall.h"
+#include "vislib/Array.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 
 namespace megamol {
 namespace protein {
 
+/**
+ * Data source for PDB files
+ */
+
+class CoarseGrainDataLoader : public megamol::core::Module {
+public:
+    /** Ctor */
+    CoarseGrainDataLoader(void);
+
+    /** Dtor */
+    virtual ~CoarseGrainDataLoader(void);
+
     /**
-	 * Data source for PDB files
-	 */
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "CoarseGrainDataLoader";
+    }
 
-	class CoarseGrainDataLoader : public megamol::core::Module
-	{
-	public:
-		
-		/** Ctor */
-		CoarseGrainDataLoader(void);
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Offers protein data.";
+    }
 
-		/** Dtor */
-		virtual ~CoarseGrainDataLoader(void);
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-		/**
-		 * Answer the name of this module.
-		 *
-		 * @return The name of this module.
-		 */
-		static const char *ClassName(void)  {
-			return "CoarseGrainDataLoader";
-		}
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-		/**
-		 * Answer a human readable description of this module.
-		 *
-		 * @return A human readable description of this module.
-		 */
-		static const char *Description(void) {
-			return "Offers protein data.";
-		}
+    /**
+     * Call callback to get the data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getData(core::Call& call);
 
-		/**
-		 * Answers whether this module is available on the current system.
-		 *
-		 * @return 'true' if the module is available, 'false' otherwise.
-		 */
-		static bool IsAvailable(void) {
-			return true;
-		}
+    /**
+     * Call callback to get the extent of the data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getExtent(core::Call& call);
 
-	protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-		/**
-		 * Implementation of 'Create'.
-		 *
-		 * @return 'true' on success, 'false' otherwise.
-		 */
-		virtual bool create(void);
+private:
+    /**
+     * Loads a PDB file.
+     *
+     * @param filename The path to the file to load.
+     */
+    void loadFile(const vislib::TString& filename);
 
-        /**
-         * Call callback to get the data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getData( core::Call& call);
+    /**
+     * Parse one entry.
+     *
+     * @param entry The atom entry string.
+     * @param idx   The number of the current atom.
+     * @param frame The number of the current frame.
+     */
+    void parseEntry(vislib::StringA& entry, unsigned int idx, unsigned int frame);
 
-        /**
-         * Call callback to get the extent of the data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getExtent( core::Call& call);
+    // -------------------- variables --------------------
 
-		/**
-		 * Implementation of 'Release'.
-		 */
-		virtual void release(void);
+    /** The file name slot */
+    core::param::ParamSlot filenameSlot;
+    /** The data callee slot */
+    core::CalleeSlot dataOutSlot;
 
-	private:
+    /** The number of frames */
+    unsigned int frameCount;
 
-        /**
-         * Loads a PDB file.
-         *
-         * @param filename The path to the file to load.
-         */
-        void loadFile( const vislib::TString& filename);
+    /** The number of spheres per frame */
+    unsigned int sphereCount;
 
-        /**
-         * Parse one entry.
-         *
-         * @param entry The atom entry string.
-         * @param idx   The number of the current atom.
-         * @param frame The number of the current frame.
-         */
-        void parseEntry( vislib::StringA &entry, unsigned int idx, unsigned int frame);
+    /** The data */
+    vislib::Array<vislib::Array<float>> data;
 
-        // -------------------- variables --------------------
+    /** The sphere charge */
+    vislib::Array<vislib::Array<float>> sphereCharge;
+    /** The maximum charge in the trajectory. */
+    float maxCharge;
+    /** The minimum charge in the trajectory. */
+    float minCharge;
 
-        /** The file name slot */
-        core::param::ParamSlot filenameSlot;
-        /** The data callee slot */
-        core::CalleeSlot dataOutSlot;
+    /** The sphere colors */
+    vislib::Array<unsigned char> sphereColor;
 
-        /** The number of frames */
-        unsigned int frameCount;
+    /** The sphere types */
+    vislib::Array<unsigned int> sphereType;
 
-        /** The number of spheres per frame */
-        unsigned int sphereCount;
+    /** The bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-        /** The data */
-        vislib::Array<vislib::Array<float> > data;
-
-        /** The sphere charge */
-        vislib::Array<vislib::Array<float> > sphereCharge;
-        /** The maximum charge in the trajectory. */
-        float maxCharge;
-        /** The minimum charge in the trajectory. */
-        float minCharge;
-
-        /** The sphere colors */
-        vislib::Array<unsigned char> sphereColor;
-
-        /** The sphere types */
-        vislib::Array<unsigned int> sphereType;
-
-        /** The bounding box */
-        vislib::math::Cuboid<float> bbox;
-
-        /** The data hash */
-        SIZE_T datahash;
-
-	};
+    /** The data hash */
+    SIZE_T datahash;
+};
 
 
 } /* end namespace protein */

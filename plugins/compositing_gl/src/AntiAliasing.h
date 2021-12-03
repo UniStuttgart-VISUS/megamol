@@ -13,7 +13,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
@@ -127,7 +127,7 @@ private:
     /**
     * Function for launching compute shaders
     */
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     bool visibilityCallback(core::param::ParamSlot& slot);
     bool setSettingsCallback(core::param::ParamSlot& slot);
