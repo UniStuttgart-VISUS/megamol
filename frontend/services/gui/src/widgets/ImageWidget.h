@@ -102,7 +102,6 @@ private:
     }
 
 #endif
-
 };
 
 
