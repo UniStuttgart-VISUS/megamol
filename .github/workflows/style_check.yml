@@ -1,0 +1,32 @@
+name: Style-Check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  style_check:
+    name: Style-Check
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run clang-format
+        run: .ci/run_clang_format.sh
+      - name: Check diff
+        run: |
+          git diff --exit-code --color
+      - name: Comment
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'ClangFormat found [formatting issues](https://github.com/'
+                    + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')! '
+                    + 'Comment `/format`, to automatically commit the suggested changes.'
+            })

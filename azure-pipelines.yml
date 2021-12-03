@@ -163,34 +163,3 @@ jobs:
     condition: succeededOrFailed()
     inputs:
       filePath: '.ci/check_files.sh'
-  - task: Bash@3
-    displayName: 'Run Clang-Format'
-    condition: succeededOrFailed()
-    inputs:
-      targetType: 'inline'
-      script: |
-        clang-format-12 --version
-        find . -iname "*.cpp" -o -iname "*.h" -o -iname "*.hpp" -o -iname "*.inl" | grep -Ev '^\./(externals|utils)/' | grep -Ev '^\./plugins/.*(3rd|external)/' | xargs clang-format-12 -i
-        git diff --exit-code
-
-# Disabled for now, because clang format version is wrong
-#- job: ClangFormatCheckWindows
-#  displayName: 'ClangFormat Check (Windows)'
-#  pool:
-#    name: 'hardware'
-#    demands:
-#      - Agent.OS -equals Windows_NT
-#      - cmake
-#      - VisualStudio_16.0
-#
-#  steps:
-#    - task: PowerShell@2
-#      displayName: 'Run Clang-Format'
-#      inputs:
-#        targetType: 'inline'
-#        script: |
-#          $Env:Path = "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer;$Env:Path"
-#          $vspath = vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-#          $vspath = join-path $vspath 'VC\Tools\Llvm\x64\bin'
-#          $Env:Path = "$vspath;$Env:Path"
-#          clang-format.exe --version
