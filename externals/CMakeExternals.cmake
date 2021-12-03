@@ -159,7 +159,7 @@ function(require_external NAME)
     set(TBB_ARGS "-DTBB_TEST=OFF")
 
     if (WIN32)
-      set(TBB_LIB "lib/tbb12.lib")
+      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
       set(TBB_DLL "bin/tbb12.dll")
 
       add_external_project(tbb SHARED
@@ -169,12 +169,13 @@ function(require_external NAME)
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}" "<INSTALL_DIR>/${TBB_LIB}"
       )
       add_external_library(tbb
+        PROJECT tbb
         LIBRARY "${TBB_DLL}"
         IMPORT_LIBRARY "${TBB_LIB}"
       )
     else()
       # todo this is surely not portable, as always
-      set(TBB_LIB "lib64/libtbb.so.12.3")
+      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12.3")
 
       add_external_project(tbb SHARED
         GIT_REPOSITORY ${TBB_REPO}
@@ -183,6 +184,7 @@ function(require_external NAME)
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_LIB}"
       )
       add_external_library(tbb
+        PROJECT tbb
         LIBRARY "${TBB_LIB}"
       )
     endif()
