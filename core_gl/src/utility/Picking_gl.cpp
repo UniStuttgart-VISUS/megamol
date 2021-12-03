@@ -84,8 +84,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
             return false;
         }
         if (this->shader == nullptr) {
-            log::Log::DefaultLog.WriteError("[GL Picking Buffer] Enable to pinter to shader. [%s, %s, line %d]\n ",
-                __FILE__, __FUNCTION__, __LINE__);
+            log::Log::DefaultLog.WriteError(
+                "[GL Picking Buffer] Invalid shader pointer. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
