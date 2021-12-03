@@ -158,62 +158,6 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW& outName) {
 }
 
 
-///*
-// * vislib::sys::SystemInformation::DisplayDeviceCount
-// */
-//DWORD vislib::sys::SystemInformation::DisplayDeviceCount(void) {
-//#ifdef _WIN32
-//    DISPLAY_DEVICE dpyDev;
-//    dpyDev.cb = sizeof(DISPLAY_DEVICE);
-//    DWORD retval = 0;
-//
-//    while (::EnumDisplayDevices(NULL, retval, &dpyDev, 0)) {
-//        retval++;
-//    }
-//
-//    return retval;
-//
-//#else /* _WIN32 */
-//    return 1;
-//#endif /* _WIN32 */
-//}
-
-
-/*
- * vislib::sys::SystemInformation::MonitorRects
- */
-DWORD vislib::sys::SystemInformation::MonitorRects(MonitorRectArray& outMonitorRects) {
-    outMonitorRects.Clear();
-
-#ifdef _WIN32
-    if (!::EnumDisplayMonitors(
-            NULL, NULL, SystemInformation::monitorEnumProc, reinterpret_cast<LPARAM>(&outMonitorRects))) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-#else /* _WIN32 */
-    int cntScreens = 0;  // # of attached screens.
-    Display* dpy = NULL; // The display.
-    StringA errorDesc;   // For formatting an error message.
-
-    if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        errorDesc.Format("Could not open display \"%s\".", ::XDisplayName(NULL));
-        throw Exception(errorDesc, __FILE__, __LINE__);
-    }
-
-    cntScreens = ScreenCount(dpy);
-    for (int i = 0; i < cntScreens; i++) {
-        outMonitorRects.Append(SystemInformation::getRootWndRect(dpy, i));
-    }
-
-    ::XCloseDisplay(dpy);
-
-#endif /* _WIN32 */
-
-    return static_cast<DWORD>(outMonitorRects.Count());
-}
-
-
 /*
  * vislib::sys::SystemInformation::PageSize
  */
@@ -282,40 +226,6 @@ UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
     return static_cast<UINT64>(info.totalram) * static_cast<UINT64>(info.mem_unit);
 
 #endif /* _WIN32 */
-}
-
-
-/*
- * vislib::sys::SystemInformation::PrimaryMonitorRect
- */
-vislib::sys::SystemInformation::MonitorRect vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
-    MonitorRect retval;
-
-#ifdef _WIN32
-    if (!::EnumDisplayMonitors(
-            NULL, NULL, SystemInformation::findPrimaryMonitorProc, reinterpret_cast<LPARAM>(&retval))) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-    if (retval.IsEmpty()) {
-        /* Enumeration was not successful in finding primary display. */
-        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
-    }
-
-#else  /* _WIN32 */
-    Display* dpy = NULL;
-    StringA errorDesc;
-
-    if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        errorDesc.Format("Could not open display \"%s\".", ::XDisplayName(NULL));
-        throw Exception(errorDesc, __FILE__, __LINE__);
-    }
-
-    retval = SystemInformation::getRootWndRect(dpy, DefaultScreen(dpy));
-    ::XCloseDisplay(dpy);
-#endif /* _WIN32 */
-
-    return retval;
 }
 
 
@@ -585,43 +495,6 @@ void vislib::sys::SystemInformation::UserName(vislib::StringW& outName) {
 }
 
 
-/*
- * vislib::sys::SystemInformation::VirtualScreen
- */
-vislib::sys::SystemInformation::MonitorRect vislib::sys::SystemInformation::VirtualScreen(void) {
-    MonitorRect retval(LONG_MAX, LONG_MAX, LONG_MIN, LONG_MIN);
-
-#ifdef _WIN32
-    if (!::EnumDisplayMonitors(
-            NULL, NULL, SystemInformation::calcVirtualScreenProc, reinterpret_cast<LPARAM>(&retval))) {
-        throw SystemException(__FILE__, __LINE__);
-    }
-
-#else  /* _WIN32 */
-    MonitorRectArray monitors;
-    SystemInformation::MonitorRects(monitors);
-
-    for (SIZE_T i = 0; i < monitors.Count(); i++) {
-        const MonitorRect& monitor = monitors[i];
-        if (monitor.Left() < retval.Left()) {
-            retval.SetLeft(monitor.Left());
-        }
-        if (monitor.Bottom() < retval.Bottom()) {
-            retval.SetBottom(monitor.Bottom());
-        }
-        if (monitor.Right() > retval.Right()) {
-            retval.SetRight(monitor.Right());
-        }
-        if (monitor.Top() > retval.Top()) {
-            retval.SetTop(monitor.Top());
-        }
-    }
-#endif /* _WIN32 */
-
-    return retval;
-}
-
-
 #ifdef _WIN32
 /*
  * vislib::sys::SystemInformation::calcVirtualScreenProc
@@ -646,23 +519,6 @@ BOOL CALLBACK vislib::sys::SystemInformation::calcVirtualScreenProc(
     return TRUE;
 }
 #endif /* _WIN32 */
-
-
-#ifndef _WIN32
-/*
- * vislib:sys::SystemInformation::getRootWndRect
- */
-vislib::sys::SystemInformation::MonitorRect vislib::sys::SystemInformation::getRootWndRect(Display* dpy, int screen) {
-    XWindowAttributes attribs; // Attributes of screen root window.
-    Window wnd;                // The per-screen root window.
-
-    wnd = RootWindow(dpy, screen);
-    ::XGetWindowAttributes(dpy, wnd, &attribs);
-    // TODO: Error handling.
-
-    return MonitorRect(attribs.x, attribs.y, attribs.width, attribs.height);
-}
-#endif /* !_WIN32 */
 
 
 #ifdef _WIN32

@@ -16,8 +16,8 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 #include "cinematic/CallKeyframeKeeper.h"
-#include "cinematic/CinematicUtils.h"
 #include "cinematic/Keyframe.h"
+#include "cinematic_gl/CinematicUtils.h"
 
 
 namespace megamol {
@@ -136,7 +136,7 @@ private:
     enum ActiveParam : size_t { SIMULATION_TIME };
 
     std::array<AxisData, Axis::COUNT> axes;
-    cinematic::CinematicUtils utils;
+    CinematicUtils utils;
     GLuint texture_id;
     ActiveParam yAxisParam;
     cinematic::Keyframe dragDropKeyframe;

@@ -16,10 +16,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/Texture2D.hpp>
-
-#include "glowl/FramebufferObject.hpp"
 
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/FileUtils.h"
@@ -27,7 +26,7 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // #### Utility vector conversion functions ############################ //
 
@@ -228,4 +227,4 @@ private:
     glm::vec3 arbitraryPerpendicular(glm::vec3 in);
 };
 
-} // namespace megamol::core::utility
+} // namespace megamol::core_gl::utility

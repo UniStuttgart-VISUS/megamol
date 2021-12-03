@@ -47,6 +47,8 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
     const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
 
+    config.megamol_executable_directory = getExecutableDirectory().u8string();
+
     // config files are already checked to exist in file system
     config.configuration_files = extract_config_file_paths(argc, argv);
 
@@ -96,6 +98,7 @@ static std::string project_files_option = "project-files";
 static std::string host_option = "host";
 static std::string opengl_context_option = "opengl";
 static std::string khrdebug_option = "khrdebug";
+static std::string disable_opengl_option = "nogl";
 static std::string vsync_option = "vsync";
 static std::string window_option = "w,window";
 static std::string fullscreen_option = "f,fullscreen";
@@ -369,7 +372,13 @@ static void vsync_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
-
+static void no_opengl_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    // User cannot overwrite default value when there is no openGL present
+#ifdef WITH_GL
+    config.no_opengl = parsed_options[option_name].as<bool>();
+#endif
+};
 static void fullscreen_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
@@ -483,6 +492,8 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<std::string>(), opengl_context_handler},
         {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
         {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
+        {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
+            no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
             cxxopts::value<std::string>(), window_handler},
         {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
@@ -610,6 +621,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
     using megamol::frontend_resources::LuaCallbacksCollection;
     using Error = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
     using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
 
 #define sane(s)                                                  \
     if (s.empty() || s.find_first_of(" =") != std::string::npos) \
@@ -699,6 +711,10 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
 #undef sane
 #undef file_exists
 #undef add_cli
+
+    lua_config_callbacks.add<StringResult>("mmGetMegaMolExecutableDirectory",
+        "()\n\tReturns the directory of the running MegaMol executable.",
+        {[&]() { return StringResult{config.megamol_executable_directory}; }});
 
     lua_config_callbacks.add<VoidResult, std::string>("mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",

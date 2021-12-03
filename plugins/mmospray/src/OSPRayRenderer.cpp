@@ -142,7 +142,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     Camera cam = cr.GetCamera();
 
     // check data and camera hash
-    if (_cam.get<Camera::Pose>() == cam.get<Camera::Pose>()) {
+    if (_cam == cam) {
         _cam_has_changed = false;
     } else {
         _cam_has_changed = true;

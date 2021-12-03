@@ -16,7 +16,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
 using namespace megamol;
 
@@ -29,7 +28,6 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
         , translateSlot("translation", "Translates the particles in x, y, z direction")
         , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
         , scaleSlot("scale", "Scales the particle data")
-        , getTFSlot("gettransferfunction", "Connects to the transfer function module")
         , finalData(NULL) {
     this->translateSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0, 0, 0)));
     this->MakeSlotAvailable(&this->translateSlot);
@@ -41,9 +39,6 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
 
     this->scaleSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->MakeSlotAvailable(&this->scaleSlot);
-
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
-    this->MakeSlotAvailable(&this->getTFSlot);
 }
 
 
@@ -223,46 +218,4 @@ bool datatools::ParticleTranslateRotateScale::manipulateExtent(
     }
 
     return true;
-}
-
-
-void datatools::ParticleTranslateRotateScale::colorTransferGray(geocalls::MultiParticleDataCall::Particles& p,
-    float const* transferTable, unsigned int tableSize, std::vector<float>& rgbaArray) {
-
-    auto const& parStore = p.GetParticleStore();
-    auto const& iAcc = parStore.GetCRAcc();
-
-    std::vector<float> grayArray(p.GetCount());
-    for (size_t i = 0; i < p.GetCount(); i++) {
-        grayArray[i] = iAcc->Get_f(i);
-    }
-
-    float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
-    float gray_min = *std::min_element(grayArray.begin(), grayArray.end());
-
-    for (auto& gray : grayArray) {
-        float scaled_gray;
-        if ((gray_max - gray_min) <= 1e-4f) {
-            scaled_gray = 0;
-        } else {
-            scaled_gray = (gray - gray_min) / (gray_max - gray_min);
-        }
-        if (transferTable == NULL && tableSize == 0) {
-            for (int i = 0; i < 3; i++) {
-                rgbaArray.push_back((0.3f + scaled_gray) / 1.3f);
-            }
-            rgbaArray.push_back(1.0f);
-        } else {
-            float exact_tf = (tableSize - 1) * scaled_gray;
-            int floor = std::floor(exact_tf);
-            float tail = exact_tf - (float)floor;
-            floor *= 4;
-            for (int i = 0; i < 4; i++) {
-                float colorFloor = transferTable[floor + i];
-                float colorCeil = transferTable[floor + i + 4];
-                float finalColor = colorFloor + (colorCeil - colorFloor) * (tail);
-                rgbaArray.push_back(finalColor);
-            }
-        }
-    }
 }

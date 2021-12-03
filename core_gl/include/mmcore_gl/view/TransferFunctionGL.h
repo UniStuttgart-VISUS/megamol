@@ -1,27 +1,15 @@
 /*
- * TransferFunction.h
+ * TransferFunctionGL.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/TransferFunctionParam.h"
+#include "CallGetTransferFunctionGL.h"
+#include "mmcore/view/AbstractTransferFunction.h"
 #include "mmcore_gl/ModuleGL.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib/sys/sysfunctions.h"
 
 
 namespace megamol {
@@ -32,7 +20,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL {
+class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
 public:
     /**
      * Answer the name of this module.
@@ -40,7 +28,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "TransferFunction";
+        return "TransferFunctionGL";
     }
 
     /**
@@ -65,7 +53,9 @@ public:
     TransferFunctionGL(void);
 
     /** Dtor. */
-    virtual ~TransferFunctionGL(void);
+    virtual ~TransferFunctionGL(void) {
+        this->Release();
+    }
 
 private:
     // FUNCTIONS ----------------------------------------------------------
@@ -91,50 +81,11 @@ private:
      */
     bool requestTF(core::Call& call);
 
-    // VARIABLES ----------------------------------------------------------
-
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
-    /** The callee slot called on request of a transfer function */
-    core::CalleeSlot getTFSlot;
-
-    /** Parameter containing the transfer function data serialized into JSON string */
-    core::param::ParamSlot tfParam;
-
     /** The OpenGL texture object id */
     unsigned int texID;
-
-    /** The texture size in texel */
-    unsigned int texSize;
-
-    /** The texture data */
-    std::vector<float> tex;
-
-    /** The texture format */
-    CallGetTransferFunctionGL::TextureFormat texFormat;
-
-    /** The interpolation mode */
-    core::param::TransferFunctionParam::InterpolationMode interpolMode;
-
-    /** The value range */
-    std::array<float, 2> range;
-
-    /** Version of texture */
-    uint32_t version;
-
-    /** Global frame ID */
-    uint32_t last_frame_id;
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 
 } /* end namespace view */
 } // namespace core_gl
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRANSFERFUNCTION_H_INCLUDED */

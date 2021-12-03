@@ -10,7 +10,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmcore/view/CallRenderView.h"
 #include "stdafx.h"
 #include "vislib/sys/File.h"
 
@@ -25,7 +25,7 @@ megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper(void)
         , nextFileSlot("nextFile", "Button parameter to switch to the next file")
         , prevFileSlot("prevFile", "Button parameter to switch to the previous file") {
 
-    this->conSlot.SetCompatibleCall<core_gl::view::CallRenderViewGLDescription>();
+    this->conSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     // TODO: Connection to a job would also be nice
     this->MakeSlotAvailable(&this->conSlot);
 
