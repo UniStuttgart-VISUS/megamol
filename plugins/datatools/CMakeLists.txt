@@ -15,8 +15,7 @@ megamol_plugin(datatools
     mmpld_io
     libzmq
     libcppzmq
-    imgui
-    PUBLIC ann)
+    imgui)
 
 if (datatools_PLUGIN_ENABLED)
   # Additional sources

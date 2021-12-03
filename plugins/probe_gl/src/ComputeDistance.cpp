@@ -5,12 +5,9 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "DTW.hpp"
-
 #include "glm/glm.hpp"
 
 #include "datatools/misc/FrechetDistance.h"
-//#include "mmstd_datatools/misc/KDE.h"
 
 #include "eigen.h"
 

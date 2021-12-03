@@ -222,30 +222,6 @@ function(require_external NAME)
         GIT_TAG "v2.1.0"
         INCLUDE_DIR "include")
 
-  # ann
-  elseif(NAME STREQUAL "ann")
-    if(TARGET ann)
-      return()
-    endif()
-
-    if(WIN32)
-      set(ANN_LIB "bin/ann.dll")
-      set(ANN_LIB_IMPORT "lib/ann.lib")
-    else()
-      set(ANN_LIB "lib/ann.so")
-    endif()
-
-    add_external_project(ann SHARED
-      GIT_REPOSITORY https://github.com/dials/annlib.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ANN_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/ann/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
-
-    add_external_library(ann
-      LIBRARY ${ANN_LIB}
-      IMPORT_LIBRARY ${ANN_LIB_IMPORT})
-
   # bhtsne
   elseif(NAME STREQUAL "bhtsne")
     if(TARGET bhtsne)
@@ -719,22 +695,24 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(QHULL_LIB "lib/qhull.lib")
+      set(QHULL_LIB "lib/qhull<SUFFIX>.lib")
     else()
-      set(QUHULL_LIB "lib/libqhull.a")
+      set(QUHULL_LIB "lib/libqhull<SUFFIX>.a")
     endif()
 
     add_external_project(qhull STATIC
       GIT_REPOSITORY https://github.com/qhull/qhull.git
       GIT_TAG "v7.3.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_LIB}"
+      DEBUG_SUFFIX _d
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/qhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(qhull
       INCLUDE_DIR "include"
-      LIBRARY ${QHULL_LIB})
+      LIBRARY ${QHULL_LIB}
+      DEBUG_SUFFIX _d)
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")

@@ -17,9 +17,6 @@
 #include "ls1ParticleFormat.h"
 #include "mmadios/CallADIOSData.h"
 
-#include "Clustering.h"
-#include "SignalPeaks.h"
-
 namespace megamol::adios {
 class MMADIOSPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MMADIOSPluginInstance)
@@ -40,8 +37,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
-        this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
-        this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
 
         // register calls
