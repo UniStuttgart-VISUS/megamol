@@ -5,10 +5,6 @@
  * All rights reserved.
  */
 
-// TOOD: consistent naming (e.g. tex or tx2D, camelCasing or underscore)
-
-#define TIMER_ENABLED 0
-
 #include "stdafx.h"
 #include "AntiAliasing.h"
 
@@ -20,11 +16,12 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
-
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore/PerformanceQueryManager.h"
-
 #include "compositing_gl/CompositingCalls.h"
+
+#ifdef PROFILING
+#include "PerformanceManager.h"
+#endif
 
 #include "SMAAAreaTex.h"
 #include "SMAASearchTex.h"
@@ -56,7 +53,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_camera_slot("Camera", "Connects the camera")
     , m_depth_tex_slot("DepthTexture", "Connects the depth texture")
     , m_settings_have_changed(false)
-        , m_cnt(0), m_totalTimeSpent(0.0) {
+{
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
@@ -160,6 +157,17 @@ megamol::compositing::AntiAliasing::~AntiAliasing() { this->Release(); }
 
 bool megamol::compositing::AntiAliasing::create() {
     try {
+// profiling
+#ifdef PROFILING
+        m_perf_manager = const_cast<frontend_resources::PerformanceManager*>(
+            &frontend_resources.get<frontend_resources::PerformanceManager>());
+
+        frontend_resources::PerformanceManager::basic_timer_config render_timer;
+        render_timer.name = "render";
+        render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+        m_timers = m_perf_manager->add_timers(this, {render_timer});
+#endif
+
         // create shader program
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_velocity_prgm = std::make_unique<GLSLComputeShader>();
@@ -306,7 +314,11 @@ bool megamol::compositing::AntiAliasing::create() {
     return true;
 }
 
-void megamol::compositing::AntiAliasing::release() {}
+void megamol::compositing::AntiAliasing::release() {
+#ifdef PROFILING
+    m_perf_manager->remove_timers(m_timers);
+#endif
+}
 
 bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamSlot& slot) {
     // low
@@ -646,11 +658,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
             // TODO: one program for all? one mega shader with barriers?
 
-#if TIMER_ENABLED
-            GLuint64 startTime, stopTime;
-            unsigned int queryID[2];
-            glGenQueries(2, queryID);
-            glQueryCounter(queryID[0], GL_TIMESTAMP);
+#ifdef PROFILING
+            m_perf_manager->start_timer(m_timers[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
             if (temporal) {
@@ -746,28 +755,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             dispatchComputeShader(
                 m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, false, m_ssbo_constants);
 
-#if TIMER_ENABLED
-            glQueryCounter(queryID[1], GL_TIMESTAMP);
-
-            GLint stopTimerAvailable = 0;
-            while (!stopTimerAvailable) {
-                glGetQueryObjectiv(queryID[1], GL_QUERY_RESULT_AVAILABLE, &stopTimerAvailable);
-            }
-
-            glGetQueryObjectui64v(queryID[0], GL_QUERY_RESULT, &startTime);
-            glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, &stopTime);
-
-            ++m_cnt;
-            m_totalTimeSpent += (double) (stopTime - startTime) / 1000000.0;
-
-            std::chrono::steady_clock::time_point tp_start =
-                std::chrono::steady_clock::time_point{std::chrono::nanoseconds(startTime)};
-            std::chrono::steady_clock::time_point tp_end =
-                std::chrono::steady_clock::time_point{std::chrono::nanoseconds(stopTime)};
-
-            std::chrono::duration<double, std::milli> dur_ms = tp_end - tp_start;
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "Time spent for last frame: %fms", dur_ms.count());
+#ifdef PROFILING
+            m_perf_manager->stop_timer(m_timers[0]);
 #endif
         }
         // fxaa

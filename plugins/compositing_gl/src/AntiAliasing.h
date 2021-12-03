@@ -144,9 +144,11 @@ private:
         const std::shared_ptr<glowl::Texture2D>& tgt,
         const std::shared_ptr<glowl::Texture2D>& src);
 
-    // timing variables
-    int m_cnt;
-    double m_totalTimeSpent;
+    // profiling
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector m_timers;
+    frontend_resources::PerformanceManager* m_perf_manager = nullptr;
+#endif
 
     std::vector<unsigned char> m_area;
     std::vector<unsigned char> m_search;
