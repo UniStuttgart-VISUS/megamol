@@ -79,7 +79,8 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
     try {
         if (out_shader_ptr != nullptr)
             out_shader_ptr.reset();
-        out_shader_ptr = std::make_shared<glowl::GLSLProgram>(RenderUtils::createShaderSource(vertex_code, fragment_code));
+        out_shader_ptr =
+            std::make_shared<glowl::GLSLProgram>(RenderUtils::createShaderSource(vertex_code, fragment_code));
     } catch (glowl::GLSLProgramException const& exc) {
         std::string debug_label;
         if (out_shader_ptr != nullptr) {
@@ -95,8 +96,8 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
 }
 
 
-bool RenderUtils::CreateShader(glowl::GLSLProgram** out_shader_ptr, const std::string& vertex_code,
-    const std::string& fragment_code) {
+bool RenderUtils::CreateShader(
+    glowl::GLSLProgram** out_shader_ptr, const std::string& vertex_code, const std::string& fragment_code) {
 
     try {
         if ((*out_shader_ptr) != nullptr)
@@ -128,7 +129,6 @@ std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> RenderUtils:
 
     return shader_srcs;
 }
-
 
 
 // LOCAL functions -------------------------------------------------------

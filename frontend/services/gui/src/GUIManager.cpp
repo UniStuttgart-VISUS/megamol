@@ -156,7 +156,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     this->gui_state.gui_visible_post = this->gui_state.gui_visible;
     // Early exit when pre step should be omitted
     if (!this->gui_state.gui_visible) {
-        this->render_backend.Clear();
+        this->render_backend.ClearFrame();
         return true;
     }
 
@@ -370,7 +370,7 @@ bool GUIManager::PostDraw() {
     // Process hotkeys --------------------------------------------------------
     if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
         if (this->gui_state.gui_visible) {
-            this->gui_state.gui_hide_next_frame = 2;
+            this->gui_state.gui_hide_next_frame = 3;
         } else {
             // Show GUI after it was hidden (before early exit!)
             // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
@@ -413,7 +413,8 @@ bool GUIManager::PostDraw() {
 
     // Hide GUI if it is currently shown --------------------------------------
     if (this->gui_state.gui_visible) {
-        if (this->gui_state.gui_hide_next_frame == 2) {
+        /// Disabling ImGui window focus required 3 frames (!?)
+        if (this->gui_state.gui_hide_next_frame == 3) {
             // First frame
             this->gui_state.gui_hide_next_frame--;
             // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
@@ -426,8 +427,11 @@ bool GUIManager::PostDraw() {
                 }
             };
             this->win_collection.EnumWindows(func);
-        } else if (this->gui_state.gui_hide_next_frame == 1) {
+        } else if (this->gui_state.gui_hide_next_frame == 2) {
             // Second frame
+            this->gui_state.gui_hide_next_frame--;
+        } else if (this->gui_state.gui_hide_next_frame == 1) {
+            // Third frame
             this->gui_state.gui_hide_next_frame = 0;
             this->gui_state.gui_visible = false;
         }
@@ -531,7 +535,7 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
-    if (io.WantTextInput) { /// io.WantCaptureKeyboard
+    if (io.WantTextInput || io.WantCaptureKeyboard) {
         return true;
     }
 
@@ -1129,7 +1133,7 @@ void GUIManager::draw_menu() {
 
         if (ImGui::MenuItem(
                 "Show/Hide All Windows", this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            this->gui_state.gui_hide_next_frame = 2;
+            this->gui_state.gui_hide_next_frame = 3;
         }
 
 /// DOCKING

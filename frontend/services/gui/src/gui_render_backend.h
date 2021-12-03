@@ -52,7 +52,7 @@ public:
 
     bool Init(GUIRenderBackend backend);
 
-    void Clear();
+    void ClearFrame();
 
     void NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size);
 

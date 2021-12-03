@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "gui_utils.h"
 #include "gui_render_backend.h"
+#include "gui_utils.h"
 #include "mmcore/utility/log/Log.h"
 
 #ifdef WITH_GL
@@ -146,7 +146,6 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_NewFrame();
-
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
@@ -328,7 +327,7 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
 }
 
 
-void megamol::gui::gui_render_backend::Clear() {
+void megamol::gui::gui_render_backend::ClearFrame() {
 
     switch (this->initialized_backend) {
 #ifdef WITH_GL

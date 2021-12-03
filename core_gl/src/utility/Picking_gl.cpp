@@ -25,8 +25,10 @@ using namespace megamol::core::utility;
 
 PickingBuffer::~PickingBuffer() {
 
-    if (this->shader != nullptr) delete this->shader;
-    if (this->fbo != nullptr) delete this->fbo;
+    if (this->shader != nullptr)
+        delete this->shader;
+    if (this->fbo != nullptr)
+        delete this->fbo;
 }
 
 
@@ -103,7 +105,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     }
     if (create_fbo) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        if (this->fbo != nullptr) delete this->fbo;
+        if (this->fbo != nullptr)
+            delete this->fbo;
         this->fbo = new glowl::FramebufferObject(vp_width, vp_height, glowl::FramebufferObject::DepthStencilType::NONE);
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
