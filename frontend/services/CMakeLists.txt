@@ -178,9 +178,4 @@ if(BUILD_FRONTEND_SERVICES)
   source_group("Header Files\\gui" FILES ${gui_header_files})
   source_group("Source Files\\gui" FILES ${gui_source_files})
 
-  # Clang formatting (so far only for gui)
-  add_clang_format(${PROJECT_NAME}
-    STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
-    FILES ${gui_header_files} ${gui_source_files})  
-
 endif()
