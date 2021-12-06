@@ -30,7 +30,33 @@ while read -r file; do
     fi
   fi
 
+  # ignore externals
+  # TODO we probably want to distinguish more granular between 3rd-party and our files here
+  if [[ $file == "./externals/"* ]]; then
+    continue
+  fi
+
+  # is cpp file?
+  is_cpp=false
+  if [[ $file == *.cpp ]] || [[ $file == *.h ]] || [[ $file == *.hpp ]] || [[ $file == *.inl ]]; then
+    is_cpp=true
+  fi
+
   # === File tests ===
+
+  # ClangFormat
+  if [[ "$is_cpp" == true ]]; then
+    if [[ $1 == "fix" ]]; then
+      clang-format-12 -i "$file"
+    else
+      output="$(clang-format-12 --dry-run --Werror "$file" 2>&1)"
+      if [[ $? -ne 0 ]]; then
+        EXIT_CODE=1
+        echo "ERROR: ClangFormat found issues in: $file"
+        #echo "$output"
+      fi
+    fi
+  fi
 
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
