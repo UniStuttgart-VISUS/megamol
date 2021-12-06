@@ -33,7 +33,7 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-
+// TODO: replace std::cout at shader compiling with log::writeinfo
 
 /////////////////////////////////////////////////////////////////////////
 // CONSTANTS

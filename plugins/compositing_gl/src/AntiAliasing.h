@@ -178,35 +178,32 @@ private:
     glm::mat4 m_prev_proj_mx;
     glm::mat4 m_prev_view_mx;
     glm::vec2 m_jitter[2] = { glm::vec2(0.25, -0.25), glm::vec2(-0.25, 0.25) };
-    glm::vec4 m_subsampleIndices[2] =
+    glm::vec4 m_subsample_indices[2] =
     { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
     std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_input_tx2D;
     /** Texture to store velocity for each pixel used in SMAA T2x */
-    std::shared_ptr<glowl::Texture2D> m_velocity_tex;
-    std::shared_ptr<glowl::Texture2D> m_temporal_tex;
+    std::shared_ptr<glowl::Texture2D> m_velocity_tx2D;
+    std::shared_ptr<glowl::Texture2D> m_temporal_tx2D;
 
     /** SMAA intermediate texture layout */
     glowl::TextureLayout m_smaa_layout;
 
     /** Texture that the combination result will be written to */
-    std::shared_ptr<glowl::Texture2D> m_output_texture;
+    std::shared_ptr<glowl::Texture2D> m_output_tx2D;
 
     /** Texture to store edges from edges detection */
-    std::shared_ptr<glowl::Texture2D> m_edges_tex;
+    std::shared_ptr<glowl::Texture2D> m_edges_tx2D;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_blend_tex;
+    std::shared_ptr<glowl::Texture2D> m_blend_tx2D;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_area_tex;
+    std::shared_ptr<glowl::Texture2D> m_area_tx2D;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_search_tex;
-
-    /** Hash value to keep track of update to the output texture */
-    size_t m_output_texture_hash;
+    std::shared_ptr<glowl::Texture2D> m_search_tx2D;
 
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot m_mode;
@@ -252,8 +249,8 @@ private:
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot m_smaa_detection_technique;
 
-    /** Parameter for toggling predication, used to counter ghosting */
-    megamol::core::param::ParamSlot m_smaa_predication;
+    /** Parameter for toggling reprojection, used to counter ghosting */
+    megamol::core::param::ParamSlot m_smaa_reprojection;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

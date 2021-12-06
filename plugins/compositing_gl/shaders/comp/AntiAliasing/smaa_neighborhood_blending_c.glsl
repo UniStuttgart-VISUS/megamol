@@ -36,6 +36,7 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
+uniform int SMAA_REPROJECTION;
 uniform sampler2D g_colorTex;
 uniform sampler2D g_blendingWeightsTex;
 uniform sampler2D g_velocityTex;
@@ -60,10 +61,8 @@ void SMAAMovc(bvec4 cond, inout vec4 variable, vec4 value) {
 vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
                                   vec4 offset,
                                   sampler2D colorTex,
-                                  sampler2D blendTex
-                                  #if SMAA_REPROJECTION
-                                  , sampler2D velocityTex
-                                  #endif
+                                  sampler2D blendTex,
+                                  sampler2D velocityTex
                                   ) {
     // Fetch the blending weights for current pixel:
     vec4 a;
@@ -75,12 +74,12 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
     if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5) {
         vec4 color = textureLod(colorTex, texcoord, 0.0);
 
-        #if SMAA_REPROJECTION
-        vec2 velocity = textureLod(velocityTex, texcoord, 0.0).rg;
+        if( SMAA_REPROJECTION == 1 ) {
+            vec2 velocity = textureLod(velocityTex, texcoord, 0.0).rg;
 
-        // Pack velocity into the alpha channel:
-        color.a = sqrt(5.0 * length(velocity));
-        #endif
+            // Pack velocity into the alpha channel:
+            color.a = sqrt(5.0 * length(velocity));
+        }
 
         return color;
     } else {
@@ -101,14 +100,14 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
         vec4 color = blendingWeight.x * textureLod(colorTex, blendingCoord.xy, 0.0);
         color += blendingWeight.y * textureLod(colorTex, blendingCoord.zw, 0.0);
 
-        #if SMAA_REPROJECTION
-        // Antialias velocity for proper reprojection in a later stage:
-        vec2 velocity = blendingWeight.x * textureLod(velocityTex, blendingCoord.xy, 0.0).rg;
-        velocity += blendingWeight.y * textureLod(velocityTex, blendingCoord.zw, 0.0).rg;
+        if( SMAA_REPROJECTION == 1 ) {
+            // Antialias velocity for proper reprojection in a later stage:
+            vec2 velocity = blendingWeight.x * textureLod(velocityTex, blendingCoord.xy, 0.0).rg;
+            velocity += blendingWeight.y * textureLod(velocityTex, blendingCoord.zw, 0.0).rg;
 
-        // Pack velocity into the alpha channel:
-        color.a = sqrt(5.0 * length(velocity));
-        #endif
+            // Pack velocity into the alpha channel:
+            color.a = sqrt(5.0 * length(velocity));
+        }
 
         return color;
     }
@@ -125,10 +124,8 @@ void main() {
     vec4 final = SMAANeighborhoodBlendingPS(texCoords,
         offset,
         g_colorTex,
-        g_blendingWeightsTex
-        #if SMAA_REPROJECTION
-        , g_velocityTex
-        #endif
+        g_blendingWeightsTex,
+        g_velocityTex
     );
 
     imageStore(g_output, ivec2(inPos.xy), final);

@@ -23,11 +23,9 @@ void main() {
 
     vec2 viewport = imageSize(velocityTx2D);
 
-    vec2 texCoords = (2.f * inPos + vec2(1.f)) / (2.f * vec2(viewport));
-
     // use texturefetch
-    float currDepth = texture(g_currDepthtex, texCoords).r;
-    float prevDepth = texture(g_prevDepthtex, texCoords).r;
+    float currDepth = texelFetch(g_currDepthtex, ivec2(inPos), 0).r;
+    float prevDepth = texelFetch(g_prevDepthtex, ivec2(inPos), 0).r;
 
     vec4 currPos = vec4(inPos / viewport, currDepth, 1.0);
     vec4 prevPos = vec4(inPos / viewport, prevDepth, 1.0);
