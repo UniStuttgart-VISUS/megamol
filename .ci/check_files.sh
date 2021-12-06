@@ -2,10 +2,6 @@
 
 EXIT_CODE=0
 
-# Store a list of files which are changed in the current branch compared to the common merge base with master.
-changed_files=$(git diff --name-only origin/master...HEAD)
-git_root=$(git rev-parse --show-toplevel)
-
 file_list=$(find . -type f | sort)
 while read -r file; do
   #ignore .git dir
@@ -39,46 +35,58 @@ while read -r file; do
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
   if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
-    EXIT_CODE=1
-    echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
+    if [[ $1 == "fix" ]]; then
+      tmp_file=$(mktemp)
+      iconv -f "$encoding" -t utf-8 -o "$tmp_file" "$file"
+      mv -f "$tmp_file" "$file"
+    else
+      EXIT_CODE=1
+      echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
+    fi
   fi
 
   # Check if file contains CRLF line endings
   fileinfo=$(file "$file")
   if [[ $fileinfo == *"CRLF"* ]]; then
-    EXIT_CODE=1
-    echo "ERROR: File contains CRLF line endings: $file"
+    if [[ $1 == "fix" ]]; then
+      sed -i 's/\r$//' "$file"
+    else
+      EXIT_CODE=1
+      echo "ERROR: File contains CRLF line endings: $file"
+    fi
   fi
 
   # Check if file starts with BOM
   if [[ $fileinfo == *"BOM"* ]]; then
-    EXIT_CODE=1
-    echo "ERROR: File starts with BOM: $file"
+    if [[ $1 == "fix" ]]; then
+      sed -i '1s/^\xEF\xBB\xBF//' "$file"
+    else
+      EXIT_CODE=1
+      echo "ERROR: File starts with BOM: $file"
+    fi
   fi
 
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
-    EXIT_CODE=1
-    echo "ERROR: File does not end with new line: $file"
+    if [[ $1 == "fix" ]]; then
+      sed -i -e '$a\' "$file"
+    else
+      EXIT_CODE=1
+      echo "ERROR: File does not end with new line: $file"
+    fi
   fi
 
   # Check if file contains tabs
   if grep -qP "\t" "$file"; then
-    EXIT_CODE=1
-    echo "ERROR: File contains tabs: $file"
+    if [[ $1 == "fix" ]]; then
+      tmp_file=$(mktemp)
+      expand -t 4 "$file" > "$tmp_file"
+      mv -f "$tmp_file" "$file"
+    else
+      EXIT_CODE=1
+      echo "ERROR: File contains tabs: $file"
+    fi
   fi
-
-  # Get absolute file path and path relative to git root (for comparison with changed_files).
-  # Assume we are always anywhere within the git work dir and just remove git_root based on string pattern.
-  file_abs="$(cd "$(dirname "$file")"; pwd -P)/$(basename "$file")"
-  file_git="${file_abs##"$git_root/"}"
-
-  # If the current file is not changed within this git branch skip the following tests
-  if [[ $changed_files != *"$file_git"* ]]; then
-    continue
-  fi
-
-  # === File tests (only on changed files) ===
 
 done <<< "$file_list"
 
