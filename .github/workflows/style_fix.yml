@@ -16,14 +16,14 @@ jobs:
           gh pr checkout ${{ github.event.issue.number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run clang-format
-        run: .ci/run_clang_format.sh
+      - name: Run style fix
+        run: .ci/check_format.sh fix
       - name: Commit
         run: |
           if ! git diff --quiet --exit-code; then
             git config user.email "actions@megamol.org"
             git config user.name "MegaMol-Bot"
-            git commit -am "Run ClangFormat."
+            git commit -am "Format fix."
             git push
           else
             echo "Nothing to do!"

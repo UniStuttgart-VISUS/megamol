@@ -12,11 +12,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Run clang-format
-        run: .ci/run_clang_format.sh
-      - name: Check diff
-        run: |
-          git diff --exit-code --color
+      - name: Run format check
+        run: .ci/check_format.sh
       - name: Comment
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v5
@@ -26,7 +23,14 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'ClangFormat found [formatting issues](https://github.com/'
+              body: 'Style check found [formatting issues](https://github.com/'
                     + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')! '
                     + 'Comment `/format`, to automatically commit the suggested changes.'
             })
+  plugin_check:
+    name: Plugin-Check
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run plugin check
+        run: .ci/check_plugins.sh

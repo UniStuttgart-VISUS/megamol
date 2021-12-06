@@ -25,6 +25,9 @@ while read -r file; do
     if [[ $file == *"/3rd/"* ]]; then
       continue
     fi
+    if [[ $file == *"/archvis/external/"* ]]; then
+      continue
+    fi
     if [[ $file == *"/protein/msms/"* ]]; then
       continue
     fi
