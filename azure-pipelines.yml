@@ -145,33 +145,27 @@ jobs:
       cmakeArgs: '--build . --config $(configuration)'
 
 # The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
-- job: FileChecks
-  displayName: 'File Checks'
+- job: StyleChecks
+  displayName: 'Style Checks'
   pool:
     name: 'default'
     demands:
     - Agent.OS -equals Linux
-  steps:
-  - task: Bash@3
-    displayName: 'Run File Checks'
-    inputs:
-      filePath: '.ci/check_files.sh'
-  - task: Bash@3
-    displayName: 'Run Plugin Structure Checks'
-    inputs:
-      filePath: '.ci/check_plugins.sh'
-
-- job: ClangFormatCheck
-  displayName: 'ClangFormat Check'
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-    - cmake
     - megamol_build_enabled
   steps:
   - task: Bash@3
+    displayName: 'Run Plugin Structure Checks'
+    condition: succeededOrFailed()
+    inputs:
+      filePath: '.ci/check_plugins.sh'
+  - task: Bash@3
+    displayName: 'Run File Checks'
+    condition: succeededOrFailed()
+    inputs:
+      filePath: '.ci/check_files.sh'
+  - task: Bash@3
     displayName: 'Run Clang-Format'
+    condition: succeededOrFailed()
     inputs:
       targetType: 'inline'
       script: |
