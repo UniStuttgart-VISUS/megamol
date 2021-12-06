@@ -1,6 +1,25 @@
 #include "mesh_shader_task.h"
 
 
+megamol::moldyn_gl::rendering::mesh_shader_task::~mesh_shader_task() {
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+}
+
+
 bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
@@ -68,7 +87,6 @@ bool megamol::moldyn_gl::rendering::mesh_shader_task::upload(data_package_t cons
     pl_data_ = package.pl_data;
 
     return true;*/
-
 
 
     auto const num_ssbos = package.positions.size();

@@ -7,9 +7,9 @@ class mesh_shader_task : public rendering_task {
 public:
     template<typename... Paths>
     mesh_shader_task(std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths)
-            : rendering_task(label, options, std::forward<Paths>(paths)...) {}
+            : rendering_task(upload_mode::NULL_MODE, label, options, std::forward<Paths>(paths)...) {}
 
-    virtual ~mesh_shader_task() = default;
+    virtual ~mesh_shader_task();
 
     bool render(GLuint ubo) override;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 namespace megamol::moldyn_gl::rendering {
@@ -62,14 +64,18 @@ struct param_package {
 
 using param_package_t = param_package;
 
-enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP };
+enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP, NULL_MODE };
 
 using upload_mode_ut = std::underlying_type_t<upload_mode>;
+
+static inline std::array<std::string, 4> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP"};
 
 class rendering_task {
 public:
     template<typename... Paths>
-    rendering_task(std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths) {
+    rendering_task(upload_mode const& mode, std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options,
+        Paths... paths)
+            : mode_(mode) {
         try {
             program_ = core::utility::make_glowl_shader(label, options, std::forward<Paths>(paths)...);
         } catch (...) {
@@ -84,12 +90,18 @@ public:
 
     virtual bool upload(data_package_t const& package) = 0;
 
+    upload_mode get_mode() const {
+        return mode_;
+    }
+
 protected:
     glowl::GLSLProgram* get_program() const {
         return program_.get();
     }
 
 private:
+    upload_mode mode_;
+
     std::unique_ptr<glowl::GLSLProgram> program_;
 };
 } // namespace megamol::moldyn_gl::rendering

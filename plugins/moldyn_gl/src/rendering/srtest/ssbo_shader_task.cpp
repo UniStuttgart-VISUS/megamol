@@ -1,6 +1,29 @@
 #include "ssbo_shader_task.h"
 
 
+megamol::moldyn_gl::rendering::ssbo_shader_task::~ssbo_shader_task() {
+    glDeleteBuffers(vbos_.size(), vbos_.data());
+
+    glDeleteBuffers(cbos_.size(), cbos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+}
+
+
 bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
@@ -19,7 +42,7 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
 
         program->setUniform("num_points", static_cast<unsigned int>(num_prims));
 
-        switch (mode_) {
+        switch (get_mode()) {
         case upload_mode::FULL_SEP: {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
@@ -55,7 +78,7 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
 
 
 bool megamol::moldyn_gl::rendering::ssbo_shader_task::upload(data_package_t const& package) {
-    switch (mode_) {
+    switch (get_mode()) {
     case upload_mode::FULL_SEP:
         upload_full_separate(package);
         break;

@@ -2,6 +2,7 @@
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/light/CallLight.h"
@@ -13,6 +14,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
         , method_slot_("method", "")
         , upload_mode_slot_("upload mode", "")
+        , enforce_upload_slot_("enforce upload", "")
 /*
 , clip_thres_slot_("clip distance", "")*/
 {
@@ -26,6 +28,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
     ep->SetTypePair(static_cast<method_ut>(method_e::TEX), "TEX");
     ep->SetTypePair(static_cast<method_ut>(method_e::COPY), "COPY");
+    ep->SetTypePair(static_cast<method_ut>(method_e::COPY_VERT), "COPY_VERT");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT), "SSBO_VERT");
@@ -44,6 +47,9 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::NO_SEP), "NO_SEP");
     upload_mode_slot_ << ep;
     MakeSlotAvailable(&upload_mode_slot_);
+
+    enforce_upload_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&enforce_upload_slot_);
 
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
     MakeSlotAvailable(&clip_thres_slot_);*/
@@ -65,7 +71,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
         auto shdr_copy_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_copy_options.addDefinition("__SRTEST_SSBO__");
-        shdr_copy_options.addDefinition("__SRTEST_UPLOAD_COPY__");
+        shdr_copy_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
@@ -112,6 +118,8 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_unique<tex_rt>(shdr_tex_options)));
 
         rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_unique<copy_rt>(shdr_copy_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::COPY_VERT, std::make_unique<copy_vert_rt>(shdr_copy_options)));
 
         rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(mode, shdr_ssbo_options)));
         rendering_tasks_.insert(
@@ -309,8 +317,11 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glGenQueries(3, queryID);
 
     glQueryCounter(queryID[0], GL_TIMESTAMP);*/
-    if (new_data /* || clip_thres_slot_.IsDirty()*/) {
+    if (new_data || enforce_upload_slot_.Param<core::param::BoolParam>()->Value() /* || clip_thres_slot_.IsDirty()*/) {
 #ifdef PROFILING
+        pm.set_transient_comment(
+            timing_handles_[0], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                                    upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
         pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
@@ -326,6 +337,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 
 #ifdef PROFILING
     // glQueryCounter(queryID[1], GL_TIMESTAMP);
+    pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
     pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
 #endif
 
@@ -504,7 +517,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
 
 megamol::moldyn_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task("SRTestVAO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+        : rendering_task(upload_mode::NULL_MODE, "SRTestVAO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
               std::filesystem::path("srtest/srtest.frag.glsl")) {}
 
 
@@ -633,7 +646,7 @@ megamol::moldyn_gl::rendering::mesh_geo_task_rt::mesh_geo_task_rt(
 
 
 megamol::moldyn_gl::rendering::tex_rt::tex_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task("SRTestTex", options, std::filesystem::path("srtest/srtest.vert.glsl"),
+        : rendering_task(upload_mode::NULL_MODE, "SRTestTex", options, std::filesystem::path("srtest/srtest.vert.glsl"),
               std::filesystem::path("srtest/srtest.frag.glsl")) {}
 
 
@@ -723,8 +736,8 @@ bool megamol::moldyn_gl::rendering::tex_rt::upload(data_package_t const& package
 
 
 megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task("SRTestCopy", options, std::filesystem::path("srtest/srtest.vert.glsl"),
-              std::filesystem::path("srtest/srtest.frag.glsl")) {
+        : rendering_task(upload_mode::NULL_MODE, "SRTestCopy", options,
+              std::filesystem::path("srtest/srtest.vert.glsl"), std::filesystem::path("srtest/srtest.frag.glsl")) {
     try {
         comp_program_ = core::utility::make_glowl_shader(
             "SRTestCopyComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
@@ -732,6 +745,27 @@ megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL 
         core::utility::log::Log::DefaultLog.WriteError("[copy_rt] Failed to create program");
         throw;
     }
+}
+
+
+megamol::moldyn_gl::rendering::copy_rt::~copy_rt() {
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
 }
 
 
@@ -751,7 +785,7 @@ bool megamol::moldyn_gl::rendering::copy_rt::render(GLuint ubo) {
 
         program->setUniform("num_points", static_cast<unsigned int>(num_prims));
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, copy_bos_[i]);
 
         glDrawArrays(GL_POINTS, 0, num_prims);
     }
@@ -767,6 +801,167 @@ bool megamol::moldyn_gl::rendering::copy_rt::render(GLuint ubo) {
 
 
 bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+    copy_bos_.resize(num_ssbos);
+    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+    xbos_.resize(num_ssbos);
+    glCreateBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+    ybos_.resize(num_ssbos);
+    glCreateBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+    zbos_.resize(num_ssbos);
+    glCreateBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+    radbos_.resize(num_ssbos);
+    glCreateBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+    rbos_.resize(num_ssbos);
+    glCreateBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+    gbos_.resize(num_ssbos);
+    glCreateBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+    bbos_.resize(num_ssbos);
+    glCreateBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+    abos_.resize(num_ssbos);
+    glCreateBuffers(abos_.size(), abos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
+
+        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
+            package.x[i].data(), 0);
+
+        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
+            package.y[i].data(), 0);
+
+        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
+            package.z[i].data(), 0);
+
+        glNamedBufferStorage(radbos_[i],
+            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
+            0);
+
+        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
+            package.r[i].data(), 0);
+
+        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
+            package.g[i].data(), 0);
+
+        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
+            package.b[i].data(), 0);
+
+        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
+            package.a[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+    comp_program_->use();
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+
+        glDispatchCompute(num_prims / 32 + 1, 1, 1);
+    }
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glUseProgram(0);
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::copy_vert_rt::copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options)
+        : rendering_task(upload_mode::NULL_MODE, "SRTestCopyVert", options,
+              std::filesystem::path("srtest/srtest_vert.vert.glsl"), std::filesystem::path("srtest/srtest_vert.frag.glsl")) {
+    try {
+        comp_program_ = core::utility::make_glowl_shader(
+            "SRTestCopyVertComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[copy_rt] Failed to create program");
+        throw;
+    }
+}
+
+
+megamol::moldyn_gl::rendering::copy_vert_rt::~copy_vert_rt() {
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+}
+
+
+bool megamol::moldyn_gl::rendering::copy_vert_rt::render(GLuint ubo) {
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, copy_bos_[i]);
+
+        glDrawArrays(GL_QUADS, 0, num_prims * 4);
+    }
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& package) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(copy_bos_.size(), copy_bos_.data());

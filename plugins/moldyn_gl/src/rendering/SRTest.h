@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <unordered_map>
 
 #include "PerformanceManager.h"
@@ -55,7 +56,35 @@ class copy_rt : public rendering_task {
 public:
     copy_rt(msf::ShaderFactoryOptionsOpenGL const& options);
 
-    virtual ~copy_rt() = default;
+    virtual ~copy_rt();
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<GLuint> copy_bos_;
+
+    std::vector<GLuint> xbos_;
+    std::vector<GLuint> ybos_;
+    std::vector<GLuint> zbos_;
+    std::vector<GLuint> radbos_;
+    std::vector<GLuint> rbos_;
+    std::vector<GLuint> gbos_;
+    std::vector<GLuint> bbos_;
+    std::vector<GLuint> abos_;
+
+    std::vector<uint64_t> num_prims_;
+    per_list_package_t pl_data_;
+
+    std::unique_ptr<glowl::GLSLProgram> comp_program_;
+};
+
+class copy_vert_rt : public rendering_task {
+public:
+    copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~copy_vert_rt();
 
     bool render(GLuint ubo) override;
 
@@ -188,6 +217,7 @@ private:
         VAO,
         TEX,
         COPY,
+        COPY_VERT,
         SSBO,
         SSBO_GEO,
         SSBO_VERT,
@@ -199,6 +229,9 @@ private:
     };
 
     using method_ut = std::underlying_type_t<method_e>;
+
+    std::array<std::string, 11> method_strings = {"VAO", "TEX", "COPY", "SSBO", "SSBO_GEO", "SSBO_VERT", "MESH",
+        "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN"};
 
     bool Render(core_gl::view::CallRender3DGL& call) override;
 
@@ -217,6 +250,8 @@ private:
     core::param::ParamSlot method_slot_;
 
     core::param::ParamSlot upload_mode_slot_;
+
+    core::param::ParamSlot enforce_upload_slot_;
 
     // core::param::ParamSlot clip_thres_slot_;
 

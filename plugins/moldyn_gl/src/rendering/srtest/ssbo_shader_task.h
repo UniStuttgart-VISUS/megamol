@@ -13,9 +13,10 @@ public:
     template<typename... Paths>
     ssbo_shader_task(upload_mode const& mode, draw_cmd_t const& draw_cmd, std::string const& label,
         msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths)
-            : rendering_task(label, options, std::forward<Paths>(paths)...), mode_(mode), draw_cmd_(draw_cmd) {}
+            : rendering_task(mode, label, options, std::forward<Paths>(paths)...)
+            , draw_cmd_(draw_cmd) {}
 
-    virtual ~ssbo_shader_task() = default;
+    virtual ~ssbo_shader_task();
 
     bool render(GLuint ubo) override;
 
@@ -42,8 +43,6 @@ private:
 
     std::vector<uint64_t> num_prims_;
     per_list_package_t pl_data_;
-
-    upload_mode mode_;
 
     draw_cmd_t draw_cmd_;
 };
