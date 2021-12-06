@@ -4,7 +4,7 @@
 #extension GL_NV_gpu_shader5 : enable
 
 #define ROOT_2 1.414213562f
-#define WARP 32
+//#define WARP 32
 #define NUM_V 4
 #define NUM_P 2
 

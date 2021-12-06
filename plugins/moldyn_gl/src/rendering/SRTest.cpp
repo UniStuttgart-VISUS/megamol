@@ -74,12 +74,16 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_copy_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
+        shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
+        shdr_mesh_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto shdr_mesh_geo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
+        shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
+        shdr_mesh_geo_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
         switch (mode) {
         case upload_mode::FULL_SEP: {

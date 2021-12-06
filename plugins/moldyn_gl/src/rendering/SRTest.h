@@ -108,9 +108,11 @@ private:
     std::unique_ptr<glowl::GLSLProgram> comp_program_;
 };
 
+#define MESH_WARP_SIZE 31
+
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
 static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
-static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / 32 + 1); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -230,7 +232,7 @@ private:
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    std::array<std::string, 11> method_strings = {"VAO", "TEX", "COPY", "SSBO", "SSBO_GEO", "SSBO_VERT", "MESH",
+    std::array<std::string, 12> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT", "MESH",
         "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN"};
 
     bool Render(core_gl::view::CallRender3DGL& call) override;

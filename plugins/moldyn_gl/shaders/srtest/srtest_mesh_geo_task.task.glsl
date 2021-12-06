@@ -4,7 +4,7 @@
 #extension GL_NV_shader_thread_group : enable
 #extension GL_NV_gpu_shader5 : enable
 
-#define WARP 32
+//#define WARP 32
 
 layout(local_size_x = WARP) in;
 

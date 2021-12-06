@@ -2,8 +2,8 @@
 
 #extension GL_NV_mesh_shader : enable
 
-layout(local_size_x = 32) in;
-layout(max_vertices = 32, max_primitives = 32, points) out;
+layout(local_size_x = WARP) in;
+layout(max_vertices = WARP, max_primitives = WARP, points) out;
 
 #include "srtest_ubo.glsl"
 
