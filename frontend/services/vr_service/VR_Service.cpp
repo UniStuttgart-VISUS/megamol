@@ -109,6 +109,10 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     auto& entry_points =
         m_requestedResourceReferences[0].getResource<frontend_resources::ImagePresentationEntryPoints>();
 
+    // we register an entry point subscription at the image presentation
+    // we will get notified of entry point changes and pass those subscription events
+    // to the currently active IVR_Device
+
     using SubscriptionEvent = frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent;
 
     entry_points.subscribe_to_entry_point_changes(
@@ -117,6 +121,8 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
 
             if (arguments.size() > 0) {
                 entry_point_name = std::any_cast<std::string>(arguments[0]);
+
+                // if the entry point is not new to us, we ignore it
 
                 if (entry_point_name.find(vr_service_marker) != std::string::npos) {
                     return;
@@ -148,7 +154,7 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
             }
         });
 
-    // VR stereo rendering: clone each view entry point in order to have two images rendered: left + right
+    // pass entry point changes to the currently active IVR_Device
     m_entry_points_registry.add_entry_point = [&](auto const& name, auto const& callbacks) -> bool {
         vr_device(add_entry_point(
             name, callbacks, const_cast<frontend_resources::ImagePresentationEntryPoints&>(entry_points)));
@@ -182,6 +188,7 @@ void VR_Service::digestChangedRequestedResources() {}
 
 void VR_Service::resetProvidedResources() {}
 
+// let the IVR_Device do things before and after graph rendering
 void VR_Service::preGraphRender() {
     vr_device(preGraphRender());
 }
@@ -201,12 +208,6 @@ glm::vec4 toGlm(const interop::vec4& v) {
 } // namespace
 
 struct megamol::frontend::VR_Service::KolabBW::PimplData {
-    struct Image {
-        unsigned int gl_handle = 0;
-        unsigned int width = 0;
-        unsigned int height = 0;
-    };
-
     interop::StereoCameraView stereoCameraView;
     interop::CameraProjection cameraProjection;
     interop::BoundingBoxCorners bboxCorners;
@@ -245,6 +246,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
         return dynamic_cast<core::param::ParamSlot*>(module_ptr->FindSlot(name.c_str()));
     };
 
+    // overwrite clip plane position/normal with state received from outside
     void update_clip_plane_state(interop::vec4 const& pos, interop::vec4 const& normal, bool const state) {
         if (!graph_ptr)
             return;
@@ -290,6 +292,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     bool has_animation_state = false;
     core::Module* view_module_ptr = nullptr;
 
+    // play/stop view dataset animation depending on received animation state
     void update_view_animation_state(bool const state) {
         if (!view_module_ptr)
             return;
@@ -305,12 +308,19 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
         play_slot->Param<core::param::BoolParam>()->SetValue(state, true);
     }
 
-    void rig_ep_execution() {
+    // entry points bring callbacks with them which define how the entry point gets rendered ("executed")
+    // we rig/replace the original entry point rendering/execution callbacks with our own to achieve two things:
+    // 1) we copy the view rendering results into a texture that we own so we can send that rendering to the Unity Kolab process
+    // 2) we override the entry point camera data with the VR rendering settings coming from Unity
+    void rig_ep_rendering_result_texture_copy() {
         // when this gets called the entry points are not null
 
         auto rig_ep = [&](auto& original_execute, auto& result_gl_copy) {
             auto old_execute = original_execute;
 
+            // our entry point execution callback copies the entry point rendering result into a separate texture
+            // we need to copy the rendering result texture because the frontend only holds a reference
+            // to the view FBO, thus after rendering the second eye the view FBO loses the rendering of the first eye
             auto new_execute = std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&,
                 megamol::frontend_resources::ImageWrapper&)>{
                 [&, old_execute](void* module_ptr, auto& resources, auto& result_image) -> bool {
@@ -331,8 +341,9 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
 #define pimpl (*m_pimpl)
 
 megamol::frontend::VR_Service::KolabBW::KolabBW() {
-    m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(
-        new PimplData, std::function<void(PimplData*)>([](PimplData* ptr) {
+    m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData,
+        // destructor function for pimpl
+        std::function<void(PimplData*)>([](PimplData* ptr) {
             ptr->cameraProjectionReceiver.stop();
             ptr->stereoCameraViewReceiver_relative.stop();
             ptr->bboxSender.stop();
@@ -434,27 +445,33 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     pimpl.bboxSender.sendData<interop::BoundingBoxCorners>("BoundingBoxCorners", pimpl.bboxCorners);
 }
 
+// what we do with incoming view entry points is to register them a second time as entry point
+// the view module in the graph will exist only one time, but two entry points in the image presentation will
+// feed that view module with left/right eye camera configurations, which we set up here
+// at the same time the entry points will write back the view rendering results to textures we own, which we send out to Unity
 bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& entry_point_name,
     frontend_resources::EntryPointRenderFunctions const& entry_point_callbacks,
     ImagePresentationEntryPoints& entry_points_registry) {
 
+    // the incoming entry point seems to be a new one that is not marked as belonging to the VR service or the GUI
+    // marked entry points simply mean "artificially added as entry point by the VR service"
+    auto marked_entry_point_name = mark(entry_point_name);
+
     // add an entry point for the second eye
     // the original entry point will be the left eye, the new (marked) entry point will be the right eye
     // QUESTION: is it a good idea to switch between left/right camera parameters in the same view? will weird (slow?) things happen down the line?
-    bool success = entry_points_registry.add_entry_point(mark(entry_point_name), entry_point_callbacks);
+    bool success = entry_points_registry.add_entry_point(marked_entry_point_name, entry_point_callbacks);
 
     if (!success)
         return false;
 
     pimpl.ep_name = entry_point_name;
 
-    frontend_resources::optional<frontend_resources::EntryPoint> ep_left =
-        entry_points_registry.get_entry_point(entry_point_name);
-    frontend_resources::optional<frontend_resources::EntryPoint> ep_right =
-        entry_points_registry.get_entry_point(mark(entry_point_name));
+    auto ep_left = entry_points_registry.get_entry_point(entry_point_name);
+    auto ep_right = entry_points_registry.get_entry_point(marked_entry_point_name);
 
     if (!ep_left.has_value() || !ep_right.has_value()) {
-        log_error("could not retrieve entry points " + entry_point_name + " and " + mark(entry_point_name));
+        log_error("could not retrieve entry points " + entry_point_name + " and " + marked_entry_point_name);
         return false;
     }
 
@@ -482,7 +499,7 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
     pimpl.left_ep = &ep_left.value().get();
     pimpl.right_ep = &ep_right.value().get();
 
-    pimpl.rig_ep_execution();
+    pimpl.rig_ep_rendering_result_texture_copy();
 
     // outputs a function that returns camera matrices built from current pimpl camera data
     auto make_matrices = [&](interop::CameraView const& iview, interop::CameraProjection const& iproj)
@@ -547,6 +564,8 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
         pimpl.ep_handles_installed = true;
     };
 
+    // we dont replace the entry point render input callbacks now (during entry point creation) but later,
+    // when the Kolab VR device received its first camera config state from the Unity process
     pimpl.update_entry_point_inputs = std::function<void()>([&, replace_ep_handlers]() {
         // view each entry point holds a resource with individual render inputs (frontend_resources::ViewRenderInpts)
         // the render inptus hold callbacks which tell them the next reder input configuration (e.g. fbo size, tiling config)
@@ -572,11 +591,13 @@ bool megamol::frontend::VR_Service::KolabBW::remove_entry_point(
         return false;
     }
 
-    bool success = entry_points_registry.remove_entry_point(mark(entry_point_name));
+    auto marked_entry_point_name = mark(entry_point_name);
+
+    bool success = entry_points_registry.remove_entry_point(marked_entry_point_name);
 
     this->clear_entry_points();
 
-    log("remove entry points " + entry_point_name + ", " + mark(entry_point_name) +
+    log("remove entry points " + entry_point_name + ", " + marked_entry_point_name +
         " from Unity-KolabBW Stereo Rendering");
 
     if (!success)

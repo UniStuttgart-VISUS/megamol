@@ -66,6 +66,7 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    // we use the marker to mark entry point names as "belongs to vr service"
     static std::string vr_service_marker;
 
 private:
@@ -77,8 +78,12 @@ private:
 
     ImagePresentationEntryPoints m_entry_points_registry;
 
-    // puts VR render inputs into entry point
-    // whether left/right eye is rendered is done by the update handler
+    // i believe the abstraction we want for VR rendering/interactions in MegaMol could be put into a "vr device"
+    // the general interface of a "vr device" is that it wants to be notified of MegaMol entry point changes
+    // and act on those entry points before/after Graph rendering (when the renderings of the entry points update)
+    // so the VR_Device is not an actual piece of VR hardware, but a "handler" of how MegaMol does VR things
+    // for example, the VR_Device would enforce some camera pose/projection for some entry point before rendering
+    // and send the rendering result to the VR output after rendering
     struct IVR_Device {
         virtual ~IVR_Device() = default;
 
@@ -93,10 +98,19 @@ private:
         void virtual postGraphRender() {}
     };
 
+    // the KolabBW implements VR capabilities by receiving reomte camera information from ZMQ channels
+    // and sending out the corresponding MegaMol renderings via Spout
+    // if a MegaMol View is registered as entry point in the Image Presentation Service
+    // the KolabBW intercepts that entry point, uses it as the left eye for VR rendering,
+    // and adds another entry point of his own, which will be used as right eye for VR rendering
+    // to inject camera state for VR rendering, the entry point execution callbacks
+    // (which define how entry points get their rendering data before rendering is triggered)
+    // will be rigged with VR information
     struct KolabBW : public IVR_Device {
         KolabBW();
         ~KolabBW();
 
+        // network communication
         void receive_camera_data();
         void send_image_data();
 
@@ -110,8 +124,10 @@ private:
         void preGraphRender() override;
         void postGraphRender() override;
 
+        // to implement clipping plane and view animation manipulation we need access to the MegaMol Graph
         void add_graph(void* ptr);
 
+        // actual implementation details are in the .cpp file
         struct PimplData;
         std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     };
