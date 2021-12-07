@@ -230,6 +230,7 @@ inline Camera::Camera(glm::mat4 const& view_matrix, glm::mat4 const& projection_
     _pose.position = view_inv * position;
     _pose.direction = glm::normalize(view_inv * direction);
     _pose.up = glm::normalize(view_inv * up);
+    _pose.right = glm::normalize(glm::cross(glm::vec3{direction}, glm::vec3{up}));
 }
 
 inline Camera::Camera(Pose const& pose, PerspectiveParameters const& intrinsics)
