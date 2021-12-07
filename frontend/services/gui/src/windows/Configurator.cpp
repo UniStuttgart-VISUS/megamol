@@ -22,7 +22,7 @@ megamol::gui::Configurator::Configurator(
         , selected_list_module_id(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)
         , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
-        , show_module_list_sidebar(true)
+        , show_module_list_sidebar(false)
         , show_module_list_popup(false)
         , module_list_popup_pos()
         , last_selected_callslot_uid(GUI_INVALID_ID)
@@ -293,6 +293,7 @@ void megamol::gui::Configurator::draw_window_menu() {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
 
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Modules Sidebar", nullptr, this->show_module_list_sidebar)) {
@@ -304,8 +305,17 @@ void megamol::gui::Configurator::draw_window_menu() {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
 
-        ImGui::SameLine();
+        if (ImGui::BeginMenu("Help")) {
+            ImGui::TextUnformatted("[Double Left Mouse Click] Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
+            ImGui::TextUnformatted("[Right Mouse Click] Show Module/Call/Group context menu");
+            ImGui::TextUnformatted("[Drag & DropLeft Mouse] Drag from call slot of module to other compatible call slot to create call connection between modules");
+            ImGui::TextUnformatted("[Mouse Wheel] Zoom graph");
+            ImGui::TextUnformatted("[Middle Mouse Click] Scroll graph");
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
 
         ImGui::EndMenuBar();
     }
