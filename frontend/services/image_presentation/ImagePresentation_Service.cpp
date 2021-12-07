@@ -84,17 +84,21 @@ bool ImagePresentation_Service::init(const Config& config) {
         };
     m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
-    this->m_providedResourceReferences = {{"ImagePresentationEntryPoints", m_entry_points_registry_resource}
-        // used by MegaMolGraph to set entry points
-        ,
+    this->m_providedResourceReferences = {
+        {"ImagePresentationEntryPoints", m_entry_points_registry_resource}, // used by MegaMolGraph to set entry points
         {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger},
-        {"FramebufferEvents", m_global_framebuffer_events}};
+        {"FramebufferEvents", m_global_framebuffer_events},
+    };
 
-    this->m_requestedResourcesNames = {"FrontendResources" // std::vector<FrontendResource>
-        ,
-        "optional<WindowManipulation>", "FramebufferEvents", "optional<GUIState>" // TODO: unused?
-        ,
-        "RegisterLuaCallbacks", "optional<OpenGL_Context>", "ImageWrapperToPNG_ScreenshotTrigger"};
+    this->m_requestedResourcesNames = {
+        "FrontendResources", // std::vector<FrontendResource>
+        "optional<WindowManipulation>",
+        "FramebufferEvents",
+        "optional<GUIState>", // TODO: unused?
+        "RegisterLuaCallbacks",
+        "optional<OpenGL_Context>",
+        "ImageWrapperToPNG_ScreenshotTrigger",
+    };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
