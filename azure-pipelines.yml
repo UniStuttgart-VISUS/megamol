@@ -6,7 +6,17 @@ pr:
 - master
 
 variables:
-  enablePlugins: '-DBUILD_PLUGIN_MMADIOS=ON -DBUILD_PLUGIN_ASTRO=OFF -DBUILD_PLUGIN_IMAGE=OFF -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=OFF'
+  defaultConfig: >-
+    -DBUILD_PLUGIN_ASTRO=OFF
+    -DBUILD_PLUGIN_ASTRO_GL=OFF
+    -DBUILD_PLUGIN_IMAGE=OFF
+    -DBUILD_PLUGIN_MEGAMOL101_GL=ON
+    -DBUILD_PLUGIN_MMADIOS=ON
+    -DBUILD_PLUGIN_MMVTKM=ON
+    -DBUILD_PLUGIN_MMVTKM_GL=ON
+    -DBUILD_PLUGIN_REMOTE=OFF
+  nonGlConfig: >-
+    -DENABLE_GL=OFF
 
 jobs:
 - job: Windows
@@ -15,15 +25,15 @@ jobs:
       'VS2019 Release':
         configuration: Release
         generator: 'Visual Studio 16 2019'
-        cmakeExtraArgs: '$(enablePlugins)'
+        cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Debug':
         configuration: Debug
         generator: 'Visual Studio 16 2019'
-        cmakeExtraArgs: '$(enablePlugins)'
+        cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Release (nonGL)':
         configuration: Release
         generator: 'Visual Studio 16 2019'
-        cmakeExtraArgs: '-DENABLE_GL=OFF'
+        cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
     name: 'hardware'
@@ -33,19 +43,6 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  #- task: PowerShell@2
-  #  displayName: 'Install Python'
-  #  inputs:
-  #    targetType: 'inline'
-  #    script: |
-  #      $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
-  #      $python_path = Join-Path (Get-Item .).FullName "python_tmp"
-  #      $tmp = New-TemporaryFile
-  #      $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
-  #      Invoke-WebRequest -OutFile $tmp $pythonUrl
-  #      Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
-  #      $tmp | Remove-Item
-  #      echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
@@ -64,32 +61,33 @@ jobs:
       #  cxxCompiler: g++-9
       #  configuration: Release
       #  generator: 'Unix Makefiles'
-      #  cmakeExtraArgs: '$(enablePlugins)'
+      #  cmakeExtraArgs: '$(defaultConfig)'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9
         configuration: Debug
         generator: 'Unix Makefiles'
-        cmakeExtraArgs: '$(enablePlugins)'
-      'GCC9 / Ninja / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Ninja'
-        cmakeExtraArgs: '$(enablePlugins)'
-      'Clang10 / Make / Release':
+        cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Ninja / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Ninja'
+      #  cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily changed to Ninja instead of Make until more CI machines are available!
+      'Clang10 / Ninja / Release':
         cCompiler: clang-10
         cxxCompiler: clang++-10
         configuration: Release
+        generator: 'Ninja'
+        cmakeExtraArgs: '$(defaultConfig)'
+      'GCC9 / Make / Release (nonGL)':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
+        configuration: Release
         generator: 'Unix Makefiles'
-        cmakeExtraArgs: '$(enablePlugins)'
-      ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Make / Debug (nonGL)':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
-      #  configuration: Debug
-      #  generator: 'Unix Makefiles'
-      #  cmakeExtraArgs: '-DENABLE_GL=OFF'
+        cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
     name: 'default'
