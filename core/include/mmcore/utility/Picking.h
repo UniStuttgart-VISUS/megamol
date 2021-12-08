@@ -118,8 +118,8 @@ private:
 
 #ifdef WITH_GL
     int prev_fbo = 0;
-    glowl::FramebufferObject* fbo = nullptr;
-    glowl::GLSLProgram* shader = nullptr;
+    std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
+    std::shared_ptr<glowl::GLSLProgram> shader = nullptr;
 #endif
 
     // FUNCTIONS --------------------------------------------------------------

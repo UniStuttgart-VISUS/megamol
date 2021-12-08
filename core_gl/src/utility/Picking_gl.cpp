@@ -25,10 +25,8 @@ using namespace megamol::core::utility;
 
 PickingBuffer::~PickingBuffer() {
 
-    if (this->shader != nullptr)
-        delete this->shader;
-    if (this->fbo != nullptr)
-        delete this->fbo;
+    this->shader.reset();
+    this->fbo.reset();
 }
 
 
@@ -80,7 +78,7 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!megamol::core_gl::utility::RenderUtils::CreateShader(&this->shader, vertex_src, fragment_src)) {
+        if (!megamol::core_gl::utility::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
         if (this->shader == nullptr) {
@@ -105,9 +103,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     }
     if (create_fbo) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        if (this->fbo != nullptr)
-            delete this->fbo;
-        this->fbo = new glowl::FramebufferObject(vp_width, vp_height, glowl::FramebufferObject::DepthStencilType::NONE);
+        this->fbo.reset();
+        this->fbo = std::make_shared<glowl::FramebufferObject>(vp_width, vp_height, glowl::FramebufferObject::DepthStencilType::NONE);
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
     }

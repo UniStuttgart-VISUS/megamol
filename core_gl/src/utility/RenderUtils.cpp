@@ -96,28 +96,6 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
 }
 
 
-bool RenderUtils::CreateShader(
-    glowl::GLSLProgram** out_shader_ptr, const std::string& vertex_code, const std::string& fragment_code) {
-
-    try {
-        if ((*out_shader_ptr) != nullptr)
-            delete (*out_shader_ptr);
-        (*out_shader_ptr) = new glowl::GLSLProgram(RenderUtils::createShaderSource(vertex_code, fragment_code));
-    } catch (glowl::GLSLProgramException const& exc) {
-        std::string debug_label;
-        if (out_shader_ptr != nullptr) {
-            debug_label = (*out_shader_ptr)->getDebugLabel();
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(), exc.what(),
-            __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
 std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> RenderUtils::createShaderSource(
     const std::string& vertex_code, const std::string& fragment_code) {
 
