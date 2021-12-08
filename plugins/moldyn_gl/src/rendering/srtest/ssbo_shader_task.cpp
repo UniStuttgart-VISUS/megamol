@@ -26,6 +26,7 @@ megamol::moldyn_gl::rendering::ssbo_shader_task::~ssbo_shader_task() {
 
 bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
     glEnable(GL_PROGRAM_POINT_SIZE);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
     program->use();
@@ -71,6 +72,7 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
 
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glDisable(GL_PROGRAM_POINT_SIZE);
 
     return true;

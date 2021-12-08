@@ -1,5 +1,9 @@
 #version 450
 
+//#define BASE_IDX gl_VertexID / 6
+//#define INV_IDX gl_VertexID % 3
+//#define BUMP_IDX gl_VertexID % 6 / 3
+
 uniform vec4 globalCol;
 uniform float globalRad;
 
@@ -12,6 +16,8 @@ flat out float sqrRad;
 flat out vec4 pointColor;
 flat out vec3 oc_pos;
 
+uniform int offset;
+
 #include "srtest_ubo.glsl"
 
 #ifdef __SRTEST_VAO__
@@ -20,39 +26,58 @@ flat out vec3 oc_pos;
 #include "srtest_ssbo.glsl"
 #endif
 
+#include "srtest_touchplane.glsl"
+
 #include "srtest_frustum.glsl"
 
 void main() {
-    int base_idx = gl_VertexID / 4;
-    int inv_idx = gl_VertexID % 4;
+    /*int base_idx = gl_InstanceID;
+    int inv_idx = gl_VertexID;*/
+    /*int base_idx = gl_VertexID / 4;
+    int inv_idx = gl_VertexID % 4;*/
+    int base_idx = BASE_IDX + offset;
+    int inv_idx = INV_IDX;
+    int bump_idx = BUMP_IDX;
 
     access_data(base_idx, objPos, pointColor, rad);
 
     oc_pos = objPos - camPos;
     sqrRad = rad * rad;
 
-    float dd = dot(oc_pos, oc_pos);
+    /*float dd = dot(oc_pos, oc_pos);
 
     float s = (sqrRad) / (dd);
 
     float vi = rad / sqrt(1.0f - s);
 
     vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
-    vec3 vu = normalize(cross(oc_pos, vr)) * vi;
+    vec3 vu = normalize(cross(oc_pos, vr)) * vi;*/
 
-    mat4 v = mat4(vec4(objPos - vr - vu, 1.0f), vec4(objPos + vr - vu, 1.0f), vec4(objPos + vr + vu, 1.0f),
-        vec4(objPos - vr + vu, 1.0f));
+//#if BUMP_IDX == 0
+    /*mat4 v = mat4(vec4(objPos - vr - vu, 1.0f), vec4(objPos + vr - vu, 1.0f), vec4(objPos + vr + vu, 1.0f),
+        vec4(objPos - vr + vu, 1.0f));*/
+//#else
+    /*mat4 v = mat4(vec4(objPos - vr - vu, 1.0f), vec4(objPos + vr - vu, 1.0f), vec4(objPos - vr + vu, 1.0f),
+        vec4(objPos + vr + vu, 1.0f));*/
+    /*mat4 v = mat4(vec4(objPos - vr + vu, 1.0f), vec4(objPos - vr - vu, 1.0f),
+        vec4(objPos + vr + vu, 1.0f), vec4(objPos + vr - vu, 1.0f));*/
+    //#endif
 
-    vec4 pos = MVP * v[inv_idx];
-    pos /= pos.w;
+    mat4 v;
+    touchplane_old_v2(objPos, rad, oc_pos, v);
 
-    vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
+    vec4 pos = v[inv_idx + bump_idx];
     
-    pos.z = projPos.z / projPos.w;
+    //pos /= pos.w;
 
-    if (isOutside(oc_pos, rad)) {
+    //vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
+
+    //pos.z = projPos.z / projPos.w;
+
+    /*if (isOutside(oc_pos, rad)) {
         pos.xyz = vec3(0);
-    }
+    }*/
 
-    gl_Position = vec4(pos.xyz, 1.0f);
+    //gl_Position = vec4(pos.xy, projPos.zw);
+    gl_Position = pos;
 }

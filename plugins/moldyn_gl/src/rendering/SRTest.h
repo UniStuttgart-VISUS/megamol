@@ -110,8 +110,33 @@ private:
 
 #define MESH_WARP_SIZE 31
 
+#define VERT_BASE_IDX "gl_VertexID / 6"
+#define VERT_INV_IDX "gl_VertexID % 3"
+#define VERT_BUMP_IDX "gl_VertexID % 6 / 3"
+
+#define QUADS_BASE_IDX "gl_VertexID / 4"
+#define QUADS_INV_IDX "gl_VertexID % 4"
+#define QUADS_BUMP_IDX "0"
+
+#define STRIP_BASE_IDX "gl_InstanceID"
+#define STRIP_INV_IDX "gl_VertexID" //"gl_VertexID + 1"
+#define STRIP_BUMP_IDX "0" //"-1"
+
+#define MUZIC_BASE_IDX "gl_VertexID / 4"
+#define MUZIC_INV_IDX "gl_VertexID % 4" //"gl_VertexID % 4 + 1"
+#define MUZIC_BUMP_IDX "0" //"-1"
+
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
-static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_TRIANGLES, 0, num_points * 6); };
+static draw_cmd_t dc_quads = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_strip = [](unsigned int num_points) { glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points); };
+static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
+    //num_points /= 2;
+    glDrawElements(GL_TRIANGLE_STRIP, num_points * 6 - 2, GL_UNSIGNED_INT, indices.data());
+    //glDrawElements(GL_TRIANGLE_STRIP, 32768, GL_UNSIGNED_INT, indices.data());
+    /*glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), 0);
+    glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), num_points);*/
+};
 static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
 
 class ssbo_rt : public ssbo_shader_task {
@@ -133,6 +158,36 @@ public:
     ssbo_vert_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_vert_rt() = default;
+};
+
+class ssbo_quad_rt : public ssbo_shader_task {
+public:
+    ssbo_quad_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_quad_rt() = default;
+};
+
+class ssbo_strip_rt : public ssbo_shader_task {
+public:
+    ssbo_strip_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_strip_rt() = default;
+};
+
+class ssbo_muzic_rt : public ssbo_shader_task {
+public:
+    ssbo_muzic_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_muzic_rt() = default;
+
+    bool render(GLuint ubo) override;
+
+    bool upload(data_package_t const& package) override;
+
+private:
+    std::vector<std::vector<uint32_t>> indices_;
+
+    std::vector<GLuint> ind_buf_;
 };
 
 class mesh_rt : public ssbo_shader_task {
@@ -223,6 +278,9 @@ private:
         SSBO,
         SSBO_GEO,
         SSBO_VERT,
+        SSBO_QUAD,
+        SSBO_STRIP,
+        SSBO_MUZIC,
         MESH,
         MESH_ALTN,
         MESH_GEO,
@@ -232,8 +290,8 @@ private:
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    std::array<std::string, 12> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT", "MESH",
-        "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN"};
+    std::array<std::string, 15> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
+        "SSBO_QUAD", "SSBO_STRIP", "SSBO_MUZIC", "MESH", "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN"};
 
     bool Render(core_gl::view::CallRender3DGL& call) override;
 

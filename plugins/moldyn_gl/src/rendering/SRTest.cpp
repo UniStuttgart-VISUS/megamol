@@ -32,6 +32,9 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT), "SSBO_VERT");
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD), "SSBO_QUAD");
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP), "SSBO_STRIP");
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC), "SSBO_MUZIC");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_ALTN), "MESH_ALTN");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO), "MESH_GEO");
@@ -69,9 +72,35 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_tex_options.addDefinition("__SRTEST_TEX__");
         auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
+        auto shdr_ssbo_vert_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_vert_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
+        shdr_ssbo_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
+        shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
+        auto shdr_ssbo_quads_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
+        shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
+        shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
+        auto shdr_ssbo_strip_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_strip_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_strip_options.addDefinition("BASE_IDX", STRIP_BASE_IDX);
+        shdr_ssbo_strip_options.addDefinition("INV_IDX", STRIP_INV_IDX);
+        shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
+        auto shdr_ssbo_muzic_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_muzic_options.addDefinition("BASE_IDX", MUZIC_BASE_IDX);
+        shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
+        shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
         auto shdr_copy_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_copy_options.addDefinition("__SRTEST_SSBO__");
         shdr_copy_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+        auto shdr_copy_vert_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_copy_vert_options.addDefinition("__SRTEST_SSBO__");
+        shdr_copy_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+        shdr_copy_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
+        shdr_copy_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
+        shdr_copy_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
         auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
@@ -88,6 +117,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         switch (mode) {
         case upload_mode::FULL_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
@@ -95,6 +128,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         } break;
         case upload_mode::VEC3_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
@@ -102,6 +139,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         } break;
         case upload_mode::NO_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
@@ -110,6 +151,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         case upload_mode::POS_COL_SEP:
         default: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
@@ -123,13 +168,20 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
 
         rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_unique<copy_rt>(shdr_copy_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::COPY_VERT, std::make_unique<copy_vert_rt>(shdr_copy_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::COPY_VERT, std::make_unique<copy_vert_rt>(shdr_copy_vert_options)));
 
         rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(mode, shdr_ssbo_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(mode, shdr_ssbo_options)));
         rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(mode, shdr_ssbo_options)));
+            std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(mode, shdr_ssbo_vert_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_QUAD, std::make_unique<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_STRIP, std::make_unique<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_MUZIC, std::make_unique<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
 
         rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(mode, shdr_mesh_options)));
 
@@ -178,6 +230,13 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
 
     glCreateBuffers(1, &ubo_);
     glNamedBufferData(ubo_, sizeof(ubo_params_t), nullptr, GL_DYNAMIC_DRAW);
+
+    GLint max_vert;
+    GLint max_ind;
+    glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &max_vert);
+    glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &max_ind);
+
+    core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Max Vert %d; Max Ind %d", max_vert, max_ind);
 
     return true;
 }
@@ -414,6 +473,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
     data_.g.resize(pl_count);
     data_.b.resize(pl_count);
     data_.a.resize(pl_count);
+    data_.indices.resize(pl_count);
 
     data_.data_sizes.resize(pl_count);
     data_.pl_data.global_radii.resize(pl_count);
@@ -437,6 +497,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         auto& G = data_.g[pl_idx];
         auto& B = data_.b[pl_idx];
         auto& A = data_.a[pl_idx];
+
+        auto& IDX = data_.indices[pl_idx];
 
         if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
             data_.pl_data.use_global_color[pl_idx] = 0;
@@ -475,6 +537,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         B.reserve(p_count);
         A.clear();
         A.reserve(p_count);
+        IDX.clear();
+        IDX.reserve(p_count * 6);
 
         data_.data_sizes[pl_idx] = p_count;
 
@@ -515,6 +579,13 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             G.push_back(cg_acc->Get_f(p_idx));
             B.push_back(cb_acc->Get_f(p_idx));
             A.push_back(ca_acc->Get_f(p_idx));
+
+            IDX.push_back(p_idx * 4 + 0);
+            IDX.push_back(p_idx * 4 + 1);
+            IDX.push_back(p_idx * 4 + 2);
+            IDX.push_back(p_idx * 4 + 3);
+            IDX.push_back(p_idx * 4 + 3);
+            IDX.push_back(p_idx * 4 + 4);
         }
     }
 }
@@ -904,7 +975,8 @@ bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& packag
 
 megamol::moldyn_gl::rendering::copy_vert_rt::copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options)
         : rendering_task(upload_mode::NULL_MODE, "SRTestCopyVert", options,
-              std::filesystem::path("srtest/srtest_vert.vert.glsl"), std::filesystem::path("srtest/srtest_vert.frag.glsl")) {
+              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {
     try {
         comp_program_ = core::utility::make_glowl_shader(
             "SRTestCopyVertComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
@@ -1058,6 +1130,108 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& p
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glUseProgram(0);
+
+    return true;
+}
+
+
+megamol::moldyn_gl::rendering::ssbo_quad_rt::ssbo_quad_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_quads, "SRTestSSBOQuad", options,
+              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+
+
+megamol::moldyn_gl::rendering::ssbo_strip_rt::ssbo_strip_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_strip, "SRTestSSBOStrip", options,
+              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+
+
+megamol::moldyn_gl::rendering::ssbo_muzic_rt::ssbo_muzic_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_strip, "SRTestSSBOMuzic", options,
+              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    auto program = get_program();
+    program->use();
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+
+        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+        program->setUniform("globalCol", pl_data_.global_color[i]);
+        program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        switch (get_mode()) {
+        case upload_mode::FULL_SEP: {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+        } break;
+        case upload_mode::NO_SEP: {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
+        } break;
+        case upload_mode::POS_COL_SEP:
+        case upload_mode::VEC3_SEP:
+        default:
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
+        }
+
+        // glDrawArrays(GL_POINTS, 0, num_prims);
+        //dc_muzic(num_prims, indices_[i]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buf_[i]);
+
+        constexpr int per_iter = 100000;
+        auto num_iter = num_prims / per_iter + 1;
+        for (int iter = 0; iter < num_iter; ++iter) {
+            auto num_items = iter * per_iter;
+            num_items = std::fmin(num_prims - num_items, per_iter);
+            program->setUniform("offset", iter * per_iter);
+            glDrawElements(GL_TRIANGLE_STRIP, num_items * 6 - 2, GL_UNSIGNED_INT, nullptr);
+        }
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::upload(data_package_t const& package) {
+    ssbo_shader_task::upload(package);
+
+    indices_ = package.indices;
+
+    glDeleteBuffers(ind_buf_.size(), ind_buf_.data());
+    ind_buf_.resize(indices_.size());
+    glCreateBuffers(ind_buf_.size(), ind_buf_.data());
+
+    for (int i = 0; i < indices_.size(); ++i) {
+        glNamedBufferStorage(ind_buf_[i], sizeof(unsigned int) * indices_[i].size(), indices_[i].data(), 0);
+    }
 
     return true;
 }

@@ -207,3 +207,82 @@ void touchplane_old(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
     v[3] = vec4(mins.x, maxs.y, projPos.z, 1.0);
     v[1] = vec4(maxs.x, mins.y, projPos.z, 1.0);
 }
+
+
+void touchplane_old_v2(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
+    // Sphere-Touch-Plane-Approach
+
+    vec2 winHalf = viewAttr.zw; // window size
+
+    vec2 d, p, q, h, dd;
+
+    // get camera orthonormal coordinate system
+    vec4 tmp;
+
+    vec2 mins, maxs;
+    vec3 testPos;
+    vec4 projPos;
+
+    float sqrRad = rad * rad;
+
+    // projected camera vector
+    vec3 c2 = vec3(dot(-oc_pos, camRight), dot(-oc_pos, camUp), dot(-oc_pos, camDir));
+
+    vec3 cpj1 = camDir * c2.z + camRight * c2.x;
+    vec3 cpm1 = camDir * c2.x - camRight * c2.z;
+
+    vec3 cpj2 = camDir * c2.z + camUp * c2.y;
+    vec3 cpm2 = camDir * c2.y - camUp * c2.z;
+
+    d.x = length(cpj1);
+    d.y = length(cpj2);
+
+    dd = vec2(1.0) / d;
+
+    p = sqrRad * dd;
+    q = d - p;
+    h = sqrt(p * q);
+
+    p *= dd;
+    h *= dd;
+
+    cpj1 *= p.x;
+    cpm1 *= h.x;
+    cpj2 *= p.y;
+    cpm2 *= h.y;
+
+    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
+    testPos = objPos.xyz + cpj1 + cpm1;
+    projPos = MVP * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = projPos.xy;
+    maxs = projPos.xy;
+
+    testPos -= 2.0 * cpm1;
+    projPos = MVP * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    testPos = objPos.xyz + cpj2 + cpm2;
+    projPos = MVP * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    testPos -= 2.0 * cpm2;
+    projPos = MVP * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+    mins = min(mins, projPos.xy);
+    maxs = max(maxs, projPos.xy);
+
+    testPos = objPos.xyz - camDir * rad;
+    projPos = MVP * vec4(testPos, 1.0);
+    projPos /= projPos.w;
+
+    v[2] = vec4(maxs.xy, projPos.z, 1.0);
+    v[1] = vec4(mins.xy, projPos.z, 1.0);
+
+    v[0] = vec4(mins.x, maxs.y, projPos.z, 1.0);
+    v[3] = vec4(maxs.x, mins.y, projPos.z, 1.0);
+}

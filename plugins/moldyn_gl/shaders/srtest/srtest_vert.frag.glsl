@@ -31,6 +31,7 @@ void main() {
     if (delta < 0.0f)
         discard;
 
+
     float tb = sqrt(delta);
     float t = tf - tb;
 
@@ -39,7 +40,10 @@ void main() {
     vec3 normal = (new_pos.xyz - objPos) / rad;
 
     outColor = vec4(LocalLighting(ray, normal, lightDir, pointColor.rgb), pointColor.a);
-    // outColor = vec4(0.5f * (pp.ray + 1.0f), 1);
+    //// outColor = vec4(0.5f * (pp.ray + 1.0f), 1);
+    //if (delta < 0.0f)
+    ////discard;
+    //outColor = vec4(1.0f);
 
     gl_FragDepth = depth(t);
 }

@@ -22,7 +22,7 @@ public:
 
     bool upload(data_package_t const& package) override;
 
-private:
+protected:
     void upload_full_separate(data_package_t const& package);
 
     void upload_pos_col_sep(data_package_t const& package);

@@ -25,6 +25,7 @@ struct data_package {
     std::vector<std::vector<float>> g;
     std::vector<std::vector<float>> b;
     std::vector<std::vector<float>> a;
+    std::vector<std::vector<uint32_t>> indices;
     std::vector<uint64_t> data_sizes;
     per_list_package pl_data;
 };
