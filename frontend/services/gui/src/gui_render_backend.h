@@ -20,7 +20,7 @@
 
 #ifdef WITH_GL
 #include <glowl/FramebufferObject.hpp>
-#endif
+#endif // WITH_GL
 
 
 namespace megamol {
@@ -79,6 +79,10 @@ private:
     std::shared_ptr<glowl::FramebufferObject> ogl_fbo = nullptr;
 #endif // WITH_GL
     std::shared_ptr<megamol::core::view::CPUFramebuffer> cpu_fbo = nullptr;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    bool createFramebuffer(unsigned int width, unsigned int height);
 };
 
 

@@ -26,7 +26,9 @@ using namespace megamol::gui;
 megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
         , cpu_window({1280, 720, 0, 0})
-        , cpu_monitor({1920, 1080}) {}
+        , cpu_monitor({1920, 1080}) {
+    this->createFramebuffer(1, 1);
+}
 
 
 megamol::gui::gui_render_backend::~gui_render_backend() {
@@ -171,35 +173,10 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         GUI_GL_CHECK_ERROR
-
-        auto width_i = static_cast<int>(width);
-        auto height_i = static_cast<int>(height);
-        bool create_fbo = false;
-        if (this->ogl_fbo == nullptr) {
-            create_fbo = true;
-        } else if (((this->ogl_fbo->getWidth() != width_i) || (this->ogl_fbo->getHeight() != height_i)) &&
-                   (width_i != 0) && (height_i != 0)) {
-            create_fbo = true;
-        }
-        if (create_fbo) {
-            try {
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                this->ogl_fbo.reset();
-                this->ogl_fbo = std::make_shared<glowl::FramebufferObject>(width_i, height_i);
-                this->ogl_fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
-                // TODO: check completness and throw if not?
-            } catch (glowl::FramebufferObjectException const& exc) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to create framebuffer object: %s [%s, %s, line %d]\n", exc.what(), __FILE__,
-                    __FUNCTION__, __LINE__);
-                return false;
-            }
-        }
-        if (this->ogl_fbo == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        if (!this->createFramebuffer(width, height)) {
             return false;
         }
+
         this->ogl_fbo->bind();
         /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         /// glClearDepth(1.0f);
@@ -211,25 +188,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        bool create_fbo = false;
-        if (this->cpu_fbo == nullptr) {
-            create_fbo = true;
-        } else if (((this->cpu_fbo->getWidth() != width) || (this->cpu_fbo->getHeight() != height)) && (width != 0) &&
-                   (height != 0)) {
-            create_fbo = true;
-        }
-        if (create_fbo) {
-            this->cpu_fbo.reset();
-            this->cpu_fbo = std::make_shared<megamol::core::view::CPUFramebuffer>();
-            if (this->cpu_fbo == nullptr) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-            this->cpu_fbo->colorBuffer = std::vector<uint32_t>(width * height, 0);
-            this->cpu_fbo->width = width;
-            this->cpu_fbo->height = height;
-        }
+        return this->createFramebuffer(width, height);
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -339,7 +298,7 @@ void megamol::gui::gui_render_backend::ClearFrame() {
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         if (this->cpu_fbo != nullptr) {
-            std::fill(this->cpu_fbo->colorBuffer.begin(), this->cpu_fbo->colorBuffer.end(), 0);
+            std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
         }
     } break;
     default: {
@@ -357,19 +316,67 @@ megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
         megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
 
 #ifdef WITH_GL
+    return megamol::frontend_resources::wrap_image(
+        {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
+        this->ogl_fbo->getColorAttachment(0)->getName(), channels);
+#else
+    return megamol::frontend_resources::wrap_image(
+        {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
+#endif
+}
+
+
+bool gui_render_backend::createFramebuffer(unsigned int width, unsigned int height) {
+
+#ifdef WITH_GL
+    auto width_i = static_cast<int>(width);
+    auto height_i = static_cast<int>(height);
+    bool create_fbo = false;
     if (this->ogl_fbo == nullptr) {
-        return megamol::frontend_resources::wrap_image({0, 0}, 0, channels);
-    } else {
-        return megamol::frontend_resources::wrap_image(
-            {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
-            this->ogl_fbo->getColorAttachment(0)->getName(), channels);
+        create_fbo = true;
+    } else if (((this->ogl_fbo->getWidth() != width_i) || (this->ogl_fbo->getHeight() != height_i)) && (width_i != 0) &&
+               (height_i != 0)) {
+        create_fbo = true;
+    }
+    if (create_fbo) {
+        try {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            this->ogl_fbo.reset();
+            this->ogl_fbo = std::make_shared<glowl::FramebufferObject>(width_i, height_i);
+            this->ogl_fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+            // TODO: check completness and throw if not?
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to create framebuffer object: %s [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
+                __LINE__);
+            return false;
+        }
+    }
+    if (this->ogl_fbo == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
 #else
+    bool create_fbo = false;
     if (this->cpu_fbo == nullptr) {
-        return megamol::frontend_resources::wrap_image({0, 0}, 0, channels);
-    } else {
-        return megamol::frontend_resources::wrap_image(
-            {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
+        create_fbo = true;
+    } else if (((this->cpu_fbo->getWidth() != width) || (this->cpu_fbo->getHeight() != height)) && (width != 0) &&
+               (height != 0)) {
+        create_fbo = true;
+    }
+    if (create_fbo) {
+        this->cpu_fbo.reset();
+        this->cpu_fbo = std::make_shared<megamol::core::view::CPUFramebuffer>();
+        if (this->cpu_fbo == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        this->cpu_fbo->colorBuffer = std::vector<uint32_t>(width * height, 0);
+        this->cpu_fbo->width = width;
+        this->cpu_fbo->height = height;
     }
 #endif
+    return true;
 }
