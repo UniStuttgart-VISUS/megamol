@@ -97,7 +97,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.backend = megamol::gui::GUIRenderBackend::CPU;
+    guiConfig.backend = (with_gl) ? (megamol::gui::GUIRenderBackend::OPEN_GL) : (megamol::gui::GUIRenderBackend::CPU);
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;

@@ -168,11 +168,13 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
     }
 
+#ifdef GUI_VERBOSE
     if ((instance_time - this->gui_state.last_instance_time) < 0.0) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
+#endif // GUI_VERBOSE
     io.DeltaTime = ((instance_time - this->gui_state.last_instance_time) > 0.0)
                        ? (static_cast<float>(instance_time - this->gui_state.last_instance_time))
                        : (io.DeltaTime);

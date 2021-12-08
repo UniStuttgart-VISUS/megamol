@@ -348,7 +348,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
     bool view_presentation_ok = image_presentation.add_entry_point(
-        "GUI Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+        "GUI_Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
                            std::function{get_gui_runtime_resources_requests}});
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
