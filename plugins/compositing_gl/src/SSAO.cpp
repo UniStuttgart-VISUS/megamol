@@ -33,7 +33,6 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-// TODO: replace std::cout at shader compiling with log::writeinfo
 
 /////////////////////////////////////////////////////////////////////////
 // CONSTANTS
@@ -275,7 +274,6 @@ bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) 
     return true;
 }
 
-// TODO: DELETE ALL MEMORY!
 megamol::compositing::SSAO::~SSAO() { this->Release(); }
 
 bool megamol::compositing::SSAO::create() {
@@ -318,7 +316,7 @@ bool megamol::compositing::SSAO::create() {
             vislib_gl::graphics::gl::ShaderSource csNaiveSSAO;
             vislib_gl::graphics::gl::ShaderSource csNaiveSSAOBlur;
 
-            std::cout << "Compiling: Compositing::assao::CSPrepareDepths\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepths");
             auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
                 instance()->Configuration().ShaderDirectories());
             if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepths", csPrepareDepths))
@@ -328,7 +326,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsHalf\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
             if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Compile(csPrepareDepthsHalf.Code(), csPrepareDepthsHalf.Count()))
@@ -336,7 +334,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsHalfPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormals\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormals");
             if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
                 return false;
             if (!m_prepareDepthsAndNormalsPrgm->Compile(
@@ -345,7 +343,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_prepareDepthsAndNormalsPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf");
             if (!ssf->MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
                 return false;
@@ -381,7 +379,7 @@ bool megamol::compositing::SSAO::create() {
                     return false;
             }
 
-            std::cout << "Compiling: Compositing::assao::CSSmartBlur\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlur");
             if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
                 return false;
             if (!m_smartBlurPrgm->Compile(csSmartBlur.Code(), csSmartBlur.Count()))
@@ -389,7 +387,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_smartBlurPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSSmartBlurWide\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlurWide");
             if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
                 return false;
             if (!m_smartBlurWidePrgm->Compile(csSmartBlur_wide.Code(), csSmartBlur_wide.Count()))
@@ -397,7 +395,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_smartBlurWidePrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSNonSmartBlur\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartBlur");
             if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
                 return false;
             if (!m_nonSmartBlurPrgm->Compile(csNonSmartBlur.Code(), csNonSmartBlur.Count()))
@@ -405,7 +403,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_nonSmartBlurPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSApply\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSApply");
             if (!ssf->MakeShaderSource("Compositing::assao::CSApply", csApply))
                 return false;
             if (!m_applyPrgm->Compile(csApply.Code(), csApply.Count()))
@@ -413,7 +411,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_applyPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSNonSmartApply\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartApply");
             if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartApply", csNonSmartApply))
                 return false;
             if (!m_nonSmartApplyPrgm->Compile(csNonSmartApply.Code(), csNonSmartApply.Count()))
@@ -421,7 +419,7 @@ bool megamol::compositing::SSAO::create() {
             if (!m_nonSmartApplyPrgm->Link())
                 return false;
 
-            std::cout << "Compiling: Compositing::assao::CSNonSmartHalfApply\n";
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartHalfApply");
             if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
                 return false;
             if (!m_nonSmartHalfApplyPrgm->Compile(csNonSmartHalfApply.Code(), csNonSmartHalfApply.Count()))

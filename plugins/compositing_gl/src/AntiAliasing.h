@@ -124,22 +124,68 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    /**
-    * Function for launching compute shaders
-    */
     typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     bool visibilityCallback(core::param::ParamSlot& slot);
     bool setSettingsCallback(core::param::ParamSlot& slot);
     bool setCustomSettingsCallback(core::param::ParamSlot& slot);
 
-    void dispatchComputeShader(const std::unique_ptr<GLSLComputeShader>& prgm,
-        const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
-        std::shared_ptr<glowl::Texture2D> output,
-        const std::vector<std::pair<const char*, int>>& uniforms,
-        bool calc_weights_pass,
-        const std::shared_ptr<glowl::BufferObject>& ssbo = nullptr);
+    /**
+    * \brief: First pass. Calculates edges of given input
+    *
+    * \param input The input texture (texture to smooth) from which the edges are calculated.
+    * \param depth The depth texture from corresponding to the input. Used for depth based edge detection
+    * \param edges The output texture to which the edges are written
+    * \param detection_technique The selected technqiue on which edge detection is based: color, luma, or depth
+    */
+    void edgeDetection(
+        const std::shared_ptr<glowl::Texture2D>& input,
+        const std::shared_ptr<glowl::Texture2D>& depth,
+        const std::shared_ptr<glowl::Texture2D>& edges,
+        GLint detection_technique);
 
+    /**
+    * \brief: Second pass. Calculates the weights of the found edges from edgeDetection function
+    *
+    * \param edges Edge texture from previous edgeDetection pass.
+    * \param area Area texture used as lookup texture to properly calculate the coverage area of an edge
+    * \param search Search texture to find the distances to surrounding edges
+    * \param weights The output texture to which the weights are written
+    */
+    void blendingWeightCalculation(
+        const std::shared_ptr<glowl::Texture2D>& edges,
+        const std::shared_ptr<glowl::Texture2D>& area,
+        const std::shared_ptr<glowl::Texture2D>& search,
+        const std::shared_ptr<glowl::Texture2D>& weights);
+
+    /**
+    * \brief: Final pass. Blends neighborhood pixels using the weight texture from the 2nd pass.
+    * Gives final result.
+    *
+    * \param input The input texture to smooth
+    * \param weights The weights texture from previous blendingWeightCalculation pass. Used to blend edges
+    * \param result The resulting smoothed texture
+    */
+    void neighborhoodBlending(
+        const std::shared_ptr<glowl::Texture2D>& input,
+        const std::shared_ptr<glowl::Texture2D>& weights,
+        const std::shared_ptr<glowl::Texture2D>& result);
+
+    /**
+    * \brief: Performs AntiAliasing based on FXAA
+    *
+    * \param input The input texture to smooth
+    * \param output The resulting smoothed texture
+    */
+    void fxaa(
+        const std::shared_ptr<glowl::Texture2D>& input,
+        const std::shared_ptr<glowl::Texture2D>& output);
+
+    /**
+    * Copies a src texture to the tgt texture
+    * Caution: this only works if the tgt texture is of format rgba16f!
+    * Use Texture2D::copy otherwise
+    */
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt,
         const std::shared_ptr<glowl::Texture2D>& src);
@@ -162,30 +208,17 @@ private:
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
 
     /** Shader programs for smaa */
-    std::unique_ptr<GLSLComputeShader> m_smaa_velocity_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_edge_detection_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
-    std::unique_ptr<GLSLComputeShader> m_smaa_temporal_resolving_prgm;
 
     /** Configurable settings for smaa */
     SMAAConstants m_smaa_constants;
     SMAAConstants m_smaa_custom_constants;
     std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
 
-    /** Temporal smaa handles */
-    core::view::Camera m_cam;
-    glm::mat4 m_prev_proj_mx;
-    glm::mat4 m_prev_view_mx;
-    glm::vec2 m_jitter[2] = { glm::vec2(0.25, -0.25), glm::vec2(-0.25, 0.25) };
-    glm::vec4 m_subsample_indices[2] =
-    { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
+    /** SMAA depth texture for depth based edge detection */
     std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
-    std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
-    std::shared_ptr<glowl::Texture2D> m_prev_input_tx2D;
-    /** Texture to store velocity for each pixel used in SMAA T2x */
-    std::shared_ptr<glowl::Texture2D> m_velocity_tx2D;
-    std::shared_ptr<glowl::Texture2D> m_temporal_tx2D;
 
     /** SMAA intermediate texture layout */
     glowl::TextureLayout m_smaa_layout;
@@ -197,7 +230,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_edges_tx2D;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_blend_tx2D;
+    std::shared_ptr<glowl::Texture2D> m_blending_weights_tx2D;
 
     /** Texture holding the blending factors for the coverage areas */
     std::shared_ptr<glowl::Texture2D> m_area_tx2D;
@@ -249,17 +282,11 @@ private:
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot m_smaa_detection_technique;
 
-    /** Parameter for toggling reprojection, used to counter ghosting */
-    megamol::core::param::ParamSlot m_smaa_reprojection;
-
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 
     /** Slot for optionally querying an input texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_input_tex_slot;
-
-    /** Slot for optionally querying the camera, i.e. a rhs connection */
-    megamol::core::CallerSlot m_camera_slot;
 
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_depth_tex_slot;

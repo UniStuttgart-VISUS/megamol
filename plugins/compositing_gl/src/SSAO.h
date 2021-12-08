@@ -463,7 +463,6 @@ void SSAO::fullscreenPassDraw(
     }
 
     // all textures in output_textures should have the same size, so we just use the first
-    // TODO: adjust dispatch size
     prgm->Dispatch(static_cast<int>(std::ceil(outputTextures[0].first->getWidth() / 8.f)),
         static_cast<int>(std::ceil(outputTextures[0].first->getHeight() / 8.f)), 1);
 
