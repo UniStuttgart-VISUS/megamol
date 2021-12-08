@@ -137,7 +137,8 @@ public:
     void validateFlagCount(FlagStorageTypes::index_type num) {
         if (flags->size() < num) {
             flags->resize(num);
-            std::fill(flags->begin(), flags->end(), FlagStorageTypes::to_integral(FlagStorageTypes::flag_bits::ENABLED));
+            std::fill(
+                flags->begin(), flags->end(), FlagStorageTypes::to_integral(FlagStorageTypes::flag_bits::ENABLED));
         }
     }
 };

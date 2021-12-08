@@ -10,8 +10,8 @@
 
 #include "mmcore/CallGeneric.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore_gl/UniFlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore_gl/UniFlagStorage.h"
 
 
 namespace megamol {
@@ -51,5 +51,5 @@ public:
 typedef megamol::core::factories::CallAutoDescription<FlagCallRead_GL> FlagCallRead_GLDescription;
 typedef megamol::core::factories::CallAutoDescription<FlagCallWrite_GL> FlagCallWrite_GLDescription;
 
-} // namespace core
+} // namespace core_gl
 } /* end namespace megamol */

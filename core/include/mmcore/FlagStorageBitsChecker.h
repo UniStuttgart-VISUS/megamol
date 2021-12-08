@@ -10,7 +10,6 @@ namespace core {
 
 class BitsChecker {
 public:
-
     BitsChecker(const std::shared_ptr<FlagStorageTypes::flag_vector_type>& flags) : flags(flags) {}
 
     BitsChecker(BitsChecker& b, tbb::split) : flags(b.flags) {

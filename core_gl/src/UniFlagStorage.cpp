@@ -28,7 +28,7 @@ UniFlagStorage::UniFlagStorage(void)
     this->writeGLFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
         FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &core::FlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeGLFlagsSlot);
-} 
+}
 
 
 UniFlagStorage::~UniFlagStorage(void) {
