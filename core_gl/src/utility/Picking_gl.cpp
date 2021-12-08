@@ -104,7 +104,8 @@ bool PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     if (create_fbo) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         this->fbo.reset();
-        this->fbo = std::make_shared<glowl::FramebufferObject>(vp_width, vp_height, glowl::FramebufferObject::DepthStencilType::NONE);
+        this->fbo = std::make_shared<glowl::FramebufferObject>(
+            vp_width, vp_height, glowl::FramebufferObject::DepthStencilType::NONE);
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
     }

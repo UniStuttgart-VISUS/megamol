@@ -10,11 +10,11 @@
 #pragma once
 
 
+#include "ImageWrapper.h"
 #include "imgui.h"
 #include "imgui_impl_generic.h"
 #include "imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
-#include "ImageWrapper.h"
 #include <glm/glm.hpp>
 #include <memory>
 

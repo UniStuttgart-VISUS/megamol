@@ -373,7 +373,7 @@ megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
         return megamol::frontend_resources::wrap_image({0, 0}, 0, channels);
     } else {
         return megamol::frontend_resources::wrap_image(
-            {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fboy->colorBuffer, channels);
+            {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
     }
 #endif
 }
