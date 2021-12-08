@@ -14,6 +14,7 @@
 #include "imgui_impl_generic.h"
 #include "imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
+#include "ImageWrapper.h"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -64,29 +65,7 @@ public:
 
     bool CreateFontsTexture();
 
-#ifdef WITH_GL
-
-    inline void GetFBOData_GL(
-        unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
-        if (this->ogl_fbo == nullptr) {
-            out_fbo_color_buffer_gl_handle = 0;
-            out_fbo_width = 0;
-            out_fbo_height = 0;
-        } else {
-            // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
-            out_fbo_color_buffer_gl_handle = this->ogl_fbo->getColorAttachment(0)->getName();
-            out_fbo_width = static_cast<size_t>(this->ogl_fbo->getWidth());
-            out_fbo_height = static_cast<size_t>(this->ogl_fbo->getHeight());
-        }
-    }
-
-#else
-
-    inline std::shared_ptr<megamol::core::view::CPUFramebuffer>& GetFBOData_CPU() {
-        return this->cpu_fbo;
-    }
-
-#endif // WITH_GL
+    megamol::frontend_resources::ImageWrapper GetImage();
 
 private:
     // VARIABLES --------------------------------------------------------------

@@ -161,22 +161,19 @@ public:
      * See imgui.h: enum ImGuiMouseCursor_
      * io.MouseDrawCursor is true when Software Cursor should be drawn instead.
      *
-     * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
+     * @return Returned mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
      */
     inline int GetMouseCursor() const {
         return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
     }
 
-#ifdef WITH_GL
-    inline void GetFBOData_GL(
-        unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) {
-        this->render_backend.GetFBOData_GL(out_fbo_color_buffer_gl_handle, out_fbo_width, out_fbo_height);
+
+    /**
+     * Get image data containing rendered image.
+     */
+    inline megamol::frontend_resources::ImageWrapper GetImage() {
+        return this->render_backend.GetImage();
     }
-#else
-    inline std::shared_ptr<core::view::CPUFramebuffer> GetFBOData_CPU() {
-        return this->render_backend.GetFBOData_CPU();
-    }
-#endif // WITH_GL
 
     ///////// SET ///////////
 

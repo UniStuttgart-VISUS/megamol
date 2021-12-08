@@ -367,25 +367,11 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,
     megamol::frontend_resources::ImageWrapper& result_image) {
 
-    // vislib::graphics::gl::FramebufferObject seems to use RGBA8
-    megamol::frontend_resources::ImageWrapper::DataChannels channels =
-        megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
-
     auto gui_ptr = static_cast<megamol::gui::GUIManager*>(void_ptr);
-
-#ifdef WITH_GL
-    unsigned int fbo_color_buffer_gl_handle = 0;
-    size_t fbo_width = 1;
-    size_t fbo_height = 1;
-    gui_ptr->GetFBOData_GL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
-
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
-#else
-    auto fbo = gui_ptr->GetFBOData_CPU();
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
-#endif
+    if (gui_ptr == nullptr) {
+        return false;
+    }
+    result_image = gui_ptr->GetImage();
 
     return true;
 }

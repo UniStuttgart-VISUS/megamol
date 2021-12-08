@@ -352,3 +352,28 @@ void megamol::gui::gui_render_backend::ClearFrame() {
     } break;
     }
 }
+
+
+megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
+
+    // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    megamol::frontend_resources::ImageWrapper::DataChannels channels =
+        megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
+
+#ifdef WITH_GL
+    if (this->ogl_fbo == nullptr) {
+        return megamol::frontend_resources::wrap_image({0, 0}, 0, channels);
+    } else {
+        return megamol::frontend_resources::wrap_image(
+            {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
+            this->ogl_fbo->getColorAttachment(0)->getName(), channels);
+    }
+#else
+    if (this->cpu_fbo == nullptr) {
+        return megamol::frontend_resources::wrap_image({0, 0}, 0, channels);
+    } else {
+        return megamol::frontend_resources::wrap_image(
+            {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fboy->colorBuffer, channels);
+    }
+#endif
+}
