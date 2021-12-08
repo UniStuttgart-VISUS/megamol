@@ -426,7 +426,7 @@ void megamol::compositing::AntiAliasing::edgeDetection(
         }
     }
 
-    glUniform1i(m_smaa_edge_detection_prgm->ParameterLocation("technqiue"), detection_technique);
+    glUniform1i(m_smaa_edge_detection_prgm->ParameterLocation("technique"), detection_technique);
 
     m_ssbo_constants->bind(0);
 
@@ -592,7 +592,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
         // smaa
         if (mode == 0) {
-            // TODO: does this work as intended?
             // textures the smaa passes need
             std::shared_ptr<glowl::Texture2D> depth_tx2D;
 

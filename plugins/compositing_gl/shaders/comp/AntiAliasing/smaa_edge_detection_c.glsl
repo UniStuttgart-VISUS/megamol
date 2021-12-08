@@ -80,16 +80,9 @@ vec2 SMAACalculatePredicatedThreshold(vec2 texcoord,
 vec2 SMAALumaEdgeDetectionPS(vec2 texcoord,
                                vec4 offset[3],
                                sampler2D colorTex
-                               #if SMAA_PREDICATION
-                               , sampler2D predicationTex
-                               #endif
                                ) {
     // Calculate the threshold:
-    #if SMAA_PREDICATION
-    vec2 threshold = SMAACalculatePredicatedThreshold(texcoord, offset, predicationTex);
-    #else
     vec2 threshold = vec2(g_SMAAConsts.SMAA_THRESHOLD);
-    #endif
 
     // Calculate lumas:
     vec3 weights = vec3(0.2126, 0.7152, 0.0722);
@@ -139,16 +132,9 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord,
 vec2 SMAAColorEdgeDetectionPS(vec2 texcoord,
                                 vec4 offset[3],
                                 sampler2D colorTex
-                                #if SMAA_PREDICATION
-                                , sampler2D predicationTex
-                                #endif
                                 ) {
     // Calculate the threshold:
-    #if SMAA_PREDICATION
-    vec2 threshold = SMAACalculatePredicatedThreshold(texcoord, offset, predicationTex);
-    #else
     vec2 threshold = vec2(g_SMAAConsts.SMAA_THRESHOLD);
-    #endif
 
     // Calculate color deltas:
     vec4 delta;
@@ -234,19 +220,11 @@ void main() {
 
     // luma
     if(technique == 0) {
-        edges = SMAALumaEdgeDetectionPS(texCoords, offset, g_colorTex
-        #if SMAA_PREDICATION
-        , g_predicationTex
-        #endif
-        );
+        edges = SMAALumaEdgeDetectionPS(texCoords, offset, g_colorTex);
     }
     // color
     else if(technique == 1) {
-        edges = SMAAColorEdgeDetectionPS(texCoords, offset, g_colorTex
-            #if SMAA_PREDICATION
-            , g_predicationTex
-            #endif
-            );
+        edges = SMAAColorEdgeDetectionPS(texCoords, offset, g_colorTex);
     }
     // depth
     else if(technique == 2) {
