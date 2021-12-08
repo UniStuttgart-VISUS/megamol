@@ -72,8 +72,8 @@ private:
 
     GUIRenderBackend initialized_backend;
 
-    GenericWindow sw_window;
-    GenericMonitor sw_monitor;
+    GenericWindow cpu_window;
+    GenericMonitor cpu_monitor;
 
 #ifdef WITH_GL
     std::shared_ptr<glowl::FramebufferObject> ogl_fbo = nullptr;

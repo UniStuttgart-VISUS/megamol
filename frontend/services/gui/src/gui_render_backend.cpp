@@ -25,8 +25,8 @@ using namespace megamol::gui;
 
 megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
-        , sw_window({1280, 720, 0, 0})
-        , sw_monitor({1920, 1080}) {}
+        , cpu_window({1280, 720, 0, 0})
+        , cpu_monitor({1920, 1080}) {}
 
 
 megamol::gui::gui_render_backend::~gui_render_backend() {
@@ -118,7 +118,7 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        if (ImGui_ImplGeneric_Init(&this->sw_window)) { /// XXX How is sw_window used?
+        if (ImGui_ImplGeneric_Init(&this->cpu_window)) { /// XXX How is cpu_window used?
             imgui_sw::bind_imgui_painting();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui render Backend for CPU.");
         } else {
@@ -149,13 +149,13 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        this->sw_window.width = static_cast<int>(window_size.x);
-        this->sw_window.height = static_cast<int>(window_size.y);
-        this->sw_window.x = 0;
-        this->sw_window.y = 0;
-        this->sw_monitor.res_x = static_cast<int>(framebuffer_size.x);
-        this->sw_monitor.res_y = static_cast<int>(framebuffer_size.y);
-        ImGui_ImplGeneric_NewFrame(&this->sw_window, &this->sw_monitor);
+        this->cpu_window.width = static_cast<int>(window_size.x);
+        this->cpu_window.height = static_cast<int>(window_size.y);
+        this->cpu_window.x = 0;
+        this->cpu_window.y = 0;
+        this->cpu_monitor.res_x = static_cast<int>(framebuffer_size.x);
+        this->cpu_monitor.res_y = static_cast<int>(framebuffer_size.y);
+        ImGui_ImplGeneric_NewFrame(&this->cpu_window, &this->cpu_monitor);
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -302,7 +302,7 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
     switch (this->initialized_backend) {
     case (GUIRenderBackend::NONE): {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Fonts can only be loaded after render backend was initialized. [%s, %s, line %d]\n", __FILE__,
+            "[GUI] Missing initialized backend to create fonts texture. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         return false;
     }
@@ -312,11 +312,7 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] CPU rendering does not support painting with any other texture than the default font texture. [%s, "
-            "%s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return ImGui_ImplGeneric_CreateFontsTexture();
     }
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

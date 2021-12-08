@@ -308,13 +308,47 @@ void megamol::gui::Configurator::draw_window_menu() {
         ImGui::Separator();
 
         if (ImGui::BeginMenu("Help")) {
-            ImGui::TextUnformatted("[Double left-click] Spawn module selection pop-up (Only compatible modules "
-                                   "when call slo tis clicked)");
-            ImGui::TextUnformatted("[Right-click] Show context menu of module/call/group");
-            ImGui::TextUnformatted("[Drag & drop] Drag from call slot of module to other compatible call "
-                                   "slot to create call connection between modules");
-            ImGui::TextUnformatted("[Mouse wheel] Zoom graph");
-            ImGui::TextUnformatted("[Middle-click] Scroll graph");
+
+            ImGui::TextUnformatted("Graph Interactions:");
+            auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
+            if (ImGui::BeginTable("configurator_help_table", 2, table_flags)) {
+                ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableHeadersRow();
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Double left-click");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Show context menu of module/call/group");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Right-click");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Drag call slot of module to other compatible call slot to create call between modules");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Drag & drop");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Zoom graph");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Mouse wheel");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Scroll graph");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Middle-click");
+
+                ImGui::EndTable();
+            }
+
             ImGui::EndMenu();
         }
         ImGui::Separator();
