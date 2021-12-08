@@ -29,21 +29,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "HeadView"; }
+    static const char* ClassName(void) {
+        return "HeadView";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Head View Module"; }
+    static const char* Description(void) {
+        return "Head View Module";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /**
      * Answer whether or not this module supports being used in a
@@ -55,7 +61,9 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart(void) { return false; }
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
     /** Ctor. */
     HeadView(void);
@@ -116,11 +124,13 @@ public:
      */
     virtual bool OnRenderView(core::Call& call);
 
-    virtual bool OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
+    virtual bool OnKey(
+        frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
 
     virtual bool OnChar(unsigned int codePoint) override;
 
-    virtual bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) override;
+    virtual bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
+        frontend_resources::Modifiers mods) override;
 
     virtual bool OnMouseMove(double x, double y) override;
 
@@ -163,5 +173,5 @@ private:
 };
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */

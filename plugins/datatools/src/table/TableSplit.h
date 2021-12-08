@@ -13,13 +13,19 @@ namespace megamol::datatools::table {
 class TableSplit : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "TableSplit"; }
+    static const char* ClassName(void) {
+        return "TableSplit";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "split table in two parts based on column name selection string"; }
+    static const char* Description(void) {
+        return "split table in two parts based on column name selection string";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     TableSplit();
 
@@ -37,9 +43,13 @@ private:
 
     bool getHashCB(core::Call& c);
 
-    bool isDirty() { return _column_selector_slot.IsDirty(); }
+    bool isDirty() {
+        return _column_selector_slot.IsDirty();
+    }
 
-    void resetDirty() { _column_selector_slot.ResetDirty(); }
+    void resetDirty() {
+        _column_selector_slot.ResetDirty();
+    }
 
     bool processData(TableDataCall const& inCall);
 

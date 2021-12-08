@@ -24,9 +24,8 @@
 // typedef for a stupid hack to bypass the even more stupid type system of CUDA
 struct __host__ __device__ __align__(8) myuint2 : uint2{
 
-__host__ __device__ myuint2(void){
-    this->x = 0;
-    this->y = 0;
+                                                      __host__ __device__ myuint2(void){this->x = 0;
+this->y = 0;
 }
 
 __host__ __device__ myuint2(int i) {
@@ -48,14 +47,18 @@ inline __host__ __device__ myuint2 operator=(int a) const {
     return {static_cast<unsigned int>(a), static_cast<unsigned int>(a)};
 }
 
-inline __host__ __device__ myuint2 operator=(uint2 a) const { return {a.x, a.y}; }
+inline __host__ __device__ myuint2 operator=(uint2 a) const {
+    return {a.x, a.y};
+}
 
 inline __host__ __device__ void operator=(const uint2& a) {
     this->x = a.x;
     this->y = a.y;
 }
 
-inline __host__ __device__ operator uint2() const { return make_uint2(this->x, this->y); }
+inline __host__ __device__ operator uint2() const {
+    return make_uint2(this->x, this->y);
+}
 }
 ;
 
@@ -77,7 +80,9 @@ public:
      *
      * @return Returns the maxgridsize supported by the current object
      */
-    uint3 GetMaxGridSize() const { return maxGridSize; }
+    uint3 GetMaxGridSize() const {
+        return maxGridSize;
+    }
 
 
     /**
@@ -148,42 +153,54 @@ public:
      *
      * @param isoval The isovalue used for the Marching Cubes computation
      */
-    void SetIsovalue(float isoval) { isoValue = isoval; }
+    void SetIsovalue(float isoval) {
+        isoValue = isoval;
+    }
 
     /**
      * Returns the current isovalue for the surface extraction.
      *
      * @return The isovalue used for the Marching Cubes computation
      */
-    float GetIsovalue() { return isoValue; }
+    float GetIsovalue() {
+        return isoValue;
+    }
 
     /**
      * Returns the total number of triangle vertices of the isosurface.
      *
      * @return The vertex count
      */
-    unsigned int GetVertexCount() { return totalVerts; }
+    unsigned int GetVertexCount() {
+        return totalVerts;
+    }
 
     /**
      * Returns the total number of voxels that contribute to the isosurface.
      *
      * @return The voxel count
      */
-    unsigned int GetActiveVoxelCount() { return activeVoxels; }
+    unsigned int GetActiveVoxelCount() {
+        return activeVoxels;
+    }
 
     /**
      * Returns the total number of voxels.
      *
      * @return The voxel count
      */
-    unsigned int GetVoxelCount() { return static_cast<unsigned int>(numVoxels); }
+    unsigned int GetVoxelCount() {
+        return static_cast<unsigned int>(numVoxels);
+    }
 
     /**
      * Returns wether a color table was computed for the surface or not.
      *
      * @return 'true' if colors were computed, 'false' otherwise
      */
-    bool UseColor() { return useColor; }
+    bool UseColor() {
+        return useColor;
+    }
 
     /**
      * Frees all allocated memory and resets all variables.
@@ -218,7 +235,9 @@ public:
      * @param triaCount The number of triangles
      * @return The memory size in bytes
      */
-    size_t MemUsageAreaCalc(unsigned int triaCount) const { return triaCount * sizeof(float); };
+    size_t MemUsageAreaCalc(unsigned int triaCount) const {
+        return triaCount * sizeof(float);
+    };
 
 private:
     int cudadevice;       ///< CUDA device index
@@ -249,8 +268,9 @@ private:
     size_t areaMemSize;
     float totalArea;
 
-    cudaArray* d_volumeArray;       ///< volumetric map in device memory
-    myuint2* d_voxelVerts;          ///< per-voxel vertex counts for scan calls (this used to be a normal uint2* but CUDA 10 ruined it all...
+    cudaArray* d_volumeArray; ///< volumetric map in device memory
+    myuint2*
+        d_voxelVerts; ///< per-voxel vertex counts for scan calls (this used to be a normal uint2* but CUDA 10 ruined it all...
     unsigned int* d_compVoxelArray; ///< compacted list of active voxels
 
     int* d_triTable;               ///< triTable in device memory

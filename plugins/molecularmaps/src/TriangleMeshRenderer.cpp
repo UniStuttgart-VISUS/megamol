@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TriangleMeshRenderer.h"
+#include "stdafx.h"
 
 #define SHADER_BASED
 

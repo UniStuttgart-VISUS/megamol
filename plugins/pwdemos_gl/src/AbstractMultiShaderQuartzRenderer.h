@@ -14,65 +14,62 @@
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * AbstractQuartzRenderer
+ */
+class AbstractMultiShaderQuartzRenderer : public AbstractQuartzRenderer {
+public:
     /**
-     * AbstractQuartzRenderer
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
      */
-    class AbstractMultiShaderQuartzRenderer : public AbstractQuartzRenderer {
-    public:
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Ctor
+     */
+    AbstractMultiShaderQuartzRenderer(void);
 
-        /**
-         * Ctor
-         */
-        AbstractMultiShaderQuartzRenderer(void);
+    /**
+     * Dtor
+     */
+    virtual ~AbstractMultiShaderQuartzRenderer(void);
 
-        /**
-         * Dtor
-         */
-        virtual ~AbstractMultiShaderQuartzRenderer(void);
+protected:
+    /**
+     * Answer the crystalite data from the connected module
+     *
+     * @return The crystalite data from the connected module or NULL if no
+     *         data could be received
+     */
+    virtual CrystalDataCall* getCrystaliteData(void);
 
-    protected:
+    /**
+     * Releases all shader objects
+     */
+    void releaseShaders(void);
 
-        /**
-         * Answer the crystalite data from the connected module
-         *
-         * @return The crystalite data from the connected module or NULL if no
-         *         data could be received
-         */
-        virtual CrystalDataCall *getCrystaliteData(void);
+    /**
+     * Creates a raycasting shader for the specified crystalite
+     *
+     * @param c The crystalite
+     *
+     * @return The shader
+     */
+    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c) = 0;
 
-        /**
-         * Releases all shader objects
-         */
-        void releaseShaders(void);
+    /** The number of shader slots */
+    unsigned int cntShaders;
 
-        /**
-         * Creates a raycasting shader for the specified crystalite
-         *
-         * @param c The crystalite
-         *
-         * @return The shader
-         */
-        virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c) = 0;
+    /** The crystalite shaders */
+    vislib_gl::graphics::gl::GLSLShader** shaders;
 
-        /** The number of shader slots */
-        unsigned int cntShaders;
+    /** The error shader indicating that the correct shader is not yet loaded */
+    vislib_gl::graphics::gl::GLSLShader errShader;
+};
 
-        /** The crystalite shaders */
-        vislib_gl::graphics::gl::GLSLShader **shaders;
-
-        /** The error shader indicating that the correct shader is not yet loaded */
-        vislib_gl::graphics::gl::GLSLShader errShader;
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

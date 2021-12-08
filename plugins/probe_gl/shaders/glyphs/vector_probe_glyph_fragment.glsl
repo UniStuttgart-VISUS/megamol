@@ -74,8 +74,8 @@ void main() {
 
     if(r > 1.0) discard;
 
-	// inverse direction of sample lookup to map higher sample depth to smaller radius
-	r = 1.0 - r;
+    // inverse direction of sample lookup to map higher sample depth to smaller radius
+    r = 1.0 - r;
 
     // identify section of radar glyph that the pixel belongs to
     int radar_section_0 = int(floor(r * radar_sections_cnt));

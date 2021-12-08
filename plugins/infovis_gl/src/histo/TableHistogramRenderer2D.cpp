@@ -6,11 +6,11 @@
 
 #include "TableHistogramRenderer2D.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "datatools/table/TableDataCall.h"
 
 using namespace megamol::infovis_gl;
 using namespace megamol::datatools;
@@ -41,8 +41,8 @@ TableHistogramRenderer2D::~TableHistogramRenderer2D() {
 
 bool TableHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
-        calcHistogramProgram_ =
-            core::utility::make_glowl_shader("histo_table_calc", shaderOptions, "infovis_gl/histo/table_calc.comp.glsl");
+        calcHistogramProgram_ = core::utility::make_glowl_shader(
+            "histo_table_calc", shaderOptions, "infovis_gl/histo/table_calc.comp.glsl");
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_table_select", shaderOptions, "infovis_gl/histo/table_select.comp.glsl");
     } catch (std::exception& e) {

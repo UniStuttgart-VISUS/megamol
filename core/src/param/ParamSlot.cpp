@@ -1,15 +1,15 @@
 /*
  * ParamSlot.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 
@@ -19,9 +19,10 @@ using namespace megamol::core;
 /*
  * param::ParamSlot::ParamSlot
  */
-param::ParamSlot::ParamSlot(const vislib::StringA& name,
-        const vislib::StringA& desc) : AbstractSlot(name, desc),
-        AbstractParamSlot(), callback(NULL) {
+param::ParamSlot::ParamSlot(const vislib::StringA& name, const vislib::StringA& desc)
+        : AbstractSlot(name, desc)
+        , AbstractParamSlot()
+        , callback(NULL) {
     // intentionally empty
 }
 
@@ -49,9 +50,8 @@ void param::ParamSlot::MakeAvailable(void) {
 /*
  * param::ParamSlot::IsParamRelevant
  */
-bool param::ParamSlot::IsParamRelevant(
-        vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool param::ParamSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+    const vislib::SmartPtr<param::AbstractParam>& param) const {
     return (this->Parameter() == param);
 }
 
@@ -85,8 +85,8 @@ void param::ParamSlot::update(void) {
     QueueUpdateNotification(true);
 
     if (oldDirty != this->IsDirty()) {
-        if ((this->callback != NULL) && (this->callback->Update(const_cast<Module*>(
-                reinterpret_cast<const Module*>(this->Owner())), *this))) {
+        if ((this->callback != NULL) &&
+            (this->callback->Update(const_cast<Module*>(reinterpret_cast<const Module*>(this->Owner())), *this))) {
             this->ResetDirty();
         }
     }

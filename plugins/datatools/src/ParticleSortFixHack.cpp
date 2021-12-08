@@ -4,16 +4,16 @@
  * Copyright (C) 2015 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleSortFixHack.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
-#include <cstdint>
-#include <algorithm>
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "stdafx.h"
+#include <algorithm>
 #include <cassert>
+#include <cstdint>
 
 using namespace megamol;
 
@@ -22,10 +22,13 @@ using namespace megamol;
  * datatools::ParticleSortFixHack::ParticleSortFixHack
  */
 datatools::ParticleSortFixHack::ParticleSortFixHack(void)
-        : AbstractParticleManipulator("outData", "indata"), 
-        data(), inDataTime(-1), outDataTime(0), 
-        ids(), inDataHash(-1), outDataHash(0) {
-}
+        : AbstractParticleManipulator("outData", "indata")
+        , data()
+        , inDataTime(-1)
+        , outDataTime(0)
+        , ids()
+        , inDataHash(-1)
+        , outDataHash(0) {}
 
 
 /*
@@ -51,18 +54,18 @@ bool datatools::ParticleSortFixHack::manipulateData(
         unsigned int fid = inData.FrameID();
         bool fid_f = inData.IsFrameForced();
 
-        if (!updateIDdata(inData)) return false;
+        if (!updateIDdata(inData))
+            return false;
 
         inData.SetFrameID(fid, fid_f);
-        if (!inData(0)) return false;
+        if (!inData(0))
+            return false;
     }
 
     // update frame data if required
-    if ((inData.FrameID() != inDataTime)
-            || (data.size() != inData.GetParticleListCount())) {
+    if ((inData.FrameID() != inDataTime) || (data.size() != inData.GetParticleListCount())) {
         inDataTime = inData.FrameID();
         updateData(inData);
-
     }
 
     // output internal data copy
@@ -80,45 +83,46 @@ bool datatools::ParticleSortFixHack::manipulateData(
 
 namespace {
 
-    class prev_part_info {
-    public:
-        bool operator<(const prev_part_info& rhs) const {
-            return dist < rhs.dist;
-        }
-
-        unsigned int idx;
-        double dist;
-    };
-
-    class cur_part_info {
-    public:
-        unsigned int idx;
-        double dist;
-
-        unsigned int prev_idx;
-        std::vector<prev_part_info> prev;
-    };
-
-    bool inv_comp_cur_part_info_ptr(const cur_part_info* lhs, const cur_part_info* rhs) {
-        return lhs->dist > rhs->dist;
+class prev_part_info {
+public:
+    bool operator<(const prev_part_info& rhs) const {
+        return dist < rhs.dist;
     }
 
+    unsigned int idx;
+    double dist;
+};
+
+class cur_part_info {
+public:
+    unsigned int idx;
+    double dist;
+
+    unsigned int prev_idx;
+    std::vector<prev_part_info> prev;
+};
+
+bool inv_comp_cur_part_info_ptr(const cur_part_info* lhs, const cur_part_info* rhs) {
+    return lhs->dist > rhs->dist;
 }
+
+} // namespace
 
 bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCall& inData) {
     outDataHash++;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Updating Particle Sorting ID Data...");
 
     inData.SetFrameID(0, false);
-    if (!inData(1)) return false; // query extends first for number for frames
+    if (!inData(1))
+        return false; // query extends first for number for frames
 
     // bbox to resolve cyclic boundary conditions
-    vislib::math::Cuboid<float> bbox = 
-        inData.AccessBoundingBoxes().IsObjectSpaceBBoxValid()
-        ? inData.AccessBoundingBoxes().ObjectSpaceBBox()
-        : inData.AccessBoundingBoxes().WorldSpaceBBox();
+    vislib::math::Cuboid<float> bbox = inData.AccessBoundingBoxes().IsObjectSpaceBBoxValid()
+                                           ? inData.AccessBoundingBoxes().ObjectSpaceBBox()
+                                           : inData.AccessBoundingBoxes().WorldSpaceBBox();
     vislib::math::Dimension<float, 3> bboxsize = bbox.GetSize();
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Bounding Box size (%f, %f, %f)", bboxsize[0], bboxsize[1], bboxsize[2]);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "Bounding Box size (%f, %f, %f)", bboxsize[0], bboxsize[1], bboxsize[2]);
 
     unsigned int frame_cnt = inData.FrameCount();
     this->ids.resize(frame_cnt); // allocate data for all frames! We are memory-hungry! but I don't care
@@ -131,19 +135,22 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
 
     std::vector<particle_data> pd[2];
     for (unsigned int frame_i = 0; frame_i < frame_cnt; ++frame_i) {
-        std::vector<particle_data> &dat_cur = pd[frame_i % 2];
-        std::vector<particle_data> &dat_prev = pd[(frame_i + 1) % 2];
+        std::vector<particle_data>& dat_cur = pd[frame_i % 2];
+        std::vector<particle_data>& dat_prev = pd[(frame_i + 1) % 2];
         do { // ensure we get the right data
             inData.SetFrameID(frame_i, true);
-            if (!inData(0)) return false;
-            if (inData.FrameID() != frame_i) vislib::sys::Thread::Sleep(1);
+            if (!inData(0))
+                return false;
+            if (inData.FrameID() != frame_i)
+                vislib::sys::Thread::Sleep(1);
         } while (inData.FrameID() != frame_i);
 
         // ensure data structure for lists
         unsigned int list_cnt = inData.GetParticleListCount();
         if (frame_i > 0) {
             if (ids[frame_i - 1].size() != list_cnt) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Data sets changes lists over time. Unsupported!");
                 return false;
             }
         }
@@ -156,21 +163,25 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
             unsigned int part_cnt = static_cast<unsigned int>(parts.GetCount());
             if (frame_i > 0) {
                 if (ids[frame_i - 1][list_i].size() != part_cnt) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "Data sets changes particle numbers in list over time. Unsupported!");
                     return false;
                 }
             }
             this->ids[frame_i][list_i].resize(part_cnt);
 
             if (frame_i > 1) {
-                // estimate new particle positions
-                //  dat_prev is data from frame_i - 1
-                //  dat_cur is data from frame_i - 2 (atm)
-                #pragma omp parallel for
+// estimate new particle positions
+//  dat_prev is data from frame_i - 1
+//  dat_cur is data from frame_i - 2 (atm)
+#pragma omp parallel for
                 for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
-                    const float * part_k_pos = reinterpret_cast<const float*>(static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) + dat_cur[list_i].parts.GetVertexDataStride() * 
-                        this->ids[frame_i - 1][list_i][part_i]);
-                    float * part_j_pos = reinterpret_cast<float*>(const_cast<unsigned char*>(static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) + dat_prev[list_i].parts.GetVertexDataStride() * part_i));
+                    const float* part_k_pos = reinterpret_cast<const float*>(
+                        static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) +
+                        dat_cur[list_i].parts.GetVertexDataStride() * this->ids[frame_i - 1][list_i][part_i]);
+                    float* part_j_pos = reinterpret_cast<float*>(const_cast<unsigned char*>(
+                        static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) +
+                        dat_prev[list_i].parts.GetVertexDataStride() * part_i));
 
                     for (int i = 0; i < 3; i++) {
                         part_j_pos[i] += 0.95f * (part_j_pos[i] - part_k_pos[i]);
@@ -185,7 +196,8 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
             for (unsigned int part_i = 0; part_i < part_cnt; ++part_i) {
                 this->ids[frame_i][list_i][part_i] = part_i;
             }
-            if (frame_i == 0) continue; // identity is great for frame 0
+            if (frame_i == 0)
+                continue; // identity is great for frame 0
 
             // for later frames find best matches for particles from current frame to previous frame trying to minimize the overall distance
 
@@ -210,16 +222,16 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                 }
             }
 
-            #pragma omp parallel for
+#pragma omp parallel for
             for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
-                const float * part_i_pos = reinterpret_cast<const float*>(
-                    static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) 
-                    + dat_cur[list_i].parts.GetVertexDataStride() * part_i);
+                const float* part_i_pos = reinterpret_cast<const float*>(
+                    static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) +
+                    dat_cur[list_i].parts.GetVertexDataStride() * part_i);
 
                 for (unsigned int part_j = 0; part_j < part_cnt; ++part_j) {
-                    const float * part_j_pos = reinterpret_cast<const float*>(
-                        static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) 
-                        + dat_prev[list_i].parts.GetVertexDataStride() * part_j);
+                    const float* part_j_pos = reinterpret_cast<const float*>(
+                        static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) +
+                        dat_prev[list_i].parts.GetVertexDataStride() * part_j);
 
                     double dist = std::sqrt(part_sqdist(part_i_pos, part_j_pos, bboxsize));
 
@@ -235,10 +247,11 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
 
                 dists[part_i]->idx = part_i;
                 dists[part_i]->prev_idx = part_i; // id is a good starting point
-                dists[part_i]->dist = dists[part_i]->prev[part_i].dist; // this works here, because dists->prev is not sorted, yet
+                dists[part_i]->dist =
+                    dists[part_i]->prev[part_i].dist; // this works here, because dists->prev is not sorted, yet
 
-            //}
-            //for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
+                //}
+                //for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
                 // now sort, so we can iterate for the smallest distance (step 3.)
                 std::sort(dists[part_i]->prev.begin(), dists[part_i]->prev.end());
             }
@@ -251,20 +264,20 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
 
             auto dists_it = dists.begin();
             auto dists_end = dists.end();
-            for (; dists_it != dists_end; ++dists_it) whole_dist += (*dists_it)->dist;
+            for (; dists_it != dists_end; ++dists_it)
+                whole_dist += (*dists_it)->dist;
             dists_it = dists.begin();
 
             // step 2
             //////////////////////////////////////////////////////////////////
             // for loop ensures the maximum iterations
-            for (unsigned int max_iter = part_cnt * 100;
-                    (dists_it != dists_end) // condition step 8
-                        && (max_iter > 0); // condition step x: maximum iterations
-                    --max_iter) {
+            for (unsigned int max_iter = part_cnt * 100; (dists_it != dists_end) // condition step 8
+                                                         && (max_iter > 0);      // condition step x: maximum iterations
+                 --max_iter) {
 
                 // dists_it is the pair with the largest distance a->a'
-                cur_part_info *a = *dists_it;
-                prev_part_info *a_to_a_tick = nullptr;
+                cur_part_info* a = *dists_it;
+                prev_part_info* a_to_a_tick = nullptr;
                 for (prev_part_info& i_tick : a->prev) {
                     if (i_tick.idx == a->prev_idx) {
                         a_to_a_tick = &i_tick;
@@ -281,12 +294,13 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                 for (prev_part_info& a_to_b_tick : a->prev) {
 
                     // limit iterations in this loop
-                    if (max_tries == 0) break;
+                    if (max_tries == 0)
+                        break;
                     --max_tries;
 
                     // search for b
-                    cur_part_info *b = nullptr;
-                    for (cur_part_info *b_i : dists) {
+                    cur_part_info* b = nullptr;
+                    for (cur_part_info* b_i : dists) {
                         if (b_i->prev_idx == a_to_b_tick.idx) {
                             b = b_i;
                             break;
@@ -294,7 +308,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                     }
                     assert(b != nullptr);
                     // search of alternative dists
-                    prev_part_info *b_to_a_tick = nullptr;
+                    prev_part_info* b_to_a_tick = nullptr;
                     for (prev_part_info& i_tick : b->prev) {
                         if (i_tick.idx == a_to_a_tick->idx) {
                             b_to_a_tick = &i_tick;
@@ -302,7 +316,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                         }
                     }
                     assert(b_to_a_tick != nullptr);
-                    prev_part_info *b_to_b_tick = nullptr;
+                    prev_part_info* b_to_b_tick = nullptr;
                     for (prev_part_info& i_tick : b->prev) {
                         if (i_tick.idx == a_to_b_tick.idx) {
                             b_to_b_tick = &i_tick;
@@ -313,10 +327,10 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
 
                     // step 4: test distance difference
                     //////////////////////////////////////////////////////////
-                    double distdiv = - a_to_a_tick->dist // distance a->a'
-                        - b_to_b_tick->dist // distance b->b'
-                        + a_to_b_tick.dist // distance a->b'
-                        + b_to_a_tick->dist; // distance b->a'
+                    double distdiv = -a_to_a_tick->dist   // distance a->a'
+                                     - b_to_b_tick->dist  // distance b->b'
+                                     + a_to_b_tick.dist   // distance a->b'
+                                     + b_to_a_tick->dist; // distance b->a'
 
                     //if ((a_to_b_tick.dist - a_to_a_tick->dist) > 0) continue;
                     //if ((b_to_a_tick->dist - b_to_b_tick->dist) > 0) continue;
@@ -342,7 +356,8 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                     //swapped = true;
 
                     if ((update_print % 10) == 0) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%u][%u] whole_dist = %g\n", frame_i, list_i, whole_dist);
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                            "[%u][%u] whole_dist = %g\n", frame_i, list_i, whole_dist);
                     }
                     ++update_print;
 
@@ -361,8 +376,8 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
                 //////////////////////////////////////////////////////////////
             }
 
-            // transfer dists matrix
-            #pragma omp parallel for
+// transfer dists matrix
+#pragma omp parallel for
             for (int i = 0; i < static_cast<int>(part_cnt); ++i) {
                 this->ids[frame_i][list_i][i] = dists[i]->prev_idx;
             }
@@ -370,10 +385,11 @@ bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCal
             // some testing output to see how good it works:
             unsigned int wcc = 0;
             for (unsigned int i = 0; i < part_cnt; ++i) {
-                if (ids[frame_i][list_i][i] != i) wcc++;
+                if (ids[frame_i][list_i][i] != i)
+                    wcc++;
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
-
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
         }
 
         inData.Unlock();
@@ -561,25 +577,45 @@ void datatools::ParticleSortFixHack::copyData(particle_data& tar, geocalls::Simp
 
     // colour
     switch (src.GetColourDataType()) {
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: break;
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: colSize = 3; break;
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: colSize = 4; break;
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: colSize = 12; break;
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: colSize = 16; break;
-    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: colSize = 4; break;
-    default: break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
+        break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+        colSize = 3;
+        break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+        colSize = 4;
+        break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+        colSize = 12;
+        break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+        colSize = 16;
+        break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+        colSize = 4;
+        break;
+    default:
+        break;
     }
-    if (colStride < colSize) colStride = colSize;
+    if (colStride < colSize)
+        colStride = colSize;
 
     // radius and position
     switch (src.GetVertexDataType()) {
-    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: break;
-    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vertSize = 12; break;
-    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vertSize = 16; break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+        break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        vertSize = 12;
+        break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+        vertSize = 16;
+        break;
         // We do not support short-vertices ATM
-    default: break;
+    default:
+        break;
     }
-    if (vertStride < vertSize) vertStride = vertSize;
+    if (vertStride < vertSize)
+        vertStride = vertSize;
 
     tar.dat.EnforceSize(static_cast<size_t>((colSize + vertSize) * tar.parts.GetCount()));
     tar.parts.SetVertexData(src.GetVertexDataType(), tar.dat.At(0), colSize + vertSize);
@@ -591,30 +627,35 @@ void datatools::ParticleSortFixHack::copyData(particle_data& tar, geocalls::Simp
         ::memcpy(tar.dat.At(static_cast<size_t>(pi * (colSize + vertSize) + vertSize)), colPtr, colSize);
         colPtr += colStride;
     }
-
 }
 
-double datatools::ParticleSortFixHack::part_sqdist(const float *p1, const float *p2, const vislib::math::Dimension<float, 3>& bboxsize) {
+double datatools::ParticleSortFixHack::part_sqdist(
+    const float* p1, const float* p2, const vislib::math::Dimension<float, 3>& bboxsize) {
     float dx = p1[0] - p2[0];
     float dy = p1[1] - p2[1];
     float dz = p1[2] - p2[2];
 
     // direction does not matter
-    if (dx < 0) dx = -dx;
-    if (dy < 0) dy = -dy;
-    if (dz < 0) dz = -dz;
+    if (dx < 0)
+        dx = -dx;
+    if (dy < 0)
+        dy = -dy;
+    if (dz < 0)
+        dz = -dz;
 
     // now for the cyclic boundary condition
     assert(dx <= bboxsize[0]);
     assert(dy <= bboxsize[1]);
     assert(dz <= bboxsize[2]);
 
-    if (dx > bboxsize[0] * 0.5f) dx = bboxsize[0] - dx;
-    if (dy > bboxsize[1] * 0.5f) dy = bboxsize[1] - dy;
-    if (dz > bboxsize[2] * 0.5f) dz = bboxsize[2] - dz;
+    if (dx > bboxsize[0] * 0.5f)
+        dx = bboxsize[0] - dx;
+    if (dy > bboxsize[1] * 0.5f)
+        dy = bboxsize[1] - dy;
+    if (dz > bboxsize[2] * 0.5f)
+        dz = bboxsize[2] - dz;
 
     // squared distance
-    return static_cast<double>(dx) * static_cast<double>(dx)
-        + static_cast<double>(dy) * static_cast<double>(dy)
-        + static_cast<double>(dz) * static_cast<double>(dz);
+    return static_cast<double>(dx) * static_cast<double>(dx) + static_cast<double>(dy) * static_cast<double>(dy) +
+           static_cast<double>(dz) * static_cast<double>(dz);
 }

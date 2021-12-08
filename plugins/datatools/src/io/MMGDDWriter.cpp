@@ -5,20 +5,21 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "io/MMGDDWriter.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
+#include "stdafx.h"
 #include "vislib/String.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol;
 using namespace megamol::datatools;
 
 
-io::MMGDDWriter::MMGDDWriter(void) : AbstractDataWriter(),
-        filenameSlot("filename", "The path to the MMGDD file to be written"),
-        dataSlot("data", "The slot requesting the data to be written") {
+io::MMGDDWriter::MMGDDWriter(void)
+        : AbstractDataWriter()
+        , filenameSlot("filename", "The path to the MMGDD file to be written")
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot.SetParameter(new core::param::FilePathParam(
         "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmgdd"}));
@@ -50,24 +51,28 @@ bool io::MMGDDWriter::run(void) {
         return false;
     }
 
-    GraphDataCall *gdc = this->dataSlot.CallAs<GraphDataCall>();
+    GraphDataCall* gdc = this->dataSlot.CallAs<GraphDataCall>();
     if (gdc == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_WARN, "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
     }
 
     gdc->SetFrameID(0);
-    if (!(*gdc)(GraphDataCall::GET_EXTENT)) return false;
+    if (!(*gdc)(GraphDataCall::GET_EXTENT))
+        return false;
     uint32_t frameCnt = gdc->FrameCount();
     gdc->Unlock();
 
     vislib::sys::FastFile file;
-    if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
+    if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
+            vislib::sys::File::CREATE_OVERWRITE)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
         gdc->Unlock();
         return false;
     }
@@ -106,20 +111,25 @@ bool io::MMGDDWriter::run(void) {
 #if __WITH_VALUE_SUMMARY
         unsigned int minVal = 1000000, maxVal = 0;
         for (const auto& e : *gdc) {
-            if (minVal > e.i1) minVal = e.i1;
-            if (maxVal < e.i1) maxVal = e.i1;
-            if (minVal > e.i2) minVal = e.i2;
-            if (maxVal < e.i2) maxVal = e.i2;
+            if (minVal > e.i1)
+                minVal = e.i1;
+            if (maxVal < e.i1)
+                maxVal = e.i1;
+            if (minVal > e.i2)
+                minVal = e.i2;
+            if (maxVal < e.i2)
+                maxVal = e.i2;
         }
 #endif
         Log::DefaultLog.WriteInfo("MMGDD frame #%u: %u edges"
 #if __WITH_VALUE_SUMMARY
-            ", indices [%u %u]"
+                                  ", indices [%u %u]"
 #endif
-            "\n",
+                                  "\n",
             i, static_cast<unsigned int>(gdc->GetEdgeCount())
 #if __WITH_VALUE_SUMMARY
-            , minVal, maxVal
+                   ,
+            minVal, maxVal
 #endif
         );
 
@@ -129,7 +139,6 @@ bool io::MMGDDWriter::run(void) {
         file.Write(gdc->GetEdgeData(), gdc->GetEdgeCount() * sizeof(GraphDataCall::edge));
 
         gdc->Unlock();
-
     }
 
     frameOffset = static_cast<UINT64>(file.Tell());

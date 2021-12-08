@@ -21,7 +21,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "vtkmMeshRenderTasks"; }
+    static const char* ClassName(void) {
+        return "vtkmMeshRenderTasks";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -37,7 +39,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     mmvtkmMeshRenderTasks();
     ~mmvtkmMeshRenderTasks();
@@ -52,7 +56,7 @@ private:
     megamol::core::CallerSlot m_material_slot;
 };
 
-} // namespace mmvtkm
+} // namespace mmvtkm_gl
 } // namespace megamol
 
 

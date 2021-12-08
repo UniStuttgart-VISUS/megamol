@@ -1,7 +1,7 @@
 /*
  * ShallowTriangle.h
  *
- * Copyright (C) 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -20,60 +20,58 @@ namespace vislib {
 namespace math {
 
 
-	template <class T> class ShallowTriangle : public AbstractTriangle<T, T*> {
+template<class T>
+class ShallowTriangle : public AbstractTriangle<T, T*> {
 
-    public:
-
-        /**
-         * Create a new triangle initialised using 'vertices' as data. The
-         * vector will operate on these data. The caller is responsible that
-         * the memory designated by 'vertices' lives as long as the object
-         * and all its aliases exist.
-         *
-         * @param vertices The initial triangle memory. This must not be a NULL
-         *                   pointer.
-         */
-        explicit inline ShallowTriangle(T *vertices) {
-            ASSERT(vertices != NULL);
-            this->vertices = vertices;
-        }
-
-
-        /** Dtor. */
-        ~ShallowTriangle(void);
-
-        /**
-         * Assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this
-         */
-        inline ShallowTriangle& operator =(const ShallowTriangle& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
-
-        template<class Tp, class Sp>
-        inline ShallowTriangle& operator =(const AbstractTriangle<Tp, Sp>& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
-
-    protected:
-
-    private:
-		typedef AbstractTriangle<T, T*> Super;
-    };
-
- 
-    /*
-     * vislib::math::Triangle<T>::~Triangle
+public:
+    /**
+     * Create a new triangle initialised using 'vertices' as data. The
+     * vector will operate on these data. The caller is responsible that
+     * the memory designated by 'vertices' lives as long as the object
+     * and all its aliases exist.
+     *
+     * @param vertices The initial triangle memory. This must not be a NULL
+     *                   pointer.
      */
-    template<class T>
-	ShallowTriangle<T>::~ShallowTriangle(void) {
-	}
-    
+    explicit inline ShallowTriangle(T* vertices) {
+        ASSERT(vertices != NULL);
+        this->vertices = vertices;
+    }
+
+
+    /** Dtor. */
+    ~ShallowTriangle(void);
+
+    /**
+     * Assignment.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this
+     */
+    inline ShallowTriangle& operator=(const ShallowTriangle& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
+
+    template<class Tp, class Sp>
+    inline ShallowTriangle& operator=(const AbstractTriangle<Tp, Sp>& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
+
+protected:
+private:
+    typedef AbstractTriangle<T, T*> Super;
+};
+
+
+/*
+ * vislib::math::Triangle<T>::~Triangle
+ */
+template<class T>
+ShallowTriangle<T>::~ShallowTriangle(void) {}
+
 } /* end namespace math */
 } /* end namespace vislib */
 
@@ -81,4 +79,3 @@ namespace math {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SHALLOWTRIANGLE_H_INCLUDED */
-

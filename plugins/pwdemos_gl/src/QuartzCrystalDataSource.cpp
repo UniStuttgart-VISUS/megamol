@@ -4,14 +4,14 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "QuartzCrystalDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "vislib/CharTraits.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/mathfunctions.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "stdafx.h"
+#include "vislib/CharTraits.h"
 #include "vislib/math/Vector.h"
+#include "vislib/math/mathfunctions.h"
 
 
 namespace megamol {
@@ -20,16 +20,20 @@ namespace demos_gl {
 /*
  * CrystalDataSource::CrystalDataSource
  */
-CrystalDataSource::CrystalDataSource(void) : core::Module(),
-        filenameSlot("filename", "The path to the file to be loaded"),
-        dataOutSlot("dataout", "The slot providing the loaded data"),
-        datahash(0), crystals() {
+CrystalDataSource::CrystalDataSource(void)
+        : core::Module()
+        , filenameSlot("filename", "The path to the file to be loaded")
+        , dataOutSlot("dataout", "The slot providing the loaded data")
+        , datahash(0)
+        , crystals() {
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->dataOutSlot.SetCallback(CrystalDataCall::ClassName(), CrystalDataCall::FunctionName(CrystalDataCall::CallForGetData), &CrystalDataSource::getData);
-    this->dataOutSlot.SetCallback(CrystalDataCall::ClassName(), CrystalDataCall::FunctionName(CrystalDataCall::CallForGetExtent), &CrystalDataSource::getData);
+    this->dataOutSlot.SetCallback(CrystalDataCall::ClassName(),
+        CrystalDataCall::FunctionName(CrystalDataCall::CallForGetData), &CrystalDataSource::getData);
+    this->dataOutSlot.SetCallback(CrystalDataCall::ClassName(),
+        CrystalDataCall::FunctionName(CrystalDataCall::CallForGetExtent), &CrystalDataSource::getData);
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
@@ -55,8 +59,9 @@ bool CrystalDataSource::create(void) {
  * CrystalDataSource::getData
  */
 bool CrystalDataSource::getData(core::Call& c) {
-    CrystalDataCall *cdc = dynamic_cast<CrystalDataCall*>(&c);
-    if (cdc == NULL) return false;
+    CrystalDataCall* cdc = dynamic_cast<CrystalDataCall*>(&c);
+    if (cdc == NULL)
+        return false;
 
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
@@ -99,32 +104,27 @@ void CrystalDataSource::loadFile(const vislib::TString& filename) {
             continue;
         } else if (file[l].Count() == 3) {
             try {
-                vislib::math::Vector<float, 3> v(
-                    static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(0))),
+                vislib::math::Vector<float, 3> v(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(0))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(1))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(2))));
                 // Do not normalize! Length of v is radius of base-sphere for that plane
                 crystal.AddFace(v);
-            } catch(...) {
-                Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l));
-            }
+            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l)); }
         } else if (file[l].Count() == 2) {
             try {
                 crystal.SetBaseRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(1))));
                 crystal.SetBoundingRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(0))));
-            } catch(...) {
-                Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l));
-            }
-            if (!crystal.IsEmpty()) this->crystals.Add(crystal);
+            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l)); }
+            if (!crystal.IsEmpty())
+                this->crystals.Add(crystal);
             crystal.Clear();
         } else {
             Log::DefaultLog.WriteWarn("Strange line \"%d\" ignored", static_cast<int>(l));
         }
     }
 
-    Log::DefaultLog.WriteInfo("Loaded \"%u\" crystalite definitions\n",
-        static_cast<unsigned int>(this->crystals.Count()));
-
+    Log::DefaultLog.WriteInfo(
+        "Loaded \"%u\" crystalite definitions\n", static_cast<unsigned int>(this->crystals.Count()));
 }
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

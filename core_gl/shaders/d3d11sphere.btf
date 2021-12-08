@@ -131,7 +131,7 @@ float4 StereoToMonoClipSpace(float4 stereoClipPos) {
     return monoClipPos;
 }
 
-float4 ComputeWorldPosition(float4 screenPosition, bool undoMonoToStereoXform) {	
+float4 ComputeWorldPosition(float4 screenPosition, bool undoMonoToStereoXform) {
     // First, undo the viewport transform.
     float4 homogenousDeviceSpacePos = float4(2 * (screenPosition.xy - 0.5) / Viewport.zw - 1.0, screenPosition.zw);
     // Viewport space and homogenous device space are inverted with respect to y, so fix that here.

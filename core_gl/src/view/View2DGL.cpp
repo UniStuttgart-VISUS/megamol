@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore_gl/view/View2DGL.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -16,6 +15,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
+#include "stdafx.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"

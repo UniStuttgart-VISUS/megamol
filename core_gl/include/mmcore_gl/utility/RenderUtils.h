@@ -16,18 +16,17 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glowl/BufferObject.hpp>
-#include <glowl/Texture2D.hpp>
+#include <glowl/FramebufferObject.hpp>
 #include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
 
-#include "glowl/FramebufferObject.hpp"
-
-#include "mmcore/utility/FileUtils.h"
 #include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/utility/FileUtils.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // #### Utility vector conversion functions ############################ //
 
@@ -87,7 +86,6 @@ static inline glm::vec3 screenspace_to_worldspace(
 class RenderUtils {
 
 public:
-
     // STATIC functions -------------------------------------------------------
 
     /**
@@ -97,8 +95,8 @@ public:
         const std::filesystem::path& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
         GLint tex_max_filter = GL_LINEAR);
 
-    static bool LoadTextureFromData(
-        std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
+    static bool LoadTextureFromData(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height,
+        float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
 
     /**
      * Create shader.
@@ -177,7 +175,6 @@ public:
     ~RenderUtils();
 
 private:
-
     enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, PRIM_COUNT = 4 };
 
     enum Buffers : GLuint { POSITION = 0, COLOR = 1, TEXTURE_COORD = 2, ATTRIBUTES = 3, BUFF_COUNT = 4 };
@@ -230,4 +227,4 @@ private:
     glm::vec3 arbitraryPerpendicular(glm::vec3 in);
 };
 
-} // end namespace
+} // namespace megamol::core_gl::utility

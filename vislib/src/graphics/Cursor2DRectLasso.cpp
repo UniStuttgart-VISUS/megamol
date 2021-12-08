@@ -13,8 +13,7 @@
 /*
  * vislib::graphics::Cursor2DRectLasso::Cursor2DRectLasso
  */
-vislib::graphics::Cursor2DRectLasso::Cursor2DRectLasso(void)
-        : AbstractCursor2DEvent(), drag(false), rect() {
+vislib::graphics::Cursor2DRectLasso::Cursor2DRectLasso(void) : AbstractCursor2DEvent(), drag(false), rect() {
     // Intentionally empty
 }
 
@@ -39,12 +38,9 @@ void vislib::graphics::Cursor2DRectLasso::Clear(void) {
 /*
  * vislib::graphics::Cursor2DRectLasso::Trigger
  */
-void vislib::graphics::Cursor2DRectLasso::Trigger(
-        vislib::graphics::AbstractCursor *caller,
-        vislib::graphics::AbstractCursorEvent::TriggerReason reason,
-        unsigned int param) {
-    vislib::graphics::Cursor2D *cursor 
-        = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
+void vislib::graphics::Cursor2DRectLasso::Trigger(vislib::graphics::AbstractCursor* caller,
+    vislib::graphics::AbstractCursorEvent::TriggerReason reason, unsigned int param) {
+    vislib::graphics::Cursor2D* cursor = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
     ASSERT(cursor != NULL);
 
     if (reason == REASON_BUTTON_DOWN) {
@@ -57,7 +53,5 @@ void vislib::graphics::Cursor2DRectLasso::Trigger(
     } else if ((reason == REASON_MOVE) && this->drag) {
         this->rect.SetRight(cursor->X());
         this->rect.SetTop(cursor->Y());
-
     }
-
 }

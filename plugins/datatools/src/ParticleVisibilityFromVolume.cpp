@@ -4,11 +4,11 @@
  * Copyright (C) 2018 by MegaMol team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleVisibilityFromVolume.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
+#include "stdafx.h"
 #include <algorithm>
 #include <chrono>
 #include <omp.h>
@@ -22,17 +22,17 @@ using namespace megamol;
  * datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume
  */
 datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
-    : AbstractParticleManipulator("outData", "indata")
-    , operatorSlot("operator", "what to do with the reference value")
-    , valueSlot("ref", "the value for the operator")
-    , epsilonSlot("epsilon", "the tolerance for equality")
-    , absoluteSlot("absolute", "use absolute values instead of relative")
-    //, cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
-    //, cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
-    //, cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
-    , minSlot("min", "the minimum value in the volume (read only)")
-    , maxSlot("max", "the maximum value in the volume (read only)")
-    , volumeSlot("volume", "the volume we the operation is based on") {
+        : AbstractParticleManipulator("outData", "indata")
+        , operatorSlot("operator", "what to do with the reference value")
+        , valueSlot("ref", "the value for the operator")
+        , epsilonSlot("epsilon", "the tolerance for equality")
+        , absoluteSlot("absolute", "use absolute values instead of relative")
+        //, cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
+        //, cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
+        //, cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
+        , minSlot("min", "the minimum value in the volume (read only)")
+        , maxSlot("max", "the maximum value in the volume (read only)")
+        , volumeSlot("volume", "the volume we the operation is based on") {
 
     this->valueSlot.SetParameter(new core::param::FloatParam(0.5, -5000.0f, 5000.0f));
     this->MakeSlotAvailable(&this->valueSlot);
@@ -67,7 +67,9 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
 /*
  * datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume
  */
-datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume(void) { this->Release(); }
+datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume(void) {
+    this->Release();
+}
 
 
 /*
@@ -75,8 +77,8 @@ datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume(void) { t
  */
 bool datatools::ParticleVisibilityFromVolume::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
-    using geocalls::VolumetricDataCall;
     using geocalls::MultiParticleDataCall;
+    using geocalls::VolumetricDataCall;
 
     float theVal = this->valueSlot.Param<core::param::FloatParam>()->Value();
     float epsilon = this->epsilonSlot.Param<core::param::FloatParam>()->Value();
@@ -86,7 +88,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     auto* inVol = this->volumeSlot.CallAs<VolumetricDataCall>();
     inVol->SetFrameID(outData.FrameID());
     if (!(*inVol)(1)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: cannot get extents of volume");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "ParticleVisibilityFromVolume: cannot get extents of volume");
         return false;
     }
     if (!(*inVol)(0)) {
@@ -95,19 +98,20 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     }
     if (inVol->FrameID() != inData.FrameID()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "ParticleVisibilityFromVolume: frameIDs of particles and volume do not match: %u (vol) - %u (parts)", inVol->FrameID(),
-            inData.FrameID());
+            "ParticleVisibilityFromVolume: frameIDs of particles and volume do not match: %u (vol) - %u (parts)",
+            inVol->FrameID(), inData.FrameID());
         return false;
     }
 
     if (!inVol->IsUniform(0) || !inVol->IsUniform(1) || !inVol->IsUniform(2)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleVisibilityFromVolume: input Volume has to be uniform!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "ParticleVisibilityFromVolume: input Volume has to be uniform!");
         return false;
     }
 
     if (inData.FrameID() == this->lastTime && inData.DataHash() == this->lastParticleHash &&
-        inVol->DataHash() == this->lastVolumeHash && !operatorSlot.IsDirty() && !valueSlot.IsDirty() && !epsilonSlot.IsDirty()
-        && !absoluteSlot.IsDirty()) {
+        inVol->DataHash() == this->lastVolumeHash && !operatorSlot.IsDirty() && !valueSlot.IsDirty() &&
+        !epsilonSlot.IsDirty() && !absoluteSlot.IsDirty()) {
         // everything should already be correct
         return true;
     }
@@ -135,7 +139,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
     //bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
     //bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    typedef const float (VolumetricDataCall::*getter)(const uint32_t, const uint32_t, const uint32_t, const uint32_t) const;
+    typedef const float (VolumetricDataCall::*getter)(const uint32_t, const uint32_t, const uint32_t, const uint32_t)
+        const;
     getter getFun;
     if (absolute) {
         getFun = &VolumetricDataCall::GetAbsoluteVoxelValue;
@@ -196,8 +201,8 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
         auto const& yAcc = parStore.GetYAcc();
         auto const& zAcc = parStore.GetZAcc();
 
-        // todo: is this OK?
-        #pragma omp parallel for
+// todo: is this OK?
+#pragma omp parallel for
         for (INT64 j = 0; j < cnt; ++j) {
             const auto x = xAcc->Get_f(j);
             const auto y = yAcc->Get_f(j);
@@ -276,7 +281,7 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
                     memcpy(theVertexData[i].data() + vdsize * localIdx, vertexBasePointer + vdstride * j, vdsize);
                     memcpy(theColorData[i].data() + cdsize * localIdx, colorBasePointer + cdstride * j, cdsize);
                 }
-                #pragma omp atomic
+#pragma omp atomic
                 cntLeft++;
             }
         }
@@ -308,12 +313,12 @@ bool datatools::ParticleVisibilityFromVolume::manipulateData(
             outp.SetVertexData(vdt, theVertexData[i].data(), vdsize);
             outp.SetColourData(cdt, theColorData[i].data(), cdsize);
         }
-
     }
 
     const auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> diffMillis = endTime - startTime;
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleVisibilityFromVolume took %f ms.", diffMillis.count());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "ParticleVisibilityFromVolume took %f ms.", diffMillis.count());
 
 
     if (volumeIsNotBBoxAligned) {

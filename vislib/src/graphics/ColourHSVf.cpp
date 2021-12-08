@@ -61,9 +61,7 @@ vislib::graphics::ColourHSVf::ColourHSVf(const vislib::graphics::ColourRGBAu8& s
     }
     SetH(comp[0]); // to clamp to the right range
 
-    comp[1] = math::IsEqual(MAX, 0.0f, epsilon)
-        ? 0.0f
-        : ((MAX - MIN) / MAX);
+    comp[1] = math::IsEqual(MAX, 0.0f, epsilon) ? 0.0f : ((MAX - MIN) / MAX);
 
     comp[2] = MAX;
 }
@@ -80,11 +78,10 @@ vislib::graphics::ColourHSVf::~ColourHSVf(void) {
 /*
  * vislib::graphics::ColourHSVf::operator==
  */
-bool vislib::graphics::ColourHSVf::operator==(
-        const vislib::graphics::ColourHSVf& rhs) const {
-    return vislib::math::IsEqual(this->comp[0], rhs.comp[0], 0.0001f)
-        && vislib::math::IsEqual(this->comp[1], rhs.comp[1], 0.0001f)
-        && vislib::math::IsEqual(this->comp[2], rhs.comp[2], 0.0001f);
+bool vislib::graphics::ColourHSVf::operator==(const vislib::graphics::ColourHSVf& rhs) const {
+    return vislib::math::IsEqual(this->comp[0], rhs.comp[0], 0.0001f) &&
+           vislib::math::IsEqual(this->comp[1], rhs.comp[1], 0.0001f) &&
+           vislib::math::IsEqual(this->comp[2], rhs.comp[2], 0.0001f);
 }
 
 
@@ -101,18 +98,40 @@ vislib::graphics::ColourHSVf::operator vislib::graphics::ColourRGBAu8(void) cons
 
     float r, g, b;
     switch (h) {
-    case 0: r = comp[2]; g = t; b = p; break;
-    case 1: r = q; g = comp[2]; b = p; break;
-    case 2: r = p; g = comp[2]; b = t; break;
-    case 3: r = p; g = q; b = comp[2]; break;
-    case 4: r = t; g = p; b = comp[2]; break;
-    case 5: r = comp[2]; g = p; b = q; break;
-    default: r = g = b = 0.0f;
+    case 0:
+        r = comp[2];
+        g = t;
+        b = p;
+        break;
+    case 1:
+        r = q;
+        g = comp[2];
+        b = p;
+        break;
+    case 2:
+        r = p;
+        g = comp[2];
+        b = t;
+        break;
+    case 3:
+        r = p;
+        g = q;
+        b = comp[2];
+        break;
+    case 4:
+        r = t;
+        g = p;
+        b = comp[2];
+        break;
+    case 5:
+        r = comp[2];
+        g = p;
+        b = q;
+        break;
+    default:
+        r = g = b = 0.0f;
     }
 
-    return ColourRGBAu8(
-        static_cast<unsigned char>(r * 255.0f),
-        static_cast<unsigned char>(g * 255.0f),
+    return ColourRGBAu8(static_cast<unsigned char>(r * 255.0f), static_cast<unsigned char>(g * 255.0f),
         static_cast<unsigned char>(b * 255.0f), 255);
 }
-

@@ -18,10 +18,10 @@
 
 #include "mmcore/RootModuleNamespace.h"
 
+#include "CommandRegistry.h"
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
-#include "CommandRegistry.h"
 
 namespace megamol {
 namespace core {
@@ -108,7 +108,7 @@ private:
 
     [[nodiscard]] CallList_t::const_iterator find_call(std::string const& from, std::string const& to) const;
 
-    // modules are named using the exact same string that gets requested, 
+    // modules are named using the exact same string that gets requested,
     // i.e. we dont split namespaces like ::Project_1::Group_1::View3D_2_1 to extract the 'actual' modul name 'View3D_2_1'
     [[nodiscard]] bool add_module(ModuleInstantiationRequest_t const& request);
 

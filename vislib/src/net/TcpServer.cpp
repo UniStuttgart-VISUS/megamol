@@ -1,17 +1,16 @@
 /*
  * TcpServer.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "vislib/net/TcpServer.h"
 
 #include "vislib/IllegalParamException.h"
-#include "vislib/sys/Interlocked.h"
-#include "vislib/net/SocketException.h"
 #include "vislib/Trace.h"
-
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/Interlocked.h"
 
 
 /*
@@ -69,7 +68,7 @@ vislib::net::TcpServer::~TcpServer(void) {
 /*
  * vislib::net::TcpServer::AddListener
  */
-void vislib::net::TcpServer::AddListener(Listener *listener) {
+void vislib::net::TcpServer::AddListener(Listener* listener) {
     if (listener != NULL) {
         this->lock.Lock();
         this->listeners.Append(listener);
@@ -81,7 +80,7 @@ void vislib::net::TcpServer::AddListener(Listener *listener) {
 /*
  * vislib::net::TcpServer::RemoveListener
  */
-void vislib::net::TcpServer::RemoveListener(Listener *listener) {
+void vislib::net::TcpServer::RemoveListener(Listener* listener) {
     if (listener != NULL) {
         this->lock.Lock();
         this->listeners.RemoveAll(listener);
@@ -93,10 +92,10 @@ void vislib::net::TcpServer::RemoveListener(Listener *listener) {
 /*
  * vislib::net::TcpServer::Run
  */
-DWORD vislib::net::TcpServer::Run(void *userData) {
+DWORD vislib::net::TcpServer::Run(void* userData) {
     ASSERT(userData != NULL);
     if (userData != NULL) {
-        IPEndPoint serverAddr = *static_cast<IPEndPoint *>(userData);
+        IPEndPoint serverAddr = *static_cast<IPEndPoint*>(userData);
         return this->Run(serverAddr);
     } else {
         throw IllegalParamException("userData", __FILE__, __LINE__);
@@ -116,8 +115,10 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Socket::Startup in TcpServer failed: "
-            "%s\n", e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_ERROR,
+            "Socket::Startup in TcpServer failed: "
+            "%s\n",
+            e.GetMsgA());
         return e.GetErrorCode();
     }
 
@@ -127,14 +128,15 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
             this->socket.Close();
         }
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "Error while cleaning existing socket of "
-            "TcpServer: %s\n", e.GetMsgA());
+        VLTRACE(Trace::LEVEL_VL_WARN,
+            "Error while cleaning existing socket of "
+            "TcpServer: %s\n",
+            e.GetMsgA());
     }
 
     /* Create socket and bind it to specified address. */
     try {
-        this->socket.Create(serverAddr, Socket::TYPE_STREAM, 
-            Socket::PROTOCOL_TCP);
+        this->socket.Create(serverAddr, Socket::TYPE_STREAM, Socket::PROTOCOL_TCP);
         if (this->IsSharingAddress()) {
             // TODO: Problems with admin rights
             this->socket.SetExclusiveAddrUse(false);
@@ -144,38 +146,50 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
         }
         this->socket.Bind(serverAddr);
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Creating or binding server socket of "
-            "TcpServer server: %s\n", e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_ERROR,
+            "Creating or binding server socket of "
+            "TcpServer server: %s\n",
+            e.GetMsgA());
         retval = e.GetErrorCode();
     }
 
     /* Enter server loop if no error so far. */
     if (retval == 0) {
         try {
-            VLTRACE(Trace::LEVEL_VL_INFO, "The TcpServer is listening on "
-                "%s ...\n", serverAddr.ToStringA().PeekBuffer());
+            VLTRACE(Trace::LEVEL_VL_INFO,
+                "The TcpServer is listening on "
+                "%s ...\n",
+                serverAddr.ToStringA().PeekBuffer());
 
             while (true) {
                 this->socket.Listen();
                 peerSocket = this->socket.Accept(&peerAddr);
-                VLTRACE(Trace::LEVEL_VL_INFO, "TcpServer accepted new connection "
-                    "from %s.\n", peerAddr.ToStringA().PeekBuffer());
+                VLTRACE(Trace::LEVEL_VL_INFO,
+                    "TcpServer accepted new connection "
+                    "from %s.\n",
+                    peerAddr.ToStringA().PeekBuffer());
 
                 if (!this->fireNewConnection(peerSocket, peerAddr)) {
-                    VLTRACE(Trace::LEVEL_VL_INFO, "TcpServer is closing "
+                    VLTRACE(Trace::LEVEL_VL_INFO,
+                        "TcpServer is closing "
                         "connection to %s because no one is interested in this "
-                        "client.\n", peerAddr.ToStringA().PeekBuffer());
+                        "client.\n",
+                        peerAddr.ToStringA().PeekBuffer());
                     try {
                         peerSocket.Close();
                     } catch (SocketException e) {
-                        VLTRACE(Trace::LEVEL_VL_WARN, "Closing unused peer "
-                            "connection: %s\n", e.GetMsgA());
+                        VLTRACE(Trace::LEVEL_VL_WARN,
+                            "Closing unused peer "
+                            "connection: %s\n",
+                            e.GetMsgA());
                     }
                 }
             }
         } catch (SocketException e) {
-            VLTRACE(VISLIB_TRCELVL_WARN, "Communication error in TcpServer: "
-                "%s\n", e.GetMsgA());
+            VLTRACE(VISLIB_TRCELVL_WARN,
+                "Communication error in TcpServer: "
+                "%s\n",
+                e.GetMsgA());
         }
     }
 
@@ -187,8 +201,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_WARN, "Error during TcpServer shutdown: %s\n",
-            e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_WARN, "Error during TcpServer shutdown: %s\n", e.GetMsgA());
         retval = e.GetErrorCode();
     }
 
@@ -200,8 +213,7 @@ DWORD vislib::net::TcpServer::Run(const IPEndPoint& serverAddr) {
  * vislib::net::TcpServer::SetFlags
  */
 void vislib::net::TcpServer::SetFlags(UINT32 flags) {
-    vislib::sys::Interlocked::Exchange(reinterpret_cast<VL_INT32*>(&this->flags),
-        static_cast<VL_INT32>(flags));
+    vislib::sys::Interlocked::Exchange(reinterpret_cast<VL_INT32*>(&this->flags), static_cast<VL_INT32>(flags));
 }
 
 
@@ -212,14 +224,18 @@ bool vislib::net::TcpServer::Terminate(void) {
     try {
         this->socket.Shutdown();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when shutting "
-            "TcpServer down: %s\n", e.GetMsgA());
+        VLTRACE(Trace::LEVEL_VL_WARN,
+            "SocketException when shutting "
+            "TcpServer down: %s\n",
+            e.GetMsgA());
     }
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when terminating "
-            "TcpServer: %s\n", e.GetMsgA());
+        VLTRACE(Trace::LEVEL_VL_WARN,
+            "SocketException when terminating "
+            "TcpServer: %s\n",
+            e.GetMsgA());
     }
     return true;
 }
@@ -228,8 +244,7 @@ bool vislib::net::TcpServer::Terminate(void) {
 /*
  * vislib::net::TcpServer::fireNewConnection
  */
-bool vislib::net::TcpServer::fireNewConnection(Socket& socket, 
-         const IPEndPoint& addr) {
+bool vislib::net::TcpServer::fireNewConnection(Socket& socket, const IPEndPoint& addr) {
     bool retval = false;
 
     this->lock.Lock();

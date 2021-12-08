@@ -79,22 +79,22 @@ typedef struct {
 __device__ __constant__ float3 camPosition;
 
 cudaError_t CUDAQuickSurf::copyCamPosToDevice(float3 camPos) {
-	cudaError_t error = cudaMemcpyToSymbol(camPosition, (void*)&camPos, sizeof(float3));
-	cudaDeviceSynchronize();
-	return error;
+    cudaError_t error = cudaMemcpyToSymbol(camPosition, (void*)&camPos, sizeof(float3));
+    cudaDeviceSynchronize();
+    return error;
 }
 
 /*
 * greater than comparison
 */
 __device__ bool greater_triangleCustom::operator()(const triangleCustom& lhs, const triangleCustom& rhs) const {
-	// use midpoint
-	float3 trianglePos1 = (lhs.v1 + lhs.v2 + lhs.v3) / 3.0f;
-	float3 trianglePos2 = (rhs.v1 + rhs.v2 + rhs.v3) / 3.0f;
-	float dist1 = length(trianglePos1 - camPosition);
-	float dist2 = length(trianglePos2 - camPosition);
+    // use midpoint
+    float3 trianglePos1 = (lhs.v1 + lhs.v2 + lhs.v3) / 3.0f;
+    float3 trianglePos2 = (rhs.v1 + rhs.v2 + rhs.v3) / 3.0f;
+    float dist1 = length(trianglePos1 - camPosition);
+    float dist2 = length(trianglePos2 - camPosition);
 
-	return (dist1 > dist2);
+    return (dist1 > dist2);
 }
 
 /* thread prototype */
@@ -2059,15 +2059,15 @@ CUDAQuickSurf::~CUDAQuickSurf() {
 }
 
 cudaError CUDAQuickSurf::SortTrianglesDevice(uint triaCnt, triangleCustom * vertices, 
-	triangleCustom * verticesCopy, triangleCustom * colors, triangleCustom * normals) {
-	thrust::sort_by_key(thrust::device_ptr<triangleCustom>(vertices),
-		thrust::device_ptr<triangleCustom>(vertices + triaCnt),
-		thrust::device_ptr<triangleCustom>(colors), greater_triangleCustom());
-	thrust::sort_by_key(thrust::device_ptr<triangleCustom>(verticesCopy),
-		thrust::device_ptr<triangleCustom>(verticesCopy + triaCnt),
-		thrust::device_ptr<triangleCustom>(normals), greater_triangleCustom());
-	cudaDeviceSynchronize();
-	return cudaGetLastError();
+    triangleCustom * verticesCopy, triangleCustom * colors, triangleCustom * normals) {
+    thrust::sort_by_key(thrust::device_ptr<triangleCustom>(vertices),
+        thrust::device_ptr<triangleCustom>(vertices + triaCnt),
+        thrust::device_ptr<triangleCustom>(colors), greater_triangleCustom());
+    thrust::sort_by_key(thrust::device_ptr<triangleCustom>(verticesCopy),
+        thrust::device_ptr<triangleCustom>(verticesCopy + triaCnt),
+        thrust::device_ptr<triangleCustom>(normals), greater_triangleCustom());
+    cudaDeviceSynchronize();
+    return cudaGetLastError();
 }
 
 
@@ -2130,10 +2130,10 @@ int CUDAQuickSurf::free_bufs() {
   gpuh->cellStartEnd_d=NULL;
 
   if (gpuh->v3f_d != NULL)
-	  cudaFree(gpuh->v3f_d);
+      cudaFree(gpuh->v3f_d);
   gpuh->v3f_d = NULL;
   if (gpuh->v3f_d_copy != NULL)
-	  cudaFree(gpuh->v3f_d_copy);
+      cudaFree(gpuh->v3f_d_copy);
   gpuh->v3f_d_copy = NULL;
 
   if (gpuh->n3f_d != NULL)
@@ -2767,9 +2767,9 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     }
   } else {
     uint3 mcmaxgridsize = gpuh->mc->GetMaxGridSize();
-	if (slabsz.x <= (int)mcmaxgridsize.x &&
-		slabsz.y <= (int)mcmaxgridsize.y &&
-		slabsz.z <= (int)mcmaxgridsize.z) {
+    if (slabsz.x <= (int)mcmaxgridsize.x &&
+        slabsz.y <= (int)mcmaxgridsize.y &&
+        slabsz.z <= (int)mcmaxgridsize.z) {
 #if VERBOSE
       printf("Reusing MC object...\n");
 #endif
@@ -2874,7 +2874,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     cudaThreadSynchronize(); 
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
-#ifdef CUDA_TIMER		
+#ifdef CUDA_TIMER
     cudaDeviceSynchronize();
     cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop);
@@ -3051,12 +3051,12 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //    }
 //#else
 #if 1
-	// TODO sort
-	if (sortTriangles) {
-		cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
-		cudaDeviceSynchronize();
-		this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
-	}
+    // TODO sort
+    if (sortTriangles) {
+        cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+        cudaDeviceSynchronize();
+        this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+    }
     // map VBOs for writing
     //size_t num_bytes;
     float *v3f, *n3f, *c3f;
@@ -3502,7 +3502,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
+    for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 
@@ -3538,7 +3538,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     cudaThreadSynchronize(); 
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
-#ifdef CUDA_TIMER		
+#ifdef CUDA_TIMER
     cudaDeviceSynchronize();
     cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop);
@@ -3693,12 +3693,12 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //    }
 //#else
 #if 1
-	// TODO sort
-	if (sortTriangles) {
-		cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
-		cudaDeviceSynchronize();
-		this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
-	}
+    // TODO sort
+    if (sortTriangles) {
+        cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+        cudaDeviceSynchronize();
+        this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+    }
 
     // map VBOs for writing
     //size_t num_bytes;
@@ -4078,7 +4078,7 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
+    for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 

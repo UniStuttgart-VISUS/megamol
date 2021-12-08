@@ -18,27 +18,28 @@ void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer
     default:
         [[fallthrough]];
     case ReadBuffer::FRONT:
-            read_buffer = GL_FRONT;
+        read_buffer = GL_FRONT;
         break;
     case ReadBuffer::BACK:
-            read_buffer = GL_BACK;
+        read_buffer = GL_BACK;
         break;
     case ReadBuffer::COLOR_ATT0:
-            read_buffer = GL_COLOR_ATTACHMENT0;
+        read_buffer = GL_COLOR_ATTACHMENT0;
         break;
     case ReadBuffer::COLOR_ATT1:
-            read_buffer = GL_COLOR_ATTACHMENT0+1;
+        read_buffer = GL_COLOR_ATTACHMENT0 + 1;
         break;
     case ReadBuffer::COLOR_ATT2:
-            read_buffer = GL_COLOR_ATTACHMENT0+2;
+        read_buffer = GL_COLOR_ATTACHMENT0 + 2;
         break;
     case ReadBuffer::COLOR_ATT3:
-            read_buffer = GL_COLOR_ATTACHMENT0+3;
+        read_buffer = GL_COLOR_ATTACHMENT0 + 3;
         break;
     }
 }
 
-megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
+megamol::frontend_resources::ScreenshotImageData const&
+megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
     // simpler and more correct approach would be to observe Framebuffer_Events resource
     // but this is our naive implementation for now
@@ -58,4 +59,3 @@ megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resour
 
     return result;
 }
-

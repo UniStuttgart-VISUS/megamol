@@ -27,7 +27,7 @@
 #include <memory.h>
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
 #endif /* _WIN32 */
@@ -35,7 +35,7 @@
 #include "vislib/types.h"
 
 #ifndef CINEMATIC_PI
-    #define CINEMATIC_PI 3.1415926535897
+#define CINEMATIC_PI 3.1415926535897
 #endif
 
 #endif /* CINEMATIC_STDAFX_H_INCLUDED */

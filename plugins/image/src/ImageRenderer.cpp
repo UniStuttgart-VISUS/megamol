@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "imageviewer2/ImageRenderer.h"
 #include "imageviewer2/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
@@ -21,9 +21,9 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/view/CallRender3DGL.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -35,26 +35,26 @@ const unsigned int TILE_SIZE = 2 * 1024;
  * misc::ImageRenderer::ImageRenderer
  */
 imageviewer2::ImageRenderer::ImageRenderer(void)
-    : Renderer3DModuleGL()
-    , leftFilenameSlot("leftImg", "The image file name")
-    , rightFilenameSlot("rightImg", "The image file name")
-    , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
-    , pasteSlideshowSlot("pasteShow", "Slot to paste filename pairs (semicolor-separated) on individual lines")
-    , firstSlot("first", "go to first image in slideshow")
-    , previousSlot("previous", "go to previous image in slideshow")
-    , currentSlot("current", "current slideshow image index")
-    , nextSlot("next", "go to next image in slideshow")
-    , lastSlot("last", "go to last image in slideshow")
-    , blankMachine("blankMachine", "semicolon-separated list of machines that do not load image")
-    , defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line")
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
-    , callRequestImage{"requestImage", "Requests an image to display"}
-    , width(1)
-    , height(1)
-    , tiles()
-    , leftFiles()
-    , rightFiles()
-    , datahash{std::numeric_limits<size_t>::max()} {
+        : Renderer3DModuleGL()
+        , leftFilenameSlot("leftImg", "The image file name")
+        , rightFilenameSlot("rightImg", "The image file name")
+        , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
+        , pasteSlideshowSlot("pasteShow", "Slot to paste filename pairs (semicolor-separated) on individual lines")
+        , firstSlot("first", "go to first image in slideshow")
+        , previousSlot("previous", "go to previous image in slideshow")
+        , currentSlot("current", "current slideshow image index")
+        , nextSlot("next", "go to next image in slideshow")
+        , lastSlot("last", "go to last image in slideshow")
+        , blankMachine("blankMachine", "semicolon-separated list of machines that do not load image")
+        , defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line")
+        , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+        , callRequestImage{"requestImage", "Requests an image to display"}
+        , width(1)
+        , height(1)
+        , tiles()
+        , leftFiles()
+        , rightFiles()
+        , datahash{std::numeric_limits<size_t>::max()} {
 
     this->leftFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->leftFilenameSlot);
@@ -117,7 +117,9 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
 /*
  * misc::ImageRenderer::~ImageRenderer
  */
-imageviewer2::ImageRenderer::~ImageRenderer(void) { this->Release(); }
+imageviewer2::ImageRenderer::~ImageRenderer(void) {
+    this->Release();
+}
 
 
 /*
@@ -138,8 +140,8 @@ bool imageviewer2::ImageRenderer::create(void) {
             return false;
         }
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
     }
 
     try {
@@ -155,12 +157,12 @@ bool imageviewer2::ImageRenderer::create(void) {
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[ImageRenderer] Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -223,7 +225,8 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
-    if (imgc != nullptr) imgcConnected = true;
+    if (imgc != nullptr)
+        imgcConnected = true;
     uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
     if (imgcConnected) {
         imgc_enc = imgc->GetEncoding();
@@ -284,7 +287,8 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == roleImgcRank) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "ImageRenderer: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
                     if (!remoteness) {
@@ -302,9 +306,11 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                             fileSize = 0;
                         }
                     } else if (roleRank == roleImgcRank) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                            "ImageRenderer: Retrieving image from call\n");
                         // retrieve data from call
-                        if (!(*imgc)(0)) return false;
+                        if (!(*imgc)(0))
+                            return false;
                         this->width = imgc->GetWidth();
                         this->height = imgc->GetHeight();
                         fileSize = imgc->GetFilesize();
@@ -315,11 +321,12 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                 // cluster nodes broadcast file size
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "ImageRenderer: Broadcast root = %d\n", bcastRoot);
                     MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
-                        roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
-                        fileSize);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "ImageRenderer: rank %i of %i (role %s) knows fileSize = %i", roleRank, roleSize,
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"), fileSize);
                     if (roleRank != 0) {
                         allFile = new BYTE[fileSize];
                         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -350,7 +357,8 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         this->width = this->height = 0;
                     }
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
                     switch (imgc_enc) {
                     case image_calls::Image2DCall::BMP: {
                         if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
@@ -416,8 +424,9 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         "ImageRenderer: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) leaving sync barrier",
-                        roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "ImageRenderer: rank %i of %i (role %s) leaving sync barrier", roleRank, roleSize,
+                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
 #endif
             }
@@ -445,19 +454,20 @@ bool imageviewer2::ImageRenderer::initMPI() {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
-                                                        _T("retrieve MPI communicator for the MPI-based view ")
-                                                        _T("from the registered provider module."));
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    _T("Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
-                                                   _T("retrieving communicator properties ..."));
+                                                                   _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
-                                                   _T("of %d."),
+                                                                   _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */
     }     /* end if (this->comm == MPI_COMM_NULL) */
@@ -529,7 +539,8 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
     }
 
     ::glEnable(GL_TEXTURE_2D);
-    if (!assertImage(rightEye)) return false;
+    if (!assertImage(rightEye))
+        return false;
 
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);

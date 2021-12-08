@@ -1,25 +1,25 @@
 #ifndef MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "datatools/table/TableDataCall.h"
 
-#include <glowl/FramebufferObject.hpp>
-#include <memory>
-#include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
 #include "vislib/math/Matrix.h"
+#include <glowl/FramebufferObject.hpp>
+#include <memory>
+#include <optional>
 
 namespace megamol::infovis_gl {
 
@@ -332,6 +332,6 @@ private:
     std::vector<::megamol::core::param::ParamSlot*> screenParams;
 };
 
-} // namespace megamol::infovis
+} // namespace megamol::infovis_gl
 
 #endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED

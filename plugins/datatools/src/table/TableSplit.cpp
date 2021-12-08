@@ -1,14 +1,14 @@
-#include "stdafx.h"
 #include "table/TableSplit.h"
+#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 
 
 megamol::datatools::table::TableSplit::TableSplit()
-    : _selected_data_slot("selectedData", "")
-    , _rest_data_slot("restData", "")
-    , _in_data_slot("inData", "")
-    , _column_selector_slot("columnSelector", "") {
+        : _selected_data_slot("selectedData", "")
+        , _rest_data_slot("restData", "")
+        , _in_data_slot("inData", "")
+        , _column_selector_slot("columnSelector", "") {
     _selected_data_slot.SetCallback(
         TableDataCall::ClassName(), TableDataCall::FunctionName(0), &TableSplit::getSelectedDataCB);
     _selected_data_slot.SetCallback(TableDataCall::ClassName(), TableDataCall::FunctionName(1), &TableSplit::getHashCB);
@@ -26,10 +26,14 @@ megamol::datatools::table::TableSplit::TableSplit()
 }
 
 
-megamol::datatools::table::TableSplit::~TableSplit() { this->Release(); }
+megamol::datatools::table::TableSplit::~TableSplit() {
+    this->Release();
+}
 
 
-bool megamol::datatools::table::TableSplit::create() { return true; }
+bool megamol::datatools::table::TableSplit::create() {
+    return true;
+}
 
 
 void megamol::datatools::table::TableSplit::release() {}
@@ -37,16 +41,20 @@ void megamol::datatools::table::TableSplit::release() {}
 
 bool megamol::datatools::table::TableSplit::getSelectedDataCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     auto inCall = _in_data_slot.CallAs<TableDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->GetFrameID());
-    if (!(*inCall)(0)) return false;
+    if (!(*inCall)(0))
+        return false;
 
     if (_in_data_hash != inCall->DataHash() || _frame_id != inCall->GetFrameID() || isDirty()) {
-        if (!processData(*inCall)) return false;
+        if (!processData(*inCall))
+            return false;
 
         _in_data_hash = inCall->DataHash();
         _frame_id = inCall->GetFrameID();
@@ -67,16 +75,20 @@ bool megamol::datatools::table::TableSplit::getSelectedDataCB(core::Call& c) {
 
 bool megamol::datatools::table::TableSplit::getRestDataCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     auto inCall = _in_data_slot.CallAs<TableDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->GetFrameID());
-    if (!(*inCall)(0)) return false;
+    if (!(*inCall)(0))
+        return false;
 
     if (_in_data_hash != inCall->DataHash() || _frame_id != inCall->GetFrameID() || isDirty()) {
-        if (!processData(*inCall)) return false;
+        if (!processData(*inCall))
+            return false;
 
         _in_data_hash = inCall->DataHash();
         _frame_id = inCall->GetFrameID();
@@ -96,13 +108,16 @@ bool megamol::datatools::table::TableSplit::getRestDataCB(core::Call& c) {
 
 bool megamol::datatools::table::TableSplit::getHashCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     auto inCall = _in_data_slot.CallAs<TableDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->GetFrameID());
-    if (!(*inCall)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
 
     outCall->SetFrameCount(inCall->GetFrameCount());
     outCall->SetDataHash(_out_data_hash);

@@ -4,12 +4,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -20,11 +20,7 @@ void megamol::core::view::light::QuadLight::addLight(LightCollection& light_coll
 /*
  * megamol::core::view::light::QuadLight::QuadLight
  */
-QuadLight::QuadLight(void)
-    : AbstractLight()
-    , position("Position", "")
-    , edgeOne("Edge1", "")
-    , edgeTwo("Edge2", "") {
+QuadLight::QuadLight(void) : AbstractLight(), position("Position", ""), edgeOne("Edge1", ""), edgeTwo("Edge2", "") {
 
     // quad light
     lightsource = std::make_shared<QuadLightType>();
@@ -40,7 +36,9 @@ QuadLight::QuadLight(void)
 /*
  * megamol::core::view::light::QuadLight::~QuadLight
  */
-QuadLight::~QuadLight(void) { this->Release(); }
+QuadLight::~QuadLight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::QuadLight::readParams
@@ -63,8 +61,7 @@ void QuadLight::readParams() {
  * megamol::core::view::light::QuadLight::InterfaceIsDirty
  */
 bool QuadLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->position.IsDirty() || this->edgeOne.IsDirty() ||
-        this->edgeTwo.IsDirty()) {
+    if (this->AbstractIsDirty() || this->position.IsDirty() || this->edgeOne.IsDirty() || this->edgeTwo.IsDirty()) {
         this->position.ResetDirty();
         this->edgeOne.ResetDirty();
         this->edgeTwo.ResetDirty();

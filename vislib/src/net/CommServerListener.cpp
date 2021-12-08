@@ -5,25 +5,23 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/net/Socket.h"
 #include "vislib/net/CommServerListener.h"
+#include "vislib/net/Socket.h"
 
-#include "vislib/net/CommServer.h"
 #include "vislib/Exception.h"
+#include "vislib/net/CommServer.h"
 
 
 /*
  * vislib::net::CommServerListener::~CommServerListener
  */
-vislib::net::CommServerListener::~CommServerListener(void) {
-}
+vislib::net::CommServerListener::~CommServerListener(void) {}
 
 
 /*
  * vislib::net::CommServerListener::OnServerError
  */
-bool vislib::net::CommServerListener::OnServerError(
-        const CommServer& src, const vislib::Exception& exception) throw() {
+bool vislib::net::CommServerListener::OnServerError(const CommServer& src, const vislib::Exception& exception) throw() {
     return true;
 }
 
@@ -31,22 +29,16 @@ bool vislib::net::CommServerListener::OnServerError(
 /*
  * vislib::net::CommServerListener::OnServerExited
  */
-void vislib::net::CommServerListener::OnServerExited(
-        const CommServer& src) throw() {
-
-}
+void vislib::net::CommServerListener::OnServerExited(const CommServer& src) throw() {}
 
 
 /*
  * vislib::net::CommServerListener::OnServerStarted
  */
-void vislib::net::CommServerListener::OnServerStarted(
-        const CommServer& src) throw() {
-}
+void vislib::net::CommServerListener::OnServerStarted(const CommServer& src) throw() {}
 
 
 /*
  * vislib::net::CommServerListener::CommServerListener
  */
-vislib::net::CommServerListener::CommServerListener(void) {
-}
+vislib::net::CommServerListener::CommServerListener(void) {}

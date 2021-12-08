@@ -3,64 +3,42 @@
 #include <iostream>
 
 #ifdef CUESDK_ENABLED
-std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> megamol::frontend_resources::CommandRegistry::corsair_led_from_glfw_key {
-        {megamol::frontend_resources::Key::KEY_ESCAPE, CLK_Escape},
-        {megamol::frontend_resources::Key::KEY_F1, CLK_F1},
-        {megamol::frontend_resources::Key::KEY_F2, CLK_F2},
-        {megamol::frontend_resources::Key::KEY_F3, CLK_F3},
-        {megamol::frontend_resources::Key::KEY_F4, CLK_F4},
-        {megamol::frontend_resources::Key::KEY_F5, CLK_F5},
-        {megamol::frontend_resources::Key::KEY_F6, CLK_F6},
-        {megamol::frontend_resources::Key::KEY_F7, CLK_F7},
-        {megamol::frontend_resources::Key::KEY_F8, CLK_F8},
-        {megamol::frontend_resources::Key::KEY_F9, CLK_F9},
-        {megamol::frontend_resources::Key::KEY_F10, CLK_F10},
-        {megamol::frontend_resources::Key::KEY_F11, CLK_F11},
+std::unordered_map<megamol::frontend_resources::Key, CorsairLedId>
+    megamol::frontend_resources::CommandRegistry::corsair_led_from_glfw_key{
+        {megamol::frontend_resources::Key::KEY_ESCAPE, CLK_Escape}, {megamol::frontend_resources::Key::KEY_F1, CLK_F1},
+        {megamol::frontend_resources::Key::KEY_F2, CLK_F2}, {megamol::frontend_resources::Key::KEY_F3, CLK_F3},
+        {megamol::frontend_resources::Key::KEY_F4, CLK_F4}, {megamol::frontend_resources::Key::KEY_F5, CLK_F5},
+        {megamol::frontend_resources::Key::KEY_F6, CLK_F6}, {megamol::frontend_resources::Key::KEY_F7, CLK_F7},
+        {megamol::frontend_resources::Key::KEY_F8, CLK_F8}, {megamol::frontend_resources::Key::KEY_F9, CLK_F9},
+        {megamol::frontend_resources::Key::KEY_F10, CLK_F10}, {megamol::frontend_resources::Key::KEY_F11, CLK_F11},
         {megamol::frontend_resources::Key::KEY_F12, CLK_F12},
         {megamol::frontend_resources::Key::KEY_GRAVE_ACCENT, CLK_GraveAccentAndTilde},
-        {megamol::frontend_resources::Key::KEY_1, CLK_1},
-        {megamol::frontend_resources::Key::KEY_2, CLK_2},
-        {megamol::frontend_resources::Key::KEY_3, CLK_3},
-        {megamol::frontend_resources::Key::KEY_4, CLK_4},
-        {megamol::frontend_resources::Key::KEY_5, CLK_5},
-        {megamol::frontend_resources::Key::KEY_6, CLK_6},
-        {megamol::frontend_resources::Key::KEY_7, CLK_7},
-        {megamol::frontend_resources::Key::KEY_8, CLK_8},
-        {megamol::frontend_resources::Key::KEY_9, CLK_9},
-        {megamol::frontend_resources::Key::KEY_0, CLK_0},
+        {megamol::frontend_resources::Key::KEY_1, CLK_1}, {megamol::frontend_resources::Key::KEY_2, CLK_2},
+        {megamol::frontend_resources::Key::KEY_3, CLK_3}, {megamol::frontend_resources::Key::KEY_4, CLK_4},
+        {megamol::frontend_resources::Key::KEY_5, CLK_5}, {megamol::frontend_resources::Key::KEY_6, CLK_6},
+        {megamol::frontend_resources::Key::KEY_7, CLK_7}, {megamol::frontend_resources::Key::KEY_8, CLK_8},
+        {megamol::frontend_resources::Key::KEY_9, CLK_9}, {megamol::frontend_resources::Key::KEY_0, CLK_0},
         {megamol::frontend_resources::Key::KEY_MINUS, CLK_MinusAndUnderscore},
-        {megamol::frontend_resources::Key::KEY_TAB, CLK_Tab},
-        {megamol::frontend_resources::Key::KEY_Q, CLK_Q},
-        {megamol::frontend_resources::Key::KEY_W, CLK_W},
-        {megamol::frontend_resources::Key::KEY_E, CLK_E},
-        {megamol::frontend_resources::Key::KEY_R, CLK_R},
-        {megamol::frontend_resources::Key::KEY_T, CLK_T},
-        {megamol::frontend_resources::Key::KEY_Y, CLK_Y},
-        {megamol::frontend_resources::Key::KEY_U, CLK_U},
-        {megamol::frontend_resources::Key::KEY_I, CLK_I},
-        {megamol::frontend_resources::Key::KEY_O, CLK_O},
+        {megamol::frontend_resources::Key::KEY_TAB, CLK_Tab}, {megamol::frontend_resources::Key::KEY_Q, CLK_Q},
+        {megamol::frontend_resources::Key::KEY_W, CLK_W}, {megamol::frontend_resources::Key::KEY_E, CLK_E},
+        {megamol::frontend_resources::Key::KEY_R, CLK_R}, {megamol::frontend_resources::Key::KEY_T, CLK_T},
+        {megamol::frontend_resources::Key::KEY_Y, CLK_Y}, {megamol::frontend_resources::Key::KEY_U, CLK_U},
+        {megamol::frontend_resources::Key::KEY_I, CLK_I}, {megamol::frontend_resources::Key::KEY_O, CLK_O},
         {megamol::frontend_resources::Key::KEY_P, CLK_P},
         {megamol::frontend_resources::Key::KEY_LEFT_BRACKET, CLK_BracketLeft},
         {megamol::frontend_resources::Key::KEY_CAPS_LOCK, CLK_CapsLock},
-        {megamol::frontend_resources::Key::KEY_A, CLK_A},
-        {megamol::frontend_resources::Key::KEY_S, CLK_S},
-        {megamol::frontend_resources::Key::KEY_D, CLK_D},
-        {megamol::frontend_resources::Key::KEY_F, CLK_F},
-        {megamol::frontend_resources::Key::KEY_G, CLK_G},
-        {megamol::frontend_resources::Key::KEY_H, CLK_H},
-        {megamol::frontend_resources::Key::KEY_J, CLK_J},
-        {megamol::frontend_resources::Key::KEY_K, CLK_K},
+        {megamol::frontend_resources::Key::KEY_A, CLK_A}, {megamol::frontend_resources::Key::KEY_S, CLK_S},
+        {megamol::frontend_resources::Key::KEY_D, CLK_D}, {megamol::frontend_resources::Key::KEY_F, CLK_F},
+        {megamol::frontend_resources::Key::KEY_G, CLK_G}, {megamol::frontend_resources::Key::KEY_H, CLK_H},
+        {megamol::frontend_resources::Key::KEY_J, CLK_J}, {megamol::frontend_resources::Key::KEY_K, CLK_K},
         {megamol::frontend_resources::Key::KEY_L, CLK_L},
         {megamol::frontend_resources::Key::KEY_SEMICOLON, CLK_SemicolonAndColon},
         {megamol::frontend_resources::Key::KEY_APOSTROPHE, CLK_ApostropheAndDoubleQuote},
         {megamol::frontend_resources::Key::KEY_LEFT_SHIFT, CLK_LeftShift},
         {megamol::frontend_resources::Key::KEY_BACKSLASH, CLK_NonUsBackslash},
-        {megamol::frontend_resources::Key::KEY_Z, CLK_Z},
-        {megamol::frontend_resources::Key::KEY_X, CLK_X},
-        {megamol::frontend_resources::Key::KEY_C, CLK_C},
-        {megamol::frontend_resources::Key::KEY_V, CLK_V},
-        {megamol::frontend_resources::Key::KEY_B, CLK_B},
-        {megamol::frontend_resources::Key::KEY_N, CLK_N},
+        {megamol::frontend_resources::Key::KEY_Z, CLK_Z}, {megamol::frontend_resources::Key::KEY_X, CLK_X},
+        {megamol::frontend_resources::Key::KEY_C, CLK_C}, {megamol::frontend_resources::Key::KEY_V, CLK_V},
+        {megamol::frontend_resources::Key::KEY_B, CLK_B}, {megamol::frontend_resources::Key::KEY_N, CLK_N},
         {megamol::frontend_resources::Key::KEY_M, CLK_M},
         {megamol::frontend_resources::Key::KEY_COMMA, CLK_CommaAndLessThan},
         {megamol::frontend_resources::Key::KEY_PERIOD, CLK_PeriodAndBiggerThan},
@@ -155,7 +133,7 @@ std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> megamol::fron
 
 const char* corsair_error_to_string(CorsairError error) {
     switch (error) {
-    case CE_Success :
+    case CE_Success:
         return "CE_Success";
     case CE_ServerNotFound:
         return "CE_ServerNotFound";
@@ -178,16 +156,16 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
 #ifdef CUESDK_ENABLED
     CorsairPerformProtocolHandshake();
     if (const auto error = CorsairGetLastError()) {
-        std::cout << "Corsair CUE Handshake failed: " << corsair_error_to_string(error) << " - is iCUE running?" << std::endl;
+        std::cout << "Corsair CUE Handshake failed: " << corsair_error_to_string(error) << " - is iCUE running?"
+                  << std::endl;
     }
     CorsairRequestControl(CAM_ExclusiveLightingControl);
     led_positions = CorsairGetLedPositions();
     for (auto i = 0; i < led_positions->numberOfLed; i++) {
         const auto ledPos = led_positions->pLedPosition[i];
         auto ledColor = CorsairLedColor{ledPos.ledId, 0, 0, 0};
-        if (ledPos.ledId == CLK_LeftShift || ledPos.ledId == CLK_RightShift ||
-            ledPos.ledId == CLK_LeftCtrl|| ledPos.ledId == CLK_RightCtrl ||
-            ledPos.ledId == CLK_LeftAlt || ledPos.ledId == CLK_RightAlt) {
+        if (ledPos.ledId == CLK_LeftShift || ledPos.ledId == CLK_RightShift || ledPos.ledId == CLK_LeftCtrl ||
+            ledPos.ledId == CLK_RightCtrl || ledPos.ledId == CLK_LeftAlt || ledPos.ledId == CLK_RightAlt) {
             ledColor.b = 255;
         }
         black_keyboard.push_back(ledColor);
@@ -250,7 +228,8 @@ const megamol::frontend_resources::Command megamol::frontend_resources::CommandR
 }
 
 void megamol::frontend_resources::CommandRegistry::remove_command_by_parent(const std::string& parent_param) {
-    auto it = std::find_if(commands.begin(), commands.end(), [parent_param] (const Command& c){return c.parent == parent_param;});
+    auto it = std::find_if(
+        commands.begin(), commands.end(), [parent_param](const Command& c) { return c.parent == parent_param; });
     if (it != commands.end()) {
         if (it->key.key != Key::KEY_UNKNOWN) {
             remove_color_from_layer(*it);
@@ -318,7 +297,8 @@ void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers m
     if (layer != key_colors.end()) {
         if (!CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data())) {
             const auto error = CorsairGetLastError();
-            std::cout << "Setting Corsair leds for layer " << mod.ToString() << " failed: " << corsair_error_to_string(error) << std::endl;
+            std::cout << "Setting Corsair leds for layer " << mod.ToString()
+                      << " failed: " << corsair_error_to_string(error) << std::endl;
         }
     }
 #endif
@@ -373,13 +353,15 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
         key_colors[c.key.mods] = std::vector<CorsairLedColor>();
     }
     if (c.key.key != Key::KEY_UNKNOWN) {
-        CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
+        CorsairLedColor clc{corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
         auto& layer = key_colors[c.key.mods];
-        auto it = std::find_if(layer.begin(), layer.end(), [&](const CorsairLedColor& cled){return cled.ledId == clc.ledId;});
+        auto it = std::find_if(
+            layer.begin(), layer.end(), [&](const CorsairLedColor& cled) { return cled.ledId == clc.ledId; });
         if (it == layer.end()) {
             key_colors[c.key.mods].push_back(clc);
         } else {
-            std::cout << "Warning: Corsair LEDs inconsistent: " << clc.ledId << " (from " << c.key.ToString() << ") already used" << std::endl;
+            std::cout << "Warning: Corsair LEDs inconsistent: " << clc.ledId << " (from " << c.key.ToString()
+                      << ") already used" << std::endl;
         }
     }
     std::cout << "adding " << c.name << " with " << c.key.ToString() << std::endl;
@@ -392,7 +374,8 @@ void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
     if (c.key.key != Key::KEY_UNKNOWN) {
         auto& layer = key_colors[c.key.mods];
         const auto& k = corsair_led_from_glfw_key[c.key.key];
-        const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
+        const auto it =
+            std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) { return c.ledId == k; });
         layer.erase(it);
     }
 #endif
@@ -405,7 +388,7 @@ void megamol::frontend_resources::CommandRegistry::push_command(const Command& c
         add_color_to_layer(c);
 #ifdef CUESDK_ENABLED
         if (current_modifiers.equals(c.key.mods)) {
-            auto ledColor = CorsairLedColor{ corsair_led_from_glfw_key[c.key.key], 255, 0, 0 };
+            auto ledColor = CorsairLedColor{corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
             CorsairSetLedsColors(1, &ledColor);
         }
 #endif

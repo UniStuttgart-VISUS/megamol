@@ -4,23 +4,24 @@
  * Copyright (C) 2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "ParticleInstantiator.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ButtonParam.h"
 #include "glm/glm.hpp"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "stdafx.h"
 
 using namespace megamol;
 
 
 datatools::ParticleInstantiator::ParticleInstantiator(void)
         : AbstractParticleManipulator("outData", "indata")
-    , numInstancesParam("instances", "number of dataset replications in X, Y, Z direction")
-    , instanceOffsetParam("instOffset", "offset per instance in X, Y, Z")
-    , setFromClipboxParam("fromClipbox", "set offsets based on size of clipbox")
-    , setFromBoundingboxParam("fromBBox", "set offsets based on size of bounding box") {
+        , numInstancesParam("instances", "number of dataset replications in X, Y, Z direction")
+        , instanceOffsetParam("instOffset", "offset per instance in X, Y, Z")
+        , setFromClipboxParam("fromClipbox", "set offsets based on size of clipbox")
+        , setFromBoundingboxParam("fromBBox", "set offsets based on size of bounding box") {
 
-    this->numInstancesParam << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f), vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
+    this->numInstancesParam << new core::param::Vector3fParam(
+        vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f), vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->MakeSlotAvailable(&this->numInstancesParam);
 
     this->instanceOffsetParam << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
@@ -31,7 +32,6 @@ datatools::ParticleInstantiator::ParticleInstantiator(void)
 
     this->setFromBoundingboxParam << new core::param::ButtonParam();
     this->MakeSlotAvailable(&this->setFromBoundingboxParam);
-
 }
 
 datatools::ParticleInstantiator::~ParticleInstantiator(void) {
@@ -39,7 +39,8 @@ datatools::ParticleInstantiator::~ParticleInstantiator(void) {
 }
 
 bool datatools::ParticleInstantiator::InterfaceIsDirty() {
-    return this->numInstancesParam.IsDirty() || this->instanceOffsetParam.IsDirty() || this->setFromBoundingboxParam.IsDirty() || this->setFromClipboxParam.IsDirty();
+    return this->numInstancesParam.IsDirty() || this->instanceOffsetParam.IsDirty() ||
+           this->setFromBoundingboxParam.IsDirty() || this->setFromClipboxParam.IsDirty();
 }
 
 void datatools::ParticleInstantiator::InterfaceResetDirty() {
@@ -53,7 +54,7 @@ bool datatools::ParticleInstantiator::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     using geocalls::MultiParticleDataCall;
 
-    outData = inData; // also transfers the unlocker to 'outData'
+    outData = inData;                   // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 
@@ -62,18 +63,20 @@ bool datatools::ParticleInstantiator::manipulateData(
             inData.AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension()));
     }
     if (this->setFromBoundingboxParam.IsDirty()) {
-        this->instanceOffsetParam.Param<core::param::Vector3fParam>()->SetValue(vislib::math::Vector<float, 3>(
-            inData.AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension()));
+        this->instanceOffsetParam.Param<core::param::Vector3fParam>()->SetValue(
+            vislib::math::Vector<float, 3>(inData.AccessBoundingBoxes().ObjectSpaceBBox().GetSize().PeekDimension()));
     }
 
     unsigned int plc = inData.GetParticleListCount();
     auto ni_temp = this->numInstancesParam.Param<core::param::Vector3fParam>()->Value();
-    glm::ivec3 numInstances = glm::ivec3(static_cast<int>(ni_temp.X()), static_cast<int>(ni_temp.Y()), static_cast<int>(ni_temp.Z()));
+    glm::ivec3 numInstances =
+        glm::ivec3(static_cast<int>(ni_temp.X()), static_cast<int>(ni_temp.Y()), static_cast<int>(ni_temp.Z()));
     auto io_temp = this->instanceOffsetParam.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 instOffsets = glm::vec3(io_temp.X(), io_temp.Y(), io_temp.Z());
     int numTotalInstances = numInstances.x * numInstances.y * numInstances.z;
 
-    if (InterfaceIsDirty() || (in_hash != inData.DataHash()) || (inData.DataHash() == 0) || (in_frameID != inData.FrameID())) {
+    if (InterfaceIsDirty() || (in_hash != inData.DataHash()) || (inData.DataHash() == 0) ||
+        (in_frameID != inData.FrameID())) {
         // Update data
         in_hash = inData.DataHash();
         in_frameID = inData.FrameID();
@@ -144,11 +147,15 @@ bool datatools::ParticleInstantiator::manipulateData(
                 for (auto instY = 0; instY < numInstances.y; instY++) {
                     for (auto instZ = 0; instZ < numInstances.z; instZ++) {
                         const auto instSize = p.GetCount() * vert_components;
-                        const auto offset = (instSize * instX) + (instSize * numInstances.x * instY) + (instSize * numInstances.x * numInstances.y * instZ);
+                        const auto offset = (instSize * instX) + (instSize * numInstances.x * instY) +
+                                            (instSize * numInstances.x * numInstances.y * instZ);
                         for (uint64_t j = 0; j < p.GetCount(); ++j) {
-                            vertData[i][offset + j * vert_components + 0] = xacc->Get_f(j) + instOffsets.x * static_cast<float>(instX);
-                            vertData[i][offset + j * vert_components + 1] = yacc->Get_f(j) + instOffsets.y * static_cast<float>(instY);
-                            vertData[i][offset + j * vert_components + 2] = zacc->Get_f(j) + instOffsets.z * static_cast<float>(instZ);
+                            vertData[i][offset + j * vert_components + 0] =
+                                xacc->Get_f(j) + instOffsets.x * static_cast<float>(instX);
+                            vertData[i][offset + j * vert_components + 1] =
+                                yacc->Get_f(j) + instOffsets.y * static_cast<float>(instY);
+                            vertData[i][offset + j * vert_components + 2] =
+                                zacc->Get_f(j) + instOffsets.z * static_cast<float>(instZ);
                             if (!has_global_radius[i]) {
                                 vertData[i][offset + j * vert_components + 3] = racc->Get_f(j);
                             }
@@ -163,7 +170,8 @@ bool datatools::ParticleInstantiator::manipulateData(
 
                             if (p.GetDirDataType() != geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                                 const auto dirInstSize = p.GetCount() * 3;
-                                const auto diroffset = (dirInstSize * instX) + (dirInstSize * numInstances.x * instY) + (dirInstSize * numInstances.x * numInstances.y * instZ);
+                                const auto diroffset = (dirInstSize * instX) + (dirInstSize * numInstances.x * instY) +
+                                                       (dirInstSize * numInstances.x * numInstances.y * instZ);
                                 memcpy(&dirData[i][diroffset], &dirData[i][0], dirInstSize * sizeof(float));
                             }
                         }
@@ -185,7 +193,8 @@ bool datatools::ParticleInstantiator::manipulateData(
                 geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, vertData[i].data(), 0);
         }
         if (p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_NONE) {
-            outData.AccessParticles(i).SetGlobalColour(p.GetGlobalColour()[0], p.GetGlobalColour()[1], p.GetGlobalColour()[2], p.GetGlobalColour()[3]);
+            outData.AccessParticles(i).SetGlobalColour(
+                p.GetGlobalColour()[0], p.GetGlobalColour()[1], p.GetGlobalColour()[2], p.GetGlobalColour()[3]);
             outData.AccessParticles(i).SetColourData(geocalls::SimpleSphericalParticles::COLDATA_NONE, nullptr, 0);
         } else {
             outData.AccessParticles(i).SetColourData(
@@ -207,7 +216,8 @@ bool datatools::ParticleInstantiator::manipulateExtent(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     auto ni_temp = this->numInstancesParam.Param<core::param::Vector3fParam>()->Value();
-    glm::ivec3 numInstances = glm::ivec3(static_cast<int>(ni_temp.X()), static_cast<int>(ni_temp.Y()), static_cast<int>(ni_temp.Z()));
+    glm::ivec3 numInstances =
+        glm::ivec3(static_cast<int>(ni_temp.X()), static_cast<int>(ni_temp.Y()), static_cast<int>(ni_temp.Z()));
     auto io_temp = this->instanceOffsetParam.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 instOffsets = glm::vec3(io_temp.X(), io_temp.Y(), io_temp.Z());
     int numTotalInstances = numInstances.x * numInstances.y * numInstances.z;

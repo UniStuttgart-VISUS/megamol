@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "astro/AstroDataCall.h"
+#include "stdafx.h"
 
 using namespace megamol::astro;
 

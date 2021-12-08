@@ -1873,8 +1873,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 }
 
 
-void Graph::DrawGlobalParameterWidgets(megamol::core_gl::utility::PickingBuffer& picking_buffer,
-    std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
+void Graph::DrawGlobalParameterWidgets(
+    megamol::core::utility::PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
 
     for (auto& module_ptr : this->Modules()) {
         module_ptr->DrawParameters(
@@ -2408,7 +2408,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            auto* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
+            auto* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,

@@ -10,8 +10,8 @@
 
 #include <json.hpp>
 
-#include "mmcore/view/Camera.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Camera.h"
 
 namespace megamol {
 namespace core {
@@ -59,7 +59,7 @@ public:
      * @param validityFlags The array containing the validity flags
      * @return A json string containing the information of the serialized cameras
      */
-    template <size_t N>
+    template<size_t N>
     std::string serialize(std::array<Camera, N> const& camVec, const std::array<bool, N>& validityFlags) const;
 
     /**
@@ -70,7 +70,7 @@ public:
      * @param camVec The array containing the camera information
      * @return A json string containing the information of the serialized cameras
      */
-    template <size_t N>
+    template<size_t N>
     std::string serialize(std::array<std::pair<Camera, bool>, N> const& camVec) const;
 
     /**
@@ -104,7 +104,7 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise
      */
-    template <size_t N>
+    template<size_t N>
     bool deserialize(std::array<Camera, N>& outCameras, std::array<bool, N>& outValidity, std::string const text) const;
 
     /**
@@ -116,7 +116,7 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise
      */
-    template <size_t N>
+    template<size_t N>
     bool deserialize(std::array<std::pair<Camera, bool>, N>& outCameras, std::string const text) const;
 
     /**

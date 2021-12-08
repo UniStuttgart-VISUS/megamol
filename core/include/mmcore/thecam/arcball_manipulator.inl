@@ -33,13 +33,14 @@
 /*
  * megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator
  */
-template <class T> megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) {}
+template<class T>
+megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) {}
 
 
 /*
  * megamol::core::thecam::arcball_manipulator<T>::on_drag
  */
-template <class T>
+template<class T>
 void megamol::core::thecam::arcball_manipulator<T>::on_drag(
     const screen_type x, const screen_type y, const point_type& rotCentre) {
     if (this->manipulating() && this->enabled()) {
@@ -52,31 +53,30 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
 
             // get camera pose
             auto cam_pose = cam->template get<view::Camera::Pose>();
-            auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
 
             // split movement into horizontal and vertical (in camera space)
             quaternion_type rot_pitch;
             quaternion_type rot_yaw;
-            
+
             // rotate horizontally
             rot_pitch = glm::angleAxis(dx * (3.14159265f / 180.0f), cam_pose.up);
-            cam_right = glm::rotate(rot_pitch, cam_right);
+            cam_pose.right = glm::rotate(rot_pitch, cam_pose.right);
             cam_pose.direction = glm::rotate(rot_pitch, cam_pose.direction);
-            
+
             // rotate vertically
-            rot_yaw = glm::angleAxis(dy * (3.14159265f / 180.0f), -cam_right);
+            rot_yaw = glm::angleAxis(dy * (3.14159265f / 180.0f), -cam_pose.right);
             cam_pose.direction = glm::rotate(rot_yaw, cam_pose.direction);
             cam_pose.up = glm::rotate(rot_yaw, cam_pose.up);
-            
+
             // transform s.t. rotation center is origin
             auto shifted_pos = cam_pose.position - glm::vec3(rotCentre);
             shifted_pos = glm::rotate(rot_pitch, shifted_pos);
             shifted_pos = glm::rotate(rot_yaw, shifted_pos);
-            
-            // transform back 
+
+            // transform back
             cam_pose.position = shifted_pos + glm::vec3(rotCentre);
             cam->setPose(cam_pose);
-            
+
             // update reference values for next call to on_drag (that happens without drag start event)
             this->lastSx = x;
             this->lastSy = y;
@@ -88,7 +88,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
 /*
  * megamol::core::thecam::arcball_manipulator<T>::on_drag_start
  */
-template <class T>
+template<class T>
 void megamol::core::thecam::arcball_manipulator<T>::setActive(const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();

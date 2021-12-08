@@ -1,13 +1,15 @@
-#include <sstream>
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/versioninfo.h"
+#include <sstream>
 
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
-static MegaMolGraph& get(void* ptr) { return *reinterpret_cast<MegaMolGraph*>(ptr); }
+static MegaMolGraph& get(void* ptr) {
+    return *reinterpret_cast<MegaMolGraph*>(ptr);
+}
 
 static void log(std::string text) {
     const std::string msg = "MegaMolGraph_Convenience: " + text + "\n";
@@ -35,9 +37,10 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeModules() const {
         if (module.isGraphEntryPoint) {
             auto first = module.request.id.find_first_not_of(':');
             auto last = module.request.id.find_first_of(':', first);
-            auto first_name = module.request.id.substr(first, last-first);
-            auto improvised_instance_name = "::"+first_name;
-            serViews.append("mmCreateView(\"" + improvised_instance_name + "\",\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+            auto first_name = module.request.id.substr(first, last - first);
+            auto improvised_instance_name = "::" + first_name;
+            serViews.append("mmCreateView(\"" + improvised_instance_name + "\",\"" + module.request.className +
+                            "\",\"" + module.request.id + "\")\n");
         }
     }
 
@@ -55,10 +58,14 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeCalls() const {
 
     for (auto& call : get(m_graph_ptr).ListCalls()) {
         serCalls.append("mmCreateCall("
-           "\"" + call.request.className + "\","
-            "\"" + call.request.from + "\","
-            "\"" + call.request.to + "\""
-            + ")\n");
+                        "\"" +
+                        call.request.className +
+                        "\","
+                        "\"" +
+                        call.request.from +
+                        "\","
+                        "\"" +
+                        call.request.to + "\"" + ")\n");
     }
 
     return serCalls + '\n';
@@ -329,8 +336,8 @@ ModuleList_t MegaMolGraph_Convenience::ListModules(const Module::ptr_type startM
     return ret;
 }
 
-void MegaMolGraph_Convenience::TraverseGraph(const std::string startModuleName,
-    std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
+void MegaMolGraph_Convenience::TraverseGraph(
+    const std::string startModuleName, std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
     auto modulePtr = get(m_graph_ptr).FindModule(startModuleName);
     if (!modulePtr) {
         err("Could not traverse graph from \"" + startModuleName + "\": module not found");
@@ -339,8 +346,8 @@ void MegaMolGraph_Convenience::TraverseGraph(const std::string startModuleName,
     }
 }
 
-void MegaMolGraph_Convenience::TraverseGraph(const Module::ptr_type startModule,
-    std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
+void MegaMolGraph_Convenience::TraverseGraph(
+    const Module::ptr_type startModule, std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
 
     const auto throwError = [&](auto detail) {
         std::ostringstream out;

@@ -12,8 +12,8 @@
 #include "mmcore/utility/ResourceWrapper.h"
 
 #include <fstream>
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 
 using namespace megamol::core::utility;
@@ -23,9 +23,11 @@ SDFFont::SDFFont(PresetFontName fn) : SDFFont(fn, 1.0f, RenderMode::RENDERMODE_F
 SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode) : SDFFont(fn, 1.0f, render_mode, false) {}
 SDFFont::SDFFont(PresetFontName fn, float size) : SDFFont(fn, size, RenderMode::RENDERMODE_FILL, false) {}
 SDFFont::SDFFont(PresetFontName fn, bool flipY) : SDFFont(fn, 1.0f, RenderMode::RENDERMODE_FILL, flipY) {}
-SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY) : SDFFont(fn, 1.0f, render_mode, flipY) {}
-SDFFont::SDFFont(PresetFontName fn, float size, bool flipY) :  SDFFont(fn, size, RenderMode::RENDERMODE_FILL, flipY) {}
-SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode) : SDFFont(fn, size, render_mode, false) {}
+SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
+        : SDFFont(fn, 1.0f, render_mode, flipY) {}
+SDFFont::SDFFont(PresetFontName fn, float size, bool flipY) : SDFFont(fn, size, RenderMode::RENDERMODE_FILL, flipY) {}
+SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode)
+        : SDFFont(fn, size, render_mode, false) {}
 SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode, bool flipY)
         : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
@@ -106,8 +108,7 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , colBatchCache(src.colBatchCache)
         , glyphs(src.glyphs)
         , glyphIdcs(src.glyphIdcs)
-        , glyphKrns(src.glyphKrns) {
-}
+        , glyphKrns(src.glyphKrns) {}
 
 
 SDFFont::~SDFFont(void) {
@@ -125,24 +126,25 @@ bool SDFFont::Initialise(megamol::core::CoreInstance* core_instance_ptr) {
 }
 
 
-unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
+unsigned int SDFFont::BlockLines(float maxWidth, float size, const char* txt) const {
 
     return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
 
-void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, bool flipY,
-    const char* txt, SDFFont::Alignment align) const {
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size,
+    bool flipY, const char* txt, SDFFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE))
+        return;
 
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
 
     } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
 
     this->drawGlyphs(mvm, pm, col, run, x, y, 0.0f, size, flipY, align);
@@ -151,40 +153,42 @@ void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float 
 }
 
 
-void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float w, float h,
-    float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float w,
+    float h, float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE))
+        return;
 
-    int *run = this->buildGlyphRun(txt, w / size);
+    int* run = this->buildGlyphRun(txt, w / size);
 
-    if (flipY) y += h;
+    if (flipY)
+        y += h;
 
     switch (align) {
     case ALIGN_CENTER_BOTTOM:
         x += w * 0.5f;
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_CENTER_MIDDLE:
         x += w * 0.5f;
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_CENTER_TOP:
         x += w * 0.5f;
         break;
     case ALIGN_LEFT_BOTTOM:
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_LEFT_MIDDLE:
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_BOTTOM:
         x += w;
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
         break;
     case ALIGN_RIGHT_MIDDLE:
         x += w;
-        y +=  (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
+        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
         break;
     case ALIGN_RIGHT_TOP:
         x += w;
@@ -199,14 +203,16 @@ void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float 
 }
 
 
-void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float w, float h,
-    float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z,
+    float w, float h, float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE))
+        return;
 
-    int *run = this->buildGlyphRun(txt, w / size);
+    int* run = this->buildGlyphRun(txt, w / size);
 
-    if (flipY) y += h;
+    if (flipY)
+        y += h;
 
     switch (align) {
     case ALIGN_CENTER_BOTTOM:
@@ -247,18 +253,18 @@ void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float 
 }
 
 
-void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float size,
-    bool flipY, const char* txt, Alignment align) const {
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z,
+    float size, bool flipY, const char* txt, Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE))
+        return;
 
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
 
     if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
-    }
-    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size * (flipY ? -1.0f : 1.0f);
+    } else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size * (flipY ? -1.0f : 1.0f);
     }
 
     this->drawGlyphs(mvm, pm, col, run, x, y, z, size, flipY, align);
@@ -267,10 +273,10 @@ void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float 
 }
 
 
-float SDFFont::LineWidth(float size, const char *txt) const {
+float SDFFont::LineWidth(float size, const char* txt) const {
 
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-    int *i = run;
+    int* run = this->buildGlyphRun(txt, FLT_MAX);
+    int* i = run;
     float len = 0.0f;
     float comlen = 0.0f;
     while (*i != 0) {
@@ -286,47 +292,53 @@ float SDFFont::LineWidth(float size, const char *txt) const {
 
 void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4]) const {
 
-    if (this->posBatchCache.empty()) return;
+    if (this->posBatchCache.empty())
+        return;
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat),
+                &this->posBatchCache.front(), GL_STATIC_DRAW);
+        } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat),
+                &this->texBatchCache.front(), GL_STATIC_DRAW);
         }
-        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(), GL_STATIC_DRAW);
-        } 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    // Draw batch cache 
-    unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+    // Draw batch cache
+    unsigned int glyphCnt =
+        ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
     this->render(mvm, pm, glyphCnt, &col);
 }
 
 
 void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
 
-    if (this->posBatchCache.empty()) return;
+    if (this->posBatchCache.empty())
+        return;
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat), &this->posBatchCache.front(), GL_STATIC_DRAW);
-        } 
-        else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat), &this->texBatchCache.front(), GL_STATIC_DRAW);
-        } 
-        else if (this->vbos[i].index == (GLuint)VBOAttrib::COLOR) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->colBatchCache.size() * sizeof(GLfloat), &this->colBatchCache.front(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat),
+                &this->posBatchCache.front(), GL_STATIC_DRAW);
+        } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat),
+                &this->texBatchCache.front(), GL_STATIC_DRAW);
+        } else if (this->vbos[i].index == (GLuint)VBOAttrib::COLOR) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->colBatchCache.size() * sizeof(GLfloat),
+                &this->colBatchCache.front(), GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     // Draw batch cache
-    unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+    unsigned int glyphCnt =
+        ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
     this->render(mvm, pm, glyphCnt, nullptr);
 }
 
@@ -349,7 +361,7 @@ void SDFFont::Deinitialise(void) {
     // Delete allocated memory
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {
         if (this->glyphs[i].kerns != nullptr) {
-            delete [] this->glyphs[i].kerns;
+            delete[] this->glyphs[i].kerns;
         }
     }
 
@@ -362,34 +374,39 @@ void SDFFont::Deinitialise(void) {
 }
 
 
-int SDFFont::lineCount(int *run, bool deleterun) const {
-    if ((run == nullptr) || (run[0] == 0)) return 0;
+int SDFFont::lineCount(int* run, bool deleterun) const {
+    if ((run == nullptr) || (run[0] == 0))
+        return 0;
     int i = 1;
     for (int j = 0; run[j] != 0; j++) {
-        if (run[j] < 0) i++;
+        if (run[j] < 0)
+            i++;
     }
-    if (deleterun) ARY_SAFE_DELETE(run);
+    if (deleterun)
+        ARY_SAFE_DELETE(run);
 
-return i;
+    return i;
 }
 
 
-float SDFFont::lineWidth(int *&run, bool iterate) const {
+float SDFFont::lineWidth(int*& run, bool iterate) const {
 
-    int *i = run;
+    int* i = run;
     float len = 0.0f;
     while (*i != 0) {
         len += this->glyphIdcs[((*i) < 0) ? (-1 - (*i)) : ((*i) - 1)]->xadvance; // No check -> requires valid run!
         i++;
-        if (*i < 0) break;
+        if (*i < 0)
+            break;
     }
-    if (iterate) run = i;
+    if (iterate)
+        run = i;
 
     return len;
 }
 
 
-int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
+int* SDFFont::buildGlyphRun(const char* txt, float maxWidth) const {
 
     vislib::StringA txtutf8(txt);
     size_t txtlen = static_cast<size_t>(vislib::CharTraitsA::SafeStringLength(txtutf8));
@@ -405,7 +422,7 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
     unsigned int idx = 0;
     unsigned int tmpIdx = 0;
 
-    int *glyphrun = new int[txtlen + 1];
+    int* glyphrun = new int[txtlen + 1];
     ::memset(glyphrun, 0, sizeof(int) * (txtlen + 1));
 
     // A run creates an array of decimal utf8 indices for each (utf8) charater.
@@ -432,28 +449,28 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
         // - Therefore ASSUMING well formed utf8 encoding ...
         unsigned char byte = txtutf8[i];
         // If byte >= 0 -> ASCII-Byte: 0XXXXXXX = 0...127
-        if (byte < 128) { 
+        if (byte < 128) {
             idx = static_cast<unsigned int>(byte);
-        }
-        else { // ... else if byte >= 128 => UTF8-Byte: 1XXXXXXX 
+        } else { // ... else if byte >= 128 => UTF8-Byte: 1XXXXXXX
             // Supporting UTF8 for up to 3 bytes:
-            if (byte >= (unsigned char)(0b11100000)) {                       // => >224 - 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
+            if (byte >= (unsigned char)(0b11100000)) { // => >224 - 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
                 folBytes = 2;
-                idx = (unsigned int)(byte & (unsigned char)(0b00001111));    // => consider only last 4 bits
-                idx = (idx << 12);                                           // => 2*6 Bits are following
+                idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // => consider only last 4 bits
+                idx = (idx << 12);                                        // => 2*6 Bits are following
                 continue;
-            }
-            else if (byte >= (unsigned char)(0b11000000)) {                  // => >192 - 110XXXXX -> start 2-Byte UTF8, 1 byte is following
+            } else if (byte >=
+                       (unsigned char)(0b11000000)) { // => >192 - 110XXXXX -> start 2-Byte UTF8, 1 byte is following
                 folBytes = 1;
-                idx = (unsigned int)(byte & (unsigned char)(0b00011111));    // => consider only last 5 bits
-                idx = (idx << 6);                                            // => 1*6 Bits are following
+                idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // => consider only last 5 bits
+                idx = (idx << 6);                                         // => 1*6 Bits are following
                 continue;
-            }
-            else if (byte >= (unsigned char)(0b10000000)) {                  // => >128 - 10XXXXXX -> "following" 1-2 bytes
+            } else if (byte >= (unsigned char)(0b10000000)) { // => >128 - 10XXXXXX -> "following" 1-2 bytes
                 folBytes--;
                 tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // => consider only last 6 bits
-                idx    = (idx | (tmpIdx << (folBytes*6)));                   // => shift tmpIdx depending on following byte and 'merge' (|) with idx
-                if (folBytes > 0)  continue;                                 // => else idx is complete
+                idx = (idx | (tmpIdx << (folBytes *
+                                         6))); // => shift tmpIdx depending on following byte and 'merge' (|) with idx
+                if (folBytes > 0)
+                    continue; // => else idx is complete
             }
         }
         // Check if glyph info is available
@@ -473,37 +490,34 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
             lineLength += this->glyphIdcs[idx]->xadvance;
             // no test for soft break here!
             if (!knowLastWhite || blackspace) {
-                knowLastWhite  = true;
-                blackspace     = false;
+                knowLastWhite = true;
+                blackspace = false;
                 lastWhiteGlyph = pos - 1;
             }
             lastWhiteSpace = i;
-        }
-        else if (nextAsNewLine) {
-            nextAsNewLine   = false;
+        } else if (nextAsNewLine) {
+            nextAsNewLine = false;
             glyphrun[pos++] = -static_cast<int>(1 + idx);
-            knowLastWhite   = false;
-            blackspace      = true;
-            lineLength      = this->glyphIdcs[idx]->xadvance;
-        }
-        else {
-            blackspace      = true;
+            knowLastWhite = false;
+            blackspace = true;
+            lineLength = this->glyphIdcs[idx]->xadvance;
+        } else {
+            blackspace = true;
             glyphrun[pos++] = static_cast<int>(1 + idx);
-            lineLength     += this->glyphIdcs[idx]->xadvance;
+            lineLength += this->glyphIdcs[idx]->xadvance;
             // test for soft break
             if (lineLength > maxWidth) {
                 // soft break
                 if (knowLastWhite) {
-                    i             = lastWhiteSpace;
-                    pos           = lastWhiteGlyph + 1;
-                    lineLength    = 0.0f;
+                    i = lastWhiteSpace;
+                    pos = lastWhiteGlyph + 1;
+                    lineLength = 0.0f;
                     knowLastWhite = false;
                     nextAsNewLine = true;
-                }
-                else {
+                } else {
                     // last word to long
                     glyphrun[pos - 1] = -glyphrun[pos - 1];
-                    lineLength        = this->glyphIdcs[idx]->xadvance;
+                    lineLength = this->glyphIdcs[idx]->xadvance;
                 }
             }
         }
@@ -513,12 +527,12 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 }
 
 
-void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], int* run, float x,
-    float y, float z, float size, bool flipY, Alignment align) const {
+void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], int* run, float x, float y,
+    float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
     unsigned glyphCnt = 0;
-    int *tmpRun = run;
+    int* tmpRun = run;
     while ((*tmpRun) != 0) {
         tmpRun++;
         glyphCnt++;
@@ -526,8 +540,8 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
     unsigned int posCnt = glyphCnt * 18; // 2 Triangles * 3 Vertices * 3 Coordinates
     unsigned int texCnt = glyphCnt * 12; // 2 Triangles * 3 Vertices * 2 Coordinates
 
-    float *posData = new float[posCnt];   
-    float *texData = new float[texCnt]; 
+    float* posData = new float[posCnt];
+    float* texData = new float[texCnt];
 
     float gx = x;
     float gy = y;
@@ -577,8 +591,7 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
     // Adjustment for first line
     if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
         gx -= this->lineWidth(run, false) * size * 0.5f;
-    }
-    else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
+    } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
         gx -= this->lineWidth(run, false) * size;
     }
 
@@ -586,20 +599,19 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
     while ((*run) != 0) {
 
         // Run contains only available character indices (=> glyph is always != nullptr)
-        SDFGlyphInfo *glyph = this->glyphIdcs[((*run) < 0) ? (-1 - (*run)) : ((*run) - 1)];
+        SDFGlyphInfo* glyph = this->glyphIdcs[((*run) < 0) ? (-1 - (*run)) : ((*run) - 1)];
 
         // Adjust positions if character indicates a new line
         if ((*run) < 0) {
-            gx = (this->billboardMode)?(billboardRotPoint.x):(x);
+            gx = (this->billboardMode) ? (billboardRotPoint.x) : (x);
             if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
-            }
-            else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
+            } else if ((align == ALIGN_RIGHT_BOTTOM) || (align == ALIGN_RIGHT_MIDDLE) || (align == ALIGN_RIGHT_TOP)) {
                 gx -= this->lineWidth(run, false) * size;
             }
             gy += (sy);
         }
-        
+
         // ____________________________________
         //
         //          t3=p3-----------p2=t2
@@ -608,9 +620,9 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
         //             |    /----\   |
         //             |   /      \  |
         //     -----t0=p0---width---p1=t1
-        //     |       |                   
-        //  yoffset    |              
-        //     |       |-kern-|     
+        //     |       |
+        //  yoffset    |
+        //     |       |-kern-|
         //     X---xoffset----|
         // (gx,gy,gz)
         //
@@ -644,38 +656,38 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
         p3 = rotation_matrix * p3;
 
         // Set position data:
-        posData[glyphIter * 18 + 0]  = p0.x; 
-        posData[glyphIter * 18 + 1]  = p0.y;  
-        posData[glyphIter * 18 + 2]  = p0.z;
+        posData[glyphIter * 18 + 0] = p0.x;
+        posData[glyphIter * 18 + 1] = p0.y;
+        posData[glyphIter * 18 + 2] = p0.z;
 
-        posData[glyphIter * 18 + 3] = p1.x; 
-        posData[glyphIter * 18 + 4] = p1.y; 
-        posData[glyphIter * 18 + 5] = p1.z;  
+        posData[glyphIter * 18 + 3] = p1.x;
+        posData[glyphIter * 18 + 4] = p1.y;
+        posData[glyphIter * 18 + 5] = p1.z;
 
         posData[glyphIter * 18 + 6] = p2.x;
-        posData[glyphIter * 18 + 7] = p2.y;  
-        posData[glyphIter * 18 + 8] = p2.z;  
+        posData[glyphIter * 18 + 7] = p2.y;
+        posData[glyphIter * 18 + 8] = p2.z;
 
-        posData[glyphIter * 18 + 9]  = p0.x; 
-        posData[glyphIter * 18 + 10] = p0.y;  
-        posData[glyphIter * 18 + 11] = p0.z; 
+        posData[glyphIter * 18 + 9] = p0.x;
+        posData[glyphIter * 18 + 10] = p0.y;
+        posData[glyphIter * 18 + 11] = p0.z;
 
-        posData[glyphIter * 18 + 12] = p2.x; 
-        posData[glyphIter * 18 + 13] = p2.y; 
+        posData[glyphIter * 18 + 12] = p2.x;
+        posData[glyphIter * 18 + 13] = p2.y;
         posData[glyphIter * 18 + 14] = p2.z;
 
-        posData[glyphIter * 18 + 15] = p3.x; 
-        posData[glyphIter * 18 + 16] = p3.y; 
-        posData[glyphIter * 18 + 17] = p3.z; 
+        posData[glyphIter * 18 + 15] = p3.x;
+        posData[glyphIter * 18 + 16] = p3.y;
+        posData[glyphIter * 18 + 17] = p3.z;
 
         // Change rotation of quad positions for flipped y axis from CCW to CW.
         if (flipY) {
-            posData[glyphIter * 18 + 3] = p2.x;   // p2-x
-            posData[glyphIter * 18 + 6] = p1.x;   // p1-x
-            posData[glyphIter * 18 + 13] = p3.y;  // p3-y
-            posData[glyphIter * 18 + 16] = p2.y;  // p2-y
+            posData[glyphIter * 18 + 3] = p2.x;  // p2-x
+            posData[glyphIter * 18 + 6] = p1.x;  // p1-x
+            posData[glyphIter * 18 + 13] = p3.y; // p3-y
+            posData[glyphIter * 18 + 16] = p2.y; // p2-y
         }
-        
+
         // Set texture data
         texData[glyphIter * 12 + 0] = glyph->texX0; // t0-x
         texData[glyphIter * 12 + 1] = glyph->texY0; // t0-y
@@ -689,17 +701,17 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
         texData[glyphIter * 12 + 6] = glyph->texX0; // t0-x
         texData[glyphIter * 12 + 7] = glyph->texY0; // t0-y
 
-        texData[glyphIter * 12 + 8]  = glyph->texX1; // t2-x
-        texData[glyphIter * 12 + 9]  = glyph->texY1; // t2-y
+        texData[glyphIter * 12 + 8] = glyph->texX1; // t2-x
+        texData[glyphIter * 12 + 9] = glyph->texY1; // t2-y
 
         texData[glyphIter * 12 + 10] = glyph->texX1; // t3-x
         texData[glyphIter * 12 + 11] = glyph->texY0; // t3-y
 
         // Change rotation of texture coord for flipped y axis from CCW to CW.
         if (flipY) {
-            texData[glyphIter * 12 + 2]  = glyph->texX1; // t2-x
-            texData[glyphIter * 12 + 4]  = glyph->texX0; // t1-x
-            texData[glyphIter * 12 + 9]  = glyph->texY0; // t3-y
+            texData[glyphIter * 12 + 2] = glyph->texX1;  // t2-x
+            texData[glyphIter * 12 + 4] = glyph->texX0;  // t1-x
+            texData[glyphIter * 12 + 9] = glyph->texY0;  // t3-y
             texData[glyphIter * 12 + 11] = glyph->texY1; // t2-y
         }
 
@@ -724,15 +736,13 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
             this->colBatchCache.push_back(col[2]);
             this->colBatchCache.push_back(col[3]);
         }
-    } 
-    else {
+    } else {
         // ... or draw glyphs instantly.
         for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
             glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
             if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
                 glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)posCnt * sizeof(GLfloat), posData, GL_STATIC_DRAW);
-            }
-            else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
+            } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
                 glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)texCnt * sizeof(GLfloat), texData, GL_STATIC_DRAW);
             }
             glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -740,14 +750,15 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
 
         // Draw data buffers
         this->render(mvm, pm, glyphCnt, &col);
-    } 
+    }
 
     ARY_SAFE_DELETE(posData);
     ARY_SAFE_DELETE(texData);
 }
 
 
-void SDFFont::render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int glyph_count, const float* color_ptr[4]) const {
+void SDFFont::render(
+    const glm::mat4& mvm, const glm::mat4& pm, unsigned int glyph_count, const float* color_ptr[4]) const {
 
     // Check texture
     if (this->texture->getName() == 0) {
@@ -773,9 +784,8 @@ void SDFFont::render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int gly
     if (this->billboardMode) {
         // Only projection matrix has to be applied for billboard
         shader_matrix = pm;
-    }
-    else {
-        shader_matrix = pm * mvm; 
+    } else {
+        shader_matrix = pm * mvm;
     }
 
     // Set blending
@@ -808,7 +818,7 @@ void SDFFont::render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int gly
         glUniform1f(usedShader->ParameterLocation("outlineThickness"), this->outlineThickness);
     }
 
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) glyph_count * 6); // 2 triangles per glyph -> 6 vertices
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)glyph_count * 6); // 2 triangles per glyph -> 6 vertices
 
     glUseProgram(0); // instead of usedShader->Disable() => because draw() is CONST
     glBindVertexArray(0);
@@ -827,7 +837,8 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
 
     if (core_instance_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[SDFFont] Pointer to MegaMol CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[SDFFont] Pointer to MegaMol CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 
@@ -857,7 +868,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     auto texture_filename = static_cast<std::wstring>(
         ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
             .PeekBuffer());
-    if (!megamol::core::utility::RenderUtils::LoadTextureFromFile(
+    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
             this->texture, megamol::core::utility::WChar2Utf8String(texture_filename))) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font texture: \"%s\". [%s, %s, line %d]\n", textureFile.c_str(), __FILE__,
@@ -894,7 +905,8 @@ std::string SDFFont::presetFontNameToString(PresetFontName fn) const {
     case (PRESET_UBUNTU_MONO):
         fileName = "Ubuntu-Mono";
         break;
-        default: break;
+    default:
+        break;
     }
     return fileName;
 }
@@ -902,7 +914,7 @@ std::string SDFFont::presetFontNameToString(PresetFontName fn) const {
 
 bool SDFFont::loadFontBuffers() {
 
-    // Reset 
+    // Reset
     if (glIsVertexArray(this->vaoHandle)) {
         glDeleteVertexArrays(1, &this->vaoHandle);
     }
@@ -918,26 +930,26 @@ bool SDFFont::loadFontBuffers() {
     newVBO.handle = 0; // Default init
 
     // VBO for position data
-    newVBO.name  = "inPos";
+    newVBO.name = "inPos";
     newVBO.index = (GLuint)VBOAttrib::POSITION;
-    newVBO.dim   = 3;
+    newVBO.dim = 3;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
-    newVBO.name  = "inTexCoord";
+    newVBO.name = "inTexCoord";
     newVBO.index = (GLuint)VBOAttrib::TEXTURE;
-    newVBO.dim   = 2;
+    newVBO.dim = 2;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
-    newVBO.name  = "inColor";
+    newVBO.name = "inColor";
     newVBO.index = (GLuint)VBOAttrib::COLOR;
-    newVBO.dim   = 4;
+    newVBO.dim = 4;
     this->vbos.push_back(newVBO);
 
     // ------------------------------------------------------------------------
 
-    // Create Vertex Array Object 
+    // Create Vertex Array Object
     glGenVertexArrays(1, &this->vaoHandle);
     glBindVertexArray(this->vaoHandle);
 
@@ -947,10 +959,10 @@ bool SDFFont::loadFontBuffers() {
         // Create empty buffer
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
         // Bind buffer to vertex attribute
-        glEnableVertexAttribArray(this->vbos[i].index); 
-        glVertexAttribPointer(this->vbos[i].index, this->vbos[i].dim, GL_FLOAT, GL_FALSE, 0, (GLubyte *)nullptr);
+        glEnableVertexAttribArray(this->vbos[i].index);
+        glVertexAttribPointer(this->vbos[i].index, this->vbos[i].dim, GL_FLOAT, GL_FALSE, 0, (GLubyte*)nullptr);
     }
-   
+
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -978,17 +990,20 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 
     std::ifstream input_file(this->to_string(filename.PeekBuffer()));
     if (!input_file.is_open() || !input_file.good()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n",  __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 
-    float texWidth   = 0.0f;
-    float texHeight  = 0.0f;
+    float texWidth = 0.0f;
+    float texHeight = 0.0f;
     float lineHeight = 0.0f;
     size_t idx;
     float width;
     float height;
-    unsigned int maxId = 0;;
+    unsigned int maxId = 0;
+    ;
     std::vector<SDFGlyphKerning> tmpKerns;
     tmpKerns.clear();
 
@@ -1003,48 +1018,48 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
             texWidth = (float)std::atof(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("scaleH=", 0);
-            texHeight = (float) std::atof(line.substr(idx + 7, 4).c_str());
+            texHeight = (float)std::atof(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("lineHeight=", 0);
-            lineHeight = (float) std::atof(line.substr(idx + 11, 4).c_str());
+            lineHeight = (float)std::atof(line.substr(idx + 11, 4).c_str());
         }
         // (2) Parse character info
-        else if (line.rfind("char ", 0) == 0) { 
+        else if (line.rfind("char ", 0) == 0) {
             SDFGlyphInfo newChar;
 
             idx = line.find("id=", 0);
-            newChar.id = (unsigned int) std::atoi(line.substr(idx + 3, 5).c_str()); 
+            newChar.id = (unsigned int)std::atoi(line.substr(idx + 3, 5).c_str());
 
             if (maxId < newChar.id) {
                 maxId = newChar.id;
             }
 
             idx = line.find("x=", 0);
-            newChar.texX0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texWidth;
+            newChar.texX0 = (float)std::atof(line.substr(idx + 2, 4).c_str()) / texWidth;
 
             idx = line.find("y=", 0);
-            newChar.texY0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texHeight;
+            newChar.texY0 = (float)std::atof(line.substr(idx + 2, 4).c_str()) / texHeight;
 
             idx = line.find("width=", 0);
-            width = (float) std::atof(line.substr(idx + 6, 4).c_str());
+            width = (float)std::atof(line.substr(idx + 6, 4).c_str());
 
             idx = line.find("height=", 0);
-            height = (float) std::atof(line.substr(idx + 7, 4).c_str());
+            height = (float)std::atof(line.substr(idx + 7, 4).c_str());
 
-            newChar.width  = width / lineHeight;
+            newChar.width = width / lineHeight;
             newChar.height = height / lineHeight;
 
             idx = line.find("xoffset=", 0);
-            newChar.xoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
+            newChar.xoffset = (float)std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
             idx = line.find("yoffset=", 0);
-            newChar.yoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
+            newChar.yoffset = (float)std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
             idx = line.find("xadvance=", 0);
-            newChar.xadvance = (float) std::atof(line.substr(idx + 9, 4).c_str()) / lineHeight;
+            newChar.xadvance = (float)std::atof(line.substr(idx + 9, 4).c_str()) / lineHeight;
 
             newChar.kernCnt = 0;
-            newChar.kerns   = nullptr;
+            newChar.kerns = nullptr;
 
             newChar.texX1 = newChar.texX0 + width / texWidth;
             newChar.texY1 = newChar.texY0 + height / texHeight;
@@ -1052,18 +1067,18 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
             this->glyphs.push_back(newChar);
         }
         // (3) Parse kerning info
-        else if (line.rfind("kerning ", 0) == 0) { 
+        else if (line.rfind("kerning ", 0) == 0) {
 
             SDFGlyphKerning newKern;
 
             idx = line.find("first=", 0);
-            newKern.previous = (unsigned int) std::atoi(line.substr(idx + 6, 4).c_str());
+            newKern.previous = (unsigned int)std::atoi(line.substr(idx + 6, 4).c_str());
 
             idx = line.find("second=", 0);
-            newKern.current = (unsigned int) std::atoi(line.substr(idx + 7, 4).c_str());
+            newKern.current = (unsigned int)std::atoi(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("amount=", 0);
-            newKern.xamount = (float) std::atof(line.substr(idx + 7, 4).c_str()) / lineHeight;
+            newKern.xamount = (float)std::atof(line.substr(idx + 7, 4).c_str()) / lineHeight;
 
             tmpKerns.push_back(newKern);
         }
@@ -1071,7 +1086,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     // Close file
     input_file.close();
 
-    // Init index pointer array 
+    // Init index pointer array
     maxId++;
     for (unsigned int i = 0; i < maxId; i++) {
         this->glyphIdcs.push_back(nullptr);
@@ -1080,7 +1095,9 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
         // Filling character index array --------------------------------------
         if (this->glyphs[i].id > (unsigned int)this->glyphIdcs.size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Character is out of range: \"%i\". [%s, %s, line %d]\n", this->glyphs[i].id, __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SDFFont] Character is out of range: \"%i\". [%s, %s, line %d]\n", this->glyphs[i].id, __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
         this->glyphIdcs[this->glyphs[i].id] = &this->glyphs[i];
@@ -1106,7 +1123,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 
 
 bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& shader_factory) {
-    
+
     // Defining used vbo attributes for each shader
     std::vector<unsigned int> attribLoc[2];
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -1114,12 +1131,10 @@ bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& sha
         if (index == (GLuint)VBOAttrib::POSITION) {
             attribLoc[0].push_back(i);
             attribLoc[1].push_back(i);
-        }
-        else if (index == (GLuint)VBOAttrib::TEXTURE) {
+        } else if (index == (GLuint)VBOAttrib::TEXTURE) {
             attribLoc[0].push_back(i);
             attribLoc[1].push_back(i);
-        }
-        else if (index == (GLuint)VBOAttrib::COLOR) {
+        } else if (index == (GLuint)VBOAttrib::COLOR) {
             attribLoc[1].push_back(i);
         }
     }
@@ -1136,15 +1151,14 @@ bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& sha
         try {
 
             vs.Clear();
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version")); 
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version"));
             // Insert right color snippet for current shader
             if (&this->shaderglobcol == shaderPtr[i]) {
                 vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::globalColor"));
-            }
-            else {
+            } else {
                 vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::vertexColor"));
             }
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main")); 
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main"));
 
             fs.Clear();
             if (!shader_factory.MakeShaderSource("sdffont::fragment", fs)) {
@@ -1162,7 +1176,8 @@ bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& sha
             }
             // Bind vertex shader attributes (before linking shaders!)
             for (unsigned int j = 0; j < attribLoc[i].size(); j++) {
-                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index, this->vbos[attribLoc[i][j]].name.c_str());
+                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index,
+                    this->vbos[attribLoc[i][j]].name.c_str());
             }
             if (!shaderPtr[i]->Link()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1170,22 +1185,21 @@ bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& sha
                     __FUNCTION__, __LINE__);
                 return false;
             }
-        }
-        catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to compile \"sdffont\"-shader (@%s): %s. [%s, %s, line %d]\n",
-                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SDFFont] Unable to compile \"sdffont\"-shader (@%s): %s. [%s, %s, line %d]\n",
+                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                ce.GetMsgA());
             return false;
-        }
-        catch (vislib::Exception e) {
+        } catch (vislib::Exception e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SDFFont] Unable to compile \"sdffont\"-shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
-        }
-        catch (...) {
+        } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown exception. [%s, %s, line %d]\n",
-                __FILE__, __FUNCTION__, __LINE__);
+                "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown exception. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
     }

@@ -51,15 +51,15 @@ void main()
 ]]>
       </snippet>
     </shader>
-	
-	    <shader name="normalFragment">
+
+        <shader name="normalFragment">
       <snippet type="version">120</snippet>
       <snippet type="string">
         <![CDATA[
 void main()
 {
-	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-	//gl_FragColor = gl_Color;
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    //gl_FragColor = gl_Color;
 }
 ]]>
       </snippet>

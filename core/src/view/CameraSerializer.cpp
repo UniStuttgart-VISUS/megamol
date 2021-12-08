@@ -4,8 +4,8 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/view/CameraSerializer.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -58,7 +58,8 @@ std::string CameraSerializer::serialize(std::vector<Camera> const& camVec) const
 bool CameraSerializer::deserialize(Camera& outCamera, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     bool result = this->getCamFromJsonObject(outCamera, obj);
-    if (!result) outCamera = {};
+    if (!result)
+        outCamera = {};
     return result;
 }
 
@@ -88,7 +89,9 @@ bool CameraSerializer::deserialize(std::vector<Camera>& outCameras, std::string 
 /*
  * CameraSerializer::setPrettyMode
  */
-void CameraSerializer::setPrettyMode(bool prettyMode) { this->prettyMode = prettyMode; }
+void CameraSerializer::setPrettyMode(bool prettyMode) {
+    this->prettyMode = prettyMode;
+}
 
 /*
  * CameraSerializer::addCamToJsonObject
@@ -163,7 +166,8 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, Camera const& 
 bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_type const& val) const {
 
     try {
-        if(!val.is_object()) return false;
+        if (!val.is_object())
+            return false;
 
         Camera::ProjectionType cam_type;
 
@@ -203,7 +207,7 @@ bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_t
                 return false;
             }
 
-            cam_pose.position = glm::vec3( std::get<0>(position),std::get<1>(position),std::get<2>(position));
+            cam_pose.position = glm::vec3(std::get<0>(position), std::get<1>(position), std::get<2>(position));
             cam_pose.direction = glm::vec3(std::get<0>(direction), std::get<1>(direction), std::get<2>(direction));
             cam_pose.up = glm::vec3(std::get<0>(up), std::get<1>(up), std::get<2>(up));
             cam_pose.right = glm::vec3(std::get<0>(right), std::get<1>(right), std::get<2>(right));
@@ -242,7 +246,7 @@ bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_t
             } else {
                 return false;
             }
-            
+
 
             if (cam_type == Camera::PERSPECTIVE) {
                 Camera::PerspectiveParameters cam_intrinsics;
@@ -291,9 +295,7 @@ bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_t
             //TODO
         }
 
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 
     // TODO
     //  try {

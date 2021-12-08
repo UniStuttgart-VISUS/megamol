@@ -71,7 +71,7 @@ std::tuple<CUmodule, CUfunction> get_bounds_function(std::string const& ptx_code
         CU_JIT_ERROR_LOG_BUFFER,
         CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
     };
-    void* optionValues[] = {(void*) 0, (char*) log, (unsigned int*) &log_size};
+    void* optionValues[] = {(void*)0, (char*)log, (unsigned int*)&log_size};
     CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module, ptx_out.c_str(), 3, options, optionValues));
 #if DEBUG
     if (log_size > 1) {
@@ -255,13 +255,13 @@ void megamol::optix_hpg::MMOptixModule::ComputeBounds(
     uint32_t threadsPerBlock = blockDims.x * blockDims.y * blockDims.z;
 
     uint32_t numBlocks = (num_elements + threadsPerBlock - 1) / threadsPerBlock;
-    uint32_t numBlocks_x = 1 + uint32_t(powf((float) numBlocks, 1.f / 3.f));
-    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float) (numBlocks / numBlocks_x)));
+    uint32_t numBlocks_x = 1 + uint32_t(powf((float)numBlocks, 1.f / 3.f));
+    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float)(numBlocks / numBlocks_x)));
     uint32_t numBlocks_z = (numBlocks + numBlocks_x * numBlocks_y - 1) / numBlocks_x * numBlocks_y;
 
     glm::uvec3 gridDims(numBlocks_x, numBlocks_y, numBlocks_z);
 
-    void* args[] = {&data_in, &bounds_out, (void*) &num_elements};
+    void* args[] = {&data_in, &bounds_out, (void*)&num_elements};
 
     CUDA_CHECK_ERROR(cuLaunchKernel(bounds_function_, gridDims.x, gridDims.y, gridDims.z, blockDims.x, blockDims.y,
         blockDims.z, 0, stream, args, nullptr));

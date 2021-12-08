@@ -1,28 +1,26 @@
 /*
-* AbstractOSPRayMaterial.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * AbstractOSPRayMaterial.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "AbstractOSPRayMaterial.h"
-#include "mmospray/CallOSPRayMaterial.h"
 #include "mmcore/utility/log/Log.h"
-
+#include "mmospray/CallOSPRayMaterial.h"
+#include "stdafx.h"
 
 
 using namespace megamol::ospray;
 
 
-AbstractOSPRayMaterial::AbstractOSPRayMaterial(void) :
-    core::Module(),
-    deployMaterialSlot("deployMaterialSlot", "Connects to an OSPRay geometry")
-{
+AbstractOSPRayMaterial::AbstractOSPRayMaterial(void)
+        : core::Module()
+        , deployMaterialSlot("deployMaterialSlot", "Connects to an OSPRay geometry") {
     this->materialContainer.isValid = true;
 
-    this->deployMaterialSlot.SetCallback(CallOSPRayMaterial::ClassName(), CallOSPRayMaterial ::FunctionName(0), &AbstractOSPRayMaterial::getMaterialCallback);
+    this->deployMaterialSlot.SetCallback(CallOSPRayMaterial::ClassName(), CallOSPRayMaterial ::FunctionName(0),
+        &AbstractOSPRayMaterial::getMaterialCallback);
     this->MakeSlotAvailable(&this->deployMaterialSlot);
-
 }
 
 AbstractOSPRayMaterial::~AbstractOSPRayMaterial(void) {
@@ -34,13 +32,11 @@ bool AbstractOSPRayMaterial::create() {
     return true;
 }
 
-void AbstractOSPRayMaterial ::release() {
-
-}
+void AbstractOSPRayMaterial ::release() {}
 
 
 bool AbstractOSPRayMaterial::getMaterialCallback(megamol::core::Call& call) {
-    CallOSPRayMaterial *mc_in = dynamic_cast<CallOSPRayMaterial*>(&call);
+    CallOSPRayMaterial* mc_in = dynamic_cast<CallOSPRayMaterial*>(&call);
 
     if (mc_in != NULL) {
         this->readParams();
@@ -53,4 +49,3 @@ bool AbstractOSPRayMaterial::getMaterialCallback(megamol::core::Call& call) {
 
     return true;
 }
-

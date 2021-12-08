@@ -19,55 +19,50 @@
 namespace megamol {
 namespace datatools {
 
+/**
+ * Selects one of the RGBA color channels as I color channel
+ */
+class ParticleColorChannelSelect : public AbstractParticleManipulator {
+public:
+    /** Return module class name */
+    static const char* ClassName(void) {
+        return "ParticleColorChannelSelect";
+    }
+
+    /** Return module class description */
+    static const char* Description(void) {
+        return "Selects one of the RGBA color channels as I color channel";
+    }
+
+    /** Module is always available */
+    static bool IsAvailable(void) {
+        return true;
+    }
+
+    /** Ctor */
+    ParticleColorChannelSelect(void);
+
+    /** Dtor */
+    virtual ~ParticleColorChannelSelect(void);
+
+protected:
     /**
-     * Selects one of the RGBA color channels as I color channel
+     * Manipulates the particle data
+     *
+     * @remarks the default implementation does not changed the data
+     *
+     * @param outData The call receiving the manipulated data
+     * @param inData The call holding the original data
+     *
+     * @return True on success
      */
-    class ParticleColorChannelSelect : public AbstractParticleManipulator {
-    public:
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
-        /** Return module class name */
-        static const char *ClassName(void) {
-            return "ParticleColorChannelSelect";
-        }
-
-        /** Return module class description */
-        static const char *Description(void) {
-            return "Selects one of the RGBA color channels as I color channel";
-        }
-
-        /** Module is always available */
-        static bool IsAvailable(void) {
-            return true;
-        }
-
-        /** Ctor */
-        ParticleColorChannelSelect(void);
-
-        /** Dtor */
-        virtual ~ParticleColorChannelSelect(void);
-
-    protected:
-
-        /**
-         * Manipulates the particle data
-         *
-         * @remarks the default implementation does not changed the data
-         *
-         * @param outData The call receiving the manipulated data
-         * @param inData The call holding the original data
-         *
-         * @return True on success
-         */
-        virtual bool manipulateData(
-            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-
-    private:
-
-        core::param::ParamSlot channelSlot;
-		size_t dataHash;
-		std::map<const void*, std::pair<float, float> > colRange;
-
-    };
+private:
+    core::param::ParamSlot channelSlot;
+    size_t dataHash;
+    std::map<const void*, std::pair<float, float>> colRange;
+};
 
 } /* end namespace datatools */
 } /* end namespace megamol */
