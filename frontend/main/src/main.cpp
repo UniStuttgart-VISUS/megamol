@@ -97,7 +97,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.backend = megamol::gui::GUIRenderBackend::OPEN_GL;
+    guiConfig.backend = megamol::gui::GUIRenderBackend::CPU;
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
@@ -180,8 +180,8 @@ int main(const int argc, const char** argv) {
     megamol::frontend::FrontendServiceCollection services;
     if (with_gl) {
         services.add(gl_service, &openglConfig);
-        services.add(gui_service, &guiConfig);
     }
+    services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);

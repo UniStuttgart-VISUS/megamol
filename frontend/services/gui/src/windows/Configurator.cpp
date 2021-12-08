@@ -318,7 +318,8 @@ void megamol::gui::Configurator::draw_window_menu() {
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
+                ImGui::TextUnformatted(
+                    "Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Double left-click");
 
@@ -330,7 +331,8 @@ void megamol::gui::Configurator::draw_window_menu() {
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Drag call slot of module to other compatible call slot to create call between modules");
+                ImGui::TextUnformatted(
+                    "Drag call slot of module to other compatible call slot to create call between modules");
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Drag & drop");
 

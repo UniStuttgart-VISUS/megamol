@@ -302,8 +302,8 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
     switch (this->initialized_backend) {
     case (GUIRenderBackend::NONE): {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Missing initialized backend to create fonts texture. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Missing initialized backend to create fonts texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 #ifdef WITH_GL
