@@ -12,7 +12,7 @@ megamol::mesh_gl::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
         : m_version(0)
         , m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
         , m_material_collection(nullptr)
-        , m_btf_name_slot("BTF filename", "Overload default gltf shader") {
+        , m_btf_name_slot("BTF name", "Overload default gltf shader") {
     this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 

@@ -10,15 +10,13 @@
 #include "mmcore/utility/log/Log.h"
 
 #ifdef WITH_GL
-
 #ifdef _WIN32 // Windows
 #include "glad/wgl.h"
 #else // LINUX
 #include "glad/glx.h"
 #endif // _WIN32
-
 #include "imgui_impl_opengl3.h"
-#endif
+#endif // WITH_GL
 
 using namespace megamol::gui;
 
@@ -27,6 +25,7 @@ megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
         , cpu_window({1280, 720, 0, 0})
         , cpu_monitor({1920, 1080}) {
+
     this->createFramebuffer(1, 1);
 }
 
