@@ -106,7 +106,8 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         if (ImGui_ImplOpenGL3_Init(nullptr) && this->createOGLFramebuffer(1, 1)) { // "#version 130"
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Initialized ImGui render backend for Open GL.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] Initialized ImGui render backend for Open GL.");
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to initialize OpenGL render backend for ImGui. [%s, %s, line %d]\n", __FILE__,
@@ -311,14 +312,24 @@ megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
     megamol::frontend_resources::ImageWrapper::DataChannels channels =
         megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
 
+    switch (this->initialized_backend) {
 #ifdef WITH_GL
-    return megamol::frontend_resources::wrap_image(
-        {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
-        this->ogl_fbo->getColorAttachment(0)->getName(), channels);
-#else
-    return megamol::frontend_resources::wrap_image(
-        {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
-#endif
+    case (GUIRenderBackend::OPEN_GL): {
+        return megamol::frontend_resources::wrap_image(
+            {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
+            this->ogl_fbo->getColorAttachment(0)->getName(), channels);
+    }
+#endif // WITH_GL
+    case (GUIRenderBackend::CPU): {
+        return megamol::frontend_resources::wrap_image(
+            {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
+    }
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return megamol::frontend_resources::wrap_image({0, 0}, std::vector<uint32_t>(), channels);
+    }
+    }
 }
 
 
