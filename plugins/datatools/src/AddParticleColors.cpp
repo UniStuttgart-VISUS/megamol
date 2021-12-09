@@ -1,13 +1,13 @@
 #include "AddParticleColors.h"
 #include "stdafx.h"
 
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 
 megamol::datatools::AddParticleColors::AddParticleColors(void)
         : AbstractParticleManipulator("outData", "indata")
         , _tf_slot("inTF", "") {
-    _tf_slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&_tf_slot);
 }
 
@@ -41,7 +41,7 @@ glm::vec4 megamol::datatools::AddParticleColors::sample_tf(
 bool megamol::datatools::AddParticleColors::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf = _tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf == nullptr)
         return false;
     if (!(*cgtf)())

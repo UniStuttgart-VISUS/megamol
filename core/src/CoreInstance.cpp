@@ -34,7 +34,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/GUID.h"
 #include "vislib/MissingImplementationException.h"

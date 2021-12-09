@@ -283,7 +283,7 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
     // Push rulers ------------------------------------------------------------
     glm::vec3 origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK};
 
-    color = this->utils.Color(cinematic::CinematicUtils::Colors::FOREGROUND);
+    color = this->utils.Color(CinematicUtils::Colors::FOREGROUND);
     // Draw x axis ruler lines
     start =
         glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK);
@@ -315,7 +315,7 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
     origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_MIDDLE};
 
     if (keyframes->size() > 0) {
-        color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SPLINE);
+        color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
         // First vertex
         start_x = this->axes[Axis::X].scaleOffset;
         float yAxisValue = 0.0f;
@@ -373,8 +373,8 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, CCTLR_Z_MIDDLE);
             end = origin + glm::vec3(f, this->rulerMarkHeight, CCTLR_Z_MIDDLE);
-            this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos,
-                this->utils.Color(cinematic::CinematicUtils::Colors::FRAME_MARKER));
+            this->utils.PushLinePrimitive(
+                start, end, 1.0f, cam_view, cam_pos, this->utils.Color(CinematicUtils::Colors::FRAME_MARKER));
         }
     }
 
@@ -392,9 +392,9 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
         y = this->axes[Axis::Y].scaleOffset +
             yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME);
+            color = this->utils.Color(CinematicUtils::Colors::KEYFRAME);
             if ((*keyframes)[i] == skf) {
-                color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SELECTED);
+                color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
             }
             this->pushMarkerTexture(
                 this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, color);
@@ -414,7 +414,7 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
     y = this->axes[Axis::Y].scaleOffset +
         yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
     if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-        color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SELECTED);
+        color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
         this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y,
             (this->keyframeMarkSize * 0.75f), color);
         start = origin + glm::vec3(x, 0.0f, CCTLR_Z_MIDDLE);
@@ -441,7 +441,7 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
             yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
             this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y,
-                this->keyframeMarkSize, this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_DRAGGED));
+                this->keyframeMarkSize, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
         }
     }
 

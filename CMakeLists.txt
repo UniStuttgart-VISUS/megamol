@@ -42,9 +42,6 @@ include(megamol_build_info)
 # MegaMol options
 include(megamol_options)
 
-# Clang-format
-include(ClangFormat)
-
 # External
 include("externals/CMakeExternals.cmake")
 

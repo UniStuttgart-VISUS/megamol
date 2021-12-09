@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "CallOSPRayTransformation.h"
+#include "mmospray/CallOSPRayTransformation.h"
 #include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 

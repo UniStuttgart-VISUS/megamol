@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "GL_STUB.h"
+
 #include "ImageWrapper.h"
 
 namespace megamol {
@@ -21,7 +23,7 @@ struct gl_texture {
     ImageWrapper::ImageSize size;
 
     gl_texture(ImageWrapper const& image);
-    ~gl_texture(); // frees texture if owned
+    ~gl_texture() GL_STUB(); // frees texture if owned
     // rule of five
     gl_texture(gl_texture const& other);
     gl_texture(gl_texture&& other) noexcept;
@@ -33,9 +35,9 @@ struct gl_texture {
     unsigned int as_gl_handle();
 
 private:
-    void assign(gl_texture const& other, bool take_ownership);
+    void assign(gl_texture const& other, bool take_ownership) GL_STUB();
+    void from_image(ImageWrapper const& image) GL_STUB();
     void clear();
-    void from_image(ImageWrapper const& image);
 };
 
 } /* end namespace frontend_resources */

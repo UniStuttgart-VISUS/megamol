@@ -1,0 +1,39 @@
+name: Style-Fix
+
+on: issue_comment
+
+jobs:
+  style_fix:
+    name: Style-Fix
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/format' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: megamol
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+      - name: Fix style
+        # WARNING: This job runs with repo permissions! Do not execute any code from PR branch!
+        run: |
+          # Copy style script from master branch
+          cp megamol/.ci/check_format.sh check_format_master.sh
+
+          cd megamol
+
+          # Checkout PR. Warning: Do not execeute any code from the repo after here!
+          gh pr checkout ${{ github.event.issue.number }}
+
+          # Run style fix with script from master branch
+          ../check_format_master.sh fix
+
+          # Commit changes
+          if ! git diff --quiet --exit-code; then
+            git config user.email "actions@megamol.org"
+            git config user.name "MegaMol-Bot"
+            git commit -am "Format fix."
+            git push
+          else
+            echo "Nothing to commit!"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

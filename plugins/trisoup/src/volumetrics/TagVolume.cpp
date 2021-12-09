@@ -4,7 +4,7 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "TagVolume.h"
+#include "trisoup/volumetrics/TagVolume.h"
 #include "stdafx.h"
 
 using namespace megamol;

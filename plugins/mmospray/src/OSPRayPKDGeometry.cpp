@@ -16,7 +16,6 @@
 #include "vislib/forceinline.h"
 
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmospray/CallOSPRayAPIObject.h"
 #include "ospray/ospray_cpp.h"
 

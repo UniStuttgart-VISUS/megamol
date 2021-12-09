@@ -5,7 +5,7 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "CallBinaryVolumeData.h"
+#include "trisoup/CallBinaryVolumeData.h"
 #include "stdafx.h"
 
 using namespace megamol;

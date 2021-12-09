@@ -4,11 +4,11 @@
  * Alle Rechte vorbehalten.
  */
 #pragma once
-#include "CallOSPRayTransformation.h"
 #include "OSPRayTransform.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmospray/CallOSPRayTransformation.h"
 
 
 namespace megamol {

@@ -58,9 +58,6 @@ protected:
     virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
     virtual bool manipulateExtent(
         geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
-    void colorTransferGray(geocalls::MultiParticleDataCall::Particles& p, float const* transferTable,
-        unsigned tableSize, std::vector<float>& rgbaArray);
-    megamol::core::CallerSlot getTFSlot;
 
 private:
     core::param::ParamSlot translateSlot;
