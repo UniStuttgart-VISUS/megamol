@@ -1198,16 +1198,22 @@ bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
         // glDrawArrays(GL_POINTS, 0, num_prims);
         //dc_muzic(num_prims, indices_[i]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buf_[i]);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, cmd_buf_[i]);
 
-        constexpr int per_iter = 100000;
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, offset_buf_[i]);
+
+        glMultiDrawElementsIndirect(GL_TRIANGLE_STRIP, GL_UNSIGNED_INT, 0, cmd_count_[i], 0);
+
+        /*constexpr int per_iter = 10000000;
         auto num_iter = num_prims / per_iter + 1;
         for (int iter = 0; iter < num_iter; ++iter) {
             auto num_items = iter * per_iter;
             num_items = std::fmin(num_prims - num_items, per_iter);
             program->setUniform("offset", iter * per_iter);
             glDrawElements(GL_TRIANGLE_STRIP, num_items * 6 - 2, GL_UNSIGNED_INT, nullptr);
-        }
+        }*/
     }
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1225,12 +1231,62 @@ bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::upload(data_package_t const& 
 
     indices_ = package.indices;
 
+    typedef struct {
+        GLuint count;
+        GLuint instanceCount;
+        GLuint firstIndex;
+        GLuint baseVertex;
+        GLuint baseInstance;
+    } DrawElementsIndirectCommand;
+
     glDeleteBuffers(ind_buf_.size(), ind_buf_.data());
     ind_buf_.resize(indices_.size());
     glCreateBuffers(ind_buf_.size(), ind_buf_.data());
 
+    glDeleteBuffers(cmd_buf_.size(), cmd_buf_.data());
+    cmd_buf_.resize(indices_.size());
+    glCreateBuffers(cmd_buf_.size(), cmd_buf_.data());
+
+    glDeleteBuffers(offset_buf_.size(), offset_buf_.data());
+    offset_buf_.resize(indices_.size());
+    glCreateBuffers(offset_buf_.size(), offset_buf_.data());
+
+    cmd_count_.resize(indices_.size());
+
     for (int i = 0; i < indices_.size(); ++i) {
         glNamedBufferStorage(ind_buf_[i], sizeof(unsigned int) * indices_[i].size(), indices_[i].data(), 0);
+
+        std::vector<uint32_t> offsets;
+        std::vector<DrawElementsIndirectCommand> commands;
+        
+        constexpr int per_iter = 1000;
+        auto num_iter = num_prims_[i] / per_iter;
+        offsets.reserve(num_iter);
+        commands.reserve(num_iter);
+        cmd_count_[i] = num_iter;
+        for (int iter = 0; iter < num_iter; ++iter) {
+            auto num_items = iter * per_iter;
+            num_items = std::fmin(num_prims_[i] - num_items, per_iter);
+            offsets.push_back(iter * per_iter);
+            DrawElementsIndirectCommand cmd;
+            memset(&cmd, 0, sizeof(DrawElementsIndirectCommand));
+            cmd.count = num_items * 6 - 2;
+            cmd.instanceCount = 1;
+            commands.push_back(cmd);
+            //program->setUniform("offset", iter * per_iter);
+            //glDrawElements(GL_TRIANGLE_STRIP, num_items * 6 - 2, GL_UNSIGNED_INT, nullptr);
+        }
+        if (num_iter * per_iter < num_prims_[i]) {
+            offsets.push_back(num_iter * per_iter);
+            DrawElementsIndirectCommand cmd;
+            memset(&cmd, 0, sizeof(DrawElementsIndirectCommand));
+            cmd.count = (num_prims_[i] - num_iter * per_iter) * 6 - 2;
+            cmd.instanceCount = 1;
+            commands.push_back(cmd);
+        }
+
+        glNamedBufferStorage(cmd_buf_[i], sizeof(DrawElementsIndirectCommand) * commands.size(), commands.data(), 0);
+        glNamedBufferStorage(offset_buf_[i], sizeof(uint32_t) * offsets.size(), offsets.data(), 0);
     }
 
     return true;

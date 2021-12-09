@@ -1,4 +1,4 @@
-#version 450
+#version 460
 
 //#define BASE_IDX gl_VertexID / 6
 //#define INV_IDX gl_VertexID % 3
@@ -16,7 +16,7 @@ flat out float sqrRad;
 flat out vec4 pointColor;
 flat out vec3 oc_pos;
 
-uniform int offset;
+//uniform int offset;
 
 #include "srtest_ubo.glsl"
 
@@ -30,7 +30,13 @@ uniform int offset;
 
 #include "srtest_frustum.glsl"
 
+layout(std430, binding = 10) readonly buffer OffsetBuf {
+    uint offset_cmd[];
+};
+
 void main() {
+    int offset = int(offset_cmd[gl_DrawID]);
+
     /*int base_idx = gl_InstanceID;
     int inv_idx = gl_VertexID;*/
     /*int base_idx = gl_VertexID / 4;

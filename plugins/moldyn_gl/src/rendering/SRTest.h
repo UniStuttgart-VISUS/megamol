@@ -188,6 +188,12 @@ private:
     std::vector<std::vector<uint32_t>> indices_;
 
     std::vector<GLuint> ind_buf_;
+
+    std::vector<GLuint> cmd_buf_;
+
+    std::vector<GLuint> offset_buf_;
+
+    std::vector<uint32_t> cmd_count_;
 };
 
 class mesh_rt : public ssbo_shader_task {
