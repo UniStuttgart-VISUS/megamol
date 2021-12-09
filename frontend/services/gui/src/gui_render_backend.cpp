@@ -24,18 +24,15 @@ using namespace megamol::gui;
 megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
         , cpu_window({1280, 720, 0, 0})
-        , cpu_monitor({1920, 1080}) {
-
-    this->createFramebuffer(1, 1);
-}
+        , cpu_monitor({1920, 1080}) {}
 
 
 megamol::gui::gui_render_backend::~gui_render_backend() {
 
+    this->cpu_fbo.reset();
 #ifdef WITH_GL
     this->ogl_fbo.reset();
 #endif // WITH_GL
-    this->cpu_fbo.reset();
 }
 
 
@@ -108,8 +105,8 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     switch (backend) {
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
-        if (ImGui_ImplOpenGL3_Init(nullptr)) { // "#version 130"
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui render backend for Open GL.");
+        if (ImGui_ImplOpenGL3_Init(nullptr) && this->createOGLFramebuffer(1, 1)) { // "#version 130"
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Initialized ImGui render backend for Open GL.");
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to initialize OpenGL render backend for ImGui. [%s, %s, line %d]\n", __FILE__,
@@ -119,9 +116,9 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        if (ImGui_ImplGeneric_Init(&this->cpu_window)) { /// XXX How is cpu_window used?
+        if (ImGui_ImplGeneric_Init(&this->cpu_window) && this->createCPUFramebuffer(1, 1)) {
             imgui_sw::bind_imgui_painting();
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui render Backend for CPU.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Initialized ImGui render Backend for CPU.");
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to initialize CPU render backend for ImGui. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -172,7 +169,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         GUI_GL_CHECK_ERROR
-        if (!this->createFramebuffer(width, height)) {
+        if (!this->createOGLFramebuffer(width, height)) {
             return false;
         }
 
@@ -187,7 +184,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsig
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        return this->createFramebuffer(width, height);
+        return this->createCPUFramebuffer(width, height);
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -325,9 +322,36 @@ megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
 }
 
 
-bool gui_render_backend::createFramebuffer(unsigned int width, unsigned int height) {
+bool gui_render_backend::createCPUFramebuffer(unsigned int width, unsigned int height) {
+
+    // Create FBO for CPU rendering
+    bool create_fbo = false;
+    if (this->cpu_fbo == nullptr) {
+        create_fbo = true;
+    } else if (((this->cpu_fbo->getWidth() != width) || (this->cpu_fbo->getHeight() != height)) && (width != 0) &&
+               (height != 0)) {
+        create_fbo = true;
+    }
+    if (create_fbo) {
+        this->cpu_fbo.reset();
+        this->cpu_fbo = std::make_shared<megamol::core::view::CPUFramebuffer>();
+        if (this->cpu_fbo == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        this->cpu_fbo->colorBuffer = std::vector<uint32_t>(width * height, 0);
+        this->cpu_fbo->width = width;
+        this->cpu_fbo->height = height;
+    }
+    return true;
+}
+
+
+bool gui_render_backend::createOGLFramebuffer(unsigned int width, unsigned int height) {
 
 #ifdef WITH_GL
+    // Create FBO for Open GL
     auto width_i = static_cast<int>(width);
     auto height_i = static_cast<int>(height);
     bool create_fbo = false;
@@ -356,26 +380,8 @@ bool gui_render_backend::createFramebuffer(unsigned int width, unsigned int heig
             "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-#else
-    bool create_fbo = false;
-    if (this->cpu_fbo == nullptr) {
-        create_fbo = true;
-    } else if (((this->cpu_fbo->getWidth() != width) || (this->cpu_fbo->getHeight() != height)) && (width != 0) &&
-               (height != 0)) {
-        create_fbo = true;
-    }
-    if (create_fbo) {
-        this->cpu_fbo.reset();
-        this->cpu_fbo = std::make_shared<megamol::core::view::CPUFramebuffer>();
-        if (this->cpu_fbo == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to create valid FBO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        this->cpu_fbo->colorBuffer = std::vector<uint32_t>(width * height, 0);
-        this->cpu_fbo->width = width;
-        this->cpu_fbo->height = height;
-    }
-#endif
     return true;
+#else
+    return false;
+#endif // WITH_GL
 }

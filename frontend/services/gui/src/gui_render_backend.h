@@ -82,7 +82,8 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool createFramebuffer(unsigned int width, unsigned int height);
+    bool createCPUFramebuffer(unsigned int width, unsigned int height);
+    bool createOGLFramebuffer(unsigned int width, unsigned int height);
 };
 
 
