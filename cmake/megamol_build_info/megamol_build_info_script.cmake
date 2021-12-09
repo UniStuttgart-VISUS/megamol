@@ -76,7 +76,7 @@ execute_process(COMMAND
   OUTPUT_VARIABLE GIT_DIFF
   RESULTS_VARIABLE GIT_IS_DIRTY
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-string_split_lines(GIT_DIFF "${GIT_DIFF}")
+file(WRITE ${CMAKE_BINARY_DIR}/GitDiff.txt "${GIT_DIFF}")
 
 # Time
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
@@ -86,15 +86,6 @@ string(TIMESTAMP BUILD_TIME "" UTC)
 file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
 string_split_lines(MEGAMOL_LICENSE "${MEGAMOL_LICENSE}")
 
-# Cache
-file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
-string_split_lines(MM_CMAKE_CACHE "${MM_CMAKE_CACHE}")
-
 # Write to sourcefile
 configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
 
-# Debug
-file(READ ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp FILE_DEBUG)
-message("########################################")
-message("${FILE_DEBUG}")
-message("########################################")

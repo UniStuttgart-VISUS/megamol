@@ -12,7 +12,5 @@ char const* const megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NA
 char const* const megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
 char const* const megamol::build_info::MEGAMOL_GIT_REMOTE_NAME = "@GIT_REMOTE_NAME@";
 char const* const megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
-char const* const megamol::build_info::MEGAMOL_GIT_DIFF = @GIT_DIFF@;
 int const megamol::build_info::MEGAMOL_GIT_IS_DIRTY = @GIT_IS_DIRTY@;
 char const* const megamol::build_info::MEGAMOL_LICENSE = @MEGAMOL_LICENSE@;
-char const* const megamol::build_info::MEGAMOL_CMAKE_CACHE = @MM_CMAKE_CACHE@;

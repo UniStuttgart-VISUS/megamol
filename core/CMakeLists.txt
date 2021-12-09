@@ -59,6 +59,9 @@ if(BUILD_CORE)
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
 
+  cmrc_add_resource_library(megamolrc WHENCE ${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/CMakeCache.txt ${CMAKE_BINARY_DIR}/GitDiff.txt)
+  target_link_libraries(core PRIVATE megamolrc)
+
   # Source groups in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/mmcore" PREFIX "Public Header Files" FILES ${public_header_files})
