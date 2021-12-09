@@ -50,7 +50,7 @@ def print_meta(metadata, fields):
             data = im.info[f]
             info = (data[:65] + '...') if len(data) > 65 else data
             print(f"{f} = {info if args.trunc else data}")
-    elif fields[0] == '*':
+    elif fields and fields[0] == '*':
         for f in metadata:
             data = im.info[f]
             info = (data[:65] + '...') if len(data) > 65 else data
@@ -60,7 +60,7 @@ def print_meta(metadata, fields):
         for f in metadata:
             print(f)
 
-parser = argparse.ArgumentParser(usage="%(prog)s <FILE> [[<field>] <field> ...]",
+parser = argparse.ArgumentParser(usage="%(prog)s <FILE> [[<field>] <field> ...] [additional args]",
     description="show metadata in a MegaMol screenshot")
 parser.add_argument('file', help='the input file')
 parser.add_argument('field', nargs='*', help='any number of metadata fields')
