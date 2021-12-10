@@ -80,7 +80,10 @@ bool ImGui_ImplGeneric_CreateFontsTexture() {
     io.Fonts->GetTexDataAsRGBA32(&texture.pixels, &texture.width, &texture.height);
 
     // Store our identifier
-    io.Fonts->SetTexID((ImTextureID)&texture);
+    if (io.Fonts->IsBuilt()) {
+        io.Fonts->SetTexID((ImTextureID)&texture);
+        return true;
+    }
 
-    return true;
+    return false;
 }

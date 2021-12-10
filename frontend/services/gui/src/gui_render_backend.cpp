@@ -8,6 +8,7 @@
 #include "gui_render_backend.h"
 #include "gui_utils.h"
 #include "mmcore/utility/log/Log.h"
+#include <algorithm>
 
 #ifdef WITH_GL
 #ifdef _WIN32 // Windows
@@ -23,7 +24,7 @@ using namespace megamol::gui;
 
 megamol::gui::gui_render_backend::gui_render_backend()
         : initialized_backend(GUIRenderBackend::NONE)
-        , cpu_window({1280, 720, 0, 0})
+        , cpu_window({1920, 1080, 0, 0})
         , cpu_monitor({1920, 1080}) {}
 
 
@@ -217,6 +218,13 @@ bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
         std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
         imgui_sw::paint_imgui(this->cpu_fbo->colorBuffer.data(), static_cast<int>(this->cpu_fbo->getWidth()),
             static_cast<int>(this->cpu_fbo->getHeight()));
+
+        /// XXX Revert content to get right orientation of final image - too expensive?
+        std::reverse(this->cpu_fbo->colorBuffer.begin(), this->cpu_fbo->colorBuffer.end());
+        for (auto it = this->cpu_fbo->colorBuffer.begin(); it != this->cpu_fbo->colorBuffer.end();) {
+            std::reverse(it, (it + this->cpu_fbo->getWidth()));
+            it += this->cpu_fbo->getWidth();
+        }
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
