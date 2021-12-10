@@ -40,7 +40,8 @@ void main() {
     vec2 tempL = vec2(0, 0.0);
     vec2 tempR = vec2(0.0, 0.0);
     // magic number, to be changed to resolution based calculation
-    float thickness = thicknessP * sqrt(1/pow(widthR,2) + 1/pow(heightR,2));
+    //float thickness = thicknessP * sqrt(1/(widthR * widthR) + 1/(heightR * heightR));
+    float thickness = thicknessP;
 
     if (out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount) {
         // Vektoren von linken zum aktuellen Vertex, dies ist die Linie die von links kommt
@@ -56,22 +57,20 @@ void main() {
         tempR.y *= heightR;
 
         // Bestimmung der Orthogonalen durch Drehung
-        //vec2 oL = vec2(-tempL.y * res.y / res.x, tempL.x * res.x / res.y);
         vec2 oL = vec2(-tempL.y, tempL.x);
-        //vec2 oR = vec2(-tempR.y * res.y/res.x, tempR.x*res.x/res.y);
         vec2 oR = vec2(-tempR.y, tempR.x);
 
         // benoetigt zur berechnung des laenge des offset vektors
-        oL = thickness * normalize(oL);
-        oR = thickness * normalize(oR);
+        oL = normalize(oL);
+        oR = normalize(oR);
 
         // h ist winkelhalbierende
         vec2 h = normalize(oL + oR);
-        //out_.color = vec4(heightR / widthR, 0.0 , 0.0, 1.0);
 
         // laenge der winkelhalbierenden um dicke zu garantieren, berechnet aus Winkel der rechten orthogonalen und der winkelhalbierenden
-        h = h * thickness / dot(oR, h) * (length(oR) * length(h));
-        h.x *= 1.0 * heightR / widthR ;
+        h = h / dot(oR, h) * (length(oR) * length(h));
+        h.x = 2.0 * h.x / widthR * thickness;
+        h.y = 2.0 * h.y / heightR * thickness;
         tempL = h;
     }
 
@@ -81,8 +80,8 @@ void main() {
         tempR.x *= widthR;
         tempR.y *= heightR;
         vec2 oR = vec2(-tempR.y, tempR.x);
-        oR = thickness * normalize(oR);
-        tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oR, vec2(0.0, 1.0));
+        oR = normalize(oR);
+        tempL = vec2(0.0, 1.0) / dot(oR, vec2(0.0, 1.0)) / heightR * 2.0 * thicknessP;
         //out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID + 1)), pc_dimension(theID + 1)), 0.0, 1.0, 1.0);
     }
     if (out_.worldSpaceAxis == dimensionCount - 1) {
@@ -95,8 +94,8 @@ void main() {
         tempL.x *= widthR;
         tempL.y *= heightR;
         vec2 oL = vec2(-tempL.y, tempL.x);
-        oL = thickness * normalize(oL);
-        tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+        oL = normalize(oL);
+        tempL = vec2(0.0, 1.0) / dot(oL, vec2(0.0, 1.0)) / heightR * 2.0 * thicknessP;
     }
     vec2 offset = (-0.5 + (gl_VertexID % 2)) * tempL;
     //offset.y *= 2.3839096683;

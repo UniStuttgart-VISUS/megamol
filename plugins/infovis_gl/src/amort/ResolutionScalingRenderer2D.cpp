@@ -123,20 +123,19 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
     p.position = p.position + 0.5f * adj_offset;
 
 
-    if (!debugParam.Param<core::param::BoolParam>()->Value()) {
-        float hAdj = ceil(float(height) / float(a)) / (float(height) / float(a));
-        float wAdj = ceil(float(width) / float(a)) / (float(width) / float(a));
+    float hAdj = ceil(float(height) / float(a)) / (float(height) / float(a));
+    float wAdj = ceil(float(width) / float(a)) / (float(width) / float(a));
 
-        float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
-        float wOffs =
-            wAdj * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
-        p.position = p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
+    float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
+    float wOffs =
+        wAdj * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
+    p.position = p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
+    intrinsics.frustrum_height = hAdj * intrinsics.frustrum_height.value();
+    intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
 
-        intrinsics.frustrum_height = hAdj * intrinsics.frustrum_height.value();
-        intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
-        cam.setOrthographicProjection(intrinsics);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%f", hAdj);
-    }
+
+    cam.setOrthographicProjection(intrinsics);
+
     cam.setPose(p);
 }
 
