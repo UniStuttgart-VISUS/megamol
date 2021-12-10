@@ -14,19 +14,16 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run format check
         run: .ci/check_format.sh
-      - name: Comment
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v5
+      - name: Save PR number
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+      - uses: actions/upload-artifact@v2
+        if: always() && github.event_name == 'pull_request'
         with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Style check found [formatting issues](https://github.com/'
-                    + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')! '
-                    + 'Comment `/format`, to automatically commit the suggested changes.'
-            })
+          name: pr
+          path: pr/
   plugin_check:
     name: Plugin-Check
     runs-on: ubuntu-20.04
