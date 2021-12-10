@@ -121,7 +121,8 @@ bool ImagePresentation_Service::init(const Config& config) {
     }
 
     auto initial_fbo_size = m_framebuffer_size_handler();
-    m_global_framebuffer_events.size_events.push_back({static_cast<int>(initial_fbo_size.first), static_cast<int>(initial_fbo_size.second)});
+    m_global_framebuffer_events.size_events.push_back(
+        {static_cast<int>(initial_fbo_size.first), static_cast<int>(initial_fbo_size.second)});
 
     log("initialized successfully");
     return true;
