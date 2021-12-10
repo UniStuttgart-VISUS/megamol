@@ -125,21 +125,6 @@ void GUI_Service::digestChangedRequestedResources() {
 
     // Check for updates in requested resources --------------------------------
 
-    /// WindowEvents = resource index 1
-    auto maybe_window_events =
-        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
-    if (maybe_window_events.has_value()) {
-        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
-
-        this->m_time = window_events.time;
-        for (auto& size_event : window_events.size_events) {
-            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
-            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
-        }
-        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
-            window_events._clipboard_user_data);
-    }
-
     /// KeyboardEvents = resource index 2
     auto maybe_keyboard_events =
         this->m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
@@ -220,6 +205,25 @@ void GUI_Service::digestChangedRequestedResources() {
     for (auto& size_event : framebuffer_events->size_events) {
         this->m_framebuffer_size.x = static_cast<float>(size_event.width);
         this->m_framebuffer_size.y = static_cast<float>(size_event.height);
+    }
+
+    /// WindowEvents = resource index 1
+    auto maybe_window_events =
+        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
+    if (maybe_window_events.has_value()) {
+        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
+
+        this->m_time = window_events.time;
+        for (auto& size_event : window_events.size_events) {
+            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
+            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
+        }
+        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
+            window_events._clipboard_user_data);
+    }
+    else {
+        // no GL
+        this->m_window_size = m_framebuffer_size;
     }
 
     /// Trigger Screenshot = resource index 6
