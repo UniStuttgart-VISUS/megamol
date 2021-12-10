@@ -220,8 +220,7 @@ void GUI_Service::digestChangedRequestedResources() {
         }
         this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
             window_events._clipboard_user_data);
-    }
-    else {
+    } else {
         // no GL
         this->m_window_size = m_framebuffer_size;
     }
