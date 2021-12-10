@@ -6,13 +6,13 @@
  */
 
 #pragma once
-#include "CallOSPRayTransformation.h"
 #include "ParticleDataAccessCollection.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmospray/CallOSPRayMaterial.h"
+#include "mmospray/CallOSPRayTransformation.h"
 #include <map>
 #include <vector>
 

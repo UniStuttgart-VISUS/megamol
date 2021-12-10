@@ -22,6 +22,7 @@
 #include "mmcore/param/ParamCalls.h"
 #include "mmcore/view/Call6DofInteraction.h"
 #include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/CallTimeControl.h"
 #include "mmcore/view/light/CallLight.h"
@@ -52,4 +53,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallRender3D>();
     instance.RegisterAutoDescription<param::FloatParamCall>();
     instance.RegisterAutoDescription<param::IntParamCall>();
+    instance.RegisterAutoDescription<view::CallGetTransferFunction>();
 }

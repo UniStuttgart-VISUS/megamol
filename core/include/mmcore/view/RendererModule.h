@@ -206,70 +206,49 @@ protected:
     }
 
     bool GetExtentsChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            return this->GetExtentsChain(cr);
-        } catch (...) { ASSERT("onGetExtentsCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        return this->GetExtentsChain(cr);
     }
 
     bool RenderChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            return this->RenderChain(cr);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        return this->RenderChain(cr);
     }
 
     bool OnMouseButtonChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
-            return this->OnMouseButtonChain(
-                evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
+        return this->OnMouseButtonChain(
+            evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
     }
 
     bool OnMouseMoveChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-            return this->OnMouseMoveChain(evt.mouseMoveData.x, evt.mouseMoveData.y);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
+        return this->OnMouseMoveChain(evt.mouseMoveData.x, evt.mouseMoveData.y);
     }
 
     bool OnMouseScrollChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
-            return this->OnMouseScrollChain(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
+        return this->OnMouseScrollChain(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
     }
 
     bool OnCharChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
-            return this->OnCharChain(evt.charData.codePoint);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
+        return this->OnCharChain(evt.charData.codePoint);
     }
 
     bool OnKeyChainCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
-            return this->OnKeyChain(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-        } catch (...) { ASSERT("onRenderCallback call cast failed\n"); }
-        return false;
+        C& cr = dynamic_cast<C&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
+        return this->OnKeyChain(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
     }
 
     /** Slot for the daisy-chained renderer */

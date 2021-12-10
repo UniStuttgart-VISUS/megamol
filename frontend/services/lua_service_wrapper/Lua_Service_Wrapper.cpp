@@ -16,6 +16,7 @@
 #include "FrameStatistics.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "RuntimeConfig.h"
 #include "Screenshots.h"
 #include "WindowManipulation.h"
 #include "vislib/UTF8Encoder.h"
@@ -105,7 +106,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
-    this->m_requestedResourcesNames = {"FrontendResourcesList",
+    this->m_requestedResourcesNames = {
+        "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics",                      // for LastFrameTime
         "optional<WindowManipulation>",         // for Framebuffer resize
@@ -113,8 +115,9 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph",                         // LuaAPI manipulates graph
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig"
-
+        frontend_resources::CommandRegistry_Req_Name,
+        "optional<GUIRegisterWindow>",
+        "RuntimeConfig",
     }; //= {"ZMQ_Context"};
 
     *open_version_notification = false;
@@ -245,6 +248,14 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
 
     auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
+
+    callbacks.add<StringResult>(
+        "mmGetMegaMolExecutableDirectory", "()\n\tReturns the directory of the running MegaMol executable.", {[&]() {
+            auto& path = m_requestedResourceReferences[10]
+                             .getResource<frontend_resources::RuntimeConfig>()
+                             .megamol_executable_directory;
+            return StringResult{path};
+        }});
 
     callbacks.add<StringResult>(
         "mmListResources", "()\n\tReturn a list of available resources in the frontend.", {[&]() -> StringResult {

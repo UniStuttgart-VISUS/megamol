@@ -604,8 +604,9 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     if (lhsTc->version() < m_version) {
         m_settingsHaveChanged = false;
         m_updateCausedByNormalSlotChange = false;
-        lhsTc->setData(m_finalOutput, m_version);
     }
+
+    lhsTc->setData(m_finalOutput, m_version);
 
     return true;
 }

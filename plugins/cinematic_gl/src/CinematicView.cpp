@@ -157,7 +157,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
         if (ccc_success && utils_success) {
 
-            ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+            ccc->SetBboxCenter(
+                core_gl::utility::vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
             ccc->SetTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
             ccc->SetFps(this->fps);
 
@@ -488,7 +489,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Set letter box background
                 auto bgcol = this->BkgndColour();
                 this->utils.SetBackgroundColor(bgcol);
-                bgcol = this->utils.Color(cinematic::CinematicUtils::Colors::LETTER_BOX);
+                bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
                 this->utils.SetBackgroundColor(bgcol);
                 glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
                 glClearDepth(1.0f);

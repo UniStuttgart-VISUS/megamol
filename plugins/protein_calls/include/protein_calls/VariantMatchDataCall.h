@@ -18,7 +18,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/macro_utils.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein_calls {

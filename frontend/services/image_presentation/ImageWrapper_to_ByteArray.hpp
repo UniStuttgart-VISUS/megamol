@@ -8,13 +8,13 @@
 #pragma once
 
 #include "ImageWrapper.h"
+#include "ImageWrapper_Conversion_Helpers.hpp"
 
 #include <vector>
 
 namespace megamol {
 namespace frontend_resources {
 
-using byte = unsigned char;
 struct byte_texture {
     std::vector<byte> texture;
     std::vector<byte>* texture_ptr = nullptr;

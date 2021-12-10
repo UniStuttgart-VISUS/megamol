@@ -45,6 +45,8 @@ int main(const int argc, const char** argv) {
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
+    const bool with_gl = !config.no_opengl;
+
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
@@ -129,6 +131,18 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
     imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
+
+    // when there is no GL we should make sure the user defined some initial framebuffer size via CLI
+    if (!with_gl) {
+        if (!config.local_framebuffer_resolution.has_value()) {
+            if (!config.window_size.has_value()) {
+                log_error("Window and framebuffer size is not set. Abort.");
+                return 1;
+            }
+            imagepresentationConfig.local_framebuffer_resolution = config.window_size;
+        }
+    }
+
     imagepresentationConfig.local_viewport_tile =
         config.local_viewport_tile.has_value()
             ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
@@ -162,8 +176,10 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
-    services.add(gl_service, &openglConfig);
-    services.add(gui_service, &guiConfig);
+    if (with_gl) {
+        services.add(gl_service, &openglConfig);
+        services.add(gui_service, &guiConfig);
+    }
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
