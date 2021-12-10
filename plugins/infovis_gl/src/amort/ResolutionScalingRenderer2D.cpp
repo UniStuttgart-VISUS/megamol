@@ -31,8 +31,13 @@ ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
 
 bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
-        shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
-            "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
+        if (!debugParam.Param<core::param::BoolParam>()->Value()) {
+            shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
+                "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
+        } else {
+            shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
+                "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_linearscaling.frag.glsl");
+        }
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseAmortizedRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -44,8 +49,8 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
     // Store texture layout for later resize
     texLayout_ = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-            {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
@@ -154,12 +159,19 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     shader_->setUniform("h", h);
     shader_->setUniform("frametype", frameIdx_);
     shader_->setUniform("moveM", movePush_);
-
     glActiveTexture(GL_TEXTURE4);
     lowResFBO_->bindColorbuffer(0);
     shader_->setUniform("src_tex2D", 4);
-    texA_->bindImage(6, GL_READ_ONLY);
-    texB_->bindImage(7, GL_WRITE_ONLY);
+
+    if (!debugParam.Param<core::param::BoolParam>()->Value()) {
+        texA_->bindImage(6, GL_READ_ONLY);
+        texB_->bindImage(7, GL_WRITE_ONLY);
+    } else {
+        glActiveTexture(GL_TEXTURE6);
+        texA_->bindTexture();
+        shader_->setUniform("Store", 6);
+        texB_->bindImage(7, GL_WRITE_ONLY);
+    }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
