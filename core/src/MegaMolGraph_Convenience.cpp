@@ -1,6 +1,6 @@
 #include "mmcore/MegaMolGraph_Convenience.h"
-#include "megamol_build_info.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 #include <sstream>
 
@@ -24,7 +24,7 @@ MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_pt
 
 std::string megamol::core::MegaMolGraph_Convenience::SerializeVersion() const {
     std::string serVersion =
-        std::string("mmCheckVersion(\"") + std::string(megamol::build_info::MEGAMOL_GIT_HASH) + "\")";
+        std::string("mmCheckVersion(\"") + utility::buildinfo::MEGAMOL_GIT_HASH() + "\")";
 
     return serVersion + '\n';
 }

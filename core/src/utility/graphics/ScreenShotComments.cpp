@@ -1,8 +1,7 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
-#include "cmrc/cmrc.hpp"
-#include "megamol_build_info.h"
 #include "mmcore/utility/DateTime.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/platform/RuntimeInfo.h"
 
 #ifdef _WIN32
@@ -10,33 +9,26 @@
 #include <windows.h>
 #endif
 
-CMRC_DECLARE(megamolrc);
-
 namespace mcu_graphics = megamol::core::utility::graphics;
 
 mcu_graphics::ScreenShotComments::ScreenShotComments(
     std::string const& project_configuration, const std::optional<comments_storage_map>& additional_comments) {
-
-    auto rs_fs = cmrc::megamolrc::get_filesystem();
-    auto the_cache = rs_fs.open("CMakeCache.txt");
-    auto the_diff = rs_fs.open("GitDiff.txt");
 
     the_comments["Title"] = "MegaMol Screen Capture " + utility::DateTime::CurrentDateTimeFormatted();
     //the_comments["Author"] = "";
     //the_comments["Description"] = "";
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
-    the_comments["Software"] = "MegaMol " + std::string(megamol::build_info::MEGAMOL_VERSION) + "-" +
-                               std::string(megamol::build_info::MEGAMOL_GIT_HASH);
+    the_comments["Software"] = "MegaMol " + megamol::core::utility::buildinfo::MEGAMOL_VERSION() + "-" +
+                               megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH();
     the_comments["MegaMol project"] = project_configuration;
 
-    the_comments["Remote Branch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
-    the_comments["Remote URL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
+    the_comments["Remote Branch"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_BRANCH_NAME_FULL();
+    the_comments["Remote URL"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_REMOTE_URL();
     the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
     the_comments["Hardware Environment"] = platform::RuntimeInfo::GetHardwareInfo();
-    //the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE);
-    the_comments["CMakeCache"] = std::string(the_cache.begin(), the_cache.end());
-    the_comments["Git Diff"] = std::string(the_diff.begin(), the_diff.end());
+    the_comments["CMakeCache"] = megamol::core::utility::buildinfo::MEGAMOL_CMAKE_CACHE();
+    the_comments["Git Diff"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_DIFF();
     the_comments["Operating System"] = platform::RuntimeInfo::GetOsInfo();
 
     //the_comments["Disclaimer"] = "";

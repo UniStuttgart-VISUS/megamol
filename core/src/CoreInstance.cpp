@@ -16,7 +16,6 @@
 #include <memory>
 #include <string>
 
-#include "megamol_build_info.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -31,6 +30,7 @@
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
@@ -2030,7 +2030,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 std::string megamol::core::CoreInstance::SerializeGraph() {
 
     std::string serVersion =
-        std::string("mmCheckVersion(\"") + std::string(megamol::build_info::MEGAMOL_GIT_HASH) + "\")";
+        std::string("mmCheckVersion(\"") + megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() + "\")";
     std::string serInstances;
     std::string serModules;
     std::string serCalls;

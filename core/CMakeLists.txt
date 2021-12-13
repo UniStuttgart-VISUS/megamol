@@ -35,8 +35,8 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> "${CMAKE_BINARY_DIR}/config")
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq megamol_build_info
-    PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
+    PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq
+    PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service megamol_build_info_rc) # abstract render api used by MegaMolGraph
 
   if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
@@ -58,9 +58,6 @@ if(BUILD_CORE)
 
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
-
-  cmrc_add_resource_library(megamolrc WHENCE ${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/CMakeCache.txt ${CMAKE_BINARY_DIR}/GitDiff.txt)
-  target_link_libraries(core PRIVATE megamolrc)
 
   # Source groups in Visual Studio
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)

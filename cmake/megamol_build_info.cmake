@@ -2,30 +2,40 @@
 # This script will provide several build information as C++ library.
 # Usage: link to the megamol_build_info library as normal library and `#include "megamol_build_info.h"`.
 
+# Dependency
+include(cmrc/CMakeRC)
+
 # Used directories
-set(INFO_SRC_DIR "${CMAKE_SOURCE_DIR}/cmake/megamol_build_info")
-set(INFO_BIN_DIR "${CMAKE_BINARY_DIR}/megamol_build_info")
+set(INFO_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/cmake/megamol_build_info")
+set(INFO_RESOURCES_DIR "${CMAKE_BINARY_DIR}/megamol_build_info")
 
 # Run build time script
 add_custom_target(megamol_build_info_script
-  COMMAND ${CMAKE_COMMAND} -P ${INFO_SRC_DIR}/megamol_build_info_script.cmake)
-
-# Install header
-configure_file(${INFO_SRC_DIR}/megamol_build_info.h ${INFO_BIN_DIR}/megamol_build_info.h COPYONLY)
-
-# Dummy copy of the buildtime sources to not trigger missing file in library definition
-configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${INFO_BIN_DIR}/megamol_build_info_buildtime.cpp COPYONLY)
+  COMMAND ${CMAKE_COMMAND} -P ${INFO_SCRIPT_DIR}/megamol_build_info_script.cmake)
 
 # Set configure time values
-configure_file(${INFO_SRC_DIR}/megamol_build_info_configuretime.cpp.in ${INFO_BIN_DIR}/megamol_build_info_configuretime.cpp @ONLY)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION "${PROJECT_VERSION}")
 
-# Define the library
-add_library(megamol_build_info OBJECT
-  ${INFO_BIN_DIR}/megamol_build_info.h
-  ${INFO_BIN_DIR}/megamol_build_info_buildtime.cpp
-  ${INFO_BIN_DIR}/megamol_build_info_configuretime.cpp)
-target_compile_features(megamol_build_info PUBLIC cxx_std_17)
-set_target_properties(megamol_build_info PROPERTIES CXX_EXTENSIONS OFF)
-target_include_directories(megamol_build_info PUBLIC ${INFO_BIN_DIR})
+# Resources
+cmrc_add_resource_library(megamol_build_info_rc WHENCE ${CMAKE_BINARY_DIR}/megamol_build_info
+  ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_MAJOR
+  ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_MINOR
+  ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_PATCH
+  ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION
+  ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIMESTAMP
+  ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_HASH
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME_FULL
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_REMOTE_NAME
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_REMOTE_URL
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_DIFF
+  ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_IS_DIRTY
+  ${INFO_RESOURCES_DIR}/MEGAMOL_LICENSE
+  ${INFO_RESOURCES_DIR}/MEGAMOL_CMAKE_CACHE)
 
-add_dependencies(megamol_build_info megamol_build_info_script)
+# Require build info files generation before resources lib build
+add_dependencies(megamol_build_info_rc megamol_build_info_script)

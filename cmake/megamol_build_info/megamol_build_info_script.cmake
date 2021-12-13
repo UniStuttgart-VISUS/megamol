@@ -4,31 +4,14 @@
 #
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-# Functions
-function(string_split_lines result text)
-  if (text STREQUAL "")
-    # Empty string
-    set("${result}" "\"\"" PARENT_SCOPE)
-  else ()
-    # Escape ";"
-    string(REPLACE ";" "\;" text "${text}")
-    # Replace newline
-    string(REPLACE "\n" ";" text_list "${text}")
-    # Add C++ delimiters to each line
-    set(text_result "")
-    foreach (line IN LISTS text_list)
-      string(APPEND text_result "R\"MM_Delim(${line}\n)MM_Delim\"\n")
-    endforeach ()
-    set("${result}" "${text_result}" PARENT_SCOPE)
-  endif ()
-endfunction()
-
 # Directory of the current script
 get_filename_component(INFO_SRC_DIR ${CMAKE_SCRIPT_MODE_FILE} DIRECTORY)
 
 # MegaMol project root
 get_filename_component(PROJECT_DIR ${INFO_SRC_DIR} DIRECTORY)
 get_filename_component(PROJECT_DIR ${PROJECT_DIR} DIRECTORY)
+
+set(INFO_RESOURCES_DIR "${CMAKE_BINARY_DIR}/megamol_build_info")
 
 # Find git
 find_package(Git REQUIRED)
@@ -39,6 +22,7 @@ execute_process(COMMAND
   WORKING_DIRECTORY "${PROJECT_DIR}"
   OUTPUT_VARIABLE GIT_HASH
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_HASH "${GIT_HASH}")
 
 # Branch name
 execute_process(COMMAND
@@ -46,6 +30,7 @@ execute_process(COMMAND
   WORKING_DIRECTORY "${PROJECT_DIR}"
   OUTPUT_VARIABLE GIT_BRANCH_NAME
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME "${GIT_BRANCH_NAME}")
 
 # Full branch name
 execute_process(COMMAND
@@ -53,6 +38,7 @@ execute_process(COMMAND
   WORKING_DIRECTORY "${PROJECT_DIR}"
   OUTPUT_VARIABLE GIT_BRANCH_NAME_FULL
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME_FULL "${GIT_BRANCH_NAME_FULL}")
 
 # Get remote name
 if (GIT_BRANCH_NAME_FULL STREQUAL "")
@@ -61,6 +47,7 @@ else ()
   string(REPLACE "/" ";" GIT_REMOTE_NAME "${GIT_BRANCH_NAME_FULL}")
   list(GET GIT_REMOTE_NAME 0 GIT_REMOTE_NAME)
 endif ()
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_REMOTE_NAME "${GIT_REMOTE_NAME}")
 
 # Origin URL
 execute_process(COMMAND
@@ -68,6 +55,7 @@ execute_process(COMMAND
   WORKING_DIRECTORY "${PROJECT_DIR}"
   OUTPUT_VARIABLE GIT_REMOTE_URL
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_REMOTE_URL "${GIT_REMOTE_URL}")
 
 # Git diff / is dirty
 execute_process(COMMAND
@@ -76,16 +64,17 @@ execute_process(COMMAND
   OUTPUT_VARIABLE GIT_DIFF
   RESULTS_VARIABLE GIT_IS_DIRTY
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-file(WRITE ${CMAKE_BINARY_DIR}/GitDiff.txt "${GIT_DIFF}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_DIFF "${GIT_DIFF}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_IS_DIRTY "${GIT_IS_DIRTY}")
 
 # Time
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
 string(TIMESTAMP BUILD_TIME "" UTC)
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIMESTAMP "${BUILD_TIMESTAMP}")
+file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME "${BUILD_TIME}")
 
 # License
-file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
-string_split_lines(MEGAMOL_LICENSE "${MEGAMOL_LICENSE}")
+configure_file(${PROJECT_DIR}/LICENSE ${INFO_RESOURCES_DIR}/MEGAMOL_LICENSE COPYONLY)
 
-# Write to sourcefile
-configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
-
+# Cache
+configure_file(${CMAKE_BINARY_DIR}/CMakeCache.txt ${INFO_RESOURCES_DIR}/MEGAMOL_CMAKE_CACHE COPYONLY)

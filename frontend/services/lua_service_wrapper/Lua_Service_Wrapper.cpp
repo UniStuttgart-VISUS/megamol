@@ -24,7 +24,7 @@
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "GUIRegisterWindow.h"
-#include "megamol_build_info.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 
 static void log(const char* text) {
@@ -428,12 +428,12 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<BoolResult, std::string>("mmCheckVersion",
         "(string version)\n\tChecks whether the running MegaMol corresponds to version.",
         {[&](std::string version) -> BoolResult {
-            bool version_ok = version == std::string(megamol::build_info::MEGAMOL_GIT_HASH);
+            bool version_ok = version == megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH();
             *open_version_notification = (!version_ok && m_config.show_version_notification);
             if (!version_ok) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "Version info in project (%s) does not match MegaMol version (%s)!", version.c_str(),
-                    megamol::build_info::MEGAMOL_GIT_HASH);
+                    megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH().c_str());
             }
             return BoolResult(version_ok);
         }});

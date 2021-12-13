@@ -27,8 +27,7 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/view/AbstractView.h"
 
-#include "megamol_build_info.h"
-
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
@@ -94,9 +93,9 @@ void mmCoreMain(int argc, char* argv[]) {
 MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-    rv->VersionNumber[0] = (const char*)megamol::build_info::MEGAMOL_VERSION_MAJOR;
-    rv->VersionNumber[1] = (const char*)megamol::build_info::MEGAMOL_VERSION_MINOR;
-    rv->VersionNumber[2] = megamol::build_info::MEGAMOL_GIT_HASH;
+    rv->VersionNumber[0] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MAJOR();
+    rv->VersionNumber[1] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MINOR();
+    rv->VersionNumber[2] = megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH().c_str();
 
 
     rv->SystemType = MMC_OSYSTEM_UNKNOWN;
