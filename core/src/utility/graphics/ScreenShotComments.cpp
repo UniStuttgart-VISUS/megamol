@@ -1,9 +1,9 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
+#include "cmrc/cmrc.hpp"
 #include "megamol_build_info.h"
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/platform/RuntimeInfo.h"
-#include "cmrc/cmrc.hpp"
 
 #ifdef _WIN32
 #include <tchar.h>

@@ -7,8 +7,8 @@
 
 
 #include "GraphCollection.h"
-#include "mmcore/utility/FileUtils.h"
 #include "megamol_build_info.h"
+#include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractView.h"
 
