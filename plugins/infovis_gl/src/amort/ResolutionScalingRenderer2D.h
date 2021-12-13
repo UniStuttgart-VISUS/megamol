@@ -63,6 +63,7 @@ private:
     core::param::ParamSlot debugFloatParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
+    std::unique_ptr<glowl::GLSLProgram> linshader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
     glowl::TextureLayout texLayout_;
     std::unique_ptr<glowl::Texture2D> texA_;

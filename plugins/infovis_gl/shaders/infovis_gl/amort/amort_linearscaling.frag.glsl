@@ -2,7 +2,7 @@
 
 uniform sampler2D src_tex2D;
 
-layout (binding=6, rgba32f) uniform image2D Store;
+layout (binding=6) uniform sampler2D Store;
 layout (binding=7, rgba32f) uniform image2D target;
 
 uniform int amortLevel;
@@ -24,16 +24,17 @@ void main() {
     //int i = (amortLevel * (line+1) - 1 - col);
     ivec2 iCoord = ivec2(int(uv_coord.x * w), int(uv_coord.y * h));
     vec2 moveP = (moveM * p).xy;
-    ivec2 movedICoord = ivec2((moveP.x / 2.0 + 0.5) * w, (moveP.y / 2.0 + 0.5) * h);
+    //ivec2 movedICoord = ivec2((moveP.x / 2.0 + 0.5) * w, (moveP.y / 2.0 + 0.5) * h);
+    vec2 movedCoord = vec2(moveP.x / 2.0 + 0.5, moveP.y / 2.0 + 0.5);
     int i = (amortLevel * line + col);
 
 
     if (frametype == i){
         tempColor = texelFetch(src_tex2D, iCoord /amortLevel, 0);
     }else{
-        tempColor = imageLoad(Store, movedICoord);
+        tempColor = texture(Store, movedCoord);
     }
     imageStore(target, iCoord, tempColor);
     frag_out = tempColor;
-    //frag_out = vec4(0.4, 0.6, 0.2, 1.0);
+    //frag_out = texelFetch(src_tex2D, iCoord /amortLevel, 0);
 }

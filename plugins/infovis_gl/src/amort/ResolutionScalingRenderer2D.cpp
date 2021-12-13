@@ -31,13 +31,11 @@ ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
 
 bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
-        if (!debugParam.Param<core::param::BoolParam>()->Value()) {
-            shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
+        shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
                 "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
-        } else {
-            shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
+        linshader_ = core::utility::make_glowl_shader("amort_linearscaling", shaderOptions,
                 "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_linearscaling.frag.glsl");
-        }
+        
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseAmortizedRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -149,19 +147,29 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     int h = fbo->getHeight();
 
     glViewport(0, 0, w, h);
-
-    shader_->use();
-
     fbo->bind();
+    if (!debugParam.Param<core::param::BoolParam>()->Value()) {
+        shader_->use();
+        shader_->setUniform("amortLevel", a);
+        shader_->setUniform("w", w);
+        shader_->setUniform("h", h);
+        shader_->setUniform("frametype", frameIdx_);
+        shader_->setUniform("moveM", movePush_);
+        glActiveTexture(GL_TEXTURE4);
+        lowResFBO_->bindColorbuffer(0);
+        shader_->setUniform("src_tex2D", 4);
 
-    shader_->setUniform("amortLevel", a);
-    shader_->setUniform("w", w);
-    shader_->setUniform("h", h);
-    shader_->setUniform("frametype", frameIdx_);
-    shader_->setUniform("moveM", movePush_);
-    glActiveTexture(GL_TEXTURE4);
-    lowResFBO_->bindColorbuffer(0);
-    shader_->setUniform("src_tex2D", 4);
+    } else {
+        linshader_->use();
+        linshader_->setUniform("amortLevel", a);
+        linshader_->setUniform("w", w);
+        linshader_->setUniform("h", h);
+        linshader_->setUniform("frametype", frameIdx_);
+        linshader_->setUniform("moveM", movePush_);
+        glActiveTexture(GL_TEXTURE4);
+        lowResFBO_->bindColorbuffer(0);
+        linshader_->setUniform("src_tex2D", 4);   
+    }
 
     if (!debugParam.Param<core::param::BoolParam>()->Value()) {
         texA_->bindImage(6, GL_READ_ONLY);
@@ -169,10 +177,9 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     } else {
         glActiveTexture(GL_TEXTURE6);
         texA_->bindTexture();
-        shader_->setUniform("Store", 6);
+        linshader_->setUniform("Store", 6);
         texB_->bindImage(7, GL_WRITE_ONLY);
     }
-
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
 
