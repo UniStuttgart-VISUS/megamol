@@ -5,7 +5,7 @@
 #
 option(BUILD_CORE "Build core" ON)
 
-if(BUILD_CORE)
+if (BUILD_CORE)
   project(core)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -21,7 +21,7 @@ if(BUILD_CORE)
 
   if (ENABLE_CUESDK)
     require_external(CUESDK)
-  endif()
+  endif ()
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
@@ -34,26 +34,27 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
-  target_link_libraries(${PROJECT_NAME} 
+  target_link_libraries(${PROJECT_NAME}
     PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service megamol_build_info_rc) # abstract render api used by MegaMolGraph
-
-  if(UNIX)
+  if (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
-  endif()
-
+  endif ()
+  if (WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Version)
+  endif ()
   if (ENABLE_CUESDK)
     target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
-  endif()
+  endif ()
 
-  if(WIN32)
+  if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
-  endif()
+  endif ()
 
-  if(MPI_C_FOUND)
+  if (MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
-  endif()
+  endif ()
 
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
@@ -64,4 +65,4 @@ if(BUILD_CORE)
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Header Files" FILES ${header_files})
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES ${source_files})
 
-endif(BUILD_CORE)
+endif (BUILD_CORE)
