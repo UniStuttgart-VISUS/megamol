@@ -22,6 +22,8 @@ public:
 
     bool upload(data_package_t const& package) override;
 
+    bool cleanup() override;
+
 protected:
     void upload_full_separate(data_package_t const& package);
 

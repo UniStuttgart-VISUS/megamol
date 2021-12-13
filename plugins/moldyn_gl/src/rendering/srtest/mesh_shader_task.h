@@ -15,6 +15,8 @@ public:
 
     bool upload(data_package_t const& package) override;
 
+    bool cleanup() override;
+
 private:
     std::vector<GLuint> vbos_;
     std::vector<GLuint> cbos_;

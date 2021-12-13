@@ -48,7 +48,7 @@ void main() {
         vec3 oc_pos = objPos - camPos;
         float sqrRad = rad * rad;
 
-        /*float dd = dot(oc_pos, oc_pos);
+        float dd = dot(oc_pos, oc_pos);
 
         float s = (sqrRad) / (dd);
 
@@ -63,7 +63,7 @@ void main() {
         v[2] = vec4(objPos + vr + vu, 1.0f);
         v[3] = vec4(objPos - vr + vu, 1.0f);
 
-        v[0] = MVP * v[0];
+        /*v[0] = MVP * v[0];
         v[1] = MVP * v[1];
         v[2] = MVP * v[2];
         v[3] = MVP * v[3];*/
@@ -71,8 +71,8 @@ void main() {
         /*vec4 projPos = MVP * vec4(objPos - rad * (camDir), 1.0f);
         projPos = projPos / projPos.w;*/
 
-        mat4 v;
-        touchplane_old(objPos, rad, oc_pos, v);
+        /*mat4 v;
+        touchplane_old(objPos, rad, oc_pos, v);*/
 
         //vec3 fac = vec3(1.0f);
         /*if (isOutsideP(v[0], v[1], v[2], v[3], rad)) {
@@ -80,8 +80,8 @@ void main() {
         }*/
 
         for (int i = 0; i < NUM_V; ++i) {
-            //v[i] = MVP * v[i];
-            v[i] /= v[i].w;
+            v[i] = MVP * v[i];
+            //v[i] /= v[i].w;
 
             pp[l_idx * NUM_V + i].pointColor = pointColor;
             pp[l_idx * NUM_V + i].objPos = objPos;

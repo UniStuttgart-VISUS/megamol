@@ -30,11 +30,14 @@ flat out vec3 oc_pos;
 
 #include "srtest_frustum.glsl"
 
+#ifdef __SRTEST_MUZIC__
 layout(std430, binding = 10) readonly buffer OffsetBuf {
     uint offset_cmd[];
 };
+#endif
 
 void main() {
+#ifdef __SRTEST_MUZIC__
     int offset = int(offset_cmd[gl_DrawID]);
 
     /*int base_idx = gl_InstanceID;
@@ -42,6 +45,9 @@ void main() {
     /*int base_idx = gl_VertexID / 4;
     int inv_idx = gl_VertexID % 4;*/
     int base_idx = BASE_IDX + offset;
+#else
+    int base_idx = BASE_IDX;
+#endif
     int inv_idx = INV_IDX;
     int bump_idx = BUMP_IDX;
 
@@ -59,10 +65,10 @@ void main() {
     vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
     vec3 vu = normalize(cross(oc_pos, vr)) * vi;*/
 
-//#if BUMP_IDX == 0
+    //#if BUMP_IDX == 0
     /*mat4 v = mat4(vec4(objPos - vr - vu, 1.0f), vec4(objPos + vr - vu, 1.0f), vec4(objPos + vr + vu, 1.0f),
         vec4(objPos - vr + vu, 1.0f));*/
-//#else
+    //#else
     /*mat4 v = mat4(vec4(objPos - vr - vu, 1.0f), vec4(objPos + vr - vu, 1.0f), vec4(objPos - vr + vu, 1.0f),
         vec4(objPos + vr + vu, 1.0f));*/
     /*mat4 v = mat4(vec4(objPos - vr + vu, 1.0f), vec4(objPos - vr - vu, 1.0f),
@@ -70,10 +76,15 @@ void main() {
     //#endif
 
     mat4 v;
+#ifdef __SRTEST_QUAD__
+    //touchplane_old(objPos, rad, oc_pos, v);
+    touchplane(objPos, rad, oc_pos, v);
+#else
     touchplane_old_v2(objPos, rad, oc_pos, v);
+#endif
 
     vec4 pos = v[inv_idx + bump_idx];
-    
+
     //pos /= pos.w;
 
     //vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);

@@ -2,25 +2,7 @@
 
 
 megamol::moldyn_gl::rendering::ssbo_shader_task::~ssbo_shader_task() {
-    glDeleteBuffers(vbos_.size(), vbos_.data());
-
-    glDeleteBuffers(cbos_.size(), cbos_.data());
-
-    glDeleteBuffers(xbos_.size(), xbos_.data());
-
-    glDeleteBuffers(ybos_.size(), ybos_.data());
-
-    glDeleteBuffers(zbos_.size(), zbos_.data());
-
-    glDeleteBuffers(radbos_.size(), radbos_.data());
-
-    glDeleteBuffers(rbos_.size(), rbos_.data());
-
-    glDeleteBuffers(gbos_.size(), gbos_.data());
-
-    glDeleteBuffers(bbos_.size(), bbos_.data());
-
-    glDeleteBuffers(abos_.size(), abos_.data());
+    cleanup();
 }
 
 
@@ -92,6 +74,40 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::upload(data_package_t cons
     default:
         upload_pos_col_sep(package);
     }
+
+    return true;
+}
+
+bool megamol::moldyn_gl::rendering::ssbo_shader_task::cleanup() {
+    if (!vbos_.empty())
+        glDeleteBuffers(vbos_.size(), vbos_.data());
+
+    if (!cbos_.empty())
+        glDeleteBuffers(cbos_.size(), cbos_.data());
+
+    if (!xbos_.empty())
+        glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    if (!ybos_.empty())
+        glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    if (!zbos_.empty())
+        glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    if (!radbos_.empty())
+        glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    if (!rbos_.empty())
+        glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    if (!gbos_.empty())
+        glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    if (!bbos_.empty())
+        glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    if (!abos_.empty())
+        glDeleteBuffers(abos_.size(), abos_.data());
 
     return true;
 }

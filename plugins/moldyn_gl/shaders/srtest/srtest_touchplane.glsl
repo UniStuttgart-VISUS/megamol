@@ -54,6 +54,28 @@ void touchplane(vec3 objPos, float rad, out vec4 projPos, out float l) {
 }
 
 
+void touchplane(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
+    float dd = dot(oc_pos, oc_pos);
+
+    float s = (rad*rad) / (dd);
+
+    float vi = rad / sqrt(1.0f - s);
+
+    vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
+    vec3 vu = normalize(cross(oc_pos, vr)) * vi;
+
+    v[0] = vec4(objPos - vr - vu, 1.0f);
+    v[1] = vec4(objPos + vr - vu, 1.0f);
+    v[2] = vec4(objPos + vr + vu, 1.0f);
+    v[3] = vec4(objPos - vr + vu, 1.0f);
+
+    v[0] = MVP * v[0];
+    v[1] = MVP * v[1];
+    v[2] = MVP * v[2];
+    v[3] = MVP * v[3];
+}
+
+
 void touchplane_old(vec3 objPos, float rad, vec3 oc_pos, out vec4 projPos, out float l) {
     // Sphere-Touch-Plane-Approach
 

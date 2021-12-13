@@ -20,7 +20,7 @@ flat in float l;
 #include "srtest_ubo.glsl"
 
 layout(location = 0) out vec4 outColor;
-layout(depth_greater) out float gl_FragDepth;
+//layout(depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 

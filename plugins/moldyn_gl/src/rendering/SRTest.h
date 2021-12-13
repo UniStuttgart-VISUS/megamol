@@ -27,6 +27,8 @@ public:
 
     bool upload(data_package_t const& package) override;
 
+    bool cleanup() override;
+
 private:
     std::vector<GLuint> vaos_;
     std::vector<GLuint> vbos_;
@@ -45,6 +47,8 @@ public:
 
     bool upload(data_package_t const& package) override;
 
+    bool cleanup() override;
+
 private:
     std::vector<GLuint> tex_;
     std::vector<GLuint> buf_;
@@ -61,6 +65,14 @@ public:
     bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
+
+#ifdef PROFILING
+    bool upload(data_package_t const& package, frontend_resources::PerformanceManager& pm,
+        frontend_resources::PerformanceManager::handle_type handle,
+        frontend_resources::PerformanceManager::frame_type id);
+#endif
+
+    bool cleanup() override;
 
 private:
     std::vector<GLuint> copy_bos_;
@@ -89,6 +101,14 @@ public:
     bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
+
+#ifdef PROFILING
+    bool upload(data_package_t const& package, frontend_resources::PerformanceManager& pm,
+        frontend_resources::PerformanceManager::handle_type handle,
+        frontend_resources::PerformanceManager::frame_type id);
+#endif
+
+    bool cleanup() override;
 
 private:
     std::vector<GLuint> copy_bos_;
@@ -183,6 +203,8 @@ public:
     bool render(GLuint ubo) override;
 
     bool upload(data_package_t const& package) override;
+
+    bool cleanup() override;
 
 private:
     std::vector<std::vector<uint32_t>> indices_;
@@ -321,7 +343,7 @@ private:
 
     // core::param::ParamSlot clip_thres_slot_;
 
-    std::unordered_map<method_e, std::unique_ptr<rendering_task>> rendering_tasks_;
+    std::unordered_map<method_e, std::shared_ptr<rendering_task>> rendering_tasks_;
 
     data_package_t data_;
 

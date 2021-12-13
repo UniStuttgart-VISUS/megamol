@@ -69,7 +69,7 @@ enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP, NULL_MODE };
 
 using upload_mode_ut = std::underlying_type_t<upload_mode>;
 
-static inline std::array<std::string, 4> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP"};
+static inline std::array<std::string, 5> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP", "NULL_MODE"};
 
 class rendering_task {
 public:
@@ -90,6 +90,8 @@ public:
     virtual bool render(GLuint ubo) = 0;
 
     virtual bool upload(data_package_t const& package) = 0;
+
+    virtual bool cleanup() = 0;
 
     upload_mode get_mode() const {
         return mode_;

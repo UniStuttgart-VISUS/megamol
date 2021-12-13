@@ -50,7 +50,7 @@ bool intersection_old(vec3 oc_pos, float sqrRad, float rad, out vec3 normal, out
     t = min(c / q, q);
 
     vec3 sphereintersection = t * ray - oc_pos; // intersection point
-    normal = (t * ray - oc_pos) / rad;
+    normal = (sphereintersection) / rad;
 
     return true;
 }

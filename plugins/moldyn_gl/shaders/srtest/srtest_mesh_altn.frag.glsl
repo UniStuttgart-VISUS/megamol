@@ -19,7 +19,7 @@ pp;
 #include "srtest_ubo.glsl"
 
 layout(location = 0) out vec4 outColor;
-layout(depth_greater) out float gl_FragDepth;
+//layout(depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 
@@ -52,8 +52,14 @@ void main() {
     if (delta < 0.0f)
         discard;
 
-    float tb = sqrt(delta);
-    float t = tf - tb;
+    /*float tb = sqrt(delta);
+    float t = tf - tb;*/
+
+    float c = dot(pp.oc_pos, pp.oc_pos) - pp.sqrRad;
+
+    float s = tf < 0.0f ? -1.0f : 1.0f;
+    float q = tf + s * sqrt(delta);
+    float t = min(c / q, q);
 
     vec4 new_pos = vec4(camPos + t * ray.xyz, 1.0f);
 

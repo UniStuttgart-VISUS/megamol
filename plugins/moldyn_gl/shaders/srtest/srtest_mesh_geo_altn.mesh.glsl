@@ -62,14 +62,14 @@ void main() {
         v[2] = vec4(objPos + vr + vu, 1.0f);
         v[3] = vec4(objPos - vr + vu, 1.0f);
 
-        vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
-        projPos = projPos / projPos.w;
+        /*vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
+        projPos = projPos / projPos.w;*/
 
         for (int i = 0; i < NUM_V; ++i) {
             pp[l_idx * NUM_V + i].ray.xyz = normalize(v[i].xyz - camPos);
             pp[l_idx * NUM_V + i].ray.w = dot(oc_pos, pp[l_idx * NUM_V + i].ray.xyz);
             v[i] = MVP * v[i];
-            v[i] /= v[i].w;
+            //v[i] /= v[i].w;
 
             pp[l_idx * NUM_V + i].pointColor = pointColor;
             pp[l_idx * NUM_V + i].objPos = objPos;
@@ -80,7 +80,8 @@ void main() {
             pp[l_idx * NUM_V + i].sqrRad = sqrRad;
 
 
-            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy, projPos.z, 1.0f);
+            //gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy, projPos.z, 1.0f);
+            gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = v[i];
         }
 
         gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 0] = l_idx * NUM_V + 1;

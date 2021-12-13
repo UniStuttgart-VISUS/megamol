@@ -46,36 +46,40 @@ void main() {
     v[2] = MVP * v[2];
     v[3] = MVP * v[3];
 
-    v[0] /= v[0].w;
+    /*v[0] /= v[0].w;
     v[1] /= v[1].w;
     v[2] /= v[2].w;
-    v[3] /= v[3].w;
+    v[3] /= v[3].w;*/
 
-    vec4 projPos = MVP * vec4(v_pp[idx].objPos + v_pp[idx].rad * (camDir), 1.0f);
-    projPos = projPos / projPos.w;
+    //vec4 projPos = MVP * vec4(v_pp[idx].objPos + v_pp[idx].rad * (camDir), 1.0f);
+    //projPos = projPos / projPos.w;
 
-    gl_Position = vec4(v[0].xy, projPos.z, 1.0f);
+    //gl_Position = vec4(v[0].xy, projPos.z, projPos.w);
+    gl_Position = v[0];
     g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
     g_pp.oc_pos = v_pp[idx].oc_pos;
     EmitVertex();
-    gl_Position = vec4(v[1].xy, projPos.z, 1.0f);
+    //gl_Position = vec4(v[1].xy, projPos.z, projPos.w);
+    gl_Position = v[1];
     g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
     g_pp.oc_pos = v_pp[idx].oc_pos;
     EmitVertex();
-    gl_Position = vec4(v[3].xy, projPos.z, 1.0f);
+    //gl_Position = vec4(v[3].xy, projPos.z, projPos.w);
+    gl_Position = v[3];
     g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
     g_pp.oc_pos = v_pp[idx].oc_pos;
     EmitVertex();
-    gl_Position = vec4(v[2].xy, projPos.z, 1.0f);
+    //gl_Position = vec4(v[2].xy, projPos.z, projPos.w);
+    gl_Position = v[2];
     g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;

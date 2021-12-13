@@ -28,8 +28,14 @@ void main() {
     if (delta < 0.0f)
         discard;
 
-    float tb = sqrt(delta);
-    float t = pp.ray.w - tb;
+    /*float tb = sqrt(delta);
+    float t = pp.ray.w - tb;*/
+
+    float c = dot(pp.oc_pos, pp.oc_pos) - pp.sqrRad;
+
+    float s = pp.ray.w < 0.0f ? -1.0f : 1.0f;
+    float q = pp.ray.w + s * sqrt(delta);
+    float t = min(c / q, q);
 
     vec4 new_pos = vec4(camPos + t * pp.ray.xyz, 1.0f);
 

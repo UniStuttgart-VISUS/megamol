@@ -79,6 +79,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
         auto shdr_ssbo_quads_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
@@ -89,6 +90,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
         auto shdr_ssbo_muzic_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_muzic_options.addDefinition("__SRTEST_MUZIC__");
         shdr_ssbo_muzic_options.addDefinition("BASE_IDX", MUZIC_BASE_IDX);
         shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
         shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
@@ -162,39 +164,39 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         }
         }
 
-        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_unique<vao_rt>(shdr_vao_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_shared<vao_rt>(shdr_vao_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_unique<tex_rt>(shdr_tex_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_shared<tex_rt>(shdr_tex_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_unique<copy_rt>(shdr_copy_options)));
-
-        rendering_tasks_.insert(
-            std::make_pair(method_e::COPY_VERT, std::make_unique<copy_vert_rt>(shdr_copy_vert_options)));
-
-        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_unique<ssbo_rt>(mode, shdr_ssbo_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_GEO, std::make_unique<ssbo_geo_rt>(mode, shdr_ssbo_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_VERT, std::make_unique<ssbo_vert_rt>(mode, shdr_ssbo_vert_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_QUAD, std::make_unique<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_STRIP, std::make_unique<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_MUZIC, std::make_unique<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
-
-        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_unique<mesh_rt>(mode, shdr_mesh_options)));
+        rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_shared<copy_rt>(shdr_copy_options)));
 
         rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_ALTN, std::make_unique<mesh_altn_rt>(mode, shdr_mesh_altn_options)));
+            std::make_pair(method_e::COPY_VERT, std::make_shared<copy_vert_rt>(shdr_copy_vert_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_shared<ssbo_rt>(mode, shdr_ssbo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_GEO, std::make_shared<ssbo_geo_rt>(mode, shdr_ssbo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_VERT, std::make_shared<ssbo_vert_rt>(mode, shdr_ssbo_vert_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_QUAD, std::make_shared<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_STRIP, std::make_shared<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_MUZIC, std::make_shared<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
+
+        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_shared<mesh_rt>(mode, shdr_mesh_options)));
 
         rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO, std::make_unique<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
+            std::make_pair(method_e::MESH_ALTN, std::make_shared<mesh_altn_rt>(mode, shdr_mesh_altn_options)));
+
         rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_TASK, std::make_unique<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
+            std::make_pair(method_e::MESH_GEO, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO_TASK, std::make_shared<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
 
         rendering_tasks_.insert(std::make_pair(
-            method_e::MESH_GEO_ALTN, std::make_unique<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
+            method_e::MESH_GEO_ALTN, std::make_shared<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -218,12 +220,14 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
 #ifdef PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
         frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer;
     upload_timer.name = "upload";
     upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
     render_timer.name = "render";
     render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
-    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer});
+    compute_timer.name = "compute";
+    compute_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer});
 #endif
     if (!create_shaders())
         return false;
@@ -312,16 +316,20 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         return false;
 
     bool new_data = false;
-    if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID() || upload_mode_slot_.IsDirty()) {
+    if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID() || upload_mode_slot_.IsDirty() /*||
+        method_slot_.IsDirty()*/) {
+        //rt->cleanup();
         loadData(*in_call);
         update_upload_setting();
         in_data_hash_ = in_call->DataHash();
         frame_id_ = in_call->FrameID();
         new_data = true;
         upload_mode_slot_.ResetDirty();
+        method_slot_.ResetDirty();
     }
-
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
+    auto& rt = rendering_tasks_[method];
+
     if (method_slot_.IsDirty()) {
         new_data = true;
         method_slot_.ResetDirty();
@@ -332,9 +340,6 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         new_data = true;
         upload_mode_slot_.ResetDirty();
     }*/
-
-
-    auto& rt = rendering_tasks_[method];
 
 
     if (!(old_cam_ == cam)) {
@@ -387,8 +392,15 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
         pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
 #endif
-
-        rt->upload(data_);
+        if (method == method_e::COPY) {
+            std::dynamic_pointer_cast<copy_rt>(rt)->upload(
+                data_, pm, timing_handles_[2], this->GetCoreInstance()->GetFrameID());
+        } else if (method == method_e::COPY_VERT) {
+            std::dynamic_pointer_cast<copy_vert_rt>(rt)->upload(
+                data_, pm, timing_handles_[2], this->GetCoreInstance()->GetFrameID());
+        } else {
+            rt->upload(data_);
+        }
 
 #ifdef PROFILING
         pm.stop_timer(timing_handles_[0]);
@@ -404,9 +416,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
                                                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
     pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
 #endif
-
     rt->render(ubo_);
-
 #ifdef PROFILING
     pm.stop_timer(timing_handles_[1]);
 #endif
@@ -667,6 +677,20 @@ bool megamol::moldyn_gl::rendering::vao_rt::upload(data_package_t const& package
 }
 
 
+bool megamol::moldyn_gl::rendering::vao_rt::cleanup() {
+    if (!vaos_.empty())
+        glDeleteVertexArrays(vaos_.size(), vaos_.data());
+
+    if (!vbos_.empty())
+        glDeleteBuffers(vbos_.size(), vbos_.data());
+
+    if (!cbos_.empty())
+        glDeleteBuffers(cbos_.size(), cbos_.data());
+
+    return true;
+}
+
+
 megamol::moldyn_gl::rendering::ssbo_rt::ssbo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
               std::filesystem::path("srtest/srtest.frag.glsl")) {}
@@ -809,6 +833,16 @@ bool megamol::moldyn_gl::rendering::tex_rt::upload(data_package_t const& package
     return true;
 }
 
+bool megamol::moldyn_gl::rendering::tex_rt::cleanup() {
+    if (!tex_.empty())
+        glDeleteTextures(tex_.size(), tex_.data());
+
+    if (!buf_.empty())
+        glDeleteBuffers(buf_.size(), buf_.data());
+
+    return true;
+}
+
 
 megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL const& options)
         : rendering_task(upload_mode::NULL_MODE, "SRTestCopy", options,
@@ -824,23 +858,7 @@ megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL 
 
 
 megamol::moldyn_gl::rendering::copy_rt::~copy_rt() {
-    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-
-    glDeleteBuffers(xbos_.size(), xbos_.data());
-
-    glDeleteBuffers(ybos_.size(), ybos_.data());
-
-    glDeleteBuffers(zbos_.size(), zbos_.data());
-
-    glDeleteBuffers(radbos_.size(), radbos_.data());
-
-    glDeleteBuffers(rbos_.size(), rbos_.data());
-
-    glDeleteBuffers(gbos_.size(), gbos_.data());
-
-    glDeleteBuffers(bbos_.size(), bbos_.data());
-
-    glDeleteBuffers(abos_.size(), abos_.data());
+    cleanup();
 }
 
 
@@ -972,6 +990,145 @@ bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& packag
     return true;
 }
 
+bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package,
+    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle,
+    frontend_resources::PerformanceManager::frame_type id) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+    copy_bos_.resize(num_ssbos);
+    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+    xbos_.resize(num_ssbos);
+    glCreateBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+    ybos_.resize(num_ssbos);
+    glCreateBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+    zbos_.resize(num_ssbos);
+    glCreateBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+    radbos_.resize(num_ssbos);
+    glCreateBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+    rbos_.resize(num_ssbos);
+    glCreateBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+    gbos_.resize(num_ssbos);
+    glCreateBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+    bbos_.resize(num_ssbos);
+    glCreateBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+    abos_.resize(num_ssbos);
+    glCreateBuffers(abos_.size(), abos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
+
+        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
+            package.x[i].data(), 0);
+
+        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
+            package.y[i].data(), 0);
+
+        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
+            package.z[i].data(), 0);
+
+        glNamedBufferStorage(radbos_[i],
+            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
+            0);
+
+        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
+            package.r[i].data(), 0);
+
+        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
+            package.g[i].data(), 0);
+
+        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
+            package.b[i].data(), 0);
+
+        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
+            package.a[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+#ifdef PROFILING
+    pm.set_transient_comment(handle, "COPY");
+    pm.start_timer(handle, id);
+#endif
+
+    comp_program_->use();
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+
+        glDispatchCompute(num_prims / 32 + 1, 1, 1);
+    }
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glUseProgram(0);
+
+#ifdef PROFILING
+    pm.stop_timer(handle);
+#endif
+
+    return true;
+}
+
+bool megamol::moldyn_gl::rendering::copy_rt::cleanup() {
+    if (!copy_bos_.empty())
+        glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+
+    if (!xbos_.empty())
+        glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    if (!ybos_.empty())
+        glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    if (!zbos_.empty())
+        glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    if (!radbos_.empty())
+        glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    if (!rbos_.empty())
+        glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    if (!gbos_.empty())
+        glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    if (!bbos_.empty())
+        glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    if (!abos_.empty())
+        glDeleteBuffers(abos_.size(), abos_.data());
+
+    return true;
+}
+
 
 megamol::moldyn_gl::rendering::copy_vert_rt::copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options)
         : rendering_task(upload_mode::NULL_MODE, "SRTestCopyVert", options,
@@ -988,23 +1145,7 @@ megamol::moldyn_gl::rendering::copy_vert_rt::copy_vert_rt(msf::ShaderFactoryOpti
 
 
 megamol::moldyn_gl::rendering::copy_vert_rt::~copy_vert_rt() {
-    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-
-    glDeleteBuffers(xbos_.size(), xbos_.data());
-
-    glDeleteBuffers(ybos_.size(), ybos_.data());
-
-    glDeleteBuffers(zbos_.size(), zbos_.data());
-
-    glDeleteBuffers(radbos_.size(), radbos_.data());
-
-    glDeleteBuffers(rbos_.size(), rbos_.data());
-
-    glDeleteBuffers(gbos_.size(), gbos_.data());
-
-    glDeleteBuffers(bbos_.size(), bbos_.data());
-
-    glDeleteBuffers(abos_.size(), abos_.data());
+    cleanup();
 }
 
 
@@ -1025,7 +1166,7 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::render(GLuint ubo) {
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, copy_bos_[i]);
 
-        glDrawArrays(GL_QUADS, 0, num_prims * 4);
+        glDrawArrays(GL_TRIANGLES, 0, num_prims * 6);
     }
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1130,6 +1271,146 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& p
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glUseProgram(0);
+
+    return true;
+}
+
+bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& package,
+    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle,
+    frontend_resources::PerformanceManager::frame_type id) {
+    auto const num_ssbos = package.positions.size();
+
+    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+    copy_bos_.resize(num_ssbos);
+    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
+
+    glDeleteBuffers(xbos_.size(), xbos_.data());
+    xbos_.resize(num_ssbos);
+    glCreateBuffers(xbos_.size(), xbos_.data());
+
+    glDeleteBuffers(ybos_.size(), ybos_.data());
+    ybos_.resize(num_ssbos);
+    glCreateBuffers(ybos_.size(), ybos_.data());
+
+    glDeleteBuffers(zbos_.size(), zbos_.data());
+    zbos_.resize(num_ssbos);
+    glCreateBuffers(zbos_.size(), zbos_.data());
+
+    glDeleteBuffers(radbos_.size(), radbos_.data());
+    radbos_.resize(num_ssbos);
+    glCreateBuffers(radbos_.size(), radbos_.data());
+
+    glDeleteBuffers(rbos_.size(), rbos_.data());
+    rbos_.resize(num_ssbos);
+    glCreateBuffers(rbos_.size(), rbos_.data());
+
+    glDeleteBuffers(gbos_.size(), gbos_.data());
+    gbos_.resize(num_ssbos);
+    glCreateBuffers(gbos_.size(), gbos_.data());
+
+    glDeleteBuffers(bbos_.size(), bbos_.data());
+    bbos_.resize(num_ssbos);
+    glCreateBuffers(bbos_.size(), bbos_.data());
+
+    glDeleteBuffers(abos_.size(), abos_.data());
+    abos_.resize(num_ssbos);
+    glCreateBuffers(abos_.size(), abos_.data());
+
+    num_prims_ = package.data_sizes;
+
+    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
+        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
+
+        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
+            package.x[i].data(), 0);
+
+        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
+            package.y[i].data(), 0);
+
+        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
+            package.z[i].data(), 0);
+
+        glNamedBufferStorage(radbos_[i],
+            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
+            0);
+
+        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
+            package.r[i].data(), 0);
+
+        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
+            package.g[i].data(), 0);
+
+        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
+            package.b[i].data(), 0);
+
+        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
+            package.a[i].data(), 0);
+    }
+
+    pl_data_ = package.pl_data;
+
+#ifdef PROFILING
+    pm.set_transient_comment(handle, "COPY_VERT");
+    pm.start_timer(handle, id);
+#endif
+
+    comp_program_->use();
+    for (int i = 0; i < num_prims_.size(); ++i) {
+        auto num_prims = num_prims_[i];
+        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
+
+        glDispatchCompute(num_prims / 32 + 1, 1, 1);
+    }
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glUseProgram(0);
+
+#ifdef PROFILING
+    pm.stop_timer(handle);
+#endif
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::copy_vert_rt::cleanup() {
+    if (!copy_bos_.empty())
+        glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
+
+    if (!xbos_.empty())
+        glDeleteBuffers(xbos_.size(), xbos_.data());
+
+    if (!ybos_.empty())
+        glDeleteBuffers(ybos_.size(), ybos_.data());
+
+    if (!zbos_.empty())
+        glDeleteBuffers(zbos_.size(), zbos_.data());
+
+    if (!radbos_.empty())
+        glDeleteBuffers(radbos_.size(), radbos_.data());
+
+    if (!rbos_.empty())
+        glDeleteBuffers(rbos_.size(), rbos_.data());
+
+    if (!gbos_.empty())
+        glDeleteBuffers(gbos_.size(), gbos_.data());
+
+    if (!bbos_.empty())
+        glDeleteBuffers(bbos_.size(), bbos_.data());
+
+    if (!abos_.empty())
+        glDeleteBuffers(abos_.size(), abos_.data());
 
     return true;
 }
@@ -1258,7 +1539,7 @@ bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::upload(data_package_t const& 
 
         std::vector<uint32_t> offsets;
         std::vector<DrawElementsIndirectCommand> commands;
-        
+
         constexpr int per_iter = 1000;
         auto num_iter = num_prims_[i] / per_iter;
         offsets.reserve(num_iter);
@@ -1288,6 +1569,20 @@ bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::upload(data_package_t const& 
         glNamedBufferStorage(cmd_buf_[i], sizeof(DrawElementsIndirectCommand) * commands.size(), commands.data(), 0);
         glNamedBufferStorage(offset_buf_[i], sizeof(uint32_t) * offsets.size(), offsets.data(), 0);
     }
+
+    return true;
+}
+
+
+bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::cleanup() {
+    if (!ind_buf_.empty())
+        glDeleteBuffers(ind_buf_.size(), ind_buf_.data());
+
+    if (!cmd_buf_.empty())
+        glDeleteBuffers(cmd_buf_.size(), cmd_buf_.data());
+
+    if (!offset_buf_.empty())
+        glDeleteBuffers(offset_buf_.size(), offset_buf_.data());
 
     return true;
 }
