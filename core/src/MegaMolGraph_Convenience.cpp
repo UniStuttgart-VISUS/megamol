@@ -23,8 +23,7 @@ static void err(std::string text) {
 MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
 
 std::string megamol::core::MegaMolGraph_Convenience::SerializeVersion() const {
-    std::string serVersion =
-        std::string("mmCheckVersion(\"") + utility::buildinfo::MEGAMOL_GIT_HASH() + "\")";
+    std::string serVersion = std::string("mmCheckVersion(\"") + utility::buildinfo::MEGAMOL_GIT_HASH() + "\")";
 
     return serVersion + '\n';
 }
