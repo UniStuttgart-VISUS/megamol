@@ -24,14 +24,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: master
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       # Checkout PR repo/branch
       - uses: actions/checkout@v2
         with:
           repository: ${{steps.pr-info.outputs.REPO}}
           ref: ${{steps.pr-info.outputs.REF}}
           path: pr
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       - name: Fix style
         # WARNING: This job runs with repo permissions! Do not execute any code from PR branch!
         run: |
@@ -48,8 +48,6 @@ jobs:
           else
             echo "Nothing to commit!"
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Comment
         if: failure()
         uses: actions/github-script@v5
