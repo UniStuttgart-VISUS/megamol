@@ -242,6 +242,11 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
 
     core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Max Vert %d; Max Ind %d", max_vert, max_ind);
 
+    GLint max_ssbo_size;
+    glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &max_ssbo_size);
+
+    core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Max SSBO Size %d;", max_ssbo_size);
+
     return true;
 }
 
@@ -289,6 +294,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
                 curlightDir = cam_pose.direction;
             } else {
                 auto lightDir = light.direction;
+                /*core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[SRTest] Light dir: (%f, %f, %f)", lightDir[0], lightDir[1], lightDir[2]);*/
                 if (lightDir.size() == 3) {
                     curlightDir[0] = lightDir[0];
                     curlightDir[1] = lightDir[1];
@@ -514,15 +521,19 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
             data_.pl_data.use_global_color[pl_idx] = 1;
-            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0], parts.GetGlobalColour()[1],
-                parts.GetGlobalColour()[2], parts.GetGlobalColour()[3]);
+            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0]/255, parts.GetGlobalColour()[1]/255,
+                parts.GetGlobalColour()[2]/255, parts.GetGlobalColour()[3]/255);
         }
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
             data_.pl_data.use_global_radii[pl_idx] = 1;
             data_.pl_data.global_radii[pl_idx] = parts.GetGlobalRadius();
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[SRTest] Having global radius: %f", data_.pl_data.global_radii[pl_idx]);
         } else {
             data_.pl_data.use_global_radii[pl_idx] = 0;
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[SRTest] Having no global radius");
         }
 
         auto const p_count = parts.GetCount();

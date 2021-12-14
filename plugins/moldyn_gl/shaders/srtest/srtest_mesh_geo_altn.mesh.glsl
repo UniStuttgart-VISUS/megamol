@@ -47,7 +47,7 @@ void main() {
         vec3 oc_pos = objPos - camPos;
         float sqrRad = rad * rad;
 
-        float dd = dot(oc_pos, oc_pos);
+        /*float dd = dot(oc_pos, oc_pos);
 
         float s = (sqrRad) / (dd);
 
@@ -60,7 +60,10 @@ void main() {
         v[0] = vec4(objPos - vr - vu, 1.0f);
         v[1] = vec4(objPos + vr - vu, 1.0f);
         v[2] = vec4(objPos + vr + vu, 1.0f);
-        v[3] = vec4(objPos - vr + vu, 1.0f);
+        v[3] = vec4(objPos - vr + vu, 1.0f);*/
+
+        mat4 v;
+        touchplane_woMVP(objPos, rad, oc_pos, v);
 
         /*vec4 projPos = MVP * vec4(objPos + rad * (camDir), 1.0f);
         projPos = projPos / projPos.w;*/

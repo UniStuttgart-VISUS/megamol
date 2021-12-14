@@ -112,8 +112,41 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::cleanup() {
     return true;
 }
 
+//void get_ssbo_meta(megamol::moldyn_gl::rendering::data_package_t const& package) {
+//    constexpr uint64_t max_size = 2147483647;
+//    auto const num_lists = package.data_sizes.size();
+//
+//    uint32_t total_num_ssbos = 0;
+//
+//    struct ssbo_job {
+//        float const* positions;
+//        float const* colors;
+//        float const* x;
+//        float const* y;
+//        float const* z;
+//        float const* rad;
+//        float const* r;
+//        float const* g;
+//        float const* b;
+//        float const* a;
+//
+//        uint64_t num_prims;
+//    };
+//
+//    for (uint32_t i = 0; i < num_lists; ++i) {
+//        auto const num_elements = package.data_sizes[i];
+//        auto const total_data_size = num_elements * 16;
+//        auto const num_list_ssbos = static_cast<uint32_t>(std::ceil(static_cast<double>(total_data_size) / static_cast<double>(max_size)));
+//
+//        total_num_ssbos += num_list_ssbos;
+//
+//
+//    }
+//}
 
 void megamol::moldyn_gl::rendering::ssbo_shader_task::upload_full_separate(data_package_t const& package) {
+    //constexpr uint64_t max_size = 2147483647;
+
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(xbos_.size(), xbos_.data());

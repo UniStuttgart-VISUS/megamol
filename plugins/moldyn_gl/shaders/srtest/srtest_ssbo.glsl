@@ -43,7 +43,8 @@ void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
     if (useGlobalRad) {
         rad = globalRad;
     } else {
-        rad = 0.001f;
+        //rad = 0.001f;
+        rad = 0.5f;
     }
 
     if (useGlobalCol) {
@@ -67,7 +68,8 @@ void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
     if (useGlobalRad) {
         rad = globalRad;
     } else {
-        rad = 0.001f;
+        //rad = 0.001f;
+        rad = 0.5f;
     }
 
     if (useGlobalCol) {

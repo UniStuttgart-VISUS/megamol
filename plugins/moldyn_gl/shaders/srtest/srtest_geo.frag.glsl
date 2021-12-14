@@ -1,7 +1,7 @@
 #version 450
 
 layout(location = 0) out vec4 outColor;
-//layout(depth_greater) out float gl_FragDepth;
+layout(depth_greater) out float gl_FragDepth;
 
 #include "srtest_ubo.glsl"
 

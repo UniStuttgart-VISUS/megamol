@@ -23,10 +23,12 @@ out Point{
 }
 g_pp;
 
+#include "srtest_touchplane.glsl"
+
 void main() {
     int idx = 0;
 
-    float dd = dot(v_pp[idx].oc_pos, v_pp[idx].oc_pos);
+    /*float dd = dot(v_pp[idx].oc_pos, v_pp[idx].oc_pos);
 
     float s = (v_pp[idx].sqrRad) / (dd);
 
@@ -44,7 +46,9 @@ void main() {
     v[0] = MVP * v[0];
     v[1] = MVP * v[1];
     v[2] = MVP * v[2];
-    v[3] = MVP * v[3];
+    v[3] = MVP * v[3];*/
+    mat4 v;
+    touchplane(v_pp[idx].objPos, v_pp[idx].rad, v_pp[idx].oc_pos, v);
 
     /*v[0] /= v[0].w;
     v[1] /= v[1].w;

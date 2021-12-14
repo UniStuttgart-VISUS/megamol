@@ -80,7 +80,7 @@ void main() {
     //touchplane_old(objPos, rad, oc_pos, v);
     touchplane(objPos, rad, oc_pos, v);
 #else
-    touchplane_old_v2(objPos, rad, oc_pos, v);
+    touchplane_v2(objPos, rad, oc_pos, v);
 #endif
 
     vec4 pos = v[inv_idx + bump_idx];
