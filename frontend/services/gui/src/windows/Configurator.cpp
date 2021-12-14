@@ -258,6 +258,11 @@ void megamol::gui::Configurator::PopUps() {
 
 void megamol::gui::Configurator::draw_window_menu() {
 
+    bool is_running_graph_active = false;
+    if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
+        is_running_graph_active = graph_ptr->IsRunning();
+    }
+
     ImGui::PushID("Configurator::Menu");
     // Menu
     if (ImGui::BeginMenuBar()) {
@@ -282,11 +287,7 @@ void megamol::gui::Configurator::draw_window_menu() {
             if (ImGui::MenuItem("Save Project",
                     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT].keycode.ToString().c_str(), false,
                     ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
-                bool is_running_graph = false;
-                if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    is_running_graph = graph_ptr->IsRunning();
-                }
-                if (is_running_graph) {
+                if (is_running_graph_active) {
                     this->graph_state.global_graph_save = true;
                 } else {
                     this->graph_state.configurator_graph_save = true;
@@ -304,8 +305,7 @@ void megamol::gui::Configurator::draw_window_menu() {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
 #ifdef PROFILING
-            if (ImGui::MenuItem("Profiling Bar", nullptr, this->graph_state.show_profiling_bar,
-                    (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+            if (ImGui::MenuItem("Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
                 this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
             }
 #endif // PROFILING

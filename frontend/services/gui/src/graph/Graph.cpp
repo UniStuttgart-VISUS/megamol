@@ -31,8 +31,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_show_grid(false)
         , gui_show_parameter_sidebar(true)
         , gui_change_show_parameter_sidebar(true)
-        , gui_change_show_profiling_bar(true)
         , gui_show_profiling_bar(false)
+        , gui_change_show_profiling_bar(true)
         , gui_profiling_bar_height(300.0f)
         , gui_graph_layout(0)
         , gui_parameter_sidebar_width(300.0f)
@@ -49,7 +49,11 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_parameters_splitter()
         , gui_profiling_splitter()
         , gui_rename_popup()
-        , gui_tooltip() {
+        , gui_tooltip()
+#ifdef PROFILING
+        , gui_profiling_run_button()
+#endif // PROFILING
+{
 
     this->filenames.first.first = false;
     this->filenames.first.second = "";
@@ -1497,6 +1501,11 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             const auto cursor_position = ImGui::GetCursorScreenPos();
             const auto available_space = ImGui::GetContentRegionAvail();
 
+            // Disable profiling bar for not running graphs
+            if (!this->IsRunning() && this->gui_show_profiling_bar) {
+                this->gui_show_profiling_bar = false;
+            }
+
             float graph_width_auto = available_space.x;
             this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_parameter_sidebar) {
@@ -2474,11 +2483,48 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    auto child_flags = ImGuiWindowFlags_NoMove;
     ImGui::SetNextWindowPos(position);
-    ImGui::BeginChild("profiling", size, false, child_flags);
+    ImGui::BeginChild("profiling_child", size, false, child_flags);
 
     ImGui::TextUnformatted("Profiling");
+    ImGui::SameLine();
+
+    // Lazy loading of run button textures
+    if (!this->gui_profiling_run_button.IsLoaded()) {
+        this->gui_profiling_run_button.LoadTextureFromFile(
+            GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+    }
+    this->gui_profiling_run_button.ToggleButton(this->gui_graph_state.interact.pause_profiling_update,
+        "Pause update of profiling values globally", "Continue updating of profiling values",
+        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+    ImGui::BeginTabBar("profiling_tab_bar", tab_bar_flags);
+
+    for (auto module_ptr : this->modules) {
+        if (module_ptr->ShowProfiling()) {
+            if (ImGui::BeginTabItem(module_ptr->FullName().c_str(), nullptr, ImGuiTabItemFlags_None)) {
+                module_ptr->DrawProfiling(this->gui_graph_state);
+                ImGui::EndTabItem();
+            }
+        }
+    }
+
+    ImGuiID call_id = 0;
+    for (auto call_ptr : this->calls) {
+        if (call_ptr->ShowProfiling()) {
+            ImGui::PushID(call_id);
+            if (ImGui::BeginTabItem(call_ptr->ClassName().c_str(), nullptr, ImGuiTabItemFlags_None)) {
+                call_ptr->DrawProfiling(this->gui_graph_state);
+                ImGui::EndTabItem();
+            }
+            call_id++;
+            ImGui::PopID();
+        }
+    }
+
+    ImGui::EndTabBar();
 
     ImGui::EndChild();
     ImGui::PopStyleVar(2);

@@ -216,6 +216,9 @@ private:
     SplitterWidget gui_profiling_splitter;
     PopUps gui_rename_popup;
     HoverToolTip gui_tooltip;
+#ifdef PROFILING
+    ImageWidget gui_profiling_run_button;
+#endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 
