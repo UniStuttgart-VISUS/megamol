@@ -197,6 +197,78 @@ bool megamol::gui::LogConsole::Draw() {
         this->scroll_up--;
     }
 
+    ImGui::EndChild();
+
+    // Console Input ----------------------------------------------------------
+
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted("Input");
+    this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/down] Browse command history.");
+    ImGui::SameLine();
+    auto popup_pos = ImGui::GetCursorScreenPos();
+    if (this->input_reclaim_focus) {
+        ImGui::SetKeyboardFocusHere();
+        this->input_reclaim_focus = false;
+    }
+    ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
+                                           ImGuiInputTextFlags_CallbackCompletion |
+                                           ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
+    if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
+            (void*)this->input_shared_data.get())) {
+        std::string command = "return " + this->input_buffer;
+        auto result = (*this->input_lua_func)(command.c_str());
+        if (std::get<0>(result)) {
+            // command was fine, no editing required
+            auto blah = std::get<1>(result);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(blah.c_str());
+            this->input_shared_data->history.back() = this->input_buffer;
+            this->input_shared_data->history.push_back("");
+            this->input_shared_data->history_index = this->input_shared_data->history.size() - 1;
+            this->input_buffer.clear();
+        } else {
+            auto blah = std::get<1>(result);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
+        }
+        this->input_reclaim_focus = true;
+    }
+    if (!this->input_shared_data->param_hint.empty()) {
+        const std::string t = "Parameter(s): " + this->input_shared_data->param_hint;
+        ImGui::SameLine();
+        ImGui::TextUnformatted(t.c_str());
+    }
+
+    std::string popup_id = "autocomplete_selector";
+    if (this->input_shared_data->open_autocomplete_popup) {
+        ImGui::OpenPopup(popup_id.c_str());
+        ImGui::SetNextWindowPos(popup_pos + ImGui::CalcTextSize(this->input_buffer.c_str()) +
+                                (ImVec2(2.0f, 0.0f) * style.ItemInnerSpacing));
+        ImGui::SetNextWindowFocus();
+        this->input_shared_data->open_autocomplete_popup = false;
+    }
+    if (ImGui::BeginPopup(popup_id.c_str())) {
+        for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
+            bool selected_candidate =
+                ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].first.c_str(), false,
+                    ImGuiSelectableFlags_AllowDoubleClick);
+            // Keyboard selection can only be confirmed with 'space'. Also allow confirmation using 'enter'
+            if (selected_candidate ||
+                (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {
+                this->input_buffer = this->input_shared_data->autocomplete_candidates[i].first;
+                this->input_buffer.append("()");
+                this->input_shared_data->autocomplete_candidates.clear();
+                this->input_shared_data->move_cursor_to_end = true;
+                this->input_reclaim_focus = true;
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+    // Check if pop-up was closed last frame (needed to detect pop-up closing for reclaiming input focus )
+    if (this->is_autocomplete_popup_open && !ImGui::IsPopupOpen(popup_id.c_str())) {
+        this->input_reclaim_focus = true;
+    }
+    this->is_autocomplete_popup_open = ImGui::IsPopupOpen(popup_id.c_str());
+
     return true;
 }
 
@@ -233,6 +305,28 @@ void megamol::gui::LogConsole::print_message(const LogBuffer::LogEntry& entry, u
     }
 }
 
+
+void LogConsole::SetLuaFunc(lua_func_type* func) {
+    this->input_lua_func = func;
+
+    if (this->input_shared_data->commands.size() == 0) {
+        auto result = (*this->input_lua_func)("return mmHelp()");
+        if (std::get<0>(result)) {
+            auto res = std::get<1>(result);
+            std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);
+            auto cmd_begin = std::sregex_iterator(res.begin(), res.end(), cmd_regex);
+            auto cmd_end = std::sregex_iterator();
+            for (auto i = cmd_begin; i != cmd_end; ++i) {
+                auto match_str = (*i).str();
+                auto bracket_pos = match_str.find('(');
+                auto command = match_str.substr(0, bracket_pos);
+                auto param_hint =
+                    match_str.substr(bracket_pos + 1, (match_str.length() - bracket_pos - 2)); // omit brackets
+                this->input_shared_data->commands.push_back({command, param_hint});
+            }
+        }
+    }
+}
 
 void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
 

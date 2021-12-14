@@ -58,6 +58,8 @@ public:
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
+    void SetLuaFunc(lua_func_type* func);
+
 private:
     // VARIABLES --------------------------------------------------------------
 
