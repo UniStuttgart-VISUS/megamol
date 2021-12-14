@@ -197,8 +197,11 @@ private:
     bool gui_show_grid;
     bool gui_show_parameter_sidebar;
     bool gui_change_show_parameter_sidebar;
-    unsigned int gui_graph_layout;
     float gui_parameter_sidebar_width;
+    bool gui_show_profiling_bar;
+    bool gui_change_show_profiling_bar;
+    float gui_profiling_bar_height;
+    unsigned int gui_graph_layout;
     bool gui_reset_zooming;
     bool gui_increment_zooming;
     bool gui_decrement_zooming;
@@ -216,7 +219,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_menu(GraphState_t& state);
-    void draw_canvas(float child_width, GraphState_t& state);
+    void draw_canvas(ImVec2 size, GraphState_t& state);
     void draw_parameters(float child_width);
 
     void draw_canvas_grid() const;

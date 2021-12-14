@@ -286,6 +286,7 @@ typedef struct _graph_state_ {
     FontScalingArray_t graph_zoom_font_scalings; // in
     float graph_width;                           // in
     bool show_parameter_sidebar;                 // in
+    bool show_profiling_bar;                     // in
     megamol::gui::HotkeyMap_t hotkeys;           // in out
     ImGuiID graph_selected_uid;                  // out
     bool graph_delete;                           // out

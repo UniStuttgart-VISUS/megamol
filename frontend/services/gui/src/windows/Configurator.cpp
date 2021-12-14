@@ -48,6 +48,7 @@ megamol::gui::Configurator::Configurator(
     this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
+    this->graph_state.show_profiling_bar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
     this->graph_state.configurator_graph_save = false;
@@ -139,8 +140,7 @@ bool megamol::gui::Configurator::Draw() {
     if (this->show_module_list_sidebar) {
         this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
 
-        this->splitter_widget.Widget(
-            SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
+        this->splitter_widget.Widget(true, SplitterWidget::FixedSplitterSide::LEFT_TOP, this->module_list_sidebar_width, this->graph_state.graph_width);
         this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, this->show_module_list_popup);
 
         this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
@@ -302,6 +302,12 @@ void megamol::gui::Configurator::draw_window_menu() {
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
+#ifdef PROFILING
+            if (ImGui::MenuItem("Profiling Bar", nullptr, this->graph_state.show_profiling_bar,
+                    (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
+            }
+#endif // PROFILING
             ImGui::EndMenu();
         }
 

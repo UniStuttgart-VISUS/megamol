@@ -31,6 +31,9 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_show_grid(false)
         , gui_show_parameter_sidebar(true)
         , gui_change_show_parameter_sidebar(true)
+        , gui_change_show_profiling_bar(true)
+        , gui_show_profiling_bar(false)
+        , gui_profiling_bar_height(300.0f)
         , gui_graph_layout(0)
         , gui_parameter_sidebar_width(300.0f)
         , gui_reset_zooming(true)
@@ -1138,7 +1141,15 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             this->gui_change_show_parameter_sidebar = true;
                             this->gui_show_parameter_sidebar = tmp_show_parameter_sidebar;
                         }
-
+#ifdef PROFILING
+                        bool tmp_show_profiling_bar = false;
+                        this->gui_change_show_profiling_bar = false;
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_profiling_bar"}, &tmp_show_profiling_bar)) {
+                            this->gui_change_show_profiling_bar = true;
+                            this->gui_show_profiling_bar = tmp_show_profiling_bar;
+                        }
+#endif // PROFILING
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"parameter_sidebar_width"}, &this->gui_parameter_sidebar_width);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_grid"}, &this->gui_show_grid);
@@ -1291,6 +1302,8 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
             this->gui_show_parameter_sidebar;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_profiling_bar"] =
+            this->gui_show_profiling_bar;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
             this->gui_parameter_sidebar_width;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->gui_show_grid;
@@ -1384,10 +1397,16 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 state.show_parameter_sidebar = this->gui_show_parameter_sidebar;
             }
             this->gui_change_show_parameter_sidebar = false;
-
             this->gui_show_parameter_sidebar = state.show_parameter_sidebar;
-            this->gui_graph_state.interact.graph_is_running = this->IsRunning();
 
+            // Only load gui_show_profiling_bar from project file for running graph
+            if (this->gui_change_show_profiling_bar && this->IsRunning()) {
+                state.show_profiling_bar = this->gui_show_profiling_bar;
+            }
+            this->gui_change_show_profiling_bar = false;
+            this->gui_show_profiling_bar = state.show_profiling_bar;
+
+            this->gui_graph_state.interact.graph_is_running = this->IsRunning();
             this->gui_graph_state.hotkeys = state.hotkeys;
             this->gui_graph_state.groups.clear();
             for (auto& group : this->GetGroups()) {
@@ -1472,11 +1491,16 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             float graph_width_auto = 0.0f;
             this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_parameter_sidebar) {
-                this->gui_splitter_widget.Widget(
-                    SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->gui_parameter_sidebar_width);
+                this->gui_splitter_widget.Widget(true, SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_width_auto, this->gui_parameter_sidebar_width);
             }
 
-            this->draw_canvas(graph_width_auto, state);
+            float graph_height_auto = 0.0f;
+            this->gui_profiling_bar_height *= megamol::gui::gui_scaling.Get();
+            if (this->gui_show_profiling_bar) {
+                this->gui_splitter_widget.Widget(false, SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_height_auto, this->gui_profiling_bar_height);
+            }
+
+            this->draw_canvas(ImVec2(graph_width_auto, graph_height_auto), state);
 
             if (this->gui_show_parameter_sidebar) {
                 ImGui::SameLine();
@@ -2068,7 +2092,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
 }
 
 
-void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
+void megamol::gui::Graph::draw_canvas(ImVec2 size, GraphState_t& state) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -2115,7 +2139,7 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-    ImGui::BeginChild("region", ImVec2(graph_width, 0.0f), true, child_flags);
+    ImGui::BeginChild("region", size, true, child_flags);
 
     this->gui_canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_None); // Ignores Pop-Ups like Context-Menu
 

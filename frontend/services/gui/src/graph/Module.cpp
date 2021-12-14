@@ -422,7 +422,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 bool profiling_button = false;
 #ifdef PROFILING
                 profiling_button = true;
-#endif
+#endif // PROFILING
                 unsigned int button_count = (graph_entry_button) ? (1) : (0);
                 button_count += (parameter_button) ? (1) : (0);
                 button_count += (profiling_button) ? (1) : (0);
@@ -449,7 +449,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         text_pos_left_upper = ImVec2(module_center.x - (text_width / 2.0f),
                             module_rect_min.y + (1.0f * ImGui::GetFrameHeightWithSpacing()));
                     }
-#endif
+#endif // PROFILING
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
@@ -471,7 +471,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         ImGui::SetCursorScreenPos(ImVec2(module_center.x - item_x_offset,
                             module_rect_min.y + (2.0f * ImGui::GetFrameHeightWithSpacing())));
                     }
-#endif
+#endif // PROFILING
                     if (graph_entry_button) {
                         bool is_graph_entry = this->IsGraphEntry();
                         if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
@@ -548,7 +548,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->draw_profiling_data(state);
                         }
                     }
-#endif
+#endif // PROFILING
                 }
 
                 // Draw Outline
@@ -597,7 +597,7 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
     bool profiling_button = false;
 #ifdef PROFILING
     profiling_button = true;
-#endif
+#endif // PROFILING
     float button_count = (graph_entry_button) ? (1.0f) : (0.0f);
     button_count += (parameter_button) ? (1.0f) : (0.0f);
     button_count += (profiling_button) ? (1.0f) : (0.0f);
@@ -643,7 +643,7 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         module_height = std::max(module_height, (3.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) +
                                                     (this->profiling_window_height) + (1.5f * GUI_SLOT_RADIUS));
     }
-#endif
+#endif // PROFILING
 
     // Clamp to minimum size
     this->gui_size = ImVec2(std::max(module_width, (2.0f * megamol::gui::gui_scaling.Get())),

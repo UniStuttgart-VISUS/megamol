@@ -244,7 +244,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 #ifdef PROFILING
                     rect_size.x += 2.0f * ImGui::GetTextLineHeightWithSpacing();
                     rect_size.y = std::max(rect_size.y, ImGui::GetTextLineHeightWithSpacing());
-#endif
+#endif // PROFILING
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
 #ifdef PROFILING
@@ -254,7 +254,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ((this->profiling_window_height * state.canvas.zooming) +
                                 (style.ItemSpacing.y * 2.0f * state.canvas.zooming) + rect_size.y));
                     }
-#endif
+#endif // PROFILING
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     std::string button_label = "call_" + std::to_string(this->uid);
@@ -370,7 +370,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                     call_center.y + (call_center.y - call_rect_min.y)));
                             this->draw_profiling_data(state);
                         }
-#endif
+#endif // PROFILING
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
