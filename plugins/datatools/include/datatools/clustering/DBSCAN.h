@@ -39,7 +39,7 @@ inline void expand_cluster(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t 
 
     search_res_t<T> tmp_res(minPts);
 
-    for (search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
+    for (typename search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
         auto const idx = Nvec[vec_idx].first;
         if (visited[idx] == 0) {
             visited[idx] = 1;
@@ -95,7 +95,7 @@ inline void expand_cluster_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>> co
 
     search_res_t<T> tmp_res(minPts);
 
-    for (search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
+    for (typename search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
         auto const idx = Nvec[vec_idx].first;
         if (visited[idx] == 0) {
             visited[idx] = 1;
@@ -164,7 +164,7 @@ inline void expand_cluster_with_similarity_and_score(std::shared_ptr<kd_tree_t<T
     T pivot_score = P_score;
     index_t pivot_size = 1;
 
-    for (search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
+    for (typename search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
         auto const idx = Nvec[vec_idx].first;
         if (visited[idx] == 0) {
             visited[idx] = 1;
@@ -272,7 +272,7 @@ inline void expand_GROWING_with_similarity_and_score(std::shared_ptr<kd_tree_t<T
     while (!Nvec.empty()) {
         search_res_t<T> nextNvec;
         nextNvec.reserve(minPts);
-        for (search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
+        for (typename search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
             auto const idx = Nvec[vec_idx].first;
             if (visited[idx] == 0) {
                 visited[idx] = 1;
