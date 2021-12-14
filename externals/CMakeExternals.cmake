@@ -180,19 +180,20 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
-        -DBUILD_TESTING=OFF
+        -DADIOS2_BUILD_EXAMPLES=OFF
+        -DADIOS2_BUILD_TESTING=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
         -DADIOS2_USE_PNG=OFF
+        -DADIOS2_USE_Profiling=OFF
         -DADIOS2_USE_Python=OFF
         -DADIOS2_USE_SST=OFF
         -DADIOS2_USE_SZ=OFF
         -DADIOS2_USE_SysVShMem=OFF
         -DADIOS2_USE_ZFP=OFF
         -DADIOS2_USE_ZeroMQ=OFF
-        -DADIOS2_USE_Profiling=OFF
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
     add_external_library(adios2
@@ -815,7 +816,7 @@ function(require_external NAME)
 
     target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
 
-  # oneTBB
+  # tbb
   elseif (NAME STREQUAL "tbb")
     if (TARGET tbb)
       return()
@@ -825,38 +826,26 @@ function(require_external NAME)
       set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
     endif ()
 
-    set(TBB_REPO "https://github.com/oneapi-src/oneTBB.git")
-    set(TBB_TAG "v2021.3.0")
-    set(TBB_ARGS "-DTBB_TEST=OFF")
-
     if (WIN32)
-      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
-      set(TBB_DLL "bin/tbb12.dll")
-
-      add_external_project(tbb SHARED
-        GIT_REPOSITORY ${TBB_REPO}
-        GIT_TAG ${TBB_TAG}
-        CMAKE_ARGS ${TBB_ARGS}
-        BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}" "<INSTALL_DIR>/${TBB_LIB}")
-      add_external_library(tbb
-        PROJECT tbb
-        LIBRARY "${TBB_DLL}"
-        IMPORT_LIBRARY "${TBB_LIB}")
+      set(TBB_LIB "bin/tbb12.dll")
+      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
     else ()
-      # todo this is surely not portable, as always
-      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12.3")
-
-      add_external_project(tbb SHARED
-        GIT_REPOSITORY ${TBB_REPO}
-        GIT_TAG ${TBB_TAG}
-        CMAKE_ARGS ${TBB_ARGS}
-        BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_LIB}"
-        )
-      add_external_library(tbb
-        PROJECT tbb
-        LIBRARY "${TBB_LIB}"
-        )
+      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12")
     endif ()
+
+    add_external_project(tbb SHARED
+      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
+      GIT_TAG v2021.3.0
+      CMAKE_ARGS
+        -DTBB_TEST=OFF
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${TBB_LIB}"
+        "<INSTALL_DIR>/${TBB_LIB_IMPORT}")
+
+    add_external_library(tbb
+      PROJECT tbb
+      IMPORT_LIBRARY "${TBB_LIB_IMPORT}"
+      LIBRARY "${TBB_LIB}")
 
   # tinyobjloader
   elseif (NAME STREQUAL "tinyobjloader")
