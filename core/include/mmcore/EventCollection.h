@@ -19,6 +19,13 @@ namespace megamol {
 namespace core {
 
 class EventCollection {
+private:
+    struct BaseEvent {
+        BaseEvent(size_t frame_id) : frame_id(frame_id) {}
+
+        size_t frame_id;
+    };
+
 public:
     template<bool is_consumable>
     struct Event : public BaseEvent {
@@ -55,12 +62,6 @@ public:
     void clear();
 
 private:
-    struct BaseEvent {
-        BaseEvent(size_t frame_id) : frame_id(frame_id) {}
-
-        size_t frame_id;
-    };
-
     // Note to future maintainer: Use of pointer type for individual events is part of
     // what turns this into a generic solution that requires no knowledge about the actual
     // event types contained later on. At the same time, it will propably not scale with
