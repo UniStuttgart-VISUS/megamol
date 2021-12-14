@@ -1786,8 +1786,8 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             return;
         }
 
-        const auto child_flags = ImGuiWindowFlags_None;
-        ImGui::BeginChild("graph_child_window", ImVec2(state.graph_width, 0.0f), true, child_flags);
+        ImGui::BeginChild("graph_tab_indow", ImVec2(state.graph_width, 0.0f), false,
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 
         // Assuming only one closed tab/graph per frame.
         bool popup_close_unsaved = false;

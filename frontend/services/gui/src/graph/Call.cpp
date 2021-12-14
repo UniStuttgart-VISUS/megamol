@@ -13,8 +13,8 @@
 #ifdef PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
-#define CALL_PROFILING_PLOT_HEIGHT (200.0f)
-#define CALL_PROFILING_WINDOW_WIDTH (450.0f)
+#define CALL_PROFILING_PLOT_HEIGHT (200.0f * megamol::gui::gui_scaling.Get())
+#define CALL_PROFILING_WINDOW_WIDTH (450.0f * megamol::gui::gui_scaling.Get())
 #endif // PROFILING
 
 using namespace megamol;

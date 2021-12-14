@@ -212,15 +212,17 @@ private:
     bool gui_canvas_hovered;
     float gui_current_font_scaling;
     StringSearchWidget gui_search_widget;
-    SplitterWidget gui_splitter_widget;
+    SplitterWidget gui_parameters_splitter;
+    SplitterWidget gui_profiling_splitter;
     PopUps gui_rename_popup;
     HoverToolTip gui_tooltip;
 
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_menu(GraphState_t& state);
-    void draw_canvas(ImVec2 size, GraphState_t& state);
-    void draw_parameters(float child_width);
+    void draw_canvas(ImVec2 position, ImVec2 size, GraphState_t& state);
+    void draw_parameters(ImVec2 position, ImVec2 size);
+    void draw_profiling(ImVec2 position, ImVec2 size);
 
     void draw_canvas_grid() const;
     void draw_canvas_dragged_call();

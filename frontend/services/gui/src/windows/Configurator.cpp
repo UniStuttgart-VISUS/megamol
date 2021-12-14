@@ -140,7 +140,8 @@ bool megamol::gui::Configurator::Draw() {
     if (this->show_module_list_sidebar) {
         this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
 
-        this->splitter_widget.Widget(true, SplitterWidget::FixedSplitterSide::LEFT_TOP, this->module_list_sidebar_width, this->graph_state.graph_width);
+        this->splitter_widget.Widget("module_splitter", true, 0.0f, SplitterWidget::FixedSplitterSide::LEFT_TOP,
+            this->module_list_sidebar_width, this->graph_state.graph_width);
         this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, this->show_module_list_popup);
 
         this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
