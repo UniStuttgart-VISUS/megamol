@@ -57,7 +57,7 @@ void touchplane(vec3 objPos, float rad, out vec4 projPos, out float l) {
 void touchplane(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
     float dd = dot(oc_pos, oc_pos);
 
-    float s = (rad*rad) / (dd);
+    float s = (rad * rad) / (dd);
 
     float vi = rad / sqrt(1.0f - s);
 

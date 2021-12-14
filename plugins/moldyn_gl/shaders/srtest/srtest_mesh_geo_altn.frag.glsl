@@ -22,6 +22,7 @@ layout(depth_greater) out float gl_FragDepth;
 #include "srtest_depth.glsl"
 
 void main() {
+    gl_FragDepth = gl_FragCoord.z;
     // float tf = dot(pp.oc_pos, pp.ray);
     vec3 tt = pp.ray.w * pp.ray.xyz - pp.oc_pos;
     float delta = pp.sqrRad - dot(tt, tt);
@@ -43,6 +44,9 @@ void main() {
 
     outColor = vec4(LocalLighting(pp.ray.xyz, normal, lightDir, pp.pointColor.rgb), pp.pointColor.a);
     // outColor = vec4(0.5f * (pp.ray + 1.0f), 1);
+
+    /*if (delta < 0.0f)
+        outColor = vec4(1.0f, 174.0f / 256.0f, 201.0f / 256.0f, 1.0f);*/
 
     gl_FragDepth = depth(t);
 }

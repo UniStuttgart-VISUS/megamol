@@ -6,7 +6,7 @@ in Point {
     flat float sqrRad;
     flat vec4 pointColor;
     flat vec3 oc_pos;
-    flat float c;
+    //flat float c;
 }
 pp;
 
@@ -28,7 +28,7 @@ void main() {
     float t;
     intersection(pp.objPos, pp.sqrRad, pp.oc_pos, pp.c, pp.rad, new_pos, normal, ray, t);*/
 
-    vec4 pos_ndc =
+    /*vec4 pos_ndc =
         vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);
     vec4 pos_clip = MVPinv * pos_ndc;
     vec3 pos_obj = pos_clip.xyz / pos_clip.w;
@@ -50,5 +50,17 @@ void main() {
 
     outColor = vec4(LocalLighting(ray, normal, lightDir, pp.pointColor.rgb), pp.pointColor.a);
 
-    gl_FragDepth = depth(t);
+    gl_FragDepth = depth(t);*/
+
+    vec3 normal;
+    vec3 ray;
+    float t;
+    gl_FragDepth = gl_FragCoord.z;
+    if (intersection_old(pp.oc_pos, pp.sqrRad, pp.rad, normal, ray, t)) {
+        outColor = vec4(LocalLighting(ray.xyz, normal, lightDir, pp.pointColor.rgb), pp.pointColor.a);
+        gl_FragDepth = depth(t);
+    } else {
+        //outColor = vec4(1.0f, 174.0f / 256.0f, 201.0f / 256.0f, 1.0f);
+        discard;
+    }
 }

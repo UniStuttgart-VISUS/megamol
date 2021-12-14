@@ -49,12 +49,13 @@ void main() {
     vec3 normal;
     vec3 ray;
     float t;
+    gl_FragDepth = gl_FragCoord.z;
     if (intersection_old(g_pp.oc_pos, g_pp.sqrRad, g_pp.rad, normal, ray, t)) {
         outColor = vec4(LocalLighting(ray.xyz, normal, lightDir, g_pp.pointColor.rgb), g_pp.pointColor.a);
+        gl_FragDepth = depth(t);
     } else {
         //outColor = vec4(1.0f, 174.0f / 256.0f, 201.0f / 256.0f, 1.0f);
         discard;
     }
 
-    gl_FragDepth = depth(t);
 }

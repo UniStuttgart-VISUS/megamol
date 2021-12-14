@@ -148,7 +148,10 @@ private:
 
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
 static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_TRIANGLES, 0, num_points * 6); };
-static draw_cmd_t dc_quads = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_quads = [](unsigned int num_points) { //glDrawArrays(GL_QUADS, 4040112*4, 4);
+    glDrawArrays(GL_QUADS, 0, num_points * 4);
+    //glDrawArrays(GL_QUADS, 3677773 * 4, 4);
+};
 static draw_cmd_t dc_strip = [](unsigned int num_points) { glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points); };
 static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
     //num_points /= 2;

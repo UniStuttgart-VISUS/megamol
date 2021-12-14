@@ -25,7 +25,7 @@ out Point {
     flat float sqrRad;
     flat vec4 pointColor;
     flat vec3 oc_pos;
-    flat float c;
+    //flat float c;
 }
 pp[];
 
@@ -38,11 +38,12 @@ void main() {
 
         pp[l_idx].oc_pos = -(camPos - pp[l_idx].objPos);
         pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
-        pp[l_idx].c = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos) - pp[l_idx].sqrRad;
+        //pp[l_idx].c = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos) - pp[l_idx].sqrRad;
 
         vec4 projPos;
         float l;
-        touchplane(pp[l_idx].objPos, pp[l_idx].rad, projPos, l);
+        //touchplane(pp[l_idx].objPos, pp[l_idx].rad, projPos, l);
+        touchplane_old(pp[l_idx].objPos, pp[l_idx].rad, pp[l_idx].oc_pos, projPos, l);   
 
         gl_MeshVerticesNV[l_idx].gl_Position = projPos;
         gl_MeshVerticesNV[l_idx].gl_PointSize = l;
