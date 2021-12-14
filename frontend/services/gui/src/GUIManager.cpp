@@ -434,7 +434,7 @@ bool GUIManager::PostDraw() {
 
         } catch (std::exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error... [%s at %s, %s, line %d]\n", ex.what() , __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unknown Error... [%s at %s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         }
 
         ///////////////////////////////////////////////////////////////////////////
