@@ -1,0 +1,62 @@
+name: Style-Fix
+
+on: issue_comment
+
+jobs:
+  style_fix:
+    name: Style-Fix
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/format' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Get PR Info
+        id: pr-info
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            })
+            core.setOutput('REPO', pr.data.head.repo.full_name);
+            core.setOutput('REF', pr.data.head.ref);
+      # Checkout master
+      - uses: actions/checkout@v2
+        with:
+          path: master
+          token: ${{ secrets.PAT_MEGAMOLSERVICE }}
+      # Checkout PR repo/branch
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{steps.pr-info.outputs.REPO}}
+          ref: ${{steps.pr-info.outputs.REF}}
+          path: pr
+          token: ${{ secrets.PAT_MEGAMOLSERVICE }}
+      - name: Fix style
+        # WARNING: This job runs with repo permissions! Do not execute any code from PR branch!
+        run: |
+          # Run style fix with script from master branch
+          cd pr
+          ../master/.ci/check_format.sh fix
+
+          # Commit changes
+          if ! git diff --quiet --exit-code; then
+            git config user.email "actions@megamol.org"
+            git config user.name "MegaMol-Bot"
+            git commit -am "Format fix."
+            git push
+          else
+            echo "Nothing to commit!"
+          fi
+      - name: Comment
+        if: failure()
+        uses: actions/github-script@v5
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Formatting failed! For details, please check the [log](https://github.com/'
+                    + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')!'
+            })
