@@ -355,25 +355,6 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Console Input ----------------------------------------------------------
 
-    // Lazy init of command list through lua interface itself
-    if (this->input_shared_data->commands.size() == 0) {
-        auto result = (*this->input_lua_func)("return mmHelp()");
-        if (std::get<0>(result)) {
-            auto res = std::get<1>(result);
-            std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);
-            auto cmd_begin = std::sregex_iterator(res.begin(), res.end(), cmd_regex);
-            auto cmd_end = std::sregex_iterator();
-            for (auto i = cmd_begin; i != cmd_end; ++i) {
-                auto match_str = (*i).str();
-                auto bracket_pos = match_str.find('(');
-                auto command = match_str.substr(0, bracket_pos);
-                auto param_hint =
-                    match_str.substr(bracket_pos + 1, (match_str.length() - bracket_pos - 2)); // omit brackets
-                this->input_shared_data->commands.push_back({command, param_hint});
-            }
-        }
-    }
-
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Input");
     this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/down] Browse command history.");
@@ -478,6 +459,28 @@ void megamol::gui::LogConsole::print_message(const LogBuffer::LogEntry& entry, u
     }
 }
 
+
+void LogConsole::SetLuaFunc(lua_func_type* func) {
+    this->input_lua_func = func;
+
+    if (this->input_shared_data->commands.size() == 0) {
+        auto result = (*this->input_lua_func)("return mmHelp()");
+        if (std::get<0>(result)) {
+            auto res = std::get<1>(result);
+            std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);
+            auto cmd_begin = std::sregex_iterator(res.begin(), res.end(), cmd_regex);
+            auto cmd_end = std::sregex_iterator();
+            for (auto i = cmd_begin; i != cmd_end; ++i) {
+                auto match_str = (*i).str();
+                auto bracket_pos = match_str.find('(');
+                auto command = match_str.substr(0, bracket_pos);
+                auto param_hint =
+                    match_str.substr(bracket_pos + 1, (match_str.length() - bracket_pos - 2)); // omit brackets
+                this->input_shared_data->commands.push_back({command, param_hint});
+            }
+        }
+    }
+}
 
 void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
