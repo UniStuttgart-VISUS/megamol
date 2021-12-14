@@ -2504,7 +2504,9 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     for (auto module_ptr : this->modules) {
         if (module_ptr->ShowProfiling()) {
-            if (ImGui::BeginTabItem(module_ptr->FullName().c_str(), nullptr, ImGuiTabItemFlags_None)) {
+            std::string label = "Module: " + module_ptr->FullName();
+            if (ImGui::BeginTabItem(label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+                ImGui::TextUnformatted("Region Name:");
                 module_ptr->DrawProfiling(this->gui_graph_state);
                 ImGui::EndTabItem();
             }
@@ -2515,7 +2517,9 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     for (auto call_ptr : this->calls) {
         if (call_ptr->ShowProfiling()) {
             ImGui::PushID(call_id);
-            if (ImGui::BeginTabItem(call_ptr->ClassName().c_str(), nullptr, ImGuiTabItemFlags_None)) {
+            std::string label = "Call: " + call_ptr->ClassName();
+            if (ImGui::BeginTabItem(label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+                ImGui::TextUnformatted("Callback Name:");
                 call_ptr->DrawProfiling(this->gui_graph_state);
                 ImGui::EndTabItem();
             }
