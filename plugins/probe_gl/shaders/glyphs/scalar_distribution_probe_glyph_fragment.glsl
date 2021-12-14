@@ -116,7 +116,7 @@ void main() {
         //    sample_value_normalized = (sample_value - min_value) / (value_range);
         //    //out_colour = fakeViridis(sample_value_normalized);
         //    //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-        //	//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
+        //    //if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         //}
         //else
         {
