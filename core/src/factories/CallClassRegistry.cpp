@@ -13,6 +13,7 @@
 
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/EventCall.h"
 #include "mmcore/FlagCalls.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
@@ -48,6 +49,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
     instance.RegisterAutoDescription<FlagCallRead_CPU>();
     instance.RegisterAutoDescription<FlagCallWrite_CPU>();
+    instance.RegisterAutoDescription<CallEvent>();
     instance.RegisterAutoDescription<view::CallRender3D>();
     instance.RegisterAutoDescription<param::FloatParamCall>();
     instance.RegisterAutoDescription<param::IntParamCall>();

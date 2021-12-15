@@ -4,7 +4,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-#include "DBSCAN.h"
+#include "datatools/clustering/DBSCAN.h"
 
 namespace megamol::datatools::clustering {
 class ParticleIColClustering : public AbstractParticleManipulator {
