@@ -46,9 +46,7 @@ bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& calle
         m_material_collection.second.push_back(filename);
     }
 
-    if (lhs_mtl_call->version() < m_version) {
-        lhs_mtl_call->setData(gpu_mtl_collections, m_version);
-    }
+    lhs_mtl_call->setData(gpu_mtl_collections, m_version);
 
     return true;
 }

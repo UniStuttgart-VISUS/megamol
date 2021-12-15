@@ -5,13 +5,13 @@
  */
 
 #include "ExtractMesh.h"
-#include "CallKDTree.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmadios/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "normal_3d_omp.h"
+#include "probe/CallKDTree.h"
 #include <limits>
 
 
@@ -89,10 +89,10 @@ ExtractMesh::ExtractMesh()
     this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_getDataCall);
 
-    this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
-    this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
+    this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
+    this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
     this->MakeSlotAvailable(&this->_deploySpheresCall);
 }
 
@@ -150,7 +150,8 @@ bool ExtractMesh::flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::P
             //    vertex_accessor[vertex_step * i + 0] - centerline_accessor[centerline_step * j + 0],
             //    vertex_accessor[vertex_step * i + 1] - centerline_accessor[centerline_step * j + 1],
             //    vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * j + 2]};
-            // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
+            // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] *
+            // diffvec[2]);
             std::array<float, 3> diff;
             diff[0] = point_cloud.points[i].x - _centerline[j][0];
             diff[1] = point_cloud.points[i].y - _centerline[j][1];
@@ -393,7 +394,8 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             }
 
         } else {
-            // auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+            // auto xyz =
+            // cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
             //               ->GetAsFloat();
             int coarse_factor = 30;
             auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
@@ -495,7 +497,7 @@ bool ExtractMesh::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var))
+        if (!cd->inquireVar(var))
             return false;
     }
 
@@ -530,7 +532,8 @@ bool ExtractMesh::getData(core::Call& call) {
         // put data in mesh
         mesh::MeshDataAccessCollection mesh;
 
-        mesh.addMesh(_mesh_attribs, _mesh_indices);
+        std::string identifier = std::string(FullName()) + "_mesh";
+        mesh.addMesh(identifier, _mesh_attribs, _mesh_indices);
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), m_version);
     }
 
@@ -575,7 +578,7 @@ bool ExtractMesh::getMetaData(core::Call& call) {
 }
 
 bool ExtractMesh::getParticleData(core::Call& call) {
-    auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (cm == nullptr)
         return false;
 
@@ -599,7 +602,7 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var))
+        if (!cd->inquireVar(var))
             return false;
     }
     if (cd->getDataHash() != _old_datahash)
@@ -623,9 +626,9 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     // cm->AccessParticles(0).SetGlobalRadius(0.02f);
     cm->AccessParticles(0).SetGlobalRadius(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-3);
     cm->AccessParticles(0).SetCount(_alphaHullCloud->points.size());
-    cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+    cm->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         reinterpret_cast<uint8_t*>(&_resultNormalCloud->points[0].x), sizeof(pcl::PointNormal));
-    cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+    cm->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
         &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
 
     _old_datahash = cd->getDataHash();
@@ -635,7 +638,7 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 }
 
 bool ExtractMesh::getParticleMetaData(core::Call& call) {
-    auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (cm == nullptr)
         return false;
 
@@ -690,7 +693,7 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var))
+        if (!cd->inquireVar(var))
             return false;
     }
 
@@ -727,7 +730,8 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
         // put data in line
         mesh::MeshDataAccessCollection line;
-        line.addMesh(_line_attribs, _line_indices);
+        std::string identifier = std::string(FullName()) + "_line";
+        line.addMesh(identifier, _line_attribs, _line_indices);
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), m_version);
 
         auto meta_data = cm->getMetaData();
@@ -802,7 +806,7 @@ bool ExtractMesh::getKDData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var))
+        if (!cd->inquireVar(var))
             return false;
     }
 
