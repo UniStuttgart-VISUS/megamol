@@ -9,7 +9,7 @@
 #include "GUIManager.h"
 #include "imgui_stdlib.h"
 #include "mmcore/utility/FileUtils.h"
-#include "mmcore/versioninfo.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "widgets/ButtonWidgets.h"
 #include "widgets/CorporateGreyStyle.h"
 #include "widgets/CorporateWhiteStyle.h"
@@ -1424,9 +1424,9 @@ void megamol::gui::GUIManager::draw_popups() {
         const std::string docu_link("https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui");
         const std::string imgui_link("https://github.com/ocornut/imgui");
 
-        const std::string mmstr = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
-                                  std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") +
-                                  std::string(MEGAMOL_CORE_COMP_REV) + ("\n");
+        const std::string mmstr = std::string("MegaMol - Version ") +
+                                  megamol::core::utility::buildinfo::MEGAMOL_VERSION() + ("\ngit# ") +
+                                  megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() + ("\n");
         const std::string mailstr = std::string("Contact: ") + email;
         const std::string webstr = std::string("Web: ") + web_link;
         const std::string gitstr = std::string("Git-Hub: ") + github_link;

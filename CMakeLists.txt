@@ -36,8 +36,8 @@ set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
 set(MEGAMOL_CORE_GL_DIR ${MEGAMOL_DIR}/core_gl)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
-# Versions
-include(global_versioninfo)
+# MegaMol build info library (version + config)
+include(megamol_build_info)
 
 # MegaMol options
 include(megamol_options)
