@@ -145,6 +145,7 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_NewFrame();
+        this->createOGLFramebuffer(framebuffer_size.x, framebuffer_size.y);
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
@@ -155,6 +156,7 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
         this->cpu_monitor.res_x = static_cast<int>(framebuffer_size.x);
         this->cpu_monitor.res_y = static_cast<int>(framebuffer_size.y);
         ImGui_ImplGeneric_NewFrame(&this->cpu_window, &this->cpu_monitor);
+        this->createCPUFramebuffer(framebuffer_size.x, framebuffer_size.y);
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -164,28 +166,26 @@ void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm:
 }
 
 
-bool megamol::gui::gui_render_backend::EnableRendering(unsigned int width, unsigned int height) {
+bool megamol::gui::gui_render_backend::EnableRendering(
+    unsigned int framebuffer_width, unsigned int framebuffer_height) {
 
     switch (this->initialized_backend) {
 #ifdef WITH_GL
     case (GUIRenderBackend::OPEN_GL): {
         GUI_GL_CHECK_ERROR
-        if (!this->createOGLFramebuffer(width, height)) {
-            return false;
-        }
 
         this->ogl_fbo->bind();
         /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         /// glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, framebuffer_width, framebuffer_height);
         glEnable(GL_DEPTH_TEST);
 
         GUI_GL_CHECK_ERROR
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        return this->createCPUFramebuffer(width, height);
+        return true;
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

@@ -274,12 +274,12 @@ bool GUIManager::PostDraw() {
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
+        ////////// DRAW GUI ///////////////////////////////////////////////////////
+
         // Enable backend rendering
         auto width = static_cast<int>(io.DisplaySize.x);
         auto height = static_cast<int>(io.DisplaySize.y);
-        this->render_backend.EnableRendering(width, height);
-
-        ////////// DRAW GUI ///////////////////////////////////////////////////////
+        this->render_backend.EnableRendering(width, height); 
 
         try {
 
@@ -308,13 +308,13 @@ bool GUIManager::PostDraw() {
                 "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
 
-        ///////////////////////////////////////////////////////////////////////////
-
         // Render the current ImGui frame
         ImGui::Render();
         auto draw_data = ImGui::GetDrawData();
         // Backend rendering
         this->render_backend.Render(draw_data);
+
+        ///////////////////////////////////////////////////////////////////////////
 
         // Loading new font -------------------------------------------------------
         // (after first imgui frame for default fonts being available)

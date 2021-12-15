@@ -57,7 +57,7 @@ public:
 
     void NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size);
 
-    bool EnableRendering(unsigned int width, unsigned int height);
+    bool EnableRendering(unsigned int framebuffer_width, unsigned int framebuffer_height);
 
     bool Render(ImDrawData* draw_data);
 
