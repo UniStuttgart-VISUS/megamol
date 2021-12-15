@@ -25,9 +25,9 @@
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamHandle.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/versioninfo.h"
 #include "mmcore/view/AbstractView.h"
 
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
@@ -93,9 +93,9 @@ void mmCoreMain(int argc, char* argv[]) {
 MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-    rv->VersionNumber[0] = (const char*)MEGAMOL_CORE_MAJOR_VER;
-    rv->VersionNumber[1] = (const char*)MEGAMOL_CORE_MINOR_VER;
-    rv->VersionNumber[2] = MEGAMOL_CORE_COMP_REV;
+    rv->VersionNumber[0] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MAJOR();
+    rv->VersionNumber[1] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MINOR();
+    rv->VersionNumber[2] = megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH().c_str();
 
 
     rv->SystemType = MMC_OSYSTEM_UNKNOWN;
@@ -125,21 +125,24 @@ MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
 #endif /* MEGAMOL_GLUT_ISDIRTY */
         ;
 
-    const char* src = MEGAMOL_CORE_NAME;
+    const char* src = "MegaMol Core";
     size_t buf_len = ::strlen(src);
     char* buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->NameStr = buf;
 
-    src = MEGAMOL_CORE_COPYRIGHT;
+    src = "Copyright (c) 2006 - 2021 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, "
+          "Germany)\n"
+          "Alle Rechte vorbehalten.\n"
+          "All rights reserved.\n";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->CopyrightStr = buf;
 
-    src = MEGAMOL_CORE_COMMENTS;
+    src = "";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);

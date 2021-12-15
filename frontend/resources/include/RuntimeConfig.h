@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "mmcore/versioninfo.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 
 namespace megamol {
 namespace frontend_resources {
@@ -113,7 +113,7 @@ struct RuntimeConfig {
         return std::string("RuntimeConfig values: "  ) +
             std::string("\n\tExecutable directory: "   ) + "\n\t\t" + megamol_executable_directory +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
-            std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
+            std::string("\n\tVersion: "              ) + megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() +
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +
