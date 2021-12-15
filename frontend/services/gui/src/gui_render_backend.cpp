@@ -277,7 +277,7 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         imgui_sw::bind_imgui_painting();
-        return true;        
+        return true;
     }
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

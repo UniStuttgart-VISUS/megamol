@@ -324,10 +324,10 @@ bool GUIManager::PostDraw() {
             bool load_success = false;
 
             if (!this->render_backend.SupportsCustomFonts()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Ignoring loading of custom font. Unsupported feature by currently used render backend.");
-            }
-            else if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                    this->gui_state.font_load_filename, std::string("ttf"))) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Ignoring loading of custom font. Unsupported feature by currently used render backend.");
+            } else if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+                           this->gui_state.font_load_filename, std::string("ttf"))) {
 
                 ImFontConfig config;
                 config.OversampleH = 4;
