@@ -16,7 +16,6 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/ResourceTestModule.h"
-#include "mmcore/UniFlagStorage.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "mmcore/job/DataWriterJob.h"
@@ -65,7 +64,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<view::light::TriDirectionalLighting>();
     instance.RegisterAutoDescription<FlagStorage>();
-    instance.RegisterAutoDescription<UniFlagStorage>();
     instance.RegisterAutoDescription<EventStorage>();
     instance.RegisterAutoDescription<view::View3D>();
     instance.RegisterAutoDescription<ResourceTestModule>();

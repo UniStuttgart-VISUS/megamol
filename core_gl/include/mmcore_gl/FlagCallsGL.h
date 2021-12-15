@@ -1,5 +1,5 @@
 /*
- * FlagCall_GL.h
+ * FlagCallsGL.h
  *
  * Author: Guido Reina and others
  * Copyright (C) 2016-2021 by Universitaet Stuttgart (VISUS).
@@ -8,21 +8,14 @@
 
 #pragma once
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
 #include "mmcore/CallGeneric.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore_gl/UniFlagStorageGL.h"
+#include "mmcore_gl/UniFlagStorage.h"
+
 
 namespace megamol {
 namespace core_gl {
-
-/**
- * Call for passing flag data (FlagStorage) between modules. This GL
- * variant just passes a GL buffer ID around and allows a call to ensure
- * the storage fits (at least) the required size
- */
 
 class MEGAMOLCORE_API FlagCallRead_GL
         : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_GL>, core::EmptyMetaData> {

@@ -114,9 +114,11 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
 
                     if (a_idx < _mesh_prefix_count.back()) {
                         auto const cur_sel = data->flags->operator[](a_idx);
-                        data->flags->operator[](a_idx) = cur_sel == core::FlagStorage::ENABLED
-                                                             ? core::FlagStorage::SELECTED
-                                                             : core::FlagStorage::ENABLED;
+                        data->flags->operator[](a_idx) =
+                            cur_sel == core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED)
+                                ? core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED |
+                                                                      core::FlagStorageTypes::flag_bits::SELECTED)
+                                : core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED);
                         fcw->setData(data, version + 1);
                         (*fcw)(core::FlagCallWrite_CPU::CallGetData);
                         os->setPickResult(-1, -1);

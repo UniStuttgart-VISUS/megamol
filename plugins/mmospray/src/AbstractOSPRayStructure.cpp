@@ -21,8 +21,8 @@ AbstractOSPRayStructure::AbstractOSPRayStructure()
         , getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure")
         , getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial")
         , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform")
-        , writeFlagsSlot("writeFlags", "")
         , readFlagsSlot("readFlags", "")
+        , writeFlagsSlot("writeFlags", "")
         , getClipplaneSlot("getClipPlaneSlot", "Connects to a Clipping plane slot") {
 
     this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0),
@@ -43,10 +43,10 @@ AbstractOSPRayStructure::AbstractOSPRayStructure()
     this->getClipplaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipplaneSlot);
 
-    writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
-    MakeSlotAvailable(&this->writeFlagsSlot);
     readFlagsSlot.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
     MakeSlotAvailable(&this->readFlagsSlot);
+    writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
+    MakeSlotAvailable(&this->writeFlagsSlot);
 
     this->structureContainer.isValid = true;
     this->time = -1.0f;

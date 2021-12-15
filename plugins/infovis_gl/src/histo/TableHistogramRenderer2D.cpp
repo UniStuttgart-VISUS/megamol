@@ -7,9 +7,8 @@
 #include "TableHistogramRenderer2D.h"
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::infovis_gl;

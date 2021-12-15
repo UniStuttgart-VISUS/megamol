@@ -14,8 +14,7 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/EventCall.h"
-#include "mmcore/FlagCall.h"
-#include "mmcore/UniFlagCalls.h"
+#include "mmcore/FlagCalls.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
@@ -48,7 +47,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<job::TickCall>();
     instance.RegisterAutoDescription<DirectDataWriterCall>();
     instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
-    instance.RegisterAutoDescription<FlagCall>();
     instance.RegisterAutoDescription<FlagCallRead_CPU>();
     instance.RegisterAutoDescription<FlagCallWrite_CPU>();
     instance.RegisterAutoDescription<CallEvent>();
