@@ -55,8 +55,10 @@ while read -r file; do
       output="$(clang-format-12 --dry-run --Werror "$file" 2>&1)"
       if [[ $? -ne 0 ]]; then
         EXIT_CODE=1
-        echo "ERROR: ClangFormat found issues in: $file"
+        echo "::error::ClangFormat found issues in: $file"
         #echo "$output"
+        # Show detailed diff. Requires ClangFormat to run again, but should mostly affect only a few files.
+        clang-format-12 "$file" | diff --color=always -u "$file" -
       fi
     fi
   fi
@@ -70,7 +72,7 @@ while read -r file; do
       mv -f "$tmp_file" "$file"
     else
       EXIT_CODE=1
-      echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
+      echo "::error::File is not UTF-8 encoded: $file ($encoding)"
     fi
   fi
 
@@ -81,7 +83,7 @@ while read -r file; do
       sed -i 's/\r$//' "$file"
     else
       EXIT_CODE=1
-      echo "ERROR: File contains CRLF line endings: $file"
+      echo "::error::File contains CRLF line endings: $file"
     fi
   fi
 
@@ -91,7 +93,7 @@ while read -r file; do
       sed -i '1s/^\xEF\xBB\xBF//' "$file"
     else
       EXIT_CODE=1
-      echo "ERROR: File starts with BOM: $file"
+      echo "::error::File starts with BOM: $file"
     fi
   fi
 
@@ -101,7 +103,7 @@ while read -r file; do
       sed -i -e '$a\' "$file"
     else
       EXIT_CODE=1
-      echo "ERROR: File does not end with new line: $file"
+      echo "::error::File does not end with new line: $file"
     fi
   fi
 
@@ -113,7 +115,7 @@ while read -r file; do
       mv -f "$tmp_file" "$file"
     else
       EXIT_CODE=1
-      echo "ERROR: File contains tabs: $file"
+      echo "::error::File contains tabs: $file"
     fi
   fi
 
