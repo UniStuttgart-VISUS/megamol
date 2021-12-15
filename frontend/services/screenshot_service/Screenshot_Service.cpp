@@ -153,9 +153,11 @@ megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() con
 
     auto& byte_vector = image_bytes.as_byte_vector();
     screenshot_image.resize(m_image->size.width, m_image->size.height);
-    assert((byte_vector.size() == (screenshot_image.image.size() *
-                                      ((m_image->channels == ImageWrapper::DataChannels::RGBA8) ? (4) : (3)))) &&
-           "Screenshot rendering is only available from second frame.");
+
+    if (byte_vector.size() !=
+        (screenshot_image.image.size() * ((m_image->channels == ImageWrapper::DataChannels::RGBA8) ? (4) : (3)))) {
+        throw std::runtime_error("[Screenshot_Service] Image is not correctly initialized...");
+    }
 
     for (size_t i = 0, j = 0; i < byte_vector.size();) {
         auto r = [&]() { return byte_vector[i++]; };
