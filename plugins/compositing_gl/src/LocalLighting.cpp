@@ -10,6 +10,7 @@
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/TriDirectionalLighting.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -228,6 +229,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
                 auto point_lights = lights.get<core::view::light::PointLightType>();
                 auto distant_lights = lights.get<core::view::light::DistantLightType>();
+                auto tridirection_lights = lights.get<core::view::light::TriDirectionalLightType>();
 
                 for (auto pl : point_lights) {
                     m_point_lights.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
@@ -239,6 +241,28 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                         m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
                     } else {
                         m_distant_lights.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+                    }
+                }
+
+                for (auto tdl : tridirection_lights) {
+                    if (tdl.in_view_space) {
+                        auto inverse_view = glm::transpose(glm::mat3(view_mx));
+                        auto key_dir =
+                            inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1], tdl.key_direction[2]);
+                        auto fill_dir = inverse_view *
+                                        glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1], tdl.fill_direction[2]);
+                        auto back_dir = inverse_view *
+                                        glm::vec3(tdl.back_direction[0], tdl.back_direction[1], tdl.back_direction[2]);
+                        m_distant_lights.push_back({key_dir[0], key_dir[1], key_dir[2], tdl.intensity});
+                        m_distant_lights.push_back({fill_dir[0], fill_dir[1], fill_dir[2], tdl.intensity});
+                        m_distant_lights.push_back({back_dir[0], back_dir[1], back_dir[2], tdl.intensity});
+                    } else {
+                        m_distant_lights.push_back(
+                            {tdl.key_direction[0], tdl.key_direction[1], tdl.key_direction[2], tdl.intensity});
+                        m_distant_lights.push_back(
+                            {tdl.fill_direction[0], tdl.fill_direction[1], tdl.fill_direction[2], tdl.intensity});
+                        m_distant_lights.push_back(
+                            {tdl.back_direction[0], tdl.back_direction[1], tdl.back_direction[2], tdl.intensity});
                     }
                 }
             }

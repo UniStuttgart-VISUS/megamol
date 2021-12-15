@@ -13,7 +13,24 @@
 namespace megamol {
 namespace probe_gl {
 
-enum InteractionType { SELECT, DESELECT, HIGHLIGHT, DEHIGHLIGHT, MOVE, PLACE, REMOVE };
+enum InteractionType {
+    SELECT,
+    DESELECT,
+    HIGHLIGHT,
+    DEHIGHLIGHT,
+    CLEAR_SELECTION,
+    MOVE,
+    PLACE,
+    REMOVE,
+    HIDE_PROBE_DATA,
+    UNHIDE_PROBE_DATA,
+    HIDE_ALL_PROBE_DATA,
+    UNHIDE_ALL_PROBE_DATA,
+    HIDE_DATA_BY_DEPTH,
+    TOGGLE_SHOW_PROBES,
+    TOGGLE_SHOW_HULL,
+    TOGGLE_SHOW_GLYPHS,
+};
 
 struct ProbeManipulation {
     InteractionType type;
