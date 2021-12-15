@@ -18,6 +18,7 @@ OSPRayMeshGeometry::OSPRayMeshGeometry(void)
 
     this->_getMeshDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_getMeshDataSlot);
+    this->_getMeshDataSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
 
@@ -54,7 +55,8 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
         if (!(*cm)(0))
             return false;
         meta_data = cm->getMetaData();
-        if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+        auto interface_dirtyness = this->InterfaceIsDirty();
+        if (cm->hasUpdate() || this->time != os->getTime() || interface_dirtyness) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);

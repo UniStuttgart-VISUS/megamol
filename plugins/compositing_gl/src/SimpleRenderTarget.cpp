@@ -88,6 +88,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core_gl::view::CallRender3
     // compositing and final presentating to screen anyway
     m_GBuffer->bind();
     glClearColor(0, 0, 0, 0);
+    glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

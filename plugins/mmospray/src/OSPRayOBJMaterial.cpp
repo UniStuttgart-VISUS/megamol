@@ -5,6 +5,7 @@
  */
 
 #include "OSPRayOBJMaterial.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "stdafx.h"
@@ -24,11 +25,11 @@ OSPRayOBJMaterial::OSPRayOBJMaterial(void)
         , d("Opacity", "Opacity")
         , Tf("TransparencyFilterColor", "Transparency filter color") {
 
-    this->Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
-    this->Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->Kd << new core::param::ColorParam(0.8f * 255, 0.8f * 255, 0.8f * 255, 1.0f * 255);
+    this->Ks << new core::param::ColorParam(0, 0, 0, 1);
     this->Ns << new core::param::FloatParam(10.0f);
     this->d << new core::param::FloatParam(1.0f);
-    this->Tf << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->Tf << new core::param::ColorParam(0, 0, 0, 1);
     this->MakeSlotAvailable(&this->Kd);
     this->MakeSlotAvailable(&this->Ks);
     this->MakeSlotAvailable(&this->Ns);
@@ -45,12 +46,12 @@ void OSPRayOBJMaterial::readParams() {
 
     objMaterial obj;
 
-    auto kd = this->Kd.Param<core::param::Vector3fParam>();
-    obj.Kd = kd->getArray();
-    auto ks = this->Ks.Param<core::param::Vector3fParam>();
-    obj.Ks = ks->getArray();
-    auto tf = this->Tf.Param<core::param::Vector3fParam>();
-    obj.Tf = tf->getArray();
+    auto kd = this->Kd.Param<core::param::ColorParam>()->GetArray();
+    obj.Kd = {kd[0], kd[1], kd[2]};
+    auto ks = this->Ks.Param<core::param::ColorParam>()->GetArray();
+    obj.Ks = {ks[0], ks[1], ks[2]};
+    auto tf = this->Tf.Param<core::param::ColorParam>()->GetArray();
+    obj.Tf = {tf[0], tf[1], tf[2]};
     obj.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
     obj.d = this->d.Param<core::param::FloatParam>()->Value();
 

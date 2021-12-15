@@ -339,6 +339,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         //megamol::core::utility::log::Log::DefaultLog.WriteError(std::string("OSPRAY last ERROR: " + error_).c_str());
 
     } else {
+        // setup framebuffer and measure time
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         _framebuffer->renderFrame(*_renderer, *_camera, *_world);
         auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
         _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
@@ -350,6 +353,19 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         frmbuffer->colorBuffer = _fb;
 
         _framebuffer->unmap(fb);
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
+        _accum_time.amount += duration.count();
+        _accum_time.count += 1;
+        if (_accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
+            const unsigned long long int mean_rendertime = _accum_time.amount / _accum_time.count;
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
+            _accum_time.count = 0;
+            _accum_time.amount = 0;
+        }
     }
 
     return true;

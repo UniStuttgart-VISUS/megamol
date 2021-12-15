@@ -5,7 +5,7 @@
  */
 
 #pragma once
-#include "ExtractMesh.h"
+#include "kdtree.h"
 #include "mmcore/CallGeneric.h"
 
 namespace megamol {
