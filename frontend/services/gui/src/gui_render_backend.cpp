@@ -119,7 +119,6 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
         if (ImGui_ImplGeneric_Init(&this->cpu_window) && this->createCPUFramebuffer(1, 1)) {
-            imgui_sw::bind_imgui_painting();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Initialized ImGui render Backend for CPU.");
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -247,6 +246,7 @@ bool megamol::gui::gui_render_backend::ShutdownBackend() {
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
+        imgui_sw::unbind_imgui_painting();
         ImGui_ImplGeneric_Shutdown();
     } break;
     default: {
@@ -276,7 +276,28 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
     } break;
 #endif // WITH_GL
     case (GUIRenderBackend::CPU): {
-        return ImGui_ImplGeneric_CreateFontsTexture();
+        imgui_sw::bind_imgui_painting();
+        return true;        
+    }
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unsupported render backend. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    }
+}
+
+
+bool megamol::gui::gui_render_backend::SupportsCustomFonts() const {
+
+    switch (this->initialized_backend) {
+#ifdef WITH_GL
+    case (GUIRenderBackend::OPEN_GL): {
+        return true;
+    } break;
+#endif // WITH_GL
+    case (GUIRenderBackend::CPU): {
+        return false;
     }
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

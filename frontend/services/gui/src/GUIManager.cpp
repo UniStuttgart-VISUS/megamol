@@ -323,7 +323,10 @@ bool GUIManager::PostDraw() {
         } else if (this->gui_state.font_load == 1) {
             bool load_success = false;
 
-            if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+            if (!this->render_backend.SupportsCustomFonts()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Ignoring loading of custom font. Unsupported feature by currently used render backend.");
+            }
+            else if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                     this->gui_state.font_load_filename, std::string("ttf"))) {
 
                 ImFontConfig config;
@@ -1008,67 +1011,71 @@ bool GUIManager::destroy_context() {
 
 void megamol::gui::GUIManager::load_default_fonts() {
 
-    ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->Clear();
+    if (this->render_backend.SupportsCustomFonts()) {
 
-    const auto graph_font_scalings = this->win_configurator_ptr->GetGraphFontScalings();
-    this->gui_state.graph_fonts_reserved = graph_font_scalings.size();
+        ImGuiIO& io = ImGui::GetIO();
+        io.Fonts->Clear();
 
-    const float default_font_size = (12.0f * megamol::gui::gui_scaling.Get());
-    ImFontConfig config;
-    config.OversampleH = 4;
-    config.OversampleV = 4;
-    config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
+        const auto graph_font_scalings = this->win_configurator_ptr->GetGraphFontScalings();
+        this->gui_state.graph_fonts_reserved = graph_font_scalings.size();
 
-    // Get other known fonts
-    std::vector<std::string> font_paths;
-    std::string configurator_font_path;
-    std::string default_font_path;
-    auto get_preset_font_path = [&](const std::string& directory) {
-        std::string font_path =
-            megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
-        if (!font_path.empty()) {
-            font_paths.emplace_back(font_path);
-            configurator_font_path = font_path;
-            default_font_path = font_path;
+        const float default_font_size = (12.0f * megamol::gui::gui_scaling.Get());
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
+        config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
+
+        // Get other known fonts
+        std::vector<std::string> font_paths;
+        std::string configurator_font_path;
+        std::string default_font_path;
+        auto get_preset_font_path = [&](const std::string& directory) {
+            std::string font_path =
+                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
+            if (!font_path.empty()) {
+                font_paths.emplace_back(font_path);
+                configurator_font_path = font_path;
+                default_font_path = font_path;
+            }
+            font_path =
+                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
+            if (!font_path.empty()) {
+                font_paths.emplace_back(font_path);
+            }
+        };
+        for (auto& resource_directory : megamol::gui::gui_resource_paths) {
+            get_preset_font_path(resource_directory);
         }
-        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
-        if (!font_path.empty()) {
-            font_paths.emplace_back(font_path);
-        }
-    };
-    for (auto& resource_directory : megamol::gui::gui_resource_paths) {
-        get_preset_font_path(resource_directory);
-    }
 
-    // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
-    /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
-    /// zooming.
-    if (configurator_font_path.empty()) {
-        for (unsigned int i = 0; i < this->gui_state.graph_fonts_reserved; i++) {
-            io.Fonts->AddFontDefault(&config);
+        // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
+        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
+        /// zooming.
+        if (configurator_font_path.empty()) {
+            for (unsigned int i = 0; i < this->gui_state.graph_fonts_reserved; i++) {
+                io.Fonts->AddFontDefault(&config);
+            }
+        } else {
+            for (unsigned int i = 0; i < this->gui_state.graph_fonts_reserved; i++) {
+                io.Fonts->AddFontFromFileTTF(
+                    configurator_font_path.c_str(), default_font_size * graph_font_scalings[i], &config);
+            }
         }
-    } else {
-        for (unsigned int i = 0; i < this->gui_state.graph_fonts_reserved; i++) {
-            io.Fonts->AddFontFromFileTTF(
-                configurator_font_path.c_str(), default_font_size * graph_font_scalings[i], &config);
-        }
-    }
 
-    // Add other fonts for gui.
-    io.Fonts->AddFontDefault(&config);
-    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-    for (auto& font_path : font_paths) {
-        io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
-        if (default_font_path == font_path) {
-            io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+        // Add other fonts for gui.
+        io.Fonts->AddFontDefault(&config);
+        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+        for (auto& font_path : font_paths) {
+            io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
+            if (default_font_path == font_path) {
+                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+            }
         }
-    }
 
-    // Set default if there is no pending font load request otherwise
-    if (this->gui_state.font_load == 0) {
-        this->gui_state.font_load_filename = default_font_path;
-        this->gui_state.font_load_size = static_cast<int>(default_font_size);
+        // Set default if there is no pending font load request otherwise
+        if (this->gui_state.font_load == 0) {
+            this->gui_state.font_load_filename = default_font_path;
+            this->gui_state.font_load_size = static_cast<int>(default_font_size);
+        }
     }
 
     this->render_backend.CreateFontsTexture();

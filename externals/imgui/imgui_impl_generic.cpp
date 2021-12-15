@@ -1,16 +1,5 @@
 #include "imgui_impl_generic.h"
 
-namespace {
-
-struct Texture {
-    uint8_t* pixels; // 8-bit.
-    int width;
-    int height;
-};
-
-static Texture texture;
-
-} // namespace
 
 struct ImGui_ImplGeneric_Data {
     GenericWindow* Window;
@@ -69,21 +58,4 @@ void ImGui_ImplGeneric_NewFrame(GenericWindow* window, GenericMonitor* monitor) 
     io.DisplaySize = ImVec2((float)w, (float)h);
     if (w > 0 && h > 0)
         io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
-}
-
-bool ImGui_ImplGeneric_CreateFontsTexture() {
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui_ImplGeneric_Data* bd = ImGui_ImplGeneric_GetBackendData();
-    IM_ASSERT(bd != NULL && "No platform backend to create fonts texture.");
-
-    // Build texture atlas
-    io.Fonts->GetTexDataAsRGBA32(&texture.pixels, &texture.width, &texture.height);
-
-    // Store our identifier
-    if (io.Fonts->IsBuilt()) {
-        io.Fonts->SetTexID((ImTextureID)&texture);
-        return true;
-    }
-
-    return false;
 }

@@ -65,6 +65,8 @@ public:
 
     bool CreateFontsTexture();
 
+    bool SupportsCustomFonts() const;
+
     megamol::frontend_resources::ImageWrapper GetImage();
 
 private:
