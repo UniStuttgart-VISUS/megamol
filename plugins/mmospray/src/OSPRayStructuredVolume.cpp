@@ -38,8 +38,8 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->MakeSlotAvailable(&this->repType);
 
     this->clippingBoxActive << new core::param::BoolParam(false);
-    this->clippingBoxLower << new core::param::Vector3fParam({-5.0f, -5.0f, -5.0f});
-    this->clippingBoxUpper << new core::param::Vector3fParam({0.0f, 5.0f, 5.0f});
+    this->clippingBoxLower << new core::param::Vector3fParam(-5.0f, -5.0f, -5.0f);
+    this->clippingBoxUpper << new core::param::Vector3fParam(0.0f, 5.0f, 5.0f);
     this->MakeSlotAvailable(&this->clippingBoxActive);
     this->MakeSlotAvailable(&this->clippingBoxLower);
     this->MakeSlotAvailable(&this->clippingBoxUpper);
