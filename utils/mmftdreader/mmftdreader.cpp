@@ -84,21 +84,15 @@ int main(int argc, char* argv[]) {
               << "| Name                 | Type | Min          | Max          |" << std::endl
               << "|----------------------|------|--------------|--------------|" << std::endl;
     for (const auto& i : info) {
-        std::cout << "| " << std::left << std::setw(20) << i.name
-                  << " | " << std::right << std::setw(4) << (int) i.type
-                  << " | " << std::setw(12) << i.min
-                  << " | " << std::setw(12) << i.max
-                  << " |" << std::endl;
+        std::cout << "| " << std::left << std::setw(20) << i.name << " | " << std::right << std::setw(4) << (int)i.type
+                  << " | " << std::setw(12) << i.min << " | " << std::setw(12) << i.max << " |" << std::endl;
     }
     std::cout << "|----------------------|------|--------------|--------------|" << std::endl;
 
     std::vector<float> data(rowCount * colCount);
     file.read(reinterpret_cast<char*>(data.data()), rowCount * colCount * sizeof(float));
 
-    std::cout << std::endl
-              << "# Table Data" << std::endl
-              << std::endl
-              << "| " << std::left;
+    std::cout << std::endl << "# Table Data" << std::endl << std::endl << "| " << std::left;
 
     for (const auto& i : info) {
         std::cout << std::setw(12) << i.name << " | ";
