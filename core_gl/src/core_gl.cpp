@@ -9,7 +9,7 @@
 #include "stdafx.h"
 
 #include "mmcore_gl/DeferredShading.h"
-#include "mmcore_gl/UniFlagStorageGL.h"
+#include "mmcore_gl/UniFlagStorage.h"
 #include "mmcore_gl/view/BoundingBoxRenderer.h"
 #include "mmcore_gl/view/ContextToGL.h"
 #include "mmcore_gl/view/HeadView.h"
@@ -22,7 +22,7 @@
 #include "mmcore_gl/view/special/DemoRenderer2D.h"
 #include "mmcore_gl/view/special/ScreenShooter.h"
 
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -56,8 +56,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<core_gl::view::BoundingBoxRenderer>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::SplitViewGL>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::special::CallbackScreenShooter>();
-        this->module_descriptions.RegisterAutoDescription<core_gl::UniFlagStorageGL>();
         this->module_descriptions.RegisterAutoDescription<core_gl::DeferredShading>();
+        this->module_descriptions.RegisterAutoDescription<core_gl::UniFlagStorage>();
 
         //////////////////////////////////////////////////////////////////////
         // Register all call descriptions here

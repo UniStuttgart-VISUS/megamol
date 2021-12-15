@@ -18,6 +18,7 @@ if(BUILD_CORE)
   require_external(libpng)
   require_external(glm)
   require_external(json)
+  require_external(tbb)
 
   if (ENABLE_CUESDK)
     require_external(CUESDK)
@@ -36,7 +37,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq
+    PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq tbb
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   if(UNIX)
