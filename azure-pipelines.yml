@@ -6,7 +6,17 @@ pr:
 - master
 
 variables:
-  enablePlugins: '-DBUILD_PLUGIN_MMADIOS=ON -DBUILD_PLUGIN_ASTRO=OFF -DBUILD_PLUGIN_IMAGE=OFF -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=OFF'
+  defaultConfig: >-
+    -DBUILD_PLUGIN_ASTRO=OFF
+    -DBUILD_PLUGIN_ASTRO_GL=OFF
+    -DBUILD_PLUGIN_IMAGE=OFF
+    -DBUILD_PLUGIN_MEGAMOL101_GL=ON
+    -DBUILD_PLUGIN_MMADIOS=ON
+    -DBUILD_PLUGIN_MMVTKM=ON
+    -DBUILD_PLUGIN_MMVTKM_GL=ON
+    -DBUILD_PLUGIN_REMOTE=OFF
+  nonGlConfig: >-
+    -DENABLE_GL=OFF
 
 jobs:
 - job: Windows
@@ -15,9 +25,15 @@ jobs:
       'VS2019 Release':
         configuration: Release
         generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Debug':
         configuration: Debug
         generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(defaultConfig)'
+      'VS2019 Release (nonGL)':
+        configuration: Release
+        generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
     name: 'hardware'
@@ -27,23 +43,10 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  #- task: PowerShell@2
-  #  displayName: 'Install Python'
-  #  inputs:
-  #    targetType: 'inline'
-  #    script: |
-  #      $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
-  #      $python_path = Join-Path (Get-Item .).FullName "python_tmp"
-  #      $tmp = New-TemporaryFile
-  #      $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
-  #      Invoke-WebRequest -OutFile $tmp $pythonUrl
-  #      Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
-  #      $tmp | Remove-Item
-  #      echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(enablePlugins)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -58,49 +61,34 @@ jobs:
       #  cxxCompiler: g++-9
       #  configuration: Release
       #  generator: 'Unix Makefiles'
+      #  cmakeExtraArgs: '$(defaultConfig)'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9
         configuration: Debug
         generator: 'Unix Makefiles'
-      'GCC9 / Ninja / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Ninja'
-      'Clang10 / Make / Release':
+        cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Ninja / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Ninja'
+      #  cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily changed to Ninja instead of Make until more CI machines are available!
+      'Clang10 / Ninja / Release':
         cCompiler: clang-10
         cxxCompiler: clang++-10
         configuration: Release
-        generator: 'Unix Makefiles'
-
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
-
-  steps:
-  - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
-    displayName: 'Bash get number of CPU cores'
-  - task: CMake@1
-    displayName: 'CMake Configure'
-    inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(enablePlugins)'
-  - task: CMake@1
-    displayName: 'CMake Build'
-    inputs:
-      cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
-
-- job: nonGL_Linux
-  strategy:
-    matrix:
-      'GCC9 / Make / Debug':
+        generator: 'Ninja'
+        cmakeExtraArgs: '$(defaultConfig)'
+      'GCC9 / Make / Release (nonGL)':
         cCompiler: gcc-9
         cxxCompiler: g++-9
-        configuration: Debug
+        configuration: Release
         generator: 'Unix Makefiles'
+        cmakeExtraArgs: '$(nonGlConfig)'
+
   pool:
     name: 'default'
     demands:
@@ -114,89 +102,8 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) -DENABLE_GL=OFF'
+      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
-
-- job: nonGL_Windows
-  strategy:
-    matrix:
-      'VS2019 Release':
-        configuration: Release
-        generator: 'Visual Studio 16 2019'
-
-  pool:
-    name: 'hardware'
-    demands:
-    - Agent.OS -equals Windows_NT
-    - cmake
-    - VisualStudio_16.0
-
-  steps:
-  - task: CMake@1
-    displayName: 'CMake Configure'
-    inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" -DENABLE_GL=OFF'
-  - task: CMake@1
-    displayName: 'CMake Build'
-    inputs:
-      cmakeArgs: '--build . --config $(configuration)'
-
-# The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
-- job: FileChecks
-  displayName: 'File Checks'
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-  steps:
-  - task: Bash@3
-    displayName: 'Run File Checks'
-    inputs:
-      filePath: '.ci/check_files.sh'
-  - task: Bash@3
-    displayName: 'Run Plugin Structure Checks'
-    inputs:
-      filePath: '.ci/check_plugins.sh'
-
-- job: ClangFormatCheck
-  displayName: 'ClangFormat Check'
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
-  steps:
-  - task: Bash@3
-    displayName: 'Run Clang-Format'
-    inputs:
-      targetType: 'inline'
-      script: |
-        clang-format-12 --version
-        find . -iname "*.cpp" -o -iname "*.h" -o -iname "*.hpp" -o -iname "*.inl" | grep -Ev '^\./(externals|utils)/' | grep -Ev '^\./plugins/.*(3rd|external)/' | xargs clang-format-12 -i
-        git diff --exit-code
-
-# Disabled for now, because clang format version is wrong
-#- job: ClangFormatCheckWindows
-#  displayName: 'ClangFormat Check (Windows)'
-#  pool:
-#    name: 'hardware'
-#    demands:
-#      - Agent.OS -equals Windows_NT
-#      - cmake
-#      - VisualStudio_16.0
-#
-#  steps:
-#    - task: PowerShell@2
-#      displayName: 'Run Clang-Format'
-#      inputs:
-#        targetType: 'inline'
-#        script: |
-#          $Env:Path = "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer;$Env:Path"
-#          $vspath = vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-#          $vspath = join-path $vspath 'VC\Tools\Llvm\x64\bin'
-#          $Env:Path = "$vspath;$Env:Path"
-#          clang-format.exe --version
