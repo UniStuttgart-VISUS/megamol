@@ -279,7 +279,7 @@ bool GUIManager::PostDraw() {
         // Enable backend rendering
         auto width = static_cast<int>(io.DisplaySize.x);
         auto height = static_cast<int>(io.DisplaySize.y);
-        this->render_backend.EnableRendering(width, height); 
+        this->render_backend.EnableRendering(width, height);
 
         try {
 
