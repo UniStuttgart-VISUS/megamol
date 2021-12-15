@@ -12,6 +12,8 @@
 
 #include "astro/AstroDataCall.h"
 #include "geometry_calls/VolumetricDataCall.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 namespace megamol {
 namespace astro {
@@ -81,6 +83,19 @@ private:
         //wavelength_slot_.ResetDirty();
         numSamplesSlot.ResetDirty();
         absorptionBiasSlot.ResetDirty();
+    }
+
+    inline glm::quat quat_from_vectors(glm::vec3 base, glm::vec3 org_dir) {
+        auto m = std::sqrt(2.0f + 2.0f * glm::dot(base, org_dir));
+        auto w = (1.0f / m) * glm::cross(base, org_dir);
+        return glm::quat(m / 2.0f, w.x, w.y, w.z); // yes, the glm quaternion order is stupid...
+    }
+
+    inline glm::vec3 quat_rotate(glm::vec3 base, glm::quat quat) {
+        glm::quat a(0.0f, base.x, base.y, base.z);
+        glm::quat c = glm::conjugate(quat);
+        auto retval = quat * a * c;
+        return glm::vec3(retval.x, retval.y, retval.z);
     }
 
     core::CallerSlot volume_in_slot_;

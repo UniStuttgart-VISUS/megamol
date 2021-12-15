@@ -177,7 +177,7 @@ private:
 
     size_t currentHash;
 
-    core::FlagStorage::FlagVersionType currentFlagsVersion;
+    core::FlagStorageTypes::flag_version_type currentFlagsVersion;
 
     ::vislib_gl::graphics::gl::FramebufferObject densityFBO;
 

@@ -1,5 +1,5 @@
 /*
- * FlagCall_GL.h
+ * FlagCalls.h
  *
  * Author: Guido Reina and others
  * Copyright (C) 2016-2021 by Universitaet Stuttgart (VISUS).
@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "FlagStorage.h"
 #include "mmcore/CallGeneric.h"
-#include "mmcore/UniFlagStorage.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {

@@ -9,6 +9,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/TransferFunctionGL.h"
 
@@ -114,24 +115,25 @@ bool SurfaceLICRenderer::create() {
         vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
         vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                "SurfaceLICRenderer::precompute", precompute_shader_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::precompute", precompute_shader_src))
             return false;
         if (!this->pre_compute_shdr.Compile(precompute_shader_src.Code(), precompute_shader_src.Count()))
             return false;
         if (!this->pre_compute_shdr.Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
             return false;
         if (!this->lic_compute_shdr.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
             return false;
         if (!this->lic_compute_shdr.Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
+        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
             return false;
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
             return false;
         if (!this->render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
@@ -196,11 +198,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
 
     ci->SetTime(req_frame);
-    core::view::Camera_2 cam = call.GetCamera();
+    core::view::Camera cam = call.GetCamera();
     ci->SetCamera(cam);
 
-    auto viewport = cam.resolution_gate();
-    if (this->fbo.GetWidth() != viewport.width() || this->fbo.GetHeight() != viewport.height()) {
+    auto viewport = call.GetViewResolution();
+    if (this->fbo.GetWidth() != viewport.x || this->fbo.GetHeight() != viewport.y) {
         if (this->fbo.IsValid())
             this->fbo.Release();
 
@@ -220,7 +222,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         sap.format = GL_STENCIL_INDEX;
         sap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
 
-        this->fbo.Create(viewport.width(), viewport.height(), cap.size(), cap.data(), dap, sap);
+        this->fbo.Create(viewport.x, viewport.y, cap.size(), cap.data(), dap, sap);
     }
 
     this->fbo.Enable();
@@ -274,11 +276,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Create velocity target texture
-    if (this->velocity_target == nullptr || this->velocity_target->getWidth() != cam.resolution_gate().width() ||
-        this->velocity_target->getHeight() != cam.resolution_gate().height()) {
+    if (this->velocity_target == nullptr || this->velocity_target->getWidth() != call.GetViewResolution().x ||
+        this->velocity_target->getHeight() != call.GetViewResolution().y) {
 
-        glowl::TextureLayout velocity_tgt_layout(GL_RGBA32F, cam.resolution_gate().width(),
-            cam.resolution_gate().height(), 1, GL_RGBA, GL_FLOAT, 1,
+        glowl::TextureLayout velocity_tgt_layout(GL_RGBA32F, call.GetViewResolution().x, call.GetViewResolution().y, 1,
+            GL_RGBA, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -288,11 +290,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Create render target texture
-    if (this->render_target == nullptr || this->render_target->getWidth() != cam.resolution_gate().width() ||
-        this->render_target->getHeight() != cam.resolution_gate().height()) {
+    if (this->render_target == nullptr || this->render_target->getWidth() != call.GetViewResolution().x ||
+        this->render_target->getHeight() != call.GetViewResolution().y) {
 
-        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
-            1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, call.GetViewResolution().x, call.GetViewResolution().y, 1,
+            GL_RGBA, GL_UNSIGNED_BYTE, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -325,14 +327,13 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Get camera
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_mat, proj_mat;
-    cam.calc_matrices(snapshot, view_mat, proj_mat, core::thecam::snapshot_content::all);
-    glm::mat4 view = view_mat;
-    glm::mat4 proj = proj_mat;
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
 
-    const auto cam_near = cam.near_clipping_plane();
-    const auto cam_far = cam.far_clipping_plane();
+    const auto intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
+
+    const auto cam_near = intrinsics.near_plane.value();
+    const auto cam_far = intrinsics.far_plane.value();
 
     const std::array<float, 2> rt_resolution{
         static_cast<float>(this->render_target->getWidth()), static_cast<float>(this->render_target->getHeight())};
