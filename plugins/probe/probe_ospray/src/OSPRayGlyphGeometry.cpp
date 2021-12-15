@@ -70,8 +70,8 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
         return false;
 
     meta_data = cm->getMetaData();
-
-    if (cm->hasUpdate() || ctex->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    auto interface_dirtyness = this->InterfaceIsDirty();
+    if (cm->hasUpdate() || ctex->hasUpdate() || this->time != os->getTime() || interface_dirtyness) {
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
 
@@ -82,9 +82,12 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
 
         // Write stuff into the structureContainer
         this->structureContainer.type = ospray::structureTypeEnum::GEOMETRY;
-        this->structureContainer.geometryType = ospray::geometryTypeEnum::TRIANGLES;
-        this->structureContainer.mesh = cm->getData();
-        this->structureContainer.mesh_textures = ctex->getData();
+        this->structureContainer.geometryType = ospray::geometryTypeEnum::MESH;
+
+        ospray::meshStructure mesh_str;
+        mesh_str.mesh = cm->getData();
+        mesh_str.mesh_textures = ctex->getData();
+        this->structureContainer.structure = mesh_str;
         this->structureContainer.materialChanged = false;
     }
 

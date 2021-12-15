@@ -5,14 +5,14 @@
  */
 
 #include "ExtractCenterline.h"
-#include "CallKDTree.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmadios/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "normal_3d_omp.h"
+#include "probe/CallKDTree.h"
 #include <atomic>
 #include <limits>
 
@@ -177,15 +177,15 @@ bool ExtractCenterline::getData(core::Call& call) {
     if (!(*cm)(0))
         return false;
 
-    auto meta_data = cm->getMetaData();
-
+    auto mesh_meta_data = cm->getMetaData();
+    _bbox = mesh_meta_data.m_bboxs;
 
     if (cm->hasUpdate()) {
         ++_version;
 
         auto data = cm->getData();
 
-        if (data->accessMesh().size() > 1 || data->accessMesh().empty()) {
+        if (data->accessMeshes().size() > 1 || data->accessMeshes().empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
             return false;
         }
@@ -193,7 +193,7 @@ bool ExtractCenterline::getData(core::Call& call) {
         float* vertices = nullptr;
         uint32_t num_vertices = 0;
         uint32_t num_components = 0;
-        for (auto& attrib : data->accessMesh()[0].attributes) {
+        for (auto& attrib : data->accessMeshes().begin()->second.attributes) {
             if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                 if (attrib.component_type != mesh::MeshDataAccessCollection::FLOAT) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -229,7 +229,8 @@ bool ExtractCenterline::getData(core::Call& call) {
 
     // put data in line
     mesh::MeshDataAccessCollection line;
-    line.addMesh(_line_attribs, _line_indices, mesh::MeshDataAccessCollection::LINES);
+    std::string identifier = std::string(FullName()) + "_line";
+    line.addMesh(identifier, _line_attribs, _line_indices, mesh::MeshDataAccessCollection::LINES);
     cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), _version);
 
     auto line_meta_data = cl->getMetaData();
