@@ -79,11 +79,11 @@ public:
         capabilities = caps;
     }
 
+#ifdef PROFILING
+
     ImVec2 GetProfilingButtonPosition() {
         return this->profiling_button_position;
     }
-
-#ifdef PROFILING
 
     void SetProfilingData(void* ptr, uint32_t num_callbacks) {
         this->profiling_parent_pointer = ptr;
