@@ -41,7 +41,7 @@ public:
     bool Widget(const std::string& idstr, bool vertical, float length, FixedSplitterSide fixed_side, float& inout_range_left_top,
         float& inout_range_right_bottom);
 
-    inline float GetWidth() const;
+    float GetWidth() const;
 
 private:
     // VARIABLES --------------------------------------------------------------

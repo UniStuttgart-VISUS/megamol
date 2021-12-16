@@ -20,6 +20,7 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
+#include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
 
 

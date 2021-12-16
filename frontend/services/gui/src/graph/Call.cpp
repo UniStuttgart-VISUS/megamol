@@ -14,7 +14,7 @@
 #include "ProfilingUtils.h"
 #include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (200.0f * megamol::gui::gui_scaling.Get())
-#define CALL_PROFILING_WINDOW_WIDTH (450.0f * megamol::gui::gui_scaling.Get())
+#define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // PROFILING
 
 using namespace megamol;
@@ -361,13 +361,17 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         ImGui::SetCursorScreenPos(profiling_button_pos);
                         ImGui::PushFont(state.canvas.gui_font_ptr);
                         if (this->gui_profiling_button.Button(
-                                "Performance Monitor", ImVec2(profiling_button_size, profiling_button_size))) {
+                                "Profiling", ImVec2(profiling_button_size, profiling_button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
+
+                            if (this->show_profiling_data) {
+                                state.interact.profiling_show = true;
+                            }
                         }
                         this->gui_profiling_btn_hovered = ImGui::IsItemHovered();
                         ImGui::PopFont();
                         if (this->show_profiling_data) {
-                            this->pause_profiling_history_update = state.interact.pause_profiling_update;
+                            this->pause_profiling_history_update = state.interact.profiling_pause_update;
                             /*
                             /// Draw profiling data inplace
                             ImGui::SetCursorScreenPos(
@@ -387,7 +391,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                     GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE,
                                     GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
                             }
-                            this->gui_profiling_run_button.ToggleButton(state.interact.pause_profiling_update,
+                            this->gui_profiling_run_button.ToggleButton(state.interact.profiling_pause_update,
                                 "Pause update of profiling values globally", "Continue updating of profiling values",
                                 ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
                             ImGui::TextDisabled("Callback Name:");

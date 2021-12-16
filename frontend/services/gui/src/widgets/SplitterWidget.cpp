@@ -85,6 +85,6 @@ bool megamol::gui::SplitterWidget::Widget(const std::string& idstr, bool vertica
 }
 
 
-inline float megamol::gui::SplitterWidget::GetWidth() const {
+float megamol::gui::SplitterWidget::GetWidth() const {
     return (12.0f * megamol::gui::gui_scaling.Get());
 }

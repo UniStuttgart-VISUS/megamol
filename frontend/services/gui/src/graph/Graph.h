@@ -218,6 +218,7 @@ private:
     HoverToolTip gui_tooltip;
 #ifdef PROFILING
     ImageWidget gui_profiling_run_button;
+    std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
 #endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
@@ -225,7 +226,6 @@ private:
     void draw_menu(GraphState_t& state);
     void draw_canvas(ImVec2 position, ImVec2 size, GraphState_t& state);
     void draw_parameters(ImVec2 position, ImVec2 size);
-    void draw_profiling(ImVec2 position, ImVec2 size);
 
     void draw_canvas_grid() const;
     void draw_canvas_dragged_call();
@@ -245,6 +245,10 @@ private:
 
     std::string generate_unique_group_name() const;
     std::string generate_unique_module_name(const std::string& name) const;
+
+#ifdef PROFILING
+    void draw_profiling(ImVec2 position, ImVec2 size);
+#endif // PROFILING
 };
 
 
