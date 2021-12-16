@@ -12,7 +12,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {

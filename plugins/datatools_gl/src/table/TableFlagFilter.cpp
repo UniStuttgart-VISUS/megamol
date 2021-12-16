@@ -8,7 +8,7 @@
 #include "TableFlagFilter.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 
 using namespace megamol::datatools_gl;
 using namespace megamol::datatools_gl::table;
@@ -132,13 +132,15 @@ bool TableFlagFilter::handleCall(core::Call& call) {
             this->colInfos[i].SetMaximumValue(std::numeric_limits<float>::lowest());
         }
 
-        core::FlagStorage::FlagItemType testMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
-        core::FlagStorage::FlagItemType passMask = core::FlagStorage::ENABLED;
-        ;
+        core::FlagStorageTypes::flag_item_type testMask = core::FlagStorageTypes::to_integral(
+            core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::FILTERED);
+        core::FlagStorageTypes::flag_item_type passMask =
+            core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED);
+
         if (static_cast<FilterMode>(this->filterModeParam.Param<core::param::EnumParam>()->Value()) ==
             FilterMode::SELECTED) {
-            testMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED;
-            passMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+            testMask |= core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED);
+            passMask |= core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED);
         }
 
         // Resize data to size of input table. With this we only need to allocate memory once.

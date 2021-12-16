@@ -12,10 +12,10 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 
 #include "job/TickSwitch.h"
+#include "mmcore/EventStorage.h"
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/ResourceTestModule.h"
-#include "mmcore/UniFlagStorage.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "mmcore/job/DataWriterJob.h"
@@ -32,6 +32,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
+#include "mmcore/view/light/TriDirectionalLighting.h"
 
 
 using namespace megamol::core;
@@ -61,8 +62,9 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::PointLight>();
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
+    instance.RegisterAutoDescription<view::light::TriDirectionalLighting>();
     instance.RegisterAutoDescription<FlagStorage>();
-    instance.RegisterAutoDescription<UniFlagStorage>();
+    instance.RegisterAutoDescription<EventStorage>();
     instance.RegisterAutoDescription<view::View3D>();
     instance.RegisterAutoDescription<ResourceTestModule>();
     instance.RegisterAutoDescription<param::FloatParamModule>();
