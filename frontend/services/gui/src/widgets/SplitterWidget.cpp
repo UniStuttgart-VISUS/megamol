@@ -52,8 +52,7 @@ bool megamol::gui::SplitterWidget::Widget(const std::string& idstr, bool vertica
         bb.Min = window->DC.CursorPos + (vertical ? ImVec2((split_range - inout_range_right_bottom) + 1.0f, 0.0f)
                                                   : ImVec2(0.0f, (split_range - inout_range_right_bottom) + 1.0f));
     }
-    bb.Max =
-        bb.Min + ImGui::CalcItemSize(vertical ? ImVec2(splitter_width / 2.0f, splitter_length)
+    bb.Max = bb.Min + ImGui::CalcItemSize(vertical ? ImVec2(splitter_width / 2.0f, splitter_length)
                                                    : ImVec2(splitter_length, splitter_width / 2.0f),
                           0.0f, 0.0f);
 

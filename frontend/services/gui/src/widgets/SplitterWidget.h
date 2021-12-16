@@ -38,8 +38,8 @@ public:
      * @param inout_range_left_top          The returned size of the respective side
      * @param inout_range_right_bottom      The returned size of the respective side
      */
-    bool Widget(const std::string& idstr, bool vertical, float length, FixedSplitterSide fixed_side, float& inout_range_left_top,
-        float& inout_range_right_bottom);
+    bool Widget(const std::string& idstr, bool vertical, float length, FixedSplitterSide fixed_side,
+        float& inout_range_left_top, float& inout_range_right_bottom);
 
     float GetWidth() const;
 

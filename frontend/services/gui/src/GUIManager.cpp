@@ -848,8 +848,8 @@ void megamol::gui::GUIManager::load_default_fonts() {
                 configurator_font_path = font_path;
                 default_font_path = font_path;
             }
-            font_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO);
+            font_path = megamol::core::utility::FileUtils::SearchFileRecursive(
+                directory, GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO);
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
             }

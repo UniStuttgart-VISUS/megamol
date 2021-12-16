@@ -306,7 +306,8 @@ void megamol::gui::Configurator::draw_window_menu() {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
 #ifdef PROFILING
-            if (ImGui::MenuItem("Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
+            if (ImGui::MenuItem(
+                    "Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
                 this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
             }
 #endif // PROFILING
