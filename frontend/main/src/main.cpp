@@ -97,7 +97,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.imgui_rbnd = megamol::frontend::GUI_Service::ImGuiRenderBackend::OPEN_GL;
+    guiConfig.backend = (with_gl) ? (megamol::gui::GUIRenderBackend::OPEN_GL) : (megamol::gui::GUIRenderBackend::CPU);
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
@@ -153,6 +153,8 @@ int main(const int argc, const char** argv) {
     imagepresentation_service.setPriority(3);
 
     megamol::frontend::Command_Service command_service;
+    // Should be applied after gui service to process only keyboard events not used by gui.
+    command_service.setPriority(24);
 #ifdef PROFILING
     megamol::frontend::Profiling_Service profiling_service;
 #endif
@@ -178,8 +180,8 @@ int main(const int argc, const char** argv) {
     megamol::frontend::FrontendServiceCollection services;
     if (with_gl) {
         services.add(gl_service, &openglConfig);
-        services.add(gui_service, &guiConfig);
     }
+    services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);

@@ -11,7 +11,7 @@
 
 #ifdef WITH_GL
 #include "mmcore_gl/utility/RenderUtils.h"
-#endif
+#endif // WITH_GL
 #include "widgets/HoverToolTip.h"
 
 
@@ -57,19 +57,11 @@ public:
         return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
     }
 
-    ImTextureID getImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
-    }
-
 #else
     bool IsLoaded() const {
         if (this->cpu_tex_ptr == nullptr)
             return false;
         return true;
-    }
-
-    ImTextureID getImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
     }
 
     bool LoadTextureFromData(int width, int height, float* data);
@@ -90,13 +82,26 @@ public:
 
 private:
     // VARIABLES --------------------------------------------------------------
+
+    HoverToolTip tooltip;
+
 #ifdef WITH_GL
+
     std::shared_ptr<glowl::Texture2D> tex_ptr = nullptr;
-#endif
+
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
+    }
+
+#else
+
     std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
 
-    // Widgets
-    HoverToolTip tooltip;
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
+    }
+
+#endif
 };
 
 

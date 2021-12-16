@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "glTFRenderTasksDataSource.h"
-#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
 #include "tiny_gltf.h"
 #include "vislib/math/Matrix.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -12,12 +12,12 @@ megamol::mesh_gl::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
         : m_version(0)
         , m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
         , m_material_collection(nullptr)
-        , m_btf_filename_slot("BTF filename", "Overload default gltf shader") {
+        , m_btf_name_slot("BTF name", "Overload default gltf shader") {
     this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 
-    this->m_btf_filename_slot << new core::param::FilePathParam("dfr_gltfExample");
-    this->MakeSlotAvailable(&this->m_btf_filename_slot);
+    this->m_btf_name_slot << new core::param::StringParam("dfr_gltfExample");
+    this->MakeSlotAvailable(&this->m_btf_name_slot);
 }
 
 megamol::mesh_gl::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
@@ -65,12 +65,12 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
 
         auto gpu_mesh_storage = mc->getData();
 
-        if (gltf_call->hasUpdate() || this->m_btf_filename_slot.IsDirty()) {
+        if (gltf_call->hasUpdate() || this->m_btf_name_slot.IsDirty()) {
             ++m_version;
 
-            if (this->m_btf_filename_slot.IsDirty()) {
-                m_btf_filename_slot.ResetDirty();
-                auto filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
+            if (this->m_btf_name_slot.IsDirty()) {
+                m_btf_name_slot.ResetDirty();
+                auto filename = m_btf_name_slot.Param<core::param::StringParam>()->Value();
                 m_material_collection->clear();
                 m_material_collection->addMaterial(this->instance(), filename, filename);
             }

@@ -63,7 +63,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
-        , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
+        , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_WARN))
         , win_log_force_open(true)
         , tooltip() {
 
