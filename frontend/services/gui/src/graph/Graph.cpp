@@ -54,6 +54,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_tooltip()
 #ifdef PROFILING
         , gui_profiling_run_button()
+        , profiling_list()
+        , scroll_delta_time(std::chrono::system_clock::now())
 #endif // PROFILING
 {
 
@@ -3123,13 +3125,13 @@ std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
 void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-    auto child_flags = ImGuiWindowFlags_AlwaysHorizontalScrollbar;
     ImGui::SetNextWindowPos(position);
-    ImGui::BeginChild("profiling_child", size, false, child_flags);
+    ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -3256,7 +3258,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     // Apply drop
     if (drop_uid != 0) {
         for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
-            if (((iterp->first.lock() != nullptr) && (iterp->first.lock()->UID() == drop_uid)) || ((iterp->second.lock() != nullptr) && (iterp->second.lock()->UID() == drop_uid))) {
+            if (((iterp->first.lock() != nullptr) && (iterp->first.lock()->UID() == drop_uid)) ||
+                ((iterp->second.lock() != nullptr) && (iterp->second.lock()->UID() == drop_uid))) {
                 auto tmp = (*iterp);
                 this->profiling_list.erase(iterp);
                 this->profiling_list.insert(this->profiling_list.begin() + drop_index, tmp);
@@ -3264,6 +3267,20 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             }
         }
     }
+
+    // Auto scroll during profiling drag
+    const float mouse_delta = 50.0f * megamol::gui::gui_scaling.Get();
+    if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+        auto min_win_x = ImGui::GetWindowPos().x;
+        auto max_win_x = min_win_x + ImGui::GetWindowSize().x;
+        auto time_delta = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - this->scroll_delta_time).count();
+        if (io.MousePos.x <= (min_win_x + mouse_delta)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() - static_cast<float>(time_delta));
+        } else if (io.MousePos.x >= (max_win_x - mouse_delta)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() + static_cast<float>(time_delta));
+        }
+    }
+    this->scroll_delta_time = std::chrono::system_clock::now();
 
     ImGui::EndChild();
     ImGui::PopStyleVar(2);

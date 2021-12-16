@@ -219,6 +219,7 @@ private:
 #ifdef PROFILING
     ImageWidget gui_profiling_run_button;
     std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
+    std::chrono::system_clock::time_point scroll_delta_time;
 #endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
