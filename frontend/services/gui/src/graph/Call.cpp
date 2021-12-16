@@ -13,7 +13,7 @@
 #ifdef PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
-#define CALL_PROFILING_PLOT_HEIGHT (200.0f * megamol::gui::gui_scaling.Get())
+#define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // PROFILING
 
@@ -43,6 +43,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , show_profiling_data(false)
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
+        , profiling_button_position()
 #endif // PROFILING
 {
 
@@ -360,10 +361,10 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 call_center.y - (profiling_button_size / 2.0f));
                         ImGui::SetCursorScreenPos(profiling_button_pos);
                         ImGui::PushFont(state.canvas.gui_font_ptr);
+                        this->profiling_button_position = ImVec2(ImGui::GetCursorScreenPos().x + profiling_button_size/2.0f, call_rect_max.y);
                         if (this->gui_profiling_button.Button(
                                 "Profiling", ImVec2(profiling_button_size, profiling_button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
-
                             if (this->show_profiling_data) {
                                 state.interact.profiling_show = true;
                             }
@@ -499,7 +500,7 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("CPU History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)), y_flags,
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags,
                 display_idx, cpu_perf_history[i]);
 
             if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
@@ -524,7 +525,7 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("GL History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)), y_flags,
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags,
                 display_idx, gl_perf_history[i]);
 
             ImGui::EndTabItem();
@@ -533,7 +534,7 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
     }
     ImGui::EndTabBar();
 
-    this->profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY() / state.canvas.zooming);
+    this->profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY());
 }
 
 

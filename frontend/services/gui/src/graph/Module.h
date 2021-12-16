@@ -188,6 +188,10 @@ public:
 
     void DrawProfiling(GraphItemsState_t& state);
 
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
+    }
+
 #endif
 
 private:
@@ -225,6 +229,7 @@ private:
     PopUps gui_rename_popup;
 
 #ifdef PROFILING
+
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
         cpu_perf_history;
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
@@ -235,6 +240,7 @@ private:
     ImageWidget gui_profiling_button;
     ImageWidget gui_profiling_run_button;
     bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
 
 #endif // PROFILING
 

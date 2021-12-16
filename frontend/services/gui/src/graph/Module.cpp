@@ -14,7 +14,7 @@
 #ifdef PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
-#define MODULE_PROFILING_PLOT_HEIGHT (200.0f * megamol::gui::gui_scaling.Get())
+#define MODULE_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define MODULE_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // PROFILING
 
@@ -56,6 +56,7 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_profiling_button()
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
+        , profiling_button_position()
 #endif // PROFILING
 {
 
@@ -538,10 +539,10 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
                         }
                         auto button_size = ImGui::GetFrameHeight();
+                        this->profiling_button_position = ImVec2(ImGui::GetCursorScreenPos().x + button_size/2.0f, module_rect_max.y);
                         if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
                             this->gui_update = true;
-
                             if (this->show_profiling_data) {
                                 state.interact.profiling_show = true;
                             }
@@ -799,7 +800,7 @@ void megamol::gui::Module::DrawProfiling(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (MODULE_PROFILING_PLOT_HEIGHT * state.canvas.zooming)),
+                ImVec2(ImGui::GetContentRegionAvail().x, MODULE_PROFILING_PLOT_HEIGHT),
                 y_flags, display_idx, histories[i]);
 
             ImGui::EndTabItem();
@@ -808,7 +809,7 @@ void megamol::gui::Module::DrawProfiling(GraphItemsState_t& state) {
     }
     ImGui::EndTabBar();
 
-    auto new_profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY() / state.canvas.zooming);
+    auto new_profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY());
     if (this->profiling_window_height != new_profiling_window_height) {
         this->profiling_window_height = new_profiling_window_height;
         this->gui_update = true;

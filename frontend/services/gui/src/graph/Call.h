@@ -79,6 +79,10 @@ public:
         capabilities = caps;
     }
 
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
+    }
+
 #ifdef PROFILING
 
     void SetProfilingData(void* ptr, uint32_t num_callbacks) {
@@ -130,6 +134,7 @@ private:
     bool gui_profiling_btn_hovered;
 
 #ifdef PROFILING
+
     std::vector<core::MultiPerformanceHistory> cpu_perf_history;
     std::vector<core::MultiPerformanceHistory> gl_perf_history;
     void* profiling_parent_pointer;
@@ -137,6 +142,8 @@ private:
     bool show_profiling_data;
     ImageWidget gui_profiling_run_button;
     bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
+
 #endif // PROFILING
 };
 

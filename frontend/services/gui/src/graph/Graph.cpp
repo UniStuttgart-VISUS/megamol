@@ -3126,12 +3126,15 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
     ImGui::SetNextWindowPos(position);
     ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    auto window_position = ImGui::GetCursorScreenPos();
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -3208,6 +3211,29 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         }
         ImGui::BeginChild(("##profiling_tab_bar" + uid_str).c_str(), ImVec2(GRAPH_PROFILING_WINDOW_WIDTH, 0.0f), true,
             ImGuiWindowFlags_NoMove);
+
+        // Draw line to graph item
+        ImVec2 start = ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight()/2.0f, ImGui::GetFrameHeight()/2.0f);
+        if (window_position.y > start.y) {
+            start.y = window_position.y;
+        }
+        ImVec2 end;
+        if (p.first.lock() != nullptr) {
+            end = p.first.lock()->GetProfilingButtonPosition();
+        } else if (p.second.lock() != nullptr) {
+            end = p.second.lock()->GetProfilingButtonPosition();
+        }
+        if (window_position.y < end.y) {
+            end.y = window_position.y;
+        }
+        auto tmpcol = style.Colors[ImGuiCol_PlotLines];
+        tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
+        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
+            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE,
+            GUI_LINE_THICKNESS);
+
+        // Profiling data
         ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
         this->gui_tooltip.ToolTip("[Drag and drop] Horizontally sort profiling data.", ImGui::GetItemID(), 0.5f, 5.0f);
         // Drag source
@@ -3219,7 +3245,6 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
             ImGui::EndDragDropSource();
         }
-
         ImGui::Separator();
         ImGui::TextUnformatted("Region Name:");
         if (p.first.lock() != nullptr) {
@@ -3273,7 +3298,9 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         auto min_win_x = ImGui::GetWindowPos().x;
         auto max_win_x = min_win_x + ImGui::GetWindowSize().x;
-        auto time_delta = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - this->scroll_delta_time).count();
+        auto time_delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - this->scroll_delta_time)
+                              .count();
         if (io.MousePos.x <= (min_win_x + mouse_delta)) {
             ImGui::SetScrollX(ImGui::GetScrollX() - static_cast<float>(time_delta));
         } else if (io.MousePos.x >= (max_win_x - mouse_delta)) {
