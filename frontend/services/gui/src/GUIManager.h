@@ -11,20 +11,16 @@
 
 
 #include "CommandRegistry.h"
+#include "gui_render_backend.h"
 #include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
-#include "mmcore/view/CPUFramebuffer.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
-#include <windows/LogConsole.h>
-#ifdef WITH_GL
-#include "imgui_impl_opengl3.h"
-#endif
 
 
 namespace megamol {
@@ -49,9 +45,9 @@ public:
     /**
      * Create ImGui context using OpenGL.
      *
-     * @param core_instance     The currently available core instance.
+     * @param backend     The ImGui render backend to use.
      */
-    bool CreateContext(ImGuiRenderBackend imgui_rbnd);
+    bool CreateContext(GUIRenderBackend backend);
 
     /**
      * Setup and enable ImGui context for subsequent use.
@@ -165,28 +161,19 @@ public:
      * See imgui.h: enum ImGuiMouseCursor_
      * io.MouseDrawCursor is true when Software Cursor should be drawn instead.
      *
-     * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
+     * @return Returned mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
      */
     inline int GetMouseCursor() const {
         return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
     }
 
-#ifdef WITH_GL
-    inline void GetFBODataGL(
-        unsigned int& out_fbo_color_buffer_gl_handle, size_t& out_fbo_width, size_t& out_fbo_height) const {
-        if (this->fbo == nullptr)
-            return;
-        // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
-        out_fbo_color_buffer_gl_handle = this->fbo->getColorAttachment(0)->getName();
-        out_fbo_width = this->fbo->getWidth();
-        out_fbo_height = this->fbo->getHeight();
-    }
-#else
-    inline std::shared_ptr<core::view::CPUFramebuffer> getFBOHandle() {
-        return this->fbo;
-    }
 
-#endif
+    /**
+     * Get image data containing rendered image.
+     */
+    inline megamol::frontend_resources::ImageWrapper GetImage() {
+        return this->render_backend.GetImage();
+    }
 
     ///////// SET ///////////
 
@@ -335,14 +322,14 @@ private:
 
     megamol::gui::HotkeyMap_t gui_hotkeys;
 
-    /** The ImGui context created and used by this GUIManager */
+    /** The ImGui context */
     ImGuiContext* imgui_context;
 
-    /** The ImGui context created and used by this GUIManager */
-    ImPlotContext* implot_context;
+    /** The ImGui render backend  */
+    gui_render_backend render_backend;
 
-    /** The currently initialized ImGui API */
-    ImGuiRenderBackend imgui_initialized_rbnd;
+    /** The ImPlot context  */
+    ImPlotContext* implot_context;
 
     /** The current local state of the gui. */
     StateBuffer gui_state;
@@ -370,14 +357,6 @@ private:
     FileBrowserWidget file_browser;
     HoverToolTip tooltip;
     megamol::core::utility::PickingBuffer picking_buffer;
-
-    // FBO
-#ifdef WITH_GL
-    std::shared_ptr<glowl::FramebufferObject> fbo;
-#else
-    // FBO
-    std::shared_ptr<core::view::CPUFramebuffer> fbo;
-#endif
 
     // FUNCTIONS --------------------------------------------------------------
 

@@ -14,6 +14,7 @@
 #include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
+#include "gui_render_backend.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
@@ -21,15 +22,15 @@
 namespace megamol {
 namespace frontend {
 
+
 class GUIManager;
+
 
 class GUI_Service final : public AbstractFrontendService {
 
 public:
-    enum ImGuiRenderBackend { OPEN_GL, CPU };
-
     struct Config {
-        ImGuiRenderBackend imgui_rbnd = GUI_Service::ImGuiRenderBackend::OPEN_GL;
+        megamol::gui::GUIRenderBackend backend = megamol::gui::GUIRenderBackend::CPU;
         megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;

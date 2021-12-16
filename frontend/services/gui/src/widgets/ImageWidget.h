@@ -11,7 +11,7 @@
 
 #ifdef WITH_GL
 #include "mmcore_gl/utility/RenderUtils.h"
-#endif
+#endif // WITH_GL
 #include "widgets/HoverToolTip.h"
 
 
@@ -86,14 +86,31 @@ public:
 
 private:
     // VARIABLES --------------------------------------------------------------
+
+    HoverToolTip tooltip;
+
 #ifdef WITH_GL
+
     std::shared_ptr<glowl::Texture2D> tex_ptr = nullptr;
+
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
+    }
+
+#else
+
+    std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
     std::shared_ptr<glowl::Texture2D> toggle_tex_ptr = nullptr;
 #else
     std::shared_ptr<CPUTexture2D<float>> cpu_tex_ptr = nullptr;
     std::shared_ptr<CPUTexture2D<float>> cpu_toggle_tex_ptr = nullptr;
 #endif
 
+    ImTextureID getImTextureID() {
+        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
+    }
+
+#endif
     // Widgets
     HoverToolTip tooltip;
 

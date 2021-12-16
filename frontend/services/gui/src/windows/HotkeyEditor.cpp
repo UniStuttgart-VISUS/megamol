@@ -137,7 +137,7 @@ bool megamol::gui::HotkeyEditor::Draw() {
     this->search_widget.Widget("hotkeyeditor_search", "Case insensitive substring search in names and hotkeys.");
     auto search_string = this->search_widget.GetSearchString();
 
-    ImGui::TextUnformatted("Left-click on button => Execute hotkey\nRight-click on button => Edit hotkey");
+    ImGui::TextUnformatted("Left-click on button: Execute hotkey\nRight-click on button: Edit hotkey");
 
     auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
     if (ImGui::BeginTable("megamol_hotkeys", 2, table_flags)) {

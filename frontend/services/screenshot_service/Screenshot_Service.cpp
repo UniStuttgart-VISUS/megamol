@@ -153,10 +153,13 @@ megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() con
         throw std::runtime_error("[Screenshot_Service] Only image with RGBA8 or RGA8 channels supported for now...");
     }
 
-
     auto& byte_vector = image_bytes.as_byte_vector();
-
     screenshot_image.resize(m_image->size.width, m_image->size.height);
+
+    if (byte_vector.size() !=
+        (screenshot_image.image.size() * ((m_image->channels == ImageWrapper::DataChannels::RGBA8) ? (4) : (3)))) {
+        throw std::runtime_error("[Screenshot_Service] Image is not correctly initialized...");
+    }
 
     for (size_t i = 0, j = 0; i < byte_vector.size();) {
         auto r = [&]() { return byte_vector[i++]; };
