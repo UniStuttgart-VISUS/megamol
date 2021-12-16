@@ -361,7 +361,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 call_center.y - (profiling_button_size / 2.0f));
                         ImGui::SetCursorScreenPos(profiling_button_pos);
                         ImGui::PushFont(state.canvas.gui_font_ptr);
-                        this->profiling_button_position = ImVec2(ImGui::GetCursorScreenPos().x + profiling_button_size/2.0f, call_rect_max.y);
+                        this->profiling_button_position =
+                            ImVec2(ImGui::GetCursorScreenPos().x + profiling_button_size / 2.0f, call_rect_max.y);
                         if (this->gui_profiling_button.Button(
                                 "Profiling", ImVec2(profiling_button_size, profiling_button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
@@ -500,8 +501,8 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("CPU History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags,
-                display_idx, cpu_perf_history[i]);
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags, display_idx,
+                cpu_perf_history[i]);
 
             if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
@@ -525,8 +526,8 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("GL History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags,
-                display_idx, gl_perf_history[i]);
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags, display_idx,
+                gl_perf_history[i]);
 
             ImGui::EndTabItem();
             y_flags = 0;

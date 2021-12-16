@@ -3213,7 +3213,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             ImGuiWindowFlags_NoMove);
 
         // Draw line to graph item
-        ImVec2 start = ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight()/2.0f, ImGui::GetFrameHeight()/2.0f);
+        ImVec2 start =
+            ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
         if (window_position.y > start.y) {
             start.y = window_position.y;
         }
@@ -3230,8 +3231,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
         const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
         draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
-            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE,
-            GUI_LINE_THICKNESS);
+            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE, GUI_LINE_THICKNESS);
 
         // Profiling data
         ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);

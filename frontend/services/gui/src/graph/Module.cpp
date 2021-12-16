@@ -539,7 +539,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
                         }
                         auto button_size = ImGui::GetFrameHeight();
-                        this->profiling_button_position = ImVec2(ImGui::GetCursorScreenPos().x + button_size/2.0f, module_rect_max.y);
+                        this->profiling_button_position =
+                            ImVec2(ImGui::GetCursorScreenPos().x + button_size / 2.0f, module_rect_max.y);
                         if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
                             this->gui_update = true;
@@ -799,8 +800,7 @@ void megamol::gui::Module::DrawProfiling(GraphItemsState_t& state) {
                 ImGui::EndTable();
             }
 
-            ProfilingUtils::DrawPlot("History",
-                ImVec2(ImGui::GetContentRegionAvail().x, MODULE_PROFILING_PLOT_HEIGHT),
+            ProfilingUtils::DrawPlot("History", ImVec2(ImGui::GetContentRegionAvail().x, MODULE_PROFILING_PLOT_HEIGHT),
                 y_flags, display_idx, histories[i]);
 
             ImGui::EndTabItem();
