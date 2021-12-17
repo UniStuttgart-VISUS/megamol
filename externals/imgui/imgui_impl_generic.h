@@ -15,9 +15,9 @@ struct GenericMonitor {
 };
 
 struct GenericCursor {
-    std::array<float,2> pos;
+    std::array<float, 2> pos;
 };
 
-IMGUI_IMPL_API bool     ImGui_ImplGeneric_Init(GenericWindow* window);
-IMGUI_IMPL_API void     ImGui_ImplGeneric_Shutdown();
-IMGUI_IMPL_API void     ImGui_ImplGeneric_NewFrame(GenericWindow* window, GenericMonitor* monitor);
+IMGUI_IMPL_API bool ImGui_ImplGeneric_Init(GenericWindow* window);
+IMGUI_IMPL_API void ImGui_ImplGeneric_Shutdown();
+IMGUI_IMPL_API void ImGui_ImplGeneric_NewFrame(GenericWindow* window, GenericMonitor* monitor);

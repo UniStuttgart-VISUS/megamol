@@ -33,7 +33,6 @@ public:
 
     void Update();
     void Draw(bool menu_visible);
-    void PopUps();
 
     bool StateFromJSON(const nlohmann::json& in_json);
     bool StateToJSON(nlohmann::json& inout_json);

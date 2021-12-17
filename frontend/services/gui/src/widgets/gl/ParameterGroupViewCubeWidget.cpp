@@ -30,7 +30,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 
     // Create texture once
     if (!this->image_up_arrow.IsLoaded()) {
-        this->image_up_arrow.LoadTextureFromFile(GUI_VIEWCUBE_UP_ARROW);
+        this->image_up_arrow.LoadTextureFromFile(GUI_FILENAME_TEXTURE_VIEWCUBE_UP_ARROW);
     }
 
     // Create shader once -----------------------------------------------------
@@ -381,6 +381,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     }
 
     // Draw -------------------------------------------------------------------
+    GUI_GL_CHECK_ERROR
 
     // Create view/model and projection matrices
     const auto rotation = glm::inverse(
@@ -423,7 +424,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     glDrawArrays(GL_TRIANGLES, 0, 72);
 
     if (texture_id != 0) {
-        glBindTexture(GL_TEXTURE_1D, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
     }
 
@@ -434,6 +435,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     if (!culling) {
         glDisable(GL_CULL_FACE);
     }
+
+    GUI_GL_CHECK_ERROR
 
     return selected;
 }
@@ -450,7 +453,7 @@ core::utility::InteractVector_t megamol::gui::PickableCube::GetInteractions(unsi
 }
 
 
-// *** Pickable Cube ******************************************************** //
+// *** Pickable Texture **************************************************** //
 
 megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shader(nullptr) {}
 
@@ -463,13 +466,13 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 
     // Create texture once
     if (!this->image_rotation_arrow.IsLoaded()) {
-        this->image_rotation_arrow.LoadTextureFromFile(GUI_VIEWCUBE_ROTATION_ARROW);
+        this->image_rotation_arrow.LoadTextureFromFile(GUI_FILENAME_TEXTURE_VIEWCUBE_ROTATION_ARROW);
     }
 
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
         std::string vertex_src =
-            "#version 130 \n"
+            "#version 450 \n"
             "uniform int picking_id; \n"
             "out vec2 tex_coord; \n"
             "flat out int encoded_id; \n"
@@ -490,7 +493,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "}";
 
         std::string fragment_src =
-            "#version 130 \n"
+            "#version 450 \n"
             "#extension GL_ARB_explicit_attrib_location : require \n"
             "in vec2 tex_coord; \n"
             "flat in int encoded_id; \n"
@@ -550,6 +553,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     }
 
     // Draw -------------------------------------------------------------------
+    GUI_GL_CHECK_ERROR
 
     // Set state
     const auto culling = glIsEnabled(GL_CULL_FACE);
@@ -583,7 +587,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     glDrawArrays(GL_TRIANGLES, 0, 12);
 
     if (texture_id != 0) {
-        glBindTexture(GL_TEXTURE_1D, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
     }
 
@@ -594,6 +598,8 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     if (!culling) {
         glDisable(GL_CULL_FACE);
     }
+
+    GUI_GL_CHECK_ERROR
 
     return selected;
 }

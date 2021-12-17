@@ -20,7 +20,7 @@ set(IMGUI_SOURCES
   misc/cpp/imgui_stdlib.cpp)
 set(IMGUI_BACKEND_HEADERS
   imgui_sw.h
-  backends/imgui_impl_generic.cpp
+  backends/imgui_impl_generic.h
 )
 set(IMGUI_BACKEND_SOURCES
   imgui_sw.cpp

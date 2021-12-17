@@ -17,59 +17,73 @@ using namespace megamol::gui;
 SplitterWidget::SplitterWidget() : splitter_last_width(0.0f) {}
 
 
-bool megamol::gui::SplitterWidget::Widget(FixedSplitterSide fixed_side, float& size_left, float& size_right) {
+bool megamol::gui::SplitterWidget::Widget(const std::string& idstr, bool vertical, float length,
+    FixedSplitterSide fixed_side, float& inout_range_left_top, float& inout_range_right_bottom) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
-    const float thickness = (12.0f * megamol::gui::gui_scaling.Get());
-
-    bool split_vertically = true;
+    const float splitter_width = this->GetWidth();
     float min_size = 1.0f; // >=1.0!
-    float splitter_long_axis_size = ImGui::GetContentRegionAvail().y;
 
-    float width_avail = ImGui::GetWindowSize().x - (2.0f * thickness);
+    float splitter_length = length;
+    if (splitter_length == 0.0f) {
+        splitter_length = (vertical) ? (ImGui::GetContentRegionAvail().y) : (ImGui::GetContentRegionAvail().x);
+    }
 
-    size_left = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? size_left : (width_avail - size_right));
-    size_right = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? (width_avail - size_left) : size_right);
+    float split_range = (vertical) ? (ImGui::GetWindowSize().x - (2.0f * splitter_width))
+                                   : (ImGui::GetWindowSize().y - (1.0f * splitter_width));
 
-    size_left = std::max(size_left, min_size);
-    size_right = std::max(size_right, min_size);
+    inout_range_left_top =
+        ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? inout_range_left_top
+                                                                     : (split_range - inout_range_right_bottom));
+    inout_range_right_bottom =
+        ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? (split_range - inout_range_left_top)
+                                                                     : inout_range_right_bottom);
+
+    inout_range_left_top = std::max(inout_range_left_top, min_size);
+    inout_range_right_bottom = std::max(inout_range_right_bottom, min_size);
 
     ImGuiWindow* window = ImGui::GetCurrentContext()->CurrentWindow;
-    ImGuiID id = window->GetID("##Splitter");
     ImRect bb;
-    if (fixed_side == SplitterWidget::FixedSplitterSide::LEFT) {
-        bb.Min =
-            window->DC.CursorPos + (split_vertically ? ImVec2(size_left + 1.0f, 0.0f) : ImVec2(0.0f, size_left + 1.0f));
-    } else if (fixed_side == SplitterWidget::FixedSplitterSide::RIGHT) {
-        bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((width_avail - size_right) + 1.0f, 0.0f)
-                                                          : ImVec2(0.0f, (width_avail - size_right) + 1.0f));
+    if (fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) {
+        bb.Min = window->DC.CursorPos +
+                 (vertical ? ImVec2(inout_range_left_top + 1.0f, 0.0f) : ImVec2(0.0f, inout_range_left_top + 1.0f));
+    } else if (fixed_side == SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM) {
+        bb.Min = window->DC.CursorPos + (vertical ? ImVec2((split_range - inout_range_right_bottom) + 1.0f, 0.0f)
+                                                  : ImVec2(0.0f, (split_range - inout_range_right_bottom) + 1.0f));
     }
-    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness / 2.0f, splitter_long_axis_size)
-                                                           : ImVec2(splitter_long_axis_size, thickness / 2.0f),
+    bb.Max = bb.Min + ImGui::CalcItemSize(vertical ? ImVec2(splitter_width / 2.0f, splitter_length)
+                                                   : ImVec2(splitter_length, splitter_width / 2.0f),
                           0.0f, 0.0f);
 
-    bool retval = ImGui::SplitterBehavior(
-        bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
+    ImGuiID id = window->GetID(idstr.c_str());
+    bool retval = ImGui::SplitterBehavior(bb, id, vertical ? ImGuiAxis_X : ImGuiAxis_Y, &inout_range_left_top,
+        &inout_range_right_bottom, min_size, min_size, 0.0f, 0.0f);
 
     /// XXX Left mouse button is not recognized properly
     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
-        float consider_width = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? size_left : size_right);
+        float consider_width = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? inout_range_left_top
+                                                                                            : inout_range_right_bottom);
         if (consider_width <= min_size) {
-            size_left =
-                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? (this->splitter_last_width)
-                                                                         : (width_avail - this->splitter_last_width));
-            size_right =
-                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? (width_avail - this->splitter_last_width)
-                                                                         : (this->splitter_last_width));
+            inout_range_left_top = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP)
+                                        ? (this->splitter_last_width)
+                                        : (split_range - this->splitter_last_width));
+            inout_range_right_bottom =
+                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? (split_range - this->splitter_last_width)
+                                                                             : (this->splitter_last_width));
         } else {
-            size_left =
-                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? (min_size) : (width_avail - min_size));
-            size_right =
-                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? (width_avail - min_size) : (min_size));
+            inout_range_left_top =
+                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? (min_size) : (split_range - min_size));
+            inout_range_right_bottom =
+                ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT_TOP) ? (split_range - min_size) : (min_size));
             this->splitter_last_width = consider_width;
         }
     }
 
     return retval;
+}
+
+
+float megamol::gui::SplitterWidget::GetWidth() const {
+    return (12.0f * megamol::gui::gui_scaling.Get());
 }

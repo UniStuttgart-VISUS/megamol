@@ -107,8 +107,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
-    this->m_requestedResourcesNames = {
-        "FrontendResourcesList",
+    this->m_requestedResourcesNames = {"FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics",                      // for LastFrameTime
         "optional<WindowManipulation>",         // for Framebuffer resize
@@ -116,9 +115,10 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph",                         // LuaAPI manipulates graph
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name,
-        "optional<GUIRegisterWindow>",
-        "RuntimeConfig",
+        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+#ifdef PROFILING
+        frontend_resources::PerformanceManager_Req_Name
+#endif
     }; //= {"ZMQ_Context"};
 
     *open_version_notification = false;
@@ -672,6 +672,35 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 
         return StringResult{answer.str().c_str()};
     }});
+#ifdef PROFILING
+    callbacks.add<StringResult, std::string>("mmListModuleTimers",
+        "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
+            auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+                &this->m_requestedResourceReferences[11]
+                     .getResource<megamol::frontend_resources::PerformanceManager>());
+            std::stringstream output;
+            auto m = graph.FindModule(name);
+            if (m) {
+                auto timers = perf_manager->lookup_timers(m.get());
+                for (auto& t : timers) {
+                    auto& timer = perf_manager->lookup_config(t);
+                    output << t << ": " << timer.name << " ("
+                           << megamol::frontend_resources::PerformanceManager::query_api_string(timer.api) << ")"
+                           << std::endl;
+                }
+            }
+            return StringResult{output.str()};
+        }});
+    callbacks.add<VoidResult, int, std::string>("mmSetTimerComment",
+        "(int handle, string comment)\n\tSet a transient comment for a timer; will show up in profiling log.",
+        {[&](int handle, std::string comment) -> VoidResult {
+            auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+                &this->m_requestedResourceReferences[11]
+                     .getResource<megamol::frontend_resources::PerformanceManager>());
+            perf_manager->set_transient_comment(handle, comment);
+            return VoidResult{};
+        }});
+#endif
     // TODO
     //const auto fun = [&answer](Module* mod) {
     //    AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
