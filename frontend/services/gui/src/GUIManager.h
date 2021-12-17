@@ -20,6 +20,7 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
+#include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
 
 
@@ -245,13 +246,28 @@ public:
      * @param megamol_graph          The megamol graph.
      * @param core_instance          The core_instance.
      */
-    bool SynchronizeRunningGraph(
-        megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool GraphSynchronization(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     /**
      * Register GUI hotkeys.
      */
     void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
+
+    void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
+        auto cons = win_collection.GetWindow<LogConsole>();
+        if (cons) {
+            cons->SetLuaFunc(lua_func);
+        }
+    }
+
+#ifdef PROFILING
+    void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+        this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
+    }
+    void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
+        this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
+    }
+#endif
 
     ///////////////////////////////////////////////////////////////////////
 

@@ -283,16 +283,16 @@ bool GUIManager::PostDraw() {
 
         try {
 
-            // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
+            // Draw global menu -----------------------------------------------
             this->draw_menu();
 
-            // Draw Windows ------------------------------------------------------------
+            // Draw Windows and their pop-ups ---------------------------------
             this->win_collection.Draw(this->gui_state.menu_visible);
 
-            // Draw Pop-ups ------------------------------------------------------------
+            // Draw global pop-ups --------------------------------------------
             this->draw_popups();
 
-            // Draw global parameter widgets -------------------------------------------
+            // Draw global parameter widgets ----------------------------------
             if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
                 /// ! Only enabled in second frame if interaction objects are added during first frame !
                 this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
@@ -303,9 +303,9 @@ bool GUIManager::PostDraw() {
                 this->picking_buffer.DisableInteraction();
             }
 
-        } catch (...) {
+        } catch (std::exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unknown Error... [%s at %s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         }
 
         // Render the current ImGui frame
@@ -508,65 +508,11 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    //// GUI
-    // for (auto& hotkey : this->gui_hotkeys) {
-    //    if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //        hotkey.second.is_pressed = true;
-    //        hotkeyPressed = true;
-    //    }
-    //}
-    //// Hotkeys of window(s)
-    // const auto windows_func = [&](AbstractWindow& wc) {
-    //    // Check Window Hotkey
-    //    bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
-    //    if (windowHotkeyPressed) {
-    //        wc.Config().show = !wc.Config().show;
-    //    }
-    //    hotkeyPressed |= windowHotkeyPressed;
-    //
-    //    // Check for additional window hotkeys
-    //    for (auto& hotkey : wc.GetHotkeys()) {
-    //        if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //            hotkey.second.is_pressed = true;
-    //            hotkeyPressed = true;
-    //        }
-    //    }
-    //};
-    // this->win_collection.EnumWindows(windows_func);
-    //
-    // if (hotkeyPressed)
-    //    return true;
-
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
     if (io.WantTextInput) {
         return true;
     }
-
-    // Check for parameter hotkeys
-    // hotkeyPressed = false;
-    // if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-    //    for (auto& module_ptr : graph_ptr->Modules()) {
-    //        // Break loop after first occurrence of parameter hotkey
-    //        if (hotkeyPressed) {
-    //            break;
-    //        }
-    //        for (auto& p : module_ptr->Parameters()) {
-    //            if (p.Type() == ParamType_t::BUTTON) {
-    //                auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
-    //                if (this->is_hotkey_pressed(keyCode)) {
-    //                    // Sync directly button action to parameter in core
-    //                    /// Does not require syncing of graphs
-    //                    if (p.CoreParamPtr() != nullptr) {
-    //                        p.CoreParamPtr()->setDirty();
-    //                    }
-    //                    /// p.ForceSetValueDirty();
-    //                    hotkeyPressed = true;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
 
     return hotkeyPressed;
 }
@@ -684,83 +630,15 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeRunningGraph(
+bool megamol::gui::GUIManager::GraphSynchronization(
     megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
-    // Synchronization is not required when no gui element is visible
+    // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    // 1) Load all known calls from core instance ONCE ---------------------------
-    if (!this->win_configurator_ptr->GetGraphCollection().LoadCallStock(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Load all known modules from core instance ONCE
-    if (!this->win_configurator_ptr->GetGraphCollection().LoadModuleStock(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    bool synced = false;
-    bool sync_success = false;
-    auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
-    // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
-    if (!synced && (graph_ptr != nullptr)) {
-        bool graph_sync_success = true;
-
-        Graph::QueueAction action;
-        Graph::QueueData data;
-        while (graph_ptr->PopSyncQueue(action, data)) {
-            synced = true;
-            switch (action) {
-            case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
-            } break;
-            case (Graph::QueueAction::RENAME_MODULE): {
-                bool rename_success = megamol_graph.RenameModule(data.name_id, data.rename_id);
-                graph_sync_success &= rename_success;
-            } break;
-            case (Graph::QueueAction::DELETE_MODULE): {
-                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
-            } break;
-            case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
-            } break;
-            case (Graph::QueueAction::DELETE_CALL): {
-                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
-            } break;
-            case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
-                megamol_graph.SetGraphEntryPoint(data.name_id);
-            } break;
-            case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                megamol_graph.RemoveGraphEntryPoint(data.name_id);
-            } break;
-            default:
-                break;
-            }
-        }
-        if (!graph_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
-        sync_success &= graph_sync_success;
-    }
-
-    // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
-    if (!synced) {
-        // Creates new graph at first call
-        ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
-        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(
-            running_graph_uid, megamol_graph);
-        if (!graph_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
+    if (this->win_configurator_ptr->GetGraphCollection().SyncRunningGUIGraphWithCoreGraph(
+            megamol_graph, core_instance)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -769,88 +647,21 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
         }
 
         // Check for new script path name
-        if (graph_sync_success) {
-            if (auto synced_graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-                std::string script_filename;
-                // Get project filename from lua state of frontend service
-                if (!this->gui_state.project_script_paths.empty()) {
-                    script_filename = this->gui_state.project_script_paths.front();
-                }
-                // Load GUI state from project file when project file changed
-                if (!script_filename.empty()) {
-                    auto script_path = std::filesystem::u8path(script_filename);
-                    synced_graph_ptr->SetFilename(script_path.generic_u8string(), false);
-                }
+        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            std::string script_filename;
+            if (!this->gui_state.project_script_paths.empty()) {
+                script_filename = this->gui_state.project_script_paths.front();
+            }
+            if (!script_filename.empty()) {
+                auto script_path = std::filesystem::u8path(script_filename);
+                graph_ptr->SetFilename(script_path.generic_u8string(), false);
             }
         }
 
-        sync_success &= graph_sync_success;
+        return true;
     }
 
-    // 3) Synchronize parameter values -------------------------------------------
-    if (graph_ptr != nullptr) {
-
-        bool param_sync_success = true;
-        for (auto& module_ptr : graph_ptr->Modules()) {
-            for (auto& p : module_ptr->Parameters()) {
-
-                // Try to connect gui parameters to newly created parameters of core modules
-                if (p.CoreParamPtr().IsNull()) {
-                    auto module_name = module_ptr->FullName();
-                    megamol::core::Module* core_module_ptr = nullptr;
-                    core_module_ptr = megamol_graph.FindModule(module_name).get();
-                    // Connect pointer of new parameters of core module to parameters in gui module
-                    if (core_module_ptr != nullptr) {
-                        auto se = core_module_ptr->ChildList_End();
-                        for (auto si = core_module_ptr->ChildList_Begin(); si != se; ++si) {
-                            auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
-                            if (param_slot != nullptr) {
-                                std::string param_full_name(param_slot->FullName().PeekBuffer());
-                                for (auto& parameter : module_ptr->Parameters()) {
-                                    if (gui_utils::CaseInsensitiveStringCompare(
-                                            parameter.FullNameCore(), param_full_name)) {
-                                        megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
-                                            (*param_slot), parameter, true, false, true);
-                                    }
-                                }
-                            }
-                        }
-                    }
-#ifdef GUI_VERBOSE
-                    if (p.CoreParamPtr().IsNull()) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                    }
-#endif // GUI_VERBOSE
-                }
-
-                if (!p.CoreParamPtr().IsNull()) {
-                    // Write changed gui state to core parameter
-                    if (p.IsGUIStateDirty()) {
-                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
-                        p.ResetGUIStateDirty();
-                    }
-                    // Write changed parameter value to core parameter
-                    if (p.IsValueDirty()) {
-                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
-                        p.ResetValueDirty();
-                    }
-                    // Read current parameter value and GUI state fro core parameter
-                    param_sync_success &=
-                        megamol::gui::Parameter::ReadCoreParameterToParameter(p.CoreParamPtr(), p, false, false);
-                }
-            }
-        }
-#ifdef GUI_VERBOSE
-        if (!param_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        }
-#endif // GUI_VERBOSE
-        sync_success &= param_sync_success;
-    }
-    return sync_success;
+    return false;
 }
 
 
@@ -1031,14 +842,14 @@ void megamol::gui::GUIManager::load_default_fonts() {
         std::string default_font_path;
         auto get_preset_font_path = [&](const std::string& directory) {
             std::string font_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
+                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_FILENAME_FONT_DEFAULT_ROBOTOSANS);
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
                 configurator_font_path = font_path;
                 default_font_path = font_path;
             }
-            font_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
+            font_path = megamol::core::utility::FileUtils::SearchFileRecursive(
+                directory, GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO);
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
             }
@@ -1355,9 +1166,6 @@ void GUIManager::draw_menu() {
 
 
 void megamol::gui::GUIManager::draw_popups() {
-
-    // Draw pop-ups defined in windows
-    this->win_collection.PopUps();
 
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
