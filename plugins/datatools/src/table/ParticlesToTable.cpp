@@ -129,6 +129,7 @@ bool ParticlesToTable::assertMPDC(geocalls::MultiParticleDataCall* in, table::Ta
         inHash = in->DataHash();
         inFrameID = in->FrameID();
     }
+    in->Unlock();
     return true;
 }
 

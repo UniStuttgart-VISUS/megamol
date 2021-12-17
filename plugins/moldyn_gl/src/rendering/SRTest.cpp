@@ -445,6 +445,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     /*core::utility::log::Log::DefaultLog.WriteInfo(
         "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);*/
 
+    in_call->Unlock();
+
     return true;
 }
 
@@ -610,7 +612,6 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         }
     }
 
-    in_data.Unlock();
 }
 
 
