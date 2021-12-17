@@ -609,6 +609,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             IDX.push_back(p_idx * 4 + 4);
         }
     }
+
+    in_data.Unlock();
 }
 
 
