@@ -317,6 +317,8 @@ bool megamol::compositing::SSAO::create() {
             m_nonSmartBlurPrgm = std::make_unique<GLSLComputeShader>();
             m_nonSmartApplyPrgm = std::make_unique<GLSLComputeShader>();
             m_nonSmartHalfApplyPrgm = std::make_unique<GLSLComputeShader>();
+            m_naiveSSAOPrgm = std::make_unique<GLSLComputeShader>();
+            m_naiveSSAOBlurPrgm = std::make_unique<GLSLComputeShader>();
 
             vislib_gl::graphics::gl::ShaderSource csPrepareDepths;
             vislib_gl::graphics::gl::ShaderSource csPrepareDepthsHalf;
@@ -330,7 +332,6 @@ bool megamol::compositing::SSAO::create() {
             vislib_gl::graphics::gl::ShaderSource csNonSmartBlur;
             vislib_gl::graphics::gl::ShaderSource csNonSmartApply;
             vislib_gl::graphics::gl::ShaderSource csNonSmartHalfApply;
-
             vislib_gl::graphics::gl::ShaderSource csNaiveSSAO;
             vislib_gl::graphics::gl::ShaderSource csNaiveSSAOBlur;
 
@@ -456,6 +457,8 @@ bool megamol::compositing::SSAO::create() {
                 return false;
             if (!m_naiveSSAOBlurPrgm->Compile(csNaiveSSAOBlur.Code(), csNaiveSSAOBlur.Count())) return false;
             if (!m_naiveSSAOBlurPrgm->Link()) return false;
+
+            Log::DefaultLog.WriteInfo("Done compiling (a)ssao shaders.");
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
@@ -926,54 +929,59 @@ void megamol::compositing::SSAO::generateSSAO(
         if (blurPasses > 0) {
             int wideBlursRemaining = std::max(0, blurPasses - 2);
 
-            for (int i = 0; i < blurPasses; ++i) {
+            for (int i = 0; i < blurPasses; ++i)
+            {
                 GLuint binding = 0;
 
                 std::vector<TextureSamplerTuple> inputTextures = {
                     {m_pingPongHalfResultA, "g_BlurInput", m_samplerStatePointMirror}};
 
-                // TODO: re-do below code, ugly af
-                // check for i == blurPasses - 1 above and not in every if
-                if (settings.QualityLevel > 0) {
-                    if (wideBlursRemaining > 0) {
-                        if (i == blurPasses - 1) {
-                            std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
-                                {m_finalResultsArrayViews[pass], binding}};
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> intermediateOutputTexs = {
+                    {m_pingPongHalfResultB, binding}};
+
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> finalOutputTexs = {
+                    {m_finalResultsArrayViews[pass], binding}};
+
+                if (settings.QualityLevel > 0)
+                {
+                    if (wideBlursRemaining > 0)
+                    {
+                        if (i == blurPasses - 1)
+                        {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                                m_smartBlurWidePrgm, inputTextures, outputTextures);
-                        } else {
-                            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                                {m_pingPongHalfResultB, binding}};
+                                m_smartBlurWidePrgm, inputTextures, finalOutputTexs);
+                        } else
+                        {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_smartBlurWidePrgm, inputTextures, outputTextures);
+                                m_smartBlurWidePrgm, inputTextures, intermediateOutputTexs);
                         }
+
                         wideBlursRemaining--;
-                    } else {
-                        if (i == blurPasses - 1) {
-                            std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
-                                {m_finalResultsArrayViews[pass], binding}};
+                    } else
+                    {
+                        if (i == blurPasses - 1)
+                        {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                                m_smartBlurPrgm, inputTextures, outputTextures);
-                        } else {
-                            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                                {m_pingPongHalfResultB, binding}};
+                                m_smartBlurPrgm, inputTextures, finalOutputTexs);
+                        } else
+                        {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_smartBlurPrgm, inputTextures, outputTextures);
+                                m_smartBlurPrgm, inputTextures, intermediateOutputTexs);
                         }
                     }
-                } else {
+                } else
+                {
                     std::get<2>(inputTextures[0]) = m_samplerStateLinearClamp;
-                    if (i == blurPasses - 1) {
-                        std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
-                            {m_finalResultsArrayViews[pass], binding}};
+
+                    if (i == blurPasses - 1)
+                    {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                            m_nonSmartBlurPrgm, inputTextures, outputTextures);
-                    } else {
-                        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                            {m_pingPongHalfResultB, binding}};
+                            m_nonSmartBlurPrgm, inputTextures, finalOutputTexs);
+                    } else
+                    {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                            m_nonSmartBlurPrgm, inputTextures, outputTextures);
-                    } // just for quality level 0 (and -1)
+                            m_nonSmartBlurPrgm, inputTextures, intermediateOutputTexs);
+                    }
                 }
 
                 std::swap(m_pingPongHalfResultA, m_pingPongHalfResultB);
