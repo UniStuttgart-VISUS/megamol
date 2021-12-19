@@ -126,17 +126,30 @@ protected:
 private:
     typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
+    /**
+    * \brief Sets GUI parameter slot visibility depending on antialiasing technique.
+    */
     bool visibilityCallback(core::param::ParamSlot& slot);
+
+    /**
+    * \brief Sets the setting parameter values of the SMAAConstants struct depending
+    * on the chosen quality level.
+    */
     bool setSettingsCallback(core::param::ParamSlot& slot);
+
+    /**
+    * \brief If the quality level is set to custom, this method sets the required parameter
+    * values of the SMAAConstants struct.
+    */
     bool setCustomSettingsCallback(core::param::ParamSlot& slot);
 
     /**
-    * \brief: First pass. Calculates edges of given input
+    * \brief First pass. Calculates edges of given input.
     *
     * \param input The input texture (texture to smooth) from which the edges are calculated.
-    * \param depth The depth texture from corresponding to the input. Used for depth based edge detection
-    * \param edges The output texture to which the edges are written
-    * \param detection_technique The selected technqiue on which edge detection is based: color, luma, or depth
+    * \param depth The depth texture from corresponding to the input. Used for depth based edge detection.
+    * \param edges The output texture to which the edges are written.
+    * \param detection_technique The selected technqiue on which edge detection is based: color, luma, or depth.
     */
     void edgeDetection(
         const std::shared_ptr<glowl::Texture2D>& input,
@@ -145,12 +158,12 @@ private:
         GLint detection_technique);
 
     /**
-    * \brief: Second pass. Calculates the weights of the found edges from edgeDetection function
+    * \brief Second pass. Calculates the weights of the found edges from edgeDetection function.
     *
     * \param edges Edge texture from previous edgeDetection pass.
-    * \param area Area texture used as lookup texture to properly calculate the coverage area of an edge
-    * \param search Search texture to find the distances to surrounding edges
-    * \param weights The output texture to which the weights are written
+    * \param area Area texture used as lookup texture to properly calculate the coverage area of an edge.
+    * \param search Search texture to find the distances to surrounding edges.
+    * \param weights The output texture to which the weights are written.
     */
     void blendingWeightCalculation(
         const std::shared_ptr<glowl::Texture2D>& edges,
@@ -159,12 +172,12 @@ private:
         const std::shared_ptr<glowl::Texture2D>& weights);
 
     /**
-    * \brief: Final pass. Blends neighborhood pixels using the weight texture from the 2nd pass.
+    * \brief Final pass. Blends neighborhood pixels using the weight texture from the 2nd pass.
     * Gives final result.
     *
-    * \param input The input texture to smooth
-    * \param weights The weights texture from previous blendingWeightCalculation pass. Used to blend edges
-    * \param result The resulting smoothed texture
+    * \param input The input texture to smooth.
+    * \param weights The weights texture from previous blendingWeightCalculation pass. Used to blend edges.
+    * \param result The resulting smoothed texture.
     */
     void neighborhoodBlending(
         const std::shared_ptr<glowl::Texture2D>& input,
@@ -172,19 +185,19 @@ private:
         const std::shared_ptr<glowl::Texture2D>& result);
 
     /**
-    * \brief: Performs AntiAliasing based on FXAA
+    * \brief Performs AntiAliasing based on FXAA.
     *
-    * \param input The input texture to smooth
-    * \param output The resulting smoothed texture
+    * \param input The input texture to smooth.
+    * \param output The resulting smoothed texture.
     */
     void fxaa(
         const std::shared_ptr<glowl::Texture2D>& input,
         const std::shared_ptr<glowl::Texture2D>& output);
 
     /**
-    * Copies a src texture to the tgt texture
+    * Copies a src texture to the tgt texture.
     * Caution: this only works if the tgt texture is of format rgba16f!
-    * Use Texture2D::copy otherwise
+    * Use Texture2D::copy otherwise.
     */
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt,
@@ -243,9 +256,9 @@ private:
 
     /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
     * SMAA 1x:  basic version of SMAA
-    * SMAA S2x: includes all SMAA 1x features plus spatial multismapling
-    * SMAA T2x: includes all SMAA 1x features plus temporal multisampling
-    * SMAA 4x:  includes all SMAA 1x features plus spatial and temporal multi/supersampling
+    * SMAA S2x: includes all SMAA 1x features plus spatial multismapling (not implemented yet)
+    * SMAA T2x: includes all SMAA 1x features plus temporal multisampling (not implemented yet)
+    * SMAA 4x:  includes all SMAA 1x features plus spatial and temporal multi/supersampling (not implemented yet)
     */
     megamol::core::param::ParamSlot m_smaa_mode;
 

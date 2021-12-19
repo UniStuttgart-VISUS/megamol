@@ -44,9 +44,11 @@
 #define SSAO_ADAPTIVE_TAP_BASE_COUNT 5
 #define SSAO_ADAPTIVE_TAP_FLEXIBLE_COUNT (SSAO_MAX_TAPS - SSAO_ADAPTIVE_TAP_BASE_COUNT)
 #define SSAODepth_MIP_LEVELS 4
-
 /////////////////////////////////////////////////////////////////////////
 
+/*
+ * @megamol::compositing::SSAO::SSAO
+ */
 megamol::compositing::SSAO::SSAO()
     : core::Module()
     , m_version(0)
@@ -204,6 +206,10 @@ megamol::compositing::SSAO::SSAO()
     this->MakeSlotAvailable(&this->m_psDetailShadowStrength);
 }
 
+
+/*
+ * @megamol::compositing::SSAO::ssaoModeCallback
+ */
 bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
     int mode = m_psSSAOMode.Param<core::param::EnumParam>()->Value();
 
@@ -251,6 +257,10 @@ bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) 
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::settingsCallback
+ */
 bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) {
     m_settings.Radius = m_psRadius.Param<core::param::FloatParam>()->Value();
     m_settings.ShadowMultiplier = m_psShadowMultiplier.Param<core::param::FloatParam>()->Value();
@@ -274,8 +284,16 @@ bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) 
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::~SSAO
+ */
 megamol::compositing::SSAO::~SSAO() { this->Release(); }
 
+
+/*
+ * @megamol::compositing::SSAO::create
+ */
 bool megamol::compositing::SSAO::create() {
     typedef megamol::core::utility::log::Log Log;
 
@@ -548,8 +566,16 @@ bool megamol::compositing::SSAO::create() {
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::release
+ */
 void megamol::compositing::SSAO::release() {}
 
+
+/*
+ * @megamol::compositing::SSAO::getDataCallback
+ */
 bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     auto lhsTc = dynamic_cast<CallTexture2D*>(&caller);
     auto callNormal = m_normalsTexSlot.CallAs<CallTexture2D>();
@@ -658,7 +684,7 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                 {
                     prepareDepths(m_settings, m_inputs, depthTx2D, m_normals);
 
-                    generateSSAO(m_settings, m_inputs, false, depthTx2D, m_normals);
+                    generateSSAO(m_settings, m_inputs, false, m_normals);
 
                     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                         {m_finalOutput, 0}
@@ -746,9 +772,16 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
-    const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
-    std::shared_ptr<glowl::Texture2D> normalTexture) {
+
+/*
+ * @megamol::compositing::SSAO::prepareDepths
+ */
+void megamol::compositing::SSAO::prepareDepths(
+    const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs,
+    std::shared_ptr<glowl::Texture2D> depthTexture,
+    std::shared_ptr<glowl::Texture2D> normalTexture)
+{
     bool generateNormals = inputs->GenerateNormals;
 
     std::vector<TextureSamplerTuple> inputTextures(1);
@@ -810,9 +843,16 @@ void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
     }
 }
 
-void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
-    const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass, std::shared_ptr<glowl::Texture2D> depthTexture,
-    std::shared_ptr<glowl::Texture2D> normalTexture) {
+
+/*
+ * @megamol::compositing::SSAO::generateSSAO
+ */
+void megamol::compositing::SSAO::generateSSAO(
+    const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs,
+    bool adaptiveBasePass,
+    std::shared_ptr<glowl::Texture2D> normalTexture)
+{
 
     // omitted viewport and scissor code from intel here
 
@@ -826,8 +866,7 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
         if ((settings.QualityLevel < 0) && ((pass == 1) || (pass == 2)))
             continue;
 
-        int blurPasses = settings.BlurPassCount;
-        blurPasses = std::min(blurPasses, m_maxBlurPassCount);
+        int blurPasses = std::min(settings.BlurPassCount, m_maxBlurPassCount);
 
         // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
@@ -840,7 +879,7 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
                 blurPasses = Max(1, blurPasses);
         } else
 #endif
-            if (settings.QualityLevel <= 0) {
+        if (settings.QualityLevel <= 0) {
             // just one blur pass allowed for minimum quality
             // MM simply uses one blur pass
             blurPasses = std::min(1, settings.BlurPassCount);
@@ -943,9 +982,19 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
     }
 }
 
+
+/*
+ * @megamol::compositing::SSAO::getMetaDataCallback
+ */
 bool megamol::compositing::SSAO::getMetaDataCallback(core::Call& caller) { return true; }
 
-void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
+
+/*
+ * @megamol::compositing::SSAO::updateTextures
+ */
+void megamol::compositing::SSAO::updateTextures(
+    const std::shared_ptr<ASSAO_Inputs> inputs)
+{
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
@@ -984,7 +1033,7 @@ void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inpu
     reCreateIfNeeded(m_finalResults, m_halfSize, m_AOResultLayout);
 
     for (int i = 0; i < 4; ++i) {
-        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, m_AOResultLayout, i);
+        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, i);
     }
 
     if (inputs->GenerateNormals) {
@@ -992,8 +1041,15 @@ void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inpu
     }
 }
 
+
+/*
+ * @megamol::compositing::SSAO::updateConstants
+ */
 void megamol::compositing::SSAO::updateConstants(
-    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass) {
+    const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs,
+    int pass)
+{
     bool generateNormals = inputs->GenerateNormals;
 
     // update constants
@@ -1042,7 +1098,7 @@ void megamol::compositing::SSAO::updateConstants(
     float effectSamplingRadiusNearLimit = (settings.Radius * 1.2f);
 
     // if the depth precision is switched to 32bit float, this can be set to something closer to 1 (0.9999 is fine)
-    consts.DepthPrecisionOffsetMod = 0.9992f; // TODO: is this correct? or does it need to be slightly > 1?
+    consts.DepthPrecisionOffsetMod = 0.9992f;
 
     // consts.RadiusDistanceScalingFunctionPow     = 1.0f - Clamp( settings.RadiusDistanceScalingFunction,
     // 0.0f, 1.0f );
@@ -1123,9 +1179,15 @@ void megamol::compositing::SSAO::updateConstants(
     m_ssboConstants->rebuffer(&m_constants, sizeof(m_constants));
 }
 
-// only resets textures if needed
+
+/*
+ * @megamol::compositing::SSAO::reCreateIfNeeded
+ */
 bool megamol::compositing::SSAO::reCreateIfNeeded(
-    std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps) {
+    std::shared_ptr<glowl::Texture2D> tex,
+    glm::ivec2 size, const glowl::TextureLayout& ly,
+    bool generateMipMaps)
+{
     if ((size.x == 0) || (size.y == 0)) {
         // reset object
     } else {
@@ -1148,8 +1210,15 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::reCreateIfNeeded
+ */
 bool megamol::compositing::SSAO::reCreateIfNeeded(
-    std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
+    std::shared_ptr<glowl::Texture2DArray> tex,
+    glm::ivec2 size,
+    const glowl::TextureLayout& ly)
+{
     if ((size.x == 0) || (size.y == 0)) {
 
     } else {
@@ -1169,8 +1238,16 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
     return true;
 }
 
-bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
-    std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice) {
+
+/*
+ * @megamol::compositing::SSAO::reCreateArrayIfNeeded
+ */
+bool megamol::compositing::SSAO::reCreateArrayIfNeeded(
+    std::shared_ptr<glowl::Texture2DView> tex,
+    std::shared_ptr<glowl::Texture2DArray> original,
+    glm::ivec2 size,
+    int arraySlice)
+{
     if ((size.x == 0) || (size.y == 0)) {
 
     } else {
@@ -1187,8 +1264,15 @@ bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Te
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::reCreateMIPViewIfNeeded
+ */
 bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
-    std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
+    std::shared_ptr<glowl::Texture2DView> current,
+    std::shared_ptr<glowl::Texture2D> original,
+    int mipViewSlice)
+{
 
     if (current != nullptr && original != nullptr) {
         glowl::TextureLayout desc = current->getTextureLayout();
@@ -1202,8 +1286,14 @@ bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
     return true;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::equalLayoutsWithoutSize
+ */
 bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
-    const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+    const glowl::TextureLayout& lhs,
+    const glowl::TextureLayout& rhs)
+{
     bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format = lhs.format == rhs.format;
@@ -1215,8 +1305,14 @@ bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
     return depth && float_parameters && format && internal_format && int_parameters && levels && type;
 }
 
+
+/*
+ * @megamol::compositing::SSAO::equalLayouts
+ */
 bool megamol::compositing::SSAO::equalLayouts(
-    const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+    const glowl::TextureLayout& lhs,
+    const glowl::TextureLayout& rhs)
+{
     bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format = lhs.format == rhs.format;

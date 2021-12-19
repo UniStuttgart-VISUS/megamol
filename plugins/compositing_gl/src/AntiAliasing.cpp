@@ -27,6 +27,9 @@
 #include "SMAASearchTex.h"
 
 
+/*
+ * @megamol::compositing::AntiAliasing::AntiAliasing
+ */
 megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_version(0)
     , m_output_tx2D(nullptr)
@@ -136,8 +139,15 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->MakeSlotAvailable(&this->m_depth_tex_slot);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::~AntiAliasing
+ */
 megamol::compositing::AntiAliasing::~AntiAliasing() { this->Release(); }
 
+/*
+* @megamol::compositing::AntiAliasing::create
+*/
 bool megamol::compositing::AntiAliasing::create() {
     try {
 // profiling
@@ -273,12 +283,20 @@ bool megamol::compositing::AntiAliasing::create() {
     return true;
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::release
+ */
 void megamol::compositing::AntiAliasing::release() {
 #ifdef PROFILING
     m_perf_manager->remove_timers(m_timers);
 #endif
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::setSettingsCallback
+ */
 bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamSlot& slot) {
     // low
     if (slot.Param<core::param::EnumParam>()->Value() == 0) {
@@ -361,6 +379,10 @@ bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamS
     return true;
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::setCustomSettingsCallback
+ */
 bool megamol::compositing::AntiAliasing::setCustomSettingsCallback(core::param::ParamSlot& slot) {
     m_smaa_constants.Smaa_threshold = this->m_smaa_threshold.Param<core::param::FloatParam>()->Value();
     m_smaa_constants.Smaa_depth_threshold = 0.1f * m_smaa_constants.Smaa_threshold;
@@ -382,6 +404,10 @@ bool megamol::compositing::AntiAliasing::setCustomSettingsCallback(core::param::
     return true;
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::visibilityCallback
+ */
 bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSlot& slot) {
     // smaa enabled
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
@@ -403,11 +429,16 @@ bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSl
     return true;
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::edgeDetection
+ */
 void megamol::compositing::AntiAliasing::edgeDetection(
     const std::shared_ptr<glowl::Texture2D>& input,
     const std::shared_ptr<glowl::Texture2D>& depth,
     const std::shared_ptr<glowl::Texture2D>& edges,
-    GLint detection_technique) {
+    GLint detection_technique)
+{
     m_smaa_edge_detection_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -443,11 +474,16 @@ void megamol::compositing::AntiAliasing::edgeDetection(
     glBindBuffer(m_ssbo_constants->getTarget(), 0);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::blendingWeightCalculation
+ */
 void megamol::compositing::AntiAliasing::blendingWeightCalculation(
     const std::shared_ptr<glowl::Texture2D>& edges,
     const std::shared_ptr<glowl::Texture2D>& area,
     const std::shared_ptr<glowl::Texture2D>& search,
-    const std::shared_ptr<glowl::Texture2D>& weights) {
+    const std::shared_ptr<glowl::Texture2D>& weights)
+{
     m_smaa_blending_weight_calculation_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -475,10 +511,15 @@ void megamol::compositing::AntiAliasing::blendingWeightCalculation(
     glBindBuffer(m_ssbo_constants->getTarget(), 0);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::neighborhoodBlending
+ */
 void megamol::compositing::AntiAliasing::neighborhoodBlending(
     const std::shared_ptr<glowl::Texture2D>& input,
     const std::shared_ptr<glowl::Texture2D>& weights,
-    const std::shared_ptr<glowl::Texture2D>& result) {
+    const std::shared_ptr<glowl::Texture2D>& result)
+{
     m_smaa_neighborhood_blending_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -503,9 +544,14 @@ void megamol::compositing::AntiAliasing::neighborhoodBlending(
     glBindBuffer(m_ssbo_constants->getTarget(), 0);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::fxaa
+ */
 void megamol::compositing::AntiAliasing::fxaa(
     const std::shared_ptr<glowl::Texture2D>& input,
-    const std::shared_ptr<glowl::Texture2D>& output) {
+    const std::shared_ptr<glowl::Texture2D>& output)
+{
     m_fxaa_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -524,8 +570,14 @@ void megamol::compositing::AntiAliasing::fxaa(
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::copyTextureViaShader
+ */
 void megamol::compositing::AntiAliasing::copyTextureViaShader(
-    const std::shared_ptr<glowl::Texture2D>& src, const std::shared_ptr<glowl::Texture2D>& tgt) {
+    const std::shared_ptr<glowl::Texture2D>& src,
+    const std::shared_ptr<glowl::Texture2D>& tgt)
+{
     m_copy_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -544,6 +596,10 @@ void megamol::compositing::AntiAliasing::copyTextureViaShader(
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::getDataCallback
+ */
 bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto rhs_call_input = m_input_tex_slot.CallAs<CallTexture2D>();
@@ -672,4 +728,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
     return true;
 }
 
+
+/*
+ * @megamol::compositing::AntiAliasing::getMetaDataCallback
+ */
 bool megamol::compositing::AntiAliasing::getMetaDataCallback(core::Call& caller) { return true; }

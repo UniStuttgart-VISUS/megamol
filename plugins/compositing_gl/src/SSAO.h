@@ -91,24 +91,24 @@ struct ASSAO_Settings {
     float HorizonAngleThreshold; // [0.0, 0.2] Limits self-shadowing (makes the sampling area less of a hemisphere, more
                                  // of a spherical cone, to avoid self-shadowing and various artifacts due to low
                                  // tessellation and depth buffer imprecision, etc.)
-    float FadeOutFrom;           // [0.0,  ~ ] Distance to start start fading out the effect.
-    float FadeOutTo;             // [0.0,  ~ ] Distance at which the effect is faded out.
-    int QualityLevel; // [ -1,  3 ] Effect quality; -1 - lowest (low, half res checkerboard), 0 - low, 1 - medium, 2 -
-                      // high, 3 - very high / adaptive; each quality level is roughly 2x more costly than the previous,
-                      // except the q3 which is variable but, in general, above q2.
-    float AdaptiveQualityLimit; // [0.0, 1.0] (only for Quality Level 3)
-    int BlurPassCount; // [  0,   6] Number of edge-sensitive smart blur passes to apply. Quality 0 is an exception with
-                       // only one 'dumb' blur pass used.
-    float Sharpness; // [0.0, 1.0] (How much to bleed over edges; 1: not at all, 0.5: half-half; 0.0: completely ignore
-                     // edges)
-    float TemporalSupersamplingAngleOffset;  // [0.0,  PI] Used to rotate sampling kernel; If using temporal AA /
+    float FadeOutFrom;           // [0.0, ~] Distance to start start fading out the effect.
+    float FadeOutTo;             // [0.0, ~] Distance at which the effect is faded out.
+    int   QualityLevel;          // [ -1, 3] Effect quality; -1 - lowest (low, half res checkerboard), 0 - low, 1 - medium, 2 -
+                                 // high, 3 - very high / adaptive; each quality level is roughly 2x more costly than the previous,
+                                 // except the q3 which is variable but, in general, above q2.
+    float AdaptiveQualityLimit;  // [0.0, 1.0] (only for Quality Level 3)
+    int   BlurPassCount;         // [0, 6] Number of edge-sensitive smart blur passes to apply. Quality 0 is an exception with
+                                 // only one 'dumb' blur pass used.
+    float Sharpness;             // [0.0, 1.0] (How much to bleed over edges; 1: not at all, 0.5: half-half; 0.0: completely ignore
+                                 // edges)
+    float TemporalSupersamplingAngleOffset;  // [0.0, PI] Used to rotate sampling kernel; If using temporal AA /
                                              // supersampling, suggested to rotate by ( (frame%3)/3.0*PI ) or similar.
                                              // Kernel is already symmetrical, which is why we use PI and not 2*PI.
     float TemporalSupersamplingRadiusOffset; // [0.0, 2.0] Used to scale sampling kernel; If using temporal AA /
                                              // supersampling, suggested to scale by ( 1.0f + (((frame%3)-1.0)/3.0)*0.1
                                              // ) or similar.
-    float DetailShadowStrength; // [0.0, 5.0] Used for high-res detail AO using neighboring depth pixels: adds a lot of
-                                // detail but also reduces temporal stability (adds aliasing).
+    float DetailShadowStrength;  // [0.0, 5.0] Used for high-res detail AO using neighboring depth pixels: adds a lot of
+                                 // detail but also reduces temporal stability (adds aliasing).
 
     ASSAO_Settings() {
         QualityLevel = 2;
@@ -144,10 +144,10 @@ struct ASSAO_Constants {
     glm::vec2 PerPassFullResUVOffset;
 
     glm::vec2 Viewport2xPixelSize;
-    glm::vec2 Viewport2xPixelSize_x_025; // Viewport2xPixelSize * 0.25 (for fusing add+mul into mad)
+    glm::vec2 Viewport2xPixelSize_x_025;    // Viewport2xPixelSize * 0.25 (for fusing add+mul into mad)
 
-    float EffectRadius;         // world (viewspace) maximum size of the shadow
-    float EffectShadowStrength; // global strength of the effect (0 - 5)
+    float EffectRadius;                     // world (viewspace) maximum size of the shadow
+    float EffectShadowStrength;             // global strength of the effect (0 - 5)
     float EffectShadowPow;
     float EffectShadowClamp;
 
@@ -161,21 +161,21 @@ struct ASSAO_Constants {
                                             // could be SSAOSettingsFadeOutFrom * 0.1 or less)
 
     float DepthPrecisionOffsetMod;
-    float NegRecEffectRadius; // -1.0 / EffectRadius
-    float LoadCounterAvgDiv;  // 1.0 / ( halfDepthMip[SSAO_DEPTH_MIP_LEVELS-1].sizeX *
-                              // halfDepthMip[SSAO_DEPTH_MIP_LEVELS-1].sizeY )
+    float NegRecEffectRadius;               // -1.0 / EffectRadius
+    float LoadCounterAvgDiv;                // 1.0 / ( halfDepthMip[SSAO_DEPTH_MIP_LEVELS-1].sizeX *
+                                            // halfDepthMip[SSAO_DEPTH_MIP_LEVELS-1].sizeY )
     float AdaptiveSampleCountLimit;
 
     float InvSharpness;
-    int PassIndex;
-    glm::vec2 QuarterResPixelSize; // used for importance map only
+    int   PassIndex;
+    glm::vec2 QuarterResPixelSize;          // used for importance map only
 
     glm::vec4 PatternRotScaleMatrices[5];
 
     float NormalsUnpackMul;
     float NormalsUnpackAdd;
     float DetailAOStrength;
-    int TransformNormalsToViewSpace;
+    int   TransformNormalsToViewSpace;
 
     glm::mat4 ViewMX;
 
@@ -240,29 +240,143 @@ protected:
 private:
     typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
+    /**
+     * De-interleaves the full resolution depth buffer into two or four depths buffers of
+     * half or quarter size, respectively, depending on the chosen quality level.
+     * If there is no normal texture given, this function additionally approximates
+     * normals from depth and creates a corresponding normal texture for further use.
+     *
+     * \param settings Struct containing various quality tweaks, e.g. radius of occlusion sphere.
+     * \param inputs Struct containing essential required inputs such as viewport dimensions or transformation matrices.
+     * \param depthTexture The (full resolution) depth texture to de-interleave.
+     * \param normalTexture The target texture where possibly generated normals are stored into.
+     */
+    void prepareDepths(
+        const ASSAO_Settings& settings,
+        const std::shared_ptr<ASSAO_Inputs> inputs,
+        std::shared_ptr<glowl::Texture2D> depthTexture,
+        std::shared_ptr<glowl::Texture2D> normalTexture);
 
-    void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs,
-        std::shared_ptr<glowl::Texture2D> depthTexture, std::shared_ptr<glowl::Texture2D> normalTexture);
-    void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass,
-        std::shared_ptr<glowl::Texture2D> depthTexture, std::shared_ptr<glowl::Texture2D> normalTexture);
+    /**
+     * Generates the occlusion for all four de-interleaved parts. For each of the four parts,
+     * first the occlusion gets generated immediatly followed by a number of blur passes.
+     *
+     * \param settings Struct containing various quality tweaks, e.g. the number of blur passes.
+     * \param inputs Struct containing essential required inputs such as viewport dimensions or transformation matrices.
+     * \param adaptiveBasePass Indicates whether the adaptive approach of ASSAO is used or not. Currently not used!
+     * \param normalTexture The normal texture to be used for generating the occlusion.
+     */
+    void generateSSAO(
+        const ASSAO_Settings& settings,
+        const std::shared_ptr<ASSAO_Inputs> inputs,
+        bool adaptiveBasePass,
+        std::shared_ptr<glowl::Texture2D> normalTexture);
 
+    /**
+     * \brief A general function to dispatch the compute shaders depending on the parameters
+     * of its signature.
+     *
+     * \param prgm The program to use containing the compute shader.
+     * \param inputTextures Textures functioning as read-only input textures accessed.
+     * \param outputTextures Target textures in which the compute shader result is stored into.
+     * \param addConstants Indicates whether the compute shader requires the ASSAO_Constants struct (SSBO).
+     * \param finals Input texture array containing the four (blurred) de-interleaved occlusion textures.
+     *               Only used in the last pass of the ASSAO algorithm.
+     */
     template<typename Tuple, typename Tex>
-    void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, const std::vector<Tuple>& input_textures,
-        std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures, bool add_constants = true,
+    void fullscreenPassDraw(
+        const std::unique_ptr<GLSLComputeShader>& prgm,
+        const std::vector<Tuple>& inputTextures,
+        std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures,
+        bool addConstants = true,
         const std::vector<TextureArraySamplerTuple>& finals = {});
 
-    bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
-    bool equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
+    /**
+     * \brief Checks both layouts for equality.
+     *
+     * \return True, if both layouts are equal. False otherwise.
+     */
+    bool equalLayouts(
+        const glowl::TextureLayout& lhs,
+        const glowl::TextureLayout& rhs);
+
+    /**
+     * \brief Checks both layouts for equality without checking their sizes.
+     *
+     * @return True, if both layouts are equal. False otherwise.
+     */
+    bool equalLayoutsWithoutSize(
+        const glowl::TextureLayout& lhs,
+        const glowl::TextureLayout& rhs);
+
+    /**
+     * \brief Updates the required textures (see also SSAO::reCreateIfNeeded) if the inputs (e.g. viewport dimensions) don't match with
+     * the texture properties.
+     */
     void updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs);
-    void updateConstants(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass);
-    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly,
+
+    /**
+     * \brief Updates the ASSAO_Constants struct depending on the settings and inputs.
+     */
+    void updateConstants(
+        const ASSAO_Settings& settings,
+        const std::shared_ptr<ASSAO_Inputs> inputs,
+        int pass);
+
+    /**
+     * \brief Reload of a texture (see Texture2D::reload) if the given layout ly doesn't match the
+     * texture layout of tex. Used inside of SSAO::updateTextures.
+     *
+     * @return True, if reloading the texture is required, false otherwise.
+     */
+    bool reCreateIfNeeded(
+        std::shared_ptr<glowl::Texture2D> tex,
+        glm::ivec2 size,
+        const glowl::TextureLayout& ly,
         bool generateMipMaps = false);
-    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
-    bool reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
-        std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly,
+
+    /**
+     * \brief Reload of a texture array (see Texture2D::reload) if the given layout ly doesn't match the
+     * texture layout of tex. Used inside of SSAO::updateTextures.
+     *
+     * @return True, if reloading the texture is required, false otherwise.
+     */
+    bool reCreateIfNeeded(
+        std::shared_ptr<glowl::Texture2DArray> tex,
+        glm::ivec2 size,
+        const glowl::TextureLayout& ly);
+
+    /**
+     * \brief Reload of a texture view (see Texture2D::reload) and binding of the view to a texture array slice
+     * if the given layout of tex doesn't match the texture layout of original. Used inside of SSAO::updateTextures.
+     *
+     * \param tex The texture view to reload.
+     * \param original The texture array to which the texture view is bound.
+     * \param size Half the size of the current full resolution viewport. Only used for boundary checks.
+     * \param arraySlice The slice of the texture array to which the texture view is bound.
+     *
+     * @return True, if reloading the texture is required, false otherwise.
+     */
+    bool reCreateArrayIfNeeded(
+        std::shared_ptr<glowl::Texture2DView> tex,
+        std::shared_ptr<glowl::Texture2DArray> original,
+        glm::ivec2 size,
         int arraySlice);
+
+    /**
+     * \brief Reload of a texture view (see Texture2D::reload) and binding of the view to a texture mip slice
+     * if the given layout of tex doesn't match the texture layout of original. Used inside of SSAO::updateTextures.
+     *
+     * \param tex The texture view to reload.
+     * \param original The texture to which mipmap the texture view is bound.
+     * \param mipViewSlice The slice of the texture mipmap to which the texture view is bound.
+     *
+     * @return True, if reloading the texture is required, false otherwise.
+     */
     bool reCreateMIPViewIfNeeded(
-        std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
+        std::shared_ptr<glowl::Texture2DView> current,
+        std::shared_ptr<glowl::Texture2D> original,
+        int mipViewSlice);
 
 
     // callback functions
