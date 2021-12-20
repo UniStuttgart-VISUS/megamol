@@ -45,6 +45,7 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader/*.cpp"
     "image_presentation/*.cpp"
     "remote_service/*.cpp"
+    "profiling_service/*.cpp"
     # "service_template/*.cpp"
   )
 

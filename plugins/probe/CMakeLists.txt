@@ -8,13 +8,15 @@ megamol_plugin(probe
   DEPENDS_PLUGINS
     mmadios
     mesh
+    datatools
+    geometry_calls
   DEPENDS_EXTERNALS
-    Eigen
-    nanoflann
     libigl
     asmjit
     blend2d
-    qhull)
+    qhull
+    PUBLIC Eigen
+    nanoflann)
 
 if (probe_PLUGIN_ENABLED)
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
@@ -24,7 +26,12 @@ if (probe_PLUGIN_ENABLED)
 
   target_sources(probe PRIVATE ${third})
   target_include_directories(probe PUBLIC "3rd")
-
+  
+  find_package(CGAL 5.3 CONFIG REQUIRED)
+  target_link_libraries(probe PUBLIC CGAL::CGAL)
+  if(WIN32)
+    install(FILES "${CGAL_DIR}/../../bin/gmp.dll" "${CGAL_DIR}/../../bin/mpfr-6.dll" DESTINATION "bin")
+  endif()
   if (BUILD_MMOSPRAY_PLUGIN_PLUGIN)
     target_sources(probe PRIVATE ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
     target_compile_definitions(probe PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
@@ -32,5 +39,4 @@ if (probe_PLUGIN_ENABLED)
     target_link_libraries(probe PUBLIC mmospray)
   endif ()
 
-  source_group("3rd Files" FILES ${third})
 endif ()

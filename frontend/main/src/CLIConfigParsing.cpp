@@ -111,6 +111,7 @@ static std::string nogui_option = "nogui";
 static std::string guiscale_option = "guiscale";
 static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
+static std::string profile_log_option = "profiling-log";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -164,6 +165,11 @@ static void versionnote_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.show_version_note = parsed_options[option_name].as<bool>();
 };
+
+static void profile_log_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.profiling_output_file = parsed_options[option_name].as<std::string>();
+}
 
 static void remote_head_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
@@ -511,7 +517,13 @@ std::vector<OptionsListEntry> cli_options_list =
         {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
-            cxxopts::value<bool>(), versionnote_handler},
+            cxxopts::value<bool>(), versionnote_handler}
+#ifdef PROFILING
+        ,
+        {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
+            profile_log_handler}
+#endif
+        ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
             cxxopts::value<std::vector<std::string>>(), param_handler},
         {remote_head_option, "Start HeadNode server and run Remote_Service test ", cxxopts::value<bool>(),

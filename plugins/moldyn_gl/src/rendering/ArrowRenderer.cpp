@@ -41,7 +41,7 @@ ArrowRenderer::ArrowRenderer(void)
     this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
+    this->getFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->getFlagsSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -153,7 +153,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
     }
 
-    auto* cflags = this->getFlagsSlot.CallAs<FlagCall>();
+    auto* cflags = this->getFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
@@ -381,15 +381,17 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 continue;
             }
 
-            std::shared_ptr<FlagStorage::FlagVectorType> flags;
             unsigned int fal = 0;
             if (useFlags) {
-                (*cflags)(core::FlagCall::CallMapFlags);
-                cflags->validateFlagsCount(parts.GetCount());
-                flags = cflags->GetFlags();
+                (*cflags)(core_gl::FlagCallRead_GL::CallGetData);
+                cflags->getData()->validateFlagCount(parts.GetCount());
+                auto flags = cflags->getData();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 glEnableVertexAttribArrayARB(fal);
-                glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
+                // TODO highly unclear whether this works fine
+                glBindBuffer(GL_ARRAY_BUFFER, flags->flags->getName());
+                //flags->flags->bindAs(GL_ARRAY_BUFFER);
+                glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, nullptr);
             }
             glUniform1ui(this->arrowShader.ParameterLocation("flagsAvailable"), useFlags ? 1 : 0);
 
@@ -397,8 +399,8 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
             if (useFlags) {
                 glDisableVertexAttribArrayARB(fal);
-                cflags->SetFlags(flags);
-                (*cflags)(core::FlagCall::CallUnmapFlags);
+                //cflags->SetFlags(flags);
+                //(*cflags)(core::FlagCall::CallUnmapFlags);
                 glVertexAttribIPointer(fal, 4, GL_FLOAT, 0, nullptr);
                 glDisableVertexAttribArrayARB(fal);
             }

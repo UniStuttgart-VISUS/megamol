@@ -1,4 +1,4 @@
-#include "ParticleIColClustering.h"
+#include "datatools/clustering/ParticleIColClustering.h"
 #include "stdafx.h"
 
 #include "mmcore/param/FloatParam.h"

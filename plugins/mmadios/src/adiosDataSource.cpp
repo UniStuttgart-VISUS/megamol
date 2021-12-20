@@ -248,7 +248,6 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
  * adiosDataSource::filenameChanged
  */
 bool adiosDataSource::filenameChanged(core::param::ParamSlot& slot) {
-    this->data_hash++;
     this->dataHashChanged = true;
     this->frameCount = 1;
 

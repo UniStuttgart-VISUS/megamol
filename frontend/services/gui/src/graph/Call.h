@@ -11,9 +11,13 @@
 
 
 #ifdef PROFILING
-#include "mmcore/PerformanceHistory.h"
+#include "PerformanceManager.h"
+#include "mmcore/MultiPerformanceHistory.h"
 #endif
+#include "mmcore/Call.h"
+#include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget.h"
 
 
 namespace megamol {
@@ -71,23 +75,39 @@ public:
         return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
     }
 
+    void SetCapabilities(core::CallCapabilities caps) {
+        capabilities = caps;
+    }
+
 #ifdef PROFILING
 
-    struct Profiling {
-        double lcput;
-        double acput;
-        uint32_t ncpus;
-        std::array<double, core::PerformanceHistory::buffer_length> hcpu;
-        double lgput;
-        double agput;
-        uint32_t ngpus;
-        std::array<double, core::PerformanceHistory::buffer_length> hgpu;
-        std::string name;
-    };
-
-    void SetProfilingValues(const std::vector<Profiling>& p) {
-        this->profiling = p;
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
     }
+
+    void SetProfilingData(void* ptr, uint32_t num_callbacks) {
+        this->profiling_parent_pointer = ptr;
+        cpu_perf_history.resize(num_callbacks);
+        gl_perf_history.resize(num_callbacks);
+        for (auto i = 0; i < num_callbacks; ++i) {
+            const auto& cb_name = (static_cast<core::Call*>(ptr))->GetCallbackName(i);
+            cpu_perf_history[i].set_name(cb_name);
+            gl_perf_history[i].set_name(cb_name);
+        }
+    }
+
+    void* GetProfilingParent() {
+        return this->profiling_parent_pointer;
+    }
+
+    void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+        const frontend_resources::PerformanceManager::timer_entry& entry);
+
+    bool ShowProfiling() {
+        return this->show_profiling_data;
+    }
+
+    void DrawProfiling(GraphItemsState_t& state);
 
 #endif // PROFILING
 
@@ -95,10 +115,12 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
+    // TODO Place StackCall (Properties?) here
     const std::string class_name;
     const std::string description;
     const std::string plugin_name;
     const std::vector<std::string> functions;
+    core::CallCapabilities capabilities;
 
     std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
@@ -108,12 +130,19 @@ private:
     std::string callee_slot_name;
 
     HoverToolTip gui_tooltip;
+    ImageWidget gui_profiling_button;
+    bool gui_profiling_btn_hovered;
 
 #ifdef PROFILING
 
-    std::vector<Profiling> profiling;
+    std::vector<core::MultiPerformanceHistory> cpu_perf_history;
+    std::vector<core::MultiPerformanceHistory> gl_perf_history;
+    void* profiling_parent_pointer;
+    float profiling_window_height; // determine dynamically
     bool show_profiling_data;
-    void draw_profiling_data();
+    ImageWidget gui_profiling_run_button;
+    bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
 
 #endif // PROFILING
 };
