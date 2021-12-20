@@ -32,10 +32,10 @@ ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
 bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
-                "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
+            "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
         linshader_ = core::utility::make_glowl_shader("amort_linearscaling", shaderOptions,
-                "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_linearscaling.frag.glsl");
-        
+            "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_linearscaling.frag.glsl");
+
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseAmortizedRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -168,7 +168,7 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
         linshader_->setUniform("moveM", movePush_);
         glActiveTexture(GL_TEXTURE4);
         lowResFBO_->bindColorbuffer(0);
-        linshader_->setUniform("src_tex2D", 4);   
+        linshader_->setUniform("src_tex2D", 4);
     }
 
     if (!debugParam.Param<core::param::BoolParam>()->Value()) {
