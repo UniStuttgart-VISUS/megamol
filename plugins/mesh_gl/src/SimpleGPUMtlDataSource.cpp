@@ -3,11 +3,12 @@
 #include "mesh_gl/MeshCalls_gl.h"
 
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
 
 megamol::mesh_gl::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
         : m_version(0)
-        , m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
-    this->m_btf_filename_slot << new core::param::FilePathParam("");
+        , m_btf_filename_slot("BTF name", "The name of the btf file to load") {
+    this->m_btf_filename_slot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
@@ -39,8 +40,7 @@ bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& calle
 
         clearMaterialCollection();
 
-        auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.generic_u8string());
+        auto filename = m_btf_filename_slot.Param<core::param::StringParam>()->Value();
 
         m_material_collection.first->addMaterial(this->instance(), filename, filename);
         m_material_collection.second.push_back(filename);
