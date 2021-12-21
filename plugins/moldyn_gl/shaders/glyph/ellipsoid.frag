@@ -6,14 +6,13 @@ in vec4 vertColor;
 in vec3 invRad;
 
 in flat vec3 dirColor;
-
 in flat vec3 transformedNormal;
 in vec3 viewRay;
 
 in mat3 rotate_world_into_tensor;
 in mat3 rotate_points;
 
-out layout(location = 0) vec3 albedo_out;
+out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
 out layout(location = 2) float depth_out;
 
@@ -23,16 +22,17 @@ void main() {
     float lambda;
 
     // transform fragment coordinates from window coordinates to view coordinates.
-    coord = gl_FragCoord 
-        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+    coord = gl_FragCoord
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
-    
+
 
     // transform fragment coordinates from view coordinates to object coordinates.
     coord = MVP_I * coord;
+    // TODO: correct order? doesnt /w need to be after inverse(projection)?
     coord /= coord.w;
     coord -= objPos; // ... and move
-    // ... and rotate mit rotMat transposed
+    // ... and rotate with rotMat transposed
     ray = rotate_world_into_tensor * coord.xyz;
 
     ray *= invRad;
@@ -45,6 +45,7 @@ void main() {
     float radicand = 1.0 - d2s;                             // square of difference of projected length and lambda
     if (radicand < 0.0) { discard; }
     lambda = d1 - sqrt(radicand);                           // lambda
+    // TODO: check if lambda is in [0,1] ?
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
 
@@ -68,7 +69,7 @@ void main() {
     //out_frag_color = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     //out_frag_color = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
 
-    albedo_out = mix(dirColor, vertColor.rgb, colorInterpolation);
+    albedo_out = vec4(mix(dirColor, vertColor.rgb, colorInterpolation), 1.0);
     normal_out = normal;
 
     sphereintersection += objPos.xyz;

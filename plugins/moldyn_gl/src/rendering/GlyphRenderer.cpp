@@ -180,7 +180,7 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
         this->radius_buffers.reserve(edc->GetParticleListCount());
         this->direction_buffers.reserve(edc->GetParticleListCount());
         this->color_buffers.reserve(edc->GetParticleListCount());
-
+        
         for (uint32_t x = 0; x < edc->GetParticleListCount(); ++x) {
             auto& l = edc->AccessParticles(x);
             this->position_buffers.emplace_back(utility::SSBOBufferArray("position_buffer" + std::to_string(x)));
@@ -528,6 +528,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x));
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x), 0, actualItems * sizeof(float) * 3);
 
+            // TODO: what is in direction_buffer?
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x));
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x), 0, actualItems * sizeof(float) * 4);
 
