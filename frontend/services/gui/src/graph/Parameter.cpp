@@ -1682,6 +1682,9 @@ bool megamol::gui::Parameter::widget_int(
         if (!std::holds_alternative<int>(this->gui_widget_store)) {
             this->gui_widget_store = val;
         }
+        if (!std::holds_alternative<int>(this->stepsize)) {
+            this->stepsize = step;
+        }
         auto p = this->GetGUIPresentation();
 
         // Min Max Step Values
@@ -1734,11 +1737,12 @@ bool megamol::gui::Parameter::widget_int(
             auto max_value = maxv;
             ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
             // step has no effect on slider
-            if (p != Present_t::Slider) {
-                auto step_size = min_step_size;
-                ImGui::InputInt("Step Size", &step_size, min_step_size, max_step_size, ImGuiInputTextFlags_None);
-            }
             gui_utils::PopReadOnly();
+            if (p != Present_t::Slider) {
+                //auto step_size = min_step_size;
+                ImGui::InputInt("Step Size", &std::get<int>(this->stepsize), min_step_size, max_step_size,
+                    ImGuiInputTextFlags_None);
+            }
         }
         ImGui::EndGroup();
     }
@@ -1755,8 +1759,12 @@ bool megamol::gui::Parameter::widget_float(
         if (!std::holds_alternative<float>(this->gui_widget_store)) {
             this->gui_widget_store = val;
         }
+        if (!std::holds_alternative<float>(this->stepsize)) {
+            this->stepsize = step;
+        }
 
         auto p = this->GetGUIPresentation();
+
         ImGui::BeginGroup();
 
         // Min Max Step Option
@@ -1814,13 +1822,13 @@ bool megamol::gui::Parameter::widget_float(
                 auto max_value = maxv;
                 ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
+                gui_utils::PopReadOnly();
                 // step has no effect on slider
                 if (p != Present_t::Slider) {
-                    auto step_size = min_step_size;
-                    ImGui::InputFloat("Step Size", &step_size, min_step_size, max_step_size,
+                    //auto step_size = min_step_size;
+                    ImGui::InputFloat("Step Size", &std::get<float>(this->stepsize), min_step_size, max_step_size,
                         this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 }
-                gui_utils::PopReadOnly();
             }
         }
         ImGui::EndGroup();
@@ -2289,8 +2297,12 @@ bool megamol::gui::Parameter::widget_knob(
             ImGui::TextUnformatted("Max: inf");
         }
         ImGui::SameLine();
-        value_label = "Step: " + this->gui_float_format;
-        ImGui::Text(value_label.c_str(), step);
+        if (step < FLT_MAX) {
+            value_label = "Step: " + this->gui_float_format;
+            ImGui::Text(value_label.c_str(), step);
+        } else {
+            ImGui::TextUnformatted("Step: inf");
+        }
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == megamol::gui::Parameter::WidgetScope::GLOBAL) {
