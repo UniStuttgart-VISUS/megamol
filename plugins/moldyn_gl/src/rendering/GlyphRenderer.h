@@ -134,6 +134,7 @@ private:
     megamol::core::param::ParamSlot scaleParam;
     megamol::core::param::ParamSlot colorInterpolationParam;
     megamol::core::param::ParamSlot colorModeParam;
+    megamol::core::param::ParamSlot minRadiusParam;
 
     SIZE_T lastHash = -1;
     uint32_t lastFrameID = -1;

@@ -45,7 +45,8 @@ GlyphRenderer::GlyphRenderer(void)
         , scaleParam("scaling", "scales the glyph radii")
         , colorInterpolationParam(
               "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)")
-        , colorModeParam("colorMode", "switch between global glyph and per axis color") {
+        , colorModeParam("colorMode", "switch between global glyph and per axis color")
+        , minRadiusParam("minRadius", "Sets the minimum radius length") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -79,6 +80,9 @@ GlyphRenderer::GlyphRenderer(void)
     gcm->SetTypePair(1, "PerAxis");
     this->colorModeParam << gcm;
     this->MakeSlotAvailable(&this->colorModeParam);
+
+    minRadiusParam << new param::FloatParam(0.1f, 0.f, 2.f);
+    this->MakeSlotAvailable(&this->minRadiusParam);
 }
 
 
@@ -108,6 +112,10 @@ bool GlyphRenderer::create(void) {
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
+
+
+    float min = minRadiusParam.Param<param::FloatParam>()->MinValue();
+    float max = minRadiusParam.Param<param::FloatParam>()->MaxValue();
 
     return retVal;
 }
