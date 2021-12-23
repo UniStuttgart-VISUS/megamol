@@ -157,6 +157,8 @@ int main(const int argc, const char** argv) {
     command_service.setPriority(24);
 #ifdef PROFILING
     megamol::frontend::Profiling_Service profiling_service;
+    megamol::frontend::Profiling_Service::Config profiling_config;
+    profiling_config.log_file = config.profiling_output_file;
 #endif
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
@@ -189,7 +191,7 @@ int main(const int argc, const char** argv) {
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
 #ifdef PROFILING
-    services.add(profiling_service, nullptr);
+    services.add(profiling_service, &profiling_config);
 #endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);

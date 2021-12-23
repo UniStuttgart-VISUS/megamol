@@ -75,6 +75,7 @@ struct RuntimeConfig {
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
+    std::string profiling_output_file;
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling

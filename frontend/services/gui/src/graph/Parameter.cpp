@@ -34,7 +34,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv,
-    const std::string& param_name, const std::string& description)
+    Step_t step, const std::string& param_name, const std::string& description)
         : megamol::core::param::AbstractParamPresentation()
         , uid(uid)
         , type(type)
@@ -44,6 +44,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , core_param_ptr(nullptr)
         , minval(minv)
         , maxval(maxv)
+        , stepsize(step)
         , storage(store)
         , value()
         , default_value()
@@ -56,7 +57,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , gui_widget_store()
         , gui_set_focus(0)
         , gui_state_dirty(false)
-        , gui_show_minmax(false)
+        , gui_show_minmaxstep(false)
         , gui_file_browser()
         , gui_tooltip()
         , gui_image_widget()
@@ -350,11 +351,13 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         out_param.default_value = p_ptr->ValueString();
         out_param.minval = p_ptr->MinValue();
         out_param.maxval = p_ptr->MaxValue();
+        out_param.stepsize = p_ptr->StepSize();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::IntParam>()) {
         out_param.type = ParamType_t::INT;
         out_param.default_value = p_ptr->ValueString();
         out_param.minval = p_ptr->MinValue();
         out_param.maxval = p_ptr->MaxValue();
+        out_param.stepsize = p_ptr->StepSize();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param.type = ParamType_t::STRING;
         out_param.default_value = p_ptr->ValueString();
@@ -414,19 +417,19 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
 
     if (auto* p_ptr = in_param_slot.template Param<core::param::BoolParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::BOOL, std::monostate(),
-            std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ButtonParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::BUTTON,
-            p_ptr->GetKeyCode(), std::monostate(), std::monostate(), param_name, description);
+            p_ptr->GetKeyCode(), std::monostate(), std::monostate(), std::monostate(), param_name, description);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ColorParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::COLOR, std::monostate(),
-            std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         auto value = p_ptr->Value();
         out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TransferFunctionParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::TRANSFERFUNCTION,
-            std::monostate(), std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
         EnumStorage_t map;
@@ -437,26 +440,27 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
         }
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::ENUM, map,
-            std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FlexEnumParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FLEXENUM,
-            p_ptr->getStorage(), std::monostate(), std::monostate(), param_name, description);
+            p_ptr->getStorage(), std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FloatParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FLOAT, std::monostate(),
-            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, description);
+            p_ptr->MinValue(), p_ptr->MaxValue(), p_ptr->StepSize(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::IntParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::INT, std::monostate(),
-            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, description);
+            p_ptr->MinValue(), p_ptr->MaxValue(), p_ptr->StepSize(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
         auto minv = p_ptr->MinValue();
         auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F,
-            std::monostate(), glm::vec2(minv.X(), minv.Y()), glm::vec2(maxv.X(), maxv.Y()), param_name, description);
+            std::monostate(), glm::vec2(minv.X(), minv.Y()), glm::vec2(maxv.X(), maxv.Y()), std::monostate(),
+            param_name, description);
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto minv = p_ptr->MinValue();
@@ -464,7 +468,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR3F,
             std::monostate(), glm::vec3(minv.X(), minv.Y(), minv.Z()), glm::vec3(maxv.X(), maxv.Y(), maxv.Z()),
-            param_name, description);
+            std::monostate(), param_name, description);
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
         auto minv = p_ptr->MinValue();
@@ -472,20 +476,20 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR4F,
             std::monostate(), glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W()),
-            glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W()), param_name, description);
+            glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W()), std::monostate(), param_name, description);
         out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::TERNARY,
-            std::monostate(), std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::STRING, std::monostate(),
-            std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
             FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
-            param_name, description);
+            std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -575,6 +579,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             out_param.SetMinValue(p_ptr->MinValue());
             out_param.SetMaxValue(p_ptr->MaxValue());
+            out_param.SetStepSize(p_ptr->StepSize());
         } else {
             type_error = true;
         }
@@ -583,6 +588,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             out_param.SetMinValue(p_ptr->MinValue());
             out_param.SetMaxValue(p_ptr->MaxValue());
+            out_param.SetStepSize(p_ptr->StepSize());
         } else {
             type_error = true;
         }
@@ -955,7 +961,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // FLOAT -----------------------------------------------
             else if constexpr (std::is_same_v<T, float>) {
                 auto val = arg;
-                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(),
+                        this->GetStepSize<T>())) {
                     this->SetValue(val);
                     retval = true;
                 }
@@ -965,7 +972,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
                     auto val = arg;
-                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(),
+                            this->GetStepSize<T>())) {
                         this->SetValue(val);
                         retval = true;
                     }
@@ -1205,7 +1213,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
                 auto val = arg;
-                if (this->widget_knob(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                if (this->widget_knob(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(),
+                        this->GetStepSize<T>())) {
                     this->SetValue(val);
                     retval = true;
                 }
@@ -1219,7 +1228,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
                 auto val = arg;
-                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(),
+                        this->GetStepSize<T>())) {
                     this->SetValue(val);
                     retval = true;
                 }
@@ -1229,7 +1239,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
                     auto val = arg;
-                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(),
+                            this->GetStepSize<T>())) {
                         this->SetValue(val);
                         retval = true;
                     }
@@ -1663,7 +1674,7 @@ bool megamol::gui::Parameter::widget_ternary(
 
 
 bool megamol::gui::Parameter::widget_int(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, int minv, int maxv) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, int minv, int maxv, int step) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1671,22 +1682,30 @@ bool megamol::gui::Parameter::widget_int(
         if (!std::holds_alternative<int>(this->gui_widget_store)) {
             this->gui_widget_store = val;
         }
+        if (!std::holds_alternative<int>(this->stepsize)) {
+            this->stepsize = step;
+        }
         auto p = this->GetGUIPresentation();
 
-        // Min Max Values
+        // Min Max Step Values
         ImGui::BeginGroup();
-        if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-            this->gui_show_minmax = !this->gui_show_minmax;
+        if (ImGui::ArrowButton("###_min_max_step", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
         }
-        this->gui_tooltip.ToolTip("Min/Max Values");
+        this->gui_tooltip.ToolTip("Min/Max/Step Values");
         ImGui::SameLine();
 
-        // Relative step size
         int min_step_size = 1;
         int max_step_size = 10;
-        if ((minv > INT_MIN) && (maxv < INT_MAX)) {
-            min_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.003f); // 0.3%
-            max_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.03f);  // 3%
+        if (step == INT_MAX) {
+            // Relative step size if step size is not explicitly set
+            if ((minv > INT_MIN) && (maxv < INT_MAX)) {
+                min_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.003f); // 0.3%
+                max_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.03f);  // 3%
+            }
+        } else {
+            min_step_size = step;
+            max_step_size = 10 * step;
         }
 
         // Value
@@ -1711,13 +1730,19 @@ bool megamol::gui::Parameter::widget_int(
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->gui_widget_store = val;
         }
-        if (this->gui_show_minmax) {
+        if (this->gui_show_minmaxstep) {
             gui_utils::PushReadOnly();
             auto min_value = minv;
             ImGui::InputInt("Min Value", &min_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
             auto max_value = maxv;
             ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
+            // step has no effect on slider
             gui_utils::PopReadOnly();
+            if (p != Present_t::Slider) {
+                //auto step_size = min_step_size;
+                ImGui::InputInt("Step Size", &std::get<int>(this->stepsize), min_step_size, max_step_size,
+                    ImGuiInputTextFlags_None);
+            }
         }
         ImGui::EndGroup();
     }
@@ -1726,7 +1751,7 @@ bool megamol::gui::Parameter::widget_int(
 
 
 bool megamol::gui::Parameter::widget_float(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float step) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1734,25 +1759,34 @@ bool megamol::gui::Parameter::widget_float(
         if (!std::holds_alternative<float>(this->gui_widget_store)) {
             this->gui_widget_store = val;
         }
+        if (!std::holds_alternative<float>(this->stepsize)) {
+            this->stepsize = step;
+        }
 
         auto p = this->GetGUIPresentation();
+
         ImGui::BeginGroup();
 
-        // Min Max Option
+        // Min Max Step Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                this->gui_show_minmax = !this->gui_show_minmax;
+            if (ImGui::ArrowButton("###_min_max_step", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
             }
-            this->gui_tooltip.ToolTip("Min/Max Values");
+            this->gui_tooltip.ToolTip("Min/Max/Step Values");
             ImGui::SameLine();
         }
 
-        // Relative step size
         float min_step_size = 1.0f;
         float max_step_size = 10.0f;
-        if ((minv > -FLT_MAX) && (maxv < FLT_MAX)) {
-            min_step_size = (maxv - minv) * 0.003f; // 0.3%
-            max_step_size = (maxv - minv) * 0.03f;  // 3%
+        if (step == FLT_MAX) {
+            // Relative step size if step size is not explicitly set
+            if ((minv > -FLT_MAX) && (maxv < FLT_MAX)) {
+                min_step_size = (maxv - minv) * 0.003f; // 0.3%
+                max_step_size = (maxv - minv) * 0.03f;  // 3%
+            }
+        } else {
+            min_step_size = step;
+            max_step_size = 10.f * min_step_size;
         }
 
         // Value
@@ -1778,9 +1812,9 @@ bool megamol::gui::Parameter::widget_float(
             this->gui_widget_store = val;
         }
 
-        // Min Max Values
+        // Min Max Step Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (this->gui_show_minmax) {
+            if (this->gui_show_minmaxstep) {
                 gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
@@ -1789,6 +1823,12 @@ bool megamol::gui::Parameter::widget_float(
                 ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
                 gui_utils::PopReadOnly();
+                // step has no effect on slider
+                if (p != Present_t::Slider) {
+                    //auto step_size = min_step_size;
+                    ImGui::InputFloat("Step Size", &std::get<float>(this->stepsize), min_step_size, max_step_size,
+                        this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
+                }
             }
         }
         ImGui::EndGroup();
@@ -1812,8 +1852,8 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                this->gui_show_minmax = !this->gui_show_minmax;
+            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
             }
             this->gui_tooltip.ToolTip("Min/Max Values");
             ImGui::SameLine();
@@ -1858,7 +1898,7 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (this->gui_show_minmax) {
+            if (this->gui_show_minmaxstep) {
                 gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat2(
@@ -1890,8 +1930,8 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                this->gui_show_minmax = !this->gui_show_minmax;
+            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
             }
             this->gui_tooltip.ToolTip("Min/Max Values");
             ImGui::SameLine();
@@ -1938,7 +1978,7 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (this->gui_show_minmax) {
+            if (this->gui_show_minmaxstep) {
                 gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat3(
@@ -1970,8 +2010,8 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                this->gui_show_minmax = !this->gui_show_minmax;
+            if (ImGui::ArrowButton("###_min_max", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
             }
             this->gui_tooltip.ToolTip("Min/Max Values");
             ImGui::SameLine();
@@ -2018,7 +2058,7 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (this->gui_show_minmax) {
+            if (this->gui_show_minmaxstep) {
                 gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat4(
@@ -2214,7 +2254,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
 
 bool megamol::gui::Parameter::widget_knob(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float step) {
     bool retval = false;
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -2224,7 +2264,7 @@ bool megamol::gui::Parameter::widget_knob(
 
         // Draw knob
         const float knob_size = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetFrameHeightWithSpacing();
-        if (ButtonWidgets::KnobButton("param_knob", knob_size, val, minv, maxv)) {
+        if (ButtonWidgets::KnobButton("param_knob", knob_size, val, minv, maxv, step)) {
             retval = true;
         }
 
@@ -2236,12 +2276,12 @@ bool megamol::gui::Parameter::widget_knob(
         ImVec2 pos = ImGui::GetCursorPos();
         ImGui::PushItemWidth(ImGui::CalcItemWidth() - left_widget_x_offset);
 
-        if (this->widget_float(scope, label, val, minv, maxv)) {
+        if (this->widget_float(scope, label, val, minv, maxv, step)) {
             retval = true;
         }
         ImGui::PopItemWidth();
 
-        // Draw min max
+        // Draw min max step
         ImGui::SetCursorPos(pos + ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing()));
         if (minv > -FLT_MAX) {
             value_label = "Min: " + this->gui_float_format;
@@ -2255,6 +2295,13 @@ bool megamol::gui::Parameter::widget_knob(
             ImGui::Text(value_label.c_str(), maxv);
         } else {
             ImGui::TextUnformatted("Max: inf");
+        }
+        ImGui::SameLine();
+        if (step < FLT_MAX) {
+            value_label = "Step: " + this->gui_float_format;
+            ImGui::Text(value_label.c_str(), step);
+        } else {
+            ImGui::TextUnformatted("Step: inf");
         }
     }
     // GLOBAL -----------------------------------------------------------
