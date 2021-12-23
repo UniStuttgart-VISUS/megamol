@@ -5,12 +5,15 @@ vec4 compute_color(vec4 in_color, uint flag, sampler1D tf_sampler, vec2 tf_range
     bool use_transfer_function = (options & OPTIONS_USE_TRANSFERFUNCTION) > 0;
     bool are_flags_available = (options & OPTIONS_USE_FLAGS) > 0;
     vec4 color = in_color;
+
     if (use_global_color)  {
         color = global_color;
     }
+
     if (use_transfer_function) {
         color = tflookup(tf_sampler, tf_range, color.r);
     }
+
     // Overwrite color depending on flags
     if (are_flags_available) {
         if (bitflag_test(flag, FLAG_SELECTED, FLAG_SELECTED)) {
@@ -19,5 +22,6 @@ vec4 compute_color(vec4 in_color, uint flag, sampler1D tf_sampler, vec2 tf_range
             color = flag_soft_selected_color;
         }
     }
+
     return color;
 }

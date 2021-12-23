@@ -12,14 +12,14 @@ struct quat {
 };
 
 layout(std430, binding = 0) buffer pos_data {
-    pos posArray[];
+    pos pos_array[];
 };
 layout(std430, binding = 1) buffer quat_data {
-    quat quatArray[];
+    quat quat_array[];
 };
 layout(std430, binding = 2) buffer rad_data {
-    pos radArray[];
+    pos rad_array[];
 };
 layout(std430, binding = 3) buffer col_data {
-    quat colArray[];
+    quat col_array[];
 };

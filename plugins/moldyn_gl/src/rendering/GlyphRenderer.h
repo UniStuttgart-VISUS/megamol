@@ -1,7 +1,7 @@
 /*
  * GlyphRenderer.h
  *
- * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -107,7 +107,7 @@ private:
         SUPERQUADRIC = 3,
     };
 
-    enum glyph_options {
+    enum GlyphOptions {
         USE_GLOBAL = 1 << 0,
         USE_TRANSFER_FUNCTION = 1 << 1,
         USE_FLAGS = 1 << 2,
@@ -116,29 +116,29 @@ private:
     };
 
     /**The ellipsoid shader*/
-    vislib_gl::graphics::gl::GLSLShader ellipsoidShader;
-    vislib_gl::graphics::gl::GLSLShader boxShader;
+    vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
+    vislib_gl::graphics::gl::GLSLShader m_box_shader;
 
-    std::vector<core::utility::SSBOBufferArray> position_buffers;
-    std::vector<core::utility::SSBOBufferArray> radius_buffers;
-    std::vector<core::utility::SSBOBufferArray> direction_buffers;
-    std::vector<core::utility::SSBOBufferArray> color_buffers;
+    std::vector<core::utility::SSBOBufferArray> m_position_buffers;
+    std::vector<core::utility::SSBOBufferArray> m_radius_buffers;
+    std::vector<core::utility::SSBOBufferArray> m_direction_buffers;
+    std::vector<core::utility::SSBOBufferArray> m_color_buffers;
 
     /** The slot to fetch the data */
-    megamol::core::CallerSlot getDataSlot;
-    megamol::core::CallerSlot getTFSlot;
-    megamol::core::CallerSlot getClipPlaneSlot;
-    megamol::core::CallerSlot readFlagsSlot;
+    megamol::core::CallerSlot m_get_data_slot;
+    megamol::core::CallerSlot m_get_tf_slot;
+    megamol::core::CallerSlot m_get_clip_plane_slot;
+    megamol::core::CallerSlot m_read_flags_slot;
 
-    megamol::core::param::ParamSlot glyphParam;
-    megamol::core::param::ParamSlot scaleParam;
-    megamol::core::param::ParamSlot colorInterpolationParam;
-    megamol::core::param::ParamSlot colorModeParam;
-    megamol::core::param::ParamSlot minRadiusParam;
+    megamol::core::param::ParamSlot m_glyph_param;
+    megamol::core::param::ParamSlot m_scale_param;
+    megamol::core::param::ParamSlot m_color_interpolation_param;
+    megamol::core::param::ParamSlot m_min_radius_param;
+    megamol::core::param::ParamSlot m_color_mode_param;
 
-    SIZE_T lastHash = -1;
-    uint32_t lastFrameID = -1;
-    GLuint greyTF;
+    SIZE_T m_last_hash = -1;
+    uint32_t m_last_frame_id = -1;
+    GLuint m_grey_tf;
 };
 
 } // namespace rendering
