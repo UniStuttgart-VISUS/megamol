@@ -46,7 +46,7 @@ GlyphRenderer::GlyphRenderer(void)
         , colorInterpolationParam(
               "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)")
         , colorModeParam("colorMode", "switch between global glyph and per axis color")
-        , minRadiusParam("minRadius", "Sets the minimum radius length") {
+        , minRadiusParam("minRadius", "Sets the minimum radius length. Applied to each axis.") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -81,7 +81,7 @@ GlyphRenderer::GlyphRenderer(void)
     this->colorModeParam << gcm;
     this->MakeSlotAvailable(&this->colorModeParam);
 
-    minRadiusParam << new param::FloatParam(0.1f, 0.f, 2.f);
+    minRadiusParam << new param::FloatParam(0.5f, 0.f, 2.f, 0.01f);
     this->MakeSlotAvailable(&this->minRadiusParam);
 }
 
@@ -391,6 +391,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(cam_pos));
     glUniform1f(shader->ParameterLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
+    glUniform1f(shader->ParameterLocation("minRadius"), this->minRadiusParam.Param<param::FloatParam>()->Value());
     //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
 
     glUniform1f(shader->ParameterLocation("colorInterpolation"),

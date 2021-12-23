@@ -15,15 +15,21 @@ out mat3 rotate_points;
 void main() {
     vec4 tmp, tmp1;
     vec3 tmp2;
-    
+
     uint inst = gl_InstanceID / 3;
     uint face = gl_InstanceID % 3;
     uint corner = gl_VertexID;
     vec3 normal = cube_face_normals[face];
     vec4 cornerPos = vec4(cube_faces[face][corner], 0.0);
 
-    vec4 inPos = vec4(posArray[inst].x, posArray[inst].y, posArray[inst].z, 1.0);
     vec3 radii = vec3(radArray[inst].x, radArray[inst].y, radArray[inst].z); //rad[inst];
+    // check radii if they are below the minimum
+    radii.x = radii.x < minRadius ? minRadius : radii.x;
+    radii.y = radii.y < minRadius ? minRadius : radii.y;
+    radii.z = radii.z < minRadius ? minRadius : radii.z;
+
+
+    vec4 inPos = vec4(posArray[inst].x, posArray[inst].y, posArray[inst].z, 1.0);
     vec3 absradii = abs(radii) * scaling;
     vec4 quatC = vec4(quatArray[inst].x, quatArray[inst].y, quatArray[inst].z, quatArray[inst].w); //quat[inst];
     invRad = 1.0 / absradii;
@@ -31,7 +37,7 @@ void main() {
     rotate_world_into_tensor = quaternion_to_matrix(quatC);
     rotate_points = transpose(rotate_world_into_tensor);
     //mat3 rotate_vectors = rotate_points; //transpose(inverse(rotate_points)); // makes no difference
-    
+
     transformedNormal = (rotate_points * normal).xyz;
 
     // if our cube face looks away from the camera, we need to replace it with the opposing one
@@ -44,7 +50,7 @@ void main() {
     }
 
     objPos = inPos;
-  
+
     tmp.xyz = cam.xyz - objPos.xyz;
     camPos.xyz = rotate_world_into_tensor * tmp.xyz;
     camPos.xyz *= invRad;

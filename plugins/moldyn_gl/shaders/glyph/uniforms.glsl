@@ -15,3 +15,4 @@ uniform vec2 tf_range;
 uniform vec4 clip_data;
 uniform vec4 clip_color;
 uniform float scaling;
+uniform float minRadius;

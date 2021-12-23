@@ -32,6 +32,11 @@ void main() {
     vec3 radii = vec3(radArray[inst].x, radArray[inst].y, radArray[inst].z); //rad[inst];
     if (ignore_radii) {
         radii = vec3(1.0);
+    } else {
+        // check radii if they are below the minimum
+        radii.x = radii.x < minRadius ? minRadius : radii.x;
+        radii.y = radii.y < minRadius ? minRadius : radii.y;
+        radii.z = radii.z < minRadius ? minRadius : radii.z;
     }
     vec3 absradii = abs(radii) * scaling;
     vec4 quatC = vec4(quatArray[inst].x, quatArray[inst].y, quatArray[inst].z, quatArray[inst].w); //quat[inst];
@@ -72,7 +77,7 @@ void main() {
     }
 
     vertColor = compute_color(col, flag, tf_texture, tf_range, global_color, flag_selected_col, flag_softselected_col, options);
-    
+
     cornerPos.xyz *= absradii; // scale
     cornerPos.xyz = rotate_points * cornerPos.xyz;
     wsPos = inPos + cornerPos; // corners relative to world space glyph positions
