@@ -2,8 +2,8 @@
 
 uniform sampler2D src_tex2D;
 
-layout (binding=6, rgba32f) uniform image2D Store;
-layout (binding=7, rgba32f) uniform image2D target;
+layout (binding=6, rgba8) uniform image2D Store;
+layout (binding=7, rgba8) uniform image2D target;
 
 uniform int amortLevel;
 uniform int w;
@@ -29,9 +29,12 @@ void main() {
 
 
     if (frametype == i){
-        tempColor = texelFetch(src_tex2D, iCoord /amortLevel, 0);
+        tempColor = vec4(texelFetch(src_tex2D, iCoord /amortLevel, 0).xyz, 1.0);
     }else{
         tempColor = imageLoad(Store, movedICoord);
+        if(tempColor.a < 1.0){
+            tempColor = vec4(texelFetch(src_tex2D, iCoord /amortLevel, 0).xyz, 1.0);
+        }
     }
     imageStore(target, iCoord, tempColor);
     frag_out = tempColor;

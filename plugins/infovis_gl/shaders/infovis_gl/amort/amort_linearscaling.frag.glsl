@@ -3,7 +3,7 @@
 uniform sampler2D src_tex2D;
 
 layout (binding=6) uniform sampler2D Store;
-layout (binding=7, rgba32f) uniform image2D target;
+layout (binding=7, rgba8) uniform image2D target;
 
 uniform int amortLevel;
 uniform int w;

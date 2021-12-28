@@ -42,10 +42,10 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
     }
 
     lowResFBO_ = std::make_shared<glowl::FramebufferObject>(1, 1);
-    lowResFBO_->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+    lowResFBO_->createColorAttachment(GL_RGBA8, GL_RGBA, GL_FLOAT);
 
     // Store texture layout for later resize
-    texLayout_ = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
+    texLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -109,7 +109,14 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     texLayout_.width = w;
     texLayout_.height = h;
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
+    texA_->bindTexture();
+    GLfloat temp[4]{0.0};
+    //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
+    //glBindTexture(GL_TEXTURE_2D, 0);
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
+    texB_->bindTexture();
+    //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
+    //glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
