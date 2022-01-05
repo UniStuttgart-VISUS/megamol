@@ -49,8 +49,8 @@ extern "C" {
 #include "libqhull/libqhull.h"
 #include "libqhull/merge.h"
 }
-#include "transforms.h"
 #include "mmcore/utility/log/Log.h"
+#include "transforms.h"
 
 namespace pcl {
 
@@ -60,7 +60,8 @@ namespace pcl {
  * \author Aitor Aldoma
  * \ingroup surface
  */
-template <typename PointInT> class ConcaveHull : public PCLBase<PointInT> {
+template<typename PointInT>
+class ConcaveHull : public PCLBase<PointInT> {
 protected:
     using Ptr = std::shared_ptr<ConcaveHull<PointInT>>;
     using ConstPtr = std::shared_ptr<const ConcaveHull<PointInT>>;
@@ -97,28 +98,40 @@ public:
      * \param alpha positive, non-zero value, defining the maximum length
      * from a vertex to the facet center(center of the voronoi cell).
      */
-    inline void setAlpha(double alpha) { alpha_ = alpha; }
+    inline void setAlpha(double alpha) {
+        alpha_ = alpha;
+    }
 
     /** \brief Returns the alpha parameter, see setAlpha(). */
-    inline double getAlpha() { return (alpha_); }
+    inline double getAlpha() {
+        return (alpha_);
+    }
 
     /** \brief If set, the voronoi cells center will be saved in _voronoi_centers_
      * \param voronoi_centers
      */
-    inline void setVoronoiCenters(PointCloudPtr voronoi_centers) { voronoi_centers_ = voronoi_centers; }
+    inline void setVoronoiCenters(PointCloudPtr voronoi_centers) {
+        voronoi_centers_ = voronoi_centers;
+    }
 
     /** \brief If keep_information_is set to true the convex hull
      * points keep other information like rgb, normals, ...
      * \param value where to keep the information or not, default is false
      */
-    void setKeepInformation(bool value) { keep_information_ = value; }
+    void setKeepInformation(bool value) {
+        keep_information_ = value;
+    }
 
     /** \brief Additional filtering for less errors in the surface
      */
-    void setDoFiltering(bool value) { do_filtering_ = value; }
+    void setDoFiltering(bool value) {
+        do_filtering_ = value;
+    }
 
     /** \brief Returns the dimensionality(2 or 3) of the calculated hull. */
-    inline int getDimension() const { return (dim_); }
+    inline int getDimension() const {
+        return (dim_);
+    }
 
     /** \brief Sets the dimension on the input data, 2D or 3D.
      * \param[in] dimension The dimension of the input data.  If not set, this will be determined automatically.
@@ -142,7 +155,9 @@ public:
 
 protected:
     /** \brief Class get name method. */
-    static std::string getClassName() { return ("ConcaveHull"); }
+    static std::string getClassName() {
+        return ("ConcaveHull");
+    }
 
 protected:
     /** \brief The actual reconstruction method.
@@ -189,7 +204,7 @@ protected:
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointInT>
+template<typename PointInT>
 void pcl::ConcaveHull<PointInT>::getHullPointIndices(pcl::PointIndices& hull_point_indices) const {
     hull_point_indices = hull_indices_;
 }
@@ -198,11 +213,12 @@ void pcl::ConcaveHull<PointInT>::getHullPointIndices(pcl::PointIndices& hull_poi
 
 
 //////////////////////////////////////////////////////////////////////////
-template <typename PointInT> void pcl::ConcaveHull<PointInT>::setInputCloud(const PointCloudConstPtr& input) {
+template<typename PointInT>
+void pcl::ConcaveHull<PointInT>::setInputCloud(const PointCloudConstPtr& input) {
     this->input_ = input;
 }
 
-template <typename PointInT>
+template<typename PointInT>
 void pcl::ConcaveHull<PointInT>::reconstruct(PointCloud& output, std::vector<pcl::Vertices>& polygons) {
     // output.header = this->input_->header;
     if (alpha_ <= 0) {
@@ -228,10 +244,10 @@ void pcl::ConcaveHull<PointInT>::reconstruct(PointCloud& output, std::vector<pcl
 }
 
 #ifdef __GNUC__
-#    pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 //////////////////////////////////////////////////////////////////////////
-template <typename PointInT>
+template<typename PointInT>
 void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, std::vector<pcl::Vertices>& polygons) {
     Eigen::Vector4d xyz_centroid;
     compute3DCentroid(*this->input_, *this->indices_, xyz_centroid);
@@ -241,7 +257,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
     // Check if the covariance matrix is finite or not.
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
-            if (!std::isfinite(covariance_matrix.coeffRef(i, j))) return;
+            if (!std::isfinite(covariance_matrix.coeffRef(i, j)))
+                return;
 
     EIGEN_ALIGN16 Eigen::Vector3d eigen_values;
     EIGEN_ALIGN16 Eigen::Matrix3d eigen_vectors;
@@ -302,7 +319,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         points[i * dim_ + 0] = static_cast<coordT>(cloud_transformed.points[i].x);
         points[i * dim_ + 1] = static_cast<coordT>(cloud_transformed.points[i].y);
 
-        if (dim_ > 2) points[i * dim_ + 2] = static_cast<coordT>(cloud_transformed.points[i].z);
+        if (dim_ > 2)
+            points[i * dim_ + 2] = static_cast<coordT>(cloud_transformed.points[i].z);
     }
 
     // Compute concave hull
@@ -310,8 +328,9 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         dim_, static_cast<int>(cloud_transformed.points.size()), points, ismalloc, flags, outfile, errfile);
 
     if (exitcode != 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a "
-                                                "concave hull for the given point cloud(%lu)!\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a "
+            "concave hull for the given point cloud(%lu)!\n",
             getClassName().c_str(), cloud_transformed.points.size());
 
         // check if it fails because of NaN values...
@@ -352,7 +371,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
     // Max vertex id
     int max_vertex_id = 0;
     FORALLvertices {
-        if (vertex->id + 1 > unsigned(max_vertex_id)) max_vertex_id = vertex->id + 1;
+        if (vertex->id + 1 > unsigned(max_vertex_id))
+            max_vertex_id = vertex->id + 1;
     }
 
     facetT* facet; // set by FORALLfacets
@@ -365,7 +385,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
 
     if (dim_ == 3) {
         setT* triangles_set = qh_settemp(4 * num_facets);
-        if (voronoi_centers_) voronoi_centers_->points.resize(num_facets);
+        if (voronoi_centers_)
+            voronoi_centers_->points.resize(num_facets);
 
         int non_upper = 0;
         FORALLfacets {
@@ -392,10 +413,10 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
                     ridgeT *ridge, **ridgep;
                     FOREACHridge_(facet->ridges) {
                         neighb = otherfacet_(ridge, facet);
-                        if ((neighb->visitid != qh visit_id)) qh_setappend(&triangles_set, ridge);
+                        if ((neighb->visitid != qh visit_id))
+                            qh_setappend(&triangles_set, ridge);
                     }
-                } 
-                else {
+                } else {
                     // consider individual triangles from the tetrahedron...
                     facet->good = false;
                     facet->visitid = qh visit_id;
@@ -419,7 +440,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
                             c.z = static_cast<float>((static_cast<vertexT*>(ridge->vertices->e[2].p))->point[2]);
 
                             double r = pcl::getCircumcircleRadius(a, b, c);
-                            if (r <= alpha_) qh_setappend(&triangles_set, ridge);
+                            if (r <= alpha_)
+                                qh_setappend(&triangles_set, ridge);
                             //if (facet->tricoplanar) qh_setappend(&triangles_set, ridge);
                         }
                     }
@@ -427,7 +449,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
             }
         }
 
-        if (voronoi_centers_) voronoi_centers_->points.resize(non_upper);
+        if (voronoi_centers_)
+            voronoi_centers_->points.resize(non_upper);
 
         // filter, add points to alpha_shape and create polygon structure
 
@@ -475,7 +498,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         // Compute the alpha complex for the set of points
         // Filters the delaunay triangles
         setT* edges_set = qh_settemp(3 * num_facets);
-        if (voronoi_centers_) voronoi_centers_->points.resize(num_facets);
+        if (voronoi_centers_)
+            voronoi_centers_->points.resize(num_facets);
 
         FORALLfacets {
             // Facets are the delaunay triangles(2d)
@@ -577,7 +601,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
 
             sorted_idx++;
 
-            if (edges.empty()) break;
+            if (edges.empty())
+                break;
 
             // reassign current
             curr = edges.find(next); // if next is not found, then we have unconnected polygons.
@@ -608,7 +633,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
             }
         }
 
-        if (voronoi_centers_) voronoi_centers_->points.resize(dd);
+        if (voronoi_centers_)
+            voronoi_centers_->points.resize(dd);
     }
 
     qh_freeqhull(!qh_ALL);
@@ -656,7 +682,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
                 if (std::find(std::begin(neighbor), std::end(neighbor), polygon.vertices[2]) != std::end(neighbor)) {
                     new_polygons.emplace_back(polygon);
                 }
-            } 
+            }
         }
         polygons = std::move(new_polygons);
     }
@@ -687,7 +713,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
 }
 
 #ifdef __GNUC__
-#    pragma GCC diagnostic warning "-Wold-style-cast"
+#pragma GCC diagnostic warning "-Wold-style-cast"
 #endif
 
 #define PCL_INSTANTIATE_ConcaveHull(T) template class PCL_EXPORTS pcl::ConcaveHull<T>;

@@ -113,7 +113,9 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
 
 SDFFont::~SDFFont(void) {
 
-    this->Deinitialise();
+    if (this->initialised) {
+        this->Deinitialise();
+    }
 }
 
 

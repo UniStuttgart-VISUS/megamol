@@ -59,7 +59,7 @@ bool RenderUtils::LoadTextureFromData(std::shared_ptr<glowl::Texture2D>& out_tex
             GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
         if (out_texture_ptr == nullptr) {
             out_texture_ptr =
-                std::make_unique<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
+                std::make_shared<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
         } else {
             // Reload data
             out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
@@ -76,17 +76,11 @@ bool RenderUtils::LoadTextureFromData(std::shared_ptr<glowl::Texture2D>& out_tex
 bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
     const std::string& fragment_code) {
 
-    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-
-    if (!vertex_code.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_code});
-    if (!fragment_code.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_code});
-
     try {
         if (out_shader_ptr != nullptr)
             out_shader_ptr.reset();
-        out_shader_ptr = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+        out_shader_ptr =
+            std::make_shared<glowl::GLSLProgram>(RenderUtils::createShaderSource(vertex_code, fragment_code));
     } catch (glowl::GLSLProgramException const& exc) {
         std::string debug_label;
         if (out_shader_ptr != nullptr) {
@@ -99,6 +93,19 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
     }
 
     return true;
+}
+
+
+std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> RenderUtils::createShaderSource(
+    const std::string& vertex_code, const std::string& fragment_code) {
+
+    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
+    if (!vertex_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_code});
+    if (!fragment_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_code});
+
+    return shader_srcs;
 }
 
 
