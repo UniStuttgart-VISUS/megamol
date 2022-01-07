@@ -5,6 +5,7 @@
 
 megamol_plugin(image
   BUILD_DEFAULT OFF
+  DEPENDS_GL
   DEPENDS_PLUGINS
     image_calls)
 
