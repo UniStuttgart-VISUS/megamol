@@ -76,6 +76,16 @@ public:
     }
 
     /**
+     * Sets the step size of the parameter.
+     *
+     * @param s the new step size for the parameter
+     */
+    template<typename U = T>
+    std::enable_if_t<std::is_arithmetic_v<U>, void> SetStepSize(T s) {
+        this->stepSize = s;
+    }
+
+    /**
      * Gets the value of the parameter
      *
      * @return The value of the parameter
@@ -107,7 +117,6 @@ public:
     }
 
     /**
-     * Needed for RemoteControl
      * Gets the step size of the parameter
      *
      * @return The step size of the parameter
