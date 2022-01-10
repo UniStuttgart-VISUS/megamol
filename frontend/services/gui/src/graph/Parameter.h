@@ -133,8 +133,8 @@ public:
 
     // ----------------------------
 
-    Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval,
-        Step_t step, const std::string& param_name, const std::string& description);
+    Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, Step_t step,
+        const std::string& param_name, const std::string& description);
 
     ~Parameter() override;
 

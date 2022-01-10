@@ -33,8 +33,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv,
-    Step_t step, const std::string& param_name, const std::string& description)
+megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv, Step_t step,
+    const std::string& param_name, const std::string& description)
         : megamol::core::param::AbstractParamPresentation()
         , uid(uid)
         , type(type)
@@ -1750,8 +1750,8 @@ bool megamol::gui::Parameter::widget_int(
 }
 
 
-bool megamol::gui::Parameter::widget_float(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float step) {
+bool megamol::gui::Parameter::widget_float(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
+    float& val, float minv, float maxv, float step) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1769,7 +1769,8 @@ bool megamol::gui::Parameter::widget_float(
 
         // Min Max Step Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
-            if (ImGui::ArrowButton("###_min_max_step", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            if (ImGui::ArrowButton(
+                    "###_min_max_step", ((this->gui_show_minmaxstep) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                 this->gui_show_minmaxstep = !this->gui_show_minmaxstep;
             }
             this->gui_tooltip.ToolTip("Min/Max/Step Values");
@@ -2253,8 +2254,8 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 }
 
 
-bool megamol::gui::Parameter::widget_knob(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float step) {
+bool megamol::gui::Parameter::widget_knob(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
+    float& val, float minv, float maxv, float step) {
     bool retval = false;
 
     ImGuiStyle& style = ImGui::GetStyle();

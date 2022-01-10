@@ -42,14 +42,13 @@ public:
 
     // stepSize has no effect on Slider
     template<typename U = T>
-    GenericParam(
-        T const& initVal, T const& minVal, T const& maxVal, T const& stepSize, std::enable_if_t<enable_cond_v<U>, void>* = nullptr)
-    {
+    GenericParam(T const& initVal, T const& minVal, T const& maxVal, T const& stepSize,
+        std::enable_if_t<enable_cond_v<U>, void>* = nullptr) {
         initParam(initVal);
         this->minVal = minVal;
         this->maxVal = maxVal;
         this->stepSize = stepSize;
-    }    
+    }
 
     virtual ~GenericParam() = default;
 
