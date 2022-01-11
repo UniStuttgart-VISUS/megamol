@@ -704,6 +704,15 @@ function(require_external NAME)
         return()
       endif ()
 
+      set(USD_PATH "" CACHE PATH "path to nv_usd root directory")
+      set(OMNIVERSE_PATH "" CACHE PATH "path to omniverse client root directory")
+      if (USD_PATH STREQUAL "")
+        message(FATAL_ERROR "USD_PATH needs to be set")
+      endif ()
+      if (OMNIVERSE_PATH STREQUAL "")
+        message(FATAL_ERROR "OMNIVERSE_PATH needs to be set")
+      endif ()
+
       add_library(OMNIVERSE_USD SHARED IMPORTED GLOBAL)
       set_target_properties(OMNIVERSE_USD PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
