@@ -699,6 +699,36 @@ function(require_external NAME)
     endif ()
     target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
+    elseif (NAME STREQUAL "omniverse")
+      if (TARGET omniverse)
+        return()
+      endif ()
+
+      set(USD_PATH "F:/packman-repo/chk/nv-usd/20.08.1818.f41ff452-win64_py37_release-main")
+      set(OMNI_PATH "F:/packman-repo/chk/omni_client_library.py37.windows-x86_64/1.13.19-main.2174+tc.b44c68ac")
+      add_library(OMNIVERSE_USD SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_USD PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include;${OMNI_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/usd.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/usd.lib")
+      include("F:/packman-repo/chk/nv-usd/20.08.1818.f41ff452-win64_py37_release-main/cmake/pxrTargets.cmake")
+      add_dependencies(OMNIVERSE_USD ar arch gf js kind pcp plug sdf tf trace usdGeom vt work usdShade usdLux)
+
+      add_library(OMNIVERSE_CLIENT SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_CLIENT PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${OMNI_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${OMNI_PATH}/release/omniclient.dll"
+        IMPORTED_IMPLIB "${OMNI_PATH}/release/omniclient.lib")
+
+      add_library(omniverse INTERFACE IMPORTED)
+      set_property(TARGET omniverse
+        PROPERTY INTERFACE_LINK_LIBRARIES OMNIVERSE_USD OMNIVERSE_CLIENT)
+
+      #install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
+
+
   # obj-io
   elseif (NAME STREQUAL "obj-io")
     if (TARGET obj-io)
