@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "OmniUsdReader.h"
-#include "pxr/usd/usd/stage.h"
 #include "OmniClient.h"
 
 #include "mmcore/param/FilePathParam.h"
