@@ -13,6 +13,7 @@
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "mesh/MeshCalls.h"
+#include "OmniUSDReader.h"
 
 namespace megamol::mesh {
 class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -33,6 +34,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ObjWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::UIElement>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::OmniUsdReader>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::Call3DInteraction>();
