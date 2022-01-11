@@ -104,6 +104,8 @@ protected:
     virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
+    void loadData(geocalls::MultiParticleDataCall& in_data);
+
     /** The call for data */
     CallerSlot getDataSlot;
 
@@ -121,6 +123,7 @@ private:
 
     /** The arrow shader */
     vislib_gl::graphics::gl::GLSLShader arrowShader;
+    std::unique_ptr<glowl::GLSLProgram> arrowShader_;
 
     /** A simple black-to-white transfer function texture as fallback */
     unsigned int greyTF;
@@ -130,6 +133,12 @@ private:
 
     /** Length filter for arrow lengths */
     param::ParamSlot lengthFilterSlot;
+
+    std::vector<GLuint> data_buf_;
+
+    uint64_t in_data_hash_ = std::numeric_limits<uint64_t>::max();
+
+    int in_frame_id_ = -1;
 };
 
 } /* end namespace rendering */

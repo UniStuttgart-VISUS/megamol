@@ -18,6 +18,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "stdafx.h"
@@ -92,6 +93,18 @@ bool GlyphRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
+
+    try {
+        auto shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        ellipsoid_shader_ = core::utility::make_glowl_shader("EllipsoidShader", shdr_options,
+            std::filesystem::path("glyph/ellipsoid.vert.glsl"), std::filesystem::path("glyph/ellipsoid.frag.glsl"));
+    } catch (glowl::GLSLProgramException const& ex) {
+        core::utility::log::Log::DefaultLog.WriteError("[GlyphRenderer]: %s", ex.what());
+        return false;
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[GlyphRenderer] Failed to create program");
+        return false;
+    }
 
     bool retVal = true;
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
@@ -329,7 +342,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     view::Camera cam = call.GetCamera();
     auto viewTemp = cam.getViewMatrix();
     auto projTemp = cam.getProjectionMatrix();
-    auto cam_pos = cam.get<view::Camera::Pose>().position;
+    auto cam_pos = glm::vec4(cam.get<view::Camera::Pose>().position, 1.0f);
 
     // todo...
     //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
@@ -356,6 +369,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
 
+#if 0
     vislib_gl::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
     case Glyph::BOX:
@@ -568,6 +582,203 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
     epdc->Unlock();
     shader->Disable();
+#else
+    ellipsoid_shader_->use();
+
+    glUniform4fv(ellipsoid_shader_->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MV_I"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
+    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MV_T"), 1, GL_TRUE, glm::value_ptr(mv_matrix));
+    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
+    //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
+    glUniform4fv(ellipsoid_shader_->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
+    glUniform1f(ellipsoid_shader_->getUniformLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
+    //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
+
+    glUniform1f(ellipsoid_shader_->getUniformLocation("colorInterpolation"),
+        this->colorInterpolationParam.Param<param::FloatParam>()->Value());
+
+    uint32_t num_total_glyphs = 0;
+    uint32_t curr_glyph_offset = 0;
+    for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
+        num_total_glyphs += epdc->AccessParticles(i).GetCount();
+    }
+
+    unsigned int fal = 0;
+    if (use_flags || use_clip) {
+        glEnable(GL_CLIP_DISTANCE0);
+    }
+    if (use_flags) {
+        (*flagsc)(core_gl::FlagCallRead_GL::CallGetData);
+        auto flags = flagsc->getData();
+        //if (flags->flags->getByteSize() / sizeof(core::FlagStorage::FlagVectorType) < num_total_glyphs) {
+        //    megamol::core::utility::log::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");
+        //    return false;
+        //}
+        flags->validateFlagCount(num_total_glyphs);
+
+        // TODO HAZARD BUG this is not in sync with the buffer arrays for all other attributes and a design flaw of the
+        // flag storage!!!!
+        flags->flags->bind(4);
+        //glBindBufferRange(
+        //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
+    }
+    glUniform4f(ellipsoid_shader_->getUniformLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
+    glUniform4f(ellipsoid_shader_->getUniformLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
+
+    if (use_clip) {
+        auto clip_point_coords = clipc->GetPlane().Point();
+        auto clip_normal_coords = clipc->GetPlane().Normal();
+        glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
+        glm::vec3 nr(clip_normal_coords.X(), clip_normal_coords.Y(), clip_normal_coords.Z());
+
+        std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
+            clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
+
+        glUniform4fv(ellipsoid_shader_->getUniformLocation("clip_data"), 1, clip_data.data());
+        auto c = clipc->GetColour();
+        glUniform4f(ellipsoid_shader_->getUniformLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
+            static_cast<float>(c[1]) / 255.f, static_cast<float>(c[2]) / 255.f, static_cast<float>(c[3]) / 255.f);
+    }
+
+    for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
+
+        auto& elParts = epdc->AccessParticles(i);
+
+        if (elParts.GetCount() == 0 || elParts.GetQuatData() == nullptr || elParts.GetRadiiData() == nullptr) {
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+        }
+
+        uint32_t options = 0;
+
+        bool bindColor = true;
+        switch (elParts.GetColourDataType()) {
+        case geocalls::EllipsoidalParticleDataCall::Particles::COLDATA_NONE: {
+            options = glyph_options::USE_GLOBAL;
+            const auto gc = elParts.GetGlobalColour();
+            const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
+                static_cast<float>(gc[2]) / 255.0f, static_cast<float>(gc[3]) / 255.0f};
+            glUniform4fv(ellipsoid_shader_->getUniformLocation("global_color"), 1, gcf.data());
+            bindColor = false;
+        } break;
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+            break;
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+            // these should have been converted to vec4 colors
+            options = 0;
+            break;
+        case geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I:
+        case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I:
+            // these should have been converted to vec4 colors with only a red channel for I
+            options = glyph_options::USE_TRANSFER_FUNCTION;
+            glActiveTexture(GL_TEXTURE0);
+            if (tfc == nullptr) {
+                glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                glUniform2f(ellipsoid_shader_->getUniformLocation("tf_range"), elParts.GetMinColourIndexValue(),
+                    elParts.GetMaxColourIndexValue());
+            } else if ((*tfc)(0)) {
+                glBindTexture(GL_TEXTURE_1D, tfc->OpenGLTexture());
+                glUniform2fv(ellipsoid_shader_->getUniformLocation("tf_range"), 1, tfc->Range().data());
+                //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
+                //    elParts.GetMaxColourIndexValue());
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "GlyphRenderer: could not retrieve transfer function!");
+                return false;
+            }
+            glUniform1i(ellipsoid_shader_->getUniformLocation("tf_texture"), 0);
+            break;
+        case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
+            // we should never get this far
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+            break;
+        default:
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+            break;
+        }
+        if (use_flags)
+            options = options | glyph_options::USE_FLAGS;
+        if (use_clip)
+            options = options | glyph_options::USE_CLIP;
+        if (use_per_axis_color)
+            options = options | glyph_options::USE_PER_AXIS;
+        glUniform1ui(ellipsoid_shader_->getUniformLocation("options"), options);
+
+        switch (elParts.GetVertexDataType()) {
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            // anything to do...?
+            break;
+        case geocalls::EllipsoidalParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            curr_glyph_offset += elParts.GetCount();
+            continue;
+            break;
+        default:
+            continue;
+        }
+
+        auto& the_pos = position_buffers[i];
+        auto& the_quat = direction_buffers[i];
+        auto& the_rad = radius_buffers[i];
+        auto& the_col = color_buffers[i];
+
+        const auto numChunks = the_pos.GetNumChunks();
+        for (GLuint x = 0; x < numChunks; ++x) {
+            const auto actualItems = the_pos.GetNumItems(x);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x));
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x), 0, actualItems * sizeof(float) * 3);
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x));
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x), 0, actualItems * sizeof(float) * 4);
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, the_rad.GetHandle(x));
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 2, the_rad.GetHandle(x), 0, actualItems * sizeof(float) * 3);
+
+            if (bindColor) {
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x));
+                glBindBufferRange(
+                    GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x), 0, actualItems * sizeof(float) * 4);
+            }
+
+            if (use_flags) {
+                glUniform1ui(ellipsoid_shader_->getUniformLocation("flag_offset"), curr_glyph_offset);
+            }
+
+            switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
+            case Glyph::BOX:
+                // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
+                //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                // but just drawing the front-facing triangles, that's better
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                break;
+            case Glyph::ELLIPSOID:
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                break;
+            case Glyph::ARROW:
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                break;
+            case Glyph::SUPERQUADRIC:
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                break;
+            default:;
+            }
+            curr_glyph_offset += elParts.GetCount();
+        }
+    }
+    epdc->Unlock();
+    glUseProgram(0);
+#endif
 
     // todo if you implement selection, write flags back :)
     //

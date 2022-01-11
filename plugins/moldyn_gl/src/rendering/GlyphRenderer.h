@@ -19,6 +19,7 @@
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "glowl/GLSLProgram.hpp"
 
 namespace megamol {
 namespace moldyn_gl {
@@ -138,6 +139,8 @@ private:
     SIZE_T lastHash = -1;
     uint32_t lastFrameID = -1;
     GLuint greyTF;
+
+    std::unique_ptr<glowl::GLSLProgram> ellipsoid_shader_;
 };
 
 } // namespace rendering

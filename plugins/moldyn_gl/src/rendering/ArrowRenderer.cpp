@@ -18,6 +18,8 @@
 
 #include "OpenGL_Context.h"
 
+#include "mmcore_gl/utility/ShaderFactory.h"
+
 using namespace megamol::core;
 using namespace megamol::geocalls;
 using namespace megamol::moldyn_gl::rendering;
@@ -68,6 +70,18 @@ bool ArrowRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
+
+    try {
+        auto shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        arrowShader_ = core::utility::make_glowl_shader("ArrowShader", shdr_options,
+            std::filesystem::path("arrow/arrow.vert.glsl"), std::filesystem::path("arrow/arrow.frag.glsl"));
+    } catch (glowl::GLSLProgramException const& ex) {
+        core::utility::log::Log::DefaultLog.WriteError("[ArrowRenderer]: %s", ex.what());
+        return false;
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[ArrowRenderer] Failed to create program");
+        return false;
+    }
 
     vislib_gl::graphics::gl::ShaderSource vert, frag;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
@@ -149,6 +163,12 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
         c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(0))
             return false;
+
+        if (in_data_hash_ != c2->DataHash() || in_frame_id_ != c2->FrameID()) {
+            loadData(*c2);
+            in_data_hash_ = c2->DataHash();
+            in_frame_id_ = c2->FrameID();
+        }
     } else {
         return false;
     }
@@ -257,26 +277,27 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
 
-    this->arrowShader.Enable();
+    arrowShader_->use();
+    //this->arrowShader.Enable();
 
-    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(MVinv));
-    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(MVtransp));
-    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(MVPinv));
-    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(MVPtransp));
-    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
-    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
-    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
-    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(curlightDir));
-    this->arrowShader.SetParameter("lengthScale", lengthScale);
-    this->arrowShader.SetParameter("lengthFilter", lengthFilter);
-    glUniform4fv(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fv(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
+    glUniformMatrix4fv(arrowShader_->getUniformLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(MVinv));
+    glUniformMatrix4fv(arrowShader_->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(MVtransp));
+    glUniformMatrix4fv(arrowShader_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    glUniformMatrix4fv(arrowShader_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(MVPinv));
+    glUniformMatrix4fv(arrowShader_->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(MVPtransp));
+    glUniform4fv(arrowShader_->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniform3fv(arrowShader_->getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(arrowShader_->getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(arrowShader_->getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
+    glUniform4fv(arrowShader_->getUniformLocation("lightDir"), 1, glm::value_ptr(curlightDir));
+    arrowShader_->setUniform("lengthScale", lengthScale);
+    arrowShader_->setUniform("lengthFilter", lengthFilter);
+    glUniform4fv(arrowShader_->getUniformLocation("clipDat"), 1, clipDat);
+    glUniform3fv(arrowShader_->getUniformLocation("clipCol"), 1, clipCol);
 
     if (c2 != nullptr) {
-        unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
-        unsigned int tpal = glGetAttribLocationARB(this->arrowShader, "dir");
+        unsigned int cial = glGetAttribLocationARB(this->arrowShader_->getHandle(), "colIdx");
+        unsigned int tpal = glGetAttribLocationARB(this->arrowShader_->getHandle(), "dir");
         bool useFlags = false;
 
         if (cflags != nullptr) {
@@ -295,7 +316,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
             // colour
             switch (parts.GetColourDataType()) {
-            case MultiParticleDataCall::Particles::COLDATA_NONE:
+            /*case MultiParticleDataCall::Particles::COLDATA_NONE:
                 glColor3ubv(parts.GetGlobalColour());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -313,7 +334,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                 glEnableClientState(GL_COLOR_ARRAY);
                 glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
-                break;
+                break;*/
             case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I:
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 glEnableVertexAttribArrayARB(cial);
@@ -336,7 +357,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     colTabSize = 2;
                 }
 
-                glUniform1i(this->arrowShader.ParameterLocation("colTab"), 0);
+                glUniform1i(this->arrowShader_->getUniformLocation("colTab"), 0);
                 minC = parts.GetMinColourIndexValue();
                 maxC = parts.GetMaxColourIndexValue();
                 //glColor3ub(127, 127, 127);
@@ -346,40 +367,40 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 break;
             }
 
-            // radius and position
-            switch (parts.GetVertexDataType()) {
-            case MultiParticleDataCall::Particles::VERTDATA_NONE:
-                continue;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                    float(colTabSize));
-                glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
-                break;
-            case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-                glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
-                break;
-            case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-                glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
-            default:
-                continue;
-            }
+            //// radius and position
+            //switch (parts.GetVertexDataType()) {
+            //case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            //    continue;
+            //case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            //    glEnableClientState(GL_VERTEX_ARRAY);
+            //    glUniform4f(this->arrowShader_->getUniformLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
+            //        float(colTabSize));
+            //    glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+            //    break;
+            //case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            //    glEnableClientState(GL_VERTEX_ARRAY);
+            //    glUniform4f(arrowShader_->getUniformLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            //    glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+            //    break;
+            //case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+            //    glEnableClientState(GL_VERTEX_ARRAY);
+            //    glUniform4f(arrowShader_->getUniformLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            //    glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
+            //default:
+            //    continue;
+            //}
 
-            // direction
-            switch (parts.GetDirDataType()) {
-            case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
-                glEnableVertexAttribArrayARB(tpal);
-                glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
-                break;
-            default:
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "ArrowRenderer: cannot render arrows without directional data!");
-                continue;
-            }
+            //// direction
+            //switch (parts.GetDirDataType()) {
+            //case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
+            //    glEnableVertexAttribArrayARB(tpal);
+            //    glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
+            //    break;
+            //default:
+            //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            //        "ArrowRenderer: cannot render arrows without directional data!");
+            //    continue;
+            //}
 
             std::shared_ptr<FlagStorage::FlagVectorType> flags;
             unsigned int fal = 0;
@@ -387,12 +408,13 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 (*cflags)(core::FlagCall::CallMapFlags);
                 cflags->validateFlagsCount(parts.GetCount());
                 flags = cflags->GetFlags();
-                fal = glGetAttribLocationARB(this->arrowShader, "flags");
+                fal = glGetAttribLocationARB(this->arrowShader_->getHandle(), "flags");
                 glEnableVertexAttribArrayARB(fal);
                 glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
             }
-            glUniform1ui(this->arrowShader.ParameterLocation("flagsAvailable"), useFlags ? 1 : 0);
+            glUniform1ui(arrowShader_->getUniformLocation("flagsAvailable"), useFlags ? 1 : 0);
 
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, data_buf_[i]);
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
             if (useFlags) {
@@ -421,10 +443,59 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
         c2->Unlock();
     }
 
-    this->arrowShader.Disable();
+    glUseProgram(0);
+    //this->arrowShader.Disable();
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     return true;
+}
+
+
+void megamol::moldyn_gl::rendering::ArrowRenderer::loadData(geocalls::MultiParticleDataCall& in_data) {
+    auto const pl_count = in_data.GetParticleListCount();
+
+    glDeleteBuffers(data_buf_.size(), data_buf_.data());
+    data_buf_.resize(pl_count);
+    glCreateBuffers(data_buf_.size(), data_buf_.data());
+
+    for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+        auto const& parts = in_data.AccessParticles(pl_idx);
+
+        auto const xAcc = parts.GetParticleStore().GetXAcc();
+        auto const yAcc = parts.GetParticleStore().GetYAcc();
+        auto const zAcc = parts.GetParticleStore().GetZAcc();
+        auto const radAcc = parts.GetParticleStore().GetRAcc();
+
+        auto const crAcc = parts.GetParticleStore().GetCRAcc();
+        auto const cgAcc = parts.GetParticleStore().GetCGAcc();
+        auto const cbAcc = parts.GetParticleStore().GetCBAcc();
+        auto const caAcc = parts.GetParticleStore().GetCAAcc();
+
+        auto const dxAcc = parts.GetParticleStore().GetDXAcc();
+        auto const dyAcc = parts.GetParticleStore().GetDYAcc();
+        auto const dzAcc = parts.GetParticleStore().GetDZAcc();
+
+        auto const p_count = parts.GetCount();
+
+        std::vector<float> data;
+        data.reserve(p_count * 8);
+
+        for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
+            data.push_back(xAcc->Get_f(p_idx));
+            data.push_back(yAcc->Get_f(p_idx));
+            data.push_back(zAcc->Get_f(p_idx));
+            data.push_back(radAcc->Get_f(p_idx));
+            unsigned int col = glm::packUnorm4x8(
+                glm::vec4(crAcc->Get_f(p_idx), cgAcc->Get_f(p_idx), cbAcc->Get_f(p_idx), caAcc->Get_f(p_idx)));
+            data.push_back(*reinterpret_cast<float*>(&col));
+            data.push_back(dxAcc->Get_f(p_idx));
+            data.push_back(dyAcc->Get_f(p_idx));
+            data.push_back(dzAcc->Get_f(p_idx));
+        }
+
+        glNamedBufferStorage(
+            data_buf_[pl_idx], data.size() * sizeof(std::decay_t<decltype(data)>::value_type), data.data(), 0);
+    }
 }
