@@ -11,7 +11,6 @@ megamol_plugin(mesh
     tinygltf
     obj-io
     omniverse
-    tbb
     )
 
 if (mesh_PLUGIN_ENABLED)

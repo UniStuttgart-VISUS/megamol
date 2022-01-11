@@ -719,8 +719,9 @@ function(require_external NAME)
         IMPORTED_CONFIGURATIONS "Release"
         IMPORTED_LOCATION "${USD_PATH}/lib/usd.dll"
         IMPORTED_IMPLIB "${USD_PATH}/lib/usd.lib")
-      include("${USD_PATH}/cmake/pxrTargets.cmake")
-      add_dependencies(OMNIVERSE_USD ar arch gf js kind pcp plug sdf tf trace usdGeom vt work usdShade usdLux)
+      #include("${USD_PATH}/cmake/pxrTargets.cmake")
+      #include("${USD_PATH}/cmake/pxrTargets-release.cmake")
+      #add_dependencies(OMNIVERSE_USD ar arch gf js kind pcp plug sdf tf trace usdGeom vt work usdShade usdLux)
 
       add_library(OMNIVERSE_CLIENT SHARED IMPORTED GLOBAL)
       set_target_properties(OMNIVERSE_CLIENT PROPERTIES
@@ -729,9 +730,34 @@ function(require_external NAME)
         IMPORTED_LOCATION "${OMNIVERSE_PATH}/release/omniclient.dll"
         IMPORTED_IMPLIB "${OMNIVERSE_PATH}/release/omniclient.lib")
 
+      add_library(OMNIVERSE_py SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_py PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/python37.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/python37.lib")
+
+      add_library(OMNIVERSE_boost_py SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_boost_py PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/boost_python37-vc141-mt-x64-1_68.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/boost_python37-vc141-mt-x64-1_68.lib")
+
+      add_library(OMNIVERSE_sdf SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_sdf PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/sdf.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/sdf.lib")
+
       add_library(omniverse INTERFACE IMPORTED)
       set_property(TARGET omniverse
-        PROPERTY INTERFACE_LINK_LIBRARIES OMNIVERSE_USD OMNIVERSE_CLIENT)
+        PROPERTY INTERFACE_LINK_LIBRARIES OMNIVERSE_USD OMNIVERSE_CLIENT OMNIVERSE_py OMNIVERSE_boost_py OMNIVERSE_sdf)
+
+      if (MSVC)
+        set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:boost_python37-vc141-mt-gd-x64-1_68.lib" CACHE STRING "" FORCE)
+      endif ()
 
       install(DIRECTORY "${USD_PATH}/lib/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
       install(DIRECTORY "${OMNIVERSE_PATH}/release/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
@@ -862,19 +888,18 @@ function(require_external NAME)
     endif ()
 
     if (MSVC)
-      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
+      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb_debug.lib" CACHE STRING "" FORCE)
     endif ()
 
     if (WIN32)
-      set(TBB_LIB "bin/tbb12.dll")
-      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
+      set(TBB_LIB "bin/tbb.dll")
+      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb.lib")
     else ()
       set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12")
     endif ()
 
     add_external_project(tbb SHARED
-      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-      GIT_TAG v2021.4.0
+      GIT_REPOSITORY https://github.com/wjakob/tbb.git
       CMAKE_ARGS
         -DTBB_TEST=OFF
       BUILD_BYPRODUCTS

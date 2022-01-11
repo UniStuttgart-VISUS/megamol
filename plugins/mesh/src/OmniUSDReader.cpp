@@ -1,6 +1,9 @@
-#include "stdafx.h"
+#include <iostream>
+#include <iomanip>
 
 #include "OmniUsdReader.h"
+#define TBB_USE_DEBUG 0
+#include "pxr/usd/usd/stage.h"
 #include "OmniClient.h"
 
 #include "mmcore/param/FilePathParam.h"
@@ -43,7 +46,6 @@ static bool startOmniverse() {
     }
 
     omniClientRegisterConnectionStatusCallback(nullptr, OmniClientConnectionStatusCallbackImpl);
-
     return true;
 }
 
