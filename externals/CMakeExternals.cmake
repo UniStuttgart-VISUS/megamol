@@ -724,8 +724,8 @@ function(require_external NAME)
       set_property(TARGET omniverse
         PROPERTY INTERFACE_LINK_LIBRARIES OMNIVERSE_USD OMNIVERSE_CLIENT)
 
-      #install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
-
+      install(DIRECTORY "${USD_PATH}/lib/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
+      install(DIRECTORY "${OMNIVERSE_PATH}/release/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
 
   # obj-io
   elseif (NAME STREQUAL "obj-io")
