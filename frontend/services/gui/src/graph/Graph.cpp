@@ -93,6 +93,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_show_label = true;
     this->gui_graph_state.interact.call_show_slots_label = false;
+    this->gui_graph_state.interact.call_coloring = false;
 
     this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
 
@@ -1169,6 +1170,8 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
                             &this->gui_graph_state.interact.call_show_slots_label);
+                        megamol::core::utility::get_json_value<bool>(graph_state, {"call_coloring"},
+                            &this->gui_graph_state.interact.call_coloring);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
                         megamol::core::utility::get_json_value<bool>(
@@ -1323,6 +1326,8 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
             this->gui_graph_state.interact.call_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
             this->gui_graph_state.interact.call_show_slots_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring"] =
+            this->gui_graph_state.interact.call_coloring;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] =
             this->gui_graph_state.interact.callslot_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] =
@@ -2055,8 +2060,10 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     ImGui::Separator();
 
-    ImGui::Button("Labels");
-    if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+    // Module and Call LABELS
+    ImGui::TextUnformatted("Labels");
+    ImGui::ArrowButton("labels_arrow", ImGuiDir_Down);
+    if (ImGui::BeginPopupContextItem("module_call_labels_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         // MODULES
         if (ImGui::BeginMenu("Modules")) {
             if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
