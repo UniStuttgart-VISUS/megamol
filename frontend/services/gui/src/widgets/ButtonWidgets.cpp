@@ -84,7 +84,7 @@ bool megamol::gui::ButtonWidgets::OptionButton(
 
 
 bool megamol::gui::ButtonWidgets::KnobButton(
-    const std::string& id, float size, float& inout_value, float minval, float maxval) {
+    const std::string& id, float size, float& inout_value, float minval, float maxval, float step) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -131,9 +131,13 @@ bool megamol::gui::ButtonWidgets::KnobButton(
 
     // Adapt scaling of one round depending on min max delta
     float scaling = 1.0f;
-    if ((minval > -FLT_MAX) && (maxval < FLT_MAX) && (maxval > minval)) {
-        float delta = maxval - minval;
-        scaling = delta / 100.0f; // 360 degree = 1%
+    if (step == FLT_MAX) {
+        if ((minval > -FLT_MAX) && (maxval < FLT_MAX) && (maxval > minval)) {
+            float delta = maxval - minval;
+            scaling = delta / 100.0f; // 360 degree = 1%
+        }
+    } else {
+        scaling = step;
     }
 
     // Calculate knob position
