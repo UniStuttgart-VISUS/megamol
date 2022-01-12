@@ -344,7 +344,6 @@ bool megamol::gui::LogConsole::Draw() {
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
         true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-    ImGuiListClipper clipper;
     auto message_count = this->echo_log_buffer.log().size();
     if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
         message_count = this->echo_log_buffer.warn_log_indices().size();
@@ -352,6 +351,8 @@ bool megamol::gui::LogConsole::Draw() {
         message_count = this->echo_log_buffer.error_log_indices().size();
     }
     const int modified_count = std::min<int>(static_cast<int>(message_count), 14000000);
+
+    ImGuiListClipper clipper;
     clipper.Begin(modified_count, ImGui::GetTextLineHeight());
     while (clipper.Step()) {
         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
