@@ -1170,8 +1170,8 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
                             &this->gui_graph_state.interact.call_show_slots_label);
-                        megamol::core::utility::get_json_value<bool>(graph_state, {"call_coloring"},
-                            &this->gui_graph_state.interact.call_coloring);
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"call_coloring"}, &this->gui_graph_state.interact.call_coloring);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
                         megamol::core::utility::get_json_value<bool>(

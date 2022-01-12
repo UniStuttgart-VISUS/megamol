@@ -206,7 +206,9 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 if (state.interact.call_coloring) {
                     // Set2Map(8)
                     const size_t set2map_size = 8;
-                    tmpcol = ImVec4(Set2Map[(curve_color_index % set2map_size)][0], Set2Map[(curve_color_index % set2map_size)][1], Set2Map[(curve_color_index % set2map_size)][2], 1.0f);
+                    tmpcol = ImVec4(Set2Map[(curve_color_index % set2map_size)][0],
+                        Set2Map[(curve_color_index % set2map_size)][1], Set2Map[(curve_color_index % set2map_size)][2],
+                        1.0f);
                 }
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 /// COLOR_CALL_CURVE_HIGHLIGHT

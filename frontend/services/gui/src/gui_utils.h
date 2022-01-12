@@ -263,7 +263,7 @@ typedef struct _interact_state_ {
     ImGuiID call_hovered_uid;   // in out
     bool call_show_label;       // in
     bool call_show_slots_label; // in
-    bool call_coloring; // in
+    bool call_coloring;         // in
 
     ImGuiID slot_dropped_uid; // in out
 
