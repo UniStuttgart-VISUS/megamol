@@ -341,8 +341,8 @@ private:
     bool widget_filepath(
         WidgetScope scope, const std::string& label, std::filesystem::path& val, const FilePathStorage_t& store);
     bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
-    bool widget_int(WidgetScope scope, const std::string& label, int& val, int& step, int minv, int maxv);
-    bool widget_float(WidgetScope scope, const std::string& label, float& val, float& step, float minv, float maxv);
+    bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv, int& step);
+    bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float& step);
     bool widget_vector2f(WidgetScope scope, const std::string& label, glm::vec2& val, glm::vec2 minv, glm::vec2 maxv);
     bool widget_vector3f(WidgetScope scope, const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv);
     bool widget_vector4f(WidgetScope scope, const std::string& label, glm::vec4& val, glm::vec4 minv, glm::vec4 maxv);

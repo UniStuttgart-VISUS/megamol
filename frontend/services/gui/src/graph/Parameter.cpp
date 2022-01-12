@@ -964,8 +964,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // FLOAT -----------------------------------------------
             else if constexpr (std::is_same_v<T, float>) {
                 auto val = arg;
-                float step = this->GetStepSize<T>();
-                if (this->widget_float(scope, param_label, val, step, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                auto step = this->GetStepSize<T>();
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(), step)) {
                     this->SetValue(val);
                     this->SetStepSize(step);
                     retval = true;
@@ -976,9 +976,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
                     auto val = arg;
-                    int step = this->GetStepSize<T>();
+                    auto step = this->GetStepSize<T>();
                     if (this->widget_int(
-                            scope, param_label, val, step, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(), step)) {
                         this->SetValue(val);
                         this->SetStepSize(step);
                         retval = true;
@@ -1234,8 +1234,8 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
                 auto val = arg;
-                float step = this->GetStepSize<T>();
-                if (this->widget_float(scope, param_label, val, step, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                auto step = this->GetStepSize<T>();
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(), step)) {
                     this->SetValue(val);
                     this->SetStepSize(step);
                     retval = true;
@@ -1246,9 +1246,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
                     auto val = arg;
-                    int step = this->GetStepSize<T>();
+                    auto step = this->GetStepSize<T>();
                     if (this->widget_int(
-                            scope, param_label, val, step, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>(), step)) {
                         this->SetValue(val);
                         this->SetStepSize(step);
                         retval = true;
@@ -1683,12 +1683,11 @@ bool megamol::gui::Parameter::widget_ternary(
 
 
 bool megamol::gui::Parameter::widget_int(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, int& step, int minv, int maxv) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, int minv, int maxv, int& step) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-
         if (!std::holds_alternative<int>(this->gui_widget_value)) {
             this->gui_widget_value = val;
         }
@@ -1774,12 +1773,11 @@ bool megamol::gui::Parameter::widget_int(
 
 
 bool megamol::gui::Parameter::widget_float(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    float& val, float& step, float minv, float maxv) {
+    float& val, float minv, float maxv, float& step) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-
         if (!std::holds_alternative<float>(this->gui_widget_value)) {
             this->gui_widget_value = val;
         }
@@ -2314,7 +2312,7 @@ bool megamol::gui::Parameter::widget_knob(megamol::gui::Parameter::WidgetScope s
         ImVec2 pos = ImGui::GetCursorPos();
         ImGui::PushItemWidth(ImGui::CalcItemWidth() - left_widget_x_offset);
 
-        if (this->widget_float(scope, label, val, step, minv, maxv)) {
+        if (this->widget_float(scope, label, val, minv, maxv, step)) {
             retval = true;
         }
         ImGui::PopItemWidth();
