@@ -348,8 +348,7 @@ bool megamol::gui::LogConsole::Draw() {
     auto message_count = this->echo_log_buffer.log().size();
     if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
         message_count = this->echo_log_buffer.warn_log_indices().size();
-    }
-    else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
+    } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
         message_count = this->echo_log_buffer.error_log_indices().size();
     }
     const int modified_count = std::min<int>(static_cast<int>(message_count), 14000000);
@@ -360,8 +359,7 @@ bool megamol::gui::LogConsole::Draw() {
             auto index = static_cast<size_t>(row);
             if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
                 index = this->echo_log_buffer.warn_log_indices()[row];
-            }
-            else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
+            } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
                 index = this->echo_log_buffer.error_log_indices()[row];
             }
             auto entry = this->echo_log_buffer.log()[index];
