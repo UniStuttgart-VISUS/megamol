@@ -12,12 +12,12 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 #include <memory>
 
 #ifdef WITH_MPI
@@ -32,6 +32,7 @@
 #include "vislib/RawStorage.h"
 
 using namespace megamol::core;
+namespace view_gl = megamol::core_gl::view;
 
 namespace megamol {
 namespace imageviewer2 {
@@ -39,7 +40,7 @@ namespace imageviewer2 {
 /**
  * Mesh-based renderer for bézier curve tubes
  */
-class ImageRenderer : public view::Renderer3DModuleGL {
+class ImageRenderer : public view_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -91,7 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(view::CallRender3DGL& call);
+    virtual bool GetExtents(view_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -105,9 +106,15 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(view::CallRender3DGL& call);
+    virtual bool Render(view_gl::CallRender3DGL& call);
 
 private:
+    /**
+     * Utility function to convert a 'std::string' instance into 'TString',
+     * while preserving '\0' bytes.
+     */
+    static vislib::TString stdToTString(const std::string& str);
+
     /**
      * Splits a line at the semicolon into a left and right part. If there
      * is no semicolon, defaultEye governs which one of the strings is set,
@@ -225,13 +232,14 @@ private:
     /** The height of the image */
     unsigned int height;
 
-    vislib::graphics::gl::GLSLShader theShader;
+    vislib_gl::graphics::gl::GLSLShader theShader;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
     GLuint theVAO;
 
     /** The image tiles */
-    vislib::Array<vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>>>
+    vislib::Array<
+        vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>>>
         tiles;
 
     /** the slide show files for the left eye */
