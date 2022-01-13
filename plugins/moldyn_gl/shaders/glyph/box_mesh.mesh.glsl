@@ -3,8 +3,8 @@
 #extension GL_NV_mesh_shader : enable
 
 #define WARP 16
-//#define NUM_V 12
-#define NUM_V 8
+#define NUM_V 12
+//#define NUM_V 8
 #define NUM_P 6
 
 layout(local_size_x = WARP) in;
@@ -39,6 +39,8 @@ out Point {
 
     flat vec3 dirColor;
 
+    flat vec3 transformedNormal;
+
     mat3 rotate_world_into_tensor;
     mat3 rotate_points;
 }
@@ -47,14 +49,14 @@ pp[];
 
 void ellipsoid(in uint inst, in uint face, in uint corner, in vec3 radii, in vec4 objPos,
     in mat3 rotate_world_into_tensor, in mat3 rotate_points, out vec3 dirColor, out vec3 invRad, out vec4 outPos,
-    out vec3 camPos) {
+    out vec3 camPos, out vec3 transformedNormal) {
     vec3 absradii = abs(radii) * scaling;
     invRad = 1.0 / absradii;
 
     //mat3 rotate_vectors = rotate_points; //transpose(inverse(rotate_points)); // makes no difference
 
     vec3 normal = cube_face_normals[face];
-    vec3 transformedNormal = (rotate_points * normal).xyz;
+    transformedNormal = (rotate_points * normal).xyz;
 
     vec4 cornerPos = vec4(cube_faces[face][corner], 0.0);
 
@@ -114,6 +116,7 @@ void main() {
         vec3 camPos = rotate_world_into_tensor * view_vec;
         camPos *= invRad;
 
+#if 0
         for (uint vert = 0; vert < 8; ++vert) {
             uint v_idx = l_idx * NUM_V + vert;
 
@@ -163,9 +166,17 @@ void main() {
             gl_PrimitiveIndicesNV[base_p_idx + 3] = base_v_idx + f1.x;
             gl_PrimitiveIndicesNV[base_p_idx + 4] = base_v_idx + f1.y;
             gl_PrimitiveIndicesNV[base_p_idx + 5] = base_v_idx + f1.z;
-        }
 
-#if 0
+            pp[base_v_idx + f0.x].transformedNormal = transformedNormal;
+            pp[base_v_idx + f0.y].transformedNormal = transformedNormal;
+            pp[base_v_idx + f0.z].transformedNormal = transformedNormal;
+            pp[base_v_idx + f1.x].transformedNormal = transformedNormal;
+            pp[base_v_idx + f1.y].transformedNormal = transformedNormal;
+            pp[base_v_idx + f1.z].transformedNormal = transformedNormal;
+        }
+#endif
+
+#if 1
         for (uint face = 0; face < 3; ++face) {
             uint base_v_idx = l_idx * NUM_V + face * 4;
             for (uint corner = 0; corner < 4; ++corner) {
@@ -175,7 +186,7 @@ void main() {
                 pp[v_idx].rotate_points = transpose(pp[v_idx].rotate_world_into_tensor);*/
                 pp[v_idx].rotate_world_into_tensor = rotate_world_into_tensor;
                 pp[v_idx].rotate_points = rotate_points;
-       
+
                 /*pp[v_idx].vertColor = compute_color(
                     col, flag, tf_texture, tf_range, global_color, flag_selected_col, flag_softselected_col, options);*/
                 pp[v_idx].vertColor = vertColor;
@@ -185,7 +196,8 @@ void main() {
                 vec4 outPos;
 
                 ellipsoid(inst, face, corner, radii, pp[v_idx].objPos, pp[v_idx].rotate_world_into_tensor,
-                    pp[v_idx].rotate_points, pp[v_idx].dirColor, pp[v_idx].invRad, outPos, pp[v_idx].camPos);
+                    pp[v_idx].rotate_points, pp[v_idx].dirColor, pp[v_idx].invRad, outPos, pp[v_idx].camPos,
+                    pp[v_idx].transformedNormal);
 
                 pp[v_idx].camPos = camPos;
                 pp[v_idx].invRad = invRad;

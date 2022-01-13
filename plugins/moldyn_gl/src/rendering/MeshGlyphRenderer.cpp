@@ -98,6 +98,9 @@ bool MeshGlyphRenderer::create(void) {
         auto shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         ellipsoid_shader_ = core::utility::make_glowl_shader("MeshEllipsoidShader", shdr_options,
             std::filesystem::path("glyph/ellipsoid_mesh.mesh.glsl"), std::filesystem::path("glyph/ellipsoid_mesh.frag.glsl"));
+        box_shader_ = core::utility::make_glowl_shader("MeshBoxShader", shdr_options,
+            std::filesystem::path("glyph/box_mesh.mesh.glsl"),
+            std::filesystem::path("glyph/box_mesh.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
         core::utility::log::Log::DefaultLog.WriteError("[MeshGlyphRenderer]: %s", ex.what());
         return false;
@@ -584,20 +587,37 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     shader->Disable();
 #else
     glDisable(GL_CULL_FACE);
-    ellipsoid_shader_->use();
+    glowl::GLSLProgram* shader;
+    switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
+    case Glyph::BOX:
+        shader = this->box_shader_.get();
+        break;
+    case Glyph::ELLIPSOID:
+        shader = this->ellipsoid_shader_.get();
+        break;
+    case Glyph::ARROW:
+        shader = this->ellipsoid_shader_.get();
+        break;
+    case Glyph::SUPERQUADRIC:
+        shader = this->ellipsoid_shader_.get();
+        break;
+    default:;
+        shader = this->ellipsoid_shader_.get();
+    }
+    shader->use();
 
-    glUniform4fv(ellipsoid_shader_->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MV_I"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
-    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MV_T"), 1, GL_TRUE, glm::value_ptr(mv_matrix));
-    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(ellipsoid_shader_->getUniformLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
+    glUniform4fv(shader->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniformMatrix4fv(shader->getUniformLocation("MV_I"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
+    glUniformMatrix4fv(shader->getUniformLocation("MV_T"), 1, GL_TRUE, glm::value_ptr(mv_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
-    glUniform4fv(ellipsoid_shader_->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
-    glUniform1f(ellipsoid_shader_->getUniformLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
+    glUniform4fv(shader->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
+    glUniform1f(shader->getUniformLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
     //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
 
-    glUniform1f(ellipsoid_shader_->getUniformLocation("colorInterpolation"),
+    glUniform1f(shader->getUniformLocation("colorInterpolation"),
         this->colorInterpolationParam.Param<param::FloatParam>()->Value());
 
     uint32_t num_total_glyphs = 0;
@@ -625,8 +645,8 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         //glBindBufferRange(
         //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }
-    glUniform4f(ellipsoid_shader_->getUniformLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
-    glUniform4f(ellipsoid_shader_->getUniformLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
+    glUniform4f(shader->getUniformLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
+    glUniform4f(shader->getUniformLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
 
     if (use_clip) {
         auto clip_point_coords = clipc->GetPlane().Point();
@@ -637,9 +657,9 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
             clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
-        glUniform4fv(ellipsoid_shader_->getUniformLocation("clip_data"), 1, clip_data.data());
+        glUniform4fv(shader->getUniformLocation("clip_data"), 1, clip_data.data());
         auto c = clipc->GetColour();
-        glUniform4f(ellipsoid_shader_->getUniformLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
+        glUniform4f(shader->getUniformLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
             static_cast<float>(c[1]) / 255.f, static_cast<float>(c[2]) / 255.f, static_cast<float>(c[3]) / 255.f);
     }
 
@@ -661,7 +681,7 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             const auto gc = elParts.GetGlobalColour();
             const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
                 static_cast<float>(gc[2]) / 255.0f, static_cast<float>(gc[3]) / 255.0f};
-            glUniform4fv(ellipsoid_shader_->getUniformLocation("global_color"), 1, gcf.data());
+            glUniform4fv(shader->getUniformLocation("global_color"), 1, gcf.data());
             bindColor = false;
         } break;
         case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -681,11 +701,11 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             glActiveTexture(GL_TEXTURE0);
             if (tfc == nullptr) {
                 glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                glUniform2f(ellipsoid_shader_->getUniformLocation("tf_range"), elParts.GetMinColourIndexValue(),
+                glUniform2f(shader->getUniformLocation("tf_range"), elParts.GetMinColourIndexValue(),
                     elParts.GetMaxColourIndexValue());
             } else if ((*tfc)(0)) {
                 glBindTexture(GL_TEXTURE_1D, tfc->OpenGLTexture());
-                glUniform2fv(ellipsoid_shader_->getUniformLocation("tf_range"), 1, tfc->Range().data());
+                glUniform2fv(shader->getUniformLocation("tf_range"), 1, tfc->Range().data());
                 //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
                 //    elParts.GetMaxColourIndexValue());
             } else {
@@ -693,7 +713,7 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     "MeshGlyphRenderer: could not retrieve transfer function!");
                 return false;
             }
-            glUniform1i(ellipsoid_shader_->getUniformLocation("tf_texture"), 0);
+            glUniform1i(shader->getUniformLocation("tf_texture"), 0);
             break;
         case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
@@ -711,7 +731,7 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             options = options | glyph_options::USE_CLIP;
         if (use_per_axis_color)
             options = options | glyph_options::USE_PER_AXIS;
-        glUniform1ui(ellipsoid_shader_->getUniformLocation("options"), options);
+        glUniform1ui(shader->getUniformLocation("options"), options);
 
         switch (elParts.GetVertexDataType()) {
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
@@ -753,7 +773,7 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             }
 
             if (use_flags) {
-                glUniform1ui(ellipsoid_shader_->getUniformLocation("flag_offset"), curr_glyph_offset);
+                glUniform1ui(shader->getUniformLocation("flag_offset"), curr_glyph_offset);
             }
 
             switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
@@ -761,11 +781,13 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
                 //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
                 // but just drawing the front-facing triangles, that's better
-                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                shader->setUniform("num_points", static_cast<unsigned int>(actualItems));
+                glDrawMeshTasksNV(0, static_cast<GLsizei>(actualItems) / 16 + 1);
                 break;
             case Glyph::ELLIPSOID:
                 //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
-                ellipsoid_shader_->setUniform("num_points", static_cast<unsigned int>(actualItems));
+                shader->setUniform("num_points", static_cast<unsigned int>(actualItems));
                 glDrawMeshTasksNV(0, static_cast<GLsizei>(actualItems) / 16 + 1);
                 break;
             case Glyph::ARROW:

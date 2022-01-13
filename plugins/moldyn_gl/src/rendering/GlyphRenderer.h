@@ -141,6 +141,7 @@ private:
     GLuint greyTF;
 
     std::unique_ptr<glowl::GLSLProgram> ellipsoid_shader_;
+    std::unique_ptr<glowl::GLSLProgram> box_shader_;
 };
 
 } // namespace rendering
