@@ -39,22 +39,22 @@
 
 #pragma once
 
+#include "mmcore/utility/log/Log.h"
 #include <Eigen/Dense>
 #include <Eigen/Eigen>
 #include <Eigen/StdVector>
 #include <array>
 #include <memory>
 #include <vector>
-#include "mmcore/utility/log/Log.h"
 
 #ifdef _DEBUG
-#    define PCL_DEBUG megamol::core::utility::log::Log::DefaultLog.WriteWarn
+#define PCL_DEBUG megamol::core::utility::log::Log::DefaultLog.WriteWarn
 #else
 // most hacky solution just to make michael more happy :,(
 namespace {
 inline auto do_nothing = [](auto... xs) {};
 }
-#    define PCL_DEBUG do_nothing
+#define PCL_DEBUG do_nothing
 #endif
 
 namespace pcl {
@@ -226,7 +226,8 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-template <typename PointT> class PointCloud {
+template<typename PointT>
+class PointCloud {
 public:
     PointCloud() = default;
     ~PointCloud() = default;
@@ -251,7 +252,8 @@ public:
 /** \brief PCL base class. Implements methods that are used by most PCL algorithms.
  * \ingroup common
  */
-template <typename PointT> class PCLBase {
+template<typename PointT>
+class PCLBase {
 public:
     using PointCloud = pcl::PointCloud<PointT>;
     using PointCloudPtr = typename PointCloud::Ptr;
@@ -307,7 +309,9 @@ protected:
     virtual void setInputCloud(const PointCloudConstPtr& cloud);
 
     /** \brief Get a pointer to the input point cloud dataset. */
-    inline PointCloudConstPtr const getInputCloud() const { return (input_); }
+    inline PointCloudConstPtr const getInputCloud() const {
+        return (input_);
+    }
 
     /** \brief Provide a pointer to the vector of indices that represents the input data.
      * \param[in] indices a pointer to the indices that represent the input data.
@@ -335,17 +339,23 @@ protected:
     virtual void setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols);
 
     /** \brief Get a pointer to the vector of indices used. */
-    inline IndicesPtr const getIndices() { return (indices_); }
+    inline IndicesPtr const getIndices() {
+        return (indices_);
+    }
 
     /** \brief Get a pointer to the vector of indices used. */
-    inline IndicesConstPtr const getIndices() const { return (indices_); }
+    inline IndicesConstPtr const getIndices() const {
+        return (indices_);
+    }
 
     /** \brief Override PointCloud operator[] to shorten code
      * \note this method can be called instead of (*input_)[(*indices_)[pos]]
      * or input_->points[(*indices_)[pos]]
      * \param[in] pos position in indices_ vector
      */
-    inline const PointT& operator[](size_t pos) const { return ((*input_)[(*indices_)[pos]]); }
+    inline const PointT& operator[](size_t pos) const {
+        return ((*input_)[(*indices_)[pos]]);
+    }
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -359,10 +369,12 @@ public:
  * \return the radius of the circumscribed circle
  * \ingroup common
  */
-template <typename PointT> inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc);
+template<typename PointT>
+inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc);
 
 
-template <typename PointT> inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc) {
+template<typename PointT>
+inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc) {
     Eigen::Vector4f p1(pa.x, pa.y, pa.z, 0);
     Eigen::Vector4f p2(pb.x, pb.y, pb.z, 0);
     Eigen::Vector4f p3(pc.x, pc.y, pc.z, 0);
@@ -385,11 +397,11 @@ template <typename PointT> inline double getCircumcircleRadius(const PointT& pa,
  * \note Assumes unique indices.
  * \ingroup common
  */
-template <typename PointT>
+template<typename PointT>
 inline void copyPointCloud(
     const pcl::PointCloud<PointT>& cloud_in, const std::vector<uint32_t>& indices, pcl::PointCloud<PointT>& cloud_out);
 
-template <typename PointT>
+template<typename PointT>
 void copyPointCloud(
     const pcl::PointCloud<PointT>& cloud_in, const std::vector<uint32_t>& indices, pcl::PointCloud<PointT>& cloud_out) {
     // Do we want to copy everything?
@@ -408,7 +420,8 @@ void copyPointCloud(
     // cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
 
     // Iterate over each point
-    for (size_t i = 0; i < indices.size(); ++i) cloud_out.points[i] = cloud_in.points[indices[i]];
+    for (size_t i = 0; i < indices.size(); ++i)
+        cloud_out.points[i] = cloud_in.points[indices[i]];
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +432,8 @@ void copyPointCloud(
  * and provide an implementation of the pure virtual copyToFloatArray method.
  * \author Michael Dixon
  */
-template <typename PointT> class PointRepresentation {
+template<typename PointT>
+class PointRepresentation {
 protected:
     /** \brief The number of dimensions in this point's vector (i.e. the "k" in "k-D") */
     int nr_dimensions_;
@@ -459,7 +473,9 @@ public:
      *  - sizeof(PointT) is a multiple of sizeof(float)
      *  In short, a trivial point representation converts the input point to a float array that is the same as if
      *  the point was reinterpret_casted to a float array of length nr_dimensions_ . */
-    inline bool isTrivial() const { return trivial_ && alpha_.empty(); }
+    inline bool isTrivial() const {
+        return trivial_ && alpha_.empty();
+    }
 
     /** \brief Verify that the input point is valid.
      *  \param p The point to validate
@@ -495,13 +511,16 @@ public:
      * \param[in] p the input point
      * \param[out] out The output vector.  Can be of any type that implements the [] operator.
      */
-    template <typename OutputType> void vectorize(const PointT& p, OutputType& out) const {
+    template<typename OutputType>
+    void vectorize(const PointT& p, OutputType& out) const {
         float* temp = new float[nr_dimensions_];
         copyToFloatArray(p, temp);
         if (alpha_.empty()) {
-            for (int i = 0; i < nr_dimensions_; ++i) out[i] = temp[i];
+            for (int i = 0; i < nr_dimensions_; ++i)
+                out[i] = temp[i];
         } else {
-            for (int i = 0; i < nr_dimensions_; ++i) out[i] = temp[i] * alpha_[i];
+            for (int i = 0; i < nr_dimensions_; ++i)
+                out[i] = temp[i] * alpha_[i];
         }
         delete[] temp;
     }
@@ -511,17 +530,21 @@ public:
      */
     void setRescaleValues(const float* rescale_array) {
         alpha_.resize(nr_dimensions_);
-        for (int i = 0; i < nr_dimensions_; ++i) alpha_[i] = rescale_array[i];
+        for (int i = 0; i < nr_dimensions_; ++i)
+            alpha_[i] = rescale_array[i];
     }
 
     /** \brief Return the number of dimensions in the point's vector representation. */
-    inline int getNumberOfDimensions() const { return (nr_dimensions_); }
+    inline int getNumberOfDimensions() const {
+        return (nr_dimensions_);
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /** \brief @b DefaultPointRepresentation extends PointRepresentation to define default behavior for common point types.
  */
-template <typename PointDefault> class DefaultPointRepresentation : public PointRepresentation<PointDefault> {
+template<typename PointDefault>
+class DefaultPointRepresentation : public PointRepresentation<PointDefault> {
     using PointRepresentation<PointDefault>::nr_dimensions_;
     using PointRepresentation<PointDefault>::trivial_;
 
@@ -534,56 +557,69 @@ public:
         // If point type is unknown, assume it's a struct/array of floats, and compute the number of dimensions
         nr_dimensions_ = sizeof(PointDefault) / sizeof(float);
         // Limit the default representation to the first 3 elements
-        if (nr_dimensions_ > 3) nr_dimensions_ = 3;
+        if (nr_dimensions_ > 3)
+            nr_dimensions_ = 3;
 
         trivial_ = true;
     }
 
     ~DefaultPointRepresentation() {}
 
-    inline Ptr makeShared() const { return (Ptr(new DefaultPointRepresentation<PointDefault>(*this))); }
+    inline Ptr makeShared() const {
+        return (Ptr(new DefaultPointRepresentation<PointDefault>(*this)));
+    }
 
     void copyToFloatArray(const PointDefault& p, float* out) const override {
         // If point type is unknown, treat it as a struct/array of floats
         const float* ptr = reinterpret_cast<const float*>(&p);
-        for (int i = 0; i < nr_dimensions_; ++i) out[i] = ptr[i];
+        for (int i = 0; i < nr_dimensions_; ++i)
+            out[i] = ptr[i];
     }
 };
 
 
-template <typename PointT> pcl::PCLBase<PointT>::PCLBase() : input_(), use_indices_(false), fake_indices_(false) {}
+template<typename PointT>
+pcl::PCLBase<PointT>::PCLBase() : input_()
+                                , use_indices_(false)
+                                , fake_indices_(false) {}
 
-template <typename PointT>
+template<typename PointT>
 pcl::PCLBase<PointT>::PCLBase(const PCLBase& base)
-    : input_(base.input_)
-    , indices_(base.indices_)
-    , use_indices_(base.use_indices_)
-    , fake_indices_(base.fake_indices_) {}
+        : input_(base.input_)
+        , indices_(base.indices_)
+        , use_indices_(base.use_indices_)
+        , fake_indices_(base.fake_indices_) {}
 
-template <typename PointT> void pcl::PCLBase<PointT>::setInputCloud(const PointCloudConstPtr& cloud) { input_ = cloud; }
+template<typename PointT>
+void pcl::PCLBase<PointT>::setInputCloud(const PointCloudConstPtr& cloud) {
+    input_ = cloud;
+}
 
 
-template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesPtr& indices) {
+template<typename PointT>
+void pcl::PCLBase<PointT>::setIndices(const IndicesPtr& indices) {
     indices_ = indices;
     fake_indices_ = false;
     use_indices_ = true;
 }
 
-template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesConstPtr& indices) {
+template<typename PointT>
+void pcl::PCLBase<PointT>::setIndices(const IndicesConstPtr& indices) {
     indices_.reset(new std::vector<uint32_t>(*indices));
     fake_indices_ = false;
     use_indices_ = true;
 }
 
 
-template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const PointIndicesConstPtr& indices) {
+template<typename PointT>
+void pcl::PCLBase<PointT>::setIndices(const PointIndicesConstPtr& indices) {
     indices_.reset(new std::vector<uint32_t>(indices->indices));
     fake_indices_ = false;
     use_indices_ = true;
 }
 
 
-template <typename PointT>
+template<typename PointT>
 void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols) {
     if ((nb_rows > input_->height) || (row_start > input_->height)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -592,7 +628,8 @@ void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t
     }
 
     if ((nb_cols > input_->width) || (col_start > input_->width)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d width", input_->width);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[PCLBase::setIndices] cloud is only %d width", input_->width);
         return;
     }
 
@@ -619,9 +656,11 @@ void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t
     use_indices_ = true;
 }
 
-template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
+template<typename PointT>
+bool pcl::PCLBase<PointT>::initCompute() {
     // Check if input was set
-    if (!input_) return (false);
+    if (!input_)
+        return (false);
 
     // If no point indices have been given, construct a set of indices for the entire input point cloud
     if (!indices_) {
@@ -646,7 +685,10 @@ template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
     return (true);
 }
 
-template <typename PointT> bool pcl::PCLBase<PointT>::deinitCompute() { return (true); }
+template<typename PointT>
+bool pcl::PCLBase<PointT>::deinitCompute() {
+    return (true);
+}
 
 #define PCL_INSTANTIATE_PCLBase(T) template class PCL_EXPORTS pcl::PCLBase<T>;
 

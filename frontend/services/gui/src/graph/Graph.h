@@ -197,8 +197,11 @@ private:
     bool gui_show_grid;
     bool gui_show_parameter_sidebar;
     bool gui_change_show_parameter_sidebar;
-    unsigned int gui_graph_layout;
     float gui_parameter_sidebar_width;
+    bool gui_show_profiling_bar;
+    bool gui_change_show_profiling_bar;
+    float gui_profiling_bar_height;
+    unsigned int gui_graph_layout;
     bool gui_reset_zooming;
     bool gui_increment_zooming;
     bool gui_decrement_zooming;
@@ -209,15 +212,21 @@ private:
     bool gui_canvas_hovered;
     float gui_current_font_scaling;
     StringSearchWidget gui_search_widget;
-    SplitterWidget gui_splitter_widget;
+    SplitterWidget gui_parameters_splitter;
+    SplitterWidget gui_profiling_splitter;
     PopUps gui_rename_popup;
     HoverToolTip gui_tooltip;
+#ifdef PROFILING
+    ImageWidget gui_profiling_run_button;
+    std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
+    std::chrono::system_clock::time_point scroll_delta_time;
+#endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_menu(GraphState_t& state);
-    void draw_canvas(float child_width, GraphState_t& state);
-    void draw_parameters(float child_width);
+    void draw_canvas(ImVec2 position, ImVec2 size, GraphState_t& state);
+    void draw_parameters(ImVec2 position, ImVec2 size);
 
     void draw_canvas_grid() const;
     void draw_canvas_dragged_call();
@@ -237,6 +246,10 @@ private:
 
     std::string generate_unique_group_name() const;
     std::string generate_unique_module_name(const std::string& name) const;
+
+#ifdef PROFILING
+    void draw_profiling(ImVec2 position, ImVec2 size);
+#endif // PROFILING
 };
 
 

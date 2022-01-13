@@ -47,6 +47,10 @@
         <snippet name="Main"             type="file">comp/phong_c.glsl</snippet>
     </shader>
 
+    <shader name="normalFromDepth">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/normalFromDepth_c.glsl</snippet>
+    </shader>
     <!-- Adaptive Screen Space Ambient Occlusion shaders -->
     <!-- Rename PS to CS -->
     <namespace name="assao">

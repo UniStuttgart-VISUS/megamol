@@ -14,7 +14,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 #include "delaunator.hpp"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include <sstream>
 
 using namespace megamol;

@@ -13,8 +13,8 @@
 #ifdef PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
-#define CALL_PROFILING_PLOT_HEIGHT (200.0f)
-#define CALL_PROFILING_WINDOW_WIDTH (450.0f)
+#define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
+#define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // PROFILING
 
 using namespace megamol;
@@ -43,6 +43,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , show_profiling_data(false)
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
+        , profiling_button_position()
 #endif // PROFILING
 {
 
@@ -244,17 +245,20 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 #ifdef PROFILING
                     rect_size.x += 2.0f * ImGui::GetTextLineHeightWithSpacing();
                     rect_size.y = std::max(rect_size.y, ImGui::GetTextLineHeightWithSpacing());
-#endif
+#endif // PROFILING
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
 #ifdef PROFILING
+                    /*
+                    /// Draw profiling data inplace
                     if (this->show_profiling_data) {
                         rect_size = ImVec2(((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming) +
                                                (style.ItemSpacing.x * 2.0f * state.canvas.zooming)),
                             ((this->profiling_window_height * state.canvas.zooming) +
                                 (style.ItemSpacing.y * 2.0f * state.canvas.zooming) + rect_size.y));
                     }
-#endif
+                    */
+#endif // PROFILING
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     std::string button_label = "call_" + std::to_string(this->uid);
@@ -357,20 +361,47 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 call_center.y - (profiling_button_size / 2.0f));
                         ImGui::SetCursorScreenPos(profiling_button_pos);
                         ImGui::PushFont(state.canvas.gui_font_ptr);
+                        this->profiling_button_position =
+                            ImVec2(ImGui::GetCursorScreenPos().x + profiling_button_size / 2.0f, call_rect_max.y);
                         if (this->gui_profiling_button.Button(
-                                "Performance Monitor", ImVec2(profiling_button_size, profiling_button_size))) {
+                                "Profiling", ImVec2(profiling_button_size, profiling_button_size))) {
                             this->show_profiling_data = !this->show_profiling_data;
+                            if (this->show_profiling_data) {
+                                state.interact.profiling_show = true;
+                            }
                         }
                         this->gui_profiling_btn_hovered = ImGui::IsItemHovered();
                         ImGui::PopFont();
-
                         if (this->show_profiling_data) {
+                            this->pause_profiling_history_update = state.interact.profiling_pause_update;
+                            /*
+                            /// Draw profiling data inplace
                             ImGui::SetCursorScreenPos(
                                 ImVec2(call_rect_min.x + (style.ItemSpacing.x * state.canvas.zooming),
                                     call_center.y + (call_center.y - call_rect_min.y)));
-                            this->draw_profiling_data(state);
+                            ImGui::BeginChild("call_profiling_info",
+                                ImVec2((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
+                                    (this->profiling_window_height * state.canvas.zooming)),
+                                true,
+                                ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove |
+                                    ImGuiWindowFlags_NoScrollbar);
+                            ImGui::TextUnformatted("Profiling");
+                            ImGui::SameLine();
+                            // Lazy loading of run button textures
+                            if (!this->gui_profiling_run_button.IsLoaded()) {
+                                this->gui_profiling_run_button.LoadTextureFromFile(
+                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE,
+                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+                            }
+                            this->gui_profiling_run_button.ToggleButton(state.interact.profiling_pause_update,
+                                "Pause update of profiling values globally", "Continue updating of profiling values",
+                                ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+                            ImGui::TextDisabled("Callback Name:");
+                            this->DrawProfiling(state);
+                            ImGui::EndChild();
+                            */
                         }
-#endif
+#endif // PROFILING
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
@@ -436,27 +467,7 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
 }
 
 
-void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
-
-    // Lazy loading of run button textures
-    if (!this->gui_profiling_run_button.IsLoaded()) {
-        this->gui_profiling_run_button.LoadTextureFromFile(
-            GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
-    }
-
-    ImGui::BeginChild("call_profiling_info",
-        ImVec2((CALL_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
-            (this->profiling_window_height * state.canvas.zooming)),
-        true, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
-
-    ImGui::TextUnformatted("Profiling");
-    ImGui::SameLine();
-    ImGui::TextDisabled("[Callback Name]");
-    ImGui::SameLine();
-    this->pause_profiling_history_update = state.interact.pause_profiling_update;
-    this->gui_profiling_run_button.ToggleButton(state.interact.pause_profiling_update,
-        "Pause update of profiling values globally", "Continue updating of profiling values",
-        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
 
     ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
     auto func_cnt = this->cpu_perf_history.size();
@@ -490,8 +501,8 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("CPU History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)), y_flags,
-                display_idx, cpu_perf_history[i]);
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags, display_idx,
+                cpu_perf_history[i]);
 
             if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
@@ -515,8 +526,8 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
             }
 
             ProfilingUtils::DrawPlot("GL History",
-                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT * state.canvas.zooming)), y_flags,
-                display_idx, gl_perf_history[i]);
+                ImVec2(ImGui::GetContentRegionAvail().x, (CALL_PROFILING_PLOT_HEIGHT)), y_flags, display_idx,
+                gl_perf_history[i]);
 
             ImGui::EndTabItem();
             y_flags = 0;
@@ -524,9 +535,7 @@ void megamol::gui::Call::draw_profiling_data(GraphItemsState_t& state) {
     }
     ImGui::EndTabBar();
 
-    this->profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY() / state.canvas.zooming);
-
-    ImGui::EndChild();
+    this->profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY());
 }
 
 

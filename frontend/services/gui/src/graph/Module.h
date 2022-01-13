@@ -181,6 +181,17 @@ public:
 
     void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
         const frontend_resources::PerformanceManager::timer_entry& entry);
+
+    bool ShowProfiling() {
+        return this->show_profiling_data;
+    }
+
+    void DrawProfiling(GraphItemsState_t& state);
+
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
+    }
+
 #endif
 
 private:
@@ -218,6 +229,7 @@ private:
     PopUps gui_rename_popup;
 
 #ifdef PROFILING
+
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
         cpu_perf_history;
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
@@ -228,8 +240,8 @@ private:
     ImageWidget gui_profiling_button;
     ImageWidget gui_profiling_run_button;
     bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
 
-    void draw_profiling_data(GraphItemsState_t& state);
 #endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------

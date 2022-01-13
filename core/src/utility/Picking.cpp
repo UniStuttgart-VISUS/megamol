@@ -16,7 +16,6 @@ using namespace megamol::core::utility;
 PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
-        , viewport_dim{0, 0}
         , cursor_on_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
         , active_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
         , available_interactions()

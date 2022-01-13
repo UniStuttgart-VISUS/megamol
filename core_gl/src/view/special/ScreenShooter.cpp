@@ -28,7 +28,6 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
-#include "mmcore/versioninfo.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "png.h"
 #include "vislib/Trace.h"

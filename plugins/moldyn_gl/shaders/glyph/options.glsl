@@ -4,3 +4,4 @@ const uint OPTIONS_USE_TRANSFERFUNCTION = 1u << 1;
 const uint OPTIONS_USE_FLAGS = 1u << 2;
 const uint OPTIONS_USE_CLIP = 1u << 3;
 const uint OPTIONS_USE_PER_AXIS_COLOR = 1u << 4;
+const uint OPTIONS_IGNORE_RADII = 1u << 5;

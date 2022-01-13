@@ -10,7 +10,9 @@
 #include "imgui_stdlib.h"
 #include "vislib/math/Ternary.h"
 #include "widgets/ButtonWidgets.h"
-
+#ifdef PROFILING
+#define GRAPH_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
+#endif // PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -29,10 +31,13 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_graph_state()
         , gui_update(true)
         , gui_show_grid(false)
-        , gui_show_parameter_sidebar(true)
+        , gui_show_parameter_sidebar(false)
         , gui_change_show_parameter_sidebar(true)
-        , gui_graph_layout(0)
         , gui_parameter_sidebar_width(300.0f)
+        , gui_show_profiling_bar(false)
+        , gui_change_show_profiling_bar(true)
+        , gui_profiling_bar_height(300.0f)
+        , gui_graph_layout(0)
         , gui_reset_zooming(true)
         , gui_increment_zooming(false)
         , gui_decrement_zooming(false)
@@ -43,9 +48,16 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_canvas_hovered(false)
         , gui_current_font_scaling(1.0f)
         , gui_search_widget()
-        , gui_splitter_widget()
+        , gui_parameters_splitter()
+        , gui_profiling_splitter()
         , gui_rename_popup()
-        , gui_tooltip() {
+        , gui_tooltip()
+#ifdef PROFILING
+        , gui_profiling_run_button()
+        , profiling_list()
+        , scroll_delta_time(std::chrono::system_clock::now())
+#endif // PROFILING
+{
 
     this->filenames.first.first = false;
     this->filenames.first.second = "";
@@ -97,7 +109,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
 
     this->gui_graph_state.interact.parameters_extended_mode = false;
     this->gui_graph_state.interact.graph_is_running = false;
-    this->gui_graph_state.interact.pause_profiling_update = false;
+    this->gui_graph_state.interact.profiling_pause_update = false;
+    this->gui_graph_state.interact.profiling_show = false;
 
     this->gui_graph_state.groups.clear();
     // this->gui_graph_state.hotkeys are already initialized
@@ -154,7 +167,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 
                 for (auto& p : mod.parameters) {
                     Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
-                        p.param_name, p.description);
+                        p.stepsize, p.param_name, p.description);
                     parameter.SetParentModuleName(mod_ptr->FullName());
                     parameter.SetValueString(p.default_value, true, true);
                     parameter.SetGUIVisible(p.gui_visibility);
@@ -1138,9 +1151,19 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             this->gui_change_show_parameter_sidebar = true;
                             this->gui_show_parameter_sidebar = tmp_show_parameter_sidebar;
                         }
-
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"parameter_sidebar_width"}, &this->gui_parameter_sidebar_width);
+#ifdef PROFILING
+                        bool tmp_show_profiling_bar = false;
+                        this->gui_change_show_profiling_bar = false;
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_profiling_bar"}, &tmp_show_profiling_bar)) {
+                            this->gui_change_show_profiling_bar = true;
+                            this->gui_show_profiling_bar = tmp_show_profiling_bar;
+                        }
+                        megamol::core::utility::get_json_value<float>(
+                            graph_state, {"profiling_bar_height"}, &this->gui_profiling_bar_height);
+#endif // PROFILING
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_grid"}, &this->gui_show_grid);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
@@ -1293,6 +1316,8 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
             this->gui_show_parameter_sidebar;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
             this->gui_parameter_sidebar_width;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_profiling_bar"] = this->gui_show_profiling_bar;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["profiling_bar_height"] = this->gui_profiling_bar_height;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->gui_show_grid;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] =
             this->gui_graph_state.interact.call_show_label;
@@ -1384,10 +1409,21 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 state.show_parameter_sidebar = this->gui_show_parameter_sidebar;
             }
             this->gui_change_show_parameter_sidebar = false;
-
             this->gui_show_parameter_sidebar = state.show_parameter_sidebar;
-            this->gui_graph_state.interact.graph_is_running = this->IsRunning();
 
+            if (this->gui_graph_state.interact.profiling_show) {
+                this->gui_graph_state.interact.profiling_show = false;
+                this->gui_change_show_profiling_bar = true;
+                this->gui_show_profiling_bar = true;
+            }
+            // Only load gui_show_profiling_bar from project file for running graph
+            if (this->gui_change_show_profiling_bar && this->IsRunning()) {
+                state.show_profiling_bar = this->gui_show_profiling_bar;
+            }
+            this->gui_change_show_profiling_bar = false;
+            this->gui_show_profiling_bar = state.show_profiling_bar;
+
+            this->gui_graph_state.interact.graph_is_running = this->IsRunning();
             this->gui_graph_state.hotkeys = state.hotkeys;
             this->gui_graph_state.groups.clear();
             for (auto& group : this->GetGroups()) {
@@ -1469,22 +1505,53 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             // Draw -----------------------------
             this->draw_menu(state);
 
-            float graph_width_auto = 0.0f;
+            ImGui::BeginChild(
+                "graph_tab", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+
+            // Disable profiling bar for not running graphs
+            if (!this->IsRunning() && this->gui_show_profiling_bar) {
+                this->gui_show_profiling_bar = false;
+            }
+
+            // Draw splitter
+            const auto splitter_width = this->gui_profiling_splitter.GetWidth();
+            const auto cursor_position = ImGui::GetCursorScreenPos();
+            const auto available_space = ImGui::GetContentRegionAvail();
+            float graph_width_auto = available_space.x;
             this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_parameter_sidebar) {
-                this->gui_splitter_widget.Widget(
-                    SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->gui_parameter_sidebar_width);
+                this->gui_parameters_splitter.Widget("parameters_splitter", true, 0.0f,
+                    SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_width_auto,
+                    this->gui_parameter_sidebar_width);
             }
+            float graph_height_auto = available_space.y;
+#ifdef PROFILING
+            this->gui_profiling_bar_height *= megamol::gui::gui_scaling.Get();
+            if (this->gui_show_profiling_bar) {
+                this->gui_profiling_splitter.Widget("profiling_splitter", false, graph_width_auto,
+                    SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_height_auto, this->gui_profiling_bar_height);
+            }
+#endif // PROFILING
 
-            this->draw_canvas(graph_width_auto, state);
-
+            // Draw content of splitter regions
+            this->draw_canvas(cursor_position + ImVec2(0.0f, 0.0f), ImVec2(graph_width_auto, graph_height_auto), state);
             if (this->gui_show_parameter_sidebar) {
-                ImGui::SameLine();
-                this->draw_parameters(this->gui_parameter_sidebar_width);
+                this->draw_parameters(cursor_position + ImVec2(graph_width_auto + splitter_width, 0.0f),
+                    ImVec2(this->gui_parameter_sidebar_width, available_space.y));
             }
+#ifdef PROFILING
+            if (this->gui_show_profiling_bar) {
+                this->draw_profiling(cursor_position + ImVec2(0.0f, graph_height_auto + splitter_width),
+                    ImVec2(graph_width_auto, this->gui_profiling_bar_height));
+            }
+#endif // PROFILING
+
+            this->gui_parameter_sidebar_width /= megamol::gui::gui_scaling.Get();
+            this->gui_profiling_bar_height /= megamol::gui::gui_scaling.Get();
 
             state.graph_selected_uid = this->uid;
-            this->gui_parameter_sidebar_width /= megamol::gui::gui_scaling.Get();
+
+            ImGui::EndChild();
 
             // State processing ---------------------
             this->ResetStatePointers();
@@ -2068,7 +2135,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
 }
 
 
-void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
+void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t& state) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -2111,11 +2178,11 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     this->gui_graph_state.canvas.gui_font_ptr = gui_font_ptr;
     ImGui::PushFont(graph_font_ptr);
 
-    // Colors
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-    ImGui::BeginChild("region", ImVec2(graph_width, 0.0f), true, child_flags);
+    ImGui::SetNextWindowPos(position);
+    ImGui::BeginChild("canvas", size, true, child_flags);
 
     this->gui_canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_None); // Ignores Pop-Ups like Context-Menu
 
@@ -2327,14 +2394,20 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
 }
 
 
-void megamol::gui::Graph::draw_parameters(float graph_width) {
+void megamol::gui::Graph::draw_parameters(ImVec2 position, ImVec2 size) {
 
-    ImGui::BeginGroup();
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    ImGui::SetNextWindowPos(position);
+    ImGui::BeginChild("parameters", size, false, child_flags);
+
+    // ------------------------------------------------------------------------
 
     float search_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
-    auto child_flags =
+    child_flags =
         ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
-    ImGui::BeginChild("parameter_search_child", ImVec2(graph_width, search_child_height), false, child_flags);
+    ImGui::BeginChild("parameter_search_child", ImVec2(size.x, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
     ImGui::Separator();
@@ -2360,7 +2433,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 
     child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
                   ImGuiWindowFlags_AlwaysUseWindowPadding;
-    ImGui::BeginChild("parameter_param_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
+    ImGui::BeginChild("parameter_param_frame_child", ImVec2(size.x, 0.0f), false, child_flags);
 
     if (!this->gui_graph_state.interact.modules_selected_uids.empty()) {
         // Get module groups
@@ -2415,7 +2488,10 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     }
     ImGui::EndChild();
 
-    ImGui::EndGroup();
+    // ------------------------------------------------------------------------
+
+    ImGui::EndChild();
+    ImGui::PopStyleVar(2);
 }
 
 
@@ -3042,3 +3118,200 @@ std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
 }
+
+
+#ifdef PROFILING
+
+void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+    ImGui::SetNextWindowPos(position);
+    ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    auto window_position = ImGui::GetCursorScreenPos();
+
+    ImGui::TextUnformatted("Profiling");
+    ImGui::SameLine();
+    // Lazy loading of run button textures
+    if (!this->gui_profiling_run_button.IsLoaded()) {
+        this->gui_profiling_run_button.LoadTextureFromFile(
+            GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+    }
+    this->gui_profiling_run_button.ToggleButton(this->gui_graph_state.interact.profiling_pause_update,
+        "Pause update of profiling values globally", "Continue updating of profiling values",
+        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+    ImGui::Separator();
+
+    // Sync profiling list
+    for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
+        if (iterp->first.lock() != nullptr) {
+            if (!iterp->first.lock()->ShowProfiling()) {
+                auto rm_iterp = iterp;
+                iterp--;
+                this->profiling_list.erase(rm_iterp);
+            }
+        } else if (iterp->second.lock() != nullptr) {
+            if (!iterp->second.lock()->ShowProfiling()) {
+                auto rm_iterp = iterp;
+                iterp--;
+                this->profiling_list.erase(rm_iterp);
+            }
+        }
+    }
+    for (auto& m_ptr : this->modules) {
+        if (m_ptr->ShowProfiling()) {
+            bool found = false;
+            for (auto p : this->profiling_list) {
+                if (p.first.lock() == m_ptr) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                this->profiling_list.push_back({m_ptr, std::weak_ptr<gui::Call>()});
+            }
+        }
+    }
+    for (auto& c_ptr : this->calls) {
+        if (c_ptr->ShowProfiling()) {
+            bool found = false;
+            for (auto p : this->profiling_list) {
+                if (p.second.lock() == c_ptr) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                this->profiling_list.push_back({std::weak_ptr<gui::Module>(), c_ptr});
+            }
+        }
+    }
+
+    // Set same max number of module uid decimal digits for drag and drop.
+    const size_t dnd_size = 16 * sizeof(char);
+    unsigned int drop_target_index = 0;
+    ImGuiID drop_uid = 0;
+    int drop_index = 0;
+
+    // Draw profiling data
+    for (auto& p : this->profiling_list) {
+
+        std::string uid_str;
+        std::string label;
+        if (p.first.lock() != nullptr) {
+            uid_str = std::to_string(p.first.lock()->UID());
+            label = "Module: " + p.first.lock()->FullName();
+        } else if (p.second.lock() != nullptr) {
+            uid_str = std::to_string(p.second.lock()->UID());
+            label = "Call: " + p.second.lock()->ClassName();
+        }
+        ImGui::BeginChild(("##profiling_tab_bar" + uid_str).c_str(), ImVec2(GRAPH_PROFILING_WINDOW_WIDTH, 0.0f), true,
+            ImGuiWindowFlags_NoMove);
+
+        // Draw line to graph item
+        ImVec2 start =
+            ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
+        if (window_position.y > start.y) {
+            start.y = window_position.y;
+        }
+        ImVec2 end;
+        if (p.first.lock() != nullptr) {
+            end = p.first.lock()->GetProfilingButtonPosition();
+        } else if (p.second.lock() != nullptr) {
+            end = p.second.lock()->GetProfilingButtonPosition();
+        }
+        if (window_position.y < end.y) {
+            end.y = window_position.y;
+        }
+        auto tmpcol = style.Colors[ImGuiCol_PlotLines];
+        tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
+        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
+            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE, GUI_LINE_THICKNESS);
+
+        // Profiling data
+        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
+        this->gui_tooltip.ToolTip("[Drag and drop] Horizontally sort profiling data.", ImGui::GetItemID(), 0.5f, 5.0f);
+        // Drag source
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+            std::string payload;
+            payload = uid_str;
+            assert((payload.size() * sizeof(char)) <= dnd_size);
+            ImGui::SetDragDropPayload("DND_COPY_PROFILING_DATA", payload.c_str(), dnd_size);
+            ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
+            ImGui::EndDragDropSource();
+        }
+        ImGui::Separator();
+        ImGui::TextUnformatted("Region Name:");
+        if (p.first.lock() != nullptr) {
+            p.first.lock()->DrawProfiling(this->gui_graph_state);
+        } else if (p.second.lock() != nullptr) {
+            p.second.lock()->DrawProfiling(this->gui_graph_state);
+        }
+        ImGui::EndChild();
+
+        // Drop target
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_PROFILING_DATA")) {
+                assert(payload->DataSize == (dnd_size * sizeof(char)));
+                std::string payload_id = (const char*)payload->Data;
+                try {
+                    auto uid_payload = static_cast<ImGuiID>(std::strtol(payload_id.c_str(), nullptr, 10));
+                    if (errno == ERANGE) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Failed to read dragged payload: '%s'. [%s, %s, line %d]\n", std::strerror(errno),
+                            __FILE__, __FUNCTION__, __LINE__);
+                    } else {
+                        drop_uid = uid_payload;
+                        drop_index = drop_target_index;
+                    }
+                } catch (...) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Failed to drop profiling data. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+        drop_target_index++;
+        ImGui::SameLine(0.0f);
+    }
+
+    // Apply drop
+    if (drop_uid != 0) {
+        for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
+            if (((iterp->first.lock() != nullptr) && (iterp->first.lock()->UID() == drop_uid)) ||
+                ((iterp->second.lock() != nullptr) && (iterp->second.lock()->UID() == drop_uid))) {
+                auto tmp = (*iterp);
+                this->profiling_list.erase(iterp);
+                this->profiling_list.insert(this->profiling_list.begin() + drop_index, tmp);
+                break;
+            }
+        }
+    }
+
+    // Auto scroll during profiling drag
+    const float mouse_delta = 50.0f * megamol::gui::gui_scaling.Get();
+    if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+        auto min_win_x = ImGui::GetWindowPos().x;
+        auto max_win_x = min_win_x + ImGui::GetWindowSize().x;
+        auto time_delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - this->scroll_delta_time)
+                              .count();
+        if (io.MousePos.x <= (min_win_x + mouse_delta)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() - static_cast<float>(time_delta));
+        } else if (io.MousePos.x >= (max_win_x - mouse_delta)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() + static_cast<float>(time_delta));
+        }
+    }
+    this->scroll_delta_time = std::chrono::system_clock::now();
+
+    ImGui::EndChild();
+    ImGui::PopStyleVar(2);
+}
+
+
+#endif // PROFILING

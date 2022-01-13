@@ -128,21 +128,6 @@ void GUI_Service::digestChangedRequestedResources() {
 
     // Check for updates in requested resources --------------------------------
 
-    /// WindowEvents = resource index 1
-    auto maybe_window_events =
-        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
-    if (maybe_window_events.has_value()) {
-        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
-
-        this->m_time = window_events.time;
-        for (auto& size_event : window_events.size_events) {
-            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
-            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
-        }
-        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
-            window_events._clipboard_user_data);
-    }
-
     /// KeyboardEvents = resource index 2
     auto maybe_keyboard_events =
         this->m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
@@ -225,6 +210,24 @@ void GUI_Service::digestChangedRequestedResources() {
         this->m_framebuffer_size.y = static_cast<float>(size_event.height);
     }
 
+    /// WindowEvents = resource index 1
+    auto maybe_window_events =
+        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
+    if (maybe_window_events.has_value()) {
+        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
+
+        this->m_time = window_events.time;
+        for (auto& size_event : window_events.size_events) {
+            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
+            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
+        }
+        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
+            window_events._clipboard_user_data);
+    } else {
+        // no GL
+        this->m_window_size = m_framebuffer_size;
+    }
+
     /// Trigger Screenshot = resource index 6
     if (this->m_gui->GetTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger =
@@ -305,33 +308,24 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 
 void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
-    // (Called only once)
+    /// (Called only once)
 
     this->m_requestedResourceReferences = resources;
     if (this->m_gui == nullptr) {
         return;
     }
 
+    // Check render backend prerequisites
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
-
-    if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
-        // GL context is active and we need to use it
-        frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
-
-        if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "GUI_Service: initialized OpenGL backend successfully");
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: error creating OpenGL backend");
-            this->setShutdown();
-        }
-    } else {
-        // no GL available
-        if (m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: no OpenGL_Context available");
-            this->setShutdown();
-        }
+    if (!maybe_opengl_context.has_value() && (m_config.backend == megamol::gui::GUIRenderBackend::OPEN_GL)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
+        m_config.backend = megamol::gui::GUIRenderBackend::CPU;
+    }
+    // Create GUI context
+    if (!this->m_gui->CreateContext(m_config.backend)) {
+        this->setShutdown();
     }
 
     /// MegaMolGraph = resource index 0
@@ -360,12 +354,11 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
     bool view_presentation_ok = image_presentation.add_entry_point(
-        "GUI Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+        "GUI_Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
                            std::function{get_gui_runtime_resources_requests}});
-
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
+            "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
     }
 
     m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
@@ -394,25 +387,11 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,
     megamol::frontend_resources::ImageWrapper& result_image) {
 
-    // vislib::graphics::gl::FramebufferObject seems to use RGBA8
-    megamol::frontend_resources::ImageWrapper::DataChannels channels =
-        megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
-
     auto gui_ptr = static_cast<megamol::gui::GUIManager*>(void_ptr);
-
-#ifdef WITH_GL
-    unsigned int fbo_color_buffer_gl_handle = 0;
-    size_t fbo_width = 1;
-    size_t fbo_height = 1;
-    gui_ptr->GetFBODataGL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
-
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
-#else
-    auto fbo = gui_ptr->getFBOHandle();
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
-#endif
+    if (gui_ptr == nullptr) {
+        return false;
+    }
+    result_image = gui_ptr->GetImage();
 
     return true;
 }

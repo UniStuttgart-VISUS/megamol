@@ -27,8 +27,12 @@ void main() {
     vec4 cornerPos = vec4(cube_faces[face][corner], 0.0);
 #endif
 
+    bool ignore_radii = (options & OPTIONS_IGNORE_RADII) > 0;
     vec4 inPos = vec4(posArray[inst].x, posArray[inst].y, posArray[inst].z, 1.0);
     vec3 radii = vec3(radArray[inst].x, radArray[inst].y, radArray[inst].z); //rad[inst];
+    if (ignore_radii) {
+        radii = vec3(1.0);
+    }
     vec3 absradii = abs(radii) * scaling;
     vec4 quatC = vec4(quatArray[inst].x, quatArray[inst].y, quatArray[inst].z, quatArray[inst].w); //quat[inst];
     invRad = 1.0 / absradii;

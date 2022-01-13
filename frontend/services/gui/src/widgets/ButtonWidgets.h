@@ -30,7 +30,8 @@ public:
     static bool OptionButton(const std::string& id, const std::string& label, bool dirty, bool read_only);
 
     /** Knob button for 'circular' float value manipulation. */
-    static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
+    static bool KnobButton(
+        const std::string& id, float size, float& inout_value, float minval, float maxval, float step);
 
     /** Extended mode button. */
     // OptionButton with menu for 'Basic' and 'Expert' option

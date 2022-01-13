@@ -77,6 +77,19 @@
 #define GUI_FILENAME_TEXTURE_PROFILING_BUTTON ("profiling_button.png")
 
 
+#ifdef WITH_GL
+
+#define GUI_GL_CHECK_ERROR                                                                        \
+    {                                                                                             \
+        auto err = glGetError();                                                                  \
+        if (err != GL_NO_ERROR)                                                                   \
+            megamol::core::utility::log::Log::DefaultLog.WriteError(                              \
+                "OpenGL Error: %i. [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__); \
+    }
+
+#endif // WITH_GL
+
+
 namespace megamol {
 namespace gui {
 
@@ -173,8 +186,6 @@ class InterfaceSlot;
 typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtr_t;
 typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
-/** Available ImGui APIs */
-enum class ImGuiRenderBackend { NONE, OPEN_GL, CPU };
 
 // Hotkeys
 enum HotkeyIndex : size_t {
@@ -268,8 +279,10 @@ typedef struct _interact_state_ {
 
     bool parameters_extended_mode; // in
 
-    bool graph_is_running;       // in
-    bool pause_profiling_update; // in out
+    bool graph_is_running; // in
+
+    bool profiling_pause_update; // in out
+    bool profiling_show;         // in out
 
 } GraphItemsInteract_t;
 
@@ -286,6 +299,7 @@ typedef struct _graph_state_ {
     FontScalingArray_t graph_zoom_font_scalings; // in
     float graph_width;                           // in
     bool show_parameter_sidebar;                 // in
+    bool show_profiling_bar;                     // in
     megamol::gui::HotkeyMap_t hotkeys;           // in out
     ImGuiID graph_selected_uid;                  // out
     bool graph_delete;                           // out

@@ -81,6 +81,10 @@ public:
 
 #ifdef PROFILING
 
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
+    }
+
     void SetProfilingData(void* ptr, uint32_t num_callbacks) {
         this->profiling_parent_pointer = ptr;
         cpu_perf_history.resize(num_callbacks);
@@ -98,6 +102,12 @@ public:
 
     void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
         const frontend_resources::PerformanceManager::timer_entry& entry);
+
+    bool ShowProfiling() {
+        return this->show_profiling_data;
+    }
+
+    void DrawProfiling(GraphItemsState_t& state);
 
 #endif // PROFILING
 
@@ -124,6 +134,7 @@ private:
     bool gui_profiling_btn_hovered;
 
 #ifdef PROFILING
+
     std::vector<core::MultiPerformanceHistory> cpu_perf_history;
     std::vector<core::MultiPerformanceHistory> gl_perf_history;
     void* profiling_parent_pointer;
@@ -131,8 +142,8 @@ private:
     bool show_profiling_data;
     ImageWidget gui_profiling_run_button;
     bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
 
-    void draw_profiling_data(GraphItemsState_t& state);
 #endif // PROFILING
 };
 
