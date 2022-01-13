@@ -42,14 +42,13 @@ public:
 
     // stepSize has no effect on Slider
     template<typename U = T>
-    GenericParam(
-        T const& initVal, T const& minVal, T const& maxVal, T const& stepSize, std::enable_if_t<enable_cond_v<U>, void>* = nullptr)
-    {
+    GenericParam(T const& initVal, T const& minVal, T const& maxVal, T const& stepSize,
+        std::enable_if_t<enable_cond_v<U>, void>* = nullptr) {
         initParam(initVal);
         this->minVal = minVal;
         this->maxVal = maxVal;
         this->stepSize = stepSize;
-    }    
+    }
 
     virtual ~GenericParam() = default;
 
@@ -74,6 +73,16 @@ public:
             if (setDirty)
                 this->setDirty();
         }
+    }
+
+    /**
+     * Sets the step size of the parameter.
+     *
+     * @param s the new step size for the parameter
+     */
+    template<typename U = T>
+    std::enable_if_t<std::is_arithmetic_v<U>, void> SetStepSize(T s) {
+        this->stepSize = s;
     }
 
     /**
@@ -108,7 +117,6 @@ public:
     }
 
     /**
-     * Needed for RemoteControl
      * Gets the step size of the parameter
      *
      * @return The step size of the parameter
