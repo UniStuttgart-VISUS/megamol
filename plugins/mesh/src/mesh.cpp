@@ -13,8 +13,7 @@
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "mesh/MeshCalls.h"
-#include "OmniUsdReader.h"
-
+#include "OmniUSDReader.h"
 
 namespace megamol::mesh {
 class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
