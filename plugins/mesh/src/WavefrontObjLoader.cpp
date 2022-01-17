@@ -228,7 +228,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
             std::string identifier = m_obj_model->shapes[s].name;
             if (!mesh.indices.empty()) {
                 m_mesh_access_collection.first->addMesh(
-                    identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::LINES);
+                    identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::TRIANGLES);
             } else {
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
             }
