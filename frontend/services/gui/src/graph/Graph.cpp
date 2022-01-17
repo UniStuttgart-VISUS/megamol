@@ -2417,6 +2417,7 @@ void megamol::gui::Graph::draw_parameters(ImVec2 position, ImVec2 size) {
     ImGui::BeginChild("parameter_search_child", ImVec2(size.x, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
+    this->gui_tooltip.Marker("Show parameters of selected modules");
     ImGui::Separator();
 
     // Mode
@@ -3133,7 +3134,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
     assert(draw_list != nullptr);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -3160,13 +3161,17 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         if (iterp->first.lock() != nullptr) {
             if (!iterp->first.lock()->ShowProfiling()) {
                 auto rm_iterp = iterp;
-                iterp--;
+                if ((iterp-1) != this->profiling_list.begin()) {
+                    iterp--;
+                }
                 this->profiling_list.erase(rm_iterp);
             }
         } else if (iterp->second.lock() != nullptr) {
             if (!iterp->second.lock()->ShowProfiling()) {
                 auto rm_iterp = iterp;
-                iterp--;
+                if ((iterp-1) != this->profiling_list.begin()) {
+                    iterp--;
+                }
                 this->profiling_list.erase(rm_iterp);
             }
         }
