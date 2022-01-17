@@ -13,6 +13,8 @@
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "mesh/MeshCalls.h"
+#include "OmniUsdReader.h"
+
 
 namespace megamol::mesh {
 class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -28,6 +30,7 @@ public:
     void registerClasses() override {
 
         // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::OmniUsdReader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFFileLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ObjWriter>();
