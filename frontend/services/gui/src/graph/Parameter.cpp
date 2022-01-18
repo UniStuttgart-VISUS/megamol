@@ -853,7 +853,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Presentation
-                    ButtonWidgets::OptionButton(
+                    ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, 
                         "param_present_button", "", (this->GetGUIPresentation() != Present_t::Basic), false);
                     if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                         for (auto& present_name_pair : this->GetPresentationNameMap()) {
