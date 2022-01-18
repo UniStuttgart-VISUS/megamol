@@ -986,7 +986,7 @@ void GUIManager::draw_menu() {
 
                 bool running = graph_ptr->IsRunning();
                 std::string button_label = "graph_running_button" + label_id;
-                if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, 
+                if (megamol::gui::ButtonWidgets::OptionButton(
                         button_label, ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
                         this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
