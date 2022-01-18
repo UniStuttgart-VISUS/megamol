@@ -2003,7 +2003,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     ImGui::BeginMenuBar();
 
     // RUNNING
-    if (megamol::gui::ButtonWidgets::OptionButton(
+    if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE,
             "graph_running_button", ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
         if (!this->running) {
             state.new_running_graph_uid = this->uid;
