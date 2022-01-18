@@ -231,7 +231,6 @@ bool MoleculeCartoonRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
@@ -857,6 +856,7 @@ bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); // default depth function
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     glPopMatrix();
