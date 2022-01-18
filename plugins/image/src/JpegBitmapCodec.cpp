@@ -5,7 +5,7 @@
  * (Copyright (C) 2010 by VISUS (Universitaet Stuttgart))
  * Alle Rechte vorbehalten.
  */
-#include "imageviewer2/JpegBitmapCodec.h"
+#include "image/JpegBitmapCodec.h"
 #include "stdafx.h"
 #ifndef _WIN32
 #include "jpeglib.h"

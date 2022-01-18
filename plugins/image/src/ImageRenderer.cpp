@@ -5,12 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "imageviewer2/ImageRenderer.h"
-#include "imageviewer2/JpegBitmapCodec.h"
+#include "image/ImageRenderer.h"
+#include "image/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 //#define _USE_MATH_DEFINES
 #include "image_calls/Image2DCall.h"
@@ -23,7 +24,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -129,14 +131,16 @@ bool imageviewer2::ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
-    vislib::graphics::gl::ShaderSource vertShader;
-    vislib::graphics::gl::ShaderSource fragShader;
+    vislib_gl::graphics::gl::ShaderSource vertShader;
+    vislib_gl::graphics::gl::ShaderSource fragShader;
 
     try {
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::vertex", vertShader)) {
+        auto shaderSourceFactory = std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(
+            instance()->Configuration().ShaderDirectories());
+        if (!shaderSourceFactory->MakeShaderSource("imageviewer::vertex", vertShader)) {
             return false;
         }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::fragment", fragShader)) {
+        if (!shaderSourceFactory->MakeShaderSource("imageviewer::fragment", fragShader)) {
             return false;
         }
     } catch (vislib::Exception e) {
@@ -150,10 +154,10 @@ bool imageviewer2::ImageRenderer::create(void) {
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile sphere shader\n");
             return false;
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -177,7 +181,7 @@ bool imageviewer2::ImageRenderer::create(void) {
 /*
  * imageviewer2::ImageRenderer::GetExtents
  */
-bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3DGL& call) {
+bool imageviewer2::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
 
     call.SetTimeFramesCount(1);
     call.AccessBoundingBoxes().Clear();
@@ -395,10 +399,10 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                                 ::memcpy(buf + (l * w * 3), image_ptr + ((y + l) * this->width * 3 + x * 3), w * 3);
                             }
                             this->tiles.Add(vislib::Pair<vislib::math::Rectangle<float>,
-                                vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>>());
+                                vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>>());
                             this->tiles.Last().First().Set(static_cast<float>(x), static_cast<float>(this->height - y),
                                 static_cast<float>(x + w), static_cast<float>(this->height - (y + h)));
-                            this->tiles.Last().SetSecond(new vislib::graphics::gl::OpenGLTexture2D());
+                            this->tiles.Last().SetSecond(new vislib_gl::graphics::gl::OpenGLTexture2D());
                             if (this->tiles.Last().Second()->Create(w, h, false, buf, GL_RGB) != GL_NO_ERROR) {
                                 this->tiles.RemoveLast();
                             } else {
@@ -482,7 +486,7 @@ bool imageviewer2::ImageRenderer::initMPI() {
 /*
  * imageviewer2::ImageRenderer::Render
  */
-bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
+bool imageviewer2::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
 
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bindToDraw();
@@ -575,7 +579,7 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
  * imageviewer2::ImageRenderer::onFilesPasted
  */
 bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
-    vislib::TString str(this->pasteFilenamesSlot.Param<param::StringParam>()->Value());
+    vislib::TString str = stdToTString(this->pasteFilenamesSlot.Param<param::StringParam>()->Value());
     vislib::TString left, right;
     str.Replace(_T("\r"), _T(""));
     this->interpretLine(str, left, right);
@@ -584,6 +588,13 @@ bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
     return true;
 }
 
+
+/*
+ * imageviewer2::ImageRenderer::stdToTString
+ */
+vislib::TString imageviewer2::ImageRenderer::stdToTString(const std::string& str) {
+    return vislib::TString(str.data(), str.size());
+}
 
 /*
  * imageviewer2::ImageRenderer::interpretLine
@@ -614,7 +625,7 @@ bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
     vislib::TString left, right;
     this->leftFiles.Clear();
     this->rightFiles.Clear();
-    vislib::TString str(this->pasteSlideshowSlot.Param<param::StringParam>()->Value());
+    vislib::TString str = stdToTString(this->pasteSlideshowSlot.Param<param::StringParam>()->Value());
     str.Replace(_T("\r"), _T(""));
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T("\n"), startPos);
@@ -690,7 +701,7 @@ bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
  * imageviewer2::ImageRenderer::onBlankMachineSet
  */
 bool imageviewer2::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
-    vislib::TString str(this->blankMachine.Param<param::StringParam>()->Value());
+    vislib::TString str = stdToTString(this->blankMachine.Param<param::StringParam>()->Value());
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T(";"), startPos);
     blankMachines.Clear();

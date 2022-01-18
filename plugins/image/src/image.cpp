@@ -7,7 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "imageviewer2/ImageRenderer.h"
+#include "image/ImageRenderer.h"
 
 namespace megamol::imageviewer2 {
 class Imaggeviewer2PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
