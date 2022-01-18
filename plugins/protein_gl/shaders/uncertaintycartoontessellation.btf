@@ -255,15 +255,15 @@
     #define UNC_VIS_SIN_U  1
     #define UNC_VIS_SIN_V  2    
     #define UNC_VIS_SIN_UV 3
-	#define UNC_VIS_TRI_U  4
-	#define UNC_VIS_TRI_UV 5
+    #define UNC_VIS_TRI_U  4
+    #define UNC_VIS_TRI_UV 5
     
-	// should be equal to 'UncertaintyCartoonRenderer::outlineOptions':   
-	#define OUTLINE_NONE           0
-	#define OUTLINE_LINE           1
-	#define OUTLINE_FULL_UNCERTAIN 2
-	#define OUTLINE_FULL_CERTAIN   3
-			
+    // should be equal to 'UncertaintyCartoonRenderer::outlineOptions':   
+    #define OUTLINE_NONE           0
+    #define OUTLINE_LINE           1
+    #define OUTLINE_FULL_UNCERTAIN 2
+    #define OUTLINE_FULL_CERTAIN   3
+            
     ////////////////
     // EXTENSIONS //
     ////////////////  
@@ -712,7 +712,7 @@
                     vNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
                 }
                 
-				if (((1.0 - EPS) > u) && (u > EPS)) {
+                if (((1.0 - EPS) > u) && (u > EPS)) {
                     mypos.xyz    += (disp * n);
                 }        
                 n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
@@ -741,7 +741,7 @@
                     vNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
                 }
                 
-				if (((1.0 - EPS) > u) && (u > EPS)) {                   // for smooth transition between amino-acids
+                if (((1.0 - EPS) > u) && (u > EPS)) {                   // for smooth transition between amino-acids
                     mypos.xyz    += (disp * n);
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
@@ -763,11 +763,11 @@
                     uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
                 }
                 
-			    mypos.xyz    += (n * disp); 
-			    n             = normalize(n + uNdisp * tangent);    
+                mypos.xyz    += (n * disp); 
+                n             = normalize(n + uNdisp * tangent);    
 
-			}
-			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
+            }
+            else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
                 float uMod    = u * ceil(distorLev * uncFac);
                 float vMod    = v * distorLev * uncFac;
                 float uFunc   = 0.5 - (uMod - floor(uMod));
@@ -799,39 +799,39 @@
                 }
                 
                 float factor = EPS;
-				if (((1.0 - factor) > u) && (u > factor)) {
+                if (((1.0 - factor) > u) && (u > factor)) {
                     mypos.xyz   += (n * (uTri + vTri)/2.0);  
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
-			}
+            }
 
             // OUTLINING
-			if ((outlineMode == OUTLINE_FULL_UNCERTAIN) || (outlineMode == OUTLINE_FULL_CERTAIN)) {
+            if ((outlineMode == OUTLINE_FULL_UNCERTAIN) || (outlineMode == OUTLINE_FULL_CERTAIN)) {
 
                 // invert uncertainty factor if certainty should be shown
-			    if (outlineMode == OUTLINE_FULL_CERTAIN) {
+                if (outlineMode == OUTLINE_FULL_CERTAIN) {
                     uncFac = 1.0 - uncFac;
                 }
-			    // shift and scale vertex position in normal direction
+                // shift and scale vertex position in normal direction
                 mypos.xyz = mypos.xyz + (outlineScale/10.0)*(uncFac)*n; 
 
                 // add caps for OUTLINING to tube strucutres and if dithering is enabled to helix and strand too
                 if (mytype == C_COIL)  // backbone
                 {
-					float factor = EPS;
-					if(u > (1.0 - factor)) {
+                    float factor = EPS;
+                    if(u > (1.0 - factor)) {
                         vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
                         vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
                         mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
                         mypos.xyz += factor * tangent;
-					}
-					else if(u < factor) {
+                    }
+                    else if(u < factor) {
                         vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
                         vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
                         mypos.xyz = mix(newpos, mypos.xyz, u / factor);
                         mypos.xyz += factor * (-tangent);
-					}  
-				}  
+                    }  
+                }  
             }
 
             gl_Position = mypos;
@@ -976,8 +976,8 @@
                                  51, 19, 59, 27, 49, 17, 57, 25,
                                  15, 47,  7, 39, 13, 45,  5, 37,
                                  63, 31, 55, 23, 61, 29, 53, 21}; 
-				
-				
+                
+                
     //////////
     // MAIN //
     //////////
@@ -1018,10 +1018,10 @@
                 material = phongUncertain;
             }
                 
-			// calculate Blinn-Phong shading
+            // calculate Blinn-Phong shading
             vec4 pos      = ProjInv * gl_FragCoord.xyzw;
             vec3 lightDir = normalize(lightPos.xyz);
-			    //vec4 light    = MV * lightPos;
+                //vec4 light    = MV * lightPos;
                 //vec3 lightDir = normalize(light.xyz - pos.xyz);
             vec3  n       = normal;
             vec3  e       = pos.xyz;

@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "MoleculeBallifier.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ColorParam.h"
@@ -90,7 +89,7 @@ MoleculeBallifier::MoleculeBallifier(void)
 
 
 /*
- * 
+ *
  */
 MoleculeBallifier::~MoleculeBallifier(void) {
     this->Release();
@@ -98,7 +97,7 @@ MoleculeBallifier::~MoleculeBallifier(void) {
 
 
 /*
- * 
+ *
  */
 bool MoleculeBallifier::create(void) {
     // intentionally empty
@@ -107,7 +106,7 @@ bool MoleculeBallifier::create(void) {
 
 
 /*
- * 
+ *
  */
 void MoleculeBallifier::release(void) {
     // intentionally empty
@@ -115,7 +114,7 @@ void MoleculeBallifier::release(void) {
 
 
 /*
- * 
+ *
  */
 bool MoleculeBallifier::getData(core::Call& c) {
     using geocalls::MultiParticleDataCall;
@@ -201,7 +200,7 @@ bool MoleculeBallifier::getData(core::Call& c) {
 
 
 /*
- * 
+ *
  */
 bool MoleculeBallifier::getExt(core::Call& c) {
     using geocalls::MultiParticleDataCall;

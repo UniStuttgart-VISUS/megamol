@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 //
 // TODO:
-// 	- Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ? -  as Paramter!
+//  - Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ? -  as Paramter!
 //  - Anpassung der reihenfolge der Strukturtypen in dataCall und den Matrizen !
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,8 +376,8 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
 
                     // PDB
-                    tmpSSU = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::PDB];
-                    tmpSSSA = &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::PDB];
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::PDB];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::PDB];
                     tmpSSU->Add(defaultSSU);
                     tmpSSSA->Add(defaultSSSA);
                     // Translate first letter of PDB secondary structure definition
@@ -429,8 +429,8 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
 
                     // STRIDE
-                    tmpSSU = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::STRIDE];
-                    tmpSSSA = &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::STRIDE];
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE];
                     tmpSSU->Add(defaultSSU);
                     tmpSSSA->Add(defaultSSSA);
                     // Translate STRIDE one letter secondary structure
@@ -472,8 +472,8 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
 
                     // DSSP
-                    tmpSSU = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::DSSP];
-                    tmpSSSA = &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::DSSP];
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::DSSP];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP];
                     tmpSSU->Add(defaultSSU);
                     tmpSSSA->Add(defaultSSSA);
                     // Translate DSSP one letter secondary structure summary
@@ -512,8 +512,8 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
 
                     // PROSIGN
-                    tmpSSU = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::PROSIGN];
-                    tmpSSSA = &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::PROSIGN];
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::PROSIGN];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::PROSIGN];
                     tmpSSU->Add(defaultSSU);
                     tmpSSSA->Add(defaultSSSA);
                     // Translate DSSP one letter secondary structure summary
@@ -551,8 +551,8 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
                         (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
 
                     // UNCERTAINTY
-                    tmpSSU = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
-                    tmpSSSA = &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
                     tmpSSU->Add(defaultSSU);
                     tmpSSSA->Add(defaultSSSA);
 
@@ -560,13 +560,13 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
                     // Read threshold and energy values of STRIDE
                     // std::atof converts "inf" to "inf"
                     // std::atof converts " "   to "0.0"
-                    float Th1 = (float) std::atof(line.Substring(204, 10));
-                    float Th3 = (float) std::atof(line.Substring(215, 10));
-                    float Th4 = (float) std::atof(line.Substring(226, 10));
-                    float Tb1p = (float) std::atof(line.Substring(237, 10));
-                    float Tb2p = (float) std::atof(line.Substring(248, 10));
-                    float Tb1a = (float) std::atof(line.Substring(259, 10));
-                    float Tb2a = (float) std::atof(line.Substring(207, 10));
+                    float Th1 = (float)std::atof(line.Substring(204, 10));
+                    float Th3 = (float)std::atof(line.Substring(215, 10));
+                    float Th4 = (float)std::atof(line.Substring(226, 10));
+                    float Tb1p = (float)std::atof(line.Substring(237, 10));
+                    float Tb2p = (float)std::atof(line.Substring(248, 10));
+                    float Tb1a = (float)std::atof(line.Substring(259, 10));
+                    float Tb2a = (float)std::atof(line.Substring(207, 10));
 
                     vislib::math::Vector<float, 7> tmpVec7;
                     tmpVec7[0] = (Th1 > 1.0E38f) ? (1.0E38f) : (Th1);
@@ -579,10 +579,10 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
                     this->strideStructThreshold.Add(tmpVec7);
 
                     // Read threshold and energy values of DSSP
-                    float HBondAc0 = (float) std::atof(line.Substring(411, 8));
-                    float HBondAc1 = (float) std::atof(line.Substring(422, 8));
-                    float HBondDo0 = (float) std::atof(line.Substring(433, 8));
-                    float HBondDo1 = (float) std::atof(line.Substring(444, 8));
+                    float HBondAc0 = (float)std::atof(line.Substring(411, 8));
+                    float HBondAc1 = (float)std::atof(line.Substring(422, 8));
+                    float HBondDo0 = (float)std::atof(line.Substring(433, 8));
+                    float HBondDo1 = (float)std::atof(line.Substring(444, 8));
 
                     vislib::math::Vector<float, 4> tmpVec4;
                     tmpVec4[0] = HBondAc0;
@@ -593,12 +593,12 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
                     // Read threshold values of PROSIGN
                     std::string bla = line.Substring(498, 10).PeekBuffer();
-                    float alphaValue = (float) std::atof(line.Substring(498, 10));
-                    float threeTenValue = (float) std::atof(line.Substring(511, 9));
-                    float piValue = (float) std::atof(line.Substring(523, 7));
-                    float betaValue = (float) std::atof(line.Substring(533, 9));
-                    float helixThr = (float) std::atof(line.Substring(545, 11));
-                    float betaThr = (float) std::atof(line.Substring(559, 10));
+                    float alphaValue = (float)std::atof(line.Substring(498, 10));
+                    float threeTenValue = (float)std::atof(line.Substring(511, 9));
+                    float piValue = (float)std::atof(line.Substring(523, 7));
+                    float betaValue = (float)std::atof(line.Substring(533, 9));
+                    float helixThr = (float)std::atof(line.Substring(545, 11));
+                    float betaThr = (float)std::atof(line.Substring(559, 10));
 
                     vislib::math::Vector<float, 6> tmpVec6;
                     tmpVec6[0] = (alphaValue > 1.0E38f) ? (1.0E38f) : alphaValue;
@@ -868,7 +868,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
             float tah4 = this->strideStructThreshold[a][2];
 
             // Check HELIX
-            unsigned int helixStr = (unsigned int) UncertaintyDataCall::secStructure::H_ALPHA_HELIX;
+            unsigned int helixStr = (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX;
             if (a + 1 < this->pdbIndex.Count()) {
 
                 float taah1 = this->strideStructThreshold[a + 1][0];
@@ -922,7 +922,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                         }
                         if (strN == -1) { // no structure with probability > 0 ... take COIL
                             this->secStructUncertainty[strideMethod][aCnt]
-                                                      [(unsigned int) UncertaintyDataCall::secStructure::C_COIL] =
+                                                      [(unsigned int)UncertaintyDataCall::secStructure::C_COIL] =
                                 1.0f - this->secStructUncertainty[strideMethod][aCnt][helixStr];
                         } else {
                             this->secStructUncertainty[strideMethod][aCnt][strN] =
@@ -975,7 +975,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                         }
                         if (strN == -1) { // no structure with probability > 0 ... take COIL
                             this->secStructUncertainty[strideMethod][a - 1]
-                                                      [(unsigned int) UncertaintyDataCall::secStructure::C_COIL] =
+                                                      [(unsigned int)UncertaintyDataCall::secStructure::C_COIL] =
                                 1.0f - this->secStructUncertainty[strideMethod][a - 1][helixStr];
                         } else {
                             this->secStructUncertainty[strideMethod][a - 1][strN] =
@@ -1016,7 +1016,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                         }
                         if (strN == -1) { // no structure with probability > 0 ... take COIL
                             this->secStructUncertainty[strideMethod][a + 4]
-                                                      [(unsigned int) UncertaintyDataCall::secStructure::C_COIL] =
+                                                      [(unsigned int)UncertaintyDataCall::secStructure::C_COIL] =
                                 1.0f - this->secStructUncertainty[strideMethod][a + 4][helixStr];
                         } else {
                             this->secStructUncertainty[strideMethod][a + 4][strN] =
@@ -1037,8 +1037,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
             float tab1a = this->strideStructThreshold[a][5];
             float tab2a = this->strideStructThreshold[a][6];
 
-            unsigned int bridgeStr = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
-            unsigned int sheetStr = (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND;
+            unsigned int bridgeStr = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+            unsigned int sheetStr = (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND;
 
             // paralllel
             if ((tab1p <= (Tbp + DeltaTbp)) && (tab2p <= (Tbp + DeltaTbp))) {
@@ -1079,7 +1079,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                 }
                 if (strN == -1) { // no structure with probability > 0 ... take COIL
                     this->secStructUncertainty[strideMethod][a]
-                                              [(unsigned int) UncertaintyDataCall::secStructure::C_COIL] =
+                                              [(unsigned int)UncertaintyDataCall::secStructure::C_COIL] =
                         1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
                 } else {
                     this->secStructUncertainty[strideMethod][a][strN] =
@@ -1165,7 +1165,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                 }
                 if (strN == -1) { // no structure with probability > 0 ... take COIL
                     this->secStructUncertainty[strideMethod][a]
-                                              [(unsigned int) UncertaintyDataCall::secStructure::C_COIL] =
+                                              [(unsigned int)UncertaintyDataCall::secStructure::C_COIL] =
                         1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
                 } else {
                     this->secStructUncertainty[strideMethod][a][strN] =
@@ -1269,9 +1269,9 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                                 } else if ((mCurO == strideMethod) && (mCurI == prosignMethod)) {
                                     dist = M_PrS[sCntI][sCntO];
                                 } else if (mCurO == pdbMethod) {
-                                    if ((sCntO == (unsigned int) UncertaintyDataCall::secStructure::G_310_HELIX) ||
-                                        (sCntO == (unsigned int) UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-                                        (sCntO == (unsigned int) UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+                                    if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+                                        (sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+                                        (sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
 
                                         if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
                                             if (mCurI == dsspMethod) {
@@ -1305,8 +1305,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                                                 (dist = M_PrP[sCntI][sCntO]);
                                             }
                                         }
-                                    } else if (sCntO ==
-                                               (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+                                    } else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
                                         if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
                                             if (mCurI == dsspMethod) {
                                                 (dist = 0.0f);
@@ -1351,9 +1350,9 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                                         }
                                     }
                                 } else if (mCurI == pdbMethod) {
-                                    if ((sCntI == (unsigned int) UncertaintyDataCall::secStructure::G_310_HELIX) ||
-                                        (sCntI == (unsigned int) UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-                                        (sCntI == (unsigned int) UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+                                    if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+                                        (sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+                                        (sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
                                         if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
                                             if (mCurO == dsspMethod) {
                                                 (dist = 0.0f);
@@ -1386,8 +1385,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                                                 (dist = M_PrP[sCntO][sCntI]);
                                             }
                                         }
-                                    } else if (sCntI ==
-                                               (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+                                    } else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
                                         if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
                                             if (mCurO == dsspMethod) {
                                                 (dist = 0.0f);
@@ -1458,7 +1456,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
             // Calculate reduced uncertainty ======================================
 
             unc = 0.0f;
-            float mean = 1.0f / ((float) consStrTypes);
+            float mean = 1.0f / ((float)consStrTypes);
 
             // Propability vector with maximum standard deviation
             vislib::math::Vector<float, consStrTypes> Pmax;
@@ -1473,7 +1471,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                 variance += ((Pmax[v] - mean) * (Pmax[v] - mean));
             }
             variance *= mean;
-            float stdDevMax = (float) std::sqrt((double) (variance));
+            float stdDevMax = (float)std::sqrt((double)(variance));
 
             // Calculating actual standard deviation
             variance = 0.0f;
@@ -1481,7 +1479,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                 variance += ((ssu[v] - mean) * (ssu[v] - mean));
             }
             variance *= mean;
-            float stdDev = (float) std::sqrt((double) (variance));
+            float stdDev = (float)std::sqrt((double)(variance));
 
             // Normalizing standard deviation and calulating uncertainty
             unc = (1.0f - (stdDev / stdDevMax));
@@ -1569,14 +1567,14 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
                         ssu[j] += structFactor[curMethod][j];
                     }
                 } else {
-                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float) (structTypes - 1)));
+                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)(structTypes - 1)));
                 }
             }
         }
 
         // Normalise structure uncertainty to [0.0,1.0]
         for (unsigned int j = 0; j < structTypes; j++) {
-            ssu[j] /= abs((float) consideredMethods);
+            ssu[j] /= abs((float)consideredMethods);
         }
 
         // Sorting structure types by their uncertainty
@@ -1614,7 +1612,7 @@ void UncertaintyDataLoader::QuickSortUncertainties(
     int j = right;
     UncertaintyDataCall::secStructure tmpStruct;
 
-    float pivot = valueArr->operator[](static_cast<int>(structArr->operator[]((int) (left + right) / 2)));
+    float pivot = valueArr->operator[](static_cast<int>(structArr->operator[]((int)(left + right) / 2)));
 
     // partition
     while (i <= j) {

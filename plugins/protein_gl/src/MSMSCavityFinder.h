@@ -111,7 +111,7 @@ private:
     vislib::Array<megamol::geocalls_gl::CallTriMeshDataGL::Mesh> cavitySubmeshes;
 };
 
-} /* end namespace protein */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif

@@ -175,7 +175,7 @@ private:
     int prevTime;
 };
 
-} // namespace protein
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */

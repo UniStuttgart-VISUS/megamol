@@ -247,11 +247,11 @@ private:
     void RecomputeAll(void);
 
     /**
-     *	Update all parameter slots.
+     *  Update all parameter slots.
      *
-     *	@param mol   Pointer to the data call.
-     *	@param frameID The current frame id used for the data call.
-     *	@param bs Pointer to the binding site call.
+     *  @param mol   Pointer to the data call.
+     *  @param frameID The current frame id used for the data call.
+     *  @param bs Pointer to the binding site call.
      */
     void UpdateParameters(megamol::protein_calls::MolecularDataCall* mol, unsigned int frameID,
         const protein_calls::BindingSiteCall* bs = 0);

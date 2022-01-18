@@ -1142,7 +1142,7 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-    //	timer.EndFrame();
+    //  timer.EndFrame();
 
     return true;
 }
