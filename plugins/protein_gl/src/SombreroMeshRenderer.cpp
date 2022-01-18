@@ -15,7 +15,7 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-#include "mmcore/FlagCall.h"
+//#include "mmcore/FlagCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
@@ -65,8 +65,10 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     this->getDataSlot.SetCompatibleCall<megamol::geocalls_gl::CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
+#if 0
     this->getFlagDataSlot.SetCompatibleCall<megamol::core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->getFlagDataSlot);
+#endif
 
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
@@ -172,6 +174,7 @@ void SombreroMeshRenderer::release(void) {
     // intentionally empty
 }
 
+#if 0
 /*
  * SombreroMeshRenderer::MouseEvent
  */
@@ -242,6 +245,7 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
 
     return consume;
 }
+#endif
 
 /*
  * SombreroMeshRenderer::rayTriIntersect
@@ -363,6 +367,7 @@ bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->lastDataHash = ctmd->DataHash();
     }
 
+#if 0
     auto flagsc = this->getFlagDataSlot.CallAs<core::FlagCall>();
     if (flagsc != nullptr) {
         (*flagsc)(core::FlagCall::CallMapFlags);
@@ -374,6 +379,7 @@ bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
         (*flagsc)(core::FlagCall::CallUnmapFlags);
     }
+#endif
 
     auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
     // printf("min: %f %f %f ; max: %f %f %f\n", bb.Left(), bb.Bottom(), bb.Back(), bb.Right(), bb.Top(), bb.Front());
