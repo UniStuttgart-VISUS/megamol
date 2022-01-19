@@ -293,7 +293,8 @@ bool megamol::gui::LogConsole::Draw() {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Warnings <= 100", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+        if (ImGui::RadioButton(
+                "Warnings <= 100", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
             if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
