@@ -2116,21 +2116,22 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     if (ImGui::BeginPopup("coloring_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         if (ImGui::BeginMenu("Calls")) {
             ImGui::TextUnformatted("Mode:");
-            if (ImGui::RadioButton("Per module coloring",(this->gui_graph_state.interact.call_coloring_mode == 1))) {
+            if (ImGui::RadioButton("Per module coloring", (this->gui_graph_state.interact.call_coloring_mode == 1))) {
                 this->gui_graph_state.interact.call_coloring_mode = 1;
             }
-            if (ImGui::RadioButton("Per call slot coloring",(this->gui_graph_state.interact.call_coloring_mode == 0))) {
+            if (ImGui::RadioButton(
+                    "Per call slot coloring", (this->gui_graph_state.interact.call_coloring_mode == 0))) {
                 this->gui_graph_state.interact.call_coloring_mode = 0;
             }
             ImGui::Separator();
             ImGui::TextUnformatted("Map:");
-            if (ImGui::RadioButton("Monochrome",(this->gui_graph_state.interact.call_coloring_map == 0))) {
+            if (ImGui::RadioButton("Monochrome", (this->gui_graph_state.interact.call_coloring_map == 0))) {
                 this->gui_graph_state.interact.call_coloring_map = 0;
             }
-            if (ImGui::RadioButton("Set3Map(12)",(this->gui_graph_state.interact.call_coloring_map == 1))) {
+            if (ImGui::RadioButton("Set3Map(12)", (this->gui_graph_state.interact.call_coloring_map == 1))) {
                 this->gui_graph_state.interact.call_coloring_map = 1;
             }
-            if (ImGui::RadioButton("PairedMap(12)",(this->gui_graph_state.interact.call_coloring_map == 2))) {
+            if (ImGui::RadioButton("PairedMap(12)", (this->gui_graph_state.interact.call_coloring_map == 2))) {
                 this->gui_graph_state.interact.call_coloring_map = 2;
             }
             ImGui::EndMenu();

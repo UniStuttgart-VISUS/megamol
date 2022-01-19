@@ -162,7 +162,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             bool connect_interface_slot = true;
             size_t curve_color_index = 0;
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
-                
+
                 // Calls lie only completely inside or outside groups
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
@@ -171,15 +171,15 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                 if (state.interact.call_coloring_mode == 0) {
                     // Get curve color index depending on callee slot index
-                    for (auto cs_ptr : calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
+                    for (auto cs_ptr :
+                        calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
                         if (cs_ptr->UID() != calleeslot_ptr->UID()) {
                             curve_color_index++;
                         } else {
                             break;
                         }
                     }
-                }
-                else if (state.interact.call_coloring_mode == 1) {
+                } else if (state.interact.call_coloring_mode == 1) {
                     // Get curve color index depending on calling module
                     curve_color_index = callerslot_ptr->GetParentModule()->UID();
                 }
@@ -216,10 +216,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     // Set3Map(12):
                     const size_t map_size = 12;
                     tmpcol = ImVec4(Set3Map[(curve_color_index % map_size)][0],
-                        Set3Map[(curve_color_index % map_size)][1], Set3Map[(curve_color_index % map_size)][2],
-                        1.0f);
-                }
-                else if (state.interact.call_coloring_map == 2) {
+                        Set3Map[(curve_color_index % map_size)][1], Set3Map[(curve_color_index % map_size)][2], 1.0f);
+                } else if (state.interact.call_coloring_map == 2) {
                     // PairedMap(12):
                     const size_t map_size = 12;
                     tmpcol = ImVec4(PairedMap[(curve_color_index % map_size)][0],
