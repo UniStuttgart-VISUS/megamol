@@ -204,7 +204,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 if (state.interact.call_coloring) {
-                    // Set2Map(8)
+                    // See ColorPalettes.h for all available color palettes.
+                    /// Set2Map(8):
                     const size_t set2map_size = 8;
                     tmpcol = ImVec4(Set2Map[(curve_color_index % set2map_size)][0],
                         Set2Map[(curve_color_index % set2map_size)][1], Set2Map[(curve_color_index % set2map_size)][2],
@@ -303,16 +304,6 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                             ImGui::TextDisabled("Call");
                             ImGui::Separator();
-
-                            if (ImGui::BeginMenu("Coloring")) {
-                                if (ImGui::MenuItem("Default", nullptr, !state.interact.call_coloring)) {
-                                    state.interact.call_coloring = false;
-                                }
-                                if (ImGui::MenuItem("Set2Map(8)", nullptr, state.interact.call_coloring)) {
-                                    state.interact.call_coloring = true;
-                                }
-                                ImGui::EndMenu();
-                            }
 
                             if (ImGui::MenuItem("Delete",
                                     state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {

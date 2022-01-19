@@ -2003,8 +2003,8 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     ImGui::BeginMenuBar();
 
     // RUNNING
-    if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE,
-            "graph_running_button", ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
+    if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, "graph_running_button",
+            ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
         if (!this->running) {
             state.new_running_graph_uid = this->uid;
         }
@@ -2026,11 +2026,11 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         gui_utils::PushReadOnly();
         bool is_graph_entry = false;
         this->gui_current_graph_entry_name.clear();
-        megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry);
+        megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry);
         gui_utils::PopReadOnly();
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
-        if (megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry)) {
             Graph::QueueData queue_data;
             if (is_graph_entry) {
                 // Remove all graph entries
@@ -2052,18 +2052,31 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             }
         }
     }
+    this->gui_tooltip.ToolTip("Set graph entry state of selected view module", ImGui::GetItemID(), 0.5f, 5.0f);
     ImGui::Separator();
 
     // GRAPH LAYOUT
-    if (ImGui::Button("Layout Graph")) {
+    if (ImGui::Button("Layout")) {
         this->gui_graph_layout = 1;
+    }
+    this->gui_tooltip.ToolTip("Align modules of graph in regular layout", ImGui::GetItemID(), 0.5f, 5.0f);
+    ImGui::Separator();
+
+    // GRID
+    if (megamol::gui::ButtonWidgets::OptionButton(
+            ButtonWidgets::ButtonStyle::GRID, "grid_option_button", "Grid", this->gui_show_grid, false)) {
+        this->gui_show_grid = !this->gui_show_grid;
     }
     ImGui::Separator();
 
     // Module and Call LABELS
-    ImGui::TextUnformatted("Labels");
-    ImGui::ArrowButton("labels_arrow", ImGuiDir_Down);
-    if (ImGui::BeginPopupContextItem("module_call_labels_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+    auto cursor_pos = ImGui::GetCursorScreenPos();
+    if (megamol::gui::ButtonWidgets::OptionButton(
+        ButtonWidgets::ButtonStyle::LINES, "labels_option_button", "Labels", false, false)) {
+        ImGui::OpenPopup("module_call_labels_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("module_call_labels_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         // MODULES
         if (ImGui::BeginMenu("Modules")) {
             if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
@@ -2088,9 +2101,24 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     ImGui::Separator();
 
-    // GRID
-    megamol::gui::ButtonWidgets::ToggleButton("Grid", this->gui_show_grid);
-
+    cursor_pos = ImGui::GetCursorScreenPos();
+    if (megamol::gui::ButtonWidgets::OptionButton(
+            ButtonWidgets::ButtonStyle::POINTS, "coloring_option_button", "Coloring", false, false)) {
+        ImGui::OpenPopup("coloring_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("coloring_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+        if (ImGui::BeginMenu("Calls")) {
+            if (ImGui::MenuItem("Default", nullptr, !this->gui_graph_state.interact.call_coloring)) {
+                this->gui_graph_state.interact.call_coloring = false;
+            }
+            if (ImGui::MenuItem("Set2Map(8)", nullptr, this->gui_graph_state.interact.call_coloring)) {
+                this->gui_graph_state.interact.call_coloring = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndPopup();
+    }
     ImGui::Separator();
 
     // SCROLLING
@@ -3161,7 +3189,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         if (iterp->first.lock() != nullptr) {
             if (!iterp->first.lock()->ShowProfiling()) {
                 auto rm_iterp = iterp;
-                if ((iterp-1) != this->profiling_list.begin()) {
+                if ((iterp - 1) != this->profiling_list.begin()) {
                     iterp--;
                 }
                 this->profiling_list.erase(rm_iterp);
@@ -3169,7 +3197,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         } else if (iterp->second.lock() != nullptr) {
             if (!iterp->second.lock()->ShowProfiling()) {
                 auto rm_iterp = iterp;
-                if ((iterp-1) != this->profiling_list.begin()) {
+                if ((iterp - 1) != this->profiling_list.begin()) {
                     iterp--;
                 }
                 this->profiling_list.erase(rm_iterp);

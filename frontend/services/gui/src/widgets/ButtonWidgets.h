@@ -26,7 +26,6 @@ class Parameter;
  */
 class ButtonWidgets {
 public:
-
     enum ButtonStyle {
         POINT_CIRCLE,
         GRID,
