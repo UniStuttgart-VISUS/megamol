@@ -162,18 +162,26 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             bool connect_interface_slot = true;
             size_t curve_color_index = 0;
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
+                
                 // Calls lie only completely inside or outside groups
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
                     hidden = callerslot_ptr->GetParentModule()->IsHidden();
                 }
-                // Get curve color index depending on callee slot index
-                for (auto cs_ptr : calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
-                    if (cs_ptr->UID() != calleeslot_ptr->UID()) {
-                        curve_color_index++;
-                    } else {
-                        break;
+
+                if (state.interact.call_coloring_mode == 0) {
+                    // Get curve color index depending on callee slot index
+                    for (auto cs_ptr : calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
+                        if (cs_ptr->UID() != calleeslot_ptr->UID()) {
+                            curve_color_index++;
+                        } else {
+                            break;
+                        }
                     }
+                }
+                else if (state.interact.call_coloring_mode == 1) {
+                    // Get curve color index depending on calling module
+                    curve_color_index = callerslot_ptr->GetParentModule()->UID();
                 }
             }
 
@@ -203,12 +211,19 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 /// COLOR_CALL_CURVE
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                if (state.interact.call_coloring) {
-                    // See ColorPalettes.h for all available color palettes.
-                    /// Set2Map(8):
-                    const size_t set2map_size = 8;
-                    tmpcol = ImVec4(Set2Map[(curve_color_index % set2map_size)][0],
-                        Set2Map[(curve_color_index % set2map_size)][1], Set2Map[(curve_color_index % set2map_size)][2],
+                /// See ColorPalettes.h for all predefined color palettes:
+                if (state.interact.call_coloring_map == 1) {
+                    // Set3Map(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(Set3Map[(curve_color_index % map_size)][0],
+                        Set3Map[(curve_color_index % map_size)][1], Set3Map[(curve_color_index % map_size)][2],
+                        1.0f);
+                }
+                else if (state.interact.call_coloring_map == 2) {
+                    // PairedMap(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(PairedMap[(curve_color_index % map_size)][0],
+                        PairedMap[(curve_color_index % map_size)][1], PairedMap[(curve_color_index % map_size)][2],
                         1.0f);
                 }
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);

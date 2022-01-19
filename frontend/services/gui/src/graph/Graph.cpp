@@ -93,7 +93,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_show_label = true;
     this->gui_graph_state.interact.call_show_slots_label = false;
-    this->gui_graph_state.interact.call_coloring = false;
+    this->gui_graph_state.interact.call_coloring_map = 0;
+    this->gui_graph_state.interact.call_coloring_mode = 0;
 
     this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
 
@@ -1170,8 +1171,10 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
                             &this->gui_graph_state.interact.call_show_slots_label);
-                        megamol::core::utility::get_json_value<bool>(
-                            graph_state, {"call_coloring"}, &this->gui_graph_state.interact.call_coloring);
+                        megamol::core::utility::get_json_value<unsigned int>(
+                            graph_state, {"call_coloring_mode"}, &this->gui_graph_state.interact.call_coloring_mode);
+                        megamol::core::utility::get_json_value<unsigned int>(
+                            graph_state, {"call_coloring_map"}, &this->gui_graph_state.interact.call_coloring_map);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
                         megamol::core::utility::get_json_value<bool>(
@@ -1326,8 +1329,10 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
             this->gui_graph_state.interact.call_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
             this->gui_graph_state.interact.call_show_slots_label;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring"] =
-            this->gui_graph_state.interact.call_coloring;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring_mode"] =
+            this->gui_graph_state.interact.call_coloring_mode;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring_map"] =
+            this->gui_graph_state.interact.call_coloring_map;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] =
             this->gui_graph_state.interact.callslot_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] =
@@ -2101,6 +2106,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     ImGui::Separator();
 
+    // Coloring
     cursor_pos = ImGui::GetCursorScreenPos();
     if (megamol::gui::ButtonWidgets::OptionButton(
             ButtonWidgets::ButtonStyle::POINTS, "coloring_option_button", "Coloring", false, false)) {
@@ -2109,11 +2115,23 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     if (ImGui::BeginPopup("coloring_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         if (ImGui::BeginMenu("Calls")) {
-            if (ImGui::MenuItem("Default", nullptr, !this->gui_graph_state.interact.call_coloring)) {
-                this->gui_graph_state.interact.call_coloring = false;
+            ImGui::TextUnformatted("Mode:");
+            if (ImGui::RadioButton("Per module coloring",(this->gui_graph_state.interact.call_coloring_mode == 1))) {
+                this->gui_graph_state.interact.call_coloring_mode = 1;
             }
-            if (ImGui::MenuItem("Set2Map(8)", nullptr, this->gui_graph_state.interact.call_coloring)) {
-                this->gui_graph_state.interact.call_coloring = true;
+            if (ImGui::RadioButton("Per call slot coloring",(this->gui_graph_state.interact.call_coloring_mode == 0))) {
+                this->gui_graph_state.interact.call_coloring_mode = 0;
+            }
+            ImGui::Separator();
+            ImGui::TextUnformatted("Map:");
+            if (ImGui::RadioButton("Monochrome",(this->gui_graph_state.interact.call_coloring_map == 0))) {
+                this->gui_graph_state.interact.call_coloring_map = 0;
+            }
+            if (ImGui::RadioButton("Set3Map(12)",(this->gui_graph_state.interact.call_coloring_map == 1))) {
+                this->gui_graph_state.interact.call_coloring_map = 1;
+            }
+            if (ImGui::RadioButton("PairedMap(12)",(this->gui_graph_state.interact.call_coloring_map == 2))) {
+                this->gui_graph_state.interact.call_coloring_map = 2;
             }
             ImGui::EndMenu();
         }
