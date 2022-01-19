@@ -2115,7 +2115,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     if (ImGui::BeginPopup("coloring_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         if (ImGui::BeginMenu("Calls")) {
-            ImGui::TextUnformatted("Mode:");
+            ImGui::TextDisabled("Mode");
             if (ImGui::RadioButton("Per module coloring", (this->gui_graph_state.interact.call_coloring_mode == 1))) {
                 this->gui_graph_state.interact.call_coloring_mode = 1;
             }
@@ -2124,7 +2124,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
                 this->gui_graph_state.interact.call_coloring_mode = 0;
             }
             ImGui::Separator();
-            ImGui::TextUnformatted("Map:");
+            ImGui::TextDisabled("Map");
             if (ImGui::RadioButton("Monochrome", (this->gui_graph_state.interact.call_coloring_map == 0))) {
                 this->gui_graph_state.interact.call_coloring_map = 0;
             }
