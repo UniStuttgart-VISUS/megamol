@@ -2072,7 +2072,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // Module and Call LABELS
     auto cursor_pos = ImGui::GetCursorScreenPos();
     if (megamol::gui::ButtonWidgets::OptionButton(
-        ButtonWidgets::ButtonStyle::LINES, "labels_option_button", "Labels", false, false)) {
+            ButtonWidgets::ButtonStyle::LINES, "labels_option_button", "Labels", false, false)) {
         ImGui::OpenPopup("module_call_labels_button_context");
         ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
     }
