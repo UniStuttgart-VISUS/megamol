@@ -9,6 +9,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "pxr/usd/usd/stage.h"
+
+
 
 namespace megamol {
 namespace mesh {
@@ -70,8 +73,42 @@ protected:
     void release();
 
 private:
-    /** The gltf file name */
+
+    uint32_t m_version;
+
+    /** The usd file name */
     core::param::ParamSlot m_filename_slot;
+
+    /**
+     * Representation of usd stage as loaded by OmniUsdLib
+     */
+    pxr::UsdStageRefPtr m_usd_stage;
+
+
+    /**
+     * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_positions;
+
+    /**
+     * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_normals;
+
+    /**
+     * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_texcoords;
+
+    /**
+     *
+     */
+    std::vector<std::vector<int>> m_indices;
+
+    /**
+     * Meta data for communicating data updates, as well as data size
+     */
+    core::Spatial3DMetaData m_meta_data;
 };
 
 } // namespace mesh
