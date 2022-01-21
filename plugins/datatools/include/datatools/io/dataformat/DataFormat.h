@@ -7,12 +7,17 @@ namespace datatools {
 namespace io {
 namespace dataformat {
 
+struct AbstractFrame {
+    virtual bool Read(std::ifstream& io) = 0;
+    virtual bool Write(std::ofstream& io) = 0;
+};
+
 template<class F>
 class AbstractDataFormat {
 public:
     virtual ~AbstractDataFormat() = default;
     using FrameType = F;
-    virtual std::unique_ptr<F> ReadFrame(std::ifstream& io) = 0;
+    virtual std::unique_ptr<F> ReadFrame(std::ifstream& io, typename F::FrameIndexType idx) = 0;
     virtual void WriteFrame(std::ofstream& io, F frame) = 0;
 };
 
