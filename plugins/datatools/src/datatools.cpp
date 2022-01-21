@@ -89,6 +89,8 @@
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
 
+#include "datatools/io/dataformat/CSVDataFormat.h"
+
 namespace megamol::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(DatatoolsPluginInstance)
@@ -185,6 +187,8 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::ParticleFilterMapDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::MultiIndexListDataCall>();
+        // TODO this is just for testing, it needs to go away!
+        io::dataformat::CSVFileCollection coll;
     }
 };
 } // namespace megamol::datatools
