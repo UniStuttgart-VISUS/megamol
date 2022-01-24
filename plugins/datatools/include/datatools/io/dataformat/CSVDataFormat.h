@@ -34,7 +34,7 @@ class CSVDataFormat : public AbstractDataFormat<CSVFrame> {
     std::unique_ptr<CSVFrame> ReadFrame(std::ifstream& io, CSVFrame::FrameIndexType idx) override {
         return std::make_unique<CSVFrame>();
     }
-    void WriteFrame(std::ofstream& io, CSVFrame frame) override{}
+    void WriteFrame(std::ofstream& io, CSVFrame const& frame) override {}
 };
 
 using CSVFileCollection = FolderContainer<CSVDataFormat>;

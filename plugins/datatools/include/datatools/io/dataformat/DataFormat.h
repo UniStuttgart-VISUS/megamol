@@ -18,7 +18,7 @@ public:
     virtual ~AbstractDataFormat() = default;
     using FrameType = F;
     virtual std::unique_ptr<F> ReadFrame(std::ifstream& io, typename F::FrameIndexType idx) = 0;
-    virtual void WriteFrame(std::ofstream& io, F frame) = 0;
+    virtual void WriteFrame(std::ofstream& io, F const& frame) = 0;
 };
 
 template<class F>
