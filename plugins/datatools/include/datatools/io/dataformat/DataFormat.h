@@ -53,6 +53,7 @@ public:
 // A directory containing several files, one for each frame
 template<class Format>
 class FolderContainer : public AbstractDataContainer<Format> {
+    // this container supports arbitrary insertion and appending
 public:
     using FrameType = typename Format::FrameType;
     using FrameIndexType = typename FrameType::FrameIndexType;
@@ -79,7 +80,8 @@ private:
 // One big blob of data, each frame sitting at some offset
 template<class Format>
 class BlobContainer : public AbstractDataContainer<Format> {
-    bool Open(std::string location) override {
+    // TODO this container does not support frame insertion. it should support frame appending.
+    bool Open(std::string location) {
         return true;
     }
 };
