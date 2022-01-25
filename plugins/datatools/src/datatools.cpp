@@ -90,6 +90,7 @@
 #include "table/TableWhere.h"
 
 #include "datatools/io/dataformat/CSVDataFormat.h"
+#include "datatools/io/dataformat/PNGDataFormat.h"
 
 namespace megamol::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -189,6 +190,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::MultiIndexListDataCall>();
         // TODO this is just for testing, it needs to go away!
         io::dataformat::CSVFileCollection coll;
+        io::dataformat::PNGFileCollection coll2;
     }
 };
 } // namespace megamol::datatools
