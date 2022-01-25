@@ -38,14 +38,7 @@ struct PNGNaming : AbstractNaming {
     }
 };
 
-class PNGDataFormat : public AbstractDataFormat<PNGFrame> {
-    std::unique_ptr<PNGFrame> ReadFrame(std::ifstream& io, PNGFrame::FrameIndexType idx) override {
-        return std::make_unique<PNGFrame>();
-    }
-
-    void WriteFrame(std::ofstream& io, PNGFrame const& frame) override {}
-};
-
+using PNGDataFormat = AbstractDataFormat<PNGFrame>;
 using PNGFileCollection = FolderContainer<PNGDataFormat>;
 
 } // namespace dataformat
