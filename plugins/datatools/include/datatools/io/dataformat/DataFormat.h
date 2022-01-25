@@ -21,7 +21,7 @@ struct AbstractNaming {
     virtual std::regex Pattern() = 0;
 };
 
-template <class Frame>
+template<class Frame>
 struct BaseNumbering {
     virtual ~BaseNumbering() = default;
     using FrameIndexType = typename Frame::FrameIndexType;
@@ -59,7 +59,6 @@ public:
 
     virtual std::unique_ptr<Frame> ReadFrame(std::ifstream& io, FrameIndexType idx) = 0;
     virtual void WriteFrame(std::ofstream& io, Frame const& frame) = 0;
-
 };
 
 // TODO read-ahead number
@@ -98,10 +97,10 @@ public:
     using FrameType = typename Format::FrameType;
     using FrameIndexType = typename FrameType::FrameIndexType;
 
-    FolderContainer(
-        std::string location, std::unique_ptr<AbstractNaming> naming, BaseNumbering<FrameType> numbering = BaseNumbering<FrameType>())
+    FolderContainer(std::string location, std::unique_ptr<AbstractNaming> naming,
+        std::unique_ptr<BaseNumbering<FrameType>> numbering = std::make_unique<BaseNumbering<FrameType> >())
             : naming(std::move(naming))
-            , numbering(numbering) {
+            , numbering(std::move(numbering)) {
         files = EnumerateFramesInDirectory(FileType(location));
     }
 
@@ -120,7 +119,7 @@ public:
     }
 
     std::ifstream IndexToIStream(FrameIndexType idx) override {
-        return std::ifstream (files[idx].path().string().c_str(), std::ifstream::binary);
+        return std::ifstream(files[idx].path().string().c_str(), std::ifstream::binary);
     }
     std::ofstream IndexToOStream(FrameIndexType idx) override {
         // TODO some code for making paths when idx > what we already had
@@ -131,8 +130,8 @@ public:
 
 private:
     FileListType files;
-    BaseNumbering<FrameType> numbering;
     std::unique_ptr<AbstractNaming> naming;
+    std::unique_ptr<BaseNumbering<FrameType>> numbering;
 };
 
 // One big blob of data, each frame sitting at some offset

@@ -30,13 +30,7 @@ struct CSVFrame : AbstractFrame {
     }
 };
 
-class CSVDataFormat : public AbstractDataFormat<CSVFrame> {
-    std::unique_ptr<CSVFrame> ReadFrame(std::ifstream& io, CSVFrame::FrameIndexType idx) override {
-        return std::make_unique<CSVFrame>();
-    }
-    void WriteFrame(std::ofstream& io, CSVFrame const& frame) override {}
-};
-
+using CSVDataFormat = AbstractDataFormat<CSVFrame>;
 using CSVFileCollection = FolderContainer<CSVDataFormat>;
 
 } // namespace dataformat
