@@ -188,9 +188,10 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::ParticleFilterMapDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::datatools::MultiIndexListDataCall>();
-        // TODO this is just for testing, it needs to go away!
-        io::dataformat::CSVFileCollection coll;
-        io::dataformat::PNGFileCollection coll2;
+
+        // TODO BUG HAZARD this is just for testing, it needs to go away!
+        //io::dataformat::CSVFileCollection coll("c:/temp");
+        io::dataformat::PNGFileCollection coll2("c:\temp", std::make_unique<io::dataformat::PNGNaming>());
     }
 };
 } // namespace megamol::datatools

@@ -11,6 +11,9 @@ namespace datatools {
 namespace io {
 namespace dataformat {
 
+// todo where would we point when we read a mmpld frame?
+// todo: end pointer?
+// does this map to MMPLD and ADIOS?
 struct PNGFrame : AbstractFrame {
     using FrameIndexType = uint32_t;
     using SizeType = uint32_t;
@@ -29,25 +32,18 @@ struct PNGFrame : AbstractFrame {
     }
 };
 
+struct PNGNaming : AbstractNaming {
+    std::regex Pattern() override {
+        return std::regex("^.*?\\.png");
+    }
+};
+
 class PNGDataFormat : public AbstractDataFormat<PNGFrame> {
     std::unique_ptr<PNGFrame> ReadFrame(std::ifstream& io, PNGFrame::FrameIndexType idx) override {
         return std::make_unique<PNGFrame>();
     }
 
     void WriteFrame(std::ofstream& io, PNGFrame const& frame) override {}
-
-    FileListType EnumerateFramesInDirectory(FileType Path, std::string FilePattern) override {
-        // TODO how to separate name, extension, and frame number?
-        auto r = std::regex(FilePattern);
-        FileListType files;
-        for (const auto& entry : std::filesystem::directory_iterator(Path)) {
-            if (std::regex_match(entry.path().filename().string(), r)) {
-                files.push_back(entry);
-            }
-        }
-        std::sort(files.begin(), files.end());
-        return files;
-    }
 };
 
 using PNGFileCollection = FolderContainer<PNGDataFormat>;
