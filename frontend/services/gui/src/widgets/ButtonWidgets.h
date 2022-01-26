@@ -26,8 +26,16 @@ class Parameter;
  */
 class ButtonWidgets {
 public:
+    enum ButtonStyle {
+        POINT_CIRCLE,
+        GRID,
+        LINES, // aka hamburger menu
+        POINTS
+    };
+
     /** "Point in Circle" Button for additional drop down Options. */
-    static bool OptionButton(const std::string& id, const std::string& label, bool dirty, bool read_only);
+    static bool OptionButton(
+        ButtonStyle button_style, const std::string& id, const std::string& label, bool dirty, bool read_only);
 
     /** Knob button for 'circular' float value manipulation. */
     static bool KnobButton(

@@ -289,9 +289,10 @@ bool megamol::gui::LogConsole::Draw() {
         ImGui::Separator();
 
         // Log Level
-        ImGui::TextUnformatted("Show");
+        ImGui::TextUnformatted("Show Log Level");
         ImGui::SameLine();
-        if (ImGui::RadioButton("Errors", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
+        if (ImGui::RadioButton(
+                "Error (<= 1)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
             if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_NONE;
             } else {
@@ -300,7 +301,8 @@ bool megamol::gui::LogConsole::Draw() {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Warnings", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+        if (ImGui::RadioButton(
+                "Warnings (<= 100)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
             if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
@@ -309,7 +311,8 @@ bool megamol::gui::LogConsole::Draw() {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Infos", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+        if (ImGui::RadioButton(
+                "Infos (<= 200)", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
             if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
