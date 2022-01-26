@@ -1,24 +1,21 @@
-/*
- * ImageRenderer.h
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
-#define MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
-#include <memory>
 
 #ifdef WITH_MPI
 #include "mpi.h"
@@ -35,7 +32,7 @@ using namespace megamol::core;
 namespace view_gl = megamol::core_gl::view;
 
 namespace megamol {
-namespace imageviewer2 {
+namespace image_gl {
 
 /**
  * Mesh-based renderer for bézier curve tubes
@@ -232,7 +229,7 @@ private:
     /** The height of the image */
     unsigned int height;
 
-    vislib_gl::graphics::gl::GLSLShader theShader;
+    std::unique_ptr<glowl::GLSLProgram> theShader;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
     GLuint theVAO;
@@ -258,7 +255,5 @@ private:
     size_t datahash;
 };
 
-} /* end namespace imageviewer2 */
+} // namespace image_gl
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED */

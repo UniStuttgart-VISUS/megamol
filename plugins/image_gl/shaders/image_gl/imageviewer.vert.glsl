@@ -1,3 +1,5 @@
+#version 430
+
 uniform mat4 MVP;
 
 layout(location = 0) in vec2 pos;
