@@ -9,6 +9,7 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "MegaMolProject.h"
 #include "ProjectLoader.h"
 
 namespace megamol::frontend {
@@ -51,6 +52,8 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    megamol::frontend_resources::MegaMolProject m_current_project;
 
     bool m_digestion_recursion = false;
 };
