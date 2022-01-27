@@ -1,7 +1,7 @@
 /*
- * LuaState.cpp
+ * LuaAPI.cpp
  *
- * Copyright (C) 2017 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
