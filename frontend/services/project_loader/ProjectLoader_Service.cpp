@@ -47,7 +47,10 @@ bool ProjectLoader_Service::init(const Config& config) {
 
     m_loader.load_filename = [&](std::filesystem::path const& filename) { return this->load_file(filename); };
 
-    this->m_providedResourceReferences = {{"ProjectLoader", m_loader}};
+    this->m_providedResourceReferences = {
+        {"ProjectLoader", m_loader},
+        {"MegaMolProject", m_current_project},
+    };
 
     this->m_requestedResourcesNames = {"ExecuteLuaScript", "SetScriptPath", "optional<WindowEvents>"};
 
