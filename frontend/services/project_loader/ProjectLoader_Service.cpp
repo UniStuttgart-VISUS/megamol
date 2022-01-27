@@ -127,6 +127,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     }
 
     log("loaded file " + filename.generic_u8string() + ((script_error.size()) ? "\n\t" + script_error : ""));
+
     return true;
 }
 

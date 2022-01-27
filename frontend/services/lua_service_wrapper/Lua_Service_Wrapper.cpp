@@ -16,6 +16,7 @@
 #include "FrameStatistics.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "MegaMolProject.h"
 #include "RuntimeConfig.h"
 #include "Screenshots.h"
 #include "WindowManipulation.h"
@@ -107,7 +108,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
-    this->m_requestedResourcesNames = {"FrontendResourcesList",
+    this->m_requestedResourcesNames = {
+        "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics",                      // for LastFrameTime
         "optional<WindowManipulation>",         // for Framebuffer resize
@@ -115,11 +117,14 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph",                         // LuaAPI manipulates graph
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+        frontend_resources::CommandRegistry_Req_Name,
+        "optional<GUIRegisterWindow>",
+        "RuntimeConfig",
+        "MegaMolProject",
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name
+        frontend_resources::PerformanceManager_Req_Name,
 #endif
-    }; //= {"ZMQ_Context"};
+    };
 
     *open_version_notification = false;
 
@@ -718,12 +723,68 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
+    callbacks.add<VoidResult>("mmProject",
+        "()\n\tSets the current script file as active project, clearing all previous graph state",
+        {[&]() -> VoidResult {
+            // clear graph
+            auto& graph = const_cast<megamol::core::MegaMolGraph&>(
+                m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+
+            graph.Clear();
+
+            // set current script file as project
+            auto& project = const_cast<frontend_resources::MegaMolProject&>(
+                m_requestedResourceReferences[11].getResource<frontend_resources::MegaMolProject>());
+
+            auto scriptpath = luaAPI.GetScriptPath();
+
+            if (scriptpath.empty())
+                return Error{"mmProject() error: no script path set. can not use it as project path."};
+
+            project.setProjectFile(scriptpath);
+
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult>("mmGetProjectFile",
+        "()\n\tReturns the current project file, i.e. the script file. If no script file is set, an error is returned.",
+        {[&]() -> StringResult {
+            auto& project = m_requestedResourceReferences[11].getResource<frontend_resources::MegaMolProject>();
+
+            if (!project.attributes.has_value())
+                return Error{"mmGetProjectFile() error: no project file set."};
+
+            return StringResult{project.attributes.value().project_file.string()};
+        }});
+
+    callbacks.add<StringResult>("mmGetProjectDirectory",
+        "()\n\tReturns the current project directory. If no script file is set, an error is returned.",
+        {[&]() -> StringResult {
+            auto& project = m_requestedResourceReferences[11].getResource<frontend_resources::MegaMolProject>();
+
+            if (!project.attributes.has_value())
+                return Error{"mmGetProjectDirectory() error: no project directory set."};
+
+            // has trailing '/'
+            return StringResult{project.attributes.value().project_directory.string()};
+        }});
+
+    callbacks.add<StringResult>("mmGetProjectName",
+        "()\n\tReturns the name of the current project directory. If no script file is set, an error is returned.",
+        {[&]() -> StringResult {
+            auto& project = m_requestedResourceReferences[11].getResource<frontend_resources::MegaMolProject>();
+
+            if (!project.attributes.has_value())
+                return Error{"mmGetProjectName() error: no project name set."};
+
+            return StringResult{project.attributes.value().project_name};
+        }});
 
 #ifdef MEGAMOL_USE_PROFILING
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             std::stringstream output;
             auto m = graph.FindModule(name);
@@ -742,7 +803,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
         "(int handle, string comment)\n\tSet a transient comment for a timer; will show up in profiling log.",
         {[&](int handle, std::string comment) -> VoidResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             perf_manager->set_transient_comment(handle, comment);
             return VoidResult{};
