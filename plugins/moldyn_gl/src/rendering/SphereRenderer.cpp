@@ -1134,14 +1134,12 @@ bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
     auto fbo = call.GetFramebuffer();
 
     this->curCamPos = glm::vec4(cam_pose.position, 1.0);
     this->curCamView = glm::vec4(cam_pose.direction, 1.0);
     this->curCamUp = glm::vec4(cam_pose.up, 1.0);
     this->curCamRight = glm::vec4(glm::cross(cam_pose.direction, cam_pose.up), 1.0);
-    this->curCamNearClip = cam_intrinsics.near_plane;
 
     this->curMVinv = glm::inverse(view);
     this->curMVtransp = glm::transpose(view);

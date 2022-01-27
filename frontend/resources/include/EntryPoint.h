@@ -13,6 +13,8 @@
 namespace megamol {
 namespace frontend_resources {
 
+// a way for entry points to get new render input state from outside
+// update of the render input gets called before the entry point is rendered/executed
 struct RenderInputsUpdate {
     virtual ~RenderInputsUpdate(){};
     virtual void update(){};
@@ -21,9 +23,12 @@ struct RenderInputsUpdate {
     };
 };
 
-using EntryPointExecutionCallback =
-    std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, ImageWrapper&)>;
+// the function/callback that gets executed when an entry point should get rendered
+using EntryPointExecutionCallback = std::function<bool(void* /*module ptr, e.g. view*/,
+    std::vector<megamol::frontend::FrontendResource> const& /*input: requested resources*/,
+    ImageWrapper& /*output: rendering result*/)>;
 
+// generic structure to encapsulate "renderable" things that can be rendered by the ImagePresentation Service
 struct EntryPoint {
     std::string moduleName;
     void* modulePtr = nullptr;

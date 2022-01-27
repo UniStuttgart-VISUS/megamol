@@ -97,6 +97,14 @@ struct RuntimeConfig {
     std::string remote_headnode_zmq_target_address = "tcp://127.0.0.1:62562";
     std::string remote_rendernode_zmq_source_address = "tcp://*:62562";
 
+    enum class VRMode {
+        Off,
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        UnityKolab,
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+    VRMode vr_mode = VRMode::Off;
+
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
             std::string result;

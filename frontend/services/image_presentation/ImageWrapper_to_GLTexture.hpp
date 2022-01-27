@@ -22,6 +22,7 @@ struct gl_texture {
 
     ImageWrapper::ImageSize size;
 
+    gl_texture() = default;
     gl_texture(ImageWrapper const& image);
     ~gl_texture() GL_STUB(); // frees texture if owned
     // rule of five

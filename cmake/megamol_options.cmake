@@ -52,6 +52,14 @@ if (ENABLE_GL)
   endif()
 endif()
 
+# VR Service / mwk-mint, interop, Spout2
+if (ENABLE_GL)
+  option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF)
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+    add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
+  endif()
+endif()
+
 # CUE
 if (WIN32)
   option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
