@@ -9,6 +9,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#define TBB_USE_DEBUG 0
 #include "pxr/usd/usd/stage.h"
 
 

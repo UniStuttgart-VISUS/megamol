@@ -2,7 +2,6 @@
 #include <iomanip>
 
 #include "OmniUsdReader.h"
-#define TBB_USE_DEBUG 0
 #include <iostream>
 #include <iomanip>
 #include "OmniClient.h"
