@@ -417,7 +417,7 @@ private:
     std::shared_ptr<glowl::FramebufferObject> solTypeCountFbo;
 
     // Render utility class used for drawing texture to framebuffer
-    core::utility::RenderUtils renderUtils;
+    core_gl::utility::RenderUtils renderUtils;
 };
 
 

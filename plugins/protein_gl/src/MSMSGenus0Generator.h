@@ -1,18 +1,18 @@
 /*
- * MSMSMeshLoader.h
+ * MSMSGenus0Generator.h
  *
  * Copyright (C) 2015 by Michael Krone
  * Copyright (C) 2015 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED
-#define MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED
+#ifndef MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
+#define MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -22,11 +22,11 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 /**
  * Class for loading MSMS mesh data
  */
-class MSMSMeshLoader : public core::Module {
+class MSMSGenus0Generator : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -34,7 +34,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "MSMSMeshLoader";
+        return "MSMSGenus0Generator";
     }
 
     /**
@@ -43,7 +43,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description(void) {
-        return "Data source for MSMS mesh data files";
+        return "Data source for MSMS mesh data files that always generates a genus 0 mesh";
     }
 
     /**
@@ -56,10 +56,10 @@ public:
     }
 
     /** Ctor */
-    MSMSMeshLoader(void);
+    MSMSGenus0Generator(void);
 
     /** Dtor */
-    virtual ~MSMSMeshLoader(void);
+    virtual ~MSMSGenus0Generator(void);
 
 protected:
     /**
@@ -84,11 +84,12 @@ protected:
      * Loads the specified file
      *
      * @param filename The file to load
+     * @param probe_radius The probe radius
      * @param frameID  The frame ID
      *
      * @return True on success
      */
-    virtual bool load(const vislib::TString& filename, unsigned int frameID = 0);
+    virtual bool load(const vislib::TString& filename, float probe_radius, unsigned int frameID = 0);
 
 private:
     /**
@@ -108,6 +109,14 @@ private:
      * @return 'true' on success, 'false' on failure.
      */
     bool getExtentCallback(core::Call& caller);
+
+    /**
+     * Computes the genus of the stored mesh and returns true if it is 0
+     *
+     * @param frame The id of the requested frame
+     * @return True if the genus is 0, false otherwise
+     */
+    bool isGenus0(uint32_t frameID, uint32_t* outGenus = nullptr);
 
     /** The slot for requesting data */
     core::CalleeSlot getDataSlot;
@@ -140,7 +149,11 @@ private:
     /** MSMS detail parameter */
     megamol::core::param::ParamSlot msmsDetailParam;
     /** MSMS detail parameter */
-    megamol::core::param::ParamSlot msmsProbeParam;
+    megamol::core::param::ParamSlot msmsStartingRadiusParam;
+    /** MSMS step size parameter */
+    megamol::core::param::ParamSlot msmsStepSizeParam;
+    /** MSMS numTrysParam */
+    megamol::core::param::ParamSlot msmsMaxTryNumParam;
 
     /** The color lookup table (for chains, amino acids,...) */
     vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
@@ -157,12 +170,12 @@ private:
     /** the index of the vertex attribute */
     unsigned int attIdx;
 
-    vislib::Array<geocalls::CallTriMeshData::Mesh*> obj;
+    vislib::Array<geocalls_gl::CallTriMeshDataGL::Mesh*> obj;
 
     int prevTime;
 };
 
-} // namespace protein
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */

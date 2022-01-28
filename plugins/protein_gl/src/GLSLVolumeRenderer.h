@@ -320,7 +320,7 @@ private:
     float* c;
 
     // Render utility class used for drawing texture to framebuffer
-    core::utility::RenderUtils renderUtils;
+    core_gl::utility::RenderUtils renderUtils;
 };
 
 

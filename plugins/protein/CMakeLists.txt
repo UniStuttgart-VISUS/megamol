@@ -14,9 +14,4 @@ megamol_plugin(protein
 
 if (protein_PLUGIN_ENABLED)
   target_link_libraries(protein PRIVATE vislib)
-
-  if (WIN32)
-    # special case for the MSMS-related files
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
-  endif ()
 endif ()

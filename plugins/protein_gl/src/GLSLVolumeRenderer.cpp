@@ -209,16 +209,6 @@ void protein_gl::GLSLVolumeRenderer::release(void) {}
  * protein::GLSLVolumeRenderer::create
  */
 bool protein_gl::GLSLVolumeRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0))
-        return false;
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform"))
-        return false;
-    if (!isExtAvailable("GL_ARB_vertex_program"))
-        return false;
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions())
-        return false;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -232,12 +222,13 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -253,14 +244,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load clipped sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereClipPlaneVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereClipPlaneFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
         return false;
@@ -276,12 +265,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
         return false;
@@ -297,13 +286,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load volume texture generation shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "volume::std::updateVolumeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::updateVolumeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
@@ -319,12 +307,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load ray start shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start shader", this->ClassName());
         return false;
@@ -340,12 +328,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load ray start eye shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start eye shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName());
         return false;
@@ -361,12 +349,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load ray length shader (uses same vertex shader as ray start shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray length shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray length shader", this->ClassName());
         return false;
@@ -382,12 +370,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Load volume rendering shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
@@ -403,12 +391,12 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Write a uniform color to all fragments
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
@@ -424,7 +412,7 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
