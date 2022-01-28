@@ -5,6 +5,8 @@
 #include <regex>
 #include <vector>
 
+#include "LRUCache.h"
+
 namespace megamol {
 namespace datatools {
 namespace io {
@@ -14,6 +16,7 @@ struct AbstractFrame {
     virtual ~AbstractFrame() = default;
     virtual bool Read(std::ifstream& io) = 0;
     virtual bool Write(std::ofstream& io) = 0;
+    virtual std::size_t GetSize() = 0;
 };
 
 struct AbstractNaming {
@@ -65,26 +68,33 @@ public:
 template<class Format>
 class AbstractDataContainer {
 public:
-    virtual ~AbstractDataContainer() = default;
     using FormatType = Format;
     using FrameType = typename Format::FrameType;
     using FrameIndexType = typename FrameType::FrameIndexType;
-    // TODO: Adrian's LRUCache here since we need most of the functionality anyway, so why not.
-    using FrameCollection = std::unordered_map<FrameIndexType, FrameType>;
+    using FrameCollection = LRUCache<AbstractDataContainer>;
+
+    AbstractDataContainer(FrameIndexType readAhead = 3)
+            : readAhead(readAhead)
+            , frames(LRUCache<AbstractDataContainer>()) {
+    }
+
+    virtual ~AbstractDataContainer() = default;
 
     // TODO generic EnumerateFrames that only files the frame indices with empty frames for now?
+    virtual FrameIndexType EnumerateFrames() = 0;
 
-    std::unique_ptr<FrameType> ReadFrame(FrameIndexType idx) {
+    std::shared_ptr<FrameType> ReadFrame(FrameIndexType idx) {
         // here we should actually grab the frames from some background thread that reads ahead and stuff?
-        FrameType f;
-        f.Read(IndexToIStream(idx));
-        return std::make_unique<FrameType>(f);
+        return frames.findOrCreate(idx, *this);
     }
 
     void WriteFrame(FrameIndexType idx, FrameType const& frame) {}
 
     virtual std::ifstream IndexToIStream(FrameIndexType idx) = 0;
     virtual std::ofstream IndexToOStream(FrameIndexType idx) = 0;
+protected:
+    FrameIndexType readAhead;
+    FrameCollection frames;
 };
 
 // A directory containing several files, one for each frame
@@ -99,23 +109,25 @@ public:
 
     FolderContainer(std::string location, std::unique_ptr<AbstractNaming> naming,
         std::unique_ptr<BaseNumbering<FrameType>> numbering = std::make_unique<BaseNumbering<FrameType> >())
-            : naming(std::move(naming))
+            : files(EnumerateFramesInDirectory(FileType(location)))
+            , naming(std::move(naming))
             , numbering(std::move(numbering)) {
-        files = EnumerateFramesInDirectory(FileType(location));
     }
 
-    // TODO specific EnumerateFrames that uses the dir enumerator below?
+    FrameIndexType EnumerateFrames() override {
+        return static_cast<FrameIndexType>(files.size());
+    }
 
     FileListType EnumerateFramesInDirectory(FileType Path) {
         auto r = std::regex(naming->Pattern());
-        FileListType files;
+        FileListType fileList;
         for (const auto& entry : std::filesystem::directory_iterator(Path)) {
             if (std::regex_match(entry.path().filename().string(), r)) {
-                files.push_back(entry);
+                fileList.push_back(entry);
             }
         }
-        std::sort(files.begin(), files.end());
-        return files;
+        std::sort(fileList.begin(), fileList.end());
+        return fileList;
     }
 
     std::ifstream IndexToIStream(FrameIndexType idx) override {
@@ -124,6 +136,7 @@ public:
     std::ofstream IndexToOStream(FrameIndexType idx) override {
         // TODO some code for making paths when idx > what we already had
         // TODO what about sparse stuff, i.e. when the numbers were not consecutive?
+        // TODO the clang dangling pointer
         auto filename = files[idx].path().string().c_str();
         return std::ofstream(filename, std::ifstream::binary);
     }
