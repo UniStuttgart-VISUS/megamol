@@ -179,6 +179,7 @@ parser.add_argument('--tail', action='store', help='show that many particles at 
 parser.add_argument('--bboxonly', action='count', help='only print the bbox of head/tail, not the particles)')
 parser.add_argument('--versiononly', action='count', help='show only file version and exit')
 parser.add_argument('--dumpxyz', action='store', help='dump/convert mmpld to xyz files <DUMPXYZ>_<frame>.xyz')
+parser.add_argument('--dumpft', action='count', help='dump frame table')
 parseResult = parser.parse_args()
 
 specific_only = parseResult.bboxonly or parseResult.versiononly
@@ -239,22 +240,36 @@ for filename in parseResult.inputfiles:
             exit(1)
         
         frameTable = []
+        refFrameOffset = 60
         for x in range(frameCount + 1):
-            frameTable.append(getUInt64(f))
+            frameOffset = getUInt64(f)
+            if frameOffset < refFrameOffset:
+                print(f"error: frame table entry {x} is invalid: not monotonically increasing or too small first offset: ({frameOffset}) < ({refFrameOffset})")
+            refFrameOffset = frameOffset
+            frameTable.append(frameOffset)
 
         if (f.tell() != frameTable[0]):
-            print("warning: dead data trailing header")
+            print(f"warning: dead data trailing header: position after reading frame table ({f.tell()}) is not the start of the first frame ({frameTable[0]})")
+
+        if os.path.getsize(filename) != frameTable[frameCount]:
+            print(f"error: file end pointer (frameTable[{frameCount}]) in frame table inconsistent with file size ({os.path.getsize(filename)})! ", end='')
+            if os.path.getsize(filename) < frameTable[frameCount]:
+                print("Data truncated.")
+            if os.path.getsize(filename) > frameTable[frameCount]:
+                print("Trailing garbage.")
+
+        if parseResult.dumpft:
+            print("Frame Table:")
+            print("index                offset")
+            sum = 0
+            for i in range(len(frameTable)):
+                print(f"{i:5}: {frameTable[i]:20}")
+                if i < frameCount:
+                    sum = sum + frameTable[i+1] - frameTable[i]
+                # else:
+                #     print(f"ignoring entry {i}, should be the end pointer")
+            print(f"average frame size: {sum / frameCount}")
         
-        f.seek(0, os.SEEK_END)
-        if (f.tell() < frameTable[frameCount]):
-            print("warning: file truncated")
-        if (f.tell() > frameTable[frameCount]):
-            print("warning: dead data trailing body")
-
-        for x in range(frameCount):
-            if (frameTable[x + 1] <= frameTable[x]):
-                print("frame table corrupted at frame " + str(x))
-
         minNumLists = 0
         maxNumLists = 0
         minNumParts = 0
