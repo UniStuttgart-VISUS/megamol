@@ -87,19 +87,19 @@ private:
             entries.clear();
         } else if (totalByteCount > maximumSize) {
             // Obtain list of entries
-            std::vector<std::pair<Key, Value>> entryList;
+            std::vector<std::pair<Key, Entry>> entryList;
             for (auto it = entries.begin(); it != entries.end(); ++it) {
-                entryList.push_back(*it);
+                entryList.emplace_back(it->first, it->second);
             }
 
             // Sort by last access time (oldest entries last)
             std::sort(entryList.begin(), entryList.end(),
-                [](const auto& a, const auto& b) { return a.lastAccess > b.lastAccess; });
+                [](const auto& a, const auto& b) { return a.second.lastAccess > b.second.lastAccess; });
 
             // Clean up until total memory usage is below threshold
             std::size_t cleanupThreshold = maximumSize * cleanupFactor;
             while (totalByteCount > cleanupThreshold && !entryList.empty()) {
-                totalByteCount -= entryList.back().value.byteCount;
+                totalByteCount -= entryList.back().second.byteCount;
                 entries.erase(entryList.back().first);
                 entryList.pop_back();
             }
