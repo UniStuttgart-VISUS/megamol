@@ -12,6 +12,8 @@ namespace megamol::ImageSeries {
 class ImageSeries2DCall : public megamol::core::AbstractGetDataCall {
 
 public:
+    using CallDescription = typename megamol::core::factories::CallAutoDescription<ImageSeries2DCall>;
+
     /** Function index for obtaining data for an image in the series. **/
     static const unsigned int CallGetData = 0;
 
