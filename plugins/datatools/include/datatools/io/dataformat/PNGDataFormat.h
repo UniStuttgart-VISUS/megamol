@@ -12,7 +12,7 @@ namespace io {
 namespace dataformat {
 
 // this this goes into the call. with that exact read/write signature for brain dumps
-struct ImageFrame : AbstractFrame {
+struct Image2DFrame : AbstractFrame {
     using SizeType = uint32_t;
 
     struct ChannelType {
@@ -40,14 +40,19 @@ struct ImageFrame : AbstractFrame {
     uint8_t NumChannels = 1;
     SizeType Width = 0, Height = 0;
 
-    std::vector<uint8_t> Values;
-
+    void SetData() {}
     bool Read(std::ifstream& io) override {
         return true;
     }
     bool Write(std::ofstream& io) override {
         return true;
     }
+    std::size_t GetSize() override {
+        
+    }
+
+private:
+    std::vector<uint8_t> Values;
 };
 
 struct PNGNaming : AbstractNaming {
