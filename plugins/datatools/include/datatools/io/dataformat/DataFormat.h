@@ -16,9 +16,9 @@ namespace dataformat {
 // this has *nothing* to do with proper file formats. readers support these to provide data via the said call
 struct AbstractFrame {
     virtual ~AbstractFrame() = default;
-    virtual bool Read(std::ifstream& io) = 0;
-    virtual bool Write(std::ofstream& io) = 0;
-    virtual std::size_t GetSize() = 0;
+    virtual bool Read(std::istream& io) = 0;
+    virtual bool Write(std::ostream& io) const = 0;
+    [[nodiscard]] virtual std::size_t ByteSize() const = 0;
 };
 
 struct AbstractMetadata {

@@ -5,55 +5,12 @@
 
 #include <regex>
 #include <algorithm>
+#include <stdexcept>
 
 namespace megamol {
 namespace datatools {
 namespace io {
 namespace dataformat {
-
-// this this goes into the call. with that exact read/write signature for brain dumps
-struct Image2DFrame : AbstractFrame {
-    using SizeType = uint32_t;
-
-    struct ChannelType {
-        enum Value : uint8_t {UINT8, FLOAT};
-        ChannelType() = default;
-        constexpr ChannelType(Value v) : val(v) {}
-        constexpr operator Value() const {
-            return val;
-        }
-        explicit operator bool() = delete;
-        constexpr uint8_t GetByteSize() const {
-            switch (val) {
-            case UINT8:
-                return sizeof(uint8_t);
-            case FLOAT:
-                return sizeof(float);
-            }
-            return sizeof(uint8_t);
-        }
-    private:
-        Value val;
-    };
-
-    ChannelType Type;
-    uint8_t NumChannels = 1;
-    SizeType Width = 0, Height = 0;
-
-    void SetData() {}
-    bool Read(std::ifstream& io) override {
-        return true;
-    }
-    bool Write(std::ofstream& io) override {
-        return true;
-    }
-    std::size_t GetSize() override {
-        
-    }
-
-private:
-    std::vector<uint8_t> Values;
-};
 
 struct PNGNaming : AbstractNaming {
     std::regex Pattern() override {
