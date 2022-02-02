@@ -191,7 +191,7 @@ public:
 
         // TODO BUG HAZARD this is just for testing, it needs to go away!
         //io::dataformat::CSVFileCollection coll("c:/temp");
-        io::dataformat::PNGFileCollection coll2("c:\temp", std::make_unique<io::dataformat::PNGNaming>());
+        //io::dataformat::PNGFileCollection coll2("c:\temp", std::make_unique<io::dataformat::PNGNaming>());
     }
 };
 } // namespace megamol::datatools

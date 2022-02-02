@@ -12,6 +12,8 @@ namespace datatools {
 namespace io {
 namespace dataformat {
 
+// every call ideally should implement this, as a generic interface for "brain dumps"
+// this has *nothing* to do with proper file formats. readers support these to provide data via the said call
 struct AbstractFrame {
     virtual ~AbstractFrame() = default;
     virtual bool Read(std::ifstream& io) = 0;
@@ -19,15 +21,18 @@ struct AbstractFrame {
     virtual std::size_t GetSize() = 0;
 };
 
+struct AbstractMetadata {
+    using FrameIndexType = uint32_t;
+};
+
 struct AbstractNaming {
     virtual ~AbstractNaming() = default;
     virtual std::regex Pattern() = 0;
 };
 
-template<class Frame>
+template<typename FrameIndexType>
 struct BaseNumbering {
     virtual ~BaseNumbering() = default;
-    using FrameIndexType = typename Frame::FrameIndexType;
 
     BaseNumbering(uint8_t digits = 5) : digits(digits) {
         reg = std::regex(std::string("(\d{") + std::to_string(digits) + "})");
@@ -57,11 +62,10 @@ class AbstractDataFormat {
 public:
     virtual ~AbstractDataFormat() = default;
     using FrameType = Frame;
-    using FrameIndexType = typename FrameType::FrameIndexType;
     using FileType = std::filesystem::directory_entry;
 
-    virtual std::unique_ptr<Frame> ReadFrame(std::ifstream& io, FrameIndexType idx) = 0;
-    virtual void WriteFrame(std::ofstream& io, Frame const& frame) = 0;
+    //virtual std::unique_ptr<Frame> ReadFrame(std::ifstream& io, FrameIndexType idx) = 0;
+    //virtual void WriteFrame(std::ofstream& io, Frame const& frame) = 0;
 };
 
 // TODO read-ahead number
@@ -104,11 +108,12 @@ class FolderContainer : public AbstractDataContainer<Format> {
 public:
     using FileType = typename Format::FileType;
     using FileListType = std::vector<FileType>;
-    using FrameType = typename Format::FrameType;
-    using FrameIndexType = typename FrameType::FrameIndexType;
+    using FrameIndexType = typename Format::FrameIndexType;
+
+    // TODO fix basenumbering
 
     FolderContainer(std::string location, std::unique_ptr<AbstractNaming> naming,
-        std::unique_ptr<BaseNumbering<FrameType>> numbering = std::make_unique<BaseNumbering<FrameType> >())
+        std::unique_ptr<BaseNumbering<FrameIndexType>> numbering = std::make_unique<BaseNumbering<FrameIndexType>>())
             : files(EnumerateFramesInDirectory(FileType(location)))
             , naming(std::move(naming))
             , numbering(std::move(numbering)) {
@@ -144,7 +149,7 @@ public:
 private:
     FileListType files;
     std::unique_ptr<AbstractNaming> naming;
-    std::unique_ptr<BaseNumbering<FrameType>> numbering;
+    std::unique_ptr<BaseNumbering<FrameIndexType>> numbering;
 };
 
 // One big blob of data, each frame sitting at some offset
