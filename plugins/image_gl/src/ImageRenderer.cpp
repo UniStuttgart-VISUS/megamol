@@ -1,15 +1,13 @@
-/*
- * ImageRenderer.cpp
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "image/ImageRenderer.h"
-#include "image/JpegBitmapCodec.h"
+#include "ImageRenderer.h"
+#include "JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -24,6 +22,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 //#include <cmath>
@@ -36,7 +35,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
 /*
  * misc::ImageRenderer::ImageRenderer
  */
-imageviewer2::ImageRenderer::ImageRenderer(void)
+image_gl::ImageRenderer::ImageRenderer(void)
         : Renderer3DModuleGL()
         , leftFilenameSlot("leftImg", "The image file name")
         , rightFilenameSlot("rightImg", "The image file name")
@@ -119,7 +118,7 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
 /*
  * misc::ImageRenderer::~ImageRenderer
  */
-imageviewer2::ImageRenderer::~ImageRenderer(void) {
+image_gl::ImageRenderer::~ImageRenderer(void) {
     this->Release();
 }
 
@@ -127,46 +126,17 @@ imageviewer2::ImageRenderer::~ImageRenderer(void) {
 /*
  * misc::ImageRenderer::create
  */
-bool imageviewer2::ImageRenderer::create(void) {
+bool image_gl::ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
-    vislib_gl::graphics::gl::ShaderSource vertShader;
-    vislib_gl::graphics::gl::ShaderSource fragShader;
+    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        auto shaderSourceFactory = std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(
-            instance()->Configuration().ShaderDirectories());
-        if (!shaderSourceFactory->MakeShaderSource("imageviewer::vertex", vertShader)) {
-            return false;
-        }
-        if (!shaderSourceFactory->MakeShaderSource("imageviewer::fragment", fragShader)) {
-            return false;
-        }
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
-    }
-
-    try {
-        if (!this->theShader.Create(vertShader.Code(), vertShader.Count(), fragShader.Code(), fragShader.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile sphere shader\n");
-            return false;
-        }
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[ImageRenderer] Unable to compile shader: Unknown exception\n");
+        theShader = core::utility::make_glowl_shader(
+            "imageviewer", shader_options, "image_gl/imageviewer.vert.glsl", "image_gl/imageviewer.frag.glsl");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -179,9 +149,9 @@ bool imageviewer2::ImageRenderer::create(void) {
 
 
 /*
- * imageviewer2::ImageRenderer::GetExtents
+ * image_gl::ImageRenderer::GetExtents
  */
-bool imageviewer2::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
 
     call.SetTimeFramesCount(1);
     call.AccessBoundingBoxes().Clear();
@@ -194,9 +164,9 @@ bool imageviewer2::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
 
 
 /*
- * imageviewer2::ImageRenderer::release
+ * image_gl::ImageRenderer::release
  */
-void imageviewer2::ImageRenderer::release(void) {
+void image_gl::ImageRenderer::release(void) {
     //    this->image.Release();
     glDeleteBuffers(1, &theVertBuffer);
     glDeleteBuffers(1, &theTexCoordBuffer);
@@ -205,9 +175,9 @@ void imageviewer2::ImageRenderer::release(void) {
 
 
 /*
- * imageviewer2::ImageRenderer::assertImage
+ * image_gl::ImageRenderer::assertImage
  */
-bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
+bool image_gl::ImageRenderer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
@@ -447,7 +417,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 }
 
 
-bool imageviewer2::ImageRenderer::initMPI() {
+bool image_gl::ImageRenderer::initMPI() {
     bool retval = false;
 #ifdef WITH_MPI
     if (this->comm == MPI_COMM_NULL) {
@@ -484,9 +454,9 @@ bool imageviewer2::ImageRenderer::initMPI() {
 
 
 /*
- * imageviewer2::ImageRenderer::Render
+ * image_gl::ImageRenderer::Render
  */
-bool imageviewer2::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
 
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bindToDraw();
@@ -553,16 +523,16 @@ bool imageviewer2::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
     ::glLineWidth(1.0f);
     ::glBindVertexArray(this->theVAO);
 
-    this->theShader.Enable();
-    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    this->theShader->use();
+    glUniformMatrix4fv(theShader->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(theShader.ParameterLocation("texSampler"), 0);
+    glUniform1i(theShader->getUniformLocation("texSampler"), 0);
 
     for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
         this->tiles[i].Second()->Bind();
         ::glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
     }
-    this->theShader.Disable();
+    glUseProgram(0);
 
     ::glBindVertexArray(0);
     ::glBindTexture(GL_TEXTURE_2D, 0);
@@ -576,9 +546,9 @@ bool imageviewer2::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
 
 
 /*
- * imageviewer2::ImageRenderer::onFilesPasted
+ * image_gl::ImageRenderer::onFilesPasted
  */
-bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
     vislib::TString str = stdToTString(this->pasteFilenamesSlot.Param<param::StringParam>()->Value());
     vislib::TString left, right;
     str.Replace(_T("\r"), _T(""));
@@ -590,16 +560,16 @@ bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageRenderer::stdToTString
+ * image_gl::ImageRenderer::stdToTString
  */
-vislib::TString imageviewer2::ImageRenderer::stdToTString(const std::string& str) {
+vislib::TString image_gl::ImageRenderer::stdToTString(const std::string& str) {
     return vislib::TString(str.data(), str.size());
 }
 
 /*
- * imageviewer2::ImageRenderer::interpretLine
+ * image_gl::ImageRenderer::interpretLine
  */
-void imageviewer2::ImageRenderer::interpretLine(
+void image_gl::ImageRenderer::interpretLine(
     const vislib::TString source, vislib::TString& left, vislib::TString& right) {
     vislib::TString line(source);
     line.Replace(_T("\n"), _T(""));
@@ -619,9 +589,9 @@ void imageviewer2::ImageRenderer::interpretLine(
 }
 
 /*
- * imageviewer2::ImageRenderer::onSlideshowPasted
+ * image_gl::ImageRenderer::onSlideshowPasted
  */
-bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
     vislib::TString left, right;
     this->leftFiles.Clear();
     this->rightFiles.Clear();
@@ -647,45 +617,45 @@ bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
 }
 
 /*
- * imageviewer2::ImageRenderer::onFirstPressed
+ * image_gl::ImageRenderer::onFirstPressed
  */
-bool imageviewer2::ImageRenderer::onFirstPressed(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onFirstPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(0);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onPreviousPressed
+ * image_gl::ImageRenderer::onPreviousPressed
  */
-bool imageviewer2::ImageRenderer::onPreviousPressed(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onPreviousPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() - 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onNextPressed
+ * image_gl::ImageRenderer::onNextPressed
  */
-bool imageviewer2::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() + 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onLastPressed
+ * image_gl::ImageRenderer::onLastPressed
  */
-bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->leftFiles.Count() - 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageRenderer::onCurrentSet
+ * image_gl::ImageRenderer::onCurrentSet
  */
-bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
     int s = slot.Param<param::IntParam>()->Value();
     if (s > -1 && s < this->leftFiles.Count()) {
         this->leftFilenameSlot.Param<param::FilePathParam>()->SetValue(leftFiles[s]);
@@ -698,9 +668,9 @@ bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageRenderer::onBlankMachineSet
+ * image_gl::ImageRenderer::onBlankMachineSet
  */
-bool imageviewer2::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
+bool image_gl::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
     vislib::TString str = stdToTString(this->blankMachine.Param<param::StringParam>()->Value());
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T(";"), startPos);
