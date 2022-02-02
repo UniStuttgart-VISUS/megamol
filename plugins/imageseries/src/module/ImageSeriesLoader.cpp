@@ -40,6 +40,9 @@ ImageSeriesLoader::ImageSeriesLoader()
 
     // Support loading PNG files
     bitmapCodecCollection->AddCodec(new sg::graphics::PngBitmapCodec);
+
+    // Set default image cache size to 512 MB
+    imageCache.setMaximumSize(512 * 1024 * 1024);
 }
 
 ImageSeriesLoader::~ImageSeriesLoader() {
@@ -65,7 +68,8 @@ bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
             // TODO load image asynchronously
             const auto& path = imageFilesFiltered[output.imageIndex];
             output.filename = path.string();
-            output.imageData = std::make_shared<AsyncImageData2D>(loadImageFile(path));
+            output.imageData = imageCache.findOrCreate(output.imageIndex,
+                [&](std::uint32_t) { return std::make_shared<AsyncImageData2D>(loadImageFile(path)); });
         }
 
         // TODO validate that width and height match series metadata
