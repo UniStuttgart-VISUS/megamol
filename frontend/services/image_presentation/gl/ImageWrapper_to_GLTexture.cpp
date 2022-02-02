@@ -114,18 +114,20 @@ void gl_texture::assign(gl_texture const& other, bool take_ownership) {
     this->size = other.size;
 
     if (take_ownership) {
-        this->texture = other.texture;
-    } else {
-        if (other.texture != 0) {
-            auto& image = *this->image_wrapper_ptr;
-            gl_wrapper_impl::gl_set_and_resize_texture(this->texture, image.size, image.channels);
-            gl_wrapper_impl::gl_copy_texture(other.texture, this->texture, image.size);
-        }
-    }
-
-    if (other.texture_reference == other.texture) {
-        this->texture_reference = this->texture;
-    } else {
+        // move texture data
         this->texture_reference = other.texture_reference;
+        this->texture = other.texture;
+        // other gets cleared after this assign
+    } else {
+        // actually copy data into own texture
+        auto copy = [](unsigned int from, unsigned int& to, auto& size, auto& channels) {
+            gl_wrapper_impl::gl_set_and_resize_texture(to, size, channels);
+            gl_wrapper_impl::gl_copy_texture(from, to, size);
+        };
+
+        auto& image = *this->image_wrapper_ptr;
+
+        copy(other.texture_reference, this->texture, image.size, image.channels);
+        this->texture_reference = this->texture;
     }
 }

@@ -22,6 +22,8 @@ public:
 
     IntParam(int initVal, int minVal, int maxVal) : Super(initVal, minVal, maxVal) {}
 
+    IntParam(int initVal, int minVal, int maxVal, int stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
+
     virtual ~IntParam() = default;
 
     std::string Definition() const override {
@@ -29,6 +31,7 @@ public:
         outDef << "MMINTR";
         outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
         outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
+        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
 
         return outDef.str();
     }

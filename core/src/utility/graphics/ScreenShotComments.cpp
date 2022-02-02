@@ -1,21 +1,36 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
 #include "mmcore/utility/DateTime.h"
-#include "mmcore/versioninfo.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
+#include "mmcore/utility/platform/RuntimeInfo.h"
+
+#ifdef _WIN32
+#include <tchar.h>
+#include <windows.h>
+#endif
 
 namespace mcu_graphics = megamol::core::utility::graphics;
 
 mcu_graphics::ScreenShotComments::ScreenShotComments(
     std::string const& project_configuration, const std::optional<comments_storage_map>& additional_comments) {
 
-    the_comments["Title"] = "MegaMol Screen Shot " + utility::DateTime::CurrentDateTimeFormatted();
+    the_comments["Title"] = "MegaMol Screen Capture " + utility::DateTime::CurrentDateTimeFormatted();
     //the_comments["Author"] = "";
     //the_comments["Description"] = "";
-    the_comments["MegaMol project"] = project_configuration;
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
-    the_comments["Software"] = "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." +
-                               std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV;
+    the_comments["Software"] = "MegaMol " + megamol::core::utility::buildinfo::MEGAMOL_VERSION() + "-" +
+                               megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH();
+    the_comments["MegaMol project"] = project_configuration;
+
+    the_comments["Remote Branch"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_BRANCH_NAME_FULL();
+    the_comments["Remote URL"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_REMOTE_URL();
+    the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
+    the_comments["Hardware Environment"] = platform::RuntimeInfo::GetHardwareInfo();
+    the_comments["CMakeCache"] = megamol::core::utility::buildinfo::MEGAMOL_CMAKE_CACHE();
+    the_comments["Git Diff"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_DIFF();
+    the_comments["Operating System"] = platform::RuntimeInfo::GetOsInfo();
+
     //the_comments["Disclaimer"] = "";
     //the_comments["Warning"] = "";
     //the_comments["Source"] = "";
@@ -30,7 +45,11 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(
 
     for (auto& s : the_comments) {
         the_vector.emplace_back();
-        the_vector.back().compression = PNG_TEXT_COMPRESSION_NONE;
+        if (s.second.size() > 1024) {
+            the_vector.back().compression = PNG_TEXT_COMPRESSION_zTXt;
+        } else {
+            the_vector.back().compression = PNG_TEXT_COMPRESSION_NONE;
+        }
         // what are the libpng people thinking?
         the_vector.back().key = const_cast<png_charp>(static_cast<png_const_charp>(s.first.data()));
         the_vector.back().text = static_cast<png_charp>(s.second.data());

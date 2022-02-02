@@ -603,6 +603,7 @@ void bind_imgui_painting() {
     uint8_t* tex_data;
     int font_width, font_height;
     io.Fonts->GetTexDataAsAlpha8(&tex_data, &font_width, &font_height);
+    ///io.Fonts->GetTexDataAsRGBA32(&tex_data, &font_width, &font_height);
     const auto texture = new Texture{tex_data, font_width, font_height};
     io.Fonts->TexID = texture;
 }

@@ -5,13 +5,13 @@
  */
 
 #include "ConstructKDTree.h"
-#include "CallKDTree.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmadios/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "normal_3d_omp.h"
+#include "probe/CallKDTree.h"
 #include <atomic>
 #include <limits>
 
@@ -50,7 +50,6 @@ ConstructKDTree::ConstructKDTree()
 
     core::param::FlexEnumParam* xyzEp = new core::param::FlexEnumParam("undef");
     this->_xyzSlot << xyzEp;
-    xyzEp->SetGUIVisible(false);
     this->MakeSlotAvailable(&this->_xyzSlot);
 
     this->_deployFullDataTree.SetCallback(
@@ -154,19 +153,21 @@ bool ConstructKDTree::getMetaData(core::Call& call) {
         return false;
 
     auto meta_data = ct->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad())
-        return true;
+    //if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad()) return true;
 
     // get metadata from adios
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
     if (!(*cd)(1))
         return false;
-    auto vars = cd->getAvailableVars();
-    for (auto var : vars) {
-        this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+
+    if (cd->getDataHash() == _old_datahash) {
+        auto vars = cd->getAvailableVars();
+        for (auto var : vars) {
+            this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        }
     }
 
     // put metadata in mesh call
@@ -200,8 +201,9 @@ bool ConstructKDTree::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var))
+        if (!cd->inquireVar(var)) {
             return false;
+        }
     }
 
     if (cd->getDataHash() != _old_datahash) {
@@ -219,9 +221,11 @@ bool ConstructKDTree::getData(core::Call& call) {
         this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
         this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
         this->_version++;
-        ct->setData(this->_full_data_tree, this->_version);
         _old_datahash = cd->getDataHash();
     }
+
+    ct->setData(this->_full_data_tree, this->_version);
+
     return true;
 }
 

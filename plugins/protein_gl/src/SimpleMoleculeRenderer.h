@@ -312,6 +312,6 @@ private:
 
 
 } // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol
 
 #endif // MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED

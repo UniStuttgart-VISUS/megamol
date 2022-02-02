@@ -11,8 +11,10 @@
 
 
 #include "AbstractFrontendService.hpp"
+#include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
+#include "gui_render_backend.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
@@ -20,15 +22,15 @@
 namespace megamol {
 namespace frontend {
 
+
 class GUIManager;
+
 
 class GUI_Service final : public AbstractFrontendService {
 
 public:
-    enum ImGuiRenderBackend { OPEN_GL, CPU };
-
     struct Config {
-        ImGuiRenderBackend imgui_rbnd = GUI_Service::ImGuiRenderBackend::OPEN_GL;
+        megamol::gui::GUIRenderBackend backend = megamol::gui::GUIRenderBackend::CPU;
         megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;
@@ -78,6 +80,7 @@ private:
     glm::vec2 m_window_size;
     Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
+    megamol::frontend_resources::PerformanceManager* perf_manager = nullptr;
     std::shared_ptr<megamol::gui::GUIManager> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
@@ -87,6 +90,7 @@ private:
 
     megamol::frontend_resources::GUIState m_providedStateResource;
     megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
+    megamol::frontend_resources::common_types::lua_func_type* m_exec_lua;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility(void);

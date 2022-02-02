@@ -7,9 +7,13 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Class encapsulating the results captured from single performance region. It contains a ring buffer of length
+ * buffer_length for keeping the values.
+ */
 class PerformanceHistory {
 public:
-    static const uint32_t buffer_length = 100;
+    static constexpr uint32_t buffer_length = 100;
 
     PerformanceHistory();
 
@@ -35,6 +39,7 @@ public:
         return num_samples;
     }
 
+    // copies the disjunct segments in the ring buffer into a contiguous array for draw calls
     std::array<double, buffer_length> copyHistory() const {
         std::array<double, buffer_length> ret{};
         std::copy(time_buffer.begin() + next_index, time_buffer.end(), ret.begin());
@@ -56,7 +61,6 @@ private:
 
     std::array<double, buffer_length> time_buffer{};
     int next_index = 0;
-    //int last_index = 0;
     double avg_time = 0;
     double window_total = 0;
     double window_avg = 0;
