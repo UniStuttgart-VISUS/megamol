@@ -31,7 +31,7 @@ public:
      * @param output The array holding the output
      * @param s The size of the input array in bytes
      */
-    static void Encode(const char* input, char* output, SIZE_T s);
+    static void Encode(const char* input, char* output, size_t s);
 
     /**
      * Decodes a byte array encoded with base 64 encoding.
@@ -40,7 +40,7 @@ public:
      * @param output The array holding the output
      * @param s The size of the output array in bytes
      */
-    static void Decode(const char* input, char* output, SIZE_T s);
+    static void Decode(const char* input, char* output, size_t s);
 };
 
 } // end namespace protein

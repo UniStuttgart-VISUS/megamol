@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 bool megamol::gui::ButtonWidgets::OptionButton(
-    const std::string& id, const std::string& label, bool dirty, bool read_only) {
+    ButtonStyle button_style, const std::string& id, const std::string& label, bool dirty, bool read_only) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -55,11 +55,10 @@ bool megamol::gui::ButtonWidgets::OptionButton(
     if (!read_only) {
         if (ImGui::IsItemHovered()) {
             color_back = style.Colors[ImGuiCol_ButtonHovered];
-            color_front = style.Colors[ImGuiCol_ChildBg];
         }
         if (ImGui::IsItemActive()) {
             color_back = style.Colors[ImGuiCol_ButtonActive];
-            color_front = style.Colors[ImGuiCol_TextDisabled];
+            color_front = color_front * ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
         }
     } else {
         color_back.w *= 0.5f;
@@ -68,11 +67,54 @@ bool megamol::gui::ButtonWidgets::OptionButton(
         }
     }
 
-    float thickness = button_size / 5.0f;
+    const float thickness = button_size / 5.0f;
+    const float half_thickness = thickness / 2.0f;
+
     ImVec2 center = button_start_pos + ImVec2(half_button_size, half_button_size);
     draw_list->AddRectFilled(button_start_pos, button_start_pos + rect, ImGui::ColorConvertFloat4ToU32(color_back));
-    draw_list->AddCircleFilled(center, thickness, ImGui::ColorConvertFloat4ToU32(color_front));
-    draw_list->AddCircle(center, 2.0f * thickness, ImGui::ColorConvertFloat4ToU32(color_front), 12, (thickness / 2.0f));
+
+    switch (button_style) {
+    case (ButtonStyle::POINT_CIRCLE): {
+        draw_list->AddCircleFilled(center, thickness, ImGui::ColorConvertFloat4ToU32(color_front));
+        draw_list->AddCircle(center, 2.0f * thickness, ImGui::ColorConvertFloat4ToU32(color_front), 12, half_thickness);
+    } break;
+    case (ButtonStyle::GRID): {
+        const float line_delta = button_size / 3.0f;
+        draw_list->AddLine(button_start_pos + ImVec2(line_delta, half_thickness),
+            button_start_pos + ImVec2(line_delta, button_size - half_thickness),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+        draw_list->AddLine(button_start_pos + ImVec2(2.0f * line_delta, half_thickness),
+            button_start_pos + ImVec2(2.0f * line_delta, button_size - half_thickness),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+        draw_list->AddLine(button_start_pos + ImVec2(half_thickness, line_delta),
+            button_start_pos + ImVec2(button_size - half_thickness, line_delta),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+        draw_list->AddLine(button_start_pos + ImVec2(half_thickness, 2.0f * line_delta),
+            button_start_pos + ImVec2(button_size - half_thickness, 2.0f * line_delta),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+    } break;
+    case (ButtonStyle::LINES): {
+        const float line_delta = button_size / 4.0f;
+        draw_list->AddLine(button_start_pos + ImVec2(thickness, 1.0f * line_delta),
+            button_start_pos + ImVec2(button_size - thickness, 1.0f * line_delta),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+        draw_list->AddLine(button_start_pos + ImVec2(thickness, 2.0f * line_delta),
+            button_start_pos + ImVec2(button_size - thickness, 2.0f * line_delta),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+        draw_list->AddLine(button_start_pos + ImVec2(thickness, 3.0f * line_delta),
+            button_start_pos + ImVec2(button_size - thickness, 3.0f * line_delta),
+            ImGui::ColorConvertFloat4ToU32(color_front), half_thickness);
+
+    } break;
+    case (ButtonStyle::POINTS): {
+        draw_list->AddCircleFilled(center + ImVec2(-thickness, thickness), thickness,
+            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_SeparatorActive]));
+        draw_list->AddCircleFilled(center + ImVec2(half_thickness, half_thickness), thickness,
+            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ScrollbarGrabHovered]));
+        draw_list->AddCircleFilled(center + ImVec2(-half_thickness, -thickness), thickness,
+            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]));
+    } break;
+    }
 
     ImGui::EndChild();
 
@@ -192,7 +234,8 @@ bool megamol::gui::ButtonWidgets::ExtendedModeButton(const std::string& id, bool
     ImGui::PushID(widget_id.c_str());
 
     bool retval = false;
-    megamol::gui::ButtonWidgets::OptionButton("param_mode_button", "", inout_extended_mode, false);
+    megamol::gui::ButtonWidgets::OptionButton(
+        ButtonStyle::POINT_CIRCLE, "param_mode_button", "", inout_extended_mode, false);
     if (ImGui::BeginPopupContextItem("param_mode_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         if (ImGui::MenuItem("Basic###param_mode_button_basic_mode", nullptr, !inout_extended_mode, true)) {
             inout_extended_mode = false;
@@ -282,6 +325,8 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
 
     bool retval = false;
 
+    ImGuiStyle& style = ImGui::GetStyle();
+
     ImVec4* colors = ImGui::GetStyle().Colors;
     ImVec2 p = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -325,6 +370,7 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
 
     if (!id.empty() && (id.find("###") != 0)) {
         ImGui::SameLine();
+        ImGui::SetCursorScreenPos(ImGui::GetCursorScreenPos() + ImVec2(-style.ItemInnerSpacing.x, 0.0f));
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(id.c_str());
     }
