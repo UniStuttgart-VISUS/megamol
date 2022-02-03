@@ -67,14 +67,18 @@ def listFramedata(parseResult, frame):
 
 # returns timeStamp, numLists
 def readFrameHeader(file):
+    mem = 0
     timestamp = 0.0
     if (version >= 102):
         timestamp = getFloat(f)
+        mem += 4
     numLists = getUInt(f)
-    return timestamp, numLists
+    mem +=4
+    return timestamp, numLists, mem
 
 # returns vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox
 def readListHeader(file):
+    frameMem = 0
     vertType = getByte(f)
     if (vertType >= len(vertexNames)):
         vertType = 0
@@ -83,6 +87,7 @@ def readListHeader(file):
         colType = 0
     if (vertType == 0):
         colType = 0
+    frameMem += 2
 
     listFramedata(parseResult, fi) and print("    #%u: %s, %s" % (li, vertexNames[vertType], colorNames[colType]))
     stride = vertexSizes[vertType] + colorSizes[colType]
@@ -94,23 +99,29 @@ def readListHeader(file):
     listBBox = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     if (vertType == 1 or vertType == 3 or vertType == 4):
         globalRad = getFloat(f)
+        frameMem += 4
         listFramedata(parseResult, fi) and print("        global radius: %f" % (globalRad))
 
     if (colType == 0):
         globalCol = [getByte(f) for x in range(4)]
+        frameMem += 4
         listFramedata(parseResult, fi) and print("        global color: (%u, %u, %u, %u)" % (tuple(globalCol)))
     elif (colType == 3 or colType == 7):
         intensityRange = [getFloat(f) for x in range(2)]
+        frameMem += 8
         listFramedata(parseResult, fi) and print("        intensity color range: [%f, %f]" % (tuple(intensityRange)))
 
     listNumParts = getUInt64(f)
+    frameMem += 8
     #listFramedata and print("        %Q particle%s" % countPlural(listNumParts))
     listFramedata(parseResult, fi) and print("        {0} particle{1}".format(*pluralTuple(listNumParts)))
+    frameMem += listNumParts * stride
 
     if (version >= 103):
         listBBox = [getFloat(f) for x in range(6)]
+        frameMem += 6 * 4
         listFramedata(parseResult, fi) and print("        list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
-    return vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox
+    return vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, frameMem
 
 def readParticles(number, vertType, colType, file, listIndex):
     mins = [sys.float_info.max, sys.float_info.max, sys.float_info.max]
@@ -180,10 +191,12 @@ parser.add_argument('--bboxonly', action='count', help='only print the bbox of h
 parser.add_argument('--versiononly', action='count', help='show only file version and exit')
 parser.add_argument('--dumpxyz', action='store', help='dump/convert mmpld to xyz files <DUMPXYZ>_<frame>.xyz')
 parser.add_argument('--dumpft', action='count', help='dump frame table')
+parser.add_argument('--try-recovery', action='count', help='try interpreting trailing dead data as a dangling frame')
 parseResult = parser.parse_args()
 
 specific_only = parseResult.bboxonly or parseResult.versiononly
 hideVersion = parseResult.bboxonly
+fakeFrame = False
 
 if (not specific_only):
     print("")
@@ -250,16 +263,26 @@ for filename in parseResult.inputfiles:
 
         if (f.tell() != frameTable[0]):
             print(f"warning: dead data trailing header: position after reading frame table ({f.tell()}) is not the start of the first frame ({frameTable[0]})")
+            if parseResult.v:
+                print("dead data:")
+                for i in range(frameTable[0] - f.tell()):
+                    print(hex(getByte(f)), end=' ')
+                print()
 
         if os.path.getsize(filename) != frameTable[frameCount]:
-            print(f"error: file end pointer (frameTable[{frameCount}]) in frame table inconsistent with file size ({os.path.getsize(filename)})! ", end='')
+            print(f"error: file end pointer (frameTable[{frameCount}]) in frame table inconsistent with file size ({os.path.getsize(filename)}): ", end='')
             if os.path.getsize(filename) < frameTable[frameCount]:
                 print("Data truncated.")
             if os.path.getsize(filename) > frameTable[frameCount]:
                 print("Trailing garbage.")
+                if parseResult.try_recovery:
+                    print("--> Appending hypothetical frame until the end of the file <--")
+                    fakeFrame = True
+                    frameCount += 1
+                    frameTable.append(os.path.getsize(filename))
 
         if parseResult.dumpft:
-            print("Frame Table:")
+            print(f"Frame Table{' (recovered)' if fakeFrame else ''}:")
             print("index                offset")
             sum = 0
             for i in range(len(frameTable)):
@@ -280,7 +303,10 @@ for filename in parseResult.inputfiles:
 
         for fi in range(frameCount):
             f.seek(frameTable[fi], os.SEEK_SET)
-            timeStamp, numLists = readFrameHeader(f)
+            expectedFrameSize = frameTable[fi+1] - frameTable[fi]
+            if parseResult.v:
+                print(f"jumping to frame {fi}, expecting a frame of size {expectedFrameSize}")
+            timeStamp, numLists, frameTotalMem = readFrameHeader(f)
             timeStampString = ""
             if (version >= 102):
                 timeStampString = "(%f)" % timeStamp
@@ -294,9 +320,10 @@ for filename in parseResult.inputfiles:
                     maxNumLists = numLists
             frameNumParts = 0
             for li in range(numLists):
-                vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox = readListHeader(f)
+                vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, frameMem = readListHeader(f)
                 frameNumParts += listNumParts
-
+                frameTotalMem += frameMem
+                
                 if (not parseResult.dumpxyz):
                     if (listFramedata(parseResult, fi)):
                         if (parseResult.head):
@@ -328,8 +355,10 @@ for filename in parseResult.inputfiles:
                 else:
                     f.seek(listNumParts * stride, os.SEEK_CUR)
 
-            if (f.tell() != frameTable[fi + 1]):
-                print("warning: trailing data after frame %u or frame table corrupted" % (fi))
+            if frameTotalMem != expectedFrameSize:
+                print(f"frame size {frameTotalMem} differs from expected size {expectedFrameSize} (from frameTable)")
+            # if (f.tell() != frameTable[fi + 1]):
+            #     print("warning: trailing data after frame %u or frame table corrupted" % (fi))
             if (fi == 0):
                 minNumParts = maxNumParts = frameNumParts
             else:
@@ -349,7 +378,7 @@ for filename in parseResult.inputfiles:
 
                 timeStamp, numLists = readFrameHeader(f)
                 for li in range(numLists):
-                    vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox = readListHeader(f)
+                    vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, particleMem = readListHeader(f)
                     readParticles(listNumParts, vertType, colType, f, li)
 
             accumulatedParts += frameNumParts
