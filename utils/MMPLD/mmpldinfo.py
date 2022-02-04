@@ -283,10 +283,10 @@ for filename in parseResult.inputfiles:
 
         if parseResult.dumpft:
             print(f"Frame Table{' (recovered)' if fakeFrame else ''}:")
-            print("index                offset")
+            print("index                offset                 hex")
             sum = 0
             for i in range(len(frameTable)):
-                print(f"{i:5}: {frameTable[i]:20}")
+                print(f"{i:5}: {frameTable[i]:20}  {frameTable[i]:#018x}")
                 if i < frameCount:
                     sum = sum + frameTable[i+1] - frameTable[i]
                 # else:
