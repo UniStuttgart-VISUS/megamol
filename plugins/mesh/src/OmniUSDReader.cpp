@@ -82,6 +82,7 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
 
         //open the stage and return false if stage could not be opened
         m_usd_stage = UsdStage::Open(stageUrl);
+       
         if (!m_usd_stage) {
             std::cout << "Failed to open stage" << std::endl;
             return false;
@@ -203,21 +204,17 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             MeshDataAccessCollection::IndexData mesh_indices;
             mesh_indices.data = reinterpret_cast<uint8_t*>(m_indices[current_m].data());
             mesh_indices.byte_size =
-                m_indices[current_m].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::INT);
-            mesh_indices.type = MeshDataAccessCollection::INT;
+                m_indices[current_m].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::UNSIGNED_INT);
+            mesh_indices.type = MeshDataAccessCollection::UNSIGNED_INT;
 
             std::string identifier = "mesh" + current_m;
             m_mesh_access_collection.first->addMesh(
                 identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::TRIANGLES);
             m_mesh_access_collection.second.push_back(identifier);
-            std::cout << "I'm here!!" << std::endl;
         }
         m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         m_meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         m_meta_data.m_frame_cnt = 1;
-        
-        std::cout << "I'm down here!!" << std::endl;
-
     }
     if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setMetaData(m_meta_data);
