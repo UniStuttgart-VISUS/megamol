@@ -150,7 +150,6 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
 
             m_positions[current_m].reserve(point_size * 3);
             std::cout << "reserving positions of: " << current_m << std::endl;
-         
             //Loop over triangled faces in the mesh
             for (size_t f = 0; f < vtFaceVertexCounts.size(); f++) {
                 // Check if vertex count is 3 for the face
@@ -164,7 +163,7 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
                         float vx = vtPoints[idx][0];
                         float vy = vtPoints[idx][1];
                         float vz = vtPoints[idx][2];
-
+                        
                         //Update bounding box
                         bbox[0] = std::min(bbox[0], vx);
                         bbox[1] = std::min(bbox[1], vy);
@@ -175,16 +174,18 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
 
                         //update m_indices and m_positions
                         m_indices[current_m][index_offset + v] = idx;
-                        auto current_position_ptr = &(vtPoints[idx][0]);
-                        m_positions[current_m].insert(m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
-                        std::cout << "xposition: " << m_positions[current_m][idx + 0]
-                                  << ", yposition: " << m_positions[current_m][idx + 1]
-                                  << ", zposition: " << m_positions[current_m][idx + 2] << std::endl;
-               
+                        
                     }
-                    index_offset += vtFaceVertexCounts[f];
+                    index_offset += vtFaceVertexCounts[f] ;
                     std::cout << "indexOffset: " << index_offset << std::endl;
                 }
+            }
+            for (int p = 0; p < point_size; p++) {
+                auto current_position_ptr = &(vtPoints[p][0]);
+                std::cout << "xposition: " << *current_position_ptr << ", yposition: " << *(current_position_ptr + 1)
+                          << ", zposition: " << *(current_position_ptr + 2) << std::endl;
+                m_positions[current_m].insert(
+                    m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);              
             }
             //create vector of mesh_attributes
             for (int i = 0; i < m_positions[current_m].size(); i++) {
