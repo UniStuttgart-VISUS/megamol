@@ -8,6 +8,7 @@
 - [Installation and Setup](#installation-and-setup)
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
+        - [Microsoft Windows (Command Line)](#microsoft-windows-command-line)
         - [Linux (Ubuntu)](#linux-ubuntu)
     - [Command Line Arguments](#command-line-arguments)        
     - [Configuration File](#configuration-file)
@@ -93,6 +94,22 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 
 ![CMake Windows](pics/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
+
+<!-- ---------------------------------------------------------------------- -->
+#### Microsoft Windows (Command Line)
+
+1. Make sure that [VS BuildTools](https://visualstudio.microsoft.com/de/downloads/) (under Tools for Visual Studio > Buildtools for Visual Studio) and [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/) are installed 
+2. Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
+3. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
+4. Create a new `build` directory.
+5. As generator, it is recommended to use the latest version of Visual Studio (although the compiler used is VS BuildTools) with default native compilers and for the platform x64.
+6. Next, click `Configure` a few times (until all red entries disappear).
+7. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
+8. Then click `Generate` to generate the build files.
+9. The configuration creates a `megamol.sln` file inside the build directory.
+10. Use `msbuild 'Absolute\Path\To\Megamol\build\ALL_BUILD.vcxproj' /p:configuration=debug` in *Developer PowerShell for VS 2022* to build MegaMol.
+11. Afterwards, use `msbuild 'Absolute\Path\To\Megamol\build\INSTALL.vcxproj' /p:configuration=debug` in *Developer PowerShell for VS 2022*  to create your MegaMol installation.
+12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
