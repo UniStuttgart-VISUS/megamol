@@ -9,6 +9,7 @@
 
 #include "imageseries/ImageSeries2DCall.h"
 #include "module/ImageSeriesLoader.h"
+#include "module/ImageSeriesResampler.h"
 
 namespace megamol::ImageSeries {
 
@@ -30,6 +31,8 @@ public:
 
         // Register modules
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();
+
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
 
 
         // Register calls

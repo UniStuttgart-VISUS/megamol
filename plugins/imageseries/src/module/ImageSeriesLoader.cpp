@@ -53,7 +53,9 @@ bool ImageSeriesLoader::create() {
     return true;
 }
 
-void ImageSeriesLoader::release() {}
+void ImageSeriesLoader::release() {
+    imageCache.clear();
+}
 
 bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
     if (auto call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
