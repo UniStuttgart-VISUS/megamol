@@ -104,6 +104,8 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
         // Traverse stage and save out meshes
         for (const auto& prim : range) {
             std::cout << "\n" << prim.GetPath() << std::endl;
+            std::cout << prim.GetTypeName() << std::endl;
+
 
             // Check if prim is a mesh
             if (prim.IsA<UsdGeomMesh>()) {
@@ -126,6 +128,9 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             UsdAttribute pointsAttr = geom.GetPointsAttr();
             UsdAttribute faceVertexCountsAttr = geom.GetFaceVertexCountsAttr();
             UsdAttribute faceVertexIndicesAttr = geom.GetFaceVertexIndicesAttr();
+            UsdGeomXformable::XformQuery xformquery = UsdGeomXformable::XformQuery(geom);
+            GfMatrix4d xformOps;
+            xformquery.GetLocalTransformation(&xformOps, 0.0);
             VtArray<GfVec3f> vtNormals;
             VtArray<GfVec3f> vtPoints;
             VtArray<int> vtFaceVertexCounts;
@@ -134,66 +139,80 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             pointsAttr.Get(&vtPoints);
             faceVertexCountsAttr.Get(&vtFaceVertexCounts);
             faceVertexIndicesAttr.Get(&vtFaceVertexIndices);
-            std::cout << "normals: " << vtNormals << std::endl;
-            std::cout << "points: " << vtPoints << std::endl;
-            std::cout << "faceVertexCounts: " << vtFaceVertexCounts << std::endl;
-            std::cout << "faceVertexIndices: " << vtFaceVertexIndices << std::endl;
 
             // vertex count for hole mesh
             uint64_t point_size = vtPoints.size();
        
-            //index offset for facevertexindices
-            size_t index_offset = 0;
+            
+            uint64_t indices_size = 0;
+            for (int i = 0; i < vtFaceVertexCounts.size(); i++) {
+                if (vtFaceVertexCounts[i] == 3) {
+                    indices_size+=3;
+                } else if (vtFaceVertexCounts[i] == 4) {
+                    indices_size += 6;
+                }
+            }
 
             //reserve space for vertex information
-            m_indices[current_m].resize(vtFaceVertexIndices.size());
-
+            m_indices[current_m].resize(indices_size);
             m_positions[current_m].reserve(point_size * 3);
             std::cout << "reserving positions of: " << current_m << std::endl;
+
+            //index offset for facevertexindices
+            size_t index_offset = 0;
+            size_t usd_index_offset = 0;
             //Loop over triangled faces in the mesh
             for (size_t f = 0; f < vtFaceVertexCounts.size(); f++) {
                 // Check if vertex count is 3 for the face
-                if (vtFaceVertexCounts[f] != 3) {
-                    std::cout << "NO TRIANGLE FACE" << std::endl;
-                } else {
+                if (vtFaceVertexCounts[f] == 3) {
                     // Loop over vertices in the face.
                     for (size_t v = 0; v < vtFaceVertexCounts[f]; v++) {
-                        // access to vertex
-                        int idx = vtFaceVertexIndices[index_offset + v];
-                        float vx = vtPoints[idx][0];
-                        float vy = vtPoints[idx][1];
-                        float vz = vtPoints[idx][2];
-                        
-                        //Update bounding box
-                        bbox[0] = std::min(bbox[0], vx);
-                        bbox[1] = std::min(bbox[1], vy);
-                        bbox[2] = std::min(bbox[2], vz);
-                        bbox[3] = std::max(bbox[3], vx);
-                        bbox[4] = std::max(bbox[4], vy);
-                        bbox[5] = std::max(bbox[5], vz);
-
-                        //update m_indices and m_positions
-                        m_indices[current_m][index_offset + v] = idx;
-                        
+                                  
+                        //update m_indices
+                        m_indices[current_m][index_offset + v] = vtFaceVertexIndices[usd_index_offset + v];
                     }
-                    index_offset += vtFaceVertexCounts[f] ;
-                    std::cout << "indexOffset: " << index_offset << std::endl;
+                    index_offset += 3;
+                    usd_index_offset += 3;
+                    
+                } else if (vtFaceVertexCounts[f] == 4) {
+                    // Loop over vertices in the face.
+                    
+                    //update m_indices
+                    m_indices[current_m][index_offset] = vtFaceVertexIndices[usd_index_offset];
+                    m_indices[current_m][index_offset + 1] = vtFaceVertexIndices[usd_index_offset + 1];
+                    m_indices[current_m][index_offset + 2] = vtFaceVertexIndices[usd_index_offset + 2];
+                    m_indices[current_m][index_offset + 3] = vtFaceVertexIndices[usd_index_offset + 0];
+                    m_indices[current_m][index_offset + 4] = vtFaceVertexIndices[usd_index_offset + 2];
+                    m_indices[current_m][index_offset+ 5] = vtFaceVertexIndices[usd_index_offset + 3];
+                    
+                    index_offset += 6;
+                    usd_index_offset += 4;
+                    
+                } else {
+                    std::cout << "N-GON FACE" << std::endl;
                 }
             }
+            //update m_positions
             for (int p = 0; p < point_size; p++) {
+                vtPoints[p][0] += xformOps[3][0];
+                vtPoints[p][1] += xformOps[3][1];
+                vtPoints[p][2] += xformOps[3][2];
+                float vx = vtPoints[p][0];
+                float vy = vtPoints[p][1];
+                float vz = vtPoints[p][2];
+
+                //Update bounding box
+                bbox[0] = std::min(bbox[0], vx);
+                bbox[1] = std::min(bbox[1], vy);
+                bbox[2] = std::min(bbox[2], vz);
+                bbox[3] = std::max(bbox[3], vx);
+                bbox[4] = std::max(bbox[4], vy);
+                bbox[5] = std::max(bbox[5], vz);
                 auto current_position_ptr = &(vtPoints[p][0]);
-                std::cout << "xposition: " << *current_position_ptr << ", yposition: " << *(current_position_ptr + 1)
-                          << ", zposition: " << *(current_position_ptr + 2) << std::endl;
                 m_positions[current_m].insert(
-                    m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);              
+                    m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
             }
-            //create vector of mesh_attributes
-            for (int i = 0; i < m_positions[current_m].size(); i++) {
-                std::cout << "position: " << m_positions[current_m][i] << std::endl;
-            }
-            for (int i = 0; i < m_indices[current_m].size(); i++) {
-                std::cout << "index: " << m_indices[current_m][i] << std::endl;
-            }
+
             const auto pos_ptr = m_positions[current_m].data();
             std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
             // create vertexattribute for positions
