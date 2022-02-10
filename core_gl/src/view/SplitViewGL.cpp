@@ -212,10 +212,12 @@ core::view::ImageWrapper view::SplitViewGL::Render(double time, double instanceT
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
 
+    _fboFull->bind();
     // Draw the splitter through clearing without overplotting.
     auto splitColour = this->_splitColourSlot.Param<core::param::ColorParam>()->Value();
     ::glClearColor(splitColour[0], splitColour[1], splitColour[2], 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     renderAndBlit(_fboFull, this->_fbo1, this->render1(), this->_clientArea1);
     renderAndBlit(_fboFull, this->_fbo2, this->render2(), this->_clientArea2);
