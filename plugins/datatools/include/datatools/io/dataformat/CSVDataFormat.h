@@ -22,12 +22,12 @@ struct CSVFrame : AbstractFrame {
     std::vector<CSVColumnInfo> ColumnInfos;
     std::vector<float> Values;
 
-    bool Read(std::ifstream& io) override {
-        return true;
-    }
-    bool Write(std::ofstream& io) override {
-        return true;
-    }
+    //bool Read(std::ifstream& io) override {
+    //    return true;
+    //}
+    //bool Write(std::ofstream& io) override {
+    //    return true;
+    //}
 };
 
 using CSVDataFormat = AbstractDataFormat<CSVFrame>;
