@@ -14,6 +14,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "protein/Color.h"
 #include "vislib/RawStorage.h"
 
 namespace megamol {
@@ -43,9 +45,24 @@ private:
 
     core::CalleeSlot outDataSlot;
     core::CallerSlot inDataSlot;
+    megamol::core::param::ParamSlot colorTableFileParam_;
+    megamol::core::param::ParamSlot coloringModeParam0_;
+    megamol::core::param::ParamSlot coloringModeParam1_;
+    megamol::core::param::ParamSlot cmWeightParam_;
+    megamol::core::param::ParamSlot minGradColorParam_;
+    megamol::core::param::ParamSlot midGradColorParam_;
+    megamol::core::param::ParamSlot maxGradColorParam_;
+    megamol::core::param::ParamSlot specialColorParam_;
+
+    protein::Color::ColoringMode curColoringMode0_;
+    protein::Color::ColoringMode curColoringMode1_;
+
+    vislib::Array<float> colorArray_;
+    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable_;
+    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors_;
+
     SIZE_T inHash, outHash;
     vislib::RawStorage data;
-    float colMin, colMax;
     int frameOld;
 };
 
