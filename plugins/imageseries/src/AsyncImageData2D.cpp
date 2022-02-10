@@ -35,13 +35,23 @@ void AsyncImageData2D::setImageData(std::shared_ptr<const BitmapImage> imageData
     if (!available) {
         this->imageData = imageData;
         available = true;
+        conditionVariable.notify_all();
     } else {
         // TODO log a warning when trying to overwrite existing async image data
     }
 }
 
-std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::getImageData() const {
+std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::tryGetImageData() const {
     return available ? imageData : nullptr;
+}
+
+std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::getImageData() const {
+    if (!available) {
+        // TODO once C++20 is available, use std::atomic::wait() instead
+        std::unique_lock<std::mutex> lock(mutex);
+        conditionVariable.wait(lock, [this]() { return isFinished(); });
+    }
+    return imageData;
 }
 
 } // namespace megamol::ImageSeries

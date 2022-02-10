@@ -8,6 +8,8 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "imageseries/ImageSeries2DCall.h"
+
+#include "module/ImageSeriesFlowPreprocessor.h"
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
 
@@ -29,14 +31,13 @@ public:
     // Registers modules and calls
     void registerClasses() override {
 
-        // Register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();
-
-        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
-
-
         // Register calls
         this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeries2DCall>();
+
+        // Register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowPreprocessor>();
     }
 };
 
