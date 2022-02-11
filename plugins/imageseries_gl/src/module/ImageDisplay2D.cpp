@@ -24,7 +24,6 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
 }
 
 bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
-    // TODO reuse textures instead of recreating them
     // TODO handle channel layouts
     glowl::TextureLayout textureLayout;
 
@@ -66,7 +65,15 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     textureLayout.width = image.Width();
     textureLayout.height = image.Height();
     textureLayout.levels = 1;
-    texture = std::make_unique<glowl::Texture2D>("ImageSeriesRenderer", textureLayout, image.PeekData());
+
+    if (texture && textureLayoutEquals(texture->getTextureLayout(), textureLayout)) {
+        // Reuse texture
+        glTextureSubImage2D(texture->getName(), 0, 0, 0, textureLayout.width, textureLayout.height,
+            textureLayout.format, textureLayout.type, image.PeekData());
+    } else {
+        // Recreate texture
+        texture = std::make_unique<glowl::Texture2D>("ImageSeriesRenderer", textureLayout, image.PeekData());
+    }
 
     return true;
 }
@@ -103,6 +110,12 @@ bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> frameb
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
+}
+
+bool ImageDisplay2D::textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2) {
+    return layout1.depth == layout2.depth && layout1.type == layout2.type &&
+           layout1.internal_format == layout2.internal_format && layout1.levels == layout2.levels &&
+           layout1.format == layout2.format && layout1.width == layout2.width && layout1.height == layout2.height;
 }
 
 } // namespace megamol::ImageSeries::GL

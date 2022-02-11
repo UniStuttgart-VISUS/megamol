@@ -30,6 +30,7 @@ public:
 
 private:
     bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix);
+    static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
 
     std::shared_ptr<glowl::GLSLProgram> shader;
     std::unique_ptr<glowl::Texture2D> texture;
