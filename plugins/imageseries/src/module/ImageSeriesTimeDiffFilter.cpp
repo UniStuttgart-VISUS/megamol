@@ -75,11 +75,13 @@ bool ImageSeriesTimeDiffFilter::getDataCallback(core::Call& caller) {
                     frame.image = requestFrame(getInputCaller, timestamp + i / inputMeta.framerate).imageData;
                     frame.weight = i < 0 ? -1 : (i > 0 ? 1 : 0);
                     frame.certainty = frameCount - std::abs(i) + 1;
+                    frame.primary = (i == 0);
 
                     if (!filterParams.frames.empty() && filterParams.frames.back().image == frame.image) {
                         // Optimization: merge identical frames
                         filterParams.frames.back().weight += frame.weight;
                         filterParams.frames.back().certainty += frame.certainty;
+                        filterParams.frames.back().primary |= frame.primary;
                     } else {
                         filterParams.frames.push_back(frame);
                     }

@@ -17,6 +17,7 @@ public:
             AsyncImagePtr image;
             float weight = 1.f;
             float certainty = 1.f;
+            bool primary = false;
         };
         std::vector<Frame> frames;
         AsyncImagePtr reference;

@@ -18,7 +18,7 @@ TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
     float totalWeight = 0;
     float totalCertainty = 0;
     for (const auto& frame : input.frames) {
-        totalWeight += frame.weight;
+        totalWeight += std::abs(frame.weight);
         totalCertainty += frame.certainty;
     }
 
@@ -37,14 +37,17 @@ TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
 
     // Create output image
     auto result =
-        std::make_shared<Image>(reference->Width(), reference->Height(), 2, Image::ChannelType::CHANNELTYPE_BYTE);
+        std::make_shared<Image>(reference->Width(), reference->Height(), 4, Image::ChannelType::CHANNELTYPE_BYTE);
 
     std::size_t size = result->Width() * result->Height();
     auto* dataOut = result->PeekDataAs<std::uint8_t>();
     for (std::size_t i = 0; i < size; i++) {
         // Initialize weights to 127 and certainty to 0
-        dataOut[i * 2] = 127;
-        dataOut[i * 2 + 1] = 0;
+        dataOut[i * 4] = 127;
+        dataOut[i * 4 + 1] = 0;
+
+        // Add original reference image
+        dataOut[i * 4 + 2] = dataRefIn[i];
     }
 
     for (const auto& frame : input.frames) {
@@ -70,14 +73,19 @@ TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
         }
 
         const auto* dataFrameIn = image->PeekDataAs<std::uint8_t>();
-        auto* dataOut = result->PeekDataAs<std::uint8_t>();
 
-        // Apply threshold to each pixel
         for (std::size_t i = 0; i < size; i++) {
             // Mismatch: add weight. Match: increase certainty.
             bool match = dataRefIn[i] == dataFrameIn[i];
-            dataOut[i * 2] += match ? 0 : weight;
-            dataOut[i * 2 + 1] += match ? certainty : 0;
+            dataOut[i * 4] += match ? 0 : weight;
+            dataOut[i * 4 + 1] += match ? certainty : 0;
+        }
+
+        // Copy primary frame to last channel
+        if (frame.primary) {
+            for (std::size_t i = 0; i < size; i++) {
+                dataOut[i * 4 + 3] = dataFrameIn[i];
+            }
         }
     }
 

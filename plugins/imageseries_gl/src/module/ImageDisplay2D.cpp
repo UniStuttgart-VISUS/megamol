@@ -113,9 +113,9 @@ bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> frameb
 }
 
 bool ImageDisplay2D::textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2) {
-    return layout1.depth == layout2.depth && layout1.type == layout2.type &&
-           layout1.internal_format == layout2.internal_format && layout1.levels == layout2.levels &&
-           layout1.format == layout2.format && layout1.width == layout2.width && layout1.height == layout2.height;
+    return layout1.type == layout2.type && layout1.internal_format == layout2.internal_format &&
+           layout1.levels == layout2.levels && layout1.format == layout2.format && layout1.width == layout2.width &&
+           layout1.height == layout2.height;
 }
 
 } // namespace megamol::ImageSeries::GL
