@@ -8,6 +8,7 @@
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
 using Log = megamol::core::utility::log::Log;
+using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;
 
 namespace megamol::ImageSeries {
 
@@ -34,18 +35,22 @@ ImageSeriesResampler::ImageSeriesResampler()
     MakeSlotAvailable(&getDataCallee);
 
     keyTimeInput1Param << new core::param::FloatParam(0);
+    keyTimeInput1Param.Parameter()->SetGUIPresentation(Presentation::Slider);
     keyTimeInput1Param.SetUpdateCallback(&ImageSeriesResampler::timestampChangedCallback);
     MakeSlotAvailable(&keyTimeInput1Param);
 
     keyTimeReference1Param << new core::param::FloatParam(0);
+    keyTimeReference1Param.Parameter()->SetGUIPresentation(Presentation::Slider);
     keyTimeReference1Param.SetUpdateCallback(&ImageSeriesResampler::timestampChangedCallback);
     MakeSlotAvailable(&keyTimeReference1Param);
 
     keyTimeInput2Param << new core::param::FloatParam(1);
+    keyTimeInput2Param.Parameter()->SetGUIPresentation(Presentation::Slider);
     keyTimeInput2Param.SetUpdateCallback(&ImageSeriesResampler::timestampChangedCallback);
     MakeSlotAvailable(&keyTimeInput2Param);
 
     keyTimeReference2Param << new core::param::FloatParam(1);
+    keyTimeReference2Param.Parameter()->SetGUIPresentation(Presentation::Slider);
     keyTimeReference2Param.SetUpdateCallback(&ImageSeriesResampler::timestampChangedCallback);
     MakeSlotAvailable(&keyTimeReference2Param);
 
