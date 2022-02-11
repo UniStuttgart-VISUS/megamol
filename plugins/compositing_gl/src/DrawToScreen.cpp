@@ -73,7 +73,7 @@ bool megamol::compositing::DrawToScreen::create() {
         std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
 
     glowl::TextureLayout color_tx_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
-    std::array<uint8_t, 4> dummy_color_data = {0,0,0,0};
+    std::array<uint8_t, 4> dummy_color_data = {0, 0, 0, 0};
     m_dummy_depth_tx =
         std::make_shared<glowl::Texture2D>("DrawToScreen_dummyColor", color_tx_layout, dummy_color_data.data());
 
