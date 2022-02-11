@@ -12,6 +12,7 @@
 #include "module/ImageSeriesFlowPreprocessor.h"
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
+#include "module/ImageSeriesTimeDiffFilter.h"
 
 namespace megamol::ImageSeries {
 
@@ -38,6 +39,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowPreprocessor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimeDiffFilter>();
     }
 };
 
