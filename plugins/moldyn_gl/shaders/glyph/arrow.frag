@@ -67,7 +67,7 @@ void main() {
     float length_cylinder = absradii.x * radius_scaling;
     float x_max_cylinder = length_cylinder / 2.0;
     float x_min_cylinder = -x_max_cylinder;
-    // shift cam to the left, so that middle of cylinder = vec3(0,0,0)
+    // shift cam to the left, so that end of cylinder = start of cone = (0,0,0)
     vec3 cpos = cam_pos - vec3(x_max_cylinder, 0.0, 0.0);
 
 
@@ -171,16 +171,12 @@ void main() {
     vec4 ix = cpos.xxxx + ray.xxxx * lambda;
 
     // is near cylinder hit in bounds?
-    //invalid.x = invalid.x || (ix.x < TIP_LEN) || (ix.x > CYL_LEN);
     invalid.x = invalid.x || (ix.x > 0.0) || (ix.x < -CYL_LEN);
     // is far cone hit in bounds and do we hit the disk on the cone side?
-    //invalid.y = invalid.y || (ix.y < 0.0) || (ix.y > TIP_LEN);
     invalid.y = invalid.y || !(((ix.y < TIP_LEN) || (ix.w < 0.0)) && (ix.y > 0.0));
     // is far cylinder hit in bounds and do we hit the disk on the left side?
-    //invalid.z = invalid.z || !(((ix.z > TIP_LEN) || (ix.x > CYL_LEN)) && (ix.z < CYL_LEN));
     invalid.z = invalid.z || !(((ix.z < 0.0) || (ix.x < -CYL_LEN)) && (ix.z > -CYL_LEN));
     // is near cone in bounds?
-    //invalid.w = invalid.w || !((ix.w > 0.0) && (ix.w < TIP_LEN));
     invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > TIP_LEN);
 
     if (invalid.x && invalid.y && invalid.z && invalid.w) {
@@ -191,11 +187,9 @@ void main() {
 
     // cone
     if (!invalid.w) {
-        //if(lambda.w < lambda.x) {
-            invalid.xyz = bvec3(true, true, true);
-            intersection = vec3(0.0, 0.0, 1.0);//cpos.xyz + (ray * lambda.w);
-            normal = normalize(vec3(-TIP_RAD / TIP_LEN, normalize(intersection.yz)));
-        //}
+        invalid.xyz = bvec3(true, true, true);
+        intersection = vec3(0.0, 0.0, 1.0);//cpos.xyz + (ray * lambda.w);
+        normal = normalize(vec3(-TIP_RAD / TIP_LEN, normalize(intersection.yz)));
     }
     // cylinder
     if (!invalid.x) {
@@ -212,7 +206,7 @@ void main() {
     }
     // cone disk
     if (!invalid.y) {
-        lambda.w = (CYL_LEN_HALF - cpos.x) / ray.x;
+        lambda.w = (0.0 - cpos.x) / ray.x;
         intersection = cpos.xyz + (ray * lambda.w);
         float pyth = dot(intersection.yz, intersection.yz);
         if(pyth > radius_cone * radius_cone) {
@@ -226,8 +220,8 @@ void main() {
 
 
     // TODO: adjust dir_color
-    //albedo_out = vec4(intersection, 1.0);
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
+    albedo_out = vec4(intersection, 1.0);
+    //albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
     // TODO: adjust normal, transformed_normal is not correct
     normal_out = normal;
     //depth_out = gl_FragCoord.z;
