@@ -27,7 +27,7 @@ void main() {
 
     // transform fragment coordinates from view coordinates to object coordinates.
     coord = mvp_i * coord;
-    // todo: correct order? doesnt /w need to be after inverse(projection)?
+    // TODO: correct order? doesnt /w need to be after inverse(projection)?
     coord /= coord.w;
     coord -= obj_pos; // ... and move
 

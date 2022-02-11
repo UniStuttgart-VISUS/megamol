@@ -17,10 +17,11 @@ void main() {
     uint face = gl_InstanceID % 3;
     uint corner = gl_VertexID;
     vec3 normal = cube_face_normals[face];
+    vec3 cylinder_axis = cube_face_normals[0];
     vec4 corner_pos = vec4(cube_faces[face][corner], 0.0);
 
     vec3 radii = vec3(rad_array[inst].x, rad_array[inst].y, rad_array[inst].z); //rad[inst];
-    // check radii if they are below the minimum
+    // need a minimum radius to avoid rendering artifacts
     radii.x = radii.x < min_radius ? min_radius : radii.x;
     radii.y = radii.y < min_radius ? min_radius : radii.y;
     radii.z = radii.z < min_radius ? min_radius : radii.z;

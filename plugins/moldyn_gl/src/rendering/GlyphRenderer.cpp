@@ -1,7 +1,7 @@
 /*
  * GlyphRenderer.cpp
  *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2022 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -38,15 +38,17 @@ using namespace megamol::moldyn_gl::rendering;
 GlyphRenderer::GlyphRenderer(void)
         : core_gl::view::Renderer3DModuleGL()
         , m_get_data_slot("getData", "The slot to fetch the data")
-        , m_get_tf_slot("getTF", "the slot for the transfer function")
-        , m_get_clip_plane_slot("getClipPlane", "the slot for the clip plane")
-        , m_read_flags_slot("readFlags", "the slot for reading the selection flags")
-        , m_glyph_param("glyph", "which glyph to render")
-        , m_scale_param("scaling", "scales the glyph radii")
+        , m_get_tf_slot("getTF", "The slot for the transfer function")
+        , m_get_clip_plane_slot("getClipPlane", "The slot for the clip plane")
+        , m_read_flags_slot("readFlags", "The slot for reading the selection flags")
+        , m_glyph_param("glyph", "Which glyph to render")
+        , m_scale_param("scaling", "TODO: scales the box??")
+        , m_radius_scale_param("radius_scaling", "scales the glyph radii")
+        , m_length_filter_param("lengthFilter", "Filters the arrows by length")
         , m_color_interpolation_param(
-              "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)")
+              "colorInterpolation", "Interpolate between directional coloring (0) and glyph color (1)")
         , m_min_radius_param("minRadius", "Sets the minimum radius length. Applied to each axis.")
-        , m_color_mode_param("colorMode", "switch between global glyph and per axis color") {
+        , m_color_mode_param("colorMode", "Switch between global glyph and per axis color") {
 
     this->m_get_data_slot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->m_get_data_slot);
@@ -68,8 +70,14 @@ GlyphRenderer::GlyphRenderer(void)
     this->m_glyph_param << gp;
     this->MakeSlotAvailable(&this->m_glyph_param);
 
-    m_scale_param << new param::FloatParam(1.0f, 0.0, 100.0f);
+    m_scale_param << new param::FloatParam(1.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->m_scale_param);
+
+    m_radius_scale_param << new param::FloatParam(1.0f, 0.0f, 100.0f, 0.1f);
+    this->MakeSlotAvailable(&this->m_radius_scale_param);
+
+    m_length_filter_param << new param::FloatParam(0.0f, 0.0f);
+    this->MakeSlotAvailable(&this->m_length_filter_param);
 
     m_color_interpolation_param << new param::FloatParam(1.0f, 0.0, 1.0f);
     this->MakeSlotAvailable(&this->m_color_interpolation_param);
@@ -95,11 +103,10 @@ bool GlyphRenderer::create(void) {
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
-    bool retVal = true;
-    // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
-    // this->m_ellipsoid_shader);
-    retVal = retVal && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->m_box_shader);
-    retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->m_ellipsoid_shader);
+    bool ret_val = true;
+    ret_val = ret_val && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->m_box_shader);
+    ret_val = ret_val && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->m_ellipsoid_shader);
+    ret_val = ret_val && this->makeShader("glyph::arrow_vertex", "glyph::arrow_fragment", this->m_arrow_shader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->m_grey_tf);
@@ -112,33 +119,29 @@ bool GlyphRenderer::create(void) {
     glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
 
-
-    float min = m_min_radius_param.Param<param::FloatParam>()->MinValue();
-    float max = m_min_radius_param.Param<param::FloatParam>()->MaxValue();
-
-    return retVal;
+    return ret_val;
 }
 
 bool GlyphRenderer::makeShader(
-    std::string vertexName, std::string fragmentName, vislib_gl::graphics::gl::GLSLShader& shader) {
+    std::string vertex_name, std::string fragment_name, vislib_gl::graphics::gl::GLSLShader& shader) {
     using namespace megamol::core::utility::log;
     using namespace vislib_gl::graphics::gl;
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
+    ShaderSource vert_src;
+    ShaderSource frag_src;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource(vertexName.c_str(), vertSrc)) {
+    if (!ssf->MakeShaderSource(vertex_name.c_str(), vert_src)) {
         Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
+            Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertex_name.c_str());
         return false;
     }
-    if (!ssf->MakeShaderSource(fragmentName.c_str(), fragSrc)) {
+    if (!ssf->MakeShaderSource(fragment_name.c_str(), frag_src)) {
         Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
+            Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragment_name.c_str());
         return false;
     }
     try {
-        if (!shader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+        if (!shader.Create(vert_src.Code(), vert_src.Count(), frag_src.Code(), frag_src.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "GlyphRenderer: unable to compile shader: unknown error\n");
             return false;
@@ -163,10 +166,10 @@ bool GlyphRenderer::makeShader(
 
 bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    auto* epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
-    if ((epdc != NULL) && ((*epdc)(1))) {
-        call.SetTimeFramesCount(epdc->FrameCount());
-        call.AccessBoundingBoxes() = epdc->AccessBoundingBoxes();
+    auto* rhs_epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
+    if ((rhs_epdc != NULL) && ((*rhs_epdc)(1))) {
+        call.SetTimeFramesCount(rhs_epdc->FrameCount());
+        call.AccessBoundingBoxes() = rhs_epdc->AccessBoundingBoxes();
     } else {
         call.SetTimeFramesCount(1);
         call.AccessBoundingBoxes().Clear();
@@ -175,21 +178,23 @@ bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 void GlyphRenderer::release(void) {
+    // TODO: maybe use smart_ptr instead
     this->m_box_shader.Release();
     this->m_ellipsoid_shader.Release();
+    this->m_arrow_shader.Release();
     glDeleteTextures(1, &this->m_grey_tf);
 }
 
-bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::EllipsoidalParticleDataCall* edc) {
+bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::EllipsoidalParticleDataCall* rhs_edc) {
 
-    if (this->m_last_hash != edc->DataHash() || this->m_last_frame_id != edc->FrameID()) {
-        this->m_position_buffers.reserve(edc->GetParticleListCount());
-        this->m_radius_buffers.reserve(edc->GetParticleListCount());
-        this->m_direction_buffers.reserve(edc->GetParticleListCount());
-        this->m_color_buffers.reserve(edc->GetParticleListCount());
+    if (this->m_last_hash != rhs_edc->DataHash() || this->m_last_frame_id != rhs_edc->FrameID()) {
+        this->m_position_buffers.reserve(rhs_edc->GetParticleListCount());
+        this->m_radius_buffers.reserve(rhs_edc->GetParticleListCount());
+        this->m_direction_buffers.reserve(rhs_edc->GetParticleListCount());
+        this->m_color_buffers.reserve(rhs_edc->GetParticleListCount());
         
-        for (uint32_t x = 0; x < edc->GetParticleListCount(); ++x) {
-            auto& l = edc->AccessParticles(x);
+        for (uint32_t x = 0; x < rhs_edc->GetParticleListCount(); ++x) {
+            auto& l = rhs_edc->AccessParticles(x);
             this->m_position_buffers.emplace_back(utility::SSBOBufferArray("position_buffer" + std::to_string(x)));
             this->m_radius_buffers.emplace_back(utility::SSBOBufferArray("radius_buffer" + std::to_string(x)));
             this->m_direction_buffers.emplace_back(utility::SSBOBufferArray("direction_buffer" + std::to_string(x)));
@@ -288,35 +293,35 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
                 l.GetCount(), num_items_per_chunk,
                 [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
         }
-        this->m_last_hash = edc->DataHash();
-        this->m_last_frame_id = edc->FrameID();
+        this->m_last_hash = rhs_edc->DataHash();
+        this->m_last_frame_id = rhs_edc->FrameID();
     }
     return true;
 }
 
 bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    auto* epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
-    if (epdc == nullptr)
+    auto* rhs_epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
+    if (rhs_epdc == nullptr)
         return false;
 
-    epdc->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*epdc)(1))
+    rhs_epdc->SetFrameID(static_cast<int>(call.Time()));
+    if (!(*rhs_epdc)(1))
         return false;
 
-    epdc->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*epdc)(0))
+    rhs_epdc->SetFrameID(static_cast<int>(call.Time()));
+    if (!(*rhs_epdc)(0))
         return false;
 
-    if (!this->validateData(epdc))
+    if (!this->validateData(rhs_epdc))
         return false;
 
-    auto* tfc = this->m_get_tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
-    auto* flagsc = this->m_read_flags_slot.CallAs<core_gl::FlagCallRead_GL>();
-    bool use_flags = (flagsc != nullptr);
+    auto* rhs_tfc = this->m_get_tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto* rhs_flagsc = this->m_read_flags_slot.CallAs<core_gl::FlagCallRead_GL>();
+    bool use_flags = (rhs_flagsc != nullptr);
 
     bool use_clip = false;
-    auto clipc = this->m_get_clip_plane_slot.CallAs<view::CallClipPlane>();
-    if (clipc != nullptr && (*clipc)(0)) {
+    auto rhs_clipc = this->m_get_clip_plane_slot.CallAs<view::CallClipPlane>();
+    if (rhs_clipc != nullptr && (*rhs_clipc)(0)) {
         use_clip = true;
     }
 
@@ -333,8 +338,8 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     view::Camera cam = call.GetCamera();
-    auto viewTemp = cam.getViewMatrix();
-    auto projTemp = cam.getProjectionMatrix();
+    auto view_temp = cam.getViewMatrix();
+    auto proj_temp = cam.getProjectionMatrix();
     auto cam_pos = cam.get<view::Camera::Pose>().position;
 
     // todo...
@@ -345,19 +350,19 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     int w = call.GetFramebuffer()->getWidth();
     int h = call.GetFramebuffer()->getHeight();
-    glm::vec4 viewportStuff;
-    viewportStuff[0] = 0.0f;
-    viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(w);
-    viewportStuff[3] = static_cast<float>(h);
-    if (viewportStuff[2] < 1.0f)
-        viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f)
-        viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
+    glm::vec4 viewport_stuff;
+    viewport_stuff[0] = 0.0f;
+    viewport_stuff[1] = 0.0f;
+    viewport_stuff[2] = static_cast<float>(w);
+    viewport_stuff[3] = static_cast<float>(h);
+    if (viewport_stuff[2] < 1.0f)
+        viewport_stuff[2] = 1.0f;
+    if (viewport_stuff[3] < 1.0f)
+        viewport_stuff[3] = 1.0f;
+    viewport_stuff[2] = 2.0f / viewport_stuff[2];
+    viewport_stuff[3] = 2.0f / viewport_stuff[3];
 
-    glm::mat4 mv_matrix = viewTemp, p_matrix = projTemp;
+    glm::mat4 mv_matrix = view_temp, p_matrix = proj_temp;
     glm::mat4 mvp_matrix = p_matrix * mv_matrix;
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
@@ -371,7 +376,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         shader = &this->m_ellipsoid_shader;
         break;
     case Glyph::ARROW:
-        shader = &this->m_ellipsoid_shader;
+        shader = &this->m_arrow_shader;
         break;
     case Glyph::SUPERQUADRIC:
         shader = &this->m_ellipsoid_shader;
@@ -381,20 +386,23 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
     shader->Enable();
 
-    glUniform4fv(shader->ParameterLocation("view_attr"), 1, glm::value_ptr(viewportStuff));
+    glUniform4fv(shader->ParameterLocation("view_attr"), 1, glm::value_ptr(viewport_stuff));
     glUniformMatrix4fv(shader->ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->ParameterLocation("mv_i"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
     glUniformMatrix4fv(shader->ParameterLocation("mvp_t"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("mvp_i"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(cam_pos));
     glUniform1f(shader->ParameterLocation("scaling"), this->m_scale_param.Param<param::FloatParam>()->Value());
+    glUniform1f(shader->ParameterLocation("radius_scaling"), this->m_radius_scale_param.Param<param::FloatParam>()->Value());
     glUniform1f(shader->ParameterLocation("min_radius"), this->m_min_radius_param.Param<param::FloatParam>()->Value());
     glUniform1f(shader->ParameterLocation("color_interpolation"),
         this->m_color_interpolation_param.Param<param::FloatParam>()->Value());
+    glUniform1f(shader->ParameterLocation("length_filter"), this->m_length_filter_param.Param<param::FloatParam>()->Value());
 
     uint32_t num_total_glyphs = 0;
     uint32_t curr_glyph_offset = 0;
-    for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
-        num_total_glyphs += epdc->AccessParticles(i).GetCount();
+    for (unsigned int i = 0; i < rhs_epdc->GetParticleListCount(); i++) {
+        num_total_glyphs += rhs_epdc->AccessParticles(i).GetCount();
     }
 
     unsigned int fal = 0;
@@ -402,8 +410,8 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glEnable(GL_CLIP_DISTANCE0);
     }
     if (use_flags) {
-        (*flagsc)(core_gl::FlagCallRead_GL::CallGetData);
-        auto flags = flagsc->getData();
+        (*rhs_flagsc)(core_gl::FlagCallRead_GL::CallGetData);
+        auto flags = rhs_flagsc->getData();
         //if (flags->flags->getByteSize() / sizeof(core::FlagStorage::FlagVectorType) < num_total_glyphs) {
         //    megamol::core::utility::log::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");
         //    return false;
@@ -420,43 +428,43 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform4f(shader->ParameterLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
 
     if (use_clip) {
-        auto clip_point_coords = clipc->GetPlane().Point();
-        auto clip_normal_coords = clipc->GetPlane().Normal();
+        auto clip_point_coords = rhs_clipc->GetPlane().Point();
+        auto clip_normal_coords = rhs_clipc->GetPlane().Normal();
         glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
         glm::vec3 nr(clip_normal_coords.X(), clip_normal_coords.Y(), clip_normal_coords.Z());
 
-        std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
-            clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
+        std::array<float, 4> clip_data = {rhs_clipc->GetPlane().Normal().X(), rhs_clipc->GetPlane().Normal().Y(),
+            rhs_clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
         glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
-        auto c = clipc->GetColour();
+        auto c = rhs_clipc->GetColour();
         /*glUniform4f(shader->ParameterLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
             static_cast<float>(c[1]) / 255.f, static_cast<float>(c[2]) / 255.f, static_cast<float>(c[3]) / 255.f);*/
     }
 
-    for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
+    for (unsigned int i = 0; i < rhs_epdc->GetParticleListCount(); i++) {
 
-        auto& elParts = epdc->AccessParticles(i);
+        auto& el_parts = rhs_epdc->AccessParticles(i);
 
-        if (elParts.GetCount() == 0 || elParts.GetQuatData() == nullptr || elParts.GetRadiiData() == nullptr) {
-            curr_glyph_offset += elParts.GetCount();
+        if (el_parts.GetCount() == 0 || el_parts.GetQuatData() == nullptr || el_parts.GetRadiiData() == nullptr) {
+            curr_glyph_offset += el_parts.GetCount();
             continue;
         }
 
         uint32_t options = 0;
 
-        bool bindColor = true;
-        switch (elParts.GetColourDataType()) {
+        bool bind_color = true;
+        switch (el_parts.GetColourDataType()) {
         case geocalls::EllipsoidalParticleDataCall::Particles::COLDATA_NONE: {
             options = GlyphOptions::USE_GLOBAL;
-            const auto gc = elParts.GetGlobalColour();
+            const auto gc = el_parts.GetGlobalColour();
             const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
                 static_cast<float>(gc[2]) / 255.0f, static_cast<float>(gc[3]) / 255.0f};
             glUniform4fv(shader->ParameterLocation("global_color"), 1, gcf.data());
-            bindColor = false;
+            bind_color = false;
         } break;
         case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
             continue;
             break;
         case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
@@ -470,13 +478,13 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             // these should have been converted to vec4 colors with only a red channel for I
             options = GlyphOptions::USE_TRANSFER_FUNCTION;
             glActiveTexture(GL_TEXTURE0);
-            if (tfc == nullptr) {
+            if (rhs_tfc == nullptr) {
                 glBindTexture(GL_TEXTURE_1D, this->m_grey_tf);
-                glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
-                    elParts.GetMaxColourIndexValue());
-            } else if ((*tfc)(0)) {
-                glBindTexture(GL_TEXTURE_1D, tfc->OpenGLTexture());
-                glUniform2fv(shader->ParameterLocation("tf_range"), 1, tfc->Range().data());
+                glUniform2f(shader->ParameterLocation("tf_range"), el_parts.GetMinColourIndexValue(),
+                    el_parts.GetMaxColourIndexValue());
+            } else if ((*rhs_tfc)(0)) {
+                glBindTexture(GL_TEXTURE_1D, rhs_tfc->OpenGLTexture());
+                glUniform2fv(shader->ParameterLocation("tf_range"), 1, rhs_tfc->Range().data());
                 //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
                 //    elParts.GetMaxColourIndexValue());
             } else {
@@ -488,11 +496,11 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             break;
         case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
             continue;
             break;
         default:
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
             continue;
             break;
         }
@@ -504,16 +512,16 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             options = options | GlyphOptions::USE_PER_AXIS;
         glUniform1ui(shader->ParameterLocation("options"), options);
 
-        switch (elParts.GetVertexDataType()) {
+        switch (el_parts.GetVertexDataType()) {
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
             continue;
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             // anything to do...?
             break;
         case geocalls::EllipsoidalParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
             continue;
             break;
         default:
@@ -525,23 +533,22 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         auto& the_rad = m_radius_buffers[i];
         auto& the_col = m_color_buffers[i];
 
-        const auto numChunks = the_pos.GetNumChunks();
-        for (GLuint x = 0; x < numChunks; ++x) {
-            const auto actualItems = the_pos.GetNumItems(x);
+        const auto num_chunks = the_pos.GetNumChunks();
+        for (GLuint x = 0; x < num_chunks; ++x) {
+            const auto actual_items = the_pos.GetNumItems(x);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x));
-            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x), 0, actualItems * sizeof(float) * 3);
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, the_pos.GetHandle(x), 0, actual_items * sizeof(float) * 3);
 
-            // TODO: what is in direction_buffer?
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x));
-            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x), 0, actualItems * sizeof(float) * 4);
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, the_quat.GetHandle(x), 0, actual_items * sizeof(float) * 4);
 
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, the_rad.GetHandle(x));
-            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 2, the_rad.GetHandle(x), 0, actualItems * sizeof(float) * 3);
+            glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 2, the_rad.GetHandle(x), 0, actual_items * sizeof(float) * 3);
 
-            if (bindColor) {
+            if (bind_color) {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x));
                 glBindBufferRange(
-                    GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x), 0, actualItems * sizeof(float) * 4);
+                    GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x), 0, actual_items * sizeof(float) * 4);
             }
 
             if (use_flags) {
@@ -553,23 +560,23 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
                 //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
                 // but just drawing the front-facing triangles, that's better
-                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             case Glyph::ELLIPSOID:
-                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             case Glyph::ARROW:
-                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             case Glyph::SUPERQUADRIC:
-                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actual_items));
                 break;
             default:;
             }
-            curr_glyph_offset += elParts.GetCount();
+            curr_glyph_offset += el_parts.GetCount();
         }
     }
-    epdc->Unlock();
+    rhs_epdc->Unlock();
     shader->Disable();
 
     // todo if you implement selection, write flags back :)

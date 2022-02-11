@@ -1,7 +1,7 @@
 /*
  * GlyphRenderer.h
  *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2022 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -71,7 +71,7 @@ protected:
      */
     bool create(void) override;
 
-    bool makeShader(std::string vertexName, std::string fragmentName, vislib_gl::graphics::gl::GLSLShader& shader);
+    bool makeShader(std::string vertex_name, std::string fragment_name, vislib_gl::graphics::gl::GLSLShader& shader);
 
     /**
      * The get extents callback. The module should set the members of
@@ -116,6 +116,7 @@ private:
     };
 
     /**The ellipsoid shader*/
+    vislib_gl::graphics::gl::GLSLShader m_arrow_shader;
     vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
     vislib_gl::graphics::gl::GLSLShader m_box_shader;
 
@@ -132,6 +133,8 @@ private:
 
     megamol::core::param::ParamSlot m_glyph_param;
     megamol::core::param::ParamSlot m_scale_param;
+    megamol::core::param::ParamSlot m_radius_scale_param;
+    megamol::core::param::ParamSlot m_length_filter_param;
     megamol::core::param::ParamSlot m_color_interpolation_param;
     megamol::core::param::ParamSlot m_min_radius_param;
     megamol::core::param::ParamSlot m_color_mode_param;
