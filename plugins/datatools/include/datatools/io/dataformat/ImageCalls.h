@@ -61,152 +61,50 @@ struct ImageFrame : AbstractFrame {
     }
 
     // data will be controlled by this instance, caller loses access!
-    void SetData(uint8_t* data, std::size_t count, ImageElementType channelType, SizeType width = 1, SizeType height = 1, SizeType depth = 1) {
+    void SetData(uint8_t* data, std::size_t count, ImageElementType channelType, SizeType width = 1,
+        SizeType height = 1, SizeType depth = 1) {
         auto vec = std::vector(data, data + count);
         delete[] data;
         SetData(vec, channelType, width, height, depth);
     }
 
-    template <typename T>
-    constexpr T* ViewAs() const {
-        return static_cast<const T*>(data.data());
-    }
-
-    template <typename ResultType>
-    std::vector<ResultType> GetCopy() {
-        std::vector<ResultType> out;
-        out.reserve(NumElements());
-        switch (elementType) {
-        case ImageElementType::UINT8:
-            CopyInto<ResultType, uint8_t>(out);
-            break;
-        case ImageElementType::UINT16:
-            CopyInto<ResultType, uint16_t>(out);
-            break;
-        case ImageElementType::UINT32:
-            // AKA case ChannelType::RGBA8:
-            CopyInto<ResultType, uint32_t>(out);
-            break;
-        case ImageElementType::FLOAT:
-            CopyInto<ResultType, float>(out);
-            break;
-        case ImageElementType::DOUBLE:
-            CopyInto<ResultType, double>(out);
-            break;
-        default:
-            throw std::logic_error("ImageFrame::GetCopy: invalid elementType");
-        }
-        return std::move(out);
+    template<typename T>
+    constexpr const T* ViewAs() const {
+        return reinterpret_cast<const T*>(data.data());
     }
 
     template<typename ResultType>
-    std::vector<ResultType> GetCopyNormalized() {
+    std::vector<ResultType> GetCopy() {
         std::vector<ResultType> out;
         out.reserve(NumElements());
-        switch (elementType) {
-        case ImageElementType::UINT8:
-            CopyIntoNormalized<ResultType, uint8_t>(out);
-            break;
-        case ImageElementType::UINT16:
-            CopyIntoNormalized<ResultType, uint16_t>(out);
-            break;
-        case ImageElementType::UINT32:
-            // AKA case ChannelType::RGBA8:
-            CopyIntoNormalized<ResultType, uint32_t>(out);
-            break;
-        case ImageElementType::FLOAT:
-            CopyIntoNormalized<ResultType, float>(out);
-            break;
-        case ImageElementType::DOUBLE:
-            CopyIntoNormalized<ResultType, double>(out);
-            break;
-        default:
-            throw std::logic_error("ImageFrame::GetCopyNormalized: invalid elementType");
-        }
-        return std::move(out);
+        Dispatcher<GetCopy_FW<ResultType>>::dispatch(elementType)(this, out);
+        return out;
     }
 
-    template<typename T>
-    T GetValue(SizeType index) const {
+    template<typename ResultType>
+    std::vector<ResultType> GetCopyNormalized(ResultType maximum = std::numeric_limits<ResultType>::max()) {
+        std::vector<ResultType> out;
+        out.reserve(NumElements());
+        Dispatcher<GetCopyNormalized_FW<ResultType>>::dispatch(elementType)(this, out, maximum);
+        return out;
+    }
+
+    template<typename ReturnType>
+    ReturnType GetValue(SizeType index) {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::GetValue: index out of bounds");
-        switch (elementType) {
-        case ImageElementType::UINT8:
-            return static_cast<T>(ViewAs<uint8_t>()[index]);
-            break;
-        case ImageElementType::UINT16:
-            return static_cast<T>(ViewAs<uint16_t>()[index]);
-            break;
-        case ImageElementType::UINT32:
-        // AKA case ChannelType::RGBA8:
-            return static_cast<T>(ViewAs<uint32_t>()[index]);
-            break;
-        case ImageElementType::FLOAT:
-            return static_cast<T>(ViewAs<float>()[index]);
-            break;
-        case ImageElementType::DOUBLE:
-            return static_cast<T>(ViewAs<double>()[index]);
-            break;
-        default:
-            throw std::logic_error("ImageFrame::GetValue: invalid elementType");
-        }
+        return Dispatcher<GetAbsolute_FW<ReturnType>>::dispatch(elementType)(this, index);
     }
 
-    template <typename T>
-    void SetValue(SizeType index, T val) {
-        if (index >= NumElements())
-            throw std::invalid_argument("ImageFrame::SetValue: index out of bounds");
-        switch (elementType) {
-        case ImageElementType::UINT8:
-            SetAbsolute<uint8_t>(index, val);
-            break;
-        case ImageElementType::UINT16:
-            SetAbsolute<uint16_t>(index, val);
-            break;
-        case ImageElementType::UINT32:
-        // AKA case ChannelType::RGBA8:
-            SetAbsolute<uint32_t>(index, val);
-            break;
-        case ImageElementType::FLOAT:
-            SetAbsolute<float>(index, val);
-            break;
-        case ImageElementType::DOUBLE:
-            SetAbsolute<double>(index, val);
-            break;
-        default:
-            throw std::logic_error("ImageFrame::SetValue: invalid elementType");
-        }
-    }
-
-    template <typename T>
-    void SetValueNormalized(SizeType index, T val, T maximum = std::numeric_limits<T>::max()) {
+    template<typename InputType>
+    void SetValue(SizeType index, InputType val) {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::SetValueNormalized: index out of bounds");
-        const double relative = static_cast<double>(val) / maximum;
-        switch (elementType) {
-        case ImageElementType::UINT8:
-            SetRelative<uint8_t>(index, relative);
-            break;
-        case ImageElementType::UINT16:
-            SetRelative<uint16_t>(index, relative);
-            break;
-        case ImageElementType::UINT32:
-            // AKA case ChannelType::RGBA8:
-            SetRelative<uint32_t>(index, relative);
-            break;
-        case ImageElementType::FLOAT:
-            SetRelative<float>(index, relative);
-            break;
-        case ImageElementType::DOUBLE:
-            SetRelative<double>(index, relative);
-            break;
-        default:
-            throw std::logic_error("ImageFrame::SetValueNormalized: invalid elementType");
-        }
+        Dispatcher<SetAbsolute_FW<InputType>>::dispatch(elementType)(this, index, val);
     }
 
     template<typename T>
-    void SetValueNormalized2(SizeType index, T val, T maximum = std::numeric_limits<T>::max()) {
+    void SetValueNormalized(SizeType index, T val, T maximum = std::numeric_limits<T>::max()) {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::SetValueNormalized: index out of bounds");
         const double relative = static_cast<double>(val) / maximum;
@@ -279,13 +177,53 @@ private:
         AccessAs<T>()[index] = static_cast<T>(relative * std::numeric_limits<T>::max());
     }
 
+    template<typename ReturnType>
+    struct GetAbsolute_FW {
+        using Function = ReturnType(ImageFrame<Dimensions>*, SizeType);
+
+        template<typename T>
+        static ReturnType run(ImageFrame<Dimensions>* that, SizeType index) {
+            return static_cast<ReturnType>(that->ViewAs<T>()[index]);
+        }
+    };
+
+    template<typename InputType>
+    struct SetAbsolute_FW {
+        using Function = void(ImageFrame<Dimensions>*, SizeType, InputType);
+
+        template<typename T>
+        static void run(ImageFrame<Dimensions>* that, SizeType index, InputType val) {
+            that->SetAbsolute<T, InputType>(index, val);
+        }
+    };
+
     struct SetRelative_FW {
         using Function = void(ImageFrame<Dimensions>*, SizeType, double);
 
         template<typename T>
         static void run(ImageFrame<Dimensions>* that, SizeType index, double relative) {
             that->SetRelative<T>(index, relative);
-        };
+        }
+    };
+
+    template<typename ResultType>
+    struct GetCopy_FW {
+        using Function = void(ImageFrame<Dimensions>*, std::vector<ResultType>&);
+
+        template<typename T>
+        static void run(ImageFrame<Dimensions>* that, std::vector<ResultType>& out) {
+            that->CopyInto<ResultType, T>(out);
+        }
+    };
+
+    template<typename ResultType>
+    struct GetCopyNormalized_FW {
+        using Function = void(ImageFrame<Dimensions>*, std::vector<ResultType>&, ResultType);
+
+        template<typename T>
+        static void run(ImageFrame<Dimensions>* that, std::vector<ResultType>& out, ResultType maximum) {
+            that->CopyIntoNormalized<ResultType, T>(out, maximum);
+        }
     };
 
     template<typename Dest, typename Source>
@@ -300,9 +238,10 @@ private:
     }
 
     template<typename Dest, typename Source>
-    void CopyIntoNormalized(std::vector<Dest>& out) {
-        std::transform(ViewAs<Source>(), ViewAs<Source>() + NumElements(), std::back_inserter(out), [](const auto& val) {
-                return static_cast<Dest>((val / std::numeric_limits<Source>::max()) * std::numeric_limits<Dest>::max());
+    void CopyIntoNormalized(std::vector<Dest>& out, Dest maximum) {
+        std::transform(
+            ViewAs<Source>(), ViewAs<Source>() + NumElements(), std::back_inserter(out), [maximum](const auto& val) {
+                return static_cast<Dest>((val / static_cast<double>(std::numeric_limits<Source>::max())) * maximum);
             });
     }
 
