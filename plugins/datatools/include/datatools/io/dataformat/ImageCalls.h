@@ -205,6 +205,41 @@ struct ImageFrame : AbstractFrame {
         }
     }
 
+    template<typename T>
+    void SetValueNormalized2(SizeType index, T val, T maximum = std::numeric_limits<T>::max()) {
+        if (index >= NumElements())
+            throw std::invalid_argument("ImageFrame::SetValueNormalized: index out of bounds");
+        const double relative = static_cast<double>(val) / maximum;
+        Dispatcher<SetRelative_FW>::dispatch(elementType)(this, index, relative);
+    }
+
+    // https://stackoverflow.com/questions/16552166/c-function-dispatch-with-template-parameters
+    template<typename FunctionWrapper>
+    struct Dispatcher {
+        static typename FunctionWrapper::Function* dispatch(ImageElementType::Value it) {
+            switch (it) {
+            case ImageElementType::UINT8:
+                return &FunctionWrapper::template run<uint8_t>;
+                break;
+            case ImageElementType::UINT16:
+                return &FunctionWrapper::template run<uint16_t>;
+                break;
+            case ImageElementType::UINT32:
+                // AKA case ChannelType::RGBA8:
+                return &FunctionWrapper::template run<uint32_t>;
+                break;
+            case ImageElementType::FLOAT:
+                return &FunctionWrapper::template run<float>;
+                break;
+            case ImageElementType::DOUBLE:
+                return &FunctionWrapper::template run<double>;
+                break;
+            default:
+                throw std::logic_error("ImageFrame::Dispatcher: invalid elementType");
+            }
+        }
+    };
+
     [[nodiscard]] SizeType ValueIndex(SizeType x, SizeType y = 0, SizeType z = 0) const {
         return (z * height + y) * width + x;
     }
@@ -244,6 +279,15 @@ private:
         AccessAs<T>()[index] = static_cast<T>(relative * std::numeric_limits<T>::max());
     }
 
+    struct SetRelative_FW {
+        using Function = void(ImageFrame<Dimensions>*, SizeType, double);
+
+        template<typename T>
+        static void run(ImageFrame<Dimensions>* that, SizeType index, double relative) {
+            that->SetRelative<T>(index, relative);
+        };
+    };
+
     template<typename Dest, typename Source>
     void SetAbsolute(SizeType index, Source val) {
         AccessAs<Dest>()[index] = static_cast<Dest>(val);
@@ -267,7 +311,7 @@ private:
     ImageElementType elementType = ImageElementType::UINT8;
 };
 
-//using Uint8Image2DFrame = ImageFrame<uint8_t, 2>;
+//using Uint8Image2DFrame = ImageFrame<2>;
 
 } // namespace dataformat
 } // namespace io
