@@ -73,19 +73,19 @@ struct ImageFrame : AbstractFrame {
         return reinterpret_cast<const T*>(data.data());
     }
 
-    template<typename ResultType>
-    std::vector<ResultType> GetCopy() {
-        std::vector<ResultType> out;
+    template<typename ReturnType>
+    std::vector<ReturnType> GetCopy() {
+        std::vector<ReturnType> out;
         out.reserve(NumElements());
-        Dispatcher<GetCopy_FW<ResultType>>::dispatch(elementType)(this, out);
+        Dispatcher<GetCopy_FW<ReturnType>>::dispatch(elementType)(this, out);
         return out;
     }
 
-    template<typename ResultType>
-    std::vector<ResultType> GetCopyNormalized(ResultType maximum = std::numeric_limits<ResultType>::max()) {
-        std::vector<ResultType> out;
+    template<typename ReturnType>
+    std::vector<ReturnType> GetCopyNormalized(ReturnType maximum = std::numeric_limits<ReturnType>::max()) {
+        std::vector<ReturnType> out;
         out.reserve(NumElements());
-        Dispatcher<GetCopyNormalized_FW<ResultType>>::dispatch(elementType)(this, out, maximum);
+        Dispatcher<GetCopyNormalized_FW<ReturnType>>::dispatch(elementType)(this, out, maximum);
         return out;
     }
 
@@ -94,6 +94,13 @@ struct ImageFrame : AbstractFrame {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::GetValue: index out of bounds");
         return Dispatcher<GetAbsolute_FW<ReturnType>>::dispatch(elementType)(this, index);
+    }
+
+    template<typename ReturnType>
+    ReturnType GetValueNormalized(SizeType index, ReturnType maximum = std::numeric_limits<ReturnType>::max()) {
+        if (index >= NumElements())
+            throw std::invalid_argument("ImageFrame::GetValueNormalized: index out of bounds");
+        return Dispatcher<GetRelative_FW<ReturnType>>::dispatch(elementType)(this, index, maximum);
     }
 
     template<typename InputType>
@@ -110,33 +117,6 @@ struct ImageFrame : AbstractFrame {
         const double relative = static_cast<double>(val) / maximum;
         Dispatcher<SetRelative_FW>::dispatch(elementType)(this, index, relative);
     }
-
-    // https://stackoverflow.com/questions/16552166/c-function-dispatch-with-template-parameters
-    template<typename FunctionWrapper>
-    struct Dispatcher {
-        static typename FunctionWrapper::Function* dispatch(ImageElementType::Value it) {
-            switch (it) {
-            case ImageElementType::UINT8:
-                return &FunctionWrapper::template run<uint8_t>;
-                break;
-            case ImageElementType::UINT16:
-                return &FunctionWrapper::template run<uint16_t>;
-                break;
-            case ImageElementType::UINT32:
-                // AKA case ChannelType::RGBA8:
-                return &FunctionWrapper::template run<uint32_t>;
-                break;
-            case ImageElementType::FLOAT:
-                return &FunctionWrapper::template run<float>;
-                break;
-            case ImageElementType::DOUBLE:
-                return &FunctionWrapper::template run<double>;
-                break;
-            default:
-                throw std::logic_error("ImageFrame::Dispatcher: invalid elementType");
-            }
-        }
-    };
 
     [[nodiscard]] SizeType ValueIndex(SizeType x, SizeType y = 0, SizeType z = 0) const {
         return (z * height + y) * width + x;
@@ -167,6 +147,33 @@ struct ImageFrame : AbstractFrame {
     }
 
 private:
+    // https://stackoverflow.com/questions/16552166/c-function-dispatch-with-template-parameters
+    template<typename FunctionWrapper>
+    struct Dispatcher {
+        static typename FunctionWrapper::Function* dispatch(ImageElementType::Value it) {
+            switch (it) {
+            case ImageElementType::UINT8:
+                return &FunctionWrapper::template run<uint8_t>;
+                break;
+            case ImageElementType::UINT16:
+                return &FunctionWrapper::template run<uint16_t>;
+                break;
+            case ImageElementType::UINT32:
+                // AKA case ChannelType::RGBA8:
+                return &FunctionWrapper::template run<uint32_t>;
+                break;
+            case ImageElementType::FLOAT:
+                return &FunctionWrapper::template run<float>;
+                break;
+            case ImageElementType::DOUBLE:
+                return &FunctionWrapper::template run<double>;
+                break;
+            default:
+                throw std::logic_error("ImageFrame::Dispatcher: invalid elementType");
+            }
+        }
+    };
+
     template<typename T>
     T* AccessAs() {
         return reinterpret_cast<T*>(data.data());
@@ -184,6 +191,17 @@ private:
         template<typename T>
         static ReturnType run(ImageFrame<Dimensions>* that, SizeType index) {
             return static_cast<ReturnType>(that->ViewAs<T>()[index]);
+        }
+    };
+
+    template<typename ReturnType>
+    struct GetRelative_FW {
+        using Function = ReturnType(ImageFrame<Dimensions>*, SizeType, ReturnType);
+
+        template<typename T>
+        static ReturnType run(ImageFrame<Dimensions>* that, SizeType index, ReturnType maximum) {
+            return static_cast<ReturnType>(
+                (that->ViewAs<T>()[index] / static_cast<double>(std::numeric_limits<T>::max())) * maximum);
         }
     };
 
