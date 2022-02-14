@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace megamol {
 namespace core {

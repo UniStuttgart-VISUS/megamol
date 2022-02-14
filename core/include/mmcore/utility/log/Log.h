@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <memory>
 
 // Enclose title of log message between start and and tag to get it pushed in GUI popup
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
