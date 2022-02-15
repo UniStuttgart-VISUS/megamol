@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 
