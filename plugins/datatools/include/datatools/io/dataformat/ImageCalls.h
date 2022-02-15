@@ -74,7 +74,7 @@ struct ImageFrame : AbstractFrame {
     }
 
     template<typename ReturnType>
-    std::vector<ReturnType> GetCopy() {
+    std::vector<ReturnType> GetCopy() const {
         std::vector<ReturnType> out;
         out.reserve(NumElements());
         Dispatcher<GetCopy_FW<ReturnType>>::dispatch(elementType)(this, out);
@@ -82,7 +82,7 @@ struct ImageFrame : AbstractFrame {
     }
 
     template<typename ReturnType>
-    std::vector<ReturnType> GetCopyNormalized(ReturnType maximum = std::numeric_limits<ReturnType>::max()) {
+    std::vector<ReturnType> GetCopyNormalized(ReturnType maximum = std::numeric_limits<ReturnType>::max()) const {
         std::vector<ReturnType> out;
         out.reserve(NumElements());
         Dispatcher<GetCopyNormalized_FW<ReturnType>>::dispatch(elementType)(this, out, maximum);
@@ -90,14 +90,14 @@ struct ImageFrame : AbstractFrame {
     }
 
     template<typename ReturnType>
-    ReturnType GetValue(SizeType index) {
+    ReturnType GetValue(SizeType index) const {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::GetValue: index out of bounds");
         return Dispatcher<GetAbsolute_FW<ReturnType>>::dispatch(elementType)(this, index);
     }
 
     template<typename ReturnType>
-    ReturnType GetValueNormalized(SizeType index, ReturnType maximum = std::numeric_limits<ReturnType>::max()) {
+    ReturnType GetValueNormalized(SizeType index, ReturnType maximum = std::numeric_limits<ReturnType>::max()) const {
         if (index >= NumElements())
             throw std::invalid_argument("ImageFrame::GetValueNormalized: index out of bounds");
         return Dispatcher<GetRelative_FW<ReturnType>>::dispatch(elementType)(this, index, maximum);
@@ -186,20 +186,20 @@ private:
 
     template<typename ReturnType>
     struct GetAbsolute_FW {
-        using Function = ReturnType(ImageFrame<Dimensions>*, SizeType);
+        using Function = ReturnType(ImageFrame<Dimensions> const*, SizeType);
 
         template<typename T>
-        static ReturnType run(ImageFrame<Dimensions>* that, SizeType index) {
+        static ReturnType run(ImageFrame<Dimensions> const* that, SizeType index) {
             return static_cast<ReturnType>(that->ViewAs<T>()[index]);
         }
     };
 
     template<typename ReturnType>
     struct GetRelative_FW {
-        using Function = ReturnType(ImageFrame<Dimensions>*, SizeType, ReturnType);
+        using Function = ReturnType(ImageFrame<Dimensions> const*, SizeType, ReturnType);
 
         template<typename T>
-        static ReturnType run(ImageFrame<Dimensions>* that, SizeType index, ReturnType maximum) {
+        static ReturnType run(ImageFrame<Dimensions> const* that, SizeType index, ReturnType maximum) {
             return static_cast<ReturnType>(
                 (that->ViewAs<T>()[index] / static_cast<double>(std::numeric_limits<T>::max())) * maximum);
         }
@@ -226,20 +226,20 @@ private:
 
     template<typename ResultType>
     struct GetCopy_FW {
-        using Function = void(ImageFrame<Dimensions>*, std::vector<ResultType>&);
+        using Function = void(ImageFrame<Dimensions> const*, std::vector<ResultType>&);
 
         template<typename T>
-        static void run(ImageFrame<Dimensions>* that, std::vector<ResultType>& out) {
+        static void run(ImageFrame<Dimensions> const* that, std::vector<ResultType>& out) {
             that->CopyInto<ResultType, T>(out);
         }
     };
 
     template<typename ResultType>
     struct GetCopyNormalized_FW {
-        using Function = void(ImageFrame<Dimensions>*, std::vector<ResultType>&, ResultType);
+        using Function = void(ImageFrame<Dimensions> const*, std::vector<ResultType>&, ResultType);
 
         template<typename T>
-        static void run(ImageFrame<Dimensions>* that, std::vector<ResultType>& out, ResultType maximum) {
+        static void run(ImageFrame<Dimensions> const* that, std::vector<ResultType>& out, ResultType maximum) {
             that->CopyIntoNormalized<ResultType, T>(out, maximum);
         }
     };
@@ -250,13 +250,13 @@ private:
     }
 
     template<typename Dest, typename Source>
-    void CopyInto(std::vector<Dest>& out) {
+    void CopyInto(std::vector<Dest>& out) const {
         std::transform(ViewAs<Source>(), ViewAs<Source>() + NumElements(), std::back_inserter(out),
             [](const auto& val) { return static_cast<Dest>(val); });
     }
 
     template<typename Dest, typename Source>
-    void CopyIntoNormalized(std::vector<Dest>& out, Dest maximum) {
+    void CopyIntoNormalized(std::vector<Dest>& out, Dest maximum) const {
         std::transform(
             ViewAs<Source>(), ViewAs<Source>() + NumElements(), std::back_inserter(out), [maximum](const auto& val) {
                 return static_cast<Dest>((val / static_cast<double>(std::numeric_limits<Source>::max())) * maximum);
