@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <list>
 #include <string>
 #include <vector>
-#include <limits>
 
 namespace megamol {
 namespace core {
