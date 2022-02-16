@@ -15,7 +15,6 @@ in mat3 rotate_world_into_tensor;
 
 in vec4 vert_color;
 in flat vec3 dir_color;
-in flat vec3 disk_normal;
 
 out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
@@ -74,9 +73,6 @@ void main() {
     float height_cone = absradii.z * radius_scaling;
     float k = radius_cone / height_cone;
     k = k * k;
-    // TODO: optimize
-    // e.g. ray.y * ray.y is also used in the cylinder intersection test
-    // reuse it!
     float cam_x_minus_height = cpos.x - height_cone;
     float a_cone = ray_yz_dot - k * ray.x * ray.x;
     float b_cone = 2.0 * (ray_cpos_yz_dot - k * ray.x * cam_x_minus_height);
@@ -128,7 +124,9 @@ void main() {
         discard;
     }
 
-    vec3 normal = vec3(1.0, 0.0, 0.0);
+    // default disk normal
+    // arrow looks in positive x-direction, therefore normal has to look the opposite way
+    vec3 normal = vec3(-1.0, 0.0, 0.0);
     vec3 intersection = vec3(0.0);
 
     // cone
@@ -148,7 +146,6 @@ void main() {
         invalid.y = true;
         lambda.z = (CYL_LEN - cpos.x) / ray.x;
         intersection = cpos + (ray * lambda.z);
-        normal = disk_normal;
     }
     // cone disk
     if (!invalid.y) {
@@ -158,14 +155,13 @@ void main() {
         if(pyth > radius_cone * radius_cone) {
             discard;
         }
-        normal = disk_normal;
     }
 
     normal = transpose(rotate_world_into_tensor) * normal;
 
 
-    albedo_out = vec4(normal, 1.0);
-    //albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
+    //albedo_out = vec4(normal, 1.0);
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
     normal_out = normal;
 
     vec4 ding = vec4(intersection, 1.0);

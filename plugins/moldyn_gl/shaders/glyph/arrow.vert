@@ -27,7 +27,7 @@ void main() {
     uint corner = gl_VertexID;
     vec3 normal = cube_normals[corner];
     // disk normals align with left/right cube face normals
-    disk_normal = cube_face_normals[0];
+    disk_normal = -cube_face_normals[0];
     vec4 corner_pos = vec4(cube_strip[corner], 0.0);
 #else
     // gl_InstanceID is same as instancecount in glDrawArraysInstanced
@@ -38,7 +38,7 @@ void main() {
     // gl_VertexID should be between 0 and 3 (since count = 4 in glDrawArrasInstanced)
     uint corner = gl_VertexID;
     vec3 normal = cube_face_normals[face];
-    disk_normal = cube_face_normals[0];
+    disk_normal = -cube_face_normals[0];
     vec4 corner_pos = vec4(cube_faces[face][corner], 0.0);
 #endif
 
@@ -52,7 +52,6 @@ void main() {
     // from the glyphs quaternion, calculate the rotation tensor
     rotate_world_into_tensor = quaternion_to_matrix(quat_c);
     mat3 rotate_points = transpose(rotate_world_into_tensor);
-    mat3 rotate_vectors = rotate_points; //transpose(inverse(rotate_points)); // makes no difference
 
 
     // all about the glyphs radii
@@ -73,7 +72,7 @@ void main() {
     // shift, rotate, and scale cam
     cam_pos = rotate_world_into_tensor * (cam.xyz - obj_pos.xyz);
 
-    vec3 transformed_normal = rotate_vectors * normal;
+    vec3 transformed_normal = rotate_points * normal;
 
 #ifdef UNOPTIMIZED
 #else
