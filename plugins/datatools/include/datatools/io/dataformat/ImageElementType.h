@@ -13,9 +13,9 @@ public:
         UINT8 = 1,
         UINT16 = 2,
         UINT32 = 3, // This is a semantic alias! OK?
-        RGBA8 = 3,  // This is a semantic alias! OK?
-        FLOAT = 4,
-        DOUBLE = 5
+        RGBA8 = 4,  // This is a semantic alias! OK?
+        FLOAT = 5,
+        DOUBLE = 6
     };
     ImageElementType() = default;
     constexpr ImageElementType(Value ct) : value(ct) {}
@@ -39,7 +39,7 @@ public:
         case UINT16:
             return sizeof(uint16_t);
         case UINT32:
-            // AKA case RGBA8:
+        case RGBA8:
             return sizeof(uint32_t);
         case FLOAT:
             return sizeof(float);
@@ -56,7 +56,7 @@ public:
         case UINT16:
             return typeid(uint16_t);
         case UINT32:
-            // AKA case RGBA8:
+        case RGBA8:
             return typeid(uint32_t);
         case FLOAT:
             return typeid(float);
