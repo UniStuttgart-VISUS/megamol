@@ -96,6 +96,66 @@ struct ImageFrame : AbstractFrame {
         return Dispatcher<GetAbsolute_FW<ReturnType>>::dispatch(elementType)(this, index);
     }
 
+    //template<typename ReturnType>
+    //struct Iterator {
+    //    using iterator_category = std::forward_iterator_tag;
+    //    using difference_type = SizeType; // huh.
+    //    using value_type = ReturnType;
+    //    using pointer = value_type*;
+    //    using reference = value_type&;
+
+    //    Iterator(ImageFrame<Dimensions>* img, SizeType idx) : img(img), idx(idx) {}
+
+    //    reference operator*() const {
+    //        temp_storage = img->GetValue<ReturnType>(idx);
+    //        return temp_storage;
+    //    }
+    //    pointer operator->() {
+    //        temp_storage = img->GetValue<ReturnType>(idx);
+    //        return &temp_storage;
+    //    }
+
+    //    Iterator& operator++() {
+    //        ++idx;
+    //        return *this;
+    //    }
+
+    //    Iterator operator++(int) {
+    //        Iterator tmp = *this;
+    //        ++(*this);
+    //        return tmp;
+    //    }
+
+    //    friend bool operator==(const Iterator& a, const Iterator& b) {
+    //        return a.idx == b.idx;
+    //    }
+    //    friend bool operator!=(const Iterator& a, const Iterator& b) {
+    //        return a.idx != b.idx;
+    //    }     
+
+    //private:
+    //    ReturnType temp_storage = static_cast<ReturnType>(0);
+    //    ImageFrame<Dimensions>* img;
+    //    SizeType idx;
+    //};
+
+    // this still feels wonky
+    template<typename T>
+    T* begin() {
+        if(typeid(T) != elementType.TypeId()) {
+            throw std::invalid_argument("cannot generate iterator for a type different from the contents");
+        }
+        return &AccessAs<T>()[0];
+    }
+
+    template<typename T>
+    T* end() {
+        if (typeid(T) != elementType.TypeId()) {
+            throw std::invalid_argument("cannot generate iterator for a type different from the contents");
+        }
+        return &AccessAs<T>()[data.size()];
+    }
+
     template<typename ReturnType>
     ReturnType GetValueNormalized(SizeType index, ReturnType maximum = std::numeric_limits<ReturnType>::max()) const {
         if (index >= NumElements())
@@ -193,6 +253,20 @@ private:
             return static_cast<ReturnType>(that->ViewAs<T>()[index]);
         }
     };
+
+    //template<typename ReturnType>
+    //struct GetIterator_FW {
+    //    using Function = Iterator(ImageFrame<Dimensions>*, SizeType);
+
+    //    template<typename T>
+    //    static Iterator<ReturnType, T> run(ImageFrame<Dimensions>* that, T* ptr) {
+    //        return GetIterator<ReturnType, T>(ptr);
+    //    }
+    //};
+    //template<typename ReturnType, typename InternalType>
+    //Iterator<ReturnType, InternalType> GetIterator(InternalType *ptr) const {
+    //    return Iterator<ReturnType, InternalType>(ptr);
+    //}
 
     template<typename ReturnType>
     struct GetRelative_FW {

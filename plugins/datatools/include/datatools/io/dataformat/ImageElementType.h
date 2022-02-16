@@ -1,3 +1,7 @@
+#pragma once
+
+#include <typeinfo>
+
 namespace megamol {
 namespace datatools {
 namespace io {
@@ -43,6 +47,23 @@ public:
             return sizeof(double);
         }
         return 0;
+    }
+
+    [[nodiscard]] const type_info& TypeId() const {
+        switch (value) {
+        case UINT8:
+            return typeid(uint8_t);
+        case UINT16:
+            return typeid(uint16_t);
+        case UINT32:
+            // AKA case RGBA8:
+            return typeid(uint32_t);
+        case FLOAT:
+            return typeid(float);
+        case DOUBLE:
+            return typeid(double);
+        }
+        return typeid(void);
     }
 
 private:
