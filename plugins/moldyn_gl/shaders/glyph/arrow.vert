@@ -5,16 +5,14 @@
  */
 
 // TODO: some of these might not be needed, cut them
-out vec4 obj_pos;
-out vec3 cam_pos;
-out mat3 rotate_world_into_tensor;
-out vec3 inv_rad;
+out vec4 obj_pos; //
+out vec3 cam_pos; //
+out mat3 rotate_world_into_tensor; //
 out vec3 absradii;
 
 out vec4 vert_color;
 out flat vec3 dir_color;
-out flat vec3 normal;
-out flat vec3 transformed_normal;
+out flat vec3 disk_normal;
 out vec3 view_ray;
 
 // this re-activates the old code that draws the whole box and costs ~50% performance for box glyphs
@@ -27,7 +25,9 @@ void main() {
 #ifdef UNOPTIMIZED
     uint inst = gl_InstanceID;
     uint corner = gl_VertexID;
-    normal = cube_normals[corner];
+    vec3 normal = cube_normals[corner];
+    // disk normals align with left/right cube face normals
+    disk_normal = cube_face_normals[0];
     vec4 corner_pos = vec4(cube_strip[corner], 0.0);
 #else
     // gl_InstanceID is same as instancecount in glDrawArraysInstanced
@@ -37,13 +37,13 @@ void main() {
     uint face = gl_InstanceID % 3;
     // gl_VertexID should be between 0 and 3 (since count = 4 in glDrawArrasInstanced)
     uint corner = gl_VertexID;
-    normal = cube_face_normals[face];
+    vec3 normal = cube_face_normals[face];
+    disk_normal = cube_face_normals[0];
     vec4 corner_pos = vec4(cube_faces[face][corner], 0.0);
 #endif
 
     // get the current glyphs (center) position
-    vec4 in_pos = vec4(pos_array[inst].x, pos_array[inst].y, pos_array[inst].z, 1.0);
-    obj_pos = in_pos; // TODO: can be done better
+    obj_pos = vec4(pos_array[inst].x, pos_array[inst].y, pos_array[inst].z, 1.0);
 
 
     // get the current glyphs orientation (represented by its quaternion)
@@ -68,21 +68,20 @@ void main() {
         radii.z = radii.z < min_radius ? min_radius : radii.z;
     }
     absradii = abs(radii) * scaling;
-    inv_rad = 1.0 / absradii;
 
 
     // shift, rotate, and scale cam
     cam_pos = rotate_world_into_tensor * (cam.xyz - obj_pos.xyz);
 
-    transformed_normal = (rotate_vectors * normal).xyz;
+    vec3 transformed_normal = rotate_vectors * normal;
 
 #ifdef UNOPTIMIZED
 #else
     // if our cube face looks away from the camera, we need to replace it with the opposing one
-    vec3 view_vec = cam.xyz - in_pos.xyz;
+    vec3 view_vec = cam.xyz - obj_pos.xyz;
     if (dot(view_vec, transformed_normal) < 0) {
         normal = -normal;
-        transformed_normal = (rotate_vectors * normal).xyz;
+        disk_normal = -disk_normal;
         // the winding changes like this (I think), but we do not CULL_FACE anyway
         corner_pos = -corner_pos;
     }
@@ -115,7 +114,7 @@ void main() {
     corner_pos.xyz = rotate_points * corner_pos.xyz;
 
     // corners relative to world space glyph positions
-    vec4 ws_pos = in_pos + corner_pos;
+    vec4 ws_pos = obj_pos + corner_pos;
 
     view_ray = cam.xyz - ws_pos.xyz; // TODO: needed?
     gl_Position =  mvp * ws_pos;
