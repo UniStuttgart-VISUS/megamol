@@ -287,11 +287,6 @@ void MoleculeSESRenderer::release(void) {}
  * MoleculeSESRenderer::create
  */
 bool MoleculeSESRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float"))
-        return false;
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
 
     // glEnable( GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
@@ -343,12 +338,13 @@ bool MoleculeSESRenderer::create(void) {
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphereVertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("protein::ses::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphereFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::ses::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -367,12 +363,12 @@ bool MoleculeSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
         return false;
@@ -390,12 +386,12 @@ bool MoleculeSESRenderer::create(void) {
     /////////////////////////////////////////////////////////////////
     // load the shader files for horizontal 1D gaussian filtering  //
     /////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::hfilterVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::hfilterVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for horizontal 1D gaussian filter shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::hfilterFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::hfilterFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for horizontal 1D gaussian filter shader", this->ClassName());
         return false;
@@ -413,12 +409,12 @@ bool MoleculeSESRenderer::create(void) {
     ///////////////////////////////////////////////////////////////
     // load the shader files for vertical 1D gaussian filtering  //
     ///////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::vfilterVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::vfilterVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for vertical 1D gaussian filter shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::vfilterFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::vfilterFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for vertical 1D gaussian filter shader", this->ClassName());
         return false;
@@ -436,12 +432,12 @@ bool MoleculeSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     // load the shader files for silhouette drawing     //
     //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::silhouetteVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::silhouetteVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for silhouette drawing shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::silhouetteFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::silhouetteFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for silhouette drawing shader", this->ClassName());
         return false;
@@ -459,12 +455,12 @@ bool MoleculeSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     // load the shader source for the cylinder renderer //
     //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;

@@ -79,7 +79,7 @@ public:
      */
     static bool IsAvailable(void) {
         // return true;
-        return vislib_gl::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** ctor */

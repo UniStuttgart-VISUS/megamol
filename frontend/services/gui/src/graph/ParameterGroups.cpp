@@ -165,8 +165,8 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                         ImGui::SameLine();
 
                         // Presentation option
-                        ButtonWidgets::OptionButton(
-                            "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic), false);
+                        ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, "param_groups", "",
+                            (group_widget_data->GetGUIPresentation() != Present_t::Basic), false);
                         if (ImGui::BeginPopupContextItem(
                                 "param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                             for (auto& present_name_pair : group_widget_data->GetPresentationNameMap()) {

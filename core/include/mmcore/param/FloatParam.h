@@ -23,6 +23,8 @@ public:
 
     FloatParam(float initVal, float minVal, float maxVal) : Super(initVal, minVal, maxVal) {}
 
+    FloatParam(float initVal, float minVal, float maxVal, float stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
+
     virtual ~FloatParam() = default;
 
     std::string Definition() const override {
@@ -30,6 +32,7 @@ public:
         outDef << "MMFLOT";
         outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
         outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
+        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
 
         return outDef.str();
     }

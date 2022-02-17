@@ -186,8 +186,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         float font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ButtonWidgets::KnobButton(
-            label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
+        ButtonWidgets::KnobButton(label, knob_size, time, param_time->GetMinValue<float>(),
+            param_time->GetMaxValue<float>(), param_time->GetStepSize<float>());
         ImGui::Text(param_time->FloatFormat().c_str(), time);
         ImGui::EndGroup();
         ImGui::SameLine();
@@ -198,8 +198,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ButtonWidgets::KnobButton(
-            label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
+        ButtonWidgets::KnobButton(label, knob_size, speed, param_speed->GetMinValue<float>(),
+            param_speed->GetMaxValue<float>(), param_speed->GetStepSize<float>());
         ImGui::Text(param_speed->FloatFormat().c_str(), speed);
         ImGui::EndGroup();
 

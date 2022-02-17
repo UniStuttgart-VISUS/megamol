@@ -22,6 +22,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "Screenshot_Service.hpp"
+#include "VR_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -152,6 +153,12 @@ int main(const int argc, const char** argv) {
             : std::nullopt;
     imagepresentation_service.setPriority(3);
 
+    megamol::frontend::VR_Service vr_service;
+    vr_service.setPriority(imagepresentation_service.getPriority() - 1);
+    megamol::frontend::VR_Service::Config vrConfig;
+    vrConfig.mode = megamol::frontend::VR_Service::Config::Mode(static_cast<int>(config.vr_mode));
+    const bool with_vr = vrConfig.mode != megamol::frontend::VR_Service::Config::Mode::Off;
+
     megamol::frontend::Command_Service command_service;
     // Should be applied after gui service to process only keyboard events not used by gui.
     command_service.setPriority(24);
@@ -190,6 +197,11 @@ int main(const int argc, const char** argv) {
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
+
+    if (with_vr) {
+        services.add(vr_service, &vrConfig);
+    }
+
 #ifdef PROFILING
     services.add(profiling_service, &profiling_config);
 #endif
