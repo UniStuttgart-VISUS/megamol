@@ -72,12 +72,19 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
 
     //Check if filename slot(string param) has been changed
     if (this->m_filename_slot.IsDirty()) {
+        for (auto const& identifier : m_mesh_access_collection.second) {
+            m_mesh_access_collection.first->deleteMesh(identifier);
+        }
+        m_mesh_access_collection.second.clear();
+
         //Reset dirty flag and update version id
         m_filename_slot.ResetDirty();
         ++m_version;
 
+        auto stageString = m_filename_slot.Param<core::param::StringParam>()->Value();
+        std::string stageUrl(stageString);
         // right now taking test scene and omitting filepath parameter for testing purposes
-        std::string stageUrl = "omniverse://10.1.241.198/Users/test/helloworld.usd";
+        //std::string stageUrl = "omniverse://10.1.241.198/Users/test/helloworld.usd";
         startOmniverse();
 
         //open the stage and return false if stage could not be opened
@@ -115,39 +122,58 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
         }
 
         this->m_positions.clear();
-
+        this->m_indices.clear();
+        this->m_normals.clear();
+        this->m_texcoords.clear();
         //shape count
         int s_cnt = meshes.size();
-        m_indices.resize(s_cnt);
-        m_positions.resize(s_cnt);
-
-        for (int current_m = 0; current_m < s_cnt; current_m ++) {
+        this->m_indices.resize(s_cnt);
+        this->m_positions.resize(s_cnt);
+        this->m_normals.resize(s_cnt);
+        this->m_texcoords.resize(s_cnt);
+        for (int current_m = 0; current_m < s_cnt; current_m++) {
             UsdGeomMesh geom = meshes[current_m];
-            //Perform UsdAttribute requests on the mesh and print them 
-            UsdAttribute normalsAttr = geom.GetNormalsAttr();
-            UsdAttribute pointsAttr = geom.GetPointsAttr();
-            UsdAttribute faceVertexCountsAttr = geom.GetFaceVertexCountsAttr();
-            UsdAttribute faceVertexIndicesAttr = geom.GetFaceVertexIndicesAttr();
-            UsdGeomXformable::XformQuery xformquery = UsdGeomXformable::XformQuery(geom);
+            //Perform UsdAttribute requests on the mesh
+            
             GfMatrix4d xformOps;
-            xformquery.GetLocalTransformation(&xformOps, 0.0);
+            bool reset = false;
+
+            geom.GetLocalTransformation(&xformOps, &reset, 0.0);
+
+
+            std::cout << "xformOps" << xformOps << std::endl;
+
+
             VtArray<GfVec3f> vtNormals;
+            geom.GetNormalsAttr().Get(&vtNormals);
+            
             VtArray<GfVec3f> vtPoints;
+            geom.GetPointsAttr().Get(&vtPoints);
+            
             VtArray<int> vtFaceVertexCounts;
+            geom.GetFaceVertexCountsAttr().Get(&vtFaceVertexCounts);
+
             VtArray<int> vtFaceVertexIndices;
-            normalsAttr.Get(&vtNormals);
-            pointsAttr.Get(&vtPoints);
-            faceVertexCountsAttr.Get(&vtFaceVertexCounts);
-            faceVertexIndicesAttr.Get(&vtFaceVertexIndices);
+            geom.GetFaceVertexIndicesAttr().Get(&vtFaceVertexIndices);
+
+            //std::vector<UsdGeomPrimvar> primvars = geom.GetPrimvars();
+
+            VtVec2fArray uvValues;
+            geom.GetPrimvar(TfToken("primvars:st")).Get<VtVec2fArray>(&uvValues);
+                
+                
 
             // vertex count for hole mesh
             uint64_t point_size = vtPoints.size();
+            std::cout << " point size: " << point_size << ", normal_size: " << vtNormals.size()
+                      << ", uvSize: " << uvValues.size() << ", faceVertexIndices_size: " << vtFaceVertexIndices.size()
+                      << std::endl;
        
-            
+
             uint64_t indices_size = 0;
             for (int i = 0; i < vtFaceVertexCounts.size(); i++) {
                 if (vtFaceVertexCounts[i] == 3) {
-                    indices_size+=3;
+                    indices_size += 3;
                 } else if (vtFaceVertexCounts[i] == 4) {
                     indices_size += 6;
                 }
@@ -156,7 +182,9 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             //reserve space for vertex information
             m_indices[current_m].resize(indices_size);
             m_positions[current_m].reserve(point_size * 3);
-            std::cout << "reserving positions of: " << current_m << std::endl;
+            m_normals[current_m].reserve(vtNormals.size() * 3);
+            m_texcoords[current_m].reserve(uvValues.size() * 2);
+            std::cout << "reserving positions and normals of: " << current_m << std::endl;
 
             //index offset for facevertexindices
             size_t index_offset = 0;
@@ -194,23 +222,35 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             }
             //update m_positions
             for (int p = 0; p < point_size; p++) {
-                vtPoints[p][0] += xformOps[3][0];
-                vtPoints[p][1] += xformOps[3][1];
-                vtPoints[p][2] += xformOps[3][2];
-                float vx = vtPoints[p][0];
-                float vy = vtPoints[p][1];
-                float vz = vtPoints[p][2];
+           
+                float vxTemp = (float)xformOps[0][0] * vtPoints[p][0] + (float)xformOps[1][0] * vtPoints[p][1] +
+                                 +(float)xformOps[2][0] * vtPoints[p][2] + (float)xformOps[3][0];
+                float vyTemp = (float)xformOps[0][1] * vtPoints[p][0] + (float)xformOps[1][1] * vtPoints[p][1] +
+                                 +(float)xformOps[2][1] * vtPoints[p][2] + (float)xformOps[3][1];
+                float vzTemp = (float)xformOps[0][2] * vtPoints[p][0] + (float)xformOps[1][2] * vtPoints[p][1] +
+                                 +(float)xformOps[2][2] * vtPoints[p][2] + (float)xformOps[3][2];
+              
+                vtPoints[p][0] = vxTemp;
+                vtPoints[p][1] = vyTemp;
+                vtPoints[p][2] = vzTemp;
 
                 //Update bounding box
-                bbox[0] = std::min(bbox[0], vx);
-                bbox[1] = std::min(bbox[1], vy);
-                bbox[2] = std::min(bbox[2], vz);
-                bbox[3] = std::max(bbox[3], vx);
-                bbox[4] = std::max(bbox[4], vy);
-                bbox[5] = std::max(bbox[5], vz);
+                bbox[0] = std::min(bbox[0], vtPoints[p][0]);
+                bbox[1] = std::min(bbox[1], vtPoints[p][1]);
+                bbox[2] = std::min(bbox[2], vtPoints[p][2]);
+                bbox[3] = std::max(bbox[3], vtPoints[p][0]);
+                bbox[4] = std::max(bbox[4], vtPoints[p][1]);
+                bbox[5] = std::max(bbox[5], vtPoints[p][2]);
+
                 auto current_position_ptr = &(vtPoints[p][0]);
                 m_positions[current_m].insert(
                     m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
+
+                /* auto current_normals_ptr = &(vtNormals[p][0]);
+                m_normals[current_m].insert(m_normals[current_m].end(), current_normals_ptr, current_normals_ptr + 3);
+
+                auto current_tex_ptr = &(uvValues[p][0]);
+                m_texcoords[current_m].insert(m_texcoords[current_m].end(), current_tex_ptr, current_tex_ptr + 2);*/
             }
 
             const auto pos_ptr = m_positions[current_m].data();
@@ -219,6 +259,18 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(pos_ptr),
                 3 * vtPoints.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
                 MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::AttributeSemanticType::POSITION});
+
+            /* const auto nor_ptr = m_normals[current_m].data();
+            // create vertexattribute for normals
+            mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(nor_ptr),
+                3 * vtNormals.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
+                MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::AttributeSemanticType::NORMAL});
+
+            const auto tex_ptr = m_texcoords[current_m].data();
+            // create vertexattribute for texcoords
+            mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(tex_ptr),
+               2 * uvValues.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 2,
+                MeshDataAccessCollection::FLOAT, 8, 0, MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});*/
 
             // create MeshDataAccessCollection indexdata
             MeshDataAccessCollection::IndexData mesh_indices;
@@ -231,16 +283,19 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             m_mesh_access_collection.first->addMesh(
                 identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::TRIANGLES);
             m_mesh_access_collection.second.push_back(identifier);
+
+            
         }
         m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         m_meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         m_meta_data.m_frame_cnt = 1;
+
     }
     if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setMetaData(m_meta_data);
         lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
     }
-
+    
     return true;
 }
 
@@ -249,7 +304,6 @@ bool megamol::mesh::OmniUsdReader::getMeshMetaDataCallback(core::Call& caller) {
 }
 
 void megamol::mesh::OmniUsdReader::release() {
-    m_usd_stage.Reset();
-    omniClientShutdown();
+   
 }
 
