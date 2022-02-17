@@ -131,9 +131,9 @@ bool SurfaceLICRenderer::create() {
         if (!this->lic_compute_shdr.Link())
             return false;
 
-        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::vert", vertex_shader_src))
             return false;
-        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::frag", fragment_shader_src))
             return false;
         if (!this->render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
