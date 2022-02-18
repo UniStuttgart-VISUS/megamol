@@ -241,6 +241,18 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
                     bbox[4] = std::max(bbox[4], vtPoints[p][1]);
                     bbox[5] = std::max(bbox[5], vtPoints[p][2]);
 
+                    GfMatrix3d rotation = xformOps.ExtractRotationMatrix();
+                    float nxTemp = (float)rotation[0][0] * vtNormals[p][0] + (float)rotation[1][0] * vtNormals[p][1] +
+                                   +(float)rotation[2][0] * vtNormals[p][2];
+                    float nyTemp = (float)rotation[0][1] * vtNormals[p][0] + (float)rotation[1][1] * vtNormals[p][1] +
+                                   +(float)rotation[2][1] * vtNormals[p][2];
+                    float nzTemp = (float)rotation[0][2] * vtNormals[p][0] + (float)rotation[1][2] * vtNormals[p][1] +
+                                   +(float)rotation[2][2] * vtNormals[p][2];
+
+                    vtNormals[p][0] = nxTemp;
+                    vtNormals[p][1] = nyTemp;
+                    vtNormals[p][2] = nzTemp;
+
                     auto current_position_ptr = &(vtPoints[p][0]);
                     m_positions[current_m].insert(
                         m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
@@ -282,7 +294,21 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
                     bbox[4] = std::max(bbox[4], vtPoints[p][1]);
                     bbox[5] = std::max(bbox[5], vtPoints[p][2]);
                 }
+                 // update normals transformation
+                 for (int n = 0; n < vtNormals.size(); n++) {
 
+                     GfMatrix3d rotation = xformOps.ExtractRotationMatrix();
+                     float nxTemp = (float)rotation[0][0] * vtNormals[n][0] + (float)rotation[1][0] * vtNormals[n][1] +
+                                    +(float)rotation[2][0] * vtNormals[n][2];
+                     float nyTemp = (float)rotation[0][1] * vtNormals[n][0] + (float)rotation[1][1] * vtNormals[n][1] +
+                                    +(float)rotation[2][1] * vtNormals[n][2];
+                     float nzTemp = (float)rotation[0][2] * vtNormals[n][0] + (float)rotation[1][2] * vtNormals[n][1] +
+                                    +(float)rotation[2][2] * vtNormals[n][2];
+
+                     vtNormals[n][0] = nxTemp;
+                     vtNormals[n][1] = nyTemp;
+                     vtNormals[n][2] = nzTemp;
+                 }
 
                 //index offset for facevertexindices
                 size_t index_offset = 0;
