@@ -134,6 +134,7 @@ private:
     megamol::core::param::ParamSlot m_glyph_param;
     megamol::core::param::ParamSlot m_scale_param;
     megamol::core::param::ParamSlot m_radius_scale_param;
+    megamol::core::param::ParamSlot m_orientation_param;
     megamol::core::param::ParamSlot m_length_filter_param;
     megamol::core::param::ParamSlot m_color_interpolation_param;
     megamol::core::param::ParamSlot m_min_radius_param;

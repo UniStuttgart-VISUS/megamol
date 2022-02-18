@@ -6,6 +6,15 @@
  * All rights reserved.
  */
 
+ // TODO:
+ // currently, there is a problem regarding the alignment of the arrows
+ // because we assume that arrows are aligned with the x-axis
+ // this results in weird behaviour, where the x-axis of an arrow is not the longest
+ // e.g. if the z-axis is the longest, the box is stretched in z-direction
+ // but the arrow is still looking in x-direction and therefore gets clipped
+ // very early by the box
+ // possible solution: macro coordinate for intersection tests
+
 in vec4 obj_pos;
 in vec3 cam_pos;
 // TODO: scale radii below radii --> i.e. x * absradii with 0.0 < absradii < 1.0
@@ -15,6 +24,8 @@ in mat3 rotate_world_into_tensor;
 
 in vec4 vert_color;
 in flat vec3 dir_color;
+
+uniform int orientation;
 
 out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
@@ -36,30 +47,72 @@ void main() {
 
     // calc the viewing ray
     vec3 ray = normalize(tmp - cam_pos);
-    // TODO: which radius to use? y or z?
 
+    vec3 aligned_absradii = absradii;
+    int alignment = 0;
+    // check which axis is used alignment
+    // 0 - x (default)
+    // 1 - y
+    // 2 - z
+    // 3 - largest
+    if(orientation == 3) {
+        if(absradii.y >= absradii.x && absradii.y >= absradii.z) {
+            alignment = 1;
+            aligned_absradii = absradii.yzx;
+        }
+        else if(absradii.z >= absradii.x && absradii.z >= absradii.y){
+            alignment = 2;
+            aligned_absradii = absradii.zxy;
+        }
+    }
+    if(orientation == 1) {
+        alignment = 1;
+        aligned_absradii = absradii.yzx;
+    }
+    if(orientation == 2) {
+        alignment = 2;
+        aligned_absradii = absradii.zxy;
+    }
+
+
+    // TODO: which radius to use? y or z?
     // cylinder length
-    float length_cylinder = absradii.x * radius_scaling;
+    float length_cylinder = aligned_absradii.x * radius_scaling;
     float length_cylinder_half = length_cylinder / 2.0;
 
-    // shift cam to the left, so that end of cylinder = start of cone = (0,0,0)
-    vec3 cpos = cam_pos - vec3(length_cylinder_half, 0.0, 0.0);
+    // shift cam, so that end of cylinder = start of cone = (0,0,0)
+    vec3 shift = vec3(0.0);
+    shift.x = alignment == 0 ? length_cylinder_half : 0.0;
+    shift.y = alignment == 1 ? length_cylinder_half : 0.0;
+    shift.z = alignment == 2 ? length_cylinder_half : 0.0;
+    vec3 cpos = cam_pos - shift;
+
+    // re-assign coordinates to account for the alignment change
+    // this way the code below doesn't need to be changed
+    if(alignment == 1) {
+        ray = ray.yzx;
+        cpos = cpos.yzx;
+    }
+    else if(alignment == 2) {
+        ray = ray.zxy;
+        cpos = cpos.zxy;
+    }
 
     // helpers needed later
-    float ray_yz_dot =      dot(ray.yz, ray.yz);
-    float ray_cpos_yz_dot = dot(ray.yz, cpos.yz);
-    float cpos_yz_dot =     dot(cpos.yz, cpos.yz);
+    float ray_dot =      dot(ray.yz, ray.yz);
+    float ray_cpos_dot = dot(ray.yz, cpos.yz);
+    float cpos_dot =     dot(cpos.yz, cpos.yz);
 
     ////////////////////////////////////////
     // CYLINDER
     // see: https://pbr-book.org/3ed-2018/Shapes/Cylinders
     ////////////////////////////////////////
-    float radius_cylinder = absradii.y * radius_scaling;
+    float radius_cylinder = aligned_absradii.y * radius_scaling;
 
     // a cylinder intersection test
-    float a_cyl = ray_yz_dot;
-    float b_cyl = 2.0 * ray_cpos_yz_dot;
-    float c_cyl = cpos_yz_dot - radius_cylinder * radius_cylinder;
+    float a_cyl = ray_dot;
+    float b_cyl = 2.0 * ray_cpos_dot;
+    float c_cyl = cpos_dot - radius_cylinder * radius_cylinder;
     float div_cyl = 2.0 * a_cyl;
     float radicand_cyl = b_cyl * b_cyl - 4.0 * a_cyl * c_cyl;
 
@@ -70,13 +123,13 @@ void main() {
     ////////////////////////////////////////
     float radius_cone = 1.5 * radius_cylinder;
     // TODO: which cone height to use? one of the radii of half the length of the cylinder or whatever?
-    float height_cone = absradii.z * radius_scaling;
+    float height_cone = aligned_absradii.z * radius_scaling;
     float k = radius_cone / height_cone;
     k = k * k;
     float cam_x_minus_height = cpos.x - height_cone;
-    float a_cone = ray_yz_dot - k * ray.x * ray.x;
-    float b_cone = 2.0 * (ray_cpos_yz_dot - k * ray.x * cam_x_minus_height);
-    float c_cone = cpos_yz_dot - k * cam_x_minus_height * cam_x_minus_height;
+    float a_cone = ray_dot - k * ray.x * ray.x;
+    float b_cone = 2.0 * (ray_cpos_dot - k * ray.x * cam_x_minus_height);
+    float c_cone = cpos_dot - k * cam_x_minus_height * cam_x_minus_height;
     float div_cone = 2.0 * a_cone;
     float radicand_cone = b_cone * b_cone - 4.0 * a_cone * c_cone;
 
@@ -121,12 +174,15 @@ void main() {
     invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > TIP_LEN);
 
     if (invalid.x && invalid.y && invalid.z && invalid.w) {
-        discard;
+        //discard;
     }
 
     // default disk normal
     // arrow looks in positive x-direction, therefore normal has to look the opposite way
-    vec3 normal = vec3(-1.0, 0.0, 0.0);
+    vec3 normal = vec3(0.0);
+    normal.x = alignment == 0 ? -1.0 : 0.0;
+    normal.y = alignment == 1 ? -1.0 : 0.0;
+    normal.z = alignment == 2 ? -1.0 : 0.0;
     vec3 intersection = vec3(0.0);
 
     // cone
@@ -153,7 +209,7 @@ void main() {
         intersection = cpos + (ray * lambda.w);
         float pyth = dot(intersection.yz, intersection.yz);
         if(pyth > radius_cone * radius_cone) {
-            discard;
+            //discard;
         }
     }
 

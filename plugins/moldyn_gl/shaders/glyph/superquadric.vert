@@ -12,6 +12,7 @@ out vec3 absradii;
 
 out vec4 vert_color;
 out flat vec3 dir_color;
+out vec3 view_ray;
 
 // this re-activates the old code that draws the whole box and costs ~50% performance for box glyphs
 // note that you need the single-strip-per-box instancing call in the Renderer for this (14 * #glyphs)
@@ -82,6 +83,7 @@ void main() {
 #endif
 
     // color stuff
+    // TODO: rework
     vec3 dir_color1 = max(vec3(0), normal * sign(radii));
     vec3 dir_color2 = vec3(1) + normal * sign(radii);
     dir_color = any(lessThan(dir_color2, vec3(0.5))) ? dir_color2 * vec3(0.5) : dir_color1;
@@ -109,6 +111,7 @@ void main() {
     // corners relative to world space glyph positions
     vec4 ws_pos = obj_pos + corner_pos;
 
+    view_ray = cam.xyz - ws_pos.xyz; // TODO: needed?
     gl_Position =  mvp * ws_pos;
 
     bool clip_available = (options & OPTIONS_USE_CLIP) > 0;

@@ -44,6 +44,7 @@ GlyphRenderer::GlyphRenderer(void)
         , m_glyph_param("glyph", "Which glyph to render")
         , m_scale_param("scaling", "TODO: scales the box??")
         , m_radius_scale_param("radius_scaling", "scales the glyph radii")
+        , m_orientation_param("Orientation", "Selects along which axis the arrows are aligned")
         , m_length_filter_param("lengthFilter", "Filters the arrows by length")
         , m_color_interpolation_param(
               "colorInterpolation", "Interpolate between directional coloring (0) and glyph color (1)")
@@ -75,6 +76,15 @@ GlyphRenderer::GlyphRenderer(void)
 
     m_radius_scale_param << new param::FloatParam(1.0f, 0.0f, 100.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_radius_scale_param);
+
+    // currently only needed for arrow
+    param::EnumParam* op = new param::EnumParam(0);
+    op->SetTypePair(0, "x");
+    op->SetTypePair(1, "y");
+    op->SetTypePair(2, "z");
+    op->SetTypePair(3, "largest radius");
+    this->m_orientation_param << op;
+    this->MakeSlotAvailable(&this->m_orientation_param);
 
     m_length_filter_param << new param::FloatParam(0.0f, 0.0f);
     this->MakeSlotAvailable(&this->m_length_filter_param);
@@ -371,15 +381,19 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     switch (this->m_glyph_param.Param<core::param::EnumParam>()->Value()) {
     case Glyph::BOX:
         shader = &this->m_box_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
         break;
     case Glyph::ELLIPSOID:
         shader = &this->m_ellipsoid_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
         break;
     case Glyph::ARROW:
         shader = &this->m_arrow_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(true);
         break;
     case Glyph::SUPERQUADRIC:
         shader = &this->m_ellipsoid_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
         break;
     default:;
         shader = &this->m_ellipsoid_shader;
@@ -394,6 +408,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(cam_pos));
     glUniform1f(shader->ParameterLocation("scaling"), this->m_scale_param.Param<param::FloatParam>()->Value());
     glUniform1f(shader->ParameterLocation("radius_scaling"), this->m_radius_scale_param.Param<param::FloatParam>()->Value());
+    glUniform1i(shader->ParameterLocation("orientation"), this->m_orientation_param.Param<param::EnumParam>()->Value());
     glUniform1f(shader->ParameterLocation("min_radius"), this->m_min_radius_param.Param<param::FloatParam>()->Value());
     glUniform1f(shader->ParameterLocation("color_interpolation"),
         this->m_color_interpolation_param.Param<param::FloatParam>()->Value());
