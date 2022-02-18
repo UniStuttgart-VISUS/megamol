@@ -9,7 +9,9 @@ megamol_plugin(mesh
     quickhull
     tinyobjloader
     tinygltf
-    obj-io)
+    obj-io
+    omniverse
+    )
 
 if (mesh_PLUGIN_ENABLED)
   if (MSVC)

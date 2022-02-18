@@ -699,6 +699,168 @@ function(require_external NAME)
     endif ()
     target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
+    elseif (NAME STREQUAL "omniverse")
+      if (TARGET omniverse)
+        return()
+      endif ()
+
+      set(USD_PATH "" CACHE PATH "path to nv_usd root directory")
+      set(OMNIVERSE_PATH "" CACHE PATH "path to omniverse client root directory")
+      if (USD_PATH STREQUAL "")
+        message(FATAL_ERROR "USD_PATH needs to be set")
+      endif ()
+      if (OMNIVERSE_PATH STREQUAL "")
+        message(FATAL_ERROR "OMNIVERSE_PATH needs to be set")
+      endif ()
+
+      add_library(OMNIVERSE_USD SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_USD PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/usd.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/usd.lib")
+      #include("${USD_PATH}/cmake/pxrTargets.cmake")
+      #include("${USD_PATH}/cmake/pxrTargets-release.cmake")
+      #add_dependencies(OMNIVERSE_USD ar arch gf js kind pcp plug sdf tf trace usdGeom vt work usdShade usdLux)
+
+      add_library(OMNIVERSE_CLIENT SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_CLIENT PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${OMNIVERSE_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${OMNIVERSE_PATH}/release/omniclient.dll"
+        IMPORTED_IMPLIB "${OMNIVERSE_PATH}/release/omniclient.lib")
+
+      add_library(OMNIVERSE_py SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_py PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/python37.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/python37.lib")
+
+      add_library(OMNIVERSE_boost_py SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_boost_py PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/boost_python37-vc141-mt-x64-1_68.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/boost_python37-vc141-mt-x64-1_68.lib")
+
+      add_library(OMNIVERSE_ar SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_ar PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/ar.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/ar.lib")
+      
+      add_library(OMNIVERSE_arch SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_arch PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/arch.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/arch.lib")
+
+      add_library(OMNIVERSE_gf SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_gf PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/gf.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/gf.lib")
+
+      add_library(OMNIVERSE_js SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_js PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/js.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/js.lib")
+
+      add_library(OMNIVERSE_kind SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_kind PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/kind.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/kind.lib")
+
+      add_library(OMNIVERSE_pcp SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_pcp PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/pcp.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/pcp.lib")
+
+        add_library(OMNIVERSE_plug SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_plug PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/plug.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/plug.lib")
+
+      add_library(OMNIVERSE_sdf SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_sdf PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/sdf.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/sdf.lib")
+
+      add_library(OMNIVERSE_tf SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_tf PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/tf.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/tf.lib")
+
+      add_library(OMNIVERSE_trace SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_trace PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/trace.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/trace.lib")
+
+      add_library(OMNIVERSE_usdGeom SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_usdGeom PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/usdGeom.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/usdGeom.lib")
+
+      add_library(OMNIVERSE_vt SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_vt PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/vt.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/vt.lib")
+
+      add_library(OMNIVERSE_work SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_work PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/work.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/work.lib")
+
+      add_library(OMNIVERSE_usdShade SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_usdShade PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/usdShade.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/usdShade.lib")
+
+      add_library(OMNIVERSE_usdLux SHARED IMPORTED GLOBAL)
+      set_target_properties(OMNIVERSE_usdLux PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${USD_PATH}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${USD_PATH}/lib/usdLux.dll"
+        IMPORTED_IMPLIB "${USD_PATH}/lib/usdLux.lib")
+      
+
+      add_library(omniverse INTERFACE IMPORTED)
+      set_property(TARGET omniverse
+        PROPERTY INTERFACE_LINK_LIBRARIES OMNIVERSE_USD OMNIVERSE_ar OMNIVERSE_CLIENT OMNIVERSE_arch OMNIVERSE_gf OMNIVERSE_js OMNIVERSE_kind OMNIVERSE_pcp OMNIVERSE_plug OMNIVERSE_sdf OMNIVERSE_tf OMNIVERSE_trace OMNIVERSE_usdGeom OMNIVERSE_vt OMNIVERSE_work OMNIVERSE_usdShade OMNIVERSE_usdLux OMNIVERSE_py OMNIVERSE_boost_py)
+
+      if (MSVC)
+        set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:boost_python37-vc141-mt-gd-x64-1_68.lib" CACHE STRING "" FORCE)
+      endif ()
+
+      install(DIRECTORY "${USD_PATH}/lib/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
+      install(DIRECTORY "${OMNIVERSE_PATH}/release/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
+
   # obj-io
   elseif (NAME STREQUAL "obj-io")
     if (TARGET obj-io)
@@ -825,19 +987,18 @@ function(require_external NAME)
     endif ()
 
     if (MSVC)
-      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
+      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb_debug.lib" CACHE STRING "" FORCE)
     endif ()
 
     if (WIN32)
-      set(TBB_LIB "bin/tbb12.dll")
-      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
+      set(TBB_LIB "bin/tbb.dll")
+      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb.lib")
     else ()
       set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12")
     endif ()
 
     add_external_project(tbb SHARED
-      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-      GIT_TAG v2021.3.0
+      GIT_REPOSITORY https://github.com/wjakob/tbb.git
       CMAKE_ARGS
         -DTBB_TEST=OFF
       BUILD_BYPRODUCTS
