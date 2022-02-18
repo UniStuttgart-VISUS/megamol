@@ -7,6 +7,7 @@
 #include "CLIConfigParsing.h"
 #include "CUDA_Service.hpp"
 #include "Command_Service.hpp"
+#include "ExoticInputs_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -99,6 +100,10 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.hidden = config.window_mode & RuntimeConfig::WindowMode::hidden;
     openglConfig.forceWindowSize = config.force_window_size;
     gl_service.setPriority(2);
+
+    megamol::frontend::ExoticInputs_Service exoticinputs_service;
+    megamol::frontend::ExoticInputs_Service::Config exoticinputsConfig;
+    exoticinputs_service.setPriority(gl_service.getPriority() + 1); // depends on gamepad updates from GLFW
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
@@ -196,6 +201,7 @@ int main(const int argc, const char** argv) {
     if (with_gl) {
         services.add(gl_service, &openglConfig);
     }
+    services.add(exoticinputs_service, &exoticinputsConfig);
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);

@@ -32,6 +32,7 @@ file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "remote_service/*.hpp"
   "profiling_service/*.hpp"
   "vr_service/*.hpp"
+  "exotic_inputs/*.hpp"
   # "service_template/*.hpp"
 )
 
@@ -48,6 +49,7 @@ file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "remote_service/*.cpp"
   "profiling_service/*.cpp"
   "vr_service/*.cpp"
+  "exotic_inputs/*.cpp"
   # "service_template/*.cpp"
 )
 
@@ -109,6 +111,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "gui/3rd"
   "gui/src"
   "vr_service"
+  "exotic_inputs"
   # "service_template"
 )
 
