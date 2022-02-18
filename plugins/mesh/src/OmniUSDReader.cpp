@@ -136,17 +136,15 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
             //Perform UsdAttribute requests on the mesh
             
             GfMatrix4d xformOps;
-            bool reset = false;
-
+            bool reset;
             geom.GetLocalTransformation(&xformOps, &reset, 0.0);
-
-
-            std::cout << "xformOps" << xformOps << std::endl;
 
 
             VtArray<GfVec3f> vtNormals;
             geom.GetNormalsAttr().Get(&vtNormals);
-            
+
+            std::cout << geom.GetNormalsInterpolation() << std::endl;
+
             VtArray<GfVec3f> vtPoints;
             geom.GetPointsAttr().Get(&vtPoints);
             
@@ -160,16 +158,8 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
 
             VtVec2fArray uvValues;
             geom.GetPrimvar(TfToken("primvars:st")).Get<VtVec2fArray>(&uvValues);
-                
-                
 
-            // vertex count for hole mesh
-            uint64_t point_size = vtPoints.size();
-            std::cout << " point size: " << point_size << ", normal_size: " << vtNormals.size()
-                      << ", uvSize: " << uvValues.size() << ", faceVertexIndices_size: " << vtFaceVertexIndices.size()
-                      << std::endl;
-       
-
+            //compute indices_size
             uint64_t indices_size = 0;
             for (int i = 0; i < vtFaceVertexCounts.size(); i++) {
                 if (vtFaceVertexCounts[i] == 3) {
@@ -178,99 +168,232 @@ bool megamol::mesh::OmniUsdReader::getMeshDataCallback(core::Call& caller) {
                     indices_size += 6;
                 }
             }
+            std::cout << " m_indices " << indices_size << std::endl;
+            uint64_t point_size = vtPoints.size();
+            std::cout << " point size: " << point_size << ", normal_size: " << vtNormals.size()
+                      << ", uvSize: " << uvValues.size() << ", faceVertexIndices_size: " << vtFaceVertexIndices.size()
+                      << std::endl;
 
-            //reserve space for vertex information
-            m_indices[current_m].resize(indices_size);
-            m_positions[current_m].reserve(point_size * 3);
-            m_normals[current_m].reserve(vtNormals.size() * 3);
-            m_texcoords[current_m].reserve(uvValues.size() * 2);
-            std::cout << "reserving positions and normals of: " << current_m << std::endl;
+            // decide between vertex and faceVarying Normals
+            if (geom.GetNormalsInterpolation() == "vertex") {
 
-            //index offset for facevertexindices
-            size_t index_offset = 0;
-            size_t usd_index_offset = 0;
-            //Loop over triangled faces in the mesh
-            for (size_t f = 0; f < vtFaceVertexCounts.size(); f++) {
-                // Check if vertex count is 3 for the face
-                if (vtFaceVertexCounts[f] == 3) {
-                    // Loop over vertices in the face.
-                    for (size_t v = 0; v < vtFaceVertexCounts[f]; v++) {
-                                  
+                //reserve space for vertex information
+                m_indices[current_m].resize(indices_size);
+                m_positions[current_m].reserve(point_size * 3);
+                m_normals[current_m].reserve(point_size * 3);
+                m_texcoords[current_m].reserve(point_size * 2);
+                std::cout << "reserving positions and normals of: " << current_m << std::endl;
+
+                //index offset for facevertexindices
+                size_t index_offset = 0;
+                size_t usd_index_offset = 0;
+
+                //Loop over triangled faces in the mesh
+                for (size_t f = 0; f < vtFaceVertexCounts.size(); f++) {
+                    // Check if vertex count is 3 for the face
+                    if (vtFaceVertexCounts[f] == 3) {
+                        // Loop over vertices in the face.
+                        for (size_t v = 0; v < vtFaceVertexCounts[f]; v++) {
+
+                            //update m_indices
+                            m_indices[current_m][index_offset + v] = vtFaceVertexIndices[usd_index_offset + v];
+                        }
+                        index_offset += 3;
+                        usd_index_offset += 3;
+
+                    } else if (vtFaceVertexCounts[f] == 4) {
+                        // Loop over vertices in the face.
+
                         //update m_indices
-                        m_indices[current_m][index_offset + v] = vtFaceVertexIndices[usd_index_offset + v];
+                        m_indices[current_m][index_offset] = vtFaceVertexIndices[usd_index_offset];
+                        m_indices[current_m][index_offset + 1] = vtFaceVertexIndices[usd_index_offset + 1];
+                        m_indices[current_m][index_offset + 2] = vtFaceVertexIndices[usd_index_offset + 2];
+                        m_indices[current_m][index_offset + 3] = vtFaceVertexIndices[usd_index_offset + 0];
+                        m_indices[current_m][index_offset + 4] = vtFaceVertexIndices[usd_index_offset + 2];
+                        m_indices[current_m][index_offset + 5] = vtFaceVertexIndices[usd_index_offset + 3];
+
+                        index_offset += 6;
+                        usd_index_offset += 4;
+
+                    } else {
+                        std::cout << "N-GON FACE" << std::endl;
                     }
-                    index_offset += 3;
-                    usd_index_offset += 3;
-                    
-                } else if (vtFaceVertexCounts[f] == 4) {
-                    // Loop over vertices in the face.
-                    
-                    //update m_indices
-                    m_indices[current_m][index_offset] = vtFaceVertexIndices[usd_index_offset];
-                    m_indices[current_m][index_offset + 1] = vtFaceVertexIndices[usd_index_offset + 1];
-                    m_indices[current_m][index_offset + 2] = vtFaceVertexIndices[usd_index_offset + 2];
-                    m_indices[current_m][index_offset + 3] = vtFaceVertexIndices[usd_index_offset + 0];
-                    m_indices[current_m][index_offset + 4] = vtFaceVertexIndices[usd_index_offset + 2];
-                    m_indices[current_m][index_offset+ 5] = vtFaceVertexIndices[usd_index_offset + 3];
-                    
-                    index_offset += 6;
-                    usd_index_offset += 4;
-                    
-                } else {
-                    std::cout << "N-GON FACE" << std::endl;
+                }
+                //update m_positions
+                for (int p = 0; p < point_size; p++) {
+
+                    float vxTemp = (float)xformOps[0][0] * vtPoints[p][0] + (float)xformOps[1][0] * vtPoints[p][1] +
+                                   +(float)xformOps[2][0] * vtPoints[p][2] + (float)xformOps[3][0];
+                    float vyTemp = (float)xformOps[0][1] * vtPoints[p][0] + (float)xformOps[1][1] * vtPoints[p][1] +
+                                   +(float)xformOps[2][1] * vtPoints[p][2] + (float)xformOps[3][1];
+                    float vzTemp = (float)xformOps[0][2] * vtPoints[p][0] + (float)xformOps[1][2] * vtPoints[p][1] +
+                                   +(float)xformOps[2][2] * vtPoints[p][2] + (float)xformOps[3][2];
+
+                    vtPoints[p][0] = vxTemp;
+                    vtPoints[p][1] = vyTemp;
+                    vtPoints[p][2] = vzTemp;
+
+                    //Update bounding box
+                    bbox[0] = std::min(bbox[0], vtPoints[p][0]);
+                    bbox[1] = std::min(bbox[1], vtPoints[p][1]);
+                    bbox[2] = std::min(bbox[2], vtPoints[p][2]);
+                    bbox[3] = std::max(bbox[3], vtPoints[p][0]);
+                    bbox[4] = std::max(bbox[4], vtPoints[p][1]);
+                    bbox[5] = std::max(bbox[5], vtPoints[p][2]);
+
+                    auto current_position_ptr = &(vtPoints[p][0]);
+                    m_positions[current_m].insert(
+                        m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
+
+                    auto current_normals_ptr = &(vtNormals[p][0]);
+                    m_normals[current_m].insert(m_normals[current_m].end(), current_normals_ptr, current_normals_ptr + 3);
+
+                    auto current_tex_ptr = &(uvValues[p][0]);
+                    m_texcoords[current_m].insert(m_texcoords[current_m].end(), current_tex_ptr, current_tex_ptr + 2);
                 }
             }
-            //update m_positions
-            for (int p = 0; p < point_size; p++) {
-           
-                float vxTemp = (float)xformOps[0][0] * vtPoints[p][0] + (float)xformOps[1][0] * vtPoints[p][1] +
-                                 +(float)xformOps[2][0] * vtPoints[p][2] + (float)xformOps[3][0];
-                float vyTemp = (float)xformOps[0][1] * vtPoints[p][0] + (float)xformOps[1][1] * vtPoints[p][1] +
-                                 +(float)xformOps[2][1] * vtPoints[p][2] + (float)xformOps[3][1];
-                float vzTemp = (float)xformOps[0][2] * vtPoints[p][0] + (float)xformOps[1][2] * vtPoints[p][1] +
-                                 +(float)xformOps[2][2] * vtPoints[p][2] + (float)xformOps[3][2];
-              
-                vtPoints[p][0] = vxTemp;
-                vtPoints[p][1] = vyTemp;
-                vtPoints[p][2] = vzTemp;
+            else if (geom.GetNormalsInterpolation() == "faceVarying") {
+                //reserve space for vertex information
+                m_indices[current_m].resize(indices_size);
+                m_positions[current_m].reserve(indices_size * 3);
+                m_normals[current_m].reserve(indices_size * 3);
+                m_texcoords[current_m].reserve(indices_size * 2);
+                std::cout << "reserving positions and normals of: " << current_m << std::endl;
 
-                //Update bounding box
-                bbox[0] = std::min(bbox[0], vtPoints[p][0]);
-                bbox[1] = std::min(bbox[1], vtPoints[p][1]);
-                bbox[2] = std::min(bbox[2], vtPoints[p][2]);
-                bbox[3] = std::max(bbox[3], vtPoints[p][0]);
-                bbox[4] = std::max(bbox[4], vtPoints[p][1]);
-                bbox[5] = std::max(bbox[5], vtPoints[p][2]);
+                // update transformation and bounding box
+                 for (int p = 0; p < point_size; p++) {
 
-                auto current_position_ptr = &(vtPoints[p][0]);
-                m_positions[current_m].insert(
-                    m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
+                    float vxTemp = (float)xformOps[0][0] * vtPoints[p][0] + (float)xformOps[1][0] * vtPoints[p][1] +
+                                   +(float)xformOps[2][0] * vtPoints[p][2] + (float)xformOps[3][0];
+                    float vyTemp = (float)xformOps[0][1] * vtPoints[p][0] + (float)xformOps[1][1] * vtPoints[p][1] +
+                                   +(float)xformOps[2][1] * vtPoints[p][2] + (float)xformOps[3][1];
+                    float vzTemp = (float)xformOps[0][2] * vtPoints[p][0] + (float)xformOps[1][2] * vtPoints[p][1] +
+                                   +(float)xformOps[2][2] * vtPoints[p][2] + (float)xformOps[3][2];
 
-                /* auto current_normals_ptr = &(vtNormals[p][0]);
-                m_normals[current_m].insert(m_normals[current_m].end(), current_normals_ptr, current_normals_ptr + 3);
+                    vtPoints[p][0] = vxTemp;
+                    vtPoints[p][1] = vyTemp;
+                    vtPoints[p][2] = vzTemp;
 
-                auto current_tex_ptr = &(uvValues[p][0]);
-                m_texcoords[current_m].insert(m_texcoords[current_m].end(), current_tex_ptr, current_tex_ptr + 2);*/
+                    //Update bounding box
+                    bbox[0] = std::min(bbox[0], vtPoints[p][0]);
+                    bbox[1] = std::min(bbox[1], vtPoints[p][1]);
+                    bbox[2] = std::min(bbox[2], vtPoints[p][2]);
+                    bbox[3] = std::max(bbox[3], vtPoints[p][0]);
+                    bbox[4] = std::max(bbox[4], vtPoints[p][1]);
+                    bbox[5] = std::max(bbox[5], vtPoints[p][2]);
+                }
+
+
+                //index offset for facevertexindices
+                size_t index_offset = 0;
+                size_t usd_index_offset = 0;
+
+                //Loop over triangled faces in the mesh
+                for (size_t f = 0; f < vtFaceVertexCounts.size(); f++) {
+                    // Check if vertex count is 3 for the face
+                    if (vtFaceVertexCounts[f] == 3) {
+                        // Loop over vertices in the face.
+                        for (size_t v = 0; v < vtFaceVertexCounts[f]; v++) {
+
+                            //update m_indices
+                            size_t currentPointIndex = vtFaceVertexIndices[usd_index_offset + v];
+                            m_indices[current_m][index_offset + v] = index_offset + v;
+
+                            auto current_position_ptr = &(vtPoints[currentPointIndex][0]);
+                            m_positions[current_m].insert(
+                                m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
+
+                            auto current_normals_ptr = &(vtNormals[usd_index_offset + v][0]);
+                            m_normals[current_m].insert(
+                                m_normals[current_m].end(), current_normals_ptr, current_normals_ptr + 3);
+
+                            auto current_tex_ptr = &(uvValues[usd_index_offset + v][0]);
+                            m_texcoords[current_m].insert(
+                                m_texcoords[current_m].end(), current_tex_ptr, current_tex_ptr + 2);
+
+                        }
+                        index_offset += 3;
+                        usd_index_offset += 3;
+
+                    } else if (vtFaceVertexCounts[f] == 4) {
+
+                        int usd_vertex_offset = 0;
+                         // Loop over vertices in the face.
+                        for (size_t v = 0; v < 6; v++) {
+                            
+                            switch(v){
+                                case 0:
+                                    usd_vertex_offset = 0;
+                                    break;
+                                case 1:
+                                    usd_vertex_offset = 1;
+                                    break;
+                                case 2:
+                                    usd_vertex_offset = 2;
+                                    break;
+                                case 3:
+                                    usd_vertex_offset = 0;
+                                    break;
+                                case 4:
+                                    usd_vertex_offset = 2;
+                                    break;
+                                case 5:
+                                    usd_vertex_offset = 3;
+                                    break;
+                            }
+
+
+                            //update m_indices
+                            size_t currentPointIndex = vtFaceVertexIndices[usd_index_offset + usd_vertex_offset];
+                            m_indices[current_m][index_offset + v] = index_offset + v;
+
+                            auto current_position_ptr = &(vtPoints[currentPointIndex][0]);
+                            m_positions[current_m].insert(
+                                m_positions[current_m].end(), current_position_ptr, current_position_ptr + 3);
+
+                            auto current_normals_ptr = &(vtNormals[usd_index_offset + usd_vertex_offset][0]);
+                            m_normals[current_m].insert(
+                                m_normals[current_m].end(), current_normals_ptr, current_normals_ptr + 3);
+
+                            auto current_tex_ptr = &(uvValues[usd_index_offset + usd_vertex_offset][0]);
+                            m_texcoords[current_m].insert(
+                                m_texcoords[current_m].end(), current_tex_ptr, current_tex_ptr + 2);
+                        }
+
+                        index_offset += 6;
+                        usd_index_offset += 4;
+                        
+                    } else {
+                        std::cout << "N-GON FACE" << std::endl;
+                    }
+                }
             }
+
+            std::cout << "pos_size : " << m_positions[current_m].size()
+                      << " normals_size: " << m_normals[current_m].size()
+                      << " uv_size: " << m_texcoords[current_m].size()
+                      << " index_size" << m_indices[current_m].size() << std::endl;
 
             const auto pos_ptr = m_positions[current_m].data();
             std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
             // create vertexattribute for positions
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(pos_ptr),
-                3 * vtPoints.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
+                m_positions[current_m].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT),
+                3,
                 MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::AttributeSemanticType::POSITION});
 
-            /* const auto nor_ptr = m_normals[current_m].data();
+            const auto nor_ptr = m_normals[current_m].data();
             // create vertexattribute for normals
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(nor_ptr),
-                3 * vtNormals.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
+                m_normals[current_m].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
                 MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::AttributeSemanticType::NORMAL});
 
             const auto tex_ptr = m_texcoords[current_m].data();
             // create vertexattribute for texcoords
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(tex_ptr),
-               2 * uvValues.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 2,
-                MeshDataAccessCollection::FLOAT, 8, 0, MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});*/
+                m_texcoords[current_m].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT),
+                2,
+                MeshDataAccessCollection::FLOAT, 8, 0, MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});
 
             // create MeshDataAccessCollection indexdata
             MeshDataAccessCollection::IndexData mesh_indices;
