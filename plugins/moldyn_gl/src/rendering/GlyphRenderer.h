@@ -116,9 +116,10 @@ private:
     };
 
     /**The ellipsoid shader*/
-    vislib_gl::graphics::gl::GLSLShader m_arrow_shader;
-    vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
     vislib_gl::graphics::gl::GLSLShader m_box_shader;
+    vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
+    vislib_gl::graphics::gl::GLSLShader m_arrow_shader;
+    vislib_gl::graphics::gl::GLSLShader m_superquadric_shader;
 
     std::vector<core::utility::SSBOBufferArray> m_position_buffers;
     std::vector<core::utility::SSBOBufferArray> m_radius_buffers;
@@ -139,6 +140,7 @@ private:
     megamol::core::param::ParamSlot m_color_interpolation_param;
     megamol::core::param::ParamSlot m_min_radius_param;
     megamol::core::param::ParamSlot m_color_mode_param;
+    megamol::core::param::ParamSlot m_superquadric_exponent_param;
 
     SIZE_T m_last_hash = -1;
     uint32_t m_last_frame_id = -1;

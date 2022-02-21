@@ -49,7 +49,8 @@ GlyphRenderer::GlyphRenderer(void)
         , m_color_interpolation_param(
               "colorInterpolation", "Interpolate between directional coloring (0) and glyph color (1)")
         , m_min_radius_param("minRadius", "Sets the minimum radius length. Applied to each axis.")
-        , m_color_mode_param("colorMode", "Switch between global glyph and per axis color") {
+        , m_color_mode_param("colorMode", "Switch between global glyph and per axis color")
+        , m_superquadric_exponent_param("exponent", "Sets the exponent used in the implicit superquadric equation") {
 
     this->m_get_data_slot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->m_get_data_slot);
@@ -78,7 +79,7 @@ GlyphRenderer::GlyphRenderer(void)
     this->MakeSlotAvailable(&this->m_radius_scale_param);
 
     // currently only needed for arrow
-    param::EnumParam* op = new param::EnumParam(0);
+    param::EnumParam* op = new param::EnumParam(3);
     op->SetTypePair(0, "x");
     op->SetTypePair(1, "y");
     op->SetTypePair(2, "z");
@@ -100,6 +101,10 @@ GlyphRenderer::GlyphRenderer(void)
     gcm->SetTypePair(1, "PerAxis");
     this->m_color_mode_param << gcm;
     this->MakeSlotAvailable(&this->m_color_mode_param);
+
+    // TODO: set visibility only to superquadric
+    m_superquadric_exponent_param << new param::FloatParam(1.0f, -100.0f, 100.0f, 0.1f);
+    this->MakeSlotAvailable(&this->m_superquadric_exponent_param);
 }
 
 
@@ -117,6 +122,7 @@ bool GlyphRenderer::create(void) {
     ret_val = ret_val && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->m_box_shader);
     ret_val = ret_val && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->m_ellipsoid_shader);
     ret_val = ret_val && this->makeShader("glyph::arrow_vertex", "glyph::arrow_fragment", this->m_arrow_shader);
+    ret_val = ret_val && this->makeShader("glyph::superquadric_vertex", "glyph::superquadric_fragment", this->m_superquadric_shader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->m_grey_tf);
@@ -192,6 +198,7 @@ void GlyphRenderer::release(void) {
     this->m_box_shader.Release();
     this->m_ellipsoid_shader.Release();
     this->m_arrow_shader.Release();
+    this->m_superquadric_shader.Release();
     glDeleteTextures(1, &this->m_grey_tf);
 }
 
@@ -382,18 +389,22 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     case Glyph::BOX:
         shader = &this->m_box_shader;
         m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ELLIPSOID:
         shader = &this->m_ellipsoid_shader;
         m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ARROW:
         shader = &this->m_arrow_shader;
         m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(true);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::SUPERQUADRIC:
-        shader = &this->m_ellipsoid_shader;
+        shader = &this->m_superquadric_shader;
         m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(true);
         break;
     default:;
         shader = &this->m_ellipsoid_shader;
@@ -413,6 +424,9 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform1f(shader->ParameterLocation("color_interpolation"),
         this->m_color_interpolation_param.Param<param::FloatParam>()->Value());
     glUniform1f(shader->ParameterLocation("length_filter"), this->m_length_filter_param.Param<param::FloatParam>()->Value());
+    glUniform1f(
+        shader->ParameterLocation("exponent"), this->m_superquadric_exponent_param.Param<param::FloatParam>()->Value());
+
 
     uint32_t num_total_glyphs = 0;
     uint32_t curr_glyph_offset = 0;
@@ -584,7 +598,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             case Glyph::SUPERQUADRIC:
-                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actual_items));
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             default:;
             }

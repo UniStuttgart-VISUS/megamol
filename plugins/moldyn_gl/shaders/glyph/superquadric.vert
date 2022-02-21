@@ -4,7 +4,6 @@
  * All rights reserved.
  */
 
-// TODO: some of these might not be needed, cut them
 out vec4 obj_pos; //
 out vec3 cam_pos; //
 out mat3 rotate_world_into_tensor; //
@@ -12,7 +11,6 @@ out vec3 absradii;
 
 out vec4 vert_color;
 out flat vec3 dir_color;
-out vec3 view_ray;
 
 // this re-activates the old code that draws the whole box and costs ~50% performance for box glyphs
 // note that you need the single-strip-per-box instancing call in the Renderer for this (14 * #glyphs)
@@ -42,14 +40,12 @@ void main() {
     // get the current glyphs (center) position
     obj_pos = vec4(pos_array[inst].x, pos_array[inst].y, pos_array[inst].z, 1.0);
 
-
     // get the current glyphs orientation (represented by its quaternion)
     vec4 quat_c = vec4(quat_array[inst].x, quat_array[inst].y, quat_array[inst].z, quat_array[inst].w); //quat[inst];
 
     // from the glyphs quaternion, calculate the rotation tensor
     rotate_world_into_tensor = quaternion_to_matrix(quat_c);
     mat3 rotate_points = transpose(rotate_world_into_tensor);
-
 
     // all about the glyphs radii
     bool ignore_radii = (options & OPTIONS_IGNORE_RADII) > 0;
@@ -111,7 +107,6 @@ void main() {
     // corners relative to world space glyph positions
     vec4 ws_pos = obj_pos + corner_pos;
 
-    view_ray = cam.xyz - ws_pos.xyz; // TODO: needed?
     gl_Position =  mvp * ws_pos;
 
     bool clip_available = (options & OPTIONS_USE_CLIP) > 0;
