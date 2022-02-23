@@ -66,8 +66,11 @@ private:
     std::unique_ptr<glowl::GLSLProgram> linshader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
     glowl::TextureLayout texLayout_;
+    glowl::TextureLayout distTexLayout_;
     std::unique_ptr<glowl::Texture2D> texA_;
     std::unique_ptr<glowl::Texture2D> texB_;
+    std::unique_ptr<glowl::Texture2D> distTexRead_;
+    std::unique_ptr<glowl::Texture2D> distTexWrite_;
 
     int oldWidth_ = -1;
     int oldHeight_ = -1;

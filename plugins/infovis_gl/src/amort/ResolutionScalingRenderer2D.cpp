@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include <vector>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -47,11 +47,19 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
     // Store texture layout for later resize
     texLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+            {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
         {});
+    distTexLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+            {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+        {});
+
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
+    distTexRead_ = std::make_unique<glowl::Texture2D>("distTexR", distTexLayout_, nullptr);
+    distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
 
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
@@ -110,13 +118,23 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     texLayout_.height = h;
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texA_->bindTexture();
-    GLfloat temp[4]{0.0};
+    const GLfloat temp[4]{1.0};
     //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
     //glBindTexture(GL_TEXTURE_2D, 0);
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
     texB_->bindTexture();
     //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
     //glBindTexture(GL_TEXTURE_2D, 0);
+
+    distTexLayout_.width = w;
+    distTexLayout_.height = h;
+    distTexRead_ = std::make_unique<glowl::Texture2D>("distTexR", distTexLayout_, nullptr);
+    distTexRead_->bindTexture();
+    //glClearTexImage(distTexRead_->getName(), 0, GL_RGBA, GL_FLOAT, &temp);
+    
+    distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
+    distTexWrite_->bindTexture();
+    //glClearTexImage(distTexWrite_->getName(), 0, GL_RGBA, GL_FLOAT, &temp);
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
@@ -181,6 +199,8 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     if (!debugParam.Param<core::param::BoolParam>()->Value()) {
         texA_->bindImage(6, GL_READ_ONLY);
         texB_->bindImage(7, GL_WRITE_ONLY);
+        distTexRead_->bindImage(2, GL_READ_ONLY);
+        distTexWrite_->bindImage(3, GL_WRITE_ONLY);
     } else {
         glActiveTexture(GL_TEXTURE6);
         texA_->bindTexture();
@@ -192,4 +212,5 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
 
     frameIdx_ = (frameIdx_ + (a - 1) * (a - 1)) % (a * a);
     texA_.swap(texB_);
+    distTexRead_.swap(distTexWrite_);
 }
