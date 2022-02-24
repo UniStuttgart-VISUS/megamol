@@ -920,7 +920,17 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 
     glUseProgram(0);
 
-    // todo read back minmax and check for plausibility!
+    // read back minmax and check for plausibility!
+    // I will keep this around for future debugging/updates to min/max computation
+    //std::vector<uint32_t> storage(2 * invocationCount); // n is the size
+    //glGetNamedBufferSubData(counterBuffer, 0, 2 * invocationCount * sizeof(uint32_t), storage.data());
+    //for (size_t i = 0; i < storage.size() / 2; ++i) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+    //        "ParallelCoordinateRenderer2D cell %lu min/max: %u / %u", i, storage[i * 2], storage[i * 2 + 1]);
+    //}
+    
+
+
     debugPop();
 }
 
