@@ -152,7 +152,7 @@ private:
      * @return The renderer 1 call
      */
     inline CallRenderViewGL* render1() const {
-        return this->_render1Slot.CallAs<CallRenderViewGL>();
+        return _render1Slot.CallAs<CallRenderViewGL>();
     }
 
     /**
@@ -161,17 +161,17 @@ private:
      * @return The renderer 2 call
      */
     inline CallRenderViewGL* render2() const {
-        return this->_render2Slot.CallAs<CallRenderViewGL>();
+        return _render2Slot.CallAs<CallRenderViewGL>();
     }
 
     /**
      * Returns the focused (keyboard input) renderer.
      */
     inline CallRenderViewGL* renderFocused() const {
-        if (this->_focus == 1) {
-            return this->render1();
-        } else if (this->_focus == 2) {
-            return this->render2();
+        if (_focus == 1) {
+            return render1();
+        } else if (_focus == 2) {
+            return render2();
         } else {
             return nullptr;
         }
@@ -181,11 +181,11 @@ private:
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderViewGL* renderHovered() const {
-        auto mousePos = vislib::math::Point<int, 2>(static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
-        if (this->_clientArea1.Contains(mousePos)) {
-            return this->render1();
-        } else if (this->_clientArea2.Contains(mousePos)) {
-            return this->render2();
+        auto mousePos = vislib::math::Point<int, 2>(static_cast<int>(_mouseX), static_cast<int>(_mouseY));
+        if (_clientArea1.Contains(mousePos)) {
+            return render1();
+        } else if (_clientArea2.Contains(mousePos)) {
+            return render2();
         } else {
             return nullptr;
         }
