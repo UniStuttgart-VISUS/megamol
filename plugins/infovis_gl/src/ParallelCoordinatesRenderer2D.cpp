@@ -928,8 +928,6 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
     //        "ParallelCoordinateRenderer2D cell %lu min/max: %u / %u", i, storage[i * 2], storage[i * 2 + 1]);
     //}
-    
-
 
     debugPop();
 }
