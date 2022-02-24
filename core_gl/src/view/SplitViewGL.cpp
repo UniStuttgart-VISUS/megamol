@@ -1,9 +1,9 @@
-/*
- * SplitViewGL.cpp
- *
- * Copyright (C) 2012 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #include "mmcore_gl/view/SplitViewGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -11,7 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"

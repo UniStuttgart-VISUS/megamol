@@ -1,15 +1,10 @@
-/*
- * SplitViewGL.h
- *
- * Copyright (C) 2012 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SPLITVIEW_H_INCLUDED
-#define MEGAMOLCORE_SPLITVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
@@ -20,10 +15,7 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
-
+namespace megamol::core_gl::view {
 
 /**
  * Abstract base class of rendering views
@@ -244,8 +236,4 @@ private:
 };
 
 
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_SPLITVIEW_H_INCLUDED */
+} // namespace megamol::core_gl::view
