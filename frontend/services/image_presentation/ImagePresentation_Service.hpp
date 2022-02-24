@@ -102,6 +102,7 @@ private:
     std::list<EntryPoint> m_entry_points;
 
     bool add_entry_point(std::string const& name, EntryPointRenderFunctions const& entry_point);
+    bool set_entry_point_priority(std::string const& name, const int priority);
     bool remove_entry_point(std::string const& name);
     bool rename_entry_point(std::string const& oldName, std::string const& newName);
     bool clear_entry_points();
