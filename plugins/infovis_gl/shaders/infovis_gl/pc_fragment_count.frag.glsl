@@ -13,14 +13,14 @@ void main()
 
     uvec2 globalMinMax = fragmentMinMax[0].xy;
 
-    if (frags.r >= 0) {
+    if (frags.r > 0) {
         float value = (frags.r - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
         if (sqrtDensity == 1) {
             value = sqrt(value);
         }
         value = clamp(value, 0.0, 1.0);
-        fragColor = texture(transferFunction, value);
+        fragColor = texture(tfTexture, value);
     } else {
-        fragColor = clearColor;
+        discard;
     }
 }

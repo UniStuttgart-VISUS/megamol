@@ -1,4 +1,4 @@
-layout(binding = 0) uniform sampler1D transferFunction;
+layout(binding = 0) uniform sampler1D tfTexture;
 layout(binding = 1) uniform sampler2D fragmentCount;
 
 uniform vec2 scaling = vec2(1.0);

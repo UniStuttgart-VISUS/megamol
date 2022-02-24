@@ -906,9 +906,12 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 
     this->enableProgramAndBind(minMaxProgram);
 
+    // density fbo clear color is set to black
+    auto clear_color = glm::vec4(0.0f);
+
     // uniforms invocationcount etc.
     glUniform1ui(minMaxProgram->getUniformLocation("invocationCount"), invocationCount);
-    glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, backgroundColor);
+    glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, glm::value_ptr(clear_color));
     glUniform2ui(minMaxProgram->getUniformLocation("resolution"), fbo->getWidth(), fbo->getHeight());
     glUniform2ui(minMaxProgram->getUniformLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
 
@@ -927,6 +930,9 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
         return;
     debugPush(6, "drawItemsContinuous");
     doFragmentCount();
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
     this->enableProgramAndBind(drawItemContinuousProgram);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
@@ -998,13 +1004,17 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             glBlendEquation(GL_FUNC_ADD);
             this->drawDiscrete(red, moreRed, 0.0f, viewRes);
             densityFBO.Disable();
-            glDisable(GL_BLEND);
+
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
 
             if (drawmode == DRAW_CONTINUOUS) {
                 this->drawItemsContinuous();
             } else if (drawmode == DRAW_HISTOGRAM) {
                 this->drawItemsHistogram();
             }
+
+            glDisable(GL_BLEND);
 
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("could not create FBO");
