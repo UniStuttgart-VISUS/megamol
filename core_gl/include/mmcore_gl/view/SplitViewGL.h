@@ -181,7 +181,7 @@ private:
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderViewGL* renderHovered() const {
-        auto mousePos = vislib::math::Point<float, 2>(this->_mouseX, this->_mouseY);
+        auto mousePos = vislib::math::Point<int, 2>(static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
         if (this->_clientArea1.Contains(mousePos)) {
             return this->render1();
         } else if (this->_clientArea2.Contains(mousePos)) {
@@ -222,11 +222,11 @@ private:
     /** Option for forwarding mouse and keyboard events to both child views */
     core::param::ParamSlot _inputToBothSlot;
 
-    vislib::math::Rectangle<float> _clientArea;
+    vislib::math::Rectangle<int> _clientArea;
 
-    vislib::math::Rectangle<float> _clientArea1;
+    vislib::math::Rectangle<int> _clientArea1;
 
-    vislib::math::Rectangle<float> _clientArea2;
+    vislib::math::Rectangle<int> _clientArea2;
 
     std::shared_ptr<glowl::FramebufferObject> _fboFull;
 
@@ -236,9 +236,9 @@ private:
 
     int _focus;
 
-    float _mouseX;
+    double _mouseX;
 
-    float _mouseY;
+    double _mouseY;
 
     bool _dragSplitter;
 };

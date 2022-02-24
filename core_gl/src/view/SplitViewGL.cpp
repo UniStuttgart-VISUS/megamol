@@ -9,6 +9,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "stdafx.h"
 
@@ -41,8 +42,8 @@ view::SplitViewGL::SplitViewGL()
         , _fbo1(nullptr)
         , _fbo2(nullptr)
         , _focus(0)
-        , _mouseX(0.0f)
-        , _mouseY(0.0f)
+        , _mouseX(0.0)
+        , _mouseY(0.0)
         , _dragSplitter(false) {
 
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
@@ -84,7 +85,7 @@ view::SplitViewGL::SplitViewGL()
     this->_splitPositionSlot << new core::param::FloatParam(0.5f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->_splitPositionSlot);
 
-    this->_splitWidthSlot << new core::param::FloatParam(4.0f, 0.0f, 100.0f);
+    this->_splitWidthSlot << new core::param::IntParam(4, 0, 100);
     this->MakeSlotAvailable(&this->_splitWidthSlot);
 
     this->_splitColourSlot << new core::param::ColorParam(0.75f, 0.75f, 0.75f, 1.0f);
@@ -158,15 +159,15 @@ core::view::ImageWrapper view::SplitViewGL::Render(double time, double instanceT
 
     if (this->_splitPositionSlot.IsDirty() || this->_splitOrientationSlot.IsDirty() ||
         this->_splitWidthSlot.IsDirty() || this->_fbo1 == nullptr || this->_fbo2 == nullptr ||
-        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(_fboFull->getWidth())) ||
-        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(_fboFull->getHeight()))) {
+        !vislib::math::IsEqual(this->_clientArea.Width(), _fboFull->getWidth()) ||
+        !vislib::math::IsEqual(this->_clientArea.Height(), _fboFull->getHeight())) {
         this->updateSize(_fboFull->getWidth(), _fboFull->getHeight());
     }
 
     // Propagate viewport changes to connected views.
     // this cannot be done in a smart way currently since reconnects and early initialization
     // would skip propagating the data when called in updateSize
-    auto propagateViewport = [](CallRenderViewGL* crv, vislib::math::Rectangle<float>& clientArea) {
+    auto propagateViewport = [](CallRenderViewGL* crv, vislib::math::Rectangle<int>& clientArea) {
         if (crv == nullptr) {
             return;
         }
@@ -279,8 +280,8 @@ void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
         }
     }
 
-    if ((!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
-            !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) &&
+    if ((!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<int>(width)) ||
+            !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<int>(height))) &&
         width != 0 && height != 0) {
         this->updateSize(width, height);
     }
@@ -410,9 +411,11 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
 
     if (this->_dragSplitter) {
         if (this->_splitOrientationSlot.Param<core::param::EnumParam>()->Value() == HORIZONTAL) {
-            this->_splitPositionSlot.Param<core::param::FloatParam>()->SetValue(x / this->_clientArea.Width());
+            this->_splitPositionSlot.Param<core::param::FloatParam>()->SetValue(
+                static_cast<float>(x) / static_cast<float>(this->_clientArea.Width()));
         } else {
-            this->_splitPositionSlot.Param<core::param::FloatParam>()->SetValue(y / this->_clientArea.Height());
+            this->_splitPositionSlot.Param<core::param::FloatParam>()->SetValue(
+                static_cast<float>(y) / static_cast<float>(this->_clientArea.Height()));
         }
     }
 
@@ -420,8 +423,8 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
 
-    float mx;
-    float my;
+    double mx;
+    double my;
 
     if (crv == crv1) {
         mx = this->_mouseX - this->_clientArea1.Left();
@@ -504,8 +507,8 @@ void view::SplitViewGL::release() {
 }
 
 void view::SplitViewGL::updateSize(size_t width, size_t height) {
-    this->_clientArea.SetWidth(static_cast<float>(width));
-    this->_clientArea.SetHeight(static_cast<float>(height));
+    this->_clientArea.SetWidth(static_cast<int>(width));
+    this->_clientArea.SetHeight(static_cast<int>(height));
     this->adjustClientAreas();
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -537,24 +540,28 @@ void view::SplitViewGL::updateSize(size_t width, size_t height) {
 }
 
 void view::SplitViewGL::adjustClientAreas() {
-    float sp = this->_splitPositionSlot.Param<core::param::FloatParam>()->Value();
-    float shw = this->_splitWidthSlot.Param<core::param::FloatParam>()->Value() * 0.5f;
-    auto so = static_cast<Orientation>(this->_splitOrientationSlot.Param<core::param::EnumParam>()->Value());
+    const float splitPos = this->_splitPositionSlot.Param<core::param::FloatParam>()->Value();
+    const int splitWidth = this->_splitWidthSlot.Param<core::param::IntParam>()->Value();
+    const auto splitOrientation =
+        static_cast<Orientation>(this->_splitOrientationSlot.Param<core::param::EnumParam>()->Value());
     this->_splitPositionSlot.ResetDirty();
     this->_splitWidthSlot.ResetDirty();
     this->_splitOrientationSlot.ResetDirty();
 
-    if (so == HORIZONTAL) {
+    if (splitOrientation == HORIZONTAL) {
+        const int client1Width =
+            static_cast<int>(static_cast<float>(this->_clientArea.Width() - splitWidth) * splitPos);
         this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(),
-            this->_clientArea.Left() + this->_clientArea.Width() * sp - shw, this->_clientArea.Top());
-        this->_clientArea2.Set(this->_clientArea.Left() + this->_clientArea.Width() * sp + shw,
-            this->_clientArea.Bottom(), this->_clientArea.Right(), this->_clientArea.Top());
+            this->_clientArea.Left() + client1Width, this->_clientArea.Top());
+        this->_clientArea2.Set(this->_clientArea.Left() + client1Width + splitWidth, this->_clientArea.Bottom(),
+            this->_clientArea.Right(), this->_clientArea.Top());
     } else {
+        const int client1Height =
+            static_cast<int>(static_cast<float>(this->_clientArea.Height() - splitWidth) * splitPos);
         this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(), this->_clientArea.Right(),
-            this->_clientArea.Bottom() + this->_clientArea.Height() * sp - shw);
-        this->_clientArea2.Set(this->_clientArea.Left(),
-            this->_clientArea.Bottom() + this->_clientArea.Height() * sp + shw, this->_clientArea.Right(),
-            this->_clientArea.Top());
+            this->_clientArea.Bottom() + client1Height);
+        this->_clientArea2.Set(this->_clientArea.Left(), this->_clientArea.Bottom() + client1Height + splitWidth,
+            this->_clientArea.Right(), this->_clientArea.Top());
     }
 
     this->_clientArea1.EnforcePositiveSize();
