@@ -1,5 +1,8 @@
 #version 430
 
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+
 #include "pc_common/pc_fragment_count_buffers.inc.glsl"
 #include "pc_common/pc_fragment_count_uniforms.inc.glsl"
 
@@ -19,7 +22,7 @@ void main()
             value = sqrt(value);
         }
         value = clamp(value, 0.0, 1.0);
-        fragColor = texture(tfTexture, value);
+        fragColor = tflookup(value);
     } else {
         discard;
     }
