@@ -886,13 +886,14 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
-    int invocations[] = {
-        static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
+    int invocations[] = {static_cast<int>(std::ceil(static_cast<float>(fbo->getWidth()) / 16.0f)),
+        static_cast<int>(std::ceil(static_cast<float>(fbo->getHeight()) / 16.0f))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
-    size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
+    size_t bytes = sizeof(uint32_t) * 2;
+    std::array<uint32_t, 2> minMaxInitData{std::numeric_limits<uint32_t>::max(), 0};
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, nullptr, GL_STATIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, minMaxInitData.data(), GL_STATIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(counterBuffer));
@@ -915,19 +916,9 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     glUniform2ui(minMaxProgram->getUniformLocation("resolution"), fbo->getWidth(), fbo->getHeight());
     glUniform2ui(minMaxProgram->getUniformLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
 
-
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     glUseProgram(0);
-
-    // read back minmax and check for plausibility!
-    // I will keep this around for future debugging/updates to min/max computation
-    //std::vector<uint32_t> storage(2 * invocationCount); // n is the size
-    //glGetNamedBufferSubData(counterBuffer, 0, 2 * invocationCount * sizeof(uint32_t), storage.data());
-    //for (size_t i = 0; i < storage.size() / 2; ++i) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-    //        "ParallelCoordinateRenderer2D cell %lu min/max: %u / %u", i, storage[i * 2], storage[i * 2 + 1]);
-    //}
 
     debugPop();
 }
