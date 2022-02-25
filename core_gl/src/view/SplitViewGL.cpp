@@ -547,13 +547,17 @@ void view::SplitViewGL::adjustClientAreas() {
     _splitOrientationSlot.ResetDirty();
 
     if (splitOrientation == HORIZONTAL) {
-        const int client1Width = static_cast<int>(static_cast<float>(_clientArea.Width() - splitWidth) * splitPos);
+        const int client1Width =
+            std::clamp(static_cast<int>(std::lround(static_cast<float>(_clientArea.Width() - splitWidth) * splitPos)),
+                0, _clientArea.Width() - splitWidth);
         _clientArea1.Set(
             _clientArea.Left(), _clientArea.Bottom(), _clientArea.Left() + client1Width, _clientArea.Top());
         _clientArea2.Set(_clientArea.Left() + client1Width + splitWidth, _clientArea.Bottom(), _clientArea.Right(),
             _clientArea.Top());
     } else {
-        const int client1Height = static_cast<int>(static_cast<float>(_clientArea.Height() - splitWidth) * splitPos);
+        int client1Height =
+            std::clamp(static_cast<int>(std::lround(static_cast<float>(_clientArea.Height() - splitWidth) * splitPos)),
+                0, _clientArea.Height() - splitWidth);
         _clientArea1.Set(
             _clientArea.Left(), _clientArea.Bottom(), _clientArea.Right(), _clientArea.Bottom() + client1Height);
         _clientArea2.Set(_clientArea.Left(), _clientArea.Bottom() + client1Height + splitWidth, _clientArea.Right(),
