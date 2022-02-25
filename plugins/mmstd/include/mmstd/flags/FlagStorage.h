@@ -122,7 +122,10 @@ protected:
     core::param::ParamSlot serializedFlags;
 
     std::shared_ptr<FlagCollection_CPU> theCPUData;
-    uint32_t version = 0;
+
+    // set initial version (in first frame, with temp data) != 0 so call data comes out as "has Update"
+    // and eventually triggers a reload of actual user-provided data via validateFlagCount()
+    uint32_t version = 1;
 };
 
 } // namespace megamol::core
