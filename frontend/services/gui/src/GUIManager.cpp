@@ -1478,6 +1478,7 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
+                megamol::core::utility::get_json_value<float>(state_str, {"global_win_background_alpha"}, &this->gui_state.window_alpha);
             }
         }
 
@@ -1508,6 +1509,7 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
+        json_state[GUI_JSON_TAG_GUI]["global_win_background_alpha"] = this->gui_state.window_alpha;
 
         // Write window configurations
         this->win_collection.StateToJSON(json_state);
