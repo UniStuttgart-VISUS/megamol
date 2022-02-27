@@ -974,6 +974,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     const float red[] = {1.0f, 0.0f, 0.0f, 1.0};
+    const float red_green[] = {1.0f, 1.0f, 0.0f, 1.0};
 
     auto drawmode = this->drawModeSlot.Param<core::param::EnumParam>()->Value();
 
@@ -988,7 +989,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
         if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
             this->densityFBO.GetHeight() != fbo->getHeight()) {
             densityFBO.Release();
-            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_R32F, GL_RED, GL_FLOAT);
+            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_RG32F, GL_RG, GL_FLOAT);
             makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
         }
         if (ok) {
@@ -1000,7 +1001,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
-            this->drawDiscrete(red, red, 0.0f, viewRes);
+            this->drawDiscrete(red, red_green, 0.0f, viewRes);
             densityFBO.Disable();
 
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
