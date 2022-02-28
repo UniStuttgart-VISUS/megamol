@@ -4,10 +4,9 @@
  * All rights reserved.
  */
 
-// TODO: some of these might not be needed, cut them
-out vec4 obj_pos; //
-out vec3 cam_pos; //
-out mat3 rotate_world_into_tensor; //
+out vec4 obj_pos;
+out vec3 cam_pos;
+out mat3 rotate_world_into_tensor;
 out vec3 absradii;
 
 out vec4 vert_color;

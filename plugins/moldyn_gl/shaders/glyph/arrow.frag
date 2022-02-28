@@ -1,19 +1,8 @@
-// TODO: copyright note of links used?
-// TODO: one of the cylinders is not rotated correctly, compare to ellipsoids
 /**
  * MegaMol
  * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
-
- // TODO:
- // currently, there is a problem regarding the alignment of the arrows
- // because we assume that arrows are aligned with the x-axis
- // this results in weird behaviour, where the x-axis of an arrow is not the longest
- // e.g. if the z-axis is the longest, the box is stretched in z-direction
- // but the arrow is still looking in x-direction and therefore gets clipped
- // very early by the box
- // possible solution: macro coordinate for intersection tests
 
 in vec4 obj_pos;
 in vec3 cam_pos;
@@ -103,12 +92,23 @@ void main() {
     float ray_cpos_dot = dot(ray.yz, cpos.yz);
     float cpos_dot =     dot(cpos.yz, cpos.yz);
 
+    float radius_cylinder = aligned_absradii.y * radius_scaling;
+    float radius_cone = 1.5 * radius_cylinder;
+    float height_cone = aligned_absradii.z * radius_scaling;
+
+    // early exit check if cam is within or "behind" arrow
+    // (actually just checks if it is within the cylinder)
+    if(cpos_dot <= radius_cylinder &&
+       cpos.x >= -length_cylinder &&
+       cpos.x <= height_cone) {
+        discard;
+    }
+
+
     ////////////////////////////////////////
     // CYLINDER
     // see: https://pbr-book.org/3ed-2018/Shapes/Cylinders
     ////////////////////////////////////////
-    float radius_cylinder = aligned_absradii.y * radius_scaling;
-
     // a cylinder intersection test
     float a_cyl = ray_dot;
     float b_cyl = 2.0 * ray_cpos_dot;
@@ -121,9 +121,7 @@ void main() {
     // CONE
     // see: https://pbr-book.org/3ed-2018/Shapes/Other_Quadrics
     ////////////////////////////////////////
-    float radius_cone = 1.5 * radius_cylinder;
     // TODO: which cone height to use? one of the radii of half the length of the cylinder or whatever?
-    float height_cone = aligned_absradii.z * radius_scaling;
     float k = radius_cone / height_cone;
     k = k * k;
     float cam_x_minus_height = cpos.x - height_cone;
@@ -174,7 +172,7 @@ void main() {
     invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > TIP_LEN);
 
     if (invalid.x && invalid.y && invalid.z && invalid.w) {
-        //discard;
+        discard;
     }
 
     // default disk normal
@@ -209,7 +207,7 @@ void main() {
         intersection = cpos + (ray * lambda.w);
         float pyth = dot(intersection.yz, intersection.yz);
         if(pyth > radius_cone * radius_cone) {
-            //discard;
+            discard;
         }
     }
 
