@@ -1,4 +1,5 @@
 layout(binding = 1) uniform sampler2D fragmentCount;
+layout(binding = 2) uniform sampler2D selectionFlag;
 
 uniform vec2 scaling = vec2(1.0);
 uniform mat4 modelView = mat4(1.0);

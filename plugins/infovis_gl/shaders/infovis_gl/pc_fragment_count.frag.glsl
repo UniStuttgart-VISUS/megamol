@@ -12,15 +12,15 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    vec4 frags = texture(fragmentCount, texCoord) - clearColor;
+    float frags = texture(fragmentCount, texCoord).r;
+    float select = texture(selectionFlag, texCoord).r;
 
     uvec2 globalMinMax = fragmentMinMax[0].xy;
 
-    if (frags.g > 0) {
+    if (select > 0) {
         fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    }
-    else if (frags.r > 0) {
-        float value = (frags.r - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
+    } else if (frags > 0) {
+        float value = (frags - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
         if (sqrtDensity == 1) {
             value = sqrt(value);
         }

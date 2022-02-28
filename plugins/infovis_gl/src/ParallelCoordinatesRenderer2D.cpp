@@ -932,13 +932,13 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     this->enableProgramAndBind(drawItemContinuousProgram);
-    // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
-    // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
+    glActiveTexture(GL_TEXTURE1);
     densityFBO->bindColorbuffer(0);
-    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
-    // tf->Range()[1]);
+    glActiveTexture(GL_TEXTURE2);
+    densityFBO->bindColorbuffer(1);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram->getUniformLocation("fragmentCount"), 1);
+    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("selectionFlag"), 2);
     glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram->getUniformLocation("sqrtDensity"),
         this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
@@ -988,7 +988,8 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             this->densityFBO->getHeight() != fbo->getHeight()) {
             densityFBO = std::make_unique<glowl::FramebufferObject>(
                 "densityFBO", fbo->getWidth(), fbo->getHeight(), glowl::FramebufferObject::NONE);
-            densityFBO->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);
+            densityFBO->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);
+            densityFBO->createColorAttachment(GL_R8, GL_RED, GL_UNSIGNED_BYTE);
         }
         densityFBO->bind();
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

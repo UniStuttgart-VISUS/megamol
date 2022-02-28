@@ -28,8 +28,8 @@ void main()
     while (texCoord.y < resolution.y) {
         texCoord.x = gl_GlobalInvocationID.x;
         while (texCoord.x < resolution.x) {
-            vec4 texel = texelFetch(fragmentCount, ivec2(texCoord), 0) - clearColor;
-            uint count = uint(texel.r);
+            float texel = texelFetch(fragmentCount, ivec2(texCoord), 0).r;
+            uint count = uint(texel);
             if (count >= 0 && count < thisMin) {
                 thisMin = count;
             }
