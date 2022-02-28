@@ -1,13 +1,18 @@
-#ifndef MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "BaseAmortizedRenderer2D.h"
 
-#include <glm/matrix.hpp>
-#include <glowl/glowl.h>
+namespace megamol::infovis_gl {
 
-namespace megamol {
-namespace infovis_gl {
 class ResolutionScalingRenderer2D : public BaseAmortizedRenderer2D {
 public:
     /**
@@ -60,7 +65,6 @@ protected:
 private:
     core::param::ParamSlot amortLevelParam;
     core::param::ParamSlot debugParam;
-    core::param::ParamSlot debugFloatParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
     std::unique_ptr<glowl::GLSLProgram> linshader_;
@@ -83,7 +87,4 @@ private:
     glm::mat4 movePush_;
     glm::mat4 lastProjViewMx_;
 };
-} // namespace infovis_gl
-} // namespace megamol
-
-#endif // MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
+} // namespace megamol::infovis_gl

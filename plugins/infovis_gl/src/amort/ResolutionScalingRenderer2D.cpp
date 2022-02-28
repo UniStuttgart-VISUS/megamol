@@ -1,10 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ResolutionScalingRenderer2D.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <vector>
+
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -14,15 +18,12 @@ using megamol::core::utility::log::Log;
 ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
         : BaseAmortizedRenderer2D()
         , amortLevelParam("AmortLevel", "Level of Amortization")
-        , debugParam("Debug", "some")
-        , debugFloatParam("debugInt", "some") {
+        , debugParam("Debug", "some") {
 
     this->amortLevelParam << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&amortLevelParam);
     this->debugParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&debugParam);
-    this->debugFloatParam << new core::param::FloatParam(0.0, 0.0);
-    this->MakeSlotAvailable(&debugFloatParam);
 }
 
 ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
@@ -76,9 +77,9 @@ void ResolutionScalingRenderer2D::releaseImpl() {
 bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
     std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
 
-    int a = amortLevelParam.Param<core::param::IntParam>()->Value();
-    int w = fbo->getWidth();
-    int h = fbo->getHeight();
+    const int a = amortLevelParam.Param<core::param::IntParam>()->Value();
+    const int w = fbo->getWidth();
+    const int h = fbo->getHeight();
 
     if (a != oldLevel_ || w != oldWidth_ || h != oldHeight_) {
         updateSize(a, w, h);
@@ -108,38 +109,34 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
-            camOffsets_[j * a + i] = glm::fvec3(((float)a - 1.0 - 2.0 * i) / w, ((float)a - 1.0 - 2.0 * j) / h, 0.0);
+            const float x = (static_cast<float>(a) - 1.0f - 2.0f * static_cast<float>(i)) / static_cast<float>(w);
+            const float y = (static_cast<float>(a) - 1.0f - 2.0f * static_cast<float>(j)) / static_cast<float>(h);
+            camOffsets_[j * a + i] = glm::vec3(x, y, 0.0f);
         }
     }
 
-    lowResFBO_->resize(ceil(float(w) / float(a)), ceil(float(h) / float(a)));
+    lowResFBO_->resize(static_cast<int>(std::ceil(static_cast<float>(w) / static_cast<float>(a))),
+        static_cast<int>(std::ceil(static_cast<float>(h) / static_cast<float>(a))));
 
     texLayout_.width = w;
     texLayout_.height = h;
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texA_->bindTexture();
-    const GLfloat temp[4]{1.0};
-    //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
-    //glBindTexture(GL_TEXTURE_2D, 0);
     texB_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
     texB_->bindTexture();
-    //glTextureParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, temp);
-    //glBindTexture(GL_TEXTURE_2D, 0);
 
     distTexLayout_.width = w;
     distTexLayout_.height = h;
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexR", distTexLayout_, nullptr);
     distTexRead_->bindTexture();
-    //glClearTexImage(distTexRead_->getName(), 0, GL_RGBA, GL_FLOAT, &temp);
-    
+
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
     distTexWrite_->bindTexture();
-    //glClearTexImage(distTexWrite_->getName(), 0, GL_RGBA, GL_FLOAT, &temp);
 
-    samplingSequence_ = std::vector<int>(a*a);
+    samplingSequence_ = std::vector<int>(a * a);
     samplingSequence_[0] = 0;
     for (int i = 1; i < a * a; i++) {
-        samplingSequence_[i] = (samplingSequence_[i-1] + (a+1) * (a+1)) % (a*a);
+        samplingSequence_[i] = (samplingSequence_[i - 1] + (a + 1) * (a + 1)) % (a * a);
     }
     samplingSequencePosition_ = 0;
 }
@@ -149,7 +146,7 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
 
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets_[frameIdx_].x,
-        -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0);
+        -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0f);
 
     movePush_ = lastProjViewMx_ * inverse(projViewMx);
     lastProjViewMx_ = projViewMx;
@@ -157,17 +154,17 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
     auto p = cam.get<core::view::Camera::Pose>();
     p.position = p.position + 0.5f * adj_offset;
 
-
-    float hAdj = ceil(float(height) / float(a)) / (float(height) / float(a));
-    float wAdj = ceil(float(width) / float(a)) / (float(width) / float(a));
+    const float ha = static_cast<float>(height) / static_cast<float>(a);
+    const float wa = static_cast<float>(width) / static_cast<float>(a);
+    float hAdj = std::ceil(ha) / ha;
+    float wAdj = std::ceil(wa) / wa;
 
     float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
     float wOffs =
         wAdj * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
-    p.position = p.position + glm::vec3(0.5 * wOffs, 0.5 * hOffs, 0);
+    p.position = p.position + glm::vec3(0.5f * wOffs, 0.5f * hOffs, 0.0f);
     intrinsics.frustrum_height = hAdj * intrinsics.frustrum_height.value();
     intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
-
 
     cam.setOrthographicProjection(intrinsics);
 
