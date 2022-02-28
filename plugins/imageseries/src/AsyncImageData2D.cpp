@@ -7,9 +7,10 @@ namespace megamol::ImageSeries {
 AsyncImageData2D::AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData)
         : available(true)
         , byteSize(imageData != nullptr ? imageData->Width() * imageData->Height() : 0)
-        , imageData(imageData) {}
+        , imageData(imageData)
+        , hash(computeHash()) {}
 
-AsyncImageData2D::AsyncImageData2D(std::size_t byteSize) : byteSize(byteSize) {}
+AsyncImageData2D::AsyncImageData2D(std::size_t byteSize) : byteSize(byteSize), hash(computeHash()) {}
 
 bool AsyncImageData2D::isWaiting() const {
     return !available;
@@ -29,6 +30,16 @@ bool AsyncImageData2D::isFailed() const {
 
 std::size_t AsyncImageData2D::getByteSize() const {
     return byteSize;
+}
+
+AsyncImageData2D::Hash AsyncImageData2D::getHash() const {
+    return imageData ? hash : 0;
+}
+
+AsyncImageData2D::Hash AsyncImageData2D::computeHash() {
+    // TODO use an actual hash function instead of a counter!
+    static std::atomic<Hash> currentHash = ATOMIC_VAR_INIT(1);
+    return currentHash++;
 }
 
 void AsyncImageData2D::setImageData(std::shared_ptr<const BitmapImage> imageData) {
