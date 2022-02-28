@@ -77,6 +77,8 @@ private:
     int oldLevel_ = -1;
 
     int frameIdx_ = 0;
+    int samplingSequencePosition_;
+    std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
     glm::mat4 movePush_;
     glm::mat4 lastProjViewMx_;

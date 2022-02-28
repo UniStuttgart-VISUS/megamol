@@ -135,6 +135,13 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
     distTexWrite_->bindTexture();
     //glClearTexImage(distTexWrite_->getName(), 0, GL_RGBA, GL_FLOAT, &temp);
+
+    samplingSequence_ = std::vector<int>(a*a);
+    samplingSequence_[0] = 0;
+    for (int i = 1; i < a * a; i++) {
+        samplingSequence_[i] = (samplingSequence_[i-1] + (a+1) * (a+1)) % (a*a);
+    }
+    samplingSequencePosition_ = 0;
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
@@ -210,7 +217,8 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
 
-    frameIdx_ = (frameIdx_ + (a - 1) * (a - 1)) % (a * a);
+    samplingSequencePosition_ = (samplingSequencePosition_ + 1) % (a * a);
+    frameIdx_ = samplingSequence_[samplingSequencePosition_];
     texA_.swap(texB_);
     distTexRead_.swap(distTexWrite_);
 }
