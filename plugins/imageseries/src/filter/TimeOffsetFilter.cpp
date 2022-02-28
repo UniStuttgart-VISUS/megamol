@@ -93,7 +93,7 @@ TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
 }
 
 std::size_t TimeOffsetFilter::getByteSize() const {
-    return input.reference ? input.reference->getByteSize() : 0;
+    return input.reference ? input.reference->getByteSize() * 4 : 0;
 }
 
 } // namespace megamol::ImageSeries::filter

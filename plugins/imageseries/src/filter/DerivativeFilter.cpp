@@ -56,7 +56,7 @@ DerivativeFilter::ImagePtr DerivativeFilter::operator()() {
 }
 
 std::size_t DerivativeFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
+    return input.image ? input.image->getByteSize() * 2 : 0;
 }
 
 } // namespace megamol::ImageSeries::filter
