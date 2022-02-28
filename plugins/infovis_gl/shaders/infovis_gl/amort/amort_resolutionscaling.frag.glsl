@@ -4,8 +4,8 @@ uniform sampler2D src_tex2D;
 
 layout (binding=6, rgba8) uniform image2D Store;
 layout (binding=7, rgba8) uniform image2D target;
-layout (binding=2, rgba8) uniform image2D distancesR;
-layout (binding=3, rgba8) uniform image2D distancesW;
+layout (binding=2, r32f) uniform image2D distancesR;
+layout (binding=3, r32f) uniform image2D distancesW;
 
 uniform int amortLevel;
 uniform int w;
@@ -36,13 +36,13 @@ void main() {
 
     if (frametype == i) {
         tempColor = vec4(texelFetch(src_tex2D, iCoord / amortLevel, 0).xyz, 1.0);
-        imageStore(distancesW, iCoord, vec4(1.0, 0.0, 0.0, 1.0));
+        imageStore(distancesW, iCoord, vec4(1.0f, 0.0f, 0.0f, 0.0f));
     } else {
         if (dist > oldDist) {
             tempColor = vec4(texelFetch(src_tex2D, iCoord /amortLevel, 0).xyz, 1.0);
-            imageStore(distancesW, iCoord, vec4(dist, 0.0, 0.0, 1.0));
+            imageStore(distancesW, iCoord, vec4(dist, 0.0f, 0.0f, 0.0f));
         } else {
-            imageStore(distancesW, iCoord, vec4(oldDist, 0.0, 0.0, 1.0));
+            imageStore(distancesW, iCoord, vec4(oldDist, 0.0f, 0.0f, 0.0f));
             tempColor = imageLoad(Store, movedICoord);
         }
     }

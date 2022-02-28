@@ -43,18 +43,26 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
     }
 
     lowResFBO_ = std::make_shared<glowl::FramebufferObject>(1, 1);
-    lowResFBO_->createColorAttachment(GL_RGBA8, GL_RGBA, GL_FLOAT);
+    lowResFBO_->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
 
     // Store texture layout for later resize
-    texLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-            {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+    texLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        {
+            {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+            {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+        },
         {});
-    distTexLayout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-            {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+    distTexLayout_ = glowl::TextureLayout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+        {
+            {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+            {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+        },
         {});
 
     texA_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
@@ -104,8 +112,8 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
 
 void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     frameIdx_ = 0;
-    movePush_ = glm::mat4(1.0);
-    lastProjViewMx_ = glm::mat4(1.0);
+    movePush_ = glm::mat4(1.0f);
+    lastProjViewMx_ = glm::mat4(1.0f);
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
