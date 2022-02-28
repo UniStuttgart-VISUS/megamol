@@ -41,7 +41,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , writeFlagsSlot("writeFlags", "writes the flag storage")
         , currentHash(0xFFFFFFFF)
         , currentFlagsVersion(0)
-        , densityFBO()
         , drawModeSlot("drawMode", "Draw mode")
         , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
         , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
@@ -899,7 +898,7 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(counterBuffer));
 
     glActiveTexture(GL_TEXTURE1);
-    densityFBO.BindColourTexture();
+    densityFBO->bindColorbuffer(0);
 
     GLuint groupCounts[3] = {
         static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
@@ -935,7 +934,7 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     this->enableProgramAndBind(drawItemContinuousProgram);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
-    densityFBO.BindColourTexture();
+    densityFBO->bindColorbuffer(0);
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
     // tf->Range()[1]);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
@@ -955,7 +954,7 @@ void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     doFragmentCount();
     this->enableProgramAndBind(drawItemsHistogramProgram);
     glActiveTexture(GL_TEXTURE1);
-    densityFBO.BindColourTexture();
+    densityFBO->bindColorbuffer(0);
     glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
     glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -985,39 +984,33 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
         break;
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:
-        bool ok = true;
-        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
-            this->densityFBO.GetHeight() != fbo->getHeight()) {
-            densityFBO.Release();
-            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_RG32F, GL_RG, GL_FLOAT);
-            makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
+        if (this->densityFBO == nullptr || this->densityFBO->getWidth() != fbo->getWidth() ||
+            this->densityFBO->getHeight() != fbo->getHeight()) {
+            densityFBO = std::make_unique<glowl::FramebufferObject>(
+                "densityFBO", fbo->getWidth(), fbo->getHeight(), glowl::FramebufferObject::NONE);
+            densityFBO->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);
         }
-        if (ok) {
-            densityFBO.Enable();
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            //::glDisable(GL_ALPHA_TEST);
-            glDisable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ONE);
-            glBlendEquation(GL_FUNC_ADD);
-            this->drawDiscrete(red, red_green, 0.0f, viewRes);
-            densityFBO.Disable();
+        densityFBO->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //::glDisable(GL_ALPHA_TEST);
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation(GL_FUNC_ADD);
+        this->drawDiscrete(red, red_green, 0.0f, viewRes);
+        fbo->bind();
 
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
 
-            if (drawmode == DRAW_CONTINUOUS) {
-                this->drawItemsContinuous();
-            } else if (drawmode == DRAW_HISTOGRAM) {
-                this->drawItemsHistogram();
-            }
-
-            glDisable(GL_BLEND);
-
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("could not create FBO");
+        if (drawmode == DRAW_CONTINUOUS) {
+            this->drawItemsContinuous();
+        } else if (drawmode == DRAW_HISTOGRAM) {
+            this->drawItemsHistogram();
         }
+
+        glDisable(GL_BLEND);
         break;
     }
 }

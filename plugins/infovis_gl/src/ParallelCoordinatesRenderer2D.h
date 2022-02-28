@@ -19,7 +19,6 @@
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace infovis_gl {
@@ -179,7 +178,7 @@ private:
 
     core::FlagStorageTypes::flag_version_type currentFlagsVersion;
 
-    ::vislib_gl::graphics::gl::FramebufferObject densityFBO;
+    std::unique_ptr<glowl::FramebufferObject> densityFBO;
 
     core::param::ParamSlot drawModeSlot;
 
