@@ -152,17 +152,16 @@ bool Remote_Service::init(const Config& config) {
             return false;
         }
 
-        if (m_mpi.i_do_broadcast()) {
+        if (m_mpi.mpi_comm.do_i_broadcast()) {
             if (!m_render.start_receiver(config.rendernode_zmq_source_address)) {
                 log_error("could not start RenderNode receiver");
                 return false;
             }
         }
 
-        m_mpi_context.mpi_comm = m_mpi.comm_;
-        m_mpi_context.mpi_comm_size = m_mpi.comm_size_;
-        m_mpi_context.rank = m_mpi.rank_;
-        m_mpi_context.broadcast_rank = m_mpi.broadcast_rank_;
+        // copy MPI context/comm info to global resource
+        // here we hope the MPI_Comm struct defined in mpi.h is ok with beeing copied
+        m_mpi_context = m_mpi.mpi_comm;
 
         this->m_providedResourceReferences.push_back({"MPI_Context", m_mpi_context});
     }

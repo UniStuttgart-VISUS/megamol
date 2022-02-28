@@ -886,13 +886,14 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
-    int invocations[] = {
-        static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
+    int invocations[] = {static_cast<int>(std::ceil(static_cast<float>(fbo->getWidth()) / 16.0f)),
+        static_cast<int>(std::ceil(static_cast<float>(fbo->getHeight()) / 16.0f))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
-    size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
+    size_t bytes = sizeof(uint32_t) * 2;
+    std::array<uint32_t, 2> minMaxInitData{std::numeric_limits<uint32_t>::max(), 0};
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, nullptr, GL_STATIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, minMaxInitData.data(), GL_STATIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(counterBuffer));
@@ -906,18 +907,19 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 
     this->enableProgramAndBind(minMaxProgram);
 
+    // density fbo clear color is set to black
+    auto clear_color = glm::vec4(0.0f);
+
     // uniforms invocationcount etc.
     glUniform1ui(minMaxProgram->getUniformLocation("invocationCount"), invocationCount);
-    glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, backgroundColor);
+    glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, glm::value_ptr(clear_color));
     glUniform2ui(minMaxProgram->getUniformLocation("resolution"), fbo->getWidth(), fbo->getHeight());
     glUniform2ui(minMaxProgram->getUniformLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
-
 
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     glUseProgram(0);
 
-    // todo read back minmax and check for plausibility!
     debugPop();
 }
 
@@ -927,6 +929,9 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
         return;
     debugPush(6, "drawItemsContinuous");
     doFragmentCount();
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
     this->enableProgramAndBind(drawItemContinuousProgram);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
@@ -969,7 +974,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     const float red[] = {1.0f, 0.0f, 0.0f, 1.0};
-    const float moreRed[] = {10.0f, 0.0f, 0.0f, 1.0};
+    const float red_green[] = {1.0f, 1.0f, 0.0f, 1.0};
 
     auto drawmode = this->drawModeSlot.Param<core::param::EnumParam>()->Value();
 
@@ -984,7 +989,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
         if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
             this->densityFBO.GetHeight() != fbo->getHeight()) {
             densityFBO.Release();
-            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_R32F, GL_RED, GL_FLOAT);
+            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_RG32F, GL_RG, GL_FLOAT);
             makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
         }
         if (ok) {
@@ -996,15 +1001,19 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
-            this->drawDiscrete(red, moreRed, 0.0f, viewRes);
+            this->drawDiscrete(red, red_green, 0.0f, viewRes);
             densityFBO.Disable();
-            glDisable(GL_BLEND);
+
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
 
             if (drawmode == DRAW_CONTINUOUS) {
                 this->drawItemsContinuous();
             } else if (drawmode == DRAW_HISTOGRAM) {
                 this->drawItemsHistogram();
             }
+
+            glDisable(GL_BLEND);
 
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("could not create FBO");

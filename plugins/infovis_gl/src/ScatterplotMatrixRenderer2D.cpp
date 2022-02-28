@@ -1281,7 +1281,7 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
     glBlendEquation(GL_FUNC_ADD);
     switch (this->valueMappingParam.Param<core::param::EnumParam>()->Value()) {
     case VALUE_MAPPING_KERNEL_BLEND:
-        // Assuming the View's background color is still set as clear color.
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     case VALUE_MAPPING_KERNEL_DENSITY:
