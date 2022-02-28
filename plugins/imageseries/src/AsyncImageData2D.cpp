@@ -4,28 +4,39 @@
 
 namespace megamol::ImageSeries {
 
-AsyncImageData2D::AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData)
-        : available(true)
-        , byteSize(imageData != nullptr ? imageData->Width() * imageData->Height() : 0)
-        , imageData(imageData)
-        , hash(computeHash()) {}
+AsyncImageData2D::AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize)
+        : byteSize(byteSize)
+        , hash(computeHash()) {
+    job = getThreadPool().submit([this, imageProvider]() { imageData = imageProvider(); });
+}
 
-AsyncImageData2D::AsyncImageData2D(std::size_t byteSize) : byteSize(byteSize), hash(computeHash()) {}
+AsyncImageData2D::AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData)
+        : byteSize(imageData != nullptr ? imageData->Width() * imageData->Height() * imageData->BytesPerPixel() : 0)
+        , imageData(imageData)
+        , hash(imageData != nullptr ? computeHash() : 0) {}
+
+AsyncImageData2D::~AsyncImageData2D() {
+    // Try to cancel job
+    if (!job.cancel()) {
+        // If not possible, wait for its completion
+        job.await();
+    }
+}
 
 bool AsyncImageData2D::isWaiting() const {
-    return !available;
+    return job.isPending();
 }
 
 bool AsyncImageData2D::isFinished() const {
-    return available;
+    return !job.isPending();
 }
 
 bool AsyncImageData2D::isValid() const {
-    return available && imageData;
+    return isFinished() && imageData;
 }
 
 bool AsyncImageData2D::isFailed() const {
-    return available && !imageData;
+    return isFinished() && !imageData;
 }
 
 std::size_t AsyncImageData2D::getByteSize() const {
@@ -33,7 +44,7 @@ std::size_t AsyncImageData2D::getByteSize() const {
 }
 
 AsyncImageData2D::Hash AsyncImageData2D::getHash() const {
-    return imageData ? hash : 0;
+    return hash;
 }
 
 AsyncImageData2D::Hash AsyncImageData2D::computeHash() {
@@ -42,27 +53,18 @@ AsyncImageData2D::Hash AsyncImageData2D::computeHash() {
     return currentHash++;
 }
 
-void AsyncImageData2D::setImageData(std::shared_ptr<const BitmapImage> imageData) {
-    if (!available) {
-        this->imageData = imageData;
-        available = true;
-        conditionVariable.notify_all();
-    } else {
-        // TODO log a warning when trying to overwrite existing async image data
-    }
-}
-
 std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::tryGetImageData() const {
-    return available ? imageData : nullptr;
+    return isFinished() ? imageData : nullptr;
 }
 
 std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::getImageData() const {
-    if (!available) {
-        // TODO once C++20 is available, use std::atomic::wait() instead
-        std::unique_lock<std::mutex> lock(mutex);
-        conditionVariable.wait(lock, [this]() { return isFinished(); });
-    }
+    job.execute();
     return imageData;
+}
+
+util::WorkerThreadPool& AsyncImageData2D::getThreadPool() {
+    static util::WorkerThreadPool pool;
+    return pool;
 }
 
 } // namespace megamol::ImageSeries

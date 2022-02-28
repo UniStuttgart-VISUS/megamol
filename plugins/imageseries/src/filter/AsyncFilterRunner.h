@@ -27,10 +27,10 @@ public:
     template<typename Filter, typename... Args>
     AsyncImageData run(Args&&... args) {
         std::shared_ptr<Filter> filter = std::make_shared<Filter>(std::forward<Args>(args)...);
-        return runFunction([filter]() { return (*filter)(); });
+        return runFunction([filter]() { return (*filter)(); }, filter->getByteSize());
     }
 
-    AsyncImageData runFunction(std::function<ImageData()> filter);
+    AsyncImageData runFunction(std::function<ImageData()> filter, std::size_t byteSize);
 };
 
 } // namespace megamol::ImageSeries::filter
