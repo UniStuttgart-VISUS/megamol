@@ -6,6 +6,7 @@
 #include "mmcore/param/StringParam.h"
 
 #include "../filter/TimeOffsetFilter.h"
+#include "../util/ImageUtils.h"
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;
@@ -63,10 +64,11 @@ bool ImageSeriesTimeDiffFilter::getDataCallback(core::Call& caller) {
 
         if (output.imageData) {
             auto reference = output.imageData;
-            auto inputMeta = requestMetadata(getInputCaller);
+            auto inputMeta = requestFrame(getInputCaller, timestamp);
 
             // Retrieve cached image or run filter on input data
-            output.imageData = imageCache.findOrCreate(output.imageIndex, [=](std::uint32_t) {
+            auto hash = util::combineHash(reference->getHash(), inputMeta.getHash());
+            output.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
                 filter::TimeOffsetFilter::Input filterParams;
                 filterParams.reference = reference;
                 int frameCount = frameCountParam.Param<core::param::IntParam>()->Value();

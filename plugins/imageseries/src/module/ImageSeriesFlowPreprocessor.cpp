@@ -62,7 +62,7 @@ bool ImageSeriesFlowPreprocessor::getDataCallback(core::Call& caller) {
                 auto output = getInput->GetOutput();
 
                 // Retrieve cached image or run filter on input data
-                output.imageData = imageCache.findOrCreate(output.imageIndex, [&](std::uint32_t) {
+                output.imageData = imageCache.findOrCreate(output.getHash(), [&](AsyncImageData2D::Hash) {
                     return filterRunner->run<filter::SegmentationFilter>(
                         output.imageData, segmentationThresholdParam.Param<core::param::FloatParam>()->Value());
                 });

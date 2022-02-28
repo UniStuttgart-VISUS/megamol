@@ -83,7 +83,7 @@ private:
 
     core::param::ParamSlot segmentationThresholdParam;
 
-    util::LRUCache<std::uint32_t, AsyncImageData2D> imageCache;
+    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 
     std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
 };
