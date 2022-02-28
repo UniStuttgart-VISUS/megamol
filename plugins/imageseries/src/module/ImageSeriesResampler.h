@@ -10,6 +10,8 @@
 #include "imageseries/AsyncImageData2D.h"
 #include "imageseries/ImageSeries2DCall.h"
 
+#include "../filter/AsyncFilterRunner.h"
+#include "../registration/AsyncImageRegistrator.h"
 #include "../util/LRUCache.h"
 
 namespace megamol::ImageSeries {
@@ -75,6 +77,11 @@ protected:
      */
     bool timestampChangedCallback(core::param::ParamSlot& param);
 
+    /**
+     * Callback for changes to any of the image registration parameters.
+     */
+    bool registrationCallback(core::param::ParamSlot& param);
+
 private:
     double toAlignedTimestamp(double timestamp) const;
     double fromAlignedTimestamp(double timestamp) const;
@@ -82,6 +89,8 @@ private:
     ImageSeries2DCall::Output transformMetadata(ImageSeries2DCall::Output metadata) const;
 
     static double transformTimestamp(double timestamp, double min1, double max1, double min2, double max2);
+
+    std::shared_ptr<const AsyncImageData2D> fetchImage(core::CallerSlot& caller, double timestamp) const;
 
     core::CalleeSlot getDataCallee;
 
@@ -94,7 +103,16 @@ private:
     core::param::ParamSlot keyTimeInput2Param;
     core::param::ParamSlot keyTimeReference2Param;
 
-    util::LRUCache<std::uint32_t, AsyncImageData2D> imageCache;
+    core::param::ParamSlot imageRegistrationParam;
+    core::param::ParamSlot imageRegistrationAutoParam;
+
+    // TODO store transformation matrix as separate parameter
+    std::unique_ptr<registration::AsyncImageRegistrator> registrator;
+    glm::mat3x2 cachedTransformMatrix;
+
+    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
+
+    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
 };
 
 } // namespace megamol::ImageSeries
