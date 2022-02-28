@@ -94,6 +94,9 @@ private:
     core::CallerSlot getDataCaller;
 
     ImageSeries2DCall::Output metadata;
+
+    bool initialReadAhead = false;
+    float lastReadAhead = 0.f;
 };
 
 } // namespace megamol::ImageSeries::GL
