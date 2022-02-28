@@ -68,6 +68,10 @@ void main() {
     // cylinder length
     float length_cylinder = aligned_absradii.x * radius_scaling;
     float length_cylinder_half = length_cylinder / 2.0;
+    float min_radius = min(aligned_absradii.y, aligned_absradii.z);
+    float radius_cylinder = 0.8 * min_radius * radius_scaling;
+    float radius_cone = min_radius * radius_scaling;
+    float height_cone = aligned_absradii.z * radius_scaling;
 
     // shift cam, so that end of cylinder = start of cone = (0,0,0)
     vec3 shift = vec3(0.0);
@@ -92,13 +96,9 @@ void main() {
     float ray_cpos_dot = dot(ray.yz, cpos.yz);
     float cpos_dot =     dot(cpos.yz, cpos.yz);
 
-    float radius_cylinder = aligned_absradii.y * radius_scaling;
-    float radius_cone = 1.5 * radius_cylinder;
-    float height_cone = aligned_absradii.z * radius_scaling;
-
     // early exit check if cam is within or "behind" arrow
     // (actually just checks if it is within the cylinder)
-    if(cpos_dot <= radius_cylinder &&
+    if(cpos_dot <= 1.5 * radius_cylinder * radius_cylinder &&
        cpos.x >= -length_cylinder &&
        cpos.x <= height_cone) {
         discard;
@@ -176,7 +176,7 @@ void main() {
     }
 
     // default disk normal
-    // arrow looks in positive x-direction, therefore normal has to look the opposite way
+    // arrow looks in positive axis-direction, therefore normal has to look the opposite way
     vec3 normal = vec3(0.0);
     normal.x = alignment == 0 ? -1.0 : 0.0;
     normal.y = alignment == 1 ? -1.0 : 0.0;

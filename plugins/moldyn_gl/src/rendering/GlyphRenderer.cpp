@@ -102,7 +102,6 @@ GlyphRenderer::GlyphRenderer(void)
     this->m_color_mode_param << gcm;
     this->MakeSlotAvailable(&this->m_color_mode_param);
 
-    // TODO: set visibility only to superquadric
     m_superquadric_exponent_param << new param::FloatParam(1.0f, -100.0f, 100.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_superquadric_exponent_param);
 }
