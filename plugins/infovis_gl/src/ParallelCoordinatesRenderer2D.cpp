@@ -252,7 +252,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
             "infovis_gl/pc_item_draw_discrete.vert.glsl", "infovis_gl/pc_item_draw_discrete.frag.glsl");
 
         drawItemsTriangleProgram = core::utility::make_glowl_shader("pc_item_draw_discreteT", shader_options,
-            "infovis_gl/pc_item_draw_discreteT.vert.glsl", "infovis_gl/pc_item_draw_discreteT.frag.glsl");
+            "infovis_gl/pc_item_draw_discreteT.vert.glsl", "infovis_gl/pc_item_draw_discrete.frag.glsl");
 
         traceItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_muhaha", shader_options,
             "infovis_gl/pc_item_draw_muhaha.vert.glsl", "infovis_gl/pc_item_draw_muhaha.frag.glsl");
