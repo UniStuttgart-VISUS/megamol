@@ -671,6 +671,11 @@ bool ParallelCoordinatesRenderer2D::OnKey(
 
 void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
     debugPush(1, "drawAxes");
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     if (this->columnCount > 0) {
         this->enableProgramAndBind(this->drawAxesProgram);
         glUniform4fv(this->drawAxesProgram->getUniformLocation("color"), 1,
@@ -743,6 +748,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         this->font.BatchDrawString(ortho);
 #endif
     }
+
+    glDisable(GL_BLEND);
     debugPop();
 }
 
@@ -832,6 +839,10 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
     auto& program = this->drawPickIndicatorProgram;
 
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     this->enableProgramAndBind(program);
 
     glUniform2f(program->getUniformLocation("mouse"), x, y);
@@ -841,10 +852,16 @@ void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pi
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
+
+    glDisable(GL_BLEND);
 }
 
 void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
     auto& prog = this->drawStrokeIndicatorProgram;
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     this->enableProgramAndBind(prog);
 
@@ -859,6 +876,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
+
+    glDisable(GL_BLEND);
 }
 
 void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
@@ -991,6 +1010,10 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
 
     auto drawmode = this->drawModeSlot.Param<core::param::EnumParam>()->Value();
 
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     switch (drawmode) {
     case DRAW_DISCRETE:
         this->drawDiscrete(this->otherItemsColorSlot.Param<core::param::ColorParam>()->Value().data(),
@@ -1012,12 +1035,10 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
-        glBlendEquation(GL_FUNC_ADD);
         this->drawDiscrete(red, red_green, 0.0f, viewRes);
         fbo->bind();
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendEquation(GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         if (drawmode == DRAW_CONTINUOUS) {
             this->drawItemsContinuous();
@@ -1025,9 +1046,10 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             this->drawItemsHistogram();
         }
 
-        glDisable(GL_BLEND);
         break;
     }
+
+    glDisable(GL_BLEND);
 }
 
 void ParallelCoordinatesRenderer2D::store_filters() {

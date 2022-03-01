@@ -792,7 +792,7 @@ void SDFFont::render(
 
     // Set blending
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     // dFdx()/dFdx() in fragment shader:
     glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
