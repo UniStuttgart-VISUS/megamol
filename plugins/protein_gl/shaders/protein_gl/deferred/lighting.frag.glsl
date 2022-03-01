@@ -8,6 +8,8 @@ struct LightParams
 layout(std430, binding = 1) readonly buffer PointLightParamsBuffer { LightParams point_light_params[]; };
 layout(std430, binding = 2) readonly buffer DistantLightParamsBuffer { LightParams distant_light_params[]; };
 
+layout(location = 0) out vec4 color_out;
+
 uniform int point_light_cnt;
 uniform int distant_light_cnt;
 
@@ -64,7 +66,7 @@ void main(void) {
     }
 
     if(no_lighting) {
-        gl_FragColor = albedo;
+        color_out = albedo;
         return;
     }
 
@@ -94,5 +96,5 @@ void main(void) {
         retval.rgb = reflected_light * albedo.rgb;
     }
 
-    gl_FragColor = vec4(retval.xyz, albedo.w);
+    color_out = vec4(retval.xyz, albedo.w);
 }
