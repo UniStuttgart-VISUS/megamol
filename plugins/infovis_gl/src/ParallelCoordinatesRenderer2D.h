@@ -231,7 +231,7 @@ private:
     float fontSize;
     float backgroundColor[4];
     core::BoundingBoxes_2 bounds;
-    core::view::Camera camera_cpy;                 //< local copy of last used camera
+    std::optional<core::view::Camera> camera_cpy;  //< local copy of last used camera
     std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
     glm::ivec2 viewRes;                            //< last used view resolution
     unsigned int lastTimeStep;

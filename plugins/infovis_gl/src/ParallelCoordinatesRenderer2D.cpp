@@ -201,10 +201,17 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(
-        program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
-    glUniformMatrix4fv(
-        program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
+    if (camera_cpy.has_value()) {
+        glUniformMatrix4fv(
+            program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.value().getViewMatrix()));
+        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE,
+            glm::value_ptr(camera_cpy.value().getProjectionMatrix()));
+    } else {
+        const glm::mat4 one(1.0f);
+        glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(one));
+        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(one));
+    }
+
     glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
 
@@ -493,7 +500,10 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 
     if (this->scaleToFitSlot.Param<core::param::BoolParam>()->Value()) {
         // scale to fit
-        float requiredHeight = width / camera_cpy.get<core::view::Camera::OrthographicParameters>().aspect;
+        float requiredHeight =
+            width / (camera_cpy.has_value()
+                            ? camera_cpy.value().get<core::view::Camera::OrthographicParameters>().aspect.value()
+                            : 1.0f);
         this->axisHeight = requiredHeight - 3.0f * marginY;
     } else {
         this->axisHeight = 80.0f;
@@ -581,9 +591,13 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
+    if (!camera_cpy.has_value()) {
+        return false;
+    }
+
     // Make the following a convenience function in the future
-    auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
+    auto cam_pose = camera_cpy.value().get<core::view::Camera::Pose>();
+    auto cam_intrinsics = camera_cpy.value().get<core::view::Camera::OrthographicParameters>();
     float world_x, world_y;
     world_x = ((x * 2.0f / static_cast<float>(viewRes.x)) - 1.0f);
     world_y = 1.0f - (y * 2.0f / static_cast<float>(viewRes.y));
