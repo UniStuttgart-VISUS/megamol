@@ -1,12 +1,10 @@
-#ifndef MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
+#pragma once
 
 #include <map>
 
-#include <glm/matrix.hpp>
-#include <json.hpp>
-
+#include <glm/glm.hpp>
 #include <glowl/glowl.h>
+#include <json.hpp>
 
 #include "Renderer2D.h"
 #include "datatools/table/TableDataCall.h"
@@ -20,8 +18,7 @@
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-namespace megamol {
-namespace infovis_gl {
+namespace megamol::infovis_gl {
 
 class ParallelCoordinatesRenderer2D : public Renderer2D {
 public:
@@ -30,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "ParallelCoordinatesRenderer2D";
     }
 
@@ -39,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Parallel coordinates renderer for generic tables.\n"
                "Left-Click to pick/stroke\npress [Shift] to filter axis using the two delimiters (hats)\n"
                "press [Alt] to re-order axes";
@@ -50,19 +47,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    ParallelCoordinatesRenderer2D(void);
+    ParallelCoordinatesRenderer2D();
 
     /**
      * Finalises an instance.
      */
-    virtual ~ParallelCoordinatesRenderer2D(void);
+    ~ParallelCoordinatesRenderer2D() override;
 
 protected:
     /**
@@ -70,25 +67,30 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
+
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     * @return The return value of the function.
+     */
+    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * The render callback.
      *
      * @param call The calling call.
-     *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
-
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
-
-    // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    bool Render(core_gl::view::CallRender2DGL& call) override;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
@@ -101,11 +103,22 @@ protected:
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
 private:
-    enum DrawMode { DRAW_DISCRETE = 0, DRAW_CONTINUOUS };
+    enum DrawMode {
+        DRAW_DISCRETE = 0,
+        DRAW_CONTINUOUS,
+    };
 
-    enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
+    enum SelectionMode {
+        SELECT_PICK = 0,
+        SELECT_STROKE,
+    };
 
-    enum InteractionState { NONE = 0, INTERACTION_DRAG, INTERACTION_FILTER, INTERACTION_SELECT };
+    enum InteractionState {
+        NONE = 0,
+        INTERACTION_DRAG,
+        INTERACTION_FILTER,
+        INTERACTION_SELECT,
+    };
 
     struct DimensionFilter {
         uint32_t dimension; // useless but good padding
@@ -125,15 +138,11 @@ private:
         }
     };
 
-    inline float relToAbsValue(int axis, float val) {
-        return (val * (this->maximums[axis] - this->minimums[axis])) + this->minimums[axis];
-    }
-
     void pickIndicator(float x, float y, int& axis, int& index);
 
     bool assertData(core_gl::view::CallRender2DGL& call);
 
-    void computeScaling(void);
+    void computeScaling();
 
     void drawAxes(glm::mat4 ortho);
 
@@ -198,14 +207,6 @@ private:
     core::param::ParamSlot pickRadiusSlot;
 
     core::param::ParamSlot scaleToFitSlot;
-    // core::param::ParamSlot scalingFactorSlot;
-    // core::param::ParamSlot scaleFullscreenSlot;
-    // core::param::ParamSlot projectionMatrixSlot;
-    // core::param::ParamSlot viewMatrixSlot;
-    // core::param::ParamSlot useCustomMatricesSlot;
-
-    // core::param::ParamSlot storeCamSlot;
-    // bool storeCamSlotCallback(core::param::ParamSlot & caller);
 
     core::param::ParamSlot glDepthTestSlot;
     core::param::ParamSlot glLineSmoothSlot;
@@ -285,7 +286,4 @@ private:
     megamol::core::utility::SDFFont font;
 };
 
-} // namespace infovis_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED */
+} // namespace megamol::infovis_gl

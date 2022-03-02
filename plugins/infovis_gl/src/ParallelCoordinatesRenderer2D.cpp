@@ -4,7 +4,6 @@
 #include <array>
 #include <iostream>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "datatools/table/TableDataCall.h"
@@ -15,15 +14,11 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "vislib/graphics/InputModifiers.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 //#define REMOVE_TEXT
 
@@ -31,7 +26,7 @@ using namespace megamol;
 using namespace megamol::infovis_gl;
 using namespace megamol::datatools;
 
-ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
+ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         : Renderer2D()
         , getDataSlot("getdata", "Float table input")
         , getTFSlot("getTF", "connects to the transfer function")
@@ -175,7 +170,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     fragmentMinMax.resize(2);
 }
 
-ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) {
+ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
     this->Release();
 }
 
@@ -214,7 +209,7 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::create(void) {
+bool ParallelCoordinatesRenderer2D::create() {
     glGenBuffers(1, &dataBuffer);
     glGenBuffers(1, &minimumsBuffer);
     glGenBuffers(1, &maximumsBuffer);
@@ -288,7 +283,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     return true;
 }
 
-void ParallelCoordinatesRenderer2D::release(void) {
+void ParallelCoordinatesRenderer2D::release() {
     glDeleteBuffers(1, &dataBuffer);
     glDeleteBuffers(1, &minimumsBuffer);
     glDeleteBuffers(1, &maximumsBuffer);
@@ -462,7 +457,7 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
     return true;
 }
 
-void ParallelCoordinatesRenderer2D::computeScaling(void) {
+void ParallelCoordinatesRenderer2D::computeScaling() {
     auto fc = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (fc == nullptr)
         return;
@@ -873,7 +868,7 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
     debugPop();
 }
 
-void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
+void ParallelCoordinatesRenderer2D::doFragmentCount() {
     debugPush(4, "doFragmentCount");
     int invocations[] = {static_cast<int>(std::ceil(static_cast<float>(fbo->getWidth()) / 16.0f)),
         static_cast<int>(std::ceil(static_cast<float>(fbo->getHeight()) / 16.0f))};
@@ -912,7 +907,7 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPop();
 }
 
-void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
+void ParallelCoordinatesRenderer2D::drawItemsContinuous() {
     auto tf = this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     if (tf == nullptr)
         return;
