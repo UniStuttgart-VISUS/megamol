@@ -1020,6 +1020,11 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 }
 
 bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+    // This check must be first. GetExtent does the same check and we need to be sure, that the outside world has seen
+    // an extent before we continue. Otherwise, i.e. the view has not initialized the camera.
+    if (!this->assertData(call)) {
+        return false;
+    }
 
     // get camera
     core::view::Camera cam = call.GetCamera();
@@ -1046,10 +1051,6 @@ bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
     backgroundColor[3] = bg[3];
 
     glm::mat4 ortho = proj * view;
-
-    if (!this->assertData(call)) {
-        return false;
-    }
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
