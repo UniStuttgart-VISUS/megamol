@@ -1,20 +1,19 @@
-/*
- * SDFFont.cpp
- *
- * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
- * Alle Rechte vorbehalten.
- *
- * This implementation is based on "vislib/graphics/OutlinetFont.h"
+/**
+ * MegaMol
+ * Copyright (c) 2006, MegaMol Dev Team
+ * All rights reserved.
  */
-
+// This implementation is based on "vislib/graphics/OutlinetFont.h"
 
 #include "mmcore_gl/utility/SDFFont.h"
-#include "mmcore/utility/ResourceWrapper.h"
 
 #include <fstream>
+
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::core::utility;
 
@@ -39,8 +38,6 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode,
         , outlineThickness(0.1f)
         , globalSize(size)
         , globalFlipY(flipY)
-        , shaderglobcol()
-        , shadervertcol()
         , texture(nullptr)
         , vaoHandle(GLuint(0))
         , vbos()
@@ -72,8 +69,6 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bo
         , outlineThickness(0.1f)
         , globalSize(size)
         , globalFlipY(flipY)
-        , shaderglobcol()
-        , shadervertcol()
         , texture(nullptr)
         , vaoHandle(GLuint(0))
         , vbos()
@@ -349,8 +344,8 @@ void SDFFont::Deinitialise(void) {
 
     this->ClearBatchDrawCache();
     this->texture.reset();
-    this->shaderglobcol.Release();
-    this->shadervertcol.Release();
+    this->shaderglobcol.reset();
+    this->shadervertcol.reset();
 
     // VBOs
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -770,13 +765,10 @@ void SDFFont::render(
     }
 
     // Check if per vertex color should be used
-    const vislib_gl::graphics::gl::GLSLShader* usedShader = &this->shaderglobcol;
-    if (color_ptr == nullptr) {
-        usedShader = &this->shadervertcol;
-    }
+    const std::shared_ptr<glowl::GLSLProgram>& usedShader = (color_ptr == nullptr) ? shadervertcol : shaderglobcol;
 
     // Check shaders
-    if (!usedShader->IsValidHandle(usedShader->ProgramHandle())) {
+    if (usedShader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SDFFont] Shader handle is not valid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -803,21 +795,21 @@ void SDFFont::render(
 
     glBindVertexArray(this->vaoHandle);
 
-    glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
+    usedShader->use();
 
     // Vertex shader uniforms
-    glUniformMatrix4fv(usedShader->ParameterLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(shader_matrix));
+    glUniformMatrix4fv(usedShader->getUniformLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(shader_matrix));
     // Set global color, if given
     if (color_ptr != nullptr) {
-        glUniform4fv(usedShader->ParameterLocation("inColor"), 1, (*color_ptr));
+        glUniform4fv(usedShader->getUniformLocation("inColor"), 1, (*color_ptr));
     }
 
     // Fragment shader uniforms
-    glUniform1i(usedShader->ParameterLocation("fontTex"), 0);
-    glUniform1i(usedShader->ParameterLocation("renderMode"), static_cast<int>(this->renderMode));
+    glUniform1i(usedShader->getUniformLocation("fontTex"), 0);
+    glUniform1i(usedShader->getUniformLocation("renderMode"), static_cast<int>(this->renderMode));
     if (this->renderMode == RenderMode::RENDERMODE_OUTLINE) {
-        glUniform3fv(usedShader->ParameterLocation("outlineColor"), 1, glm::value_ptr(this->outlineColor));
-        glUniform1f(usedShader->ParameterLocation("outlineThickness"), this->outlineThickness);
+        glUniform3fv(usedShader->getUniformLocation("outlineColor"), 1, glm::value_ptr(this->outlineColor));
+        glUniform1f(usedShader->getUniformLocation("outlineThickness"), this->outlineThickness);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)glyph_count * 6); // 2 triangles per glyph -> 6 vertices
@@ -879,9 +871,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    auto ssf =
-        std::make_shared<core_gl::utility::ShaderSourceFactory>(core_instance_ptr->Configuration().ShaderDirectories());
-    if (!this->loadFontShader(*ssf)) {
+    if (!this->loadFontShader(core_instance_ptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font shaders. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1124,86 +1114,22 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 }
 
 
-bool SDFFont::loadFontShader(megamol::core_gl::utility::ShaderSourceFactory& shader_factory) {
+bool SDFFont::loadFontShader(megamol::core::CoreInstance* core_instance_ptr) {
 
-    // Defining used vbo attributes for each shader
-    std::vector<unsigned int> attribLoc[2];
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
-        GLuint index = this->vbos[i].index;
-        if (index == (GLuint)VBOAttrib::POSITION) {
-            attribLoc[0].push_back(i);
-            attribLoc[1].push_back(i);
-        } else if (index == (GLuint)VBOAttrib::TEXTURE) {
-            attribLoc[0].push_back(i);
-            attribLoc[1].push_back(i);
-        } else if (index == (GLuint)VBOAttrib::COLOR) {
-            attribLoc[1].push_back(i);
-        }
-    }
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(core_instance_ptr->GetShaderPaths());
 
-    vislib_gl::graphics::gl::ShaderSource vs, fs;
-    // Create array of shaders to loop over
-    vislib_gl::graphics::gl::GLSLShader* shaderPtr[2];
-    shaderPtr[0] = &this->shaderglobcol;
-    shaderPtr[1] = &this->shadervertcol;
-    // Loop over all shaders in array
-    for (unsigned int i = 0; i < 2; ++i) {
-        // Reset shader
-        shaderPtr[i]->Release();
-        try {
+    try {
+        auto shader_options_globcol = shader_options;
+        shader_options_globcol.addDefinition("GLOBAL_COLOR");
 
-            vs.Clear();
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version"));
-            // Insert right color snippet for current shader
-            if (&this->shaderglobcol == shaderPtr[i]) {
-                vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::globalColor"));
-            } else {
-                vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::vertexColor"));
-            }
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main"));
+        this->shaderglobcol = core::utility::make_shared_glowl_shader(
+            "globcol", shader_options_globcol, "core/sdffont/sdffont.vert.glsl", "core/sdffont/sdffont.frag.glsl");
+        this->shadervertcol = core::utility::make_shared_glowl_shader(
+            "vertcol", shader_options, "core/sdffont/sdffont.vert.glsl", "core/sdffont/sdffont.frag.glsl");
 
-            fs.Clear();
-            if (!shader_factory.MakeShaderSource("sdffont::fragment", fs)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[SDFFont] Unable to make shader source for fragment shader. [%s, %s, line %d]\n", __FILE__,
-                    __FUNCTION__, __LINE__);
-                return false;
-            }
-
-            if (!shaderPtr[i]->Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown error. [%s, %s, line %d]\n", __FILE__,
-                    __FUNCTION__, __LINE__);
-                return false;
-            }
-            // Bind vertex shader attributes (before linking shaders!)
-            for (unsigned int j = 0; j < attribLoc[i].size(); j++) {
-                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index,
-                    this->vbos[attribLoc[i][j]].name.c_str());
-            }
-            if (!shaderPtr[i]->Link()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[SDFFont] Unable to link \"sdffont\"-shader: Unknown error. [%s, %s, line %d]\n", __FILE__,
-                    __FUNCTION__, __LINE__);
-                return false;
-            }
-        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[SDFFont] Unable to compile \"sdffont\"-shader (@%s): %s. [%s, %s, line %d]\n",
-                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-                ce.GetMsgA());
-            return false;
-        } catch (vislib::Exception e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[SDFFont] Unable to compile \"sdffont\"-shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
-        } catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown exception. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
-        }
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
+        return false;
     }
 
     return true;
