@@ -249,6 +249,28 @@ function(require_external NAME)
       INCLUDE_DIR "include"
       LIBRARY ${BLEND2D_LIB})
 
+  # chemfiles
+  elseif(NAME STREQUAL "chemfiles")
+    if (TARGET chemfiles)
+      return()
+    endif()
+
+    if (WIN32)
+      set(CHEMFILES_LIB "lib/chemfiles.lib")
+    else ()
+      set(CHEMFILES_LIB "lib/chemfiles.a")
+    endif ()
+
+    add_external_project(chemfiles STATIC
+      GIT_REPOSITORY https://github.com/chemfiles/chemfiles.git
+      GIT_TAG "0.10.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${CHEMFILES_LIB}"
+    )
+
+    add_external_library(chemfiles
+      INCLUDE_DIR "include"
+      LIBRARY ${CHEMFILES_LIB})
+
   # Corsair CUE SDK
   elseif (NAME STREQUAL "CUESDK")
     if (TARGET CUESDK)
