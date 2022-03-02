@@ -98,7 +98,6 @@ protected:
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     bool scalingChangedCallback(core::param::ParamSlot& caller);
-    bool resetFlagsSlotCallback(core::param::ParamSlot& caller);
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
 private:
@@ -215,7 +214,6 @@ private:
     core::param::ParamSlot glLineWidthSlot;
     core::param::ParamSlot sqrtDensitySlot;
 
-    // core::param::ParamSlot resetFlagsSlot;
     core::param::ParamSlot resetFiltersSlot;
 
     core::param::ParamSlot filterStateSlot;
@@ -250,7 +248,6 @@ private:
 
     std::unique_ptr<glowl::GLSLProgram> drawItemContinuousProgram;
     std::unique_ptr<glowl::GLSLProgram> drawItemsHistogramProgram;
-    std::unique_ptr<glowl::GLSLProgram> traceItemsDiscreteProgram;
 
     std::unique_ptr<glowl::GLSLProgram> filterProgram;
     std::unique_ptr<glowl::GLSLProgram> minMaxProgram;

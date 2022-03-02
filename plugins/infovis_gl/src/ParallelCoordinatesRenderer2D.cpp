@@ -25,7 +25,6 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-//#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
 //#define REMOVE_TEXT
 
@@ -59,7 +58,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
         , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
         , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-        //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
         , triangleModeSlot("triangleMode", "Enables triangles instead of GL_LINES")
@@ -159,10 +157,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     sqrtDensitySlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&sqrtDensitySlot);
 
-    // resetFlagsSlot << new core::param::ButtonParam();
-    // resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
-    // this->MakeSlotAvailable(&resetFlagsSlot);
-
     resetFiltersSlot << new core::param::ButtonParam();
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
@@ -260,9 +254,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
         drawItemsTriangleProgram = core::utility::make_glowl_shader("pc_item_draw_discreteT", shader_options,
             "infovis_gl/pc_item_draw_discreteT.vert.glsl", "infovis_gl/pc_item_draw_discrete.frag.glsl");
-
-        traceItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_muhaha", shader_options,
-            "infovis_gl/pc_item_draw_muhaha.vert.glsl", "infovis_gl/pc_item_draw_muhaha.frag.glsl");
 
         drawItemsDiscreteTessProgram = core::utility::make_glowl_shader("pc_item_draw_discTess", shader_options,
             "infovis_gl/pc_item_draw_discTess.vert.glsl", "infovis_gl/pc_item_draw_discTess.tesc.glsl",
@@ -367,8 +358,6 @@ bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlo
     this->computeScaling();
     return true;
 }
-
-// bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
 
 bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
@@ -726,10 +715,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
                 color = this->axesColorSlot.Param<core::param::ColorParam>()->Value().data();
             }
             float x = this->marginX + this->axisDistance * c;
-#if 0
-            this->font.DrawString(ortho, color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-#else
+
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
             // bottom += minimums[realCol];
@@ -740,7 +726,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
                 std::to_string(bottom).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-#endif
+
             this->font.DrawString(ortho, color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
@@ -780,16 +766,12 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 
     debugPush(2, "drawItemsDiscrete");
 
-#ifdef FUCK_THE_PIPELINE
-    std::unique_ptr<glowl::GLSLProgram>& prog = this->traceItemsDiscreteProgram;
-#else
 #ifdef USE_TESSELLATION
     std::unique_ptr<glowl::GLSLProgram>& prog = this->drawItemsDiscreteTessProgram;
 #else
     std::unique_ptr<glowl::GLSLProgram>& prog = this->triangleModeSlot.Param<core::param::BoolParam>()->Value()
                                                     ? this->drawItemsTriangleProgram
                                                     : this->drawItemsDiscreteProgram;
-#endif
 #endif
 
     this->enableProgramAndBind(prog);
@@ -813,9 +795,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1f(prog->getUniformLocation("thicknessP"), lineThicknessSlot.Param<core::param::FloatParam>()->Value());
 
     glEnable(GL_CLIP_DISTANCE0);
-#ifdef FUCK_THE_PIPELINE
-    glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
-#else
 #ifdef USE_TESSELLATION
     glUniform1i(prog->getUniformLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
     glPatchParameteri(GL_PATCH_VERTICES, 1);
@@ -829,7 +808,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
         glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     }
 
-#endif
 #endif
     glUseProgram(0);
     glDisable(GL_CLIP_DISTANCE0);
@@ -1173,29 +1151,8 @@ bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
         if (readFlags != nullptr && writeFlags != nullptr) {
             writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
             (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
-#if 0
-            auto flags = readFlags->getData()->flags;
-            std::vector<core::FlagStorage::FlagItemType> f(flags->getByteSize()/sizeof(core::FlagStorage::FlagItemType));
-            flags->bind();
-            glGetBufferSubData(
-                GL_SHADER_STORAGE_BUFFER, 0, flags->getByteSize(), f.data());
-
-            core::FlagStorage::FlagVectorType::size_type numFiltered = 0, numEnabled = 0, numSelected = 0,
-                                                         numSoftSelected = 0;
-            for (unsigned int& i : f) {
-                if ((i & core::FlagStorage::FILTERED) > 0) numFiltered++;
-                if ((i & core::FlagStorage::ENABLED) > 0) numEnabled++;
-                if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
-                if ((i & core::FlagStorage::SOFTSELECTED) > 0) numSoftSelected++;
-            }
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
-                "soft-selected.",
-                f.size(), numEnabled, numFiltered, numSelected, numSoftSelected);
-#endif
         }
     }
-
 
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
         drawAxes(ortho);
