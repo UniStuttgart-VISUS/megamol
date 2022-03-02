@@ -105,7 +105,7 @@ protected:
 private:
     enum DrawMode {
         DRAW_DISCRETE = 0,
-        DRAW_CONTINUOUS,
+        DRAW_DENSITY,
     };
 
     enum SelectionMode {

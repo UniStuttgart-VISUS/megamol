@@ -92,8 +92,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
-    drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
-    drawModes->SetTypePair(DRAW_CONTINUOUS, "Continuous");
+    drawModes->SetTypePair(DRAW_DISCRETE, "Kernel Blending");
+    drawModes->SetTypePair(DRAW_DENSITY, "Kernel Density Estimation");
     drawModeSlot.SetParameter(drawModes);
     this->MakeSlotAvailable(&drawModeSlot);
 
@@ -962,7 +962,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
         this->drawDiscrete(this->otherItemsColorSlot.Param<core::param::ColorParam>()->Value().data(),
             this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f, viewRes);
         break;
-    case DRAW_CONTINUOUS:
+    case DRAW_DENSITY:
         if (this->densityFBO == nullptr || this->densityFBO->getWidth() != fbo->getWidth() ||
             this->densityFBO->getHeight() != fbo->getHeight()) {
             densityFBO = std::make_unique<glowl::FramebufferObject>(
