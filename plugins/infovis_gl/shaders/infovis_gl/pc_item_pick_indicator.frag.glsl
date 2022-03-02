@@ -1,7 +1,5 @@
 #version 430
 
-#include "pc_common/pc_extensions.inc.glsl"
-#include "pc_common/pc_useLineStrip.inc.glsl"
 #include "pc_common/pc_buffers.inc.glsl"
 #include "pc_common/pc_uniforms.inc.glsl"
 #include "pc_common/pc_common.inc.glsl"
