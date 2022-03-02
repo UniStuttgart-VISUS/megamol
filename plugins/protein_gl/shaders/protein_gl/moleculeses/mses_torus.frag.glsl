@@ -4,6 +4,8 @@
 #include "lightdirectional.glsl"
 #include "protein_gl/moleculeses/mses_rootsolver.glsl"
 
+layout(location = 0) out vec4 color_out;
+
 uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
@@ -31,7 +33,7 @@ in float maxAngle;
 in vec4 colors;
 in vec3 cuttingPlane;
 
-#include "moleculeses/mses_decodecolor.glsl"
+#include "protein_gl/moleculeses/mses_decodecolor.glsl"
 
 void main(void) {
     vec4 coord;
@@ -122,8 +124,8 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
     // phong lighting with directional light
-    //gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(color, 1.0);
+    //color_out = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    color_out = vec4(color, 1.0);
     gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
@@ -148,9 +150,9 @@ void main(void) {
 
 #ifdef FOGGING_SES
     float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
+    color_out.rgb = mix( fogCol, color_out.rgb, f);
 #endif // FOGGING_SES
-    gl_FragColor.a = alpha;
+    color_out.a = alpha;
     
     tmp = normal;
     normal.x = dot( rotMatT0, tmp.xyz);

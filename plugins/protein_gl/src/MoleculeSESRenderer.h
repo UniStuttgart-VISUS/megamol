@@ -42,8 +42,6 @@ namespace protein_gl {
  */
 class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
-    /** postprocessing modi */
-    enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
 
     /** render modi */
     enum RenderMode {
@@ -129,14 +127,6 @@ protected:
     virtual void release(void);
 
     /**
-     * Render atoms as spheres using GLSL Raycasting shaders.
-     *
-     * @param protein The protein data interface.
-     * @param scale The scale factor for the atom radius.
-     */
-    void RenderAtomsGPU(const megamol::protein_calls::MolecularDataCall* mol, const float scale = 1.0f);
-
-    /**
      * Renders the probe atom at position 'm'.
      *
      * @param m The probe position.
@@ -190,28 +180,6 @@ protected:
      * @param protein Pointer to the protein data interface.
      */
     void RenderSESGpuRaycasting(const megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
-     *
-     * @param protein Pointer to the protein data interface.
-     */
-    void RenderDebugStuff(const megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * Postprocessing: use screen space ambient occlusion
-     */
-    void PostprocessingSSAO();
-
-    /**
-     * Postprocessing: use silhouette shader
-     */
-    void PostprocessingSilhouette();
-
-    /**
-     * Postprocessing: transparency (blend two images)
-     */
-    void PostprocessingTransparency(float transparency);
 
     /**
      * returns the color of the atom 'idx' for the current coloring mode
@@ -289,8 +257,6 @@ private:
     // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
     core::view::Camera MoleculeSESRenderercameraInfo;
 
-    megamol::core::param::ParamSlot postprocessingParam;
-
     /** parameter slot for coloring mode */
     megamol::core::param::ParamSlot coloringModeParam0;
     /** parameter slot for coloring mode */
@@ -307,7 +273,6 @@ private:
     /** parameter slot for max color of gradient color mode */
     megamol::core::param::ParamSlot maxGradColorParam;
     megamol::core::param::ParamSlot fogstartParam;
-    megamol::core::param::ParamSlot debugParam;
     megamol::core::param::ParamSlot drawSESParam;
     megamol::core::param::ParamSlot drawSASParam;
     megamol::core::param::ParamSlot molIdxListParam;
@@ -317,7 +282,6 @@ private:
     megamol::core::param::ParamSlot probeRadiusSlot;
 
 
-    bool drawRS;
     bool drawSES;
     bool drawSAS;
 
@@ -326,22 +290,6 @@ private:
     std::vector<std::vector<protein::ReducedSurface*>> reducedSurfaceAllFrames;
     /** the reduced surface(s) */
     std::vector<protein::ReducedSurface*> reducedSurface;
-
-    // shader for the cylinders (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader cylinderShader;
-    // shader for the spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
-    // shader for the spheres with clipped interior (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereClipInteriorShader;
-    // shader for per pixel lighting (polygonal view)
-    vislib_gl::graphics::gl::GLSLShader lightShader;
-    // shader for 1D gaussian filtering (postprocessing)
-    vislib_gl::graphics::gl::GLSLShader hfilterShader;
-    vislib_gl::graphics::gl::GLSLShader vfilterShader;
-    // shader for silhouette drawing (postprocessing)
-    vislib_gl::graphics::gl::GLSLShader silhouetteShader;
-    // shader for cheap transparency (postprocessing/blending)
-    vislib_gl::graphics::gl::GLSLShader transparencyShader;
 
     std::shared_ptr<glowl::GLSLProgram> torusShader_;
     std::shared_ptr<glowl::GLSLProgram> sphereShader_;
@@ -373,8 +321,6 @@ private:
     /** The current coloring mode */
     protein::Color::ColoringMode currentColoringMode0;
     protein::Color::ColoringMode currentColoringMode1;
-    /** postprocessing mode */
-    PostprocessingMode postprocessing;
 
     /** vertex and attribute arrays for raycasting the tori */
     std::vector<vislib::Array<float>> torusVertexArray;
