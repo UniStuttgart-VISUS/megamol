@@ -240,7 +240,6 @@ private:
     std::unique_ptr<glowl::GLSLProgram> drawFilterIndicatorsProgram;
     std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteProgram;
     std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteTessProgram;
     std::unique_ptr<glowl::GLSLProgram> drawPickIndicatorProgram;
     std::unique_ptr<glowl::GLSLProgram> drawStrokeIndicatorProgram;
 
@@ -276,9 +275,6 @@ private:
     bool needSelectionUpdate;
     bool needFlagsUpdate;
     std::map<std::string, uint32_t> columnIndex;
-
-    GLint maxAxes;
-    GLint isoLinesPerInvocation;
 
     GLint filterWorkgroupSize[3];
     GLint counterWorkgroupSize[3];

@@ -25,7 +25,6 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-//#define USE_TESSELLATION
 //#define REMOVE_TEXT
 
 using namespace megamol;
@@ -254,10 +253,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
         drawItemsTriangleProgram = core::utility::make_glowl_shader("pc_item_draw_discreteT", shader_options,
             "infovis_gl/pc_item_draw_discreteT.vert.glsl", "infovis_gl/pc_item_draw_discrete.frag.glsl");
 
-        drawItemsDiscreteTessProgram = core::utility::make_glowl_shader("pc_item_draw_discTess", shader_options,
-            "infovis_gl/pc_item_draw_discTess.vert.glsl", "infovis_gl/pc_item_draw_discTess.tesc.glsl",
-            "infovis_gl/pc_item_draw_discTess.tese.glsl", "infovis_gl/pc_item_draw_discTess.frag.glsl");
-
         drawItemContinuousProgram = core::utility::make_glowl_shader("pc_fragment_count", shader_options,
             "infovis_gl/pc_fragment_count.vert.glsl", "infovis_gl/pc_fragment_count.frag.glsl");
 
@@ -278,9 +273,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
             ("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
-
-    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
-    this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
 
     glGetProgramiv(filterProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
     glGetProgramiv(minMaxProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
@@ -762,13 +754,9 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 
     debugPush(2, "drawItemsDiscrete");
 
-#ifdef USE_TESSELLATION
-    std::unique_ptr<glowl::GLSLProgram>& prog = this->drawItemsDiscreteTessProgram;
-#else
     std::unique_ptr<glowl::GLSLProgram>& prog = this->triangleModeSlot.Param<core::param::BoolParam>()->Value()
                                                     ? this->drawItemsTriangleProgram
                                                     : this->drawItemsDiscreteProgram;
-#endif
 
     this->enableProgramAndBind(prog);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
@@ -791,11 +779,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1f(prog->getUniformLocation("thicknessP"), lineThicknessSlot.Param<core::param::FloatParam>()->Value());
 
     glEnable(GL_CLIP_DISTANCE0);
-#ifdef USE_TESSELLATION
-    glUniform1i(prog->getUniformLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
-    glPatchParameteri(GL_PATCH_VERTICES, 1);
-    glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
-#else
+
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
     if (this->triangleModeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -804,7 +788,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
         glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     }
 
-#endif
     glUseProgram(0);
     glDisable(GL_CLIP_DISTANCE0);
     debugPop();
