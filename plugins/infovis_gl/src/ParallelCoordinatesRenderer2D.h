@@ -220,6 +220,7 @@ private:
     core::param::ParamSlot triangleModeSlot;
     core::param::ParamSlot lineThicknessSlot;
     core::param::ParamSlot axesLineThicknessSlot;
+    core::param::ParamSlot smoothFontSlot;
 
     float marginX, marginY;
     float axisDistance;

@@ -33,6 +33,7 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode,
         , renderMode(render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
+        , smoothMode(true)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
@@ -64,6 +65,7 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bo
         , renderMode(render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
+        , smoothMode(true)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
@@ -88,6 +90,7 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , renderMode(src.renderMode)
         , billboardMode(src.billboardMode)
         , batchDrawMode(src.batchDrawMode)
+        , smoothMode(src.smoothMode)
         , rotation(src.rotation)
         , outlineColor(src.outlineColor)
         , outlineThickness(src.outlineThickness)
@@ -798,19 +801,20 @@ void SDFFont::render(
     usedShader->use();
 
     // Vertex shader uniforms
-    glUniformMatrix4fv(usedShader->getUniformLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(shader_matrix));
+    usedShader->setUniform("mvpMat", shader_matrix);
     // Set global color, if given
     if (color_ptr != nullptr) {
-        glUniform4fv(usedShader->getUniformLocation("inColor"), 1, (*color_ptr));
+        glUniform4fv(usedShader->getUniformLocation("inColor"), 1, *color_ptr);
     }
 
     // Fragment shader uniforms
-    glUniform1i(usedShader->getUniformLocation("fontTex"), 0);
-    glUniform1i(usedShader->getUniformLocation("renderMode"), static_cast<int>(this->renderMode));
+    usedShader->setUniform("fontTex", 0);
+    usedShader->setUniform("renderMode", static_cast<int>(this->renderMode));
     if (this->renderMode == RenderMode::RENDERMODE_OUTLINE) {
-        glUniform3fv(usedShader->getUniformLocation("outlineColor"), 1, glm::value_ptr(this->outlineColor));
-        glUniform1f(usedShader->getUniformLocation("outlineThickness"), this->outlineThickness);
+        usedShader->setUniform("outlineColor", this->outlineColor);
+        usedShader->setUniform("outlineThickness", this->outlineThickness);
     }
+    usedShader->setUniform("smoothMode", static_cast<int>(this->smoothMode));
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)glyph_count * 6); // 2 triangles per glyph -> 6 vertices
 
@@ -828,6 +832,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     this->SetBatchDrawMode(false);
     this->ClearBatchDrawCache();
     this->SetBillboardMode(false);
+    this->SetSmoothMode(true);
 
     if (core_instance_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

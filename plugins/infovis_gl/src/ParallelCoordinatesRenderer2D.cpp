@@ -57,6 +57,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , triangleModeSlot("triangleMode", "Enables triangles instead of GL_LINES")
         , lineThicknessSlot("lineThickness", "Float value to incease line thickness")
         , axesLineThicknessSlot("axesLineThickness", "Float value to incease line thickness of Axes and Indicators")
+        , smoothFontSlot("smoothFont", "Font rendering with smooth edges")
         , numTicks(5)
         , columnCount(0)
         , itemCount(0)
@@ -166,6 +167,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
 
     this->axesLineThicknessSlot << new core::param::FloatParam(1.0);
     this->MakeSlotAvailable(&axesLineThicknessSlot);
+
+    smoothFontSlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&smoothFontSlot);
 
     fragmentMinMax.resize(2);
 }
@@ -690,6 +694,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
 #ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
         font.ClearBatchDrawCache();
+        font.SetSmoothMode(smoothFontSlot.Param<core::param::BoolParam>()->Value());
         for (unsigned int c = 0; c < this->columnCount; c++) {
             unsigned int realCol = this->axisIndirection[c];
             if (this->pickedAxis == realCol) {

@@ -13,6 +13,7 @@ uniform sampler2D fontTexture;
 uniform vec3      outlineColor       = vec3(0.0, 0.0, 0.0);
 uniform float     outlineThickness   = 0.2; // in [0,1]
 uniform int       renderMode         = RENDERMODE_FILL;
+uniform bool      smoothMode         = true; // TODO only implemented for RENDERMODE_FILL!
 
 layout(location = 0) out vec4 outFragColor;
 
@@ -28,7 +29,7 @@ void main(void) {
         discard;
     }
     float smootingEdge = fwidth(distance); // = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
-    if (renderMode == RENDERMODE_FILL) { 
+    if (renderMode == RENDERMODE_FILL && smoothMode) {
         distance = smoothstep((SDF_THRESHOLD - smootingEdge), (SDF_THRESHOLD + smootingEdge), distance);
     }
     else if (renderMode == RENDERMODE_OUTLINE) {
@@ -53,12 +54,19 @@ void main(void) {
     // -------------------------------------------------------------------------
        
     if (renderMode == RENDERMODE_FILL) {
-        // Apply 4xSS
-        alpha = (alpha + 0.5 * asum) / 3.0;
-        alpha = clamp(alpha, 0.0, 1.0);
-        if (alpha <= 0.0) discard;
-        
-        outFragColor = vec4(color.rgb, color.a * alpha);
+        if (smoothMode) {
+            // Apply 4xSS
+            alpha = (alpha + 0.5 * asum) / 3.0;
+            alpha = clamp(alpha, 0.0, 1.0);
+            if (alpha <= 0.0) discard;
+
+            outFragColor = vec4(color.rgb, color.a * alpha);
+        } else {
+            if (distance < 0.5f) {
+                discard;
+            }
+            outFragColor = color;
+        }
     }
     else if (renderMode == RENDERMODE_OUTLINE) {
         // Apply 4xSS

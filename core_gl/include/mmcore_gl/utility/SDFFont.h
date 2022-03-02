@@ -320,6 +320,14 @@ public:
             return this->batchDrawMode;
         }
 
+        inline void SetSmoothMode(bool state) {
+            this->smoothMode = state;
+        }
+
+        inline bool GetSmoothMode() const {
+            return this->smoothMode;
+        }
+
         /**
          * Renders all cached string data at once.
          * Given color is used for all cached DrawString() calls (-> Faster version).
@@ -547,6 +555,9 @@ public:
 
         /** String batch cache status. */
         bool batchDrawMode;
+
+        /** Smooth mode. TODO 'off' only works with renderMode filled. */
+        bool smoothMode;
 
         /** Quaternion for font rotation. */
         glm::quat rotation;
