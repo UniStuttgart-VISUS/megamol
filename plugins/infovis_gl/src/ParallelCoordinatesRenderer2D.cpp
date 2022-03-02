@@ -99,7 +99,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
     drawModes->SetTypePair(DRAW_CONTINUOUS, "Continuous");
-    drawModes->SetTypePair(DRAW_HISTOGRAM, "Histogram");
     drawModeSlot.SetParameter(drawModes);
     this->MakeSlotAvailable(&drawModeSlot);
 
@@ -264,9 +263,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
         minMaxProgram = core::utility::make_glowl_shader(
             "pc_fragment_count", shader_options, "infovis_gl/pc_fragment_count.comp.glsl");
-
-        drawItemsHistogramProgram = core::utility::make_glowl_shader("pc_item_draw_histogram", shader_options,
-            "infovis_gl/pc_item_draw_histogram.vert.glsl", "infovis_gl/pc_item_draw_histogram.frag.glsl");
 
         filterProgram =
             core::utility::make_glowl_shader("pc_item_filter", shader_options, "infovis_gl/pc_item_filter.comp.glsl");
@@ -960,20 +956,6 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     debugPop();
 }
 
-void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
-    debugPush(7, "drawItemsHistogram");
-    doFragmentCount();
-    this->enableProgramAndBind(drawItemsHistogramProgram);
-    glActiveTexture(GL_TEXTURE1);
-    densityFBO->bindColorbuffer(0);
-    glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glEnable(GL_CLIP_DISTANCE0);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
-    glDisable(GL_CLIP_DISTANCE0);
-    debugPop();
-}
-
 void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
 
     // TODO only when filters changed!
@@ -998,7 +980,6 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
             this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f, viewRes);
         break;
     case DRAW_CONTINUOUS:
-    case DRAW_HISTOGRAM:
         if (this->densityFBO == nullptr || this->densityFBO->getWidth() != fbo->getWidth() ||
             this->densityFBO->getHeight() != fbo->getHeight()) {
             densityFBO = std::make_unique<glowl::FramebufferObject>(
@@ -1018,11 +999,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
 
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        if (drawmode == DRAW_CONTINUOUS) {
-            this->drawItemsContinuous();
-        } else if (drawmode == DRAW_HISTOGRAM) {
-            this->drawItemsHistogram();
-        }
+        this->drawItemsContinuous();
 
         break;
     }

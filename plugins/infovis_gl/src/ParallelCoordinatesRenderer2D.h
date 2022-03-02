@@ -101,7 +101,7 @@ protected:
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
 private:
-    enum DrawMode { DRAW_DISCRETE = 0, DRAW_CONTINUOUS, DRAW_HISTOGRAM };
+    enum DrawMode { DRAW_DISCRETE = 0, DRAW_CONTINUOUS };
 
     enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
 
@@ -148,8 +148,6 @@ private:
     void drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]);
 
     void drawItemsContinuous();
-
-    void drawItemsHistogram();
 
     void doPicking(float x, float y, float pickRadius);
 
@@ -247,7 +245,6 @@ private:
     std::unique_ptr<glowl::GLSLProgram> drawStrokeIndicatorProgram;
 
     std::unique_ptr<glowl::GLSLProgram> drawItemContinuousProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsHistogramProgram;
 
     std::unique_ptr<glowl::GLSLProgram> filterProgram;
     std::unique_ptr<glowl::GLSLProgram> minMaxProgram;
