@@ -68,12 +68,12 @@ public:
     ModulePtr_t GetModule(ImGuiID module_uid);
     ModulePtr_t GetModule(const std::string& module_fullname);
     bool ModuleExists(const std::string& module_fullname);
+    bool UniqueModuleRename(const std::string& module_full_name);
 
     bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
     CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
     bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
     CallPtr_t GetCall(std::string const& caller_fullname, std::string const& callee_fullname);
-
     bool DeleteCall(ImGuiID call_uid);
     inline const CallPtrVector_t& Calls() {
         return this->calls;
@@ -99,7 +99,6 @@ public:
         this->dirty_flag = true;
     }
 
-    bool UniqueModuleRename(const std::string& module_full_name);
 
     std::string GetFilename() const;
     void SetFilename(const std::string& filename, bool saved_filename);
@@ -169,6 +168,10 @@ public:
     bool IsModuleHovered() const {
         return (this->gui_graph_state.interact.module_hovered_uid != GUI_INVALID_ID);
     }
+
+    /// TODO get set module/call labels
+    /// TODO get/set call coloring
+
 
     void SetLayoutGraph(bool layout = true) {
         this->gui_graph_layout = ((layout) ? (1) : (0));

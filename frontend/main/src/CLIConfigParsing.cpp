@@ -124,6 +124,7 @@ static std::string remote_headnode_broadcast_project_option = "headnode-broadcas
 static std::string remote_headnode_connect_at_start_option = "headnode-connect-at-start";
 static std::string framebuffer_option = "framebuffer";
 static std::string viewport_tile_option = "tile";
+static std::string vr_service_option = "vr";
 static std::string help_option = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -469,6 +470,32 @@ static void viewport_tile_handler(
     }
 };
 
+static void vr_service_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    auto string = parsed_options[option_name].as<std::string>();
+    // --vr=[off|unitykolab]
+
+    std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
+        {"off", RuntimeConfig::VRMode::Off},
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        {"unitykolab", RuntimeConfig::VRMode::UnityKolab},
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+
+    auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
+        auto find = std::find_if(options.begin(), options.end(), [&](auto const& opt) { return opt.first == string; });
+
+        if (find != options.end())
+            return find->second;
+
+        exit("vr service cli option needs to be one of the following: " +
+             std::accumulate(options.begin(), options.end(), std::string{},
+                 [](auto const& a, auto const& b) { return a + "  " + b.first; }));
+    };
+
+    config.vr_mode = match(string);
+};
+
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>,
     std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
@@ -553,6 +580,8 @@ std::vector<OptionsListEntry> cli_options_list =
             "LWIDTHxLHEIGHT is the local framebuffer resolution, "
             "GWIDTHxGHEIGHT is the global framebuffer resolution",
             cxxopts::value<std::string>(), viewport_tile_handler},
+        {vr_service_option, "VR Service mode: --vr=[off|unitykolab], off by default", cxxopts::value<std::string>(),
+            vr_service_handler},
         {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
 
 static std::string loong(std::string const& option) {

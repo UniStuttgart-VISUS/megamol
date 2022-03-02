@@ -103,6 +103,9 @@ protected:
 private:
     typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
 
+    /** Dummy color texture to use when no texture is connected */
+    std::shared_ptr<glowl::Texture2D> m_dummy_color_tx;
+
     /** Dummy depth texture to use when no depth texture is connected */
     std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
 

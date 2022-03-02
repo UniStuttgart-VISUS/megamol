@@ -78,7 +78,6 @@ void WindowCollection::Draw(bool menu_visible) {
         if (wc.Config().show) {
 
             // Draw Window ----------------------------------------------------
-            ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
 
             // Begin Window

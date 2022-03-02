@@ -9,6 +9,7 @@
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/ColorPalettes.h"
 
 #ifdef PROFILING
 #include "ProfilingUtils.h"
@@ -157,15 +158,33 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             this->caller_slot_name = callerslot_ptr->Name();
             this->callee_slot_name = calleeslot_ptr->Name();
 
-            // Calls lie only completely inside or outside groups
             bool hidden = false;
             bool connect_interface_slot = true;
+            size_t curve_color_index = 0;
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
+
+                // Calls lie only completely inside or outside groups
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
                     hidden = callerslot_ptr->GetParentModule()->IsHidden();
                 }
+
+                if (state.interact.call_coloring_mode == 0) {
+                    // Get curve color index depending on callee slot index
+                    for (auto cs_ptr :
+                        calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
+                        if (cs_ptr->UID() != calleeslot_ptr->UID()) {
+                            curve_color_index++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else if (state.interact.call_coloring_mode == 1) {
+                    // Get curve color index depending on calling module
+                    curve_color_index = callerslot_ptr->GetParentModule()->UID();
+                }
             }
+
             if (!hidden) {
 
                 ImVec2 caller_pos = callerslot_ptr->Position();
@@ -192,6 +211,19 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 /// COLOR_CALL_CURVE
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                /// See ColorPalettes.h for all predefined color palettes:
+                if (state.interact.call_coloring_map == 1) {
+                    // Set3Map(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(Set3Map[(curve_color_index % map_size)][0],
+                        Set3Map[(curve_color_index % map_size)][1], Set3Map[(curve_color_index % map_size)][2], 1.0f);
+                } else if (state.interact.call_coloring_map == 2) {
+                    // PairedMap(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(PairedMap[(curve_color_index % map_size)][0],
+                        PairedMap[(curve_color_index % map_size)][1], PairedMap[(curve_color_index % map_size)][2],
+                        1.0f);
+                }
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 /// COLOR_CALL_CURVE_HIGHLIGHT
                 tmpcol = style.Colors[ImGuiCol_ButtonActive];

@@ -3,19 +3,19 @@
 # All rights reserved.
 #
 
-megamol_plugin(image
+megamol_plugin(image_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
   DEPENDS_PLUGINS
     image_calls)
 
-if (image_PLUGIN_ENABLED)
+if (image_gl_PLUGIN_ENABLED)
   if (UNIX)
     find_package(JPEG REQUIRED)
-    target_link_libraries(image PRIVATE JPEG::JPEG)
+    target_link_libraries(image_gl PRIVATE JPEG::JPEG)
   endif ()
 
   if (MPI_C_FOUND)
-    target_link_libraries(image PRIVATE MPI::MPI_C)
+    target_link_libraries(image_gl PRIVATE MPI::MPI_C)
   endif ()
 endif ()

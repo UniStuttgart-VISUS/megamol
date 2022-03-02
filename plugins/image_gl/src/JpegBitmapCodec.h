@@ -1,19 +1,9 @@
-/*
- * JpegBitmapCodec.h
- *
- * Copyright (C) 2010 by Sebastian Grottel.
- * (Copyright (C) 2010 by VISUS (Universitaet Stuttgart))
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
-
-#ifndef VISLIB_JPEGBITMAPCODEC_H_INCLUDED
-#define VISLIB_JPEGBITMAPCODEC_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
@@ -182,8 +172,3 @@ private:
 
 } /* end namespace graphics */
 } /* end namespace sg */
-
-#if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_JPEGBITMAPCODEC_H_INCLUDED */

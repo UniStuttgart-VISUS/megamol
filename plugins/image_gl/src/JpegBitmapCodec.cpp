@@ -1,12 +1,10 @@
-/*
- * JpegBitmapCodec.cpp
- *
- * Copyright (C) 2010 by Sebastian Grottel.
- * (Copyright (C) 2010 by VISUS (Universitaet Stuttgart))
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
-#include "image/JpegBitmapCodec.h"
-#include "stdafx.h"
+
+#include "JpegBitmapCodec.h"
 #ifndef _WIN32
 #include "jpeglib.h"
 #endif
