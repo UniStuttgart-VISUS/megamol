@@ -42,7 +42,6 @@ namespace protein_gl {
  */
 class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
-
     /** render modi */
     enum RenderMode {
         GPU_RAYCASTING = 0,
