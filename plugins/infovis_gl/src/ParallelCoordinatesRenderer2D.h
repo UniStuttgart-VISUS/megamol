@@ -206,9 +206,6 @@ private:
 
     core::param::ParamSlot scaleToFitSlot;
 
-    core::param::ParamSlot glDepthTestSlot;
-    core::param::ParamSlot glLineSmoothSlot;
-    core::param::ParamSlot glLineWidthSlot;
     core::param::ParamSlot sqrtDensitySlot;
 
     core::param::ParamSlot resetFiltersSlot;

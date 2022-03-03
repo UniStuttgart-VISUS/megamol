@@ -48,9 +48,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
         , pickRadiusSlot("pickRadius", "Picking radius in object-space")
         , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
-        , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
-        , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
-        , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
         , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
@@ -138,15 +135,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     scaleToFitSlot << new core::param::BoolParam(false);
     scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
     this->MakeSlotAvailable(&scaleToFitSlot);
-
-    glDepthTestSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&glDepthTestSlot);
-
-    glLineSmoothSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&glLineSmoothSlot);
-
-    glLineWidthSlot << new core::param::FloatParam(1.0f, 0.1f);
-    this->MakeSlotAvailable(&glLineWidthSlot);
 
     sqrtDensitySlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&sqrtDensitySlot);
