@@ -6,7 +6,6 @@
 out vec4 fragColor;
 in vec4 actualColor;
 
-void main()
-{
+void main() {
     fragColor = actualColor;
 }

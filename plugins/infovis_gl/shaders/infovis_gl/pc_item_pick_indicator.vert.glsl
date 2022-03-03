@@ -3,12 +3,10 @@
 #include "pc_common/pc_buffers.inc.glsl"
 #include "pc_common/pc_uniforms.inc.glsl"
 #include "pc_common/pc_common.inc.glsl"
-//#include "::pc_item_pick::uniforms"
 
 smooth out vec2 circleCoord;
 
-void main()
-{
+void main() {
     vec2 vertices[6] =
     {
     // b_l, b_r, t_r

@@ -9,10 +9,8 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 uniform uvec2 resolution = uvec2(0);
 uniform uvec2 fragmentCountStepSize = uvec2(16);
 
-void main()
-{
-    if (any(greaterThanEqual(gl_GlobalInvocationID.xy, resolution)))
-    {
+void main() {
+    if (any(greaterThanEqual(gl_GlobalInvocationID.xy, resolution))) {
         return;
     }
 

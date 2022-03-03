@@ -10,8 +10,7 @@ smooth in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
-void main()
-{
+void main() {
     float frags = texture(fragmentCount, texCoord).r;
     float select = texture(selectionFlag, texCoord).r;
 

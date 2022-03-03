@@ -3,13 +3,11 @@
 #include "pc_common/pc_buffers.inc.glsl"
 #include "pc_common/pc_uniforms.inc.glsl"
 #include "pc_common/pc_common.inc.glsl"
-//#include "::pc_item_filter::uniforms"
 #include "core/bitflags.inc.glsl"
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-void main()
-{
+void main() {
     uint itemID = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
 
 

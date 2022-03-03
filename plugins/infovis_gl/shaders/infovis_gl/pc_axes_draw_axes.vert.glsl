@@ -9,8 +9,7 @@ uniform float axesThickness;
 uniform int width;
 uniform int height;
 
-void main()
-{
+void main() {
     uint dimension = pc_dimension(gl_InstanceID);
     int realID = gl_VertexID % 2;
     int side = gl_VertexID / 2 - gl_VertexID/3;

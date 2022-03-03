@@ -9,9 +9,7 @@ uniform float axesThickness;
 uniform int width;
 uniform int height;
 
-void main()
-{
-
+void main() {
     uint dimension = pc_dimension(gl_InstanceID / numTicks);
     vec4 bottom = axis_line(gl_InstanceID / numTicks, 0);
     vec4 top = axis_line(gl_InstanceID / numTicks, 1);
