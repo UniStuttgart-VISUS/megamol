@@ -55,7 +55,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
         , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
         , m_transferFunction_callerSlot(
-              "getTranfserFunction", "Connects the volume renderer with a transfer function") {
+              "getTransferFunction", "Connects the volume renderer with a transfer function") {
 
     this->m_renderer_callerSlot.SetCompatibleCall<megamol::core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->m_renderer_callerSlot);
