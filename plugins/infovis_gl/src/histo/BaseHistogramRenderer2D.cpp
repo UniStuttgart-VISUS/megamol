@@ -265,13 +265,7 @@ bool BaseHistogramRenderer2D::OnMouseButton(
 }
 
 bool BaseHistogramRenderer2D::OnMouseMove(double x, double y) {
-    auto cam_pose = camera_.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = camera_.get<core::view::Camera::OrthographicParameters>();
-    float world_x = ((static_cast<float>(x) * 2.0f / static_cast<float>(viewRes_.x)) - 1.0f);
-    float world_y = 1.0f - (static_cast<float>(y) * 2.0f / static_cast<float>(viewRes_.y));
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
-
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, camera_, viewRes_.x, viewRes_.y);
     mouseX_ = world_x;
     mouseY_ = world_y;
     return false;

@@ -50,3 +50,16 @@ void Renderer2D::debugPop() const {
     glPopDebugGroup();
 #endif
 }
+
+std::tuple<double, double> Renderer2D::mouseCoordsToWorld(
+    double mouse_x, double mouse_y, const core::view::Camera& cam, int width, int height) {
+
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
+    double world_x = ((mouse_x * 2.0 / static_cast<double>(width)) - 1.0);
+    double world_y = 1.0 - (mouse_y * 2.0 / static_cast<double>(height));
+    world_x = world_x * 0.5 * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5 * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+    return std::make_tuple(world_x, world_y);
+}

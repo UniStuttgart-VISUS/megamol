@@ -358,15 +358,9 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 }
 
 bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
-    // Make the following a convenience function in the future
-    auto cam_pose = currentCamera.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = currentCamera.get<core::view::Camera::OrthographicParameters>();
-    float world_x, world_y;
-    world_x = ((x * 2.0f / currentFBO->getWidth()) - 1.0f);
-    world_y = 1.0f - (y * 2.0f / currentFBO->getHeight());
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
 
+    auto const& [world_x, world_y] =
+        mouseCoordsToWorld(x, y, currentCamera, currentFBO->getWidth(), currentFBO->getHeight());
     this->mouse.x = world_x;
     this->mouse.y = world_y;
 
