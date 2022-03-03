@@ -127,14 +127,6 @@ protected:
     virtual void release(void);
 
     /**
-     * Renders the probe atom at position 'm'.
-     *
-     * @param m The probe position.
-     */
-    // void RenderProbe(const vislib::math::Vector<float, 3> m);
-    void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
-
-    /**
      * Compute all vertex, attribute and color arrays used for ray casting
      * all molecular surfaces (spheres, spherical triangles, tori).
      */
@@ -180,14 +172,6 @@ protected:
      * @param protein Pointer to the protein data interface.
      */
     void RenderSESGpuRaycasting(const megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * returns the color of the atom 'idx' for the current coloring mode
-     *
-     * @param idx The index of the atom.
-     * @return The color of the atom with the index 'idx'.
-     */
-    vislib::math::Vector<float, 3> GetProteinAtomColor(unsigned int idx);
 
     /**
      * Create the singularity textureS which stores for every RS-edge (of all

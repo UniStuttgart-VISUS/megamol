@@ -1757,16 +1757,3 @@ void MoleculeSESRenderer::deinitialise(void) {
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
 }
-
-
-/*
- * returns the color of the atom 'idx' for the current coloring mode
- */
-vislib::math::Vector<float, 3> MoleculeSESRenderer::GetProteinAtomColor(unsigned int idx) {
-    if (idx < this->atomColorTable.Count() / 3)
-        // return this->atomColorTable[idx];
-        return vislib::math::Vector<float, 3>(
-            this->atomColorTable[idx * 3 + 0], this->atomColorTable[idx * 3 + 1], this->atomColorTable[idx * 3 + 0]);
-    else
-        return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
-}
