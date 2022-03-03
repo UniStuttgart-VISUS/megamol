@@ -97,8 +97,6 @@ protected:
 
     bool OnMouseMove(double x, double y) override;
 
-    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
-
     bool scalingChangedCallback(core::param::ParamSlot& caller);
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
@@ -263,9 +261,8 @@ private:
     std::vector<GLuint> fragmentMinMax;
     std::vector<std::string> names;
 
-    float mouseX;
-    float mouseY;
-    bool ctrlDown = false, altDown = false, shiftDown = false;
+    double mouseX;
+    double mouseY;
     InteractionState interactionState;
     int pickedAxis;
     int pickedIndicatorAxis;

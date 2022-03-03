@@ -504,50 +504,48 @@ bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& ca
 bool ParallelCoordinatesRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    if (this->ctrlDown) {
-        // these clicks go to the view
-        return false;
-    }
-
-    // TODO could values from mouse move be updated from other threads? otherwise this copy is useless
-    float mousePressedX = this->mouseX;
-    float mousePressedY = this->mouseY;
-
+    // Ignore everything which is not left mouse button.
     if (button != core::view::MouseButton::BUTTON_LEFT) {
-        // ignore everything which is not left mouse button
         return false;
     }
 
-    // any up/down event stops interaction, but only down changes selection
+    // Any up/down event stops interaction, but only down changes selection.
     this->interactionState = InteractionState::NONE;
+
+    // If control is pressed, event is meant for view. Nevertheless, the interaction state is set to none before this
+    // check, to avoid locking into a state in case CTRL is pressed while an interaction state is active.
+    if (mods.test(core::view::Modifier::CTRL)) {
+        return false;
+    }
+
     if (action == core::view::MouseButtonAction::PRESS) {
         this->pickedAxis = -1;
         this->pickedIndicatorAxis = -1;
         this->pickedIndicatorIndex = -1;
 
-        if (this->altDown) {
-            this->pickedAxis = mouseXtoAxis(mousePressedX);
+        if (mods.test(core::view::Modifier::ALT)) {
+            this->pickedAxis = mouseXtoAxis(this->mouseX);
             if (this->pickedAxis != -1) {
                 this->interactionState = InteractionState::INTERACTION_DRAG;
             }
             return true;
         }
 
-        if (this->shiftDown) {
+        if (mods.test(core::view::Modifier::SHIFT)) {
 
-            auto axis = mouseXtoAxis(mousePressedX);
+            auto axis = mouseXtoAxis(this->mouseX);
             if (axis != -1) {
                 float base = this->marginY * 0.5f - fontSize * 0.5f;
-                if ((mousePressedY > base && mousePressedY < base + fontSize) ||
-                    (mousePressedY > base + this->marginY + this->axisHeight &&
-                        mousePressedY < base + this->marginY + this->axisHeight + fontSize)) {
+                if ((this->mouseY > base && this->mouseY < base + fontSize) ||
+                    (this->mouseY > base + this->marginY + this->axisHeight &&
+                        this->mouseY < base + this->marginY + this->axisHeight + fontSize)) {
                     std::swap(this->filters[axis].lower, this->filters[axis].upper);
                     this->needFlagsUpdate = true;
                     return true;
                 }
             }
 
-            pickIndicator(mousePressedX, mousePressedY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
+            pickIndicator(this->mouseX, this->mouseY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
             if (this->pickedIndicatorAxis != -1) {
                 this->interactionState = InteractionState::INTERACTION_FILTER;
             }
@@ -555,18 +553,20 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
         }
 
         this->interactionState = InteractionState::INTERACTION_SELECT;
-        this->strokeStartX = mousePressedX;
-        this->strokeStartY = mousePressedY;
-        this->strokeEndX = mousePressedX;
-        this->strokeEndY = mousePressedY;
+        this->strokeStartX = this->mouseX;
+        this->strokeStartY = this->mouseY;
+        this->strokeEndX = this->mouseX;
+        this->strokeEndY = this->mouseY;
         this->needSelectionUpdate = true;
         return true;
     }
 
-    return true;
+    return false;
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
+    // mouseCoordsToWorld requires a valid camera and camera_cpy is initialized on first render. Before anything is
+    // draw, interaction probably is not needed anyway, but this event could be triggered independently.
     if (!camera_cpy.has_value()) {
         return false;
     }
@@ -575,11 +575,6 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
 
     this->mouseX = world_x;
     this->mouseY = world_y;
-
-    if (this->ctrlDown) {
-        // these clicks go to the view
-        return false;
-    }
 
     if (this->interactionState == InteractionState::INTERACTION_DRAG) {
         int currAxis = mouseXtoAxis(this->mouseX);
@@ -627,14 +622,6 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
         return true;
     }
 
-    return false;
-}
-
-bool ParallelCoordinatesRenderer2D::OnKey(
-    core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    ctrlDown = mods.test(core::view::Modifier::CTRL);
-    altDown = mods.test(core::view::Modifier::ALT);
-    shiftDown = mods.test(core::view::Modifier::SHIFT);
     return false;
 }
 
