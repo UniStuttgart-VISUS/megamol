@@ -60,31 +60,30 @@ protected:
 
     void setupCamera(core::view::Camera& cam, int width, int height, int a);
 
-    void reconstruct(std::shared_ptr<glowl::FramebufferObject>& fbo, int a);
+    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, int a);
 
 private:
     core::param::ParamSlot amortLevelParam;
-    core::param::ParamSlot debugParam;
+    core::param::ParamSlot skipInterpolationParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
-    std::unique_ptr<glowl::GLSLProgram> linshader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
     glowl::TextureLayout texLayout_;
     glowl::TextureLayout distTexLayout_;
-    std::unique_ptr<glowl::Texture2D> texA_;
-    std::unique_ptr<glowl::Texture2D> texB_;
+    std::unique_ptr<glowl::Texture2D> texRead_;
+    std::unique_ptr<glowl::Texture2D> texWrite_;
     std::unique_ptr<glowl::Texture2D> distTexRead_;
     std::unique_ptr<glowl::Texture2D> distTexWrite_;
 
     int oldWidth_ = -1;
     int oldHeight_ = -1;
-    int oldLevel_ = -1;
+    int oldAmortLevel_ = -1;
 
     int frameIdx_ = 0;
     int samplingSequencePosition_;
     std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
-    glm::mat4 movePush_;
+    glm::mat4 shiftMx_;
     glm::mat4 lastProjViewMx_;
 };
 } // namespace megamol::infovis_gl
