@@ -96,7 +96,7 @@ void main() {
     float ray_cpos_dot = dot(ray.yz, cpos.yz);
     float cpos_dot =     dot(cpos.yz, cpos.yz);
 
-    // early exit check if cam is within or "behind" arrow
+    // early exit check if cam is too close or within arrow
     // (actually just checks if it is within the cylinder)
     if(cpos_dot <= 1.5 * radius_cylinder * radius_cylinder &&
        cpos.x >= -length_cylinder &&

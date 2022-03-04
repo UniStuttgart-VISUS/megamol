@@ -39,30 +39,29 @@ void main() {
 
     // calc the viewing ray
     vec3 ray = normalize(tmp - cam_pos);
-    // TODO: which radius to use? y or z?
 
     // iterative ray marching approch
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // start solution with box intersection
-    float t = length(box_pos - cam_pos);
+    float t = length(tmp - cam_pos);
+    // TODO: what radius to use?
     float radius = 1.0;
     vec3 superquadric = vec3(1.0);
-    // TODO: try cam - obj_pos instead of box_pos (see paper)
-    float result = pow(abs(box_pos.x / superquadric.x), exponent) +
-                   pow(abs(box_pos.y / superquadric.y), exponent) +
-                   pow(abs(box_pos.z / superquadric.z), exponent) -
+    float result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), absradii.x) +
+                   pow(abs((cam_pos.y + t * ray.y) / superquadric.y), absradii.y) +
+                   pow(abs((cam_pos.z + t * ray.z) / superquadric.z), absradii.z) -
                    radius;
 
     // set a threshold at which the result is good enough
-    float threshold = 0.001;
+    float threshold = 0.0001;
     float t1 = t;
     t += 0.0001;
     // march along ray until we find a hit
     while(result > threshold) {
         float old_result = result;
-        result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), exponent) +
-                 pow(abs((cam_pos.y + t * ray.y) / superquadric.y), exponent) +
-                 pow(abs((cam_pos.z + t * ray.z) / superquadric.z), exponent) -
+        result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), absradii.x) +
+                 pow(abs((cam_pos.y + t * ray.y) / superquadric.y), absradii.y) +
+                 pow(abs((cam_pos.z + t * ray.z) / superquadric.z), absradii.z) -
                  radius;
 
         // if we move further away from the object
@@ -90,8 +89,8 @@ void main() {
     else normal.z = -pow( -normal.z, k );
     normal = normalize( normal );
 
-    albedo_out = vec4(normal, 1.0);
-    //albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
+    //albedo_out = vec4(normal, 1.0);
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
     normal_out = normal;
 
     vec4 ding = vec4(intersection, 1.0);
