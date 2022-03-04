@@ -122,9 +122,10 @@ view::AbstractView::AbstractView(void)
     this->_bkgndCol[0] = 0.0f;
     this->_bkgndCol[1] = 0.0f;
     this->_bkgndCol[2] = 0.125f;
-    this->_bkgndCol[3] = 0.0f;
+    this->_bkgndCol[3] = 1.0f;
 
-    this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
+    this->_bkgndColSlot << new param::ColorParam(
+        this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], this->_bkgndCol[3]);
     this->MakeSlotAvailable(&this->_bkgndColSlot);
 }
 
@@ -261,7 +262,7 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
         return; // empty enough
     }
 
-    cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
+    cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], bkgndCol[3]));
 
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
@@ -518,7 +519,8 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
 glm::vec4 view::AbstractView::BkgndColour(void) const {
     if (this->_bkgndColSlot.IsDirty()) {
         this->_bkgndColSlot.ResetDirty();
-        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b);
+        this->_bkgndColSlot.Param<param::ColorParam>()->Value(
+            this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b, this->_bkgndCol.a);
     }
     return this->_bkgndCol;
 }

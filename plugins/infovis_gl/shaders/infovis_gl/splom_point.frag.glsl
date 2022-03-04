@@ -24,7 +24,7 @@ float gauss2(vec2 p) {
     const vec2 x = p * 6.0;
     const float g = exp(-dot(x, x) * 0.5);
     const float gAtPlusMinus3 = exp(-4.5);
-    return (g - gAtPlusMinus3) / (1.0 - gAtPlusMinus3);
+    return max((g - gAtPlusMinus3) / (1.0 - gAtPlusMinus3), 0.0f);
 }
 
 void main(void) {
@@ -39,6 +39,10 @@ void main(void) {
         break;
     default:
         density = 0.0;
+    }
+
+    if (density <= 0.0f) {
+        discard;
     }
 
     const float attenuation = vsPixelKernelSize - vsKernelSize;

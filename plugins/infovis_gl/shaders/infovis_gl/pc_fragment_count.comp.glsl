@@ -17,7 +17,6 @@ void main()
     }
 
     uint invocationID = getInvocationID();
-    fragmentMinMax[invocationID] = uvec2(4294967295u, 0u);
 
     memoryBarrierBuffer();
     uvec2 texCoord = gl_GlobalInvocationID.xy;
@@ -42,28 +41,6 @@ void main()
         texCoord.y += fragmentCountStepSize.y;
     }
 
-    fragmentMinMax[invocationID] = uvec2(thisMin, thisMax);
-
-    //  barrier();
-    memoryBarrierBuffer();
-
-    if (invocationID == 0)
-    {
-        for (uint index = 1; index < invocationCount; ++index)
-        {
-            uvec2 thatMinMax = fragmentMinMax[index];
-
-            if (thatMinMax.x < thisMin)
-            {
-                thisMin = thatMinMax.x;
-            }
-
-            if (thatMinMax.y > thisMax)
-            {
-                thisMax = thatMinMax.y;
-            }
-        }
-
-        fragmentMinMax[0] = uvec2(thisMin, thisMax);
-    }
+    atomicMin(fragmentMinMax[0].x,thisMin);
+    atomicMax(fragmentMinMax[0].y,thisMax);
 }

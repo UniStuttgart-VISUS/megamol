@@ -175,8 +175,8 @@ bool megamol::gui::gui_render_backend::EnableRendering(
         GUI_GL_CHECK_ERROR
 
         this->ogl_fbo->bind();
-        /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        /// glClearDepth(1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, framebuffer_width, framebuffer_height);
         glEnable(GL_DEPTH_TEST);
@@ -315,8 +315,8 @@ void megamol::gui::gui_render_backend::ClearFrame() {
     case (GUIRenderBackend::OPEN_GL): {
         if (this->ogl_fbo != nullptr) {
             this->ogl_fbo->bind();
-            /// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            /// glClearDepth(1.0f);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClearDepth(1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
