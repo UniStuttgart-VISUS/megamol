@@ -495,6 +495,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     }
 
     // copy image to framebuffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
     bool state_blend = glIsEnabled(GL_BLEND);
 
