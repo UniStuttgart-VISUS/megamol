@@ -442,7 +442,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
                           vislib::math::Min(mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
                               mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) *
                       0.75f;
-#pragma omp parallel for
+
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         if (std::sqrt(std::pow(pos0[3 * cnt + 0] - pos1[3 * cnt + 0], 2) +
                       std::pow(pos0[3 * cnt + 1] - pos1[3 * cnt + 1], 2) +
@@ -638,7 +638,6 @@ void SimpleMoleculeRenderer::RenderStick(
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -652,7 +651,6 @@ void SimpleMoleculeRenderer::RenderStick(
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -817,7 +815,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -831,7 +828,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -971,7 +967,6 @@ void SimpleMoleculeRenderer::RenderSpacefilling(
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -1037,7 +1032,6 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
