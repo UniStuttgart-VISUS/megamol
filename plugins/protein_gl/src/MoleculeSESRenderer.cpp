@@ -193,15 +193,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     // fill rainbow color table
     Color::MakeRainbowColorTable(100, this->rainbowColors);
 
-    // set the FBOs and textures for post processing
-    this->colorFBO = 0;
-    this->blendFBO = 0;
-    this->horizontalFilterFBO = 0;
-    this->verticalFilterFBO = 0;
-    this->texture0 = 0;
-    this->depthTex0 = 0;
-    this->hFilter = 0;
-    this->vFilter = 0;
     // width and height of the screen
     this->width = 0;
     this->height = 0;
@@ -227,18 +218,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
  * MoleculeSESRenderer::~MoleculeSESRenderer
  */
 MoleculeSESRenderer::~MoleculeSESRenderer(void) {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
@@ -343,7 +322,7 @@ bool MoleculeSESRenderer::create(void) {
 
     torusVertexBuffer_->bind();
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     torusColorBuffer_->bind();
     glEnableVertexAttribArray(1);
@@ -693,106 +672,6 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
         this->preComputationDone = false;
     }
 }
-
-
-/*
- * Create the fbo and texture needed for offscreen rendering
- */
-void MoleculeSESRenderer::CreateFBO() {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
-    glGenFramebuffersEXT(1, &colorFBO);
-    glGenFramebuffersEXT(1, &blendFBO);
-    glGenFramebuffersEXT(1, &horizontalFilterFBO);
-    glGenFramebuffersEXT(1, &verticalFilterFBO);
-    glGenTextures(1, &texture0);
-    glGenTextures(1, &depthTex0);
-    glGenTextures(1, &texture1);
-    glGenTextures(1, &depthTex1);
-    glGenTextures(1, &hFilter);
-    glGenTextures(1, &vFilter);
-
-    // color and depth FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
-    // init texture0 (color)
-    glBindTexture(GL_TEXTURE_2D, texture0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texture0, 0);
-    // init depth texture
-    glBindTexture(GL_TEXTURE_2D, depthTex0);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->width, this->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, this->depthTex0, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // color and depth FBO for blending (transparency)
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->blendFBO);
-    // init texture1 (color)
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texture1, 0);
-    // init depth texture
-    glBindTexture(GL_TEXTURE_2D, depthTex1);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->width, this->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, this->depthTex1, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // horizontal filter FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
-    glBindTexture(GL_TEXTURE_2D, this->hFilter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, hFilter, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // vertical filter FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->verticalFilterFBO);
-    glBindTexture(GL_TEXTURE_2D, this->vFilter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, vFilter, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-}
-
 
 /*
  * Render the molecular surface using GPU raycasting
@@ -1741,18 +1620,6 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
  * MoleculeSESRenderer::deinitialise
  */
 void MoleculeSESRenderer::deinitialise(void) {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);

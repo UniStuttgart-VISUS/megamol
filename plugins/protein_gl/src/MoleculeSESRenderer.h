@@ -161,11 +161,6 @@ protected:
     vislib::math::Vector<float, 3> DecodeColor(int codedColor) const;
 
     /**
-     * Creates the frame buffer object and textures needed for offscreen rendering.
-     */
-    void CreateFBO();
-
-    /**
      * Render the molecular surface using GPU raycasting.
      *
      * @param protein Pointer to the protein data interface.
@@ -328,17 +323,6 @@ private:
     std::vector<vislib::Array<float>> sphereVertexArray;
     std::vector<vislib::Array<float>> sphereColors;
 
-    // FBOs and textures for postprocessing
-    GLuint colorFBO;
-    GLuint blendFBO;
-    GLuint horizontalFilterFBO;
-    GLuint verticalFilterFBO;
-    GLuint texture0;
-    GLuint depthTex0;
-    GLuint texture1;
-    GLuint depthTex1;
-    GLuint hFilter;
-    GLuint vFilter;
     // width and height of view
     unsigned int width;
     unsigned int height;
