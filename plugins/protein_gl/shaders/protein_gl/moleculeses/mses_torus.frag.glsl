@@ -1,26 +1,10 @@
 #version 430
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
-#include "lightdirectional.glsl"
+#include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_gl/moleculeses/mses_rootsolver.glsl"
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
-layout(location = 0) out vec4 color_out;
-
-uniform vec4 viewAttr;
-uniform vec3 zValues;
-uniform vec3 fogCol;
-uniform float alpha = 0.5;
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
-
-in vec4 objPos;
-in vec4 camPos;
-in vec4 lightPos;
 in vec4 radii;
 in vec4 visibilitySphere;
 
@@ -124,9 +108,9 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
     // phong lighting with directional light
-    //color_out = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
-    color_out = vec4(color, 1.0);
-    gl_FragDepth = gl_FragCoord.z;
+    //albedo_out = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    albedo_out = vec4(color, 1.0);
+    float depthval = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
@@ -141,21 +125,25 @@ void main(void) {
     float depth = dot(mvptransposed[2], Ding);
     float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    //depthval = ( depth + zValues.y) / zValues.z;
+    depthval = (depth + zValues.y)/( zValues.z + zValues.y);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
 
 #ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    color_out.rgb = mix( fogCol, color_out.rgb, f);
+    float f = clamp( ( 1.0 - depthval)/( 1.0 - zValues.x ), 0.0, 1.0);
+    albedo_out.rgb = mix( fogCol, albedo_out.rgb, f);
 #endif // FOGGING_SES
-    color_out.a = alpha;
+    albedo_out.a = alpha;
     
     tmp = normal;
     normal.x = dot( rotMatT0, tmp.xyz);
     normal.y = dot( rotMatT1, tmp.xyz);
     normal.z = dot( rotMatT2, tmp.xyz);
+
+    normal_out = normal;
+    depth_out = depthval;
+    gl_FragDepth = depthval;
 }
