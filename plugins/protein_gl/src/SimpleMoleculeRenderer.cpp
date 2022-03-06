@@ -55,7 +55,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
-        , getFramebufferSlot("getFramebuffer", "Connects the molecule rendering to an optional external framebuffer")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
@@ -74,9 +73,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
         , currentZClipPos(-20)
-        , fbo_version_(0)
-        , vertex_array_(0)
-        , usedFramebufferObj_(nullptr) {
+        , vertex_array_(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -85,8 +82,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
-    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
-    this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
@@ -201,7 +196,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
-    usedFramebufferObj_.reset();
     this->Release();
 }
 
@@ -337,7 +331,6 @@ bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    ++fbo_version_;
     auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -348,23 +341,14 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    call_fbo->bind(); // reset to default behavior
+    call_fbo->bind(); // set to default behavior
 
-
-    // if there is a fbo connected, use the connected one
+    // if there is a fbo of appropriate size connected, draw to it.
+    // if not, we handle the lighting
     bool externalfbo = false;
-    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
-    if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
-        auto fbo = cfbo->getData();
-        if (fbo != nullptr) {
-            externalfbo = true;
-            usedFramebufferObj_ = fbo;
-            usedFramebufferObj_->bind();
-        } else {
-            deferredProvider_.bindDeferredFramebufferToDraw();
-        }
+    auto cfbo = call.GetFramebuffer();
+    if (cfbo != nullptr && cfbo->getNumColorAttachments() == 3) {
+        externalfbo = true;
     } else {
         deferredProvider_.bindDeferredFramebufferToDraw();
     }
@@ -536,7 +520,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // perform the lighing pass only if no framebuffer is attached
-    if (cfbo == nullptr) {
+    if (!externalfbo) {
         deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>(),
             this->currentRenderMode == LINES || this->currentRenderMode == LINES_FILTER);
     }
