@@ -471,16 +471,6 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(proj_));
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(view_));
-
     float callTime = call.Time();
 
     // get pointer to CallProteinData
@@ -566,10 +556,6 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
         virtualViewportChanged = true;
     }
 
-    // ==================== Scale & Translate ====================
-
-    glPushMatrix();
-
     // ==================== Start actual rendering ====================
 
     glDisable(GL_BLEND);
@@ -581,18 +567,8 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // render the SES
     this->RenderSESGpuRaycasting(mol);
 
-    glPopMatrix();
-
     // unlock the current frame
     mol->Unlock();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glLoadIdentity();
 
     return true;
 }
