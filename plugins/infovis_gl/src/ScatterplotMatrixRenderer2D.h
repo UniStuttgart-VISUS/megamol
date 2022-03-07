@@ -318,7 +318,7 @@ private:
     bool trianglesValid;
 
     core::view::Camera currentCamera;
-    std::shared_ptr<glowl::FramebufferObject> currentFBO;
+    glm::ivec2 currentViewRes;
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
     glm::mat4 screenLastMVP;

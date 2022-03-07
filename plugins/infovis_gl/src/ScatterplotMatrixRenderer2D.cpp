@@ -116,6 +116,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , triangleIBO(0)
         , triangleVertexCount(0)
         , trianglesValid(false)
+        , currentViewRes(glm::ivec2(0, 0))
         , screenFBO(nullptr)
         , screenValid(false)
         , axisFont(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
@@ -359,8 +360,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 
 bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
 
-    auto const& [world_x, world_y] =
-        mouseCoordsToWorld(x, y, currentCamera, currentFBO->getWidth(), currentFBO->getHeight());
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, currentCamera, currentViewRes.x, currentViewRes.y);
     this->mouse.x = world_x;
     this->mouse.y = world_y;
 
@@ -380,7 +380,7 @@ bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         auto view = currentCamera.getViewMatrix();
         auto proj = currentCamera.getProjectionMatrix();
         glm::mat4 ortho = proj * view;
-        currentFBO = call.GetFramebuffer();
+        currentViewRes = call.GetViewResolution();
 
         if (!this->validate(call, false))
             return false;
