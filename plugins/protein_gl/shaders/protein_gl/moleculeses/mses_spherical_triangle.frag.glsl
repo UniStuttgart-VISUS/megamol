@@ -4,6 +4,10 @@
 #include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_gl/moleculeses/mses_common_defines.glsl"
 
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+
 // texture sampler
 uniform sampler2D tex;
 uniform vec2 texOffset;

@@ -5,6 +5,10 @@
 #include "protein_gl/moleculeses/mses_rootsolver.glsl"
 #include "protein_gl/moleculeses/mses_common_defines.glsl"
 
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+
 in vec4 radii;
 in vec4 visibilitySphere;
 

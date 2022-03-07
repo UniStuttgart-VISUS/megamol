@@ -4,6 +4,10 @@
 #include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_gl/moleculeses/mses_common_defines.glsl"
 
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+
 in float squarRad;
 in float rad;
 in vec3 move_color;
@@ -18,7 +22,6 @@ void main(void) {
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-
     // transform fragment coordinates from view coordinates to object coordinates.
     coord = mvpinverse * coord;
     coord /= coord.w;
@@ -26,7 +29,6 @@ void main(void) {
 
     // calc the viewing ray
     ray = normalize(coord.xyz - camPos.xyz);
-
 
     // calculate the geometry-ray-intersection
     float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray

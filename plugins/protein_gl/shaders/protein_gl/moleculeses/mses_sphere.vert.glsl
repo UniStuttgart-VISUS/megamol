@@ -1,25 +1,15 @@
 #version 430
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
-uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec2 zValues;
-uniform vec3 fogCol;
-
-uniform vec3 camIn;
-uniform vec3 camUp;
-uniform vec3 camRight;
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
+layout (location = 0) in vec4 vert_position;
+layout (location = 1) in vec3 vert_color;
 
 out vec4 objPos;
 out vec4 camPos;
 out vec4 lightPos;
+
 out float squarRad;
 out float rad;
 out vec3 move_color;
@@ -27,9 +17,6 @@ out vec3 move_color;
 #ifdef RETICLE
 out vec2 centerFragment;
 #endif // RETICLE
-
-layout (location = 0) in vec4 vert_position;
-layout (location = 1) in vec3 vert_color;
 
 void main(void) {
 
