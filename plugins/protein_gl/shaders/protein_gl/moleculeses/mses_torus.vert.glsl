@@ -12,7 +12,7 @@ layout (location = 5) in vec3 torus_cuttingplane;
 
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+
 out vec4 radii;
 out vec4 visibilitySphere;
 
@@ -75,14 +75,6 @@ void main(void) {
     tmp = viewInverse[3]; // (C) by Christoph
     tmp.xyz -= objPos.xyz; // cam move
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0,0,0,1); // Dummy
-    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size

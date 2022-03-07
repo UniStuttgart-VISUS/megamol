@@ -7,7 +7,6 @@
 
 in vec4 objPos;
 in vec4 camPos;
-in vec4 lightPos;
 
 in vec4 radii;
 in vec4 visibilitySphere;
@@ -105,14 +104,7 @@ void main(void) {
     else
         color = decodeColor( colors.y);
 #endif // FLATSHADE_SES
-    // uniform color
-    //color = vec3( 1.0, 0.75, 0.0);
-    //color = vec3( 0.98, 0.82, 0.0 ); // for VIS
-    //color = vec3( 0.02, 0.75, 0.02);
-    //color = vec3( 0.19, 0.52, 0.82);
 
-    // phong lighting with directional light
-    //albedo_out = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
     albedo_out = vec4(color, 1.0);
     float depthval = gl_FragCoord.z;
     

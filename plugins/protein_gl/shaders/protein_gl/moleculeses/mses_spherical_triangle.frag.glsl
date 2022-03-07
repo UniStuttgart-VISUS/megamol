@@ -6,7 +6,6 @@
 
 in vec4 objPos;
 in vec4 camPos;
-in vec4 lightPos;
 
 // texture sampler
 uniform sampler2D tex;
@@ -114,7 +113,7 @@ void main(void) {
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
 #ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
+    normal = mix(-ray, normal, 1);
 #endif // SMALL_SPRITE_LIGHTING
 
     // ========== START compute color ==========
@@ -143,16 +142,7 @@ void main(void) {
     else
         color = decodeColor( inColors.z);
 #endif // FLATSHADE_SES
-    // ========== END compute color ==========
-    // uniform color
-    //color = vec3( 0.0, 0.75, 1.0);
-    //color = vec3( 0.0, 0.6, 0.6 ); // for VIS
-    //color = vec3( texCoord2.xy, 0.0);
-    //color = vec3( 0.8, 0.0, 0.2);
-    //color = vec3( 0.19, 0.52, 0.82);
 
-    // phong lighting with directional light
-    //albedo_out = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     albedo_out = vec4(color,1.0);
     float depthval = gl_FragCoord.z;
     

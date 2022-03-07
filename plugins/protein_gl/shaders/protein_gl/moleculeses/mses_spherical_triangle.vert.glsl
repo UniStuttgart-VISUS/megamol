@@ -16,7 +16,6 @@ uniform vec2 texOffset;
 
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
 
 out vec4 inVec1;
 out vec4 inVec2;
@@ -51,13 +50,6 @@ void main(void) {
     // calculate cam position
     camPos = viewInverse[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
-    
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0,0,0,1); // dummy
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size

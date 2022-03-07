@@ -8,7 +8,7 @@ layout (location = 1) in vec3 vert_color;
 
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out float move_d;
 
 out float squarRad;
 out float rad;
@@ -33,12 +33,8 @@ void main(void) {
     camPos = viewInverse[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0, 0, 0, 1); // Dummy value
+    // Dummy value
+    move_d = 1;
 
     // send color to fragment shader
     move_color = vert_color;
@@ -111,7 +107,7 @@ void main(void) {
     gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
 
     // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+    move_d = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 
     // gl_PointSize = 32.0;
 }

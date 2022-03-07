@@ -6,7 +6,7 @@
 
 in vec4 objPos;
 in vec4 camPos;
-in vec4 lightPos;
+in float move_d;
 
 in float squarRad;
 in float rad;
@@ -45,13 +45,10 @@ void main(void) {
     // "calc" normal at intersection point
     vec3 normal = sphereintersection / rad;
 #ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
+    normal = mix(-ray, normal, move_d);
 #endif // SMALL_SPRITE_LIGHTING
 
-    vec3 color = move_color.rgb;
-
-    // phong lighting with directional light
-    albedo_out = vec4(color,1.0);
+    albedo_out = vec4(move_color.rgb,1.0);
 
     // calculate depth
 #ifdef DEPTH
