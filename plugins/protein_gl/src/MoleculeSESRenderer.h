@@ -104,15 +104,6 @@ public:
         probeRadius = rad;
     };
 
-    /** set the color of the silhouette */
-    void SetSilhouetteColor(float r, float g, float b) {
-        silhouetteColor.Set(r, g, b);
-        codedSilhouetteColor = int(r * 255.0f) * 1000000 + int(g * 255.0f) * 1000 + int(b * 255.0f);
-    };
-    void SetSilhouetteColor(vislib::math::Vector<float, 3> color) {
-        SetSilhouetteColor(color.GetX(), color.GetY(), color.GetZ());
-    };
-
 protected:
     /**
      * Implementation of 'Create'.
