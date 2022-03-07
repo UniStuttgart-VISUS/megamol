@@ -160,12 +160,11 @@ void main(void) {
 #ifdef OGL_DEPTH_SES
     depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    depthval = (depth + zValues.y)/( zValues.z + zValues.y);
+    //gl_FragDepth = ( depth + zValues.x) / zValues.y;
+    depthval = (depth + zValues.x)/( zValues.y + zValues.x);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
 
-    albedo_out.a = alpha;
     normal_out = normal;
     gl_FragDepth = depthval;
     depth_out = depthval;

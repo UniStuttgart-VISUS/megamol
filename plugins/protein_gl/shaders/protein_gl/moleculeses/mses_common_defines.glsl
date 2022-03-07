@@ -1,5 +1,5 @@
 uniform vec4 viewAttr;
-uniform vec3 zValues;
+uniform vec2 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
 

@@ -58,15 +58,11 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
         , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-        , silhouettecolorParam("silhouetteColor", "Silhouette Color: ")
-        , sigmaParam("SSAOsigma", "Sigma value for SSAO: ")
-        , lambdaParam("SSAOlambda", "Lambda value for SSAO: ")
         , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
         , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
         , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
         , drawSESParam("drawSES", "Draw the SES: ")
         , drawSASParam("drawSAS", "Draw the SAS: ")
-        , fogstartParam("fogStart", "Fog Start: ")
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , probeRadiusSlot("probeRadius", "The probe radius for the surface computation")
@@ -105,31 +101,9 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->epsilon = vislib::math::FLOAT_EPSILON;
     // set probe radius
     this->probeRadius = 1.4f;
-    // set transparency
-    this->transparency = 0.5f;
 
     this->probeRadiusSlot.SetParameter(new param::FloatParam(1.4f, 0.1f));
     this->MakeSlotAvailable(&this->probeRadiusSlot);
-
-    // ----- set the default color for the silhouette -----
-    this->SetSilhouetteColor(1.0f, 1.0f, 1.0f);
-    param::IntParam* sc = new param::IntParam(this->codedSilhouetteColor, 0, 255255255);
-    this->silhouettecolorParam << sc;
-
-    // ----- set sigma for screen space ambient occlusion (SSAO) -----
-    this->sigma = 5.0f;
-    param::FloatParam* ssaos = new param::FloatParam(this->sigma);
-    this->sigmaParam << ssaos;
-
-    // ----- set lambda for screen space ambient occlusion (SSAO) -----
-    this->lambda = 10.0f;
-    param::FloatParam* ssaol = new param::FloatParam(this->lambda);
-    this->lambdaParam << ssaol;
-
-    // ----- set start value for fogging -----
-    this->fogStart = 0.5f;
-    param::FloatParam* fs = new param::FloatParam(this->fogStart, 0.0f);
-    this->fogstartParam << fs;
 
     // coloring modes
     this->currentColoringMode0 = Color::ColoringMode::CHAIN;
@@ -205,12 +179,13 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->preComputationDone = false;
 
     // export parameters
-    this->MakeSlotAvailable(&this->silhouettecolorParam);
-    this->MakeSlotAvailable(&this->sigmaParam);
-    this->MakeSlotAvailable(&this->lambdaParam);
-    this->MakeSlotAvailable(&this->fogstartParam);
     this->MakeSlotAvailable(&this->drawSESParam);
     this->MakeSlotAvailable(&this->drawSASParam);
+
+    auto defparams = deferredProvider_.getUsedParamSlots();
+    for (const auto& param : defparams) {
+        this->MakeSlotAvailable(param);
+    }
 }
 
 
@@ -391,6 +366,8 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
+    deferredProvider_.setup(this->GetCoreInstance());
+
     return true;
 }
 
@@ -430,7 +407,10 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     mvpinverse_ = glm::inverse(mvp_);
     mvptranspose_ = glm::transpose(mvp_);
 
-    std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
+    fbo_ = call.GetFramebuffer();
+    deferredProvider_.setFramebufferExtents(fbo_->getWidth(), fbo_->getHeight());
+
+    std::array<int, 2> resolution = {fbo_->getWidth(), fbo_->getHeight()};
 
     float callTime = call.Time();
 
@@ -451,8 +431,14 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
         (*bs)(BindingSiteCall::CallForGetData);
     }
 
-    fbo = call.GetFramebuffer();
-    fbo->bind();
+    fbo_->bind();
+
+    bool externalfbo = false;
+    if (fbo_->getNumColorAttachments() == 3) {
+        externalfbo = true;
+    } else {
+        deferredProvider_.bindDeferredFramebufferToDraw();
+    }
 
     // ==================== check parameters ====================
     this->UpdateParameters(mol, bs);
@@ -519,14 +505,14 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // ==================== Start actual rendering ====================
 
-    glDisable(GL_BLEND);
-    // glEnable( GL_NORMALIZE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
-    // render the SES
     this->RenderSESGpuRaycasting(mol);
+
+    if (externalfbo) {
+        fbo_->bind();
+    } else {
+        deferredProvider_.resetToPreviousFramebuffer();
+        deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>());
+    }
 
     // unlock the current frame
     mol->Unlock();
@@ -560,22 +546,6 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
-    }
-    if (this->silhouettecolorParam.IsDirty()) {
-        this->SetSilhouetteColor(this->DecodeColor(this->silhouettecolorParam.Param<param::IntParam>()->Value()));
-        this->silhouettecolorParam.ResetDirty();
-    }
-    if (this->sigmaParam.IsDirty()) {
-        this->sigma = this->sigmaParam.Param<param::FloatParam>()->Value();
-        this->sigmaParam.ResetDirty();
-    }
-    if (this->lambdaParam.IsDirty()) {
-        this->lambda = this->lambdaParam.Param<param::FloatParam>()->Value();
-        this->lambdaParam.ResetDirty();
-    }
-    if (this->fogstartParam.IsDirty()) {
-        this->fogStart = this->fogstartParam.Param<param::FloatParam>()->Value();
-        this->fogstartParam.ResetDirty();
     }
     if (this->drawSESParam.IsDirty()) {
         this->drawSES = this->drawSESParam.Param<param::BoolParam>()->Value();
@@ -617,10 +587,10 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     // TODO: attribute locations nicht jedes mal neu abfragen!
 
     bool virtualViewportChanged = false;
-    if (static_cast<unsigned int>(fbo->getWidth()) != this->width ||
-        static_cast<unsigned int>(fbo->getHeight()) != this->height) {
-        this->width = static_cast<unsigned int>(fbo->getWidth());
-        this->height = static_cast<unsigned int>(fbo->getHeight());
+    if (static_cast<unsigned int>(fbo_->getWidth()) != this->width ||
+        static_cast<unsigned int>(fbo_->getHeight()) != this->height) {
+        this->width = static_cast<unsigned int>(fbo_->getWidth());
+        this->height = static_cast<unsigned int>(fbo_->getHeight());
         virtualViewportChanged = true;
     }
 
@@ -628,8 +598,8 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->getWidth());
-    viewportStuff[3] = static_cast<float>(fbo->getHeight());
+    viewportStuff[2] = static_cast<float>(fbo_->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo_->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -642,11 +612,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
     float nearplane = camera.get<core::view::Camera::NearPlane>();
     float farplane = camera.get<core::view::Camera::FarPlane>();
-
-    // get clear color (i.e. background color) for fogging
-    float* clearColor = new float[4];
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, clearColor);
-    vislib::math::Vector<float, 3> fogCol(clearColor[0], clearColor[1], clearColor[2]);
 
     unsigned int cntRS;
 
@@ -682,9 +647,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             torusShader_->setUniform("camIn", camdir);
             torusShader_->setUniform("camRight", right);
             torusShader_->setUniform("camUp", up);
-            torusShader_->setUniform("zValues", fogStart, nearplane, farplane);
-            torusShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-            torusShader_->setUniform("alpha", this->transparency);
+            torusShader_->setUniform("zValues", nearplane, farplane);
             torusShader_->setUniform("view", view_);
             torusShader_->setUniform("proj", proj_);
             torusShader_->setUniform("viewInverse", invview_);
@@ -735,11 +698,9 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             sphericalTriangleShader_->setUniform("camIn", camdir);
             sphericalTriangleShader_->setUniform("camRight", right);
             sphericalTriangleShader_->setUniform("camUp", up);
-            sphericalTriangleShader_->setUniform("zValues", fogStart, nearplane, farplane);
-            sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            sphericalTriangleShader_->setUniform("zValues", nearplane, farplane);
             sphericalTriangleShader_->setUniform(
                 "texOffset", 1.0f / (float)this->singTexWidth[cntRS], 1.0f / (float)this->singTexHeight[cntRS]);
-            sphericalTriangleShader_->setUniform("alpha", this->transparency);
             sphericalTriangleShader_->setUniform("view", view_);
             sphericalTriangleShader_->setUniform("proj", proj_);
             sphericalTriangleShader_->setUniform("viewInverse", invview_);
@@ -772,9 +733,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         sphereShader_->setUniform("camIn", camdir);
         sphereShader_->setUniform("camRight", right);
         sphereShader_->setUniform("camUp", up);
-        sphereShader_->setUniform("zValues", fogStart, nearplane, farplane);
-        sphereShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-        sphereShader_->setUniform("alpha", this->transparency);
+        sphereShader_->setUniform("zValues", nearplane, farplane);
         sphereShader_->setUniform("view", view_);
         sphereShader_->setUniform("proj", proj_);
         sphereShader_->setUniform("viewInverse", invview_);
@@ -788,9 +747,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         glUseProgram(0);
         glBindVertexArray(0);
     }
-
-    // delete pointers
-    delete[] clearColor;
 }
 
 /*

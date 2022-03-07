@@ -46,8 +46,6 @@ void main(void) {
     normal = mix(-ray, normal, lightPos.w);
 #endif // SMALL_SPRITE_LIGHTING
 
-    // chose color for lighting
-
     vec3 color = move_color.rgb;
 
     // phong lighting with directional light
@@ -61,12 +59,11 @@ void main(void) {
 #ifdef OGL_DEPTH_SES
     float depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    float depthval = (depth + zValues.y)/( zValues.z + zValues.y);
+    //gl_FragDepth = ( depth + zValues.x) / zValues.y;
+    float depthval = (depth + zValues.x)/( zValues.y + zValues.x);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
 
-    albedo_out.a = alpha;
     depth_out = depthval;
     gl_FragDepth = depthval;
     normal_out = normal;

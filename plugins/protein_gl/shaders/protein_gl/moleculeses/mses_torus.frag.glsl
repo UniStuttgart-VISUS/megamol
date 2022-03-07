@@ -127,16 +127,10 @@ void main(void) {
 #ifdef OGL_DEPTH_SES
     depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //depthval = ( depth + zValues.y) / zValues.z;
-    depthval = (depth + zValues.y)/( zValues.z + zValues.y);
+    //depthval = ( depth + zValues.x) / zValues.y;
+    depthval = (depth + zValues.x)/( zValues.y + zValues.x);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
-
-#ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - depthval)/( 1.0 - zValues.x ), 0.0, 1.0);
-    albedo_out.rgb = mix( fogCol, albedo_out.rgb, f);
-#endif // FOGGING_SES
-    albedo_out.a = alpha;
     
     tmp = normal;
     normal.x = dot( rotMatT0, tmp.xyz);

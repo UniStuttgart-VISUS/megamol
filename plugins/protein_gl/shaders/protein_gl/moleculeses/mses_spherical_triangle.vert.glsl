@@ -3,7 +3,7 @@
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec3 zValues;
+uniform vec2 zValues;
 uniform vec3 fogCol;
 uniform vec2 texOffset;
 uniform mat4 view;

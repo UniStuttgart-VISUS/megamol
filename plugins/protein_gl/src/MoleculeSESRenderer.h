@@ -230,7 +230,7 @@ private:
     core::view::Camera camera;
 
     /** framebuffer information */
-    std::shared_ptr<glowl::FramebufferObject> fbo;
+    std::shared_ptr<glowl::FramebufferObject> fbo_;
 
     // camera information
     // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
@@ -242,16 +242,12 @@ private:
     megamol::core::param::ParamSlot coloringModeParam1;
     /** parameter slot for coloring mode weighting*/
     megamol::core::param::ParamSlot cmWeightParam;
-    megamol::core::param::ParamSlot silhouettecolorParam;
-    megamol::core::param::ParamSlot sigmaParam;
-    megamol::core::param::ParamSlot lambdaParam;
     /** parameter slot for min color of gradient color mode */
     megamol::core::param::ParamSlot minGradColorParam;
     /** parameter slot for mid color of gradient color mode */
     megamol::core::param::ParamSlot midGradColorParam;
     /** parameter slot for max color of gradient color mode */
     megamol::core::param::ParamSlot maxGradColorParam;
-    megamol::core::param::ParamSlot fogstartParam;
     megamol::core::param::ParamSlot drawSESParam;
     megamol::core::param::ParamSlot drawSASParam;
     megamol::core::param::ParamSlot molIdxListParam;
@@ -322,10 +318,6 @@ private:
     // width and height of view
     unsigned int width;
     unsigned int height;
-    // sigma factor for screen space ambient occlusion
-    float sigma;
-    // lambda factor for screen space ambient occlusion
-    float lambda;
 
     /** The color lookup table (for chains, amino acids,...) */
     vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
@@ -349,11 +341,6 @@ private:
     // silhouette color
     vislib::math::Vector<float, 3> silhouetteColor;
     int codedSilhouetteColor;
-
-    // start value for fogging
-    float fogStart;
-    // transparency value
-    float transparency;
 
     // the list of molecular indices
     vislib::Array<vislib::StringA> molIdxList;
