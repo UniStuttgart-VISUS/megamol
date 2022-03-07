@@ -411,45 +411,6 @@ bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-void MoleculeSESRenderer::UpdateLights(void) {
-    auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
-    bool lighting_available = false;
-    if (call_light != nullptr) {
-        if ((*call_light)(0)) {
-            lighting_available = true;
-        }
-    }
-
-    if (!lighting_available) {
-        pointLights_.clear();
-        directionalLights_.clear();
-    }
-
-    if (lighting_available && call_light->hasUpdate()) {
-        auto& lights = call_light->getData();
-        pointLights_.clear();
-        directionalLights_.clear();
-
-        auto point_lights = lights.get<core::view::light::PointLightType>();
-        auto directional_lights = lights.get<core::view::light::DistantLightType>();
-
-        for (auto& pl : point_lights) {
-            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
-        }
-
-        for (auto& dl : directional_lights) {
-            if (dl.eye_direction) {
-                auto cam_dir = glm::normalize(this->camera.getPose().direction);
-                directionalLights_.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
-            } else {
-                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
-            }
-        }
-    }
-    pointLightBuffer_->rebuffer(pointLights_);
-    directionalLightBuffer_->rebuffer(directionalLights_);
-}
-
 /*
  * MoleculeSESRenderer::Render
  */
@@ -491,10 +452,10 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     fbo = call.GetFramebuffer();
+    fbo->bind();
 
     // ==================== check parameters ====================
     this->UpdateParameters(mol, bs);
-    this->UpdateLights();
 
     // ==================== Precomputations ====================
     this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();

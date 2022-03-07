@@ -10,6 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include "DeferredRenderingProvider.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
@@ -273,11 +274,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> sphereShader_;
     std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
 
-    /**
-     * updates and uploads all arrays according to the incoming light information
-     */
-    void UpdateLights();
-
     ////////////
 
     // the bounding box of the protein
@@ -399,12 +395,7 @@ private:
     GLuint vertexArrayTorus_;
     GLuint vertexArrayTria_;
 
-    struct LightParams {
-        float x, y, z, intensity;
-    };
-
-    std::vector<LightParams> pointLights_;
-    std::vector<LightParams> directionalLights_;
+    DeferredRenderingProvider deferredProvider_;
 };
 
 } // namespace protein_gl
