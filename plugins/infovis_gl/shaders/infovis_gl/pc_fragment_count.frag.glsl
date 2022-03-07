@@ -19,11 +19,14 @@ void main() {
     if (select > 0) {
         fragColor = vec4(1.0, 0.0, 0.0, 1.0);
     } else if (frags > 0) {
-        float value = (frags - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
-        if (sqrtDensity == 1) {
-            value = sqrt(value);
+        float value = frags;
+        if (normalizeDensity) {
+            value = (value - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
+            if (sqrtDensity) {
+                value = sqrt(value);
+            }
+            value = clamp(value, 0.0, 1.0);
         }
-        value = clamp(value, 0.0, 1.0);
         fragColor = tflookup(value);
     } else {
         discard;

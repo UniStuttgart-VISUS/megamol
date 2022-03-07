@@ -8,4 +8,5 @@ uniform mat4 projection = mat4(1.0);
 uniform vec4 clearColor = vec4(0.0);
 
 uniform uint invocationCount = 0;
-uniform int sqrtDensity = 1;
+uniform bool normalizeDensity = true;
+uniform bool sqrtDensity = false;

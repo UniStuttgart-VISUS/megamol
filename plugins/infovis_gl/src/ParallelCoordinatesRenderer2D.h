@@ -216,6 +216,7 @@ private:
     core::param::ParamSlot lineThicknessSlot;
     core::param::ParamSlot axesLineThicknessSlot;
     core::param::ParamSlot smoothFontSlot;
+    core::param::ParamSlot normalizeDensitySlot;
 
     float marginX, marginY;
     float axisDistance;

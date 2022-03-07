@@ -48,6 +48,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
         , pickRadiusSlot("pickRadius", "Picking radius in object-space")
         , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
+        , normalizeDensitySlot("normalizeDensity", "Normalize the range of the density values to [0, 1]")
         , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
@@ -136,7 +137,10 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
     this->MakeSlotAvailable(&scaleToFitSlot);
 
-    sqrtDensitySlot << new core::param::BoolParam(true);
+    normalizeDensitySlot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&normalizeDensitySlot);
+
+    sqrtDensitySlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&sqrtDensitySlot);
 
     resetFiltersSlot << new core::param::ButtonParam();
@@ -847,10 +851,9 @@ void ParallelCoordinatesRenderer2D::doFragmentCount() {
         static_cast<int>(std::ceil(static_cast<float>(fbo->getHeight()) / 16.0f))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
-    size_t bytes = sizeof(uint32_t) * 2;
-    std::array<uint32_t, 2> minMaxInitData{std::numeric_limits<uint32_t>::max(), 0};
+    constexpr std::array<uint32_t, 2> minMaxInitData{std::numeric_limits<uint32_t>::max(), 0};
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, minMaxInitData.data(), GL_STATIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint32_t) * 2, minMaxInitData.data(), GL_STATIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(counterBuffer));
@@ -885,9 +888,12 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous() {
     if (tf == nullptr)
         return;
     debugPush(6, "drawItemsContinuous");
-    doFragmentCount();
 
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    const bool normalizeDensity = normalizeDensitySlot.Param<core::param::BoolParam>()->Value();
+    if (normalizeDensity) {
+        doFragmentCount();
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
 
     this->enableProgramAndBind(drawItemContinuousProgram);
     glActiveTexture(GL_TEXTURE1);
@@ -895,11 +901,12 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous() {
     glActiveTexture(GL_TEXTURE2);
     densityFBO->bindColorbuffer(1);
     tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
-    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("fragmentCount"), 1);
-    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("selectionFlag"), 2);
+    this->drawItemContinuousProgram->setUniform("fragmentCount", 1);
+    this->drawItemContinuousProgram->setUniform("selectionFlag", 2);
     glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("sqrtDensity"),
-        this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    this->drawItemContinuousProgram->setUniform("normalizeDensity", normalizeDensity ? 1 : 0);
+    this->drawItemContinuousProgram->setUniform(
+        "sqrtDensity", this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
     glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
