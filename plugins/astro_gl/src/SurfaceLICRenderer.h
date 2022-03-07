@@ -14,10 +14,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
 
@@ -132,7 +132,7 @@ private:
     std::unique_ptr<glowl::Texture3D> noise_texture;
 
     /** FBO for input */
-    vislib_gl::graphics::gl::FramebufferObject fbo;
+    std::shared_ptr<glowl::FramebufferObject> fbo;
 
     /** Noise texture data */
     std::vector<float> noise;

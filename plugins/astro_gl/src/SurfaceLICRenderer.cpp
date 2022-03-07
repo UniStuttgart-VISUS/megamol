@@ -18,6 +18,7 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -49,6 +50,7 @@ SurfaceLICRenderer::SurfaceLICRenderer()
         , ambient_color("lighting::ambient color", "Ambient color")
         , specular_color("lighting::specular color", "Specular color")
         , light_color("lighting::light color", "Light color")
+        , fbo(nullptr)
         , hash(-1) {
 
     this->input_renderer.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
@@ -131,9 +133,9 @@ bool SurfaceLICRenderer::create() {
         if (!this->lic_compute_shdr.Link())
             return false;
 
-        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::vert", vertex_shader_src))
             return false;
-        if (!ssf->MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::frag", fragment_shader_src))
             return false;
         if (!this->render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
@@ -202,38 +204,21 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ci->SetCamera(cam);
 
     auto viewport = call.GetViewResolution();
-    if (this->fbo.GetWidth() != viewport.x || this->fbo.GetHeight() != viewport.y) {
-        if (this->fbo.IsValid())
-            this->fbo.Release();
+    if (this->fbo == nullptr || this->fbo->getWidth() != viewport.x || this->fbo->getHeight() != viewport.y) {
+        this->fbo =
+            std::make_shared<glowl::FramebufferObject>(viewport.x, viewport.y, glowl::FramebufferObject::DEPTH24);
 
-        std::array<vislib_gl::graphics::gl::FramebufferObject::ColourAttachParams, 2> cap;
-        cap[0].internalFormat = GL_RGBA8;
-        cap[0].format = GL_RGBA;
-        cap[0].type = GL_UNSIGNED_BYTE;
-        cap[1].internalFormat = GL_RGBA32F;
-        cap[1].format = GL_RGBA;
-        cap[1].type = GL_FLOAT;
-
-        vislib_gl::graphics::gl::FramebufferObject::DepthAttachParams dap;
-        dap.format = GL_DEPTH_COMPONENT24;
-        dap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
-
-        vislib_gl::graphics::gl::FramebufferObject::StencilAttachParams sap;
-        sap.format = GL_STENCIL_INDEX;
-        sap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
-
-        this->fbo.Create(viewport.x, viewport.y, cap.size(), cap.data(), dap, sap);
+        this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
-    this->fbo.Enable();
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ci->SetFramebuffer(this->fbo);
 
     if (!(*ci)(core_gl::view::CallRender3DGL::FnRender))
         return false;
     call.SetTimeFramesCount(ci->TimeFramesCount());
-
-    this->fbo.Disable();
 
     // Get input velocities
     auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
@@ -358,11 +343,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform3fv(this->pre_compute_shdr.ParameterLocation("resolution"), 1, resolution.data());
 
     glActiveTexture(GL_TEXTURE0);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->pre_compute_shdr.ParameterLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
-    this->fbo.BindColourTexture(1);
+    this->fbo->bindColorbuffer(1);
     glUniform1i(this->pre_compute_shdr.ParameterLocation("normal_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
@@ -434,7 +419,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->light_color.Param<core::param::ColorParam>()->Value().data());
 
     glActiveTexture(GL_TEXTURE0);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->lic_compute_shdr.ParameterLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
@@ -442,7 +427,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform1i(this->lic_compute_shdr.ParameterLocation("velocity_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
-    this->fbo.BindColourTexture(1);
+    this->fbo->bindColorbuffer(1);
     glUniform1i(this->lic_compute_shdr.ParameterLocation("normal_tx2D"), 2);
 
     glActiveTexture(GL_TEXTURE3);
@@ -480,6 +465,8 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // Render to framebuffer
+    call.GetFramebuffer()->bind();
+
     bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
     bool state_blend = glIsEnabled(GL_BLEND);
 
@@ -495,7 +482,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("src_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("depth_tx2D"), 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
