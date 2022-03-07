@@ -278,6 +278,7 @@ private:
     /** 'true' if the data for the current render mode is computed, 'false' otherwise */
     bool preComputationDone;
 
+    uint32_t atomCount_;
 
     /** The current coloring mode */
     protein::Color::ColoringMode currentColoringMode0;

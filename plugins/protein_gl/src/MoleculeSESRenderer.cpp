@@ -87,7 +87,8 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , triaAttribTexCoord2Buffer_(nullptr)
         , triaAttribTexCoord3Buffer_(nullptr)
         , pointLightBuffer_(nullptr)
-        , directionalLightBuffer_(nullptr) {
+        , directionalLightBuffer_(nullptr)
+        , atomCount_(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -523,6 +524,13 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
 void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const BindingSiteCall* bs) {
     // variables
     bool recomputeColors = false;
+
+    if (atomCount_ != mol->AtomCount()) {
+        atomCount_ = mol->AtomCount();
+        reducedSurface.clear();
+        this->preComputationDone = false;
+    }
+
     // ==================== check parameters ====================
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
