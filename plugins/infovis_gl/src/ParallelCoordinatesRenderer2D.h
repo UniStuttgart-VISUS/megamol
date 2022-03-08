@@ -141,14 +141,14 @@ protected:
         }
     };
 
+    bool assertData(core_gl::view::CallRender2DGL& call);
+
+    void computeScaling();
+
     bool scalingChangedCallback(core::param::ParamSlot& caller);
     bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
     void pickIndicator(float x, float y, int& axis, int& index);
-
-    bool assertData(core_gl::view::CallRender2DGL& call);
-
-    void computeScaling();
 
     void drawAxes(glm::mat4 ortho);
 

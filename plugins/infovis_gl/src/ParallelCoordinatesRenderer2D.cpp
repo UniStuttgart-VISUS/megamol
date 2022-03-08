@@ -177,41 +177,6 @@ ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
     this->Release();
 }
 
-bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program) {
-    program->use();
-    // bindbuffer?
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
-    auto flags = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-    flags->getData()->validateFlagCount(this->itemCount);
-    flags->getData()->flags->bind(1);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, filtersBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
-
-    glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    if (camera_cpy.has_value()) {
-        glUniformMatrix4fv(
-            program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.value().getViewMatrix()));
-        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE,
-            glm::value_ptr(camera_cpy.value().getProjectionMatrix()));
-    } else {
-        const glm::mat4 one(1.0f);
-        glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(one));
-        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(one));
-    }
-
-    glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
-    glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
-
-    glUniform2f(program->getUniformLocation("margin"), this->marginX, this->marginY);
-    glUniform1f(program->getUniformLocation("axisDistance"), this->axisDistance);
-    glUniform1f(program->getUniformLocation("axisHeight"), this->axisHeight);
-
-    return true;
-}
-
 bool ParallelCoordinatesRenderer2D::create() {
     glGenBuffers(1, &dataBuffer);
     glGenBuffers(1, &minimumsBuffer);
@@ -295,62 +260,244 @@ void ParallelCoordinatesRenderer2D::release() {
     glDeleteBuffers(1, &counterBuffer);
 }
 
-int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
-    float f = (x - this->marginX) / this->axisDistance;
-    float frac = f - static_cast<long>(f);
-    int integral = static_cast<int>(std::round(f));
-    if (integral >= static_cast<int>(this->columnCount) || integral < 0)
-        return -1;
-    if (frac > 0.7 || frac < 0.3) {
-        // Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
-        // axisIndirection[integral], integral);
-        return axisIndirection[integral];
-    } else {
-        return -1;
+bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+    if (!this->assertData(call)) {
+        return false;
     }
+
+    call.AccessBoundingBoxes() = this->bounds;
+
+    return true;
 }
 
-void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
-    axis = mouseXtoAxis(x);
-    index = -1;
-    if (axis != -1) {
-        // calculate position of click and filters in [0, 1] range of axis height
-        float pickPos = (y - this->marginY) / this->axisHeight;
-        float upperPos = (this->filters[axis].upper - minimums[axis]) / (maximums[axis] - minimums[axis]);
-        float lowerPos = (this->filters[axis].lower - minimums[axis]) / (maximums[axis] - minimums[axis]);
+bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+    // This check must be first. GetExtent does the same check and we need to be sure, that the outside world has seen
+    // an extent before we continue. Otherwise, i.e. the view has not initialized the camera.
+    if (!this->assertData(call)) {
+        return false;
+    }
 
-        // Add small epsilon for better UI feeling because indicator is drawn only to one side.
-        // This also handles intuitive selection if upper and lower filter are set to the same value.
-        upperPos += 0.01;
-        lowerPos -= 0.01;
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_intrinsics =
+        cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
+    fbo = call.GetFramebuffer();
+    camera_cpy = cam;
+    viewRes = call.GetViewResolution();
 
-        float distUpper = fabs(upperPos - pickPos);
-        float distLower = fabs(lowerPos - pickPos);
+    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image
+    // tile
 
-        float thresh = 0.1f;
-        if (distUpper < thresh && distUpper < distLower) {
-            index = 1;
-        } else if (distLower < thresh) {
-            index = 0;
+
+    // maintainer comment: assuming this now here wants to know about the current tile's resolution
+
+
+    auto bg = call.BackgroundColor();
+
+    backgroundColor[0] = bg[0];
+    backgroundColor[1] = bg[1];
+    backgroundColor[2] = bg[2];
+    backgroundColor[3] = bg[3];
+
+    glm::mat4 ortho = proj * view;
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    if (this->filterStateSlot.IsDirty()) {
+        load_filters();
+        this->filterStateSlot.ResetDirty();
+        this->needFlagsUpdate = true;
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
+
+    // Do stroking/picking
+    if (this->needSelectionUpdate) {
+        this->needSelectionUpdate = false;
+
+        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
+        case SELECT_STROKE:
+            this->doStroking(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY);
+            break;
+        case SELECT_PICK:
+            this->doPicking(this->strokeEndX, this->strokeEndY,
+                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
+            break;
+        }
+
+        this->needFlagsUpdate = true;
+    }
+    drawParcos(call.GetViewResolution());
+
+    // Draw stroking/picking indicator
+    if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
+        case SELECT_STROKE:
+            if (this->interactionState == InteractionState::INTERACTION_SELECT) {
+                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
+                    this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
+            }
+            break;
+        case SELECT_PICK:
+            this->drawPickIndicator(this->mouseX, this->mouseY,
+                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(),
+                this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
+            break;
         }
     }
-    if (index == -1) {
-        axis = -1;
-    }
-}
 
-bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlot& caller) {
-    this->computeScaling();
+    if (needFlagsUpdate) {
+        needFlagsUpdate = false;
+        this->store_filters();
+
+        this->currentFlagsVersion++;
+        // HAZARD: downloading everything over and over is slowish
+        auto readFlags = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
+        auto writeFlags = writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
+        if (readFlags != nullptr && writeFlags != nullptr) {
+            writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
+            (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+        }
+    }
+
+    if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
+        drawAxes(ortho);
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDepthMask(GL_TRUE);
+
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
-    for (GLuint i = 0; i < this->columnCount; i++) {
-        this->filters[i].lower = minimums[i];
-        this->filters[i].upper = maximums[i];
+bool ParallelCoordinatesRenderer2D::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    // Ignore everything which is not left mouse button.
+    if (button != core::view::MouseButton::BUTTON_LEFT) {
+        return false;
     }
-    this->needFlagsUpdate = true;
-    return true;
+
+    // Any up/down event stops interaction, but only down changes selection.
+    this->interactionState = InteractionState::NONE;
+
+    // If control is pressed, event is meant for view. Nevertheless, the interaction state is set to none before this
+    // check, to avoid locking into a state in case CTRL is pressed while an interaction state is active.
+    if (mods.test(core::view::Modifier::CTRL)) {
+        return false;
+    }
+
+    if (action == core::view::MouseButtonAction::PRESS) {
+        this->pickedAxis = -1;
+        this->pickedIndicatorAxis = -1;
+        this->pickedIndicatorIndex = -1;
+
+        if (mods.test(core::view::Modifier::ALT)) {
+            this->pickedAxis = mouseXtoAxis(this->mouseX);
+            if (this->pickedAxis != -1) {
+                this->interactionState = InteractionState::INTERACTION_DRAG;
+            }
+            return true;
+        }
+
+        if (mods.test(core::view::Modifier::SHIFT)) {
+
+            auto axis = mouseXtoAxis(this->mouseX);
+            if (axis != -1) {
+                float base = this->marginY * 0.5f - fontSize * 0.5f;
+                if ((this->mouseY > base && this->mouseY < base + fontSize) ||
+                    (this->mouseY > base + this->marginY + this->axisHeight &&
+                        this->mouseY < base + this->marginY + this->axisHeight + fontSize)) {
+                    std::swap(this->filters[axis].lower, this->filters[axis].upper);
+                    this->needFlagsUpdate = true;
+                    return true;
+                }
+            }
+
+            pickIndicator(this->mouseX, this->mouseY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
+            if (this->pickedIndicatorAxis != -1) {
+                this->interactionState = InteractionState::INTERACTION_FILTER;
+            }
+            return true;
+        }
+
+        this->interactionState = InteractionState::INTERACTION_SELECT;
+        this->strokeStartX = this->mouseX;
+        this->strokeStartY = this->mouseY;
+        this->strokeEndX = this->mouseX;
+        this->strokeEndY = this->mouseY;
+        this->needSelectionUpdate = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
+    // mouseCoordsToWorld requires a valid camera and camera_cpy is initialized on first render. Before anything is
+    // draw, interaction probably is not needed anyway, but this event could be triggered independently.
+    if (!camera_cpy.has_value()) {
+        return false;
+    }
+
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, camera_cpy.value(), viewRes.x, viewRes.y);
+
+    this->mouseX = world_x;
+    this->mouseY = world_y;
+
+    if (this->interactionState == InteractionState::INTERACTION_DRAG) {
+        int currAxis = mouseXtoAxis(this->mouseX);
+        if (currAxis != this->pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
+            auto pickedAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), this->pickedAxis);
+            int pickedIdx = std::distance(this->axisIndirection.begin(), pickedAxisIt);
+            this->axisIndirection.erase(pickedAxisIt);
+
+            auto currAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), currAxis);
+            int currIdx = std::distance(this->axisIndirection.begin(), currAxisIt);
+            if (pickedIdx <= currIdx) {
+                currAxisIt++;
+            }
+            this->axisIndirection.insert(currAxisIt, this->pickedAxis);
+
+            this->needFlagsUpdate = true;
+        }
+
+        return true;
+    }
+
+    if (this->interactionState == InteractionState::INTERACTION_FILTER) {
+        float val = ((this->mouseY - this->marginY) / this->axisHeight) *
+                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
+                    minimums[this->pickedIndicatorAxis];
+        if (this->pickedIndicatorIndex == 0) {
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
+            this->filters[this->pickedIndicatorAxis].lower = val;
+        } else {
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
+            this->filters[this->pickedIndicatorAxis].upper = val;
+        }
+        this->needFlagsUpdate = true;
+
+        return true;
+    }
+
+    if (this->interactionState == InteractionState::INTERACTION_SELECT) {
+        if (this->mouseX != this->strokeEndX || this->mouseY != this->strokeEndY) {
+            this->strokeEndX = this->mouseX;
+            this->strokeEndY = this->mouseY;
+            this->needSelectionUpdate = true;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
@@ -494,139 +641,97 @@ void ParallelCoordinatesRenderer2D::computeScaling() {
     bounds.SetBoundingBox(left, bottom, 0, right, top, 0);
 }
 
-bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program) {
+    program->use();
+    // bindbuffer?
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
+    auto flags = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
+    flags->getData()->validateFlagCount(this->itemCount);
+    flags->getData()->flags->bind(1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, filtersBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
-    if (!this->assertData(call)) {
-        return false;
+    glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
+    if (camera_cpy.has_value()) {
+        glUniformMatrix4fv(
+            program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.value().getViewMatrix()));
+        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE,
+            glm::value_ptr(camera_cpy.value().getProjectionMatrix()));
+    } else {
+        const glm::mat4 one(1.0f);
+        glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(one));
+        glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(one));
     }
 
-    call.AccessBoundingBoxes() = this->bounds;
+    glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
+    glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
+
+    glUniform2f(program->getUniformLocation("margin"), this->marginX, this->marginY);
+    glUniform1f(program->getUniformLocation("axisDistance"), this->axisDistance);
+    glUniform1f(program->getUniformLocation("axisHeight"), this->axisHeight);
 
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::OnMouseButton(
-    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-
-    // Ignore everything which is not left mouse button.
-    if (button != core::view::MouseButton::BUTTON_LEFT) {
-        return false;
+int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
+    float f = (x - this->marginX) / this->axisDistance;
+    float frac = f - static_cast<long>(f);
+    int integral = static_cast<int>(std::round(f));
+    if (integral >= static_cast<int>(this->columnCount) || integral < 0)
+        return -1;
+    if (frac > 0.7 || frac < 0.3) {
+        // Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
+        // axisIndirection[integral], integral);
+        return axisIndirection[integral];
+    } else {
+        return -1;
     }
-
-    // Any up/down event stops interaction, but only down changes selection.
-    this->interactionState = InteractionState::NONE;
-
-    // If control is pressed, event is meant for view. Nevertheless, the interaction state is set to none before this
-    // check, to avoid locking into a state in case CTRL is pressed while an interaction state is active.
-    if (mods.test(core::view::Modifier::CTRL)) {
-        return false;
-    }
-
-    if (action == core::view::MouseButtonAction::PRESS) {
-        this->pickedAxis = -1;
-        this->pickedIndicatorAxis = -1;
-        this->pickedIndicatorIndex = -1;
-
-        if (mods.test(core::view::Modifier::ALT)) {
-            this->pickedAxis = mouseXtoAxis(this->mouseX);
-            if (this->pickedAxis != -1) {
-                this->interactionState = InteractionState::INTERACTION_DRAG;
-            }
-            return true;
-        }
-
-        if (mods.test(core::view::Modifier::SHIFT)) {
-
-            auto axis = mouseXtoAxis(this->mouseX);
-            if (axis != -1) {
-                float base = this->marginY * 0.5f - fontSize * 0.5f;
-                if ((this->mouseY > base && this->mouseY < base + fontSize) ||
-                    (this->mouseY > base + this->marginY + this->axisHeight &&
-                        this->mouseY < base + this->marginY + this->axisHeight + fontSize)) {
-                    std::swap(this->filters[axis].lower, this->filters[axis].upper);
-                    this->needFlagsUpdate = true;
-                    return true;
-                }
-            }
-
-            pickIndicator(this->mouseX, this->mouseY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
-            if (this->pickedIndicatorAxis != -1) {
-                this->interactionState = InteractionState::INTERACTION_FILTER;
-            }
-            return true;
-        }
-
-        this->interactionState = InteractionState::INTERACTION_SELECT;
-        this->strokeStartX = this->mouseX;
-        this->strokeStartY = this->mouseY;
-        this->strokeEndX = this->mouseX;
-        this->strokeEndY = this->mouseY;
-        this->needSelectionUpdate = true;
-        return true;
-    }
-
-    return false;
 }
 
-bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-    // mouseCoordsToWorld requires a valid camera and camera_cpy is initialized on first render. Before anything is
-    // draw, interaction probably is not needed anyway, but this event could be triggered independently.
-    if (!camera_cpy.has_value()) {
-        return false;
-    }
+void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
+    axis = mouseXtoAxis(x);
+    index = -1;
+    if (axis != -1) {
+        // calculate position of click and filters in [0, 1] range of axis height
+        float pickPos = (y - this->marginY) / this->axisHeight;
+        float upperPos = (this->filters[axis].upper - minimums[axis]) / (maximums[axis] - minimums[axis]);
+        float lowerPos = (this->filters[axis].lower - minimums[axis]) / (maximums[axis] - minimums[axis]);
 
-    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, camera_cpy.value(), viewRes.x, viewRes.y);
+        // Add small epsilon for better UI feeling because indicator is drawn only to one side.
+        // This also handles intuitive selection if upper and lower filter are set to the same value.
+        upperPos += 0.01;
+        lowerPos -= 0.01;
 
-    this->mouseX = world_x;
-    this->mouseY = world_y;
+        float distUpper = fabs(upperPos - pickPos);
+        float distLower = fabs(lowerPos - pickPos);
 
-    if (this->interactionState == InteractionState::INTERACTION_DRAG) {
-        int currAxis = mouseXtoAxis(this->mouseX);
-        if (currAxis != this->pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
-            auto pickedAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), this->pickedAxis);
-            int pickedIdx = std::distance(this->axisIndirection.begin(), pickedAxisIt);
-            this->axisIndirection.erase(pickedAxisIt);
-
-            auto currAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), currAxis);
-            int currIdx = std::distance(this->axisIndirection.begin(), currAxisIt);
-            if (pickedIdx <= currIdx) {
-                currAxisIt++;
-            }
-            this->axisIndirection.insert(currAxisIt, this->pickedAxis);
-
-            this->needFlagsUpdate = true;
+        float thresh = 0.1f;
+        if (distUpper < thresh && distUpper < distLower) {
+            index = 1;
+        } else if (distLower < thresh) {
+            index = 0;
         }
-
-        return true;
     }
-
-    if (this->interactionState == InteractionState::INTERACTION_FILTER) {
-        float val = ((this->mouseY - this->marginY) / this->axisHeight) *
-                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
-                    minimums[this->pickedIndicatorAxis];
-        if (this->pickedIndicatorIndex == 0) {
-            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
-            this->filters[this->pickedIndicatorAxis].lower = val;
-        } else {
-            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
-            this->filters[this->pickedIndicatorAxis].upper = val;
-        }
-        this->needFlagsUpdate = true;
-
-        return true;
+    if (index == -1) {
+        axis = -1;
     }
+}
 
-    if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-        if (this->mouseX != this->strokeEndX || this->mouseY != this->strokeEndY) {
-            this->strokeEndX = this->mouseX;
-            this->strokeEndY = this->mouseY;
-            this->needSelectionUpdate = true;
-        }
+bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlot& caller) {
+    this->computeScaling();
+    return true;
+}
 
-        return true;
+bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
+    for (GLuint i = 0; i < this->columnCount; i++) {
+        this->filters[i].lower = minimums[i];
+        this->filters[i].upper = maximums[i];
     }
-
-    return false;
+    this->needFlagsUpdate = true;
+    return true;
 }
 
 void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
@@ -1004,110 +1109,4 @@ void ParallelCoordinatesRenderer2D::load_filters() {
             "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
         return;
     }
-}
-
-bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
-    // This check must be first. GetExtent does the same check and we need to be sure, that the outside world has seen
-    // an extent before we continue. Otherwise, i.e. the view has not initialized the camera.
-    if (!this->assertData(call)) {
-        return false;
-    }
-
-    // get camera
-    core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
-    auto cam_intrinsics =
-        cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
-    fbo = call.GetFramebuffer();
-    camera_cpy = cam;
-    viewRes = call.GetViewResolution();
-
-    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image
-    // tile
-
-
-    // maintainer comment: assuming this now here wants to know about the current tile's resolution
-
-
-    auto bg = call.BackgroundColor();
-
-    backgroundColor[0] = bg[0];
-    backgroundColor[1] = bg[1];
-    backgroundColor[2] = bg[2];
-    backgroundColor[3] = bg[3];
-
-    glm::mat4 ortho = proj * view;
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-
-    if (this->filterStateSlot.IsDirty()) {
-        load_filters();
-        this->filterStateSlot.ResetDirty();
-        this->needFlagsUpdate = true;
-    }
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
-
-    // Do stroking/picking
-    if (this->needSelectionUpdate) {
-        this->needSelectionUpdate = false;
-
-        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
-        case SELECT_STROKE:
-            this->doStroking(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY);
-            break;
-        case SELECT_PICK:
-            this->doPicking(this->strokeEndX, this->strokeEndY,
-                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
-            break;
-        }
-
-        this->needFlagsUpdate = true;
-    }
-    drawParcos(call.GetViewResolution());
-
-    // Draw stroking/picking indicator
-    if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
-        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
-        case SELECT_STROKE:
-            if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
-                    this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
-            }
-            break;
-        case SELECT_PICK:
-            this->drawPickIndicator(this->mouseX, this->mouseY,
-                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(),
-                this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
-            break;
-        }
-    }
-
-    if (needFlagsUpdate) {
-        needFlagsUpdate = false;
-        this->store_filters();
-
-        this->currentFlagsVersion++;
-        // HAZARD: downloading everything over and over is slowish
-        auto readFlags = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-        auto writeFlags = writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
-        if (readFlags != nullptr && writeFlags != nullptr) {
-            writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
-            (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
-        }
-    }
-
-    if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
-        drawAxes(ortho);
-    }
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glDepthMask(GL_TRUE);
-
-    return true;
 }
