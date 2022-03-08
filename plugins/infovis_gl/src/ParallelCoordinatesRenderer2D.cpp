@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>

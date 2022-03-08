@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"

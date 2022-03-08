@@ -1,5 +1,10 @@
-#ifndef MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -334,5 +339,3 @@ private:
 };
 
 } // namespace megamol::infovis_gl
-
-#endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED

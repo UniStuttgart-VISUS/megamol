@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <map>
@@ -80,14 +86,16 @@ protected:
      * and times).
      *
      * @param call The calling call.
+     *
      * @return The return value of the function.
      */
     bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     /**
-     * The render callback.
+     * The OpenGL Render callback.
      *
      * @param call The calling call.
+     *
      * @return The return value of the function.
      */
     bool Render(core_gl::view::CallRender2DGL& call) override;
@@ -97,10 +105,7 @@ protected:
 
     bool OnMouseMove(double x, double y) override;
 
-    bool scalingChangedCallback(core::param::ParamSlot& caller);
-    bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
-
-private:
+protected:
     enum DrawMode {
         DRAW_DISCRETE = 0,
         DRAW_DENSITY,
@@ -135,6 +140,9 @@ private:
             j.at("flags").get_to(d.flags);
         }
     };
+
+    bool scalingChangedCallback(core::param::ParamSlot& caller);
+    bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
 
     void pickIndicator(float x, float y, int& axis, int& index);
 
