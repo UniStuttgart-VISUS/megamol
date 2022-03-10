@@ -8,6 +8,7 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/AffineTransform2DCall.h"
 
 #include "module/ImageSeriesFlowPreprocessor.h"
 #include "module/ImageSeriesLoader.h"
@@ -34,6 +35,7 @@ public:
 
         // Register calls
         this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeries2DCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::AffineTransform2DCall>();
 
         // Register modules
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();

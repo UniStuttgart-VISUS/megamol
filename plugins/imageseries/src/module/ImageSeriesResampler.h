@@ -7,6 +7,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "imageseries/AffineTransform2DCall.h"
 #include "imageseries/AsyncImageData2D.h"
 #include "imageseries/ImageSeries2DCall.h"
 
@@ -73,6 +74,11 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
     /**
+     * Implementation of the getTransform call.
+     */
+    bool getTransformCallback(core::Call& caller);
+
+    /**
      * Callback for changes to any of the timestamp parameters.
      */
     bool timestampChangedCallback(core::param::ParamSlot& param);
@@ -92,10 +98,14 @@ private:
 
     std::shared_ptr<const AsyncImageData2D> fetchImage(core::CallerSlot& caller, double timestamp) const;
 
+    void updateTransformationMatrix();
+
     core::CalleeSlot getDataCallee;
+    core::CalleeSlot getTransformCallee;
 
     core::CallerSlot getInputCaller;
     core::CallerSlot getReferenceCaller;
+    core::CallerSlot getTransformCaller;
 
     /// Reference points for temporally aligning the dataset
     core::param::ParamSlot keyTimeInput1Param;

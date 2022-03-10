@@ -17,8 +17,10 @@ namespace megamol::ImageSeries {
 
 ImageSeriesResampler::ImageSeriesResampler()
         : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
+        , getTransformCallee("getTransform", "Returns the affine matrix by which the image is transformed.")
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
         , getReferenceCaller("requestReferenceImageSeries", "Requests image data from a series.")
+        , getTransformCaller("chainTransform", "Overrides the transformation matrix.")
         , keyTimeInput1Param("Input alignment timestamp 1", "First alignment timestamp for the input image series.")
         , keyTimeReference1Param("Reference timestamp 1", "First alignment timestamp for the reference image series.")
         , keyTimeInput2Param("Input alignment timestamp 2", "Second alignment timestamp for the input image series.")
@@ -33,6 +35,8 @@ ImageSeriesResampler::ImageSeriesResampler()
     MakeSlotAvailable(&getInputCaller);
     getReferenceCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getReferenceCaller);
+    getTransformCaller.SetCompatibleCall<typename ImageSeries::AffineTransform2DCall::CallDescription>();
+    MakeSlotAvailable(&getTransformCaller);
 
     getDataCallee.SetCallback(ImageSeries2DCall::ClassName(),
         ImageSeries2DCall::FunctionName(ImageSeries2DCall::CallGetData), &ImageSeriesResampler::getDataCallback);
@@ -40,6 +44,11 @@ ImageSeriesResampler::ImageSeriesResampler()
         ImageSeries2DCall::FunctionName(ImageSeries2DCall::CallGetMetaData),
         &ImageSeriesResampler::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
+
+    getTransformCallee.SetCallback(AffineTransform2DCall::ClassName(),
+        AffineTransform2DCall::FunctionName(AffineTransform2DCall::CallGetTransform),
+        &ImageSeriesResampler::getTransformCallback);
+    MakeSlotAvailable(&getTransformCallee);
 
     keyTimeInput1Param << new core::param::FloatParam(0);
     keyTimeInput1Param.Parameter()->SetGUIPresentation(Presentation::Slider);
@@ -109,12 +118,8 @@ bool ImageSeriesResampler::getDataCallback(core::Call& caller) {
                         registrator->setInputImage(fetchImage(getInputCaller, keyTimeInput));
                     }
 
-                    if (cachedTransformMatrix != registrator->getTransform()) {
-                        cachedTransformMatrix = registrator->getTransform();
-                        imageCache.clear();
-                    }
+                    updateTransformationMatrix();
 
-                    // TODO change to approximate equals comparison
                     if (cachedTransformMatrix != glm::mat3x2(1, 0, 0, 1, 0, 0)) {
                         output.imageData = imageCache.findOrCreate(output.getHash(), [&](AsyncImageData2D::Hash) {
                             return filterRunner->run<filter::TransformationFilter>(
@@ -139,6 +144,15 @@ bool ImageSeriesResampler::getMetaDataCallback(core::Call& caller) {
                 return true;
             }
         }
+    }
+    return false;
+}
+
+bool ImageSeriesResampler::getTransformCallback(core::Call& caller) {
+    if (auto* call = dynamic_cast<AffineTransform2DCall*>(&caller)) {
+        updateTransformationMatrix();
+        call->SetOutput({cachedTransformMatrix});
+        return true;
     }
     return false;
 }
@@ -189,6 +203,27 @@ std::shared_ptr<const AsyncImageData2D> ImageSeriesResampler::fetchImage(
         return seriesCall->GetOutput().imageData;
     }
     return nullptr;
+}
+
+void ImageSeriesResampler::updateTransformationMatrix() {
+    glm::mat3x2 matrix(1, 0, 0, 1, 0, 0);
+
+    if (registrator->isActive()) {
+        matrix = registrator->getTransform();
+    } else if (getTransformCaller.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED) {
+        if (auto* getTransform = getTransformCaller.CallAs<ImageSeries::AffineTransform2DCall>()) {
+            if ((*getTransform)()) {
+                matrix = getTransform->GetOutput().matrix;
+            }
+        }
+    } else {
+        return;
+    }
+
+    if (cachedTransformMatrix != matrix) {
+        cachedTransformMatrix = matrix;
+        imageCache.clear();
+    }
 }
 
 
