@@ -226,7 +226,8 @@ protected:
      * @param cr3d Pointer to the render call.
      * @return 'true' if initialization was successful, otherwise 'false'
      */
-    bool initCuda(megamol::protein_calls::MolecularDataCall* protein, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
+    bool initCuda(
+        megamol::protein_calls::MolecularDataCall* protein, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
 
     /**
      * Write atom positions and radii to an array for processing in CUDA

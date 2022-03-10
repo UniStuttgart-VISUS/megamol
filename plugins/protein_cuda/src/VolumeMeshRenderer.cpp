@@ -27,10 +27,10 @@
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringConverter.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/PerformanceCounter.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <ctime>
 #include <cuda_gl_interop.h>
@@ -354,14 +354,12 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }
 
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::perpixellightVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
         return false;
@@ -376,14 +374,12 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }
 
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::halo::GenerateVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::halo::GenerateFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for halo generation shader", this->ClassName());
         return false;
@@ -399,14 +395,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for gaussian filter (horizontal)
-    if (!ssf->MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::halo::fragmentHoriz", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentHoriz", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
@@ -421,8 +415,7 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for gaussian filter (vertical)
-    if (!ssf->MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
         return false;
@@ -442,14 +435,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for substract filter
-    if (!ssf->MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: halo substract", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::halo::SubstractFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::SubstractFragment", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: halo substract", this->ClassName());
         return false;
@@ -464,8 +455,7 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for grow filter
-    if (!ssf->MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: halo grow filter", this->ClassName());
         return false;
@@ -1179,8 +1169,8 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
         vislib::math::Vector<float, 4> haloColor;
         megamol::core::utility::ColourParser::FromString(
-            this->haloColorParam.Param<param::StringParam>()->Value().c_str(),
-            haloColor.PeekComponents()[0], haloColor.PeekComponents()[1], haloColor.PeekComponents()[2]);
+            this->haloColorParam.Param<param::StringParam>()->Value().c_str(), haloColor.PeekComponents()[0],
+            haloColor.PeekComponents()[1], haloColor.PeekComponents()[2]);
 
         haloColor.SetW(this->haloAlphaParam.Param<param::FloatParam>()->Value());
 

@@ -12,10 +12,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 
 namespace megamol {
 namespace protein_cuda {

@@ -13,11 +13,11 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <limits>
 #include <map>
 

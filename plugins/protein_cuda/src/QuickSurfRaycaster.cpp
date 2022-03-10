@@ -447,8 +447,7 @@ bool QuickSurfRaycaster::initPixelBuffer(core_gl::view::CallRender3DGL& cr3d) {
         glGenTextures(1, &texHandle);
         glActiveTexture(GL_TEXTURE15);
         glBindTexture(GL_TEXTURE_2D, texHandle);
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -461,8 +460,8 @@ bool QuickSurfRaycaster::initPixelBuffer(core_gl::view::CallRender3DGL& cr3d) {
         glGenTextures(1, &depthTexHandle);
         glActiveTexture(GL_TEXTURE16);
         glBindTexture(GL_TEXTURE_2D, depthTexHandle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0,
-            GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -479,10 +478,8 @@ bool QuickSurfRaycaster::initPixelBuffer(core_gl::view::CallRender3DGL& cr3d) {
         cudaDepthImage = NULL;
     }
 
-    checkCudaErrors(
-        cudaMallocHost((void**)&cudaImage, viewport.x * viewport.y * sizeof(unsigned int)));
-    checkCudaErrors(
-        cudaMallocHost((void**)&cudaDepthImage, viewport.x * viewport.y * sizeof(float)));
+    checkCudaErrors(cudaMallocHost((void**)&cudaImage, viewport.x * viewport.y * sizeof(unsigned int)));
+    checkCudaErrors(cudaMallocHost((void**)&cudaDepthImage, viewport.x * viewport.y * sizeof(float)));
 
     return true;
 }
@@ -522,14 +519,12 @@ bool QuickSurfRaycaster::initOpenGL() {
     ShaderSource fragSrc;
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource(
-            "quicksurfraycast::texture::textureVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("quicksurfraycast::texture::textureVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for texture shader");
         return false;
     }
 
-    if (!ssf->MakeShaderSource(
-            "quicksurfraycast::texture::textureFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("quicksurfraycast::texture::textureFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for texture shader");
         return false;
     }
@@ -696,8 +691,8 @@ bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
                 unsigned int posStride = parts.GetVertexDataStride();
                 unsigned int colStride = parts.GetColourDataStride();
                 float globalRadius = parts.GetGlobalRadius();
-                bool useGlobRad = (parts.GetVertexDataType() ==
-                                   geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                bool useGlobRad =
+                    (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
                 int numColors = 0;
 
                 switch (parts.GetColourDataType()) {
@@ -719,8 +714,7 @@ bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
                 }
 
                 // if the vertices have no type, take the next list
-                if (parts.GetVertexDataType() ==
-                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) { // TODO is this correct?
@@ -1025,9 +1019,9 @@ bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
     auto depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
     glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
 
-    render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.x, viewport.y, fovx, fovy,
-        camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax,
-        volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f), plane, clipplaneAvailable);
+    render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.x, viewport.y, fovx, fovy, camPos, camDir,
+        camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light,
+        make_float4(0.3f, 0.5f, 0.4f, 10.0f), plane, clipplaneAvailable);
 
     getLastCudaError("kernel failed");
     checkCudaErrors(cudaDeviceSynchronize());
@@ -1049,8 +1043,7 @@ bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
     glGetIntegerv(GL_ACTIVE_TEXTURE, &texID);
     glActiveTexture(GL_TEXTURE15);
     glBindTexture(GL_TEXTURE_2D, texHandle);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, cudaImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, cudaImage);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1058,8 +1051,8 @@ bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
 
     glActiveTexture(GL_TEXTURE16);
     glBindTexture(GL_TEXTURE_2D, depthTexHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0,
-        GL_DEPTH_COMPONENT, GL_FLOAT, cudaDepthImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+        cudaDepthImage);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

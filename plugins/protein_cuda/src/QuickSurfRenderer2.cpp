@@ -14,6 +14,7 @@
 #include "Color.h"
 #include "MolecularSurfaceFeature.h"
 #include "QuickSurfRenderer2.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -22,18 +23,17 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib/math/Quaternion.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 #include <GL/glu.h>
 #include <cfloat>
 #include <omp.h>
@@ -215,13 +215,11 @@ bool QuickSurfRenderer2::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!ssf->MakeShaderSource(
-            "quicksurf::perpixellightVertexClip", vertSrc)) {
+    if (!ssf->MakeShaderSource("quicksurf::perpixellightVertexClip", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "quicksurf::perpixellightFragmentClip", fragSrc)) {
+    if (!ssf->MakeShaderSource("quicksurf::perpixellightFragmentClip", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -306,8 +304,7 @@ bool QuickSurfRenderer2::Render(megamol::core_gl::view::CallRender3DGL& call) {
         const float* pos = static_cast<const float*>(parts.GetVertexData());
         unsigned int posStride = parts.GetVertexDataStride();
         float globRad = parts.GetGlobalRadius();
-        bool useGlobRad =
-            (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+        bool useGlobRad = (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
         if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
@@ -349,7 +346,8 @@ bool QuickSurfRenderer2::Render(megamol::core_gl::view::CallRender3DGL& call) {
     // recompute color table, if necessary
     if (this->atomColorTable.Count() / 3 < numParticles || this->surfaceColorParam.IsDirty()) {
         float r, g, b;
-        utility::ColourParser::FromString(this->surfaceColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
+        utility::ColourParser::FromString(
+            this->surfaceColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
         // Use one coloring mode
         this->atomColorTable.AssertCapacity(numParticles * 3);
         this->atomColorTable.Clear();
@@ -461,10 +459,9 @@ bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& sl
                 geocalls::MultiParticleDataCall::Particles& particles = parts->AccessParticles(k);
                 const float* pos = static_cast<const float*>(particles.GetVertexData());
                 unsigned int posStride = particles.GetVertexDataStride();
-                bool useGlobRad = (particles.GetVertexDataType() ==
-                                   geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-                if (particles.GetVertexDataType() ==
-                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                bool useGlobRad =
+                    (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) {
@@ -566,10 +563,9 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
                 geocalls::MultiParticleDataCall::Particles& particles = parts->AccessParticles(i);
                 const float* pos = static_cast<const float*>(particles.GetVertexData());
                 unsigned int posStride = particles.GetVertexDataStride();
-                bool useGlobRad = (particles.GetVertexDataType() ==
-                                   geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-                if (particles.GetVertexDataType() ==
-                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                bool useGlobRad =
+                    (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) {

@@ -18,18 +18,18 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/math/Quaternion.h"
 #include <GL/glu.h>
 #include <algorithm>
 #include <omp.h>
@@ -218,13 +218,11 @@ bool QuickSurfRenderer::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -234,13 +232,11 @@ bool QuickSurfRenderer::create(void) {
     // load the shader files for the per pixel lighting (OFFSCREEN/PASSTHROUGH RENDERER) //
     ///////////////////////////////////////////////////////////////////////////////////////
     // vertex shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight OR shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight OR shader");
         return false;
     }
@@ -413,7 +409,8 @@ bool QuickSurfRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     } else {
         // offscreen rendering (Render to fragment buffer)
         this->lightShaderOR.Enable();
-        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
+        glUniform2fARB(
+            this->lightShaderOR.ParameterLocation("zValues"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
         glUniform1fARB(this->lightShaderOR.ParameterLocation("alpha"), alpha);
     }
 

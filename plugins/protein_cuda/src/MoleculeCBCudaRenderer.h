@@ -16,9 +16,9 @@
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/graphics/FpsCounter.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include "vislib/math/Quaternion.h"
 #include <algorithm>
 #include <list>
 #include <set>

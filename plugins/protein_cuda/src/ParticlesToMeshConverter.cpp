@@ -526,8 +526,8 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
                 unsigned int posStride = parts.GetVertexDataStride();
                 unsigned int colStride = parts.GetColourDataStride();
                 float globalRadius = parts.GetGlobalRadius();
-                bool useGlobRad = (parts.GetVertexDataType() ==
-                                   geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                bool useGlobRad =
+                    (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
                 int numColors = 0;
 
                 switch (parts.GetColourDataType()) {
@@ -554,8 +554,7 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
                 }
 
                 // if the vertices have no type, take the next list
-                if (parts.GetVertexDataType() ==
-                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) { // TODO is this correct?

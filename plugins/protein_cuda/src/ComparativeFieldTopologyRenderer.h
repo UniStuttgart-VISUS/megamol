@@ -20,9 +20,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
+#include "vislib/math/Matrix.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib/math/Matrix.h"
 
 namespace megamol {
 namespace protein_cuda {

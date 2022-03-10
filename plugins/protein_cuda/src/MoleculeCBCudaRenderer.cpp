@@ -15,20 +15,20 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/ColourRGBAu8.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <ctime>
 #include <fstream>
@@ -545,10 +545,9 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     ///////////////////////////////////////////////////////////////////////////
     // RENDER THE SOLVENT EXCLUDED SURFACE
     ///////////////////////////////////////////////////////////////////////////
-    
+
     // do actual rendering
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -611,12 +610,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     this->sphericalTriangleShader.Enable();
     // set shader variables
     glUniform4fvARB(this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(
-        this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), 0.5f, cv.near_plane,
-        cv.far_plane);
+    glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
     glUniform3fARB(
         this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     //glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
@@ -686,8 +683,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3fARB(this->torusShader.ParameterLocation("zValues"), 0.5f, cv.near_plane,
-        cv.far_plane);
+    glUniform3fARB(this->torusShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
     glUniform3fARB(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1fARB(this->torusShader.ParameterLocation("alpha"), 1.0f);
     // get attribute locations
@@ -880,8 +876,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
         m_hSmallCircles, m_dSmallCircles, 0, sizeof(float) * 4 * this->numAtoms * this->atomNeighborCount);
 
     // do actual rendering
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)

@@ -25,9 +25,9 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
+#include "vislib/math/Cuboid.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/math/Cuboid.h"
 #include <cuda_runtime.h>
 
 namespace megamol {

@@ -14,9 +14,9 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "ogl_error_check.h"
 #include "stdafx.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -75,15 +75,13 @@ bool SurfacePotentialRendererSlave::create(void) {
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;

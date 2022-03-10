@@ -747,15 +747,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -771,15 +769,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::vertexMapped", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexMapped", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::fragmentMapped", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentMapped", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -795,15 +791,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -820,15 +814,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;

@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Color.h"
-#include "mmcore/CallerSlot.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"

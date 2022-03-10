@@ -951,8 +951,7 @@ void MoleculeCudaSESRenderer::RenderAtomIdGPU(MolecularDataCall* protein) {
     glUniform3fv(this->writeSphereIdShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fv(this->writeSphereIdShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fv(this->writeSphereIdShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3f(
-        this->writeSphereIdShader.ParameterLocation("zValues"), 1.0f, cv.near_plane, cv.far_plane);
+    glUniform3f(this->writeSphereIdShader.ParameterLocation("zValues"), 1.0f, cv.near_plane, cv.far_plane);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -2316,8 +2315,7 @@ void MoleculeCudaSESRenderer::RenderVisibleAtomsGPU(MolecularDataCall* protein) 
         positions = posInter;
 
     // set viewport
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2338,8 +2336,7 @@ void MoleculeCudaSESRenderer::RenderVisibleAtomsGPU(MolecularDataCall* protein) 
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3f(
-        this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
+    glUniform3f(this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->sphereShader.ParameterLocation("alpha"), this->transparency);
     // draw visible atoms
@@ -2367,8 +2364,7 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
         positions = posInter;
 
     // set viewport
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2392,8 +2388,7 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3f(
-        this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
+    glUniform3f(this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->sphereShader.ParameterLocation("alpha"), this->transparency);
     // draw visible atoms
@@ -2421,8 +2416,8 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3f(this->sphericalTriangleShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane,
-        cv.far_plane);
+    glUniform3f(
+        this->sphericalTriangleShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform2f(this->sphericalTriangleShader.ParameterLocation("texOffset"), 1.0f, 1.0f);
     // get attribute locations
@@ -2473,8 +2468,7 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     glUniform3fv(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fv(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fv(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3f(
-        this->torusShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
+    glUniform3f(this->torusShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->torusShader.ParameterLocation("alpha"), this->transparency);
     // get attribute locations

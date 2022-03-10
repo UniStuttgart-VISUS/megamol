@@ -19,21 +19,21 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/glverify.h"
-#include "vislib/math/Point.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/sys/File.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <math.h>
@@ -230,8 +230,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::sphereFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -247,14 +246,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load clipped sphere shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::sphereClipPlaneVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereClipPlaneVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::sphereClipPlaneFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereClipPlaneFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
         return false;
@@ -270,14 +267,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load cylinder shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
         return false;
@@ -298,8 +293,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "volume::std::updateVolumeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::updateVolumeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
@@ -513,8 +507,8 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(core_gl::view::CallRender3
             vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
 
-    // TODO what does this do?
-    #if 0
+// TODO what does this do?
+#if 0
     if (this->renderProteinParam.Param<param::BoolParam>()->Value()) {
         // =============== Protein Rendering ===============
         // disable the output buffer
@@ -538,7 +532,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(core_gl::view::CallRender3
         // re-enable the output buffer
         cr3d->EnableOutputBuffer();
     }
-    #endif
+#endif
 
     // =============== Refresh all parameters ===============
     this->ParameterRefresh(&call);
@@ -585,7 +579,8 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(core_gl::view::CallRender3
 /*
  * Volume rendering using molecular data.
  */
-bool protein_cuda::MoleculeVolumeCudaRenderer::RenderMolecularData(core_gl::view::CallRender3DGL* call, MolecularDataCall* mol) {
+bool protein_cuda::MoleculeVolumeCudaRenderer::RenderMolecularData(
+    core_gl::view::CallRender3DGL* call, MolecularDataCall* mol) {
 
     // check last atom count with current atom count
     if (this->atomCount != mol->AtomCount()) {
@@ -1108,8 +1103,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::RayParamTextures(vislib::math::Cu
     this->volRayStartEyeShader.Enable();
     auto cam_intrinsics = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
-    float u =
-        cam_intrinsics.near_plane * tan(cam_intrinsics.fovy * float(vislib::math::PI_DOUBLE) / 360.0f);
+    float u = cam_intrinsics.near_plane * tan(cam_intrinsics.fovy * float(vislib::math::PI_DOUBLE) / 360.0f);
     float r = (this->width / this->height) * u;
 
     glBegin(GL_QUADS);
@@ -1188,8 +1182,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::RayParamTextures(vislib::math::Cu
     glUniform2f(this->volRayLengthShader.ParameterLocation("screenResInv"), 1.0f / float(this->width),
         1.0f / float(this->height));
     glUniform2f(
-        this->volRayLengthShader.ParameterLocation("zNearFar"), cam_intrinsics.near_plane,
-        cam_intrinsics.far_plane);
+        this->volRayLengthShader.ParameterLocation("zNearFar"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
 
     if (this->renderIsometric) {
         glUniform3f(this->volRayLengthShader.ParameterLocation("translate"), 0.0f, 0.0f, 0.0f);

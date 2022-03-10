@@ -18,10 +18,10 @@
 #include "protein_calls/Interpol.h"
 #include "protein_calls/VTIDataCall.h"
 
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
@@ -30,8 +30,8 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstdlib>
 #include <cuda_gl_interop.h>
 
@@ -195,13 +195,11 @@ bool StreamlineRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for illuminated streamlines");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "streamlines::illuminated::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for illuminated streamlines");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "streamlines::illuminated::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for illuminated streamlines");
         return false;
     }

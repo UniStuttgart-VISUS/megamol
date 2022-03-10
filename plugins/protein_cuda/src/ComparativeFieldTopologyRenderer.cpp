@@ -390,8 +390,7 @@ bool ComparativeFieldTopologyRenderer::create(void) {
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load arrow shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::arrowVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
@@ -399,8 +398,7 @@ bool ComparativeFieldTopologyRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::arrowFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -409,8 +407,7 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     this->arrowShader.Link();
 
     // Load sphere shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::sphereVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
@@ -418,8 +415,7 @@ bool ComparativeFieldTopologyRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::sphereFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
         return false;
     }
@@ -1368,8 +1364,7 @@ bool ComparativeFieldTopologyRenderer::renderCritPointsSpheres() {
     glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("modelview"), 1, false, this->modelMatrix);
     glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("proj"), 1, false, this->projMatrix);
     glUniform4fvARB(this->sphereShader.ParameterLocation("lightPos"), 1, this->lightPos);
-    glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), this->fogZ, cv.near_plane,
-        cv.far_plane);
+    glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), this->fogZ, cv.near_plane, cv.far_plane);
 
     // Vertex attributes
     GLint vertexPos = glGetAttribLocation(this->sphereShader, "vertex");

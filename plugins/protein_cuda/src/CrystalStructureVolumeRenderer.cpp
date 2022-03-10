@@ -37,11 +37,11 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "mmcore/utility/log/Log.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/math/Quaternion.h"
 
 #include "mmcore/view/Input.h"
 
@@ -1352,8 +1352,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         return false;
     }
     // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource(
-            "scivis::raycasting::fragmentDebug", fragSrc)) {
+    if (!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
@@ -1369,8 +1368,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
     }
 
     // Load alternative arrow shader (uses geometry shader)
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::arrowVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
@@ -1378,8 +1376,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::arrowFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -1388,14 +1385,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
     this->arrowShader.Link();
 
     // Load cylinder vertex shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
     // Load cylinder fragment shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
         return false;
     }
@@ -1409,16 +1404,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
     }
 
     // Load per pixel lighting shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::perpixellightVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
 
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::std::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
@@ -1443,8 +1436,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         return false;
     }
 
-    if (!ssf->MakeShaderSource(
-            "scivis::ppl::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
@@ -2430,8 +2422,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
 
     // Actual rendering
 
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
 
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
@@ -2533,8 +2524,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
 void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
     const protein_calls::CrystalStructureDataCall* dc) {
 
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2558,8 +2548,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform2fARB(
-        this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
+    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, this->posInter.PeekElements());
@@ -2622,8 +2611,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
         }
     }
 
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2648,8 +2636,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
     glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform2fARB(
-        this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
+    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, sphPos.PeekElements());
@@ -2762,8 +2749,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
 
 
     // Get viewpoint parameters for raycasting
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2905,8 +2891,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
 
 
     // Get viewpoint parameters for raycasting
-    float viewportStuff[4] = {0.0f, 0.0f,
-        this->width, this->height};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)

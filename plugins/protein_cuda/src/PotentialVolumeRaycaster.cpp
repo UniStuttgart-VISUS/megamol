@@ -34,8 +34,8 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -145,19 +145,22 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
     // Parameter for minimum potential value for the color map
     this->colorMinPotential.Set(0.75f, 0.01f, 0.15f);
     this->colorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorMinPotential.X(), this->colorMinPotential.Y(), this->colorMinPotential.Z()).PeekBuffer()));
+        this->colorMinPotential.X(), this->colorMinPotential.Y(), this->colorMinPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->colorZeroPotential.Set(1.0f, 1.0f, 1.0f);
     this->colorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorZeroPotential.X(), this->colorZeroPotential.Y(), this->colorZeroPotential.Z()).PeekBuffer()));
+        this->colorZeroPotential.X(), this->colorZeroPotential.Y(), this->colorZeroPotential.Z())
+                                                                               .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->colorMaxPotential.Set(0.23f, 0.29f, 0.75f);
     this->colorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorMaxPotential.X(), this->colorMaxPotential.Y(), this->colorMaxPotential.Z()).PeekBuffer()));
+        this->colorMaxPotential.X(), this->colorMaxPotential.Y(), this->colorMaxPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMaxPotentialSlot);
 
     // Parameter for iso value for volume rendering
@@ -272,19 +275,22 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
     // Parameter for minimum potential value for the color map
     this->sliceColorMinPotential.Set(0.75f, 0.01f, 0.15f);
     this->sliceColorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorMinPotential.X(), this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z()).PeekBuffer()));
+        this->sliceColorMinPotential.X(), this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->sliceColorZeroPotential.Set(1.0f, 1.0f, 1.0f);
     this->sliceColorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorZeroPotential.X(), this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z()).PeekBuffer()));
+        this->sliceColorZeroPotential.X(), this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z())
+                                                                                    .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->sliceColorMaxPotential.Set(0.23f, 0.29f, 0.75f);
     this->sliceColorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorMaxPotential.X(), this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z()).PeekBuffer()));
+        this->sliceColorMaxPotential.X(), this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMaxPotentialSlot);
 
     // Minimum texture value
@@ -540,15 +546,13 @@ bool PotentialVolumeRaycaster::create() {
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::raycasting::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::raycasting::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
@@ -564,15 +568,13 @@ bool PotentialVolumeRaycaster::create() {
     }
 
     // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::raycasting::vertexRay", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertexRay", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource(
-            "electrostatics::raycasting::fragmentRay", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragmentRay", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;

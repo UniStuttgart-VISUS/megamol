@@ -14,9 +14,9 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "geometry_calls/VolumetricDataCallTypes.h"
-#include "geometry_calls/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
 #include "CUDAMarchingCubes.h"

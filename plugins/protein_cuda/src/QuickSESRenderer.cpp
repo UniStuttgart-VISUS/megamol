@@ -25,10 +25,10 @@
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib/math/Quaternion.h"
 #include <GL/glu.h>
 #include <algorithm>
 #include <omp.h>
@@ -162,13 +162,11 @@ bool QuickSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // vertex shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -178,13 +176,11 @@ bool QuickSESRenderer::create(void) {
     // load the shader files for the per pixel lighting (OFFSCREEN/PASSTHROUGH RENDERER) //
     ///////////////////////////////////////////////////////////////////////////////////////
     // vertex shader
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight OR shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight OR shader");
         return false;
     }
@@ -220,7 +216,7 @@ bool QuickSESRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) 
  */
 bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
-    #if 0
+#if 0
     if (setCUDAGLDevice) {
 #ifdef _WIN32
         if (cr3d->IsGpuAffinity()) {
@@ -237,7 +233,7 @@ bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }
-    #endif
+#endif
 
     // get camera information
     this->cameraInfo = call.GetCamera();
@@ -366,7 +362,8 @@ bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     } else {
         // offscreen rendering (Render to fragment buffer)
         this->lightShaderOR.Enable();
-        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), camera_intrinsics.near_plane, camera_intrinsics.far_plane);
+        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), camera_intrinsics.near_plane,
+            camera_intrinsics.far_plane);
     }
 
     // TODO calculate and render SES

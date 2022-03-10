@@ -23,9 +23,9 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "slicing.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include <GL/glu.h>
 //#include "vislib_vector_typedefs.h"
 typedef vislib::math::Vector<int, 2> Vec2i;
