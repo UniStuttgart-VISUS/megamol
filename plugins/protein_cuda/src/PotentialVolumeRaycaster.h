@@ -19,12 +19,13 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "slicing.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include <GL/glu.h>
 //#include "vislib_vector_typedefs.h"
 typedef vislib::math::Vector<int, 2> Vec2i;
@@ -36,7 +37,7 @@ typedef vislib::math::Cuboid<float> Cubef;
 namespace megamol {
 namespace protein_cuda {
 
-class PotentialVolumeRaycaster : public core::view::Renderer3DModuleDS {
+class PotentialVolumeRaycaster : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -68,8 +69,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
-            return false;
         return true;
     }
 
@@ -112,7 +111,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Initializes the textures containing the potential maps
@@ -133,7 +132,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Render texture slices of different textures
@@ -306,22 +305,22 @@ private:
     /* Raycasting */
 
     /// Frame buffer object for raycasting
-    vislib::graphics::gl::FramebufferObject rcFbo;
+    vislib_gl::graphics::gl::FramebufferObject rcFbo;
 
     /// Frame buffer object for opaque objects of the scene
-    vislib::graphics::gl::FramebufferObject srcFbo;
+    vislib_gl::graphics::gl::FramebufferObject srcFbo;
 
     /// Shader for raycasting
-    vislib::graphics::gl::GLSLShader rcShader;
+    vislib_gl::graphics::gl::GLSLShader rcShader;
 
     /// Shader for rendering the cube backface
-    vislib::graphics::gl::GLSLShader rcShaderRay;
+    vislib_gl::graphics::gl::GLSLShader rcShaderRay;
 
     /// Current resolution of the fbos
     Vec2i fboDim;
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// The texture holding the scalar data
     GLuint volumeTex;
@@ -381,7 +380,7 @@ private:
     /* Slice rendering */
 
     /// Shader for slice rendering
-    vislib::graphics::gl::GLSLShader sliceShader;
+    vislib_gl::graphics::gl::GLSLShader sliceShader;
 };
 
 } // namespace protein_cuda

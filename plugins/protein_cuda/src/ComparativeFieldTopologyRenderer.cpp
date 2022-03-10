@@ -19,12 +19,13 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "CUDAFieldTopology.cuh"
 #include "VecField3f.h"
@@ -46,6 +47,7 @@ bool myisinf(double x) {
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::core;
+using namespace megamol::core_gl;
 using namespace megamol::core::utility::log;
 
 
@@ -53,7 +55,7 @@ using namespace megamol::core::utility::log;
  * ComparativeFieldTopologyRenderer::ComparativeFieldTopologyRenderer
  */
 ComparativeFieldTopologyRenderer::ComparativeFieldTopologyRenderer(void)
-        : view::Renderer3DModule()
+        : Renderer3DModuleGL()
         ,
         /* Data caller slots */
         dataCallerSlot0("getdata0", "Connects the renderer with the first data source")
@@ -377,34 +379,26 @@ bool ComparativeFieldTopologyRenderer::create(void) {
 
     // Load shaders
     using namespace vislib;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    /*if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") || !isExtAvailable("GL_ARB_multitexture")) {
         return false;
-    }
-    if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") || !isExtAvailable("GL_ARB_multitexture")) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load arrow shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::arrowVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::arrowFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -413,17 +407,15 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     this->arrowShader.Link();
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::sphereVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereGeom", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::sphereFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
         return false;
     }
@@ -432,12 +424,12 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     this->sphereShader.Link();
 
     // Load streamline shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::streamline::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::streamline::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: streamline shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::streamline::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::streamline::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  streamline shader", this->ClassName());
         return false;
@@ -451,12 +443,12 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     }
 
     // Load slice shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;
@@ -494,7 +486,7 @@ void ComparativeFieldTopologyRenderer::release(void) {
 /*
  * ComparativeFieldTopologyRenderer::GetExtents
  */
-bool ComparativeFieldTopologyRenderer::GetExtents(core::Call& call) {
+bool ComparativeFieldTopologyRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     //    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     //    if (cr3d == NULL) return false;
     //
@@ -550,17 +542,12 @@ bool ComparativeFieldTopologyRenderer::GetExtents(core::Call& call) {
 /*
  * ComparativeFieldTopologyRenderer::Render
  */
-bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
+bool ComparativeFieldTopologyRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     using namespace vislib::math;
 
-    // Get render call from view3d
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
     // Get call time
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
 
     // Get data calls
     protein_calls::VTIDataCall* cmd0 = this->dataCallerSlot0.CallAs<protein_calls::VTIDataCall>();
@@ -608,15 +595,9 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
             cmd->GetOrigin().Y() + (cmd->GetGridsize().Y()-1)*cmd->GetSpacing().Y(),
             cmd->GetOrigin().Z() + (cmd->GetGridsize().Z()-1)*cmd->GetSpacing().Z());*/
 
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(1);
+
+    call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
+    call.SetTimeFramesCount(1);
 
 
     if ((cmd0->GetGridsize().GetX() == 0) || (cmd0->GetGridsize().GetY() == 0) || (cmd0->GetGridsize().GetZ() == 0)) {
@@ -648,7 +629,7 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
     }
 
     // Get camera information
-    this->cameraInfo = dynamic_cast<core::view::CallRender3D*>(&call)->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
     // Update parameters
     this->updateParams();
@@ -760,7 +741,7 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
     //    } else {
     //        scale = 1.0f;
     //    }
-    glScalef(scale, scale, scale);
+    //glScalef(scale, scale, scale);
 
     // Setup OpenGL
     glDisable(GL_BLEND);
@@ -769,10 +750,10 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
     glLineWidth(1.0);
 
     // Prepare stuff for glyph ray casting
-    this->viewportStuff[0] = this->cameraInfo->TileRect().Left();
-    this->viewportStuff[1] = this->cameraInfo->TileRect().Bottom();
-    this->viewportStuff[2] = this->cameraInfo->TileRect().Width();
-    this->viewportStuff[3] = this->cameraInfo->TileRect().Height();
+    this->viewportStuff[0] = 0.0f;
+    this->viewportStuff[1] = 0.0f;
+    this->viewportStuff[2] = call.GetViewResolution().x;
+    this->viewportStuff[3] = call.GetViewResolution().y;
     if (this->viewportStuff[2] < 1.0f)
         this->viewportStuff[2] = 1.0f;
     if (this->viewportStuff[3] < 1.0f)
@@ -1372,16 +1353,18 @@ bool ComparativeFieldTopologyRenderer::renderCritPointsSpheres() {
     // Enable sphere shader
     this->sphereShader.Enable();
 
+    auto cp = cameraInfo.getPose();
+    auto cv = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // Set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, this->viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
     glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("modelview"), 1, false, this->modelMatrix);
     glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("proj"), 1, false, this->projMatrix);
     glUniform4fvARB(this->sphereShader.ParameterLocation("lightPos"), 1, this->lightPos);
-    glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), this->fogZ, this->cameraInfo->NearClip(),
-        this->cameraInfo->FarClip());
+    glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), this->fogZ, cv.near_plane, cv.far_plane);
 
     // Vertex attributes
     GLint vertexPos = glGetAttribLocation(this->sphereShader, "vertex");
@@ -1492,10 +1475,12 @@ bool ComparativeFieldTopologyRenderer::renderFieldArrows(const protein_calls::VT
 
     this->arrowShader.Enable();
 
+    auto cp = cameraInfo.getPose();
+
     glUniform4fvARB(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
     glUniform1fARB(this->arrowShader.ParameterLocation("radScale"), this->arrowRadScl / 100.0f);
     glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("modelview"), 1, false, this->modelMatrix);
     glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("proj"), 1, false, this->projMatrix);
