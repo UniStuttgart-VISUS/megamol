@@ -18,16 +18,16 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
 #include <GL/glu.h>
@@ -45,7 +45,7 @@ using namespace megamol::core::utility::log;
  * protein_cuda::QuickSurfRenderer::QuickSurfRenderer (CTOR)
  */
 QuickSurfRenderer::QuickSurfRenderer(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam("color::coloringMode", "The first coloring mode.")
@@ -66,7 +66,7 @@ QuickSurfRenderer::QuickSurfRenderer(void)
     // fill color table with default values and set the filename param
     vislib::StringA filename("colors.txt");
     Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename.PeekBuffer()));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring mode #0
@@ -196,11 +196,8 @@ void QuickSurfRenderer::release(void) {}
  * protein_cuda::QuickSurfRenderer::create
  */
 bool QuickSurfRenderer::create(void) {
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
-        return false;
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
+    /*if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
+        return false;*/
 
     //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
     //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
@@ -211,21 +208,22 @@ bool QuickSurfRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+    if (!ssf->MakeShaderSource(
             "protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+    if (!ssf->MakeShaderSource(
             "protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
@@ -236,12 +234,12 @@ bool QuickSurfRenderer::create(void) {
     // load the shader files for the per pixel lighting (OFFSCREEN/PASSTHROUGH RENDERER) //
     ///////////////////////////////////////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+    if (!ssf->MakeShaderSource(
             "protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight OR shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+    if (!ssf->MakeShaderSource(
             "protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight OR shader");
         return false;
@@ -255,27 +253,15 @@ bool QuickSurfRenderer::create(void) {
 /*
  * protein_cuda::QuickSurfRenderer::GetExtents
  */
-bool QuickSurfRenderer::GetExtents(Call& call) {
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool QuickSurfRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
     if (!(*mol)(MolecularDataCall::CallForGetExtent))
         return false;
 
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
 }
@@ -288,34 +274,17 @@ bool QuickSurfRenderer::GetExtents(Call& call) {
 /*
  * protein_cuda::QuickSurfRenderer::Render
  */
-bool QuickSurfRenderer::Render(Call& call) {
-
-    // cast the call to Render3D
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
+bool QuickSurfRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
     if (setCUDAGLDevice) {
-#ifdef _WIN32
-        if (cr3d->IsGpuAffinity()) {
-            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice(&devId, gpuId);
-            cudaGLSetGLDevice(devId);
-        } else {
-            cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-        }
-#else
         cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-#endif
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
-
-    float callTime = cr3d->Time();
+    this->cameraInfo = call.GetCamera();
+    float callTime = call.Time();
 
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -393,9 +362,9 @@ bool QuickSurfRenderer::Render(Call& call) {
     if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
         // Use one coloring mode
         Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true);
     }
 
     // ---------- render ----------
@@ -434,6 +403,8 @@ bool QuickSurfRenderer::Render(Call& call) {
         sort = true;
     }
 
+    auto cam_intrinsics = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // enable per-pixel light shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
         // direct rendering
@@ -442,7 +413,7 @@ bool QuickSurfRenderer::Render(Call& call) {
     } else {
         // offscreen rendering (Render to fragment buffer)
         this->lightShaderOR.Enable();
-        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
         glUniform1fARB(this->lightShaderOR.ParameterLocation("alpha"), alpha);
     }
 
@@ -482,7 +453,7 @@ void QuickSurfRenderer::UpdateParameters(const MolecularDataCall* mol) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
@@ -493,9 +464,9 @@ void QuickSurfRenderer::UpdateParameters(const MolecularDataCall* mol) {
 
         // Use one coloring mode
         Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true);
 
         this->coloringModeParam.ResetDirty();
     }

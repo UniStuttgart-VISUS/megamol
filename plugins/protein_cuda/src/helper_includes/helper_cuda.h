@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <helper_string.h>
+#include "cuda_runtime_api.h"
 
 #ifndef EXIT_WAIVED
 #define EXIT_WAIVED 2

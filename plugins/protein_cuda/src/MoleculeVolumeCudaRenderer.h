@@ -15,12 +15,12 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \
@@ -39,7 +39,7 @@ namespace protein_cuda {
 /**
  * Protein Renderer class
  */
-class MoleculeVolumeCudaRenderer : public megamol::core::view::Renderer3DModule {
+class MoleculeVolumeCudaRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -119,7 +119,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -127,17 +127,18 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Volume rendering using molecular data.
      */
-    bool RenderMolecularData(megamol::core::view::CallRender3D* call, megamol::protein_calls::MolecularDataCall* mol);
+    bool RenderMolecularData(
+        megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Refresh all parameters.
      */
-    void ParameterRefresh(megamol::core::view::CallRender3D* call);
+    void ParameterRefresh(megamol::core_gl::view::CallRender3DGL* call);
 
     /**
      * Create a volume containing all molecule atoms.
@@ -196,7 +197,7 @@ private:
     megamol::core::CallerSlot protRendererCallerSlot;
 
     // camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
     // scaling factor for the scene
     float scale;
     // translation of the scene
@@ -228,19 +229,19 @@ private:
     megamol::core::param::ParamSlot renderProteinParam;
 
     // shader for the spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
     // shader for the cylinders (raycasting view)
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
     // shader for the clipped spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader clippedSphereShader;
+    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
-    vislib::graphics::gl::GLSLShader updateVolumeShader;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
     // shader for volume rendering
-    vislib::graphics::gl::GLSLShader volumeShader;
-    vislib::graphics::gl::GLSLShader volRayStartShader;
-    vislib::graphics::gl::GLSLShader volRayStartEyeShader;
-    vislib::graphics::gl::GLSLShader volRayLengthShader;
-    vislib::graphics::gl::GLSLShader colorWriterShader;
+    vislib_gl::graphics::gl::GLSLShader volumeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
+    vislib_gl::graphics::gl::GLSLShader colorWriterShader;
 
     // current coloring mode
     Color::ColoringMode currentColoringMode;
@@ -267,7 +268,7 @@ private:
     unsigned int atomCount;
 
     // FBO for rendering the protein
-    vislib::graphics::gl::FramebufferObject proteinFBO;
+    vislib_gl::graphics::gl::FramebufferObject proteinFBO;
 
     // volume texture
     GLuint volumeTex;

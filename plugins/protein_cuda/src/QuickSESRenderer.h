@@ -14,16 +14,17 @@
 #include "Color.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "CUDAQuickSES.h"
 #include "WKFUtils.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cuda.h>
 #include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
@@ -35,7 +36,7 @@ namespace protein_cuda {
  * Simple Molecular Renderer class
  */
 
-class QuickSESRenderer : public megamol::core::view::Renderer3DModule {
+class QuickSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -138,7 +139,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -146,7 +147,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**********************************************************************
      * variables
@@ -156,7 +157,7 @@ private:
     megamol::core::CallerSlot molDataCallerSlot;
 
     /** camera information */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /** parameter slot for color table filename */
     megamol::core::param::ParamSlot colorTableFileParam;
@@ -177,11 +178,11 @@ private:
     megamol::core::param::ParamSlot offscreenRenderingParam;
 
     /** shader for the spheres (raycasting view) */
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
     // shader for per pixel lighting (polygonal view)
-    vislib::graphics::gl::GLSLShader lightShader;
+    vislib_gl::graphics::gl::GLSLShader lightShader;
     // OFFSCREEN RENDERING shader for per pixel lighting (polygonal view)
-    vislib::graphics::gl::GLSLShader lightShaderOR;
+    vislib_gl::graphics::gl::GLSLShader lightShaderOR;
 
     /** The current coloring mode */
     Color::ColoringMode currentColoringMode;

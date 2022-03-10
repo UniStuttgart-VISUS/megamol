@@ -19,7 +19,7 @@ class HostArr {
 
 public:
     /** Ctor */
-    HostArr() : size(0), count(0), pt(NULL) {}
+    HostArr() : size(0), count(0), pt(nullptr) {}
 
     /** Dtor */
     ~HostArr() {
@@ -66,12 +66,12 @@ public:
      * Deallocates the memory of the array and inits size with zero.
      */
     inline void Release() {
-        if (this->pt != NULL) {
+        if (this->pt != nullptr) {
             //delete[] this->pt;
             free(this->pt);
         }
         this->size = 0;
-        this->pt = NULL;
+        this->pt = nullptr;
         this->count = 0;
     }
 
@@ -91,7 +91,7 @@ public:
      * @param sizeNew The desired amount of elements.
      */
     inline void Validate(size_t sizeNew) {
-        if ((this->pt == NULL) || (sizeNew > this->size)) {
+        if ((this->pt == nullptr) || (sizeNew > this->size)) {
             this->Release();
             //this->pt = new T[sizeNew];
             this->pt = (T*)malloc(sizeNew * sizeof(T));
