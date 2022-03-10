@@ -80,8 +80,10 @@ private:
     core::CalleeSlot getDataCallee;
 
     core::CallerSlot getInputCaller;
+    core::CallerSlot getMaskCaller;
 
     core::param::ParamSlot segmentationThresholdParam;
+    core::param::ParamSlot maskFrameParam;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 
