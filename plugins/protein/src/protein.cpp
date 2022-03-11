@@ -38,7 +38,6 @@
 #include "protein/CallColor.h"
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
-#include "protein/ParticleDataCall.h"
 #include "protein/RMSF.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/SphereDataCall.h"
@@ -135,7 +134,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SphereDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::ParticleDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
