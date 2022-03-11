@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
-#include <json.hpp>
 
 #include "Renderer2D.h"
 #include "datatools/table/TableDataCall.h"
@@ -123,171 +122,141 @@ protected:
         INTERACTION_SELECT,
     };
 
-    struct DimensionFilter {
-        uint32_t dimension; // useless but good padding
-        float lower;
-        float upper;
-        uint32_t flags;
-
-        static inline void to_json(nlohmann::json& j, const DimensionFilter& d) {
-            j = nlohmann::json{{"dim", d.dimension}, {"lower", d.lower}, {"upper", d.upper}, {"flags", d.flags}};
-        }
-
-        static inline void from_json(const nlohmann::json& j, DimensionFilter& d) {
-            j.at("dim").get_to(d.dimension);
-            j.at("lower").get_to(d.lower);
-            j.at("upper").get_to(d.upper);
-            j.at("flags").get_to(d.flags);
-        }
+    struct Range {
+        float min;
+        float max;
     };
 
     bool assertData(core_gl::view::CallRender2DGL& call);
 
-    void computeScaling();
-
-    bool scalingChangedCallback(core::param::ParamSlot& caller);
-    bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
-
-    void pickIndicator(float x, float y, int& axis, int& index);
-
-    void drawAxes(glm::mat4 ortho);
-
-    void drawDiscrete(
-        const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
-
-    void drawItemsDiscrete(
-        uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes);
-
-    void drawPickIndicator(float x, float y, float pickRadius, const float color[4]);
-
-    void drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]);
-
-    void drawItemsContinuous();
-
-    void doPicking(float x, float y, float pickRadius);
-
-    void doStroking(float x0, float y0, float x1, float y1);
-
-    void doFragmentCount();
-
-    void drawParcos(glm::ivec2 const& viewRes);
-    void store_filters();
-    void load_filters();
+    void calcSizes();
 
     int mouseXtoAxis(float x);
 
-    bool enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program);
+    void mouseToFilterIndicator(float x, float y, int& axis, int& index);
 
-    core::CallerSlot getDataSlot;
+    bool useProgramAndBindCommon(std::unique_ptr<glowl::GLSLProgram> const& program);
 
-    core::CallerSlot getTFSlot;
+    void doPicking(glm::vec2 pos, float pickRadius);
 
-    core::CallerSlot readFlagsSlot;
+    void doStroking(glm::vec2 start, glm::vec2 end);
 
-    core::CallerSlot writeFlagsSlot;
+    void drawItemLines(uint32_t testMask, uint32_t passMask, bool useTf, glm::vec4 const& color);
 
-    size_t currentHash;
+    void drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor);
 
-    core::FlagStorageTypes::flag_version_type currentFlagsVersion;
+    void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
-    std::unique_ptr<glowl::FramebufferObject> densityFBO;
+    void drawAxes(glm::mat4 ortho);
 
-    core::param::ParamSlot drawModeSlot;
+    void drawIndicatorPick(glm::vec2 pos, float pickRadius, glm::vec4 const& color);
 
-    core::param::ParamSlot drawSelectedItemsSlot;
-    core::param::ParamSlot selectedItemsColorSlot;
+    void drawIndicatorStroke(glm::vec2 start, glm::vec2 end, glm::vec4 const& color);
 
-    core::param::ParamSlot drawOtherItemsSlot;
-    core::param::ParamSlot otherItemsColorSlot;
-    core::param::ParamSlot otherItemsAttribSlot;
+    void storeFilters();
 
-    core::param::ParamSlot drawAxesSlot;
-    core::param::ParamSlot axesColorSlot;
+    void loadFilters();
 
-    core::param::ParamSlot filterIndicatorColorSlot;
+    // Slots
+    core::CallerSlot dataSlot_;
+    core::CallerSlot tfSlot_;
+    core::CallerSlot readFlagsSlot_;
+    core::CallerSlot writeFlagsSlot_;
 
-    core::param::ParamSlot selectionModeSlot;
-    core::param::ParamSlot drawSelectionIndicatorSlot;
-    core::param::ParamSlot selectionIndicatorColorSlot;
+    // Params
+    core::param::ParamSlot drawModeParam_;
+    core::param::ParamSlot normalizeDensityParam_;
+    core::param::ParamSlot sqrtDensityParam_;
+    core::param::ParamSlot triangleModeParam_;
+    core::param::ParamSlot lineWidthParam_;
+    core::param::ParamSlot columnNameParam_;
+    core::param::ParamSlot drawItemsParam_;
+    core::param::ParamSlot drawSelectedItemsParam_;
+    core::param::ParamSlot ignoreTransferFunctionParam_;
+    core::param::ParamSlot itemsColorParam_;
+    core::param::ParamSlot selectedItemsColorParam_;
+    core::param::ParamSlot drawAxesParam_;
+    core::param::ParamSlot axesLineWidthParam_;
+    core::param::ParamSlot axesColorParam_;
+    core::param::ParamSlot filterIndicatorColorParam_;
+    core::param::ParamSlot smoothFontParam_;
+    core::param::ParamSlot selectionModeParam_;
+    core::param::ParamSlot pickRadiusParam_;
+    core::param::ParamSlot drawSelectionIndicatorParam_;
+    core::param::ParamSlot selectionIndicatorColorParam_;
+    core::param::ParamSlot scaleToFitParam_;
+    core::param::ParamSlot resetFiltersParam_;
+    core::param::ParamSlot filterStateParam_;
 
-    core::param::ParamSlot pickRadiusSlot;
+    // Data Info
+    std::size_t currentTableDataHash_;
+    unsigned int currentTableFrameId_;
 
-    core::param::ParamSlot scaleToFitSlot;
+    std::size_t columnCount_;
+    std::size_t rowCount_;
+    std::vector<std::string> names_;
+    std::vector<Range> columnRanges_;
+    std::vector<int> axisIndirection_;
+    std::unordered_map<std::string, int> columnIndex_;
+    std::vector<Range> filters_;
+    const std::array<uint32_t, 2> densityMinMaxInit_;
 
-    core::param::ParamSlot sqrtDensitySlot;
+    std::unique_ptr<glowl::BufferObject> dataBuffer_;
+    std::unique_ptr<glowl::BufferObject> columnRangesBuffer_;
+    std::unique_ptr<glowl::BufferObject> axisIndirectionBuffer_;
+    std::unique_ptr<glowl::BufferObject> filtersBuffer_;
+    std::unique_ptr<glowl::BufferObject> densityMinMaxBuffer_;
 
-    core::param::ParamSlot resetFiltersSlot;
+    // Layout
+    float marginX_;
+    float marginY_;
+    float axisDistance_;
+    float axisHeight_;
+    int numTicks_;
+    float tickLength_;
+    float fontSize_;
+    megamol::core::utility::SDFFont font_;
+    core::BoundingBoxes_2 bounds_;
 
-    core::param::ParamSlot filterStateSlot;
+    // Interaction state
+    float mouseX_;
+    float mouseY_;
+    InteractionState interactionState_;
+    int pickedAxis_;
+    int pickedIndicatorAxis_;
+    int pickedIndicatorIndex_;
+    glm::vec2 strokeStart_;
+    glm::vec2 strokeEnd_;
+    bool needAxisUpdate_;
+    bool needFilterUpdate_;
+    bool needSelectionUpdate_;
+    bool needFlagsUpdate_;
 
-    core::param::ParamSlot triangleModeSlot;
-    core::param::ParamSlot lineThicknessSlot;
-    core::param::ParamSlot axesLineThicknessSlot;
-    core::param::ParamSlot smoothFontSlot;
-    core::param::ParamSlot normalizeDensitySlot;
+    // OpenGL
+    std::unique_ptr<glowl::GLSLProgram> filterProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectPickProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectStrokeProgram_;
+    std::unique_ptr<glowl::GLSLProgram> densityMinMaxProgram_;
 
-    float marginX, marginY;
-    float axisDistance;
-    float axisHeight;
-    GLuint numTicks;
-    float fontSize;
-    float backgroundColor[4];
-    core::BoundingBoxes_2 bounds;
-    std::optional<core::view::Camera> camera_cpy;  //< local copy of last used camera
-    std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
-    glm::ivec2 viewRes;                            //< last used view resolution
-    unsigned int lastTimeStep;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsLineProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsDensityProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
 
-    GLuint columnCount;
-    GLuint itemCount;
+    GLint filterWorkgroupSize_[3];
+    GLint selectPickWorkgroupSize_[3];
+    GLint selectStrokeWorkgroupSize_[3];
+    GLint densityMinMaxWorkgroupSize_[3];
 
-    std::unique_ptr<glowl::GLSLProgram> drawAxesProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawScalesProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawFilterIndicatorsProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawPickIndicatorProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawStrokeIndicatorProgram;
+    GLint maxWorkgroupCount_[3];
 
-    std::unique_ptr<glowl::GLSLProgram> drawItemContinuousProgram;
+    std::unique_ptr<glowl::FramebufferObject> densityFbo_;
 
-    std::unique_ptr<glowl::GLSLProgram> filterProgram;
-    std::unique_ptr<glowl::GLSLProgram> minMaxProgram;
-
-    std::unique_ptr<glowl::GLSLProgram> pickProgram;
-    std::unique_ptr<glowl::GLSLProgram> strokeProgram;
-
-    GLuint dataBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
-    GLuint counterBuffer;
-
-    std::vector<GLuint> axisIndirection;
-    std::vector<GLfloat> minimums;
-    std::vector<GLfloat> maximums;
-    std::vector<DimensionFilter> filters;
-    std::vector<GLuint> fragmentMinMax;
-    std::vector<std::string> names;
-
-    double mouseX;
-    double mouseY;
-    InteractionState interactionState;
-    int pickedAxis;
-    int pickedIndicatorAxis;
-    int pickedIndicatorIndex;
-    float strokeStartX;
-    float strokeStartY;
-    float strokeEndX;
-    float strokeEndY;
-    bool needSelectionUpdate;
-    bool needFlagsUpdate;
-    std::map<std::string, uint32_t> columnIndex;
-
-    GLint filterWorkgroupSize[3];
-    GLint counterWorkgroupSize[3];
-    GLint pickWorkgroupSize[3];
-    GLint strokeWorkgroupSize[3];
-    GLint maxWorkgroupCount[3];
-
-    megamol::core::utility::SDFFont font;
+    // View and camera state
+    std::optional<core::view::Camera> cameraCopy_;
+    glm::ivec2 viewRes_;
 };
 
 } // namespace megamol::infovis_gl

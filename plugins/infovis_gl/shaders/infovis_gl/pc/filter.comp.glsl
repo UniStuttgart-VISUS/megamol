@@ -1,0 +1,32 @@
+#version 450
+
+#include "common/common.inc.glsl"
+#include "core/bitflags.inc.glsl"
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main() {
+    uint itemIdx = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+
+    if (itemIdx >= itemCount || !bitflag_test(flags[itemIdx], FLAG_ENABLED, FLAG_ENABLED)) {
+        return;
+    }
+
+    bool filtered = false;
+    for (uint d = 0; d < dimensionCount; d++) {
+        float value = pc_dataValue(itemIdx, d);
+        if (filters[d].min <= filters[d].max) {
+            if (value < filters[d].min || value > filters[d].max) {
+                filtered = true;
+                break;
+            }
+        } else {
+            if (value < filters[d].min && value > filters[d].max) {
+                filtered = true;
+                break;
+            }
+        }
+    }
+
+    bitflag_set(flags[itemIdx], FLAG_FILTERED, filtered);
+}
