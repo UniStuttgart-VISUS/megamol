@@ -1,9 +1,10 @@
 #version 450
 
-#include "common/common.inc.glsl"
-#include "core/bitflags.inc.glsl"
-
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+#include "common/common.inc.glsl"
+#include "common/invocation_index.inc.glsl"
+#include "core/bitflags.inc.glsl"
 
 void main() {
     uint itemIdx = globalInvocationIndex();

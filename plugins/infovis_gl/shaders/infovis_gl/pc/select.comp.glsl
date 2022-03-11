@@ -1,6 +1,9 @@
 #version 450
 
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
 #include "common/common.inc.glsl"
+#include "common/invocation_index.inc.glsl"
 #include "core/bitflags.inc.glsl"
 
 #ifdef STROKE
@@ -10,8 +13,6 @@ uniform vec2 strokeEnd = vec2(0.0f, 0.0f);
 uniform vec2 mouse = vec2(0.0f, 0.0f);
 uniform float pickRadius = 0.1f;
 #endif
-
-layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 #define FLOAT_EPS (1.0e-10)
 

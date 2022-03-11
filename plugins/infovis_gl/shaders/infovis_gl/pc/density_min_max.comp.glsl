@@ -1,8 +1,8 @@
 #version 450
 
-#include "common/common.inc.glsl"
-
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+#include "common/common.inc.glsl"
 
 layout(binding = 1) uniform sampler2D fragmentCountTex;
 uniform ivec2 resolution = ivec2(0);

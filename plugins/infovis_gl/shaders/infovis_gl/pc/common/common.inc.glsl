@@ -72,8 +72,3 @@ vec4 pc_axisVertex(uint axisIdx, float factor) {
 vec4 pc_itemVertex(uint itemIdx, uint axisIdx) {
     return pc_axisVertex(axisIdx, pc_dataValueNormalized(itemIdx, axisIndirection[axisIdx]));
 }
-
-uint globalInvocationIndex() {
-    const uvec3 globalSize = gl_NumWorkGroups * gl_WorkGroupSize;
-    return globalSize.x * (globalSize.y * gl_GlobalInvocationID.z + gl_GlobalInvocationID.y) + gl_GlobalInvocationID.x;
-}
