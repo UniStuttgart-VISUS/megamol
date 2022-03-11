@@ -797,8 +797,8 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
     if (normalizeDensity) {
         densityMinMaxBuffer_->rebuffer(densityMinMaxInit_);
 
-        static const GLuint countSize = 16; // Each compute shader invocation will check countSize * countSize pixels.
-        glm::uvec2 invocations((fboWidth + countSize - 1) / countSize, (fboHeight + countSize - 1) / countSize);
+        static const GLuint blockSize = 16; // Each compute shader invocation will check blockSize * blockSize pixels.
+        glm::uvec2 invocations((fboWidth + blockSize - 1) / blockSize, (fboHeight + blockSize - 1) / blockSize);
         std::array<GLuint, 3> groupCounts{
             (invocations.x + densityMinMaxWorkgroupSize_[0] - 1) / densityMinMaxWorkgroupSize_[0],
             (invocations.y + densityMinMaxWorkgroupSize_[1] - 1) / densityMinMaxWorkgroupSize_[1], 1};
@@ -808,7 +808,7 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
         densityFbo_->bindColorbuffer(0);
         densityMinMaxProgram_->setUniform("fragmentCountTex", 1);
         densityMinMaxProgram_->setUniform("resolution", fboWidth, fboHeight);
-        densityMinMaxProgram_->setUniform("fragmentCountStepSize", invocations[0], invocations[1]);
+        densityMinMaxProgram_->setUniform("blockSize", blockSize);
         glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
         glUseProgram(0);
 
