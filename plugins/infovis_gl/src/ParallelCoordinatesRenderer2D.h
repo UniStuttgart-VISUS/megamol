@@ -169,7 +169,7 @@ protected:
     core::param::ParamSlot sqrtDensityParam_;
     core::param::ParamSlot triangleModeParam_;
     core::param::ParamSlot lineWidthParam_;
-    core::param::ParamSlot columnNameParam_;
+    core::param::ParamSlot dimensionNameParam_;
     core::param::ParamSlot drawItemsParam_;
     core::param::ParamSlot drawSelectedItemsParam_;
     core::param::ParamSlot ignoreTransferFunctionParam_;
@@ -192,17 +192,17 @@ protected:
     std::size_t currentTableDataHash_;
     unsigned int currentTableFrameId_;
 
-    std::size_t columnCount_;
-    std::size_t rowCount_;
+    std::size_t dimensionCount_;
+    std::size_t itemCount_;
     std::vector<std::string> names_;
-    std::vector<Range> columnRanges_;
+    std::vector<Range> dimensionRanges_;
     std::vector<int> axisIndirection_;
-    std::unordered_map<std::string, int> columnIndex_;
+    std::unordered_map<std::string, int> dimensionIndex_;
     std::vector<Range> filters_;
     const std::array<uint32_t, 2> densityMinMaxInit_;
 
     std::unique_ptr<glowl::BufferObject> dataBuffer_;
-    std::unique_ptr<glowl::BufferObject> columnRangesBuffer_;
+    std::unique_ptr<glowl::BufferObject> dimensionRangesBuffer_;
     std::unique_ptr<glowl::BufferObject> axisIndirectionBuffer_;
     std::unique_ptr<glowl::BufferObject> filtersBuffer_;
     std::unique_ptr<glowl::BufferObject> densityMinMaxBuffer_;
@@ -245,12 +245,12 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
 
-    GLint filterWorkgroupSize_[3];
-    GLint selectPickWorkgroupSize_[3];
-    GLint selectStrokeWorkgroupSize_[3];
-    GLint densityMinMaxWorkgroupSize_[3];
+    std::array<GLint, 3> filterWorkgroupSize_;
+    std::array<GLint, 3> selectPickWorkgroupSize_;
+    std::array<GLint, 3> selectStrokeWorkgroupSize_;
+    std::array<GLint, 3> densityMinMaxWorkgroupSize_;
 
-    GLint maxWorkgroupCount_[3];
+    std::array<GLint, 3> maxWorkgroupCount_;
 
     std::unique_ptr<glowl::FramebufferObject> densityFbo_;
 

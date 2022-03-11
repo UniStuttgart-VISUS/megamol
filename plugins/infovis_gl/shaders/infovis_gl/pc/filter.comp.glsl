@@ -6,7 +6,7 @@
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 void main() {
-    uint itemIdx = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+    uint itemIdx = globalInvocationIndex();
 
     if (itemIdx >= itemCount || !bitflag_test(flags[itemIdx], FLAG_ENABLED, FLAG_ENABLED)) {
         return;

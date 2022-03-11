@@ -60,7 +60,7 @@ bool intersectLineLine(vec2 p, vec2 r, vec2 q, vec2 s) {
 }
 
 void main() {
-    uint itemIdx = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+    uint itemIdx = globalInvocationIndex();
 
     if (itemIdx >= itemCount || !bitflag_isVisible(flags[itemIdx])) {
         return;

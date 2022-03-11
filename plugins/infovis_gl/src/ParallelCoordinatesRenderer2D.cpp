@@ -24,7 +24,6 @@
 #include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
@@ -42,7 +41,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , sqrtDensityParam_("sqrtDensity", "Map root of density to transfer function (instead of linear mapping)")
         , triangleModeParam_("triangleMode", "Draw items with triangle lines")
         , lineWidthParam_("lineWidth", "Line width of data points")
-        , columnNameParam_("columnName", "Column name of the attribute to use for TF lookup and item coloring")
+        , dimensionNameParam_("dimensionName", "Dimension name of the attribute to use for TF lookup and item coloring")
         , drawItemsParam_("ui::drawItems", "Draw (non-selected) items")
         , drawSelectedItemsParam_("ui::drawSelectedItems", "Draw selected items")
         , ignoreTransferFunctionParam_("ui::ignoreTransferFunction", "Use static color instead of TF color lookup")
@@ -62,8 +61,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , filterStateParam_("filter::filterState", "stores filter state for serialization")
         , currentTableDataHash_(std::numeric_limits<std::size_t>::max())
         , currentTableFrameId_(std::numeric_limits<unsigned int>::max())
-        , columnCount_(0)
-        , rowCount_(0)
+        , dimensionCount_(0)
+        , itemCount_(0)
         , densityMinMaxInit_{std::numeric_limits<uint32_t>::max(), 0}
         , marginX_(0.0f)
         , marginY_(0.0f)
@@ -85,6 +84,12 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , needFilterUpdate_(false)
         , needSelectionUpdate_(false)
         , needFlagsUpdate_(false)
+        , filterWorkgroupSize_()
+        , selectPickWorkgroupSize_()
+        , selectStrokeWorkgroupSize_()
+        , densityMinMaxWorkgroupSize_()
+        , maxWorkgroupCount_()
+        , cameraCopy_(std::nullopt)
         , viewRes_(glm::ivec2(1, 1)) {
 
     dataSlot_.SetCompatibleCall<table::TableDataCallDescription>();
@@ -117,8 +122,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     lineWidthParam_ << new core::param::FloatParam(1.5f);
     MakeSlotAvailable(&lineWidthParam_);
 
-    columnNameParam_ << new core::param::FlexEnumParam("[none]");
-    MakeSlotAvailable(&columnNameParam_);
+    dimensionNameParam_ << new core::param::FlexEnumParam("[none]");
+    MakeSlotAvailable(&dimensionNameParam_);
 
     drawItemsParam_ << new core::param::BoolParam(true);
     MakeSlotAvailable(&drawItemsParam_);
@@ -172,7 +177,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     MakeSlotAvailable(&resetFiltersParam_);
 
     filterStateParam_ << new ::core::param::StringParam("");
-    // filterStateParam_.Param<core::param::StringParam>()->SetGUIVisible(false);
     MakeSlotAvailable(&filterStateParam_);
 }
 
@@ -227,16 +231,14 @@ bool ParallelCoordinatesRenderer2D::create() {
         return false;
     }
 
-    glGetProgramiv(filterProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize_);
-    glGetProgramiv(selectPickProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectPickWorkgroupSize_);
-    glGetProgramiv(selectStrokeProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectStrokeWorkgroupSize_);
-    glGetProgramiv(densityMinMaxProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, densityMinMaxWorkgroupSize_);
+    glGetProgramiv(filterProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize_.data());
+    glGetProgramiv(selectPickProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectPickWorkgroupSize_.data());
+    glGetProgramiv(selectStrokeProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectStrokeWorkgroupSize_.data());
+    glGetProgramiv(densityMinMaxProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, densityMinMaxWorkgroupSize_.data());
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount_[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
-
-    // filterStateParam_.ForceSetDirty();
 
     return true;
 }
@@ -271,9 +273,10 @@ bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         storeFilters();
 
-        GLuint groups = rowCount_ / (filterWorkgroupSize_[0] * filterWorkgroupSize_[1] * filterWorkgroupSize_[2]);
-        GLuint groupCounts[3] = {(groups % maxWorkgroupCount_[0]) + 1, (groups / maxWorkgroupCount_[0]) + 1, 1};
         useProgramAndBindCommon(filterProgram_);
+
+        std::array<GLuint, 3> groupCounts{};
+        computeDispatchSizes(itemCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
         glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -438,7 +441,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
 
     if (interactionState_ == InteractionState::INTERACTION_DRAG) {
         int currAxis = mouseXtoAxis(mouseX_);
-        if (currAxis != pickedAxis_ && currAxis >= 0 && currAxis < static_cast<int>(columnCount_)) {
+        if (currAxis != pickedAxis_ && currAxis >= 0 && currAxis < static_cast<int>(dimensionCount_)) {
             auto pickedAxisIt = std::find(axisIndirection_.begin(), axisIndirection_.end(), pickedAxis_);
             auto pickedIdx = std::distance(axisIndirection_.begin(), pickedAxisIt);
             axisIndirection_.erase(pickedAxisIt);
@@ -457,7 +460,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     }
 
     if (interactionState_ == InteractionState::INTERACTION_FILTER) {
-        const auto& range = columnRanges_[pickedIndicatorAxis_];
+        const auto& range = dimensionRanges_[pickedIndicatorAxis_];
         float val = ((mouseY_ - marginY_) / axisHeight_) * (range.max - range.min) + range.min;
         val = std::clamp(val, range.min, range.max);
         if (pickedIndicatorIndex_ == 0) {
@@ -517,34 +520,34 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
     (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
     if (dataChanged) {
-        columnCount_ = floatTableCall->GetColumnsCount();
-        rowCount_ = floatTableCall->GetRowsCount();
-        names_.resize(columnCount_);
-        columnRanges_.resize(columnCount_);
-        axisIndirection_.resize(columnCount_);
-        filters_.resize(columnCount_);
+        dimensionCount_ = floatTableCall->GetColumnsCount();
+        itemCount_ = floatTableCall->GetRowsCount();
+        names_.resize(dimensionCount_);
+        dimensionRanges_.resize(dimensionCount_);
+        axisIndirection_.resize(dimensionCount_);
+        filters_.resize(dimensionCount_);
 
-        columnIndex_.clear();
-        auto* columnNameParam = columnNameParam_.Param<core::param::FlexEnumParam>();
-        columnNameParam->ClearValues();
-        columnNameParam->AddValue("[none]");
-        for (int i = 0; i < columnCount_; i++) {
+        dimensionIndex_.clear();
+        auto* dimensionNameParam = dimensionNameParam_.Param<core::param::FlexEnumParam>();
+        dimensionNameParam->ClearValues();
+        dimensionNameParam->AddValue("[none]");
+        for (int i = 0; i < dimensionCount_; i++) {
             const auto& colInfo = floatTableCall->GetColumnsInfos()[i];
             names_[i] = colInfo.Name();
-            columnRanges_[i].min = colInfo.MinimumValue();
-            columnRanges_[i].max = colInfo.MaximumValue();
-            if (columnRanges_[i].max - columnRanges_[i].min < 0.001f) {
-                columnRanges_[i].max = columnRanges_[i].min + 0.001f;
+            dimensionRanges_[i].min = colInfo.MinimumValue();
+            dimensionRanges_[i].max = colInfo.MaximumValue();
+            if (dimensionRanges_[i].max - dimensionRanges_[i].min < 0.001f) {
+                dimensionRanges_[i].max = dimensionRanges_[i].min + 0.001f;
             }
             axisIndirection_[i] = i;
-            columnIndex_[colInfo.Name()] = i;
-            columnNameParam->AddValue(colInfo.Name());
-            filters_[i] = columnRanges_[i];
+            dimensionIndex_[colInfo.Name()] = i;
+            dimensionNameParam->AddValue(colInfo.Name());
+            filters_[i] = dimensionRanges_[i];
         }
 
         dataBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, floatTableCall->GetData(),
-            columnCount_ * rowCount_ * sizeof(float), GL_DYNAMIC_DRAW);
-        columnRangesBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, columnRanges_);
+            dimensionCount_ * itemCount_ * sizeof(float), GL_DYNAMIC_DRAW);
+        dimensionRangesBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, dimensionRanges_);
         axisIndirectionBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, axisIndirection_);
         filtersBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, filters_);
         densityMinMaxBuffer_ =
@@ -561,19 +564,19 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
         calcSizes();
     }
 
-    if (dataChanged || columnNameParam_.IsDirty() || drawModeParam_.IsDirty()) {
+    if (dataChanged || dimensionNameParam_.IsDirty() || drawModeParam_.IsDirty()) {
         drawModeParam_.ResetDirty();
-        columnNameParam_.ResetDirty();
+        dimensionNameParam_.ResetDirty();
 
         if (drawModeParam_.Param<core::param::EnumParam>()->Value() == DrawMode::DRAW_DISCRETE) {
-            const auto& columnName = columnNameParam_.Param<core::param::FlexEnumParam>()->Value();
+            const auto& dimensionName = dimensionNameParam_.Param<core::param::FlexEnumParam>()->Value();
             try {
-                const auto colIdx = columnIndex_.at(columnName);
-                tfCall->SetRange({columnRanges_[colIdx].min, columnRanges_[colIdx].max});
+                const auto dimIdx = dimensionIndex_.at(dimensionName);
+                tfCall->SetRange({dimensionRanges_[dimIdx].min, dimensionRanges_[dimIdx].max});
             } catch (std::out_of_range& ex) {
                 Log::DefaultLog.WriteWarn(
-                    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
-                    columnName.c_str());
+                    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing dimension '%s'",
+                    dimensionName.c_str());
                 tfCall->SetRange({0.0f, 1.0f});
             }
         } else {
@@ -591,8 +594,8 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
     if (resetFiltersParam_.IsDirty()) {
         resetFiltersParam_.ResetDirty();
 
-        for (int i = 0; i < columnCount_; i++) {
-            filters_[i] = columnRanges_[i];
+        for (int i = 0; i < dimensionCount_; i++) {
+            filters_[i] = dimensionRanges_[i];
         }
         needFilterUpdate_ = true;
     }
@@ -606,7 +609,7 @@ void ParallelCoordinatesRenderer2D::calcSizes() {
     axisDistance_ = 40.0f;
     fontSize_ = axisDistance_ / 10.0f;
     auto left = 0.0f;
-    auto right = 2.0f * marginX_ + axisDistance_ * static_cast<float>(columnCount_ - 1);
+    auto right = 2.0f * marginX_ + axisDistance_ * static_cast<float>(dimensionCount_ - 1);
     auto width = right - left;
 
     if (scaleToFitParam_.Param<core::param::BoolParam>()->Value() && cameraCopy_.has_value()) {
@@ -626,7 +629,7 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     const float f = (x - marginX_) / axisDistance_;
     const float frac = f - std::floor(f);
     const int integral = static_cast<int>(std::round(f));
-    if (integral >= 0 && integral < static_cast<int>(columnCount_) && (frac < 0.3f || frac > 0.7f)) {
+    if (integral >= 0 && integral < static_cast<int>(dimensionCount_) && (frac < 0.3f || frac > 0.7f)) {
         return axisIndirection_[integral];
     }
     return -1;
@@ -638,7 +641,7 @@ void ParallelCoordinatesRenderer2D::mouseToFilterIndicator(float x, float y, int
     if (axis != -1) {
         // calculate position of click and filters in [0, 1] range of axis height
         const float pickPos = (y - marginY_) / axisHeight_;
-        const auto& range = columnRanges_[axis];
+        const auto& range = dimensionRanges_[axis];
         float upperPos = (filters_[axis].max - range.min) / (range.max - range.min);
         float lowerPos = (filters_[axis].min - range.min) / (range.max - range.min);
 
@@ -667,9 +670,9 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
 
     dataBuffer_->bind(0);
     auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
-    readFlagsCall->getData()->validateFlagCount(rowCount_);
+    readFlagsCall->getData()->validateFlagCount(static_cast<int32_t>(itemCount_));
     readFlagsCall->getData()->flags->bind(1);
-    columnRangesBuffer_->bind(2);
+    dimensionRangesBuffer_->bind(2);
     axisIndirectionBuffer_->bind(3);
     filtersBuffer_->bind(4);
     densityMinMaxBuffer_->bind(5);
@@ -683,8 +686,8 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
         program->setUniform("viewMx", one);
     }
 
-    program->setUniform("dimensionCount", static_cast<GLuint>(columnCount_));
-    program->setUniform("itemCount", static_cast<GLuint>(rowCount_));
+    program->setUniform("dimensionCount", static_cast<GLuint>(dimensionCount_));
+    program->setUniform("itemCount", static_cast<GLuint>(itemCount_));
 
     program->setUniform("margin", marginX_, marginY_);
     program->setUniform("axisDistance", axisDistance_);
@@ -694,39 +697,29 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
 }
 
 void ParallelCoordinatesRenderer2D::doPicking(glm::vec2 pos, float pickRadius) {
-    debugPush(3, "doPicking");
-
     useProgramAndBindCommon(selectPickProgram_);
-
     selectPickProgram_->setUniform("mouse", pos);
     selectPickProgram_->setUniform("pickRadius", pickRadius);
 
-    GLuint groupCounts[3];
-    computeDispatchSizes(rowCount_, selectPickWorkgroupSize_, maxWorkgroupCount_, groupCounts);
-
+    std::array<GLuint, 3> groupCounts{};
+    computeDispatchSizes(itemCount_, selectPickWorkgroupSize_, maxWorkgroupCount_, groupCounts);
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     glUseProgram(0);
-    debugPop();
 }
 
 void ParallelCoordinatesRenderer2D::doStroking(glm::vec2 start, glm::vec2 end) {
-    debugPush(3, "doStroking");
-
     useProgramAndBindCommon(selectStrokeProgram_);
-
     selectStrokeProgram_->setUniform("strokeStart", start);
     selectStrokeProgram_->setUniform("strokeEnd", end);
 
-    GLuint groupCounts[3];
-    computeDispatchSizes(rowCount_, selectStrokeWorkgroupSize_, maxWorkgroupCount_, groupCounts);
-
+    std::array<GLuint, 3> groupCounts{};
+    computeDispatchSizes(itemCount_, selectStrokeWorkgroupSize_, maxWorkgroupCount_, groupCounts);
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     glUseProgram(0);
-    debugPop();
 }
 
 void ParallelCoordinatesRenderer2D::drawItemLines(
@@ -736,10 +729,8 @@ void ParallelCoordinatesRenderer2D::drawItemLines(
 
     int colorDimension = -1;
     try {
-        colorDimension = columnIndex_.at(columnNameParam_.Param<core::param::FlexEnumParam>()->Value());
+        colorDimension = dimensionIndex_.at(dimensionNameParam_.Param<core::param::FlexEnumParam>()->Value());
     } catch (std::out_of_range& ex) {}
-
-    debugPush(2, "drawItemLines");
 
     auto& prog1 = triangleMode ? drawItemsTriangleProgram_ : drawItemsLineProgram_;
 
@@ -755,14 +746,13 @@ void ParallelCoordinatesRenderer2D::drawItemLines(
 
     glEnable(GL_CLIP_DISTANCE0);
     if (triangleMode) {
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 2 * static_cast<int>(columnCount_), static_cast<int>(rowCount_));
+        glDrawArraysInstanced(
+            GL_TRIANGLE_STRIP, 0, 2 * static_cast<int>(dimensionCount_), static_cast<int>(itemCount_));
     } else {
-        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<int>(columnCount_), static_cast<int>(rowCount_));
+        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<int>(dimensionCount_), static_cast<int>(itemCount_));
     }
     glDisable(GL_CLIP_DISTANCE0);
     glUseProgram(0);
-
-    debugPop();
 }
 
 void ParallelCoordinatesRenderer2D::drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor) {
@@ -805,15 +795,13 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
 
     const bool normalizeDensity = normalizeDensityParam_.Param<core::param::BoolParam>()->Value();
     if (normalizeDensity) {
-        int invocations[] = {static_cast<int>(std::ceil(static_cast<float>(fboWidth) / 16.0f)),
-            static_cast<int>(std::ceil(static_cast<float>(fboHeight) / 16.0f))};
-
         densityMinMaxBuffer_->rebuffer(densityMinMaxInit_);
 
-        GLuint groupCounts[3] = {
-            static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / densityMinMaxWorkgroupSize_[0]))),
-            static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[1]) / densityMinMaxWorkgroupSize_[1]))),
-            1};
+        static const GLuint countSize = 16; // Each compute shader invocation will check countSize * countSize pixels.
+        glm::uvec2 invocations((fboWidth + countSize - 1) / countSize, (fboHeight + countSize - 1) / countSize);
+        std::array<GLuint, 3> groupCounts{
+            (invocations.x + densityMinMaxWorkgroupSize_[0] - 1) / densityMinMaxWorkgroupSize_[0],
+            (invocations.y + densityMinMaxWorkgroupSize_[1] - 1) / densityMinMaxWorkgroupSize_[1], 1};
 
         useProgramAndBindCommon(densityMinMaxProgram_);
         glActiveTexture(GL_TEXTURE1);
@@ -846,9 +834,7 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
 }
 
 void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
-    debugPush(1, "drawAxes");
-
-    if (columnCount_ > 0) {
+    if (dimensionCount_ > 0) {
         useProgramAndBindCommon(drawAxesProgram_);
         drawAxesProgram_->setUniform("lineWidth", axesLineWidthParam_.Param<core::param::FloatParam>()->Value());
         drawAxesProgram_->setUniform("viewSize", viewRes_);
@@ -862,38 +848,39 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         const glm::vec4 filterColor =
             glm::make_vec4<float>(filterIndicatorColorParam_.Param<core::param::ColorParam>()->Value().data());
         drawAxesProgram_->setUniform("filterColor", filterColor);
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<int>(columnCount_) * (1 + 4 + numTicks_));
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<int>(dimensionCount_) * (1 + 4 + numTicks_));
         glUseProgram(0);
 
-        float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+        const float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
         const float* color;
 
         glActiveTexture(GL_TEXTURE0);
         font_.ClearBatchDrawCache();
         font_.SetSmoothMode(smoothFontParam_.Param<core::param::BoolParam>()->Value());
-        for (unsigned int c = 0; c < columnCount_; c++) {
-            unsigned int realCol = axisIndirection_[c];
-            if (pickedAxis_ == realCol) {
+        for (int axisIdx = 0; axisIdx < dimensionCount_; axisIdx++) {
+            const int dimIdx = axisIndirection_[axisIdx];
+            if (pickedAxis_ == dimIdx) {
                 color = red;
             } else {
                 color = axesColorParam_.Param<core::param::ColorParam>()->Value().data();
             }
-            float x = marginX_ + axisDistance_ * c;
 
-            float bottom = filters_[realCol].min;
-            float top = filters_[realCol].max;
-            font_.DrawString(ortho, color, x, marginY_ * 0.5f, fontSize_, false, std::to_string(bottom).c_str(),
+            const float posX = marginX_ + axisDistance_ * static_cast<float>(axisIdx);
+            const float posY_bottom = marginY_ * 0.5f;
+            const float posY_top = marginY_ * 1.5f + axisHeight_;
+            const float posY_label = marginY_ * (2.0f + static_cast<float>(axisIdx % 2) * 0.5f) + axisHeight_;
+
+            const std::string bottom = std::to_string(filters_[dimIdx].min);
+            const std::string top = std::to_string(filters_[dimIdx].max);
+            font_.DrawString(ortho, color, posX, posY_bottom, fontSize_, false, bottom.c_str(),
                 core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-            font_.DrawString(ortho, color, x, marginY_ * 1.5f + axisHeight_, fontSize_, false,
-                std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-
-            font_.DrawString(ortho, color, x, marginY_ * (2.0f + static_cast<float>(c % 2) * 0.5f) + axisHeight_,
-                fontSize_ * 2.0f, false, names_[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            font_.DrawString(ortho, color, posX, posY_top, fontSize_, false, top.c_str(),
+                core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            font_.DrawString(ortho, color, posX, posY_label, fontSize_ * 2.0f, false, names_[dimIdx].c_str(),
+                core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
         font_.BatchDrawString(ortho);
     }
-
-    debugPop();
 }
 
 void ParallelCoordinatesRenderer2D::drawIndicatorPick(glm::vec2 pos, float pickRadius, glm::vec4 const& color) {
@@ -933,8 +920,8 @@ void ParallelCoordinatesRenderer2D::loadFilters() {
             if (i < filters_.size()) {
                 f.at("lower").get_to(filters_[i].min);
                 f.at("upper").get_to(filters_[i].max);
-                filters_[i].min = std::clamp(filters_[i].min, columnRanges_[i].min, columnRanges_[i].max);
-                filters_[i].max = std::clamp(filters_[i].max, columnRanges_[i].min, columnRanges_[i].max);
+                filters_[i].min = std::clamp(filters_[i].min, dimensionRanges_[i].min, dimensionRanges_[i].max);
+                filters_[i].max = std::clamp(filters_[i].max, dimensionRanges_[i].min, dimensionRanges_[i].max);
             } else {
                 break;
             }
