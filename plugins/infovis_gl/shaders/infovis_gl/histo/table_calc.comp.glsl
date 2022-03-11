@@ -8,9 +8,9 @@ layout(std430, binding = 4) buffer FloatData
     float floatData[];
 };
 
-layout(std430, binding = 5) buffer Flags
+layout(std430, binding = 5) coherent buffer Flags
 {
-    coherent uint flags[];
+    uint flags[];
 };
 
 uniform uint numRows = 0;
