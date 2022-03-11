@@ -6,7 +6,7 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(binding = 1) uniform sampler2D fragmentCountTex;
 uniform ivec2 resolution = ivec2(0);
-uniform ivec2 fragmentCountStepSize = ivec2(16);
+uniform uvec2 fragmentCountStepSize = uvec2(16);
 
 void main() {
     if (any(greaterThanEqual(gl_GlobalInvocationID.xy, resolution))) {
@@ -30,9 +30,9 @@ void main() {
             if (count > thisMax) {
                 thisMax = count;
             }
-            texCoord.x += fragmentCountStepSize.x;
+            texCoord.x += int(fragmentCountStepSize.x);
         }
-        texCoord.y += fragmentCountStepSize.y;
+        texCoord.y += int(fragmentCountStepSize.y);
     }
 
     atomicMin(densityMin, thisMin);
