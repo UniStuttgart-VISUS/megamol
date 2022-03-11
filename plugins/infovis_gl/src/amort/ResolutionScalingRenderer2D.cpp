@@ -109,7 +109,6 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
 }
 
 void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
-    frameIdx_ = 0;
     shiftMx_ = glm::mat4(1.0f);
     lastProjViewMx_ = glm::mat4(1.0f);
     camOffsets_.resize(a * a);
@@ -138,10 +137,12 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
 
     samplingSequence_ = std::vector<int>(a * a);
     samplingSequence_[0] = 0;
+    // samplingSequence_[0] = (a / 2) * (a + 1); // Alternative to start in the center of a block.
     for (int i = 1; i < a * a; i++) {
         samplingSequence_[i] = (samplingSequence_[i - 1] + (a + 1) * (a + 1)) % (a * a);
     }
     samplingSequencePosition_ = 0;
+    frameIdx_ = samplingSequence_[samplingSequencePosition_];
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
@@ -182,8 +183,8 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
 
     shader_->use();
     shader_->setUniform("amortLevel", a);
-    shader_->setUniform("w", w);
-    shader_->setUniform("h", h);
+    shader_->setUniform("resolution", w, h);
+    shader_->setUniform("lowResResolution", lowResFBO_->getWidth(), lowResFBO_->getHeight());
     shader_->setUniform("frameIdx", frameIdx_);
     shader_->setUniform("shiftMx", shiftMx_);
     shader_->setUniform(
