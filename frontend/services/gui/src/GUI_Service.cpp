@@ -353,9 +353,12 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+    const std::string gui_entry_point_name = "GUI_Service";
     bool view_presentation_ok = image_presentation.add_entry_point(
-        "GUI_Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
-                           std::function{get_gui_runtime_resources_requests}});
+        gui_entry_point_name, {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+                                  std::function{get_gui_runtime_resources_requests}});
+    view_presentation_ok &= image_presentation.set_entry_point_priority(
+        gui_entry_point_name, 100); // render after views (default priority is 0)
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
