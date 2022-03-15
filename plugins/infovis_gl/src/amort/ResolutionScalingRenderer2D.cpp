@@ -53,7 +53,7 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         },
         {});
-    distTexLayout_ = glowl::TextureLayout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    distTexLayout_ = glowl::TextureLayout(GL_RG32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {
             {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -147,13 +147,14 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
     auto const projViewMx = cam.getProjectionMatrix() * cam.getViewMatrix();
+    currentProjViewMx_ = projViewMx;
 
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets_[frameIdx_].x,
         -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0f);
 
-    shiftMx_ = lastProjViewMx_ * inverse(projViewMx);
-    lastProjViewMx_ = projViewMx;
+    inversePVMx_ = inverse(projViewMx);
+    shiftMx_ = lastProjViewMx_ * inversePVMx_;
 
     auto p = cam.get<core::view::Camera::Pose>();
     p.position = p.position + 0.5f * adj_offset;
@@ -187,8 +188,12 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     shader_->setUniform("lowResResolution", lowResFBO_->getWidth(), lowResFBO_->getHeight());
     shader_->setUniform("frameIdx", frameIdx_);
     shader_->setUniform("shiftMx", shiftMx_);
+    shader_->setUniform("inversePVMx", inversePVMx_);
+    shader_->setUniform("PVMx", currentProjViewMx_);
+    shader_->setUniform("lastPVMx", lastProjViewMx_);
     shader_->setUniform(
         "skipInterpolation", static_cast<int>(skipInterpolationParam.Param<core::param::BoolParam>()->Value()));
+    lastProjViewMx_ = currentProjViewMx_;
 
     glActiveTexture(GL_TEXTURE0);
     lowResFBO_->bindColorbuffer(0);

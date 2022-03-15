@@ -4,8 +4,8 @@ uniform sampler2D texLowResFBO;
 
 layout (binding=0, rgba8) uniform image2D imgRead;
 layout (binding=1, rgba8) uniform image2D imgWrite;
-layout (binding=2, r32f) uniform image2D imgDistRead;
-layout (binding=3, r32f) uniform image2D imgDistWrite;
+layout (binding=2, rg32f) uniform image2D imgDistRead;
+layout (binding=3, rg32f) uniform image2D imgDistWrite;
 
 uniform int amortLevel;
 uniform ivec2 resolution;
@@ -13,6 +13,9 @@ uniform ivec2 lowResResolution;
 uniform int frameIdx;
 uniform mat4 shiftMx;
 uniform bool skipInterpolation;
+uniform mat4 inversePVMx;
+uniform mat4 PVMx;
+uniform mat4 lastPVMx;
 
 in vec2 uvCoords;
 
@@ -40,8 +43,8 @@ ivec2 pixelDistanceWithOffset1D(int highResPos, int lowResPos, int currentIdx, i
     }
 
     // Case 1
-    int dist = abs(highResPos - lowResPos);
-    if (dist <= amortLevel / 2) {
+    int dist = highResPos - lowResPos;
+    if (abs(dist) <= amortLevel / 2) {
         return ivec2(dist, 0);
     }
 
@@ -74,7 +77,10 @@ void main() {
     if (frameIdx == idx) {
         // Current high res pixel matches exactly the low res pixel of the current pass.
         color = vec4(texelFetch(texLowResFBO, imgCoord / amortLevel, 0).xyz, 1.0f);
-        imageStore(imgDistWrite, imgCoord, vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        
+        vec2 samplePos = 2.0f * uvCoords - vec2(1.0f);
+        samplePos = (inversePVMx * vec4(samplePos,0.0,1.0)).xy;
+        imageStore(imgDistWrite, imgCoord, vec4(samplePos, 0.0f, 0.0f));
     } else {
         // Find shifted image coords. This is where the current high res position was in the previous frame.
         const vec4 p = vec4(2.0f * uvCoords - vec2(1.0f), 0.0f, 1.0f);
@@ -92,25 +98,28 @@ void main() {
         const ivec2 offset = ivec2(distOffsetX.y, distOffsetY.y); // Tex coord offset for lookup in low res texture.
 
         lowResTexCoord += offset;
+        ivec2 samplePos = imgCoord + distXY;
 
-        // Calculate distance between current position in the a*a quad and the nearest frameIdx position.
-        float dist = length(vec2(distXY));
-        // Normalize distance to [0, 1]. Maximum distance is diagonal of the a*a quad, but measured from pixel centers.
-        dist = dist / (sqrt(2.0f) * float(amortLevel - 1));
-        // Invert so 1.0 means nearest and 0.0 meanst farest, because texture ist zero initialized.
-        dist = clamp(1.0f - dist, 0.0f, 1.0f);
+        vec2 sampleWS = vec2( 2 * (float(samplePos.x) / float(resolution.x)) - 1.0, 2 * (float(samplePos.y) / float(resolution.y)) - 1.0);
+        sampleWS = (inversePVMx * vec4(sampleWS, 0.0, 1.0)).xy;
 
-        float oldDist = imageLoad(imgDistRead, shiftedImgCoord).r;
+        vec2 oldWS = imageLoad(imgDistRead, shiftedImgCoord).xy;
+        oldWS = (inversePVMx * inverse(shiftMx) * lastPVMx * vec4(oldWS,0.0,1.0)).xy;
 
-        if (dist >= oldDist && !skipInterpolation) {
+        vec2 currentWS = (inversePVMx * p).xy;
+        float distOldSample = length(currentWS - oldWS);
+        float distNewSample = length(currentWS - sampleWS);
+
+        if (distNewSample <= distOldSample && !skipInterpolation) {
             color = vec4(texelFetch(texLowResFBO, lowResTexCoord, 0).xyz, 1.0);
-            imageStore(imgDistWrite, imgCoord, vec4(dist, 0.0f, 0.0f, 0.0f));
+            imageStore(imgDistWrite, imgCoord, vec4(sampleWS,0,0));
         } else {
             color = imageLoad(imgRead, shiftedImgCoord);
-            imageStore(imgDistWrite, imgCoord, vec4(oldDist, 0.0f, 0.0f, 0.0f));
+            imageStore(imgDistWrite, imgCoord, vec4(oldWS,0,0));
         }
     }
 
     imageStore(imgWrite, imgCoord, color);
     fragOut = color;
+    
 }

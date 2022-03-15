@@ -85,5 +85,7 @@ private:
     std::vector<glm::vec3> camOffsets_;
     glm::mat4 shiftMx_;
     glm::mat4 lastProjViewMx_;
+    glm::mat4 currentProjViewMx_;
+    glm::mat4 inversePVMx_;
 };
 } // namespace megamol::infovis_gl
