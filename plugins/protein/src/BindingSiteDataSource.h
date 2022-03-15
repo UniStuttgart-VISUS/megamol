@@ -19,6 +19,7 @@
 #include "vislib/Pair.h"
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
+#include "glm/glm.hpp"
 
 
 namespace megamol {
@@ -118,9 +119,9 @@ private:
     vislib::Array<vislib::StringA> bindingSiteDescription;
 
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> bindingSiteColors;
+    std::vector<glm::vec3> bindingSiteColors;
 };
 
 } /* end namespace protein */
