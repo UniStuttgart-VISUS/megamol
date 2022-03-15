@@ -18,9 +18,9 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 //#include "protein/Color.h"
-#include "protein_calls/ProteinColor.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"

@@ -11,20 +11,20 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "protein_calls/ProteinColor.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "slicing.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <list>
-#include "glm/glm.hpp"
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \

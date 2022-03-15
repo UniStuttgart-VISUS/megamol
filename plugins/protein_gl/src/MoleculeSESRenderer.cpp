@@ -855,12 +855,12 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->sphericTriaTexCoord3[cntRS][i * 3 + 2] =
                 (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
             // colors
-            this->sphericTriaColors[cntRS][i * 3 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
-            this->sphericTriaColors[cntRS][i * 3 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
-            this->sphericTriaColors[cntRS][i * 3 + 2] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 2] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
             // sphere center
             this->sphericTriaVertexArray[cntRS][i * 4 + 0] =
                 this->reducedSurface[cntRS]->GetRSFace(i)->GetProbeCenter().GetX();
@@ -960,10 +960,10 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->torusInSphereArray[cntRS][i * 4 + 2] = C.GetZ();
             this->torusInSphereArray[cntRS][i * 4 + 3] = distance;
             // colors
-            this->torusColors[cntRS][i * 4 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
-            this->torusColors[cntRS][i * 4 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
+            this->torusColors[cntRS][i * 4 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
+            this->torusColors[cntRS][i * 4 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
             this->torusColors[cntRS][i * 4 + 2] = d;
             // this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
             this->torusColors[cntRS][i * 4 + 3] =

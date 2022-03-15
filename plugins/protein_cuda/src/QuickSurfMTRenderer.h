@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "protein_calls/ProteinColor.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "CUDAQuickSurf.h"

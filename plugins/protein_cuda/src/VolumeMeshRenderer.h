@@ -13,7 +13,6 @@
 
 #include "CUDAQuickSurf.h"
 #include "CenterLineGenerator.h"
-#include "protein_calls/ProteinColor.h"
 #include "MolecularAOShader.h"
 #include "VolumeMeshRenderer.cuh"
 #include "WKFUtils.h"
@@ -23,6 +22,7 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "vislib/math/Cuboid.h"

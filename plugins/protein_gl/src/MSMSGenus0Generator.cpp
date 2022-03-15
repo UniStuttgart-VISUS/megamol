@@ -421,12 +421,9 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         color[i * 3 + 1] += static_cast<unsigned char>(weight0 * col[1]);
                         color[i * 3 + 2] += static_cast<unsigned char>(weight0 * col[2]);
                     } else {
-                        color[i * 3 + 0] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].x * 255);
-                        color[i * 3 + 1] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].y * 255);
-                        color[i * 3 + 2] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].z * 255);
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].x * 255);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].y * 255);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].z * 255);
                     }
 
                     if (currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR ||
@@ -459,12 +456,9 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
                         color[i * 3 + 2] += static_cast<unsigned char>(weight1 * col[2]);
                     } else {
-                        color[i * 3 + 0] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].x * 255);
-                        color[i * 3 + 1] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].y * 255);
-                        color[i * 3 + 2] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].z * 255);
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].x * 255);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].y * 255);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].z * 255);
                     }
                 }
 

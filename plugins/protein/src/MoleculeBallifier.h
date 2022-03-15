@@ -11,14 +11,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/RawStorage.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
 
 namespace megamol {
 namespace protein {
