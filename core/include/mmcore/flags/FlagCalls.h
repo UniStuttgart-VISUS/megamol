@@ -1,29 +1,26 @@
-/*
- * FlagCalls.h
- *
- * Author: Guido Reina and others
- * Copyright (C) 2016-2021 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
  * All rights reserved.
  */
 
 #pragma once
 
 #include "mmcore/CallGeneric.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/flags/FlagStorage.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class FlagCallRead_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
 public:
     inline FlagCallRead_CPU() = default;
-    ~FlagCallRead_CPU() = default;
+    ~FlagCallRead_CPU() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "FlagCallRead_CPU";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
                "reading";
     }
@@ -32,12 +29,12 @@ public:
 class FlagCallWrite_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
 public:
     inline FlagCallWrite_CPU() = default;
-    ~FlagCallWrite_CPU() = default;
+    ~FlagCallWrite_CPU() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "FlagCallWrite_CPU";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
                "writing";
     }
@@ -47,5 +44,4 @@ public:
 typedef megamol::core::factories::CallAutoDescription<FlagCallRead_CPU> FlagCallRead_CPUDescription;
 typedef megamol::core::factories::CallAutoDescription<FlagCallWrite_CPU> FlagCallWrite_CPUDescription;
 
-} // namespace core
-} /* end namespace megamol */
+} // namespace megamol::core

@@ -1,8 +1,7 @@
-/*
- * UniFlagStorage.h
- *
- * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -16,12 +15,11 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace core_gl {
+namespace megamol::core_gl {
 
 class FlagCollection_GL;
 
@@ -38,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UniFlagStorageGL";
     }
 
@@ -47,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module representing an index-synced array of flag uints as a CPU or GL buffer";
     }
 
@@ -56,7 +54,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -67,10 +65,10 @@ public:
     }
 
     /** Ctor. */
-    UniFlagStorage(void);
+    UniFlagStorage();
 
     /** Dtor. */
-    virtual ~UniFlagStorage(void);
+    virtual ~UniFlagStorage();
 
 protected:
     /**
@@ -78,12 +76,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create();
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release();
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -162,5 +160,4 @@ public:
     }
 };
 
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl

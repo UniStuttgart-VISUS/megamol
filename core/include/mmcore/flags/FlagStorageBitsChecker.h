@@ -1,12 +1,17 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
-#include "tbb/tbb.h"
+#include <tbb/tbb.h>
 
-#include "mmcore/FlagStorageTypes.h"
+#include "mmcore/flags/FlagStorageTypes.h"
 #include "vislib/assert.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class BitsChecker {
 public:
@@ -39,5 +44,4 @@ public:
     const std::shared_ptr<FlagStorageTypes::flag_vector_type>& flags;
 };
 
-} // namespace core
-} /* end namespace megamol */
+} // namespace megamol::core

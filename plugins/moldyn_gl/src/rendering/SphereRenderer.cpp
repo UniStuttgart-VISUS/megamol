@@ -10,7 +10,7 @@
 #include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 
 #include "OpenGL_Context.h"
 

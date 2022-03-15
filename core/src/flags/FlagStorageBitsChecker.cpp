@@ -1,5 +1,12 @@
-#include "mmcore/FlagStorageBitsChecker.h"
-#include "mmcore/FlagStorage.h"
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#include "mmcore/flags/FlagStorageBitsChecker.h"
+
+#include "mmcore/flags/FlagStorage.h"
 
 using namespace megamol;
 using namespace megamol::core;

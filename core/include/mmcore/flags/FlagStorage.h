@@ -1,8 +1,7 @@
-/*
- * FlagStorage.h
- *
- * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,13 +9,12 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorageBitsChecker.h"
-#include "mmcore/FlagStorageTypes.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagStorageBitsChecker.h"
+#include "mmcore/flags/FlagStorageTypes.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class FlagCollection_CPU;
 
@@ -32,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "FlagStorage";
     }
 
@@ -41,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module representing an index-synced array of flag uints as a CPU buffer";
     }
 
@@ -50,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    FlagStorage(void);
+    FlagStorage();
 
     /** Dtor. */
-    virtual ~FlagStorage(void);
+    ~FlagStorage() override;
 
     /**
      * Access the metadata provided by the UniFlagStorage
@@ -84,12 +82,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create();
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release();
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -143,5 +141,4 @@ public:
     }
 };
 
-} // namespace core
-} /* end namespace megamol */
+} // namespace megamol::core

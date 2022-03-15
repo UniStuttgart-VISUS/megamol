@@ -1,18 +1,25 @@
-#include "mmcore_gl/UniFlagStorage.h"
-#include "json.hpp"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCalls.h"
-#include "mmcore/param/StringParam.h"
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#include "mmcore_gl/flags/UniFlagStorage.h"
+
+#include <json.hpp>
 
 #include "OpenGL_Context.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/flags/FlagCalls.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol;
 using namespace megamol::core_gl;
 
 
-UniFlagStorage::UniFlagStorage(void)
+UniFlagStorage::UniFlagStorage()
         : FlagStorage()
         , readGLFlagsSlot("readFlags", "Provides flag data to clients.")
         , writeGLFlagsSlot("writeFlags", "Accepts updated flag data from clients.") {
@@ -31,12 +38,12 @@ UniFlagStorage::UniFlagStorage(void)
 }
 
 
-UniFlagStorage::~UniFlagStorage(void) {
+UniFlagStorage::~UniFlagStorage() {
     this->Release();
 };
 
 
-bool UniFlagStorage::create(void) {
+bool UniFlagStorage::create() {
     const int num = 10;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -65,7 +72,7 @@ bool UniFlagStorage::create(void) {
 }
 
 
-void UniFlagStorage::release(void) {
+void UniFlagStorage::release() {
     // intentionally empty
 }
 

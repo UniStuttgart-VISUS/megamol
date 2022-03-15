@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <type_traits>
@@ -37,8 +43,7 @@ constexpr typename std::enable_if<EnableBitMaskOperators<Enum>::enable, Enum>::t
 
 // do we want the assignment ops?
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Class holding a buffer of uints which contain flags that say something
@@ -68,8 +73,7 @@ public:
     }
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core
 
 template<>
 struct EnableBitMaskOperators<megamol::core::FlagStorageTypes::flag_bits> {

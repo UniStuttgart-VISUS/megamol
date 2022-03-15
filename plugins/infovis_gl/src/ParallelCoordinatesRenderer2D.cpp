@@ -21,7 +21,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 

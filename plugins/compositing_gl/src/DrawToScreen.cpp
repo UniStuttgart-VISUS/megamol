@@ -6,7 +6,7 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()

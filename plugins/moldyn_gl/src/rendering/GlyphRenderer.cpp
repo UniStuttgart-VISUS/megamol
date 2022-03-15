@@ -16,7 +16,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "stdafx.h"

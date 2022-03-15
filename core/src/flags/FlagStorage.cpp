@@ -1,7 +1,15 @@
-#include "mmcore/FlagStorage.h"
-#include "json.hpp"
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#include "mmcore/flags/FlagStorage.h"
+
+#include <json.hpp>
+
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCalls.h"
+#include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/StringParam.h"
 
 using namespace megamol;

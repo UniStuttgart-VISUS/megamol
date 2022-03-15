@@ -20,7 +20,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 #include "delaunator.hpp"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include <sstream>
 
 using namespace megamol;
