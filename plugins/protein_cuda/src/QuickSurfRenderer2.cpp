@@ -11,13 +11,13 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "MolecularSurfaceFeature.h"
 #include "QuickSurfRenderer2.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -25,6 +25,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -79,9 +80,9 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->areaDiagramCalleeSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(filename.PeekBuffer()));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // en-/disable positional interpolation
@@ -89,7 +90,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     this->qualityParam.SetParameter(new param::IntParam(1, 0, 4));
     this->MakeSlotAvailable(&this->qualityParam);
@@ -107,7 +108,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->twoSidedLightParam);
 
     // the surface color
-    this->surfaceColorParam.SetParameter(new param::StringParam("#7092be"));
+    this->surfaceColorParam.SetParameter(new param::ColorParam("#7092be"));
     this->MakeSlotAvailable(&this->surfaceColorParam);
 
     // the recompute area diagram button
@@ -344,17 +345,12 @@ bool QuickSurfRenderer2::Render(megamol::core_gl::view::CallRender3DGL& call) {
     this->UpdateParameters(c2);
 
     // recompute color table, if necessary
-    if (this->atomColorTable.Count() / 3 < numParticles || this->surfaceColorParam.IsDirty()) {
-        float r, g, b;
-        utility::ColourParser::FromString(
-            this->surfaceColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
+    if (this->atomColorTable.size() < numParticles || this->surfaceColorParam.IsDirty()) {
+        auto col = this->surfaceColorParam.Param<param::ColorParam>()->Value();
         // Use one coloring mode
-        this->atomColorTable.AssertCapacity(numParticles * 3);
-        this->atomColorTable.Clear();
+        this->atomColorTable.clear();
         for (unsigned int i = 0; i < numParticles; i++) {
-            this->atomColorTable.Add(r);
-            this->atomColorTable.Add(g);
-            this->atomColorTable.Add(b);
+            this->atomColorTable.push_back(glm::make_vec3(col.data()));
         }
         this->surfaceColorParam.ResetDirty();
     }
@@ -584,17 +580,12 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
                 }
             }
             // recompute color table, if necessary
-            if (this->atomColorTable.Count() / 3 < numParticles || this->surfaceColorParam.IsDirty()) {
-                float r, g, b;
-                utility::ColourParser::FromString(
-                    this->surfaceColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
+            if (this->atomColorTable.size() < numParticles || this->surfaceColorParam.IsDirty()) {
+                auto col = this->surfaceColorParam.Param<param::ColorParam>()->Value();
                 // Use one coloring mode
-                this->atomColorTable.AssertCapacity(numParticles * 3);
-                this->atomColorTable.Clear();
+                this->atomColorTable.clear();
                 for (unsigned int i = 0; i < numParticles; i++) {
-                    this->atomColorTable.Add(r);
-                    this->atomColorTable.Add(g);
-                    this->atomColorTable.Add(b);
+                    this->atomColorTable.push_back(glm::make_vec3(col.data()));
                 }
                 this->surfaceColorParam.ResetDirty();
             }
@@ -777,6 +768,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
 
     int ind = 0;
     int ind4 = 0;
+    int ind1 = 0;
     //    xyzr = (float *) malloc( numParticles * sizeof(float) * 4);
     if (useCol) {
         colors = (float*)malloc(numParticles * sizeof(float) * 4);
@@ -790,7 +782,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
             //            xyzr[ind4 + 3] = minrad;
 
             //const float *cp = &cmap[colidx[i] * 3];
-            const float* cp = &this->atomColorTable[ind];
+            const float* cp = &this->atomColorTable[ind1].x;
             colors[ind4] = cp[0];
             colors[ind4 + 1] = cp[1];
             colors[ind4 + 2] = cp[2];
@@ -798,6 +790,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
 
             ind4 += 4;
             ind += 3;
+            ind1++;
         }
     }
     //    else {
@@ -840,9 +833,9 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
     cqs->useGaussKernel = true;
 
     // compute both density map and floating point color texture map
-    int rc = cqs->calc_surf(static_cast<long>(numParticles), posInter, (useCol) ? &colors[0] : &this->atomColorTable[0],
-        useCol, origin, numvoxels, maxrad, radscale, gridSpacing3D, isovalue, gausslim, gpunumverts, gv, gn, gc,
-        gpunumfacets, gf);
+    int rc = cqs->calc_surf(static_cast<long>(numParticles), posInter,
+        (useCol) ? &colors[0] : &this->atomColorTable[0].x, useCol, origin, numvoxels, maxrad, radscale, gridSpacing3D,
+        isovalue, gausslim, gpunumverts, gv, gn, gc, gpunumfacets, gf);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)
