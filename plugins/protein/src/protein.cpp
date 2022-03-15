@@ -35,7 +35,6 @@
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 
 // data interfaces (calls)
-#include "protein/CallColor.h"
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
 #include "protein/RMSF.h"
@@ -47,7 +46,6 @@
 #include "MoleculeBallifier.h"
 
 // other modules (filter etc)
-#include "ColorModule.h"
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
 #include "MolecularNeighborhood.h"
@@ -113,7 +111,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularBezierData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
@@ -136,7 +133,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
     }
 };
 } // namespace megamol::protein
