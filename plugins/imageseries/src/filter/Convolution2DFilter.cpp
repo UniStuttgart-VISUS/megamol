@@ -86,7 +86,7 @@ std::vector<float> Convolution2DFilter::makeGaussianKernel(float sigma, std::siz
         double sample = (invSqrtTau / sigma) * exp(-(double(i) * i) / (2 * sigma * sigma));
         kernel[radius + i] = sample;
         kernel[radius - i] = sample;
-        sum += sample;
+        sum += (i == 0 ? 1 : 2) * sample;
     }
 
     for (float& entry : kernel) {
