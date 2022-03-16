@@ -29,8 +29,8 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
-#include "protein_calls/RMSF.h"
 #include "protein_calls/ProteinColor.h"
+#include "protein_calls/RMSF.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
