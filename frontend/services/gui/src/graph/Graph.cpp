@@ -3204,48 +3204,41 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGui::Separator();
 
     // Sync profiling list
-    for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
-        if (iterp->first.lock() != nullptr) {
-            if (!iterp->first.lock()->ShowProfiling()) {
-                auto rm_iterp = iterp;
-                if ((iterp - 1) != this->profiling_list.begin()) {
-                    iterp--;
-                }
-                this->profiling_list.erase(rm_iterp);
-            }
-        } else if (iterp->second.lock() != nullptr) {
-            if (!iterp->second.lock()->ShowProfiling()) {
-                auto rm_iterp = iterp;
-                if ((iterp - 1) != this->profiling_list.begin()) {
-                    iterp--;
-                }
-                this->profiling_list.erase(rm_iterp);
-            }
+    auto iterp = this->profiling_list.begin();
+    while (iterp != this->profiling_list.end()) {
+        const auto m_ptr = iterp->first.lock();
+        const auto c_ptr = iterp->second.lock();
+        if ((m_ptr != nullptr && !m_ptr->ShowProfiling()) || (c_ptr != nullptr && !c_ptr->ShowProfiling())) {
+            iterp = this->profiling_list.erase(iterp);
+        } else {
+            iterp++;
         }
     }
-    for (auto& m_ptr : this->modules) {
+    for (const auto& m_ptr : this->modules) {
         if (m_ptr->ShowProfiling()) {
             bool found = false;
-            for (auto p : this->profiling_list) {
+            for (const auto& p : this->profiling_list) {
                 if (p.first.lock() == m_ptr) {
                     found = true;
+                    break;
                 }
             }
             if (!found) {
-                this->profiling_list.push_back({m_ptr, std::weak_ptr<gui::Call>()});
+                this->profiling_list.emplace_back(m_ptr, std::weak_ptr<gui::Call>());
             }
         }
     }
     for (auto& c_ptr : this->calls) {
         if (c_ptr->ShowProfiling()) {
             bool found = false;
-            for (auto p : this->profiling_list) {
+            for (const auto& p : this->profiling_list) {
                 if (p.second.lock() == c_ptr) {
                     found = true;
+                    break;
                 }
             }
             if (!found) {
-                this->profiling_list.push_back({std::weak_ptr<gui::Module>(), c_ptr});
+                this->profiling_list.emplace_back(std::weak_ptr<gui::Module>(), c_ptr);
             }
         }
     }
@@ -3259,14 +3252,17 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     // Draw profiling data
     for (auto& p : this->profiling_list) {
 
+        const auto m_ptr = p.first.lock();
+        const auto c_ptr = p.second.lock();
+
         std::string uid_str;
         std::string label;
-        if (p.first.lock() != nullptr) {
-            uid_str = std::to_string(p.first.lock()->UID());
-            label = "Module: " + p.first.lock()->FullName();
-        } else if (p.second.lock() != nullptr) {
-            uid_str = std::to_string(p.second.lock()->UID());
-            label = "Call: " + p.second.lock()->ClassName();
+        if (m_ptr != nullptr) {
+            uid_str = std::to_string(m_ptr->UID());
+            label = "Module: " + m_ptr->FullName();
+        } else if (c_ptr != nullptr) {
+            uid_str = std::to_string(c_ptr->UID());
+            label = "Call: " + c_ptr->ClassName();
         }
         ImGui::BeginChild(("##profiling_tab_bar" + uid_str).c_str(), ImVec2(GRAPH_PROFILING_WINDOW_WIDTH, 0.0f), true,
             ImGuiWindowFlags_NoMove);
@@ -3278,10 +3274,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             start.y = window_position.y;
         }
         ImVec2 end;
-        if (p.first.lock() != nullptr) {
-            end = p.first.lock()->GetProfilingButtonPosition();
-        } else if (p.second.lock() != nullptr) {
-            end = p.second.lock()->GetProfilingButtonPosition();
+        if (m_ptr != nullptr) {
+            end = m_ptr->GetProfilingButtonPosition();
+        } else if (c_ptr != nullptr) {
+            end = c_ptr->GetProfilingButtonPosition();
         }
         if (window_position.y < end.y) {
             end.y = window_position.y;
@@ -3306,10 +3302,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         }
         ImGui::Separator();
         ImGui::TextUnformatted("Region Name:");
-        if (p.first.lock() != nullptr) {
-            p.first.lock()->DrawProfiling(this->gui_graph_state);
-        } else if (p.second.lock() != nullptr) {
-            p.second.lock()->DrawProfiling(this->gui_graph_state);
+        if (m_ptr != nullptr) {
+            m_ptr->DrawProfiling(this->gui_graph_state);
+        } else if (c_ptr != nullptr) {
+            c_ptr->DrawProfiling(this->gui_graph_state);
         }
         ImGui::EndChild();
 
@@ -3342,8 +3338,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     // Apply drop
     if (drop_uid != 0) {
         for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
-            if (((iterp->first.lock() != nullptr) && (iterp->first.lock()->UID() == drop_uid)) ||
-                ((iterp->second.lock() != nullptr) && (iterp->second.lock()->UID() == drop_uid))) {
+            const auto m_ptr = iterp->first.lock();
+            const auto c_ptr = iterp->second.lock();
+            if (((m_ptr != nullptr) && (m_ptr->UID() == drop_uid)) ||
+                ((c_ptr != nullptr) && (c_ptr->UID() == drop_uid))) {
                 auto tmp = (*iterp);
                 this->profiling_list.erase(iterp);
                 this->profiling_list.insert(this->profiling_list.begin() + drop_index, tmp);
