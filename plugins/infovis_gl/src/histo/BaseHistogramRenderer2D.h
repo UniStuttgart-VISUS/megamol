@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_INFOVIS_BASEHISTOGRAMRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_BASEHISTOGRAMRENDERER2D_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -59,6 +58,7 @@ protected:
      * The OpenGL Render callback.
      *
      * @param call The calling call.
+     *
      * @return The return value of the function.
      */
     bool Render(core_gl::view::CallRender2DGL& call) final;
@@ -133,5 +133,3 @@ private:
 };
 
 } // namespace megamol::infovis_gl
-
-#endif // MEGAMOL_INFOVIS_BASEHISTOGRAMRENDERER2D_H_INCLUDED
