@@ -16,7 +16,7 @@ void ImageRegistrator::setInputImage(AsyncImagePtr image) {
         // Blue input image
         filter::Convolution2DFilter::Input blurInput;
         blurInput.image = this->inputImage;
-        blurInput.kernelX = filter::Convolution2DFilter::makeGaussianKernel(3, 5);
+        blurInput.kernelX = filter::Convolution2DFilter::makeGaussianKernel(5, 10);
         blurInput.kernelY = blurInput.kernelX;
         auto blurredImage = std::make_shared<AsyncImageData2D>(filter::Convolution2DFilter(blurInput)());
 
@@ -44,12 +44,20 @@ const glm::mat3x2& ImageRegistrator::getTransform() const {
     return transform;
 }
 
-void ImageRegistrator::setConvergenceRate(float rate) {
-    this->convergenceRate = rate;
+void ImageRegistrator::setConvergenceRateLinear(float rate) {
+    this->convergenceRateLinear = rate;
 }
 
-float ImageRegistrator::getConvergenceRate() const {
-    return convergenceRate;
+float ImageRegistrator::getConvergenceRateLinear() const {
+    return convergenceRateLinear;
+}
+
+void ImageRegistrator::setConvergenceRateAffine(float rate) {
+    this->convergenceRateAffine = rate;
+}
+
+float ImageRegistrator::getConvergenceRateAffine() const {
+    return convergenceRateAffine;
 }
 
 float ImageRegistrator::getMeanSquareError() const {
@@ -72,9 +80,9 @@ void ImageRegistrator::step() {
     std::size_t sampleCount = 0;
     double squareErrorSum = 0;
 
-    for (std::size_t y = 0; y < reference.getHeight(); ++y) {
-        for (std::size_t x = 0; x < reference.getWidth(); ++x) {
-            auto point = transform * glm::vec3(x, y, 1.f);
+    for (std::size_t y = 0; y < input.getHeight(); ++y) {
+        for (std::size_t x = 0; x < input.getWidth(); ++x) {
+            auto point = glm::vec2(transform * glm::vec3(x, y, 1.f));
 
             if (point.x < 0 || point.y < 0 || point.x > reference.getWidth() - 1 ||
                 point.y > reference.getHeight() - 1) {
@@ -88,14 +96,15 @@ void ImageRegistrator::step() {
             auto difference = referenceSample - inputSample;
             squareErrorSum += difference.x * difference.x;
 
-            auto offset = difference * 2.f * (transform * glm::vec3(derivativeSample, 0.f));
+            auto offset = difference.x * 2.f * derivativeSample;
             sum += glm::mat3x2(x * offset.x, x * offset.y, y * offset.x, y * offset.y, offset.x, offset.y);
             sampleCount++;
         }
     }
 
     if (sampleCount != 0) {
-        transform += (convergenceRate / sampleCount) * sum;
+        transform += glm::mat3x2(sum[0] * (convergenceRateLinear / sampleCount),
+            sum[1] * (convergenceRateLinear / sampleCount), sum[2] * (convergenceRateAffine / sampleCount));
         meanSquareError = squareErrorSum / sampleCount;
     }
 }

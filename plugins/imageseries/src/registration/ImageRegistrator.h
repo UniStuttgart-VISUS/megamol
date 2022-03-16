@@ -28,8 +28,11 @@ public:
     void setTransform(glm::mat3x2 transform);
     const glm::mat3x2& getTransform() const;
 
-    void setConvergenceRate(float rate);
-    float getConvergenceRate() const;
+    void setConvergenceRateLinear(float rate);
+    float getConvergenceRateLinear() const;
+
+    void setConvergenceRateAffine(float rate);
+    float getConvergenceRateAffine() const;
 
     float getMeanSquareError() const;
 
@@ -40,7 +43,8 @@ private:
     ImagePtr inputDerivative;
     AsyncImagePtr referenceImage;
     glm::mat3x2 transform;
-    float convergenceRate = 0.02f;
+    float convergenceRateLinear = 0.0001f;
+    float convergenceRateAffine = 100.f;
     float meanSquareError = 0.f;
 };
 

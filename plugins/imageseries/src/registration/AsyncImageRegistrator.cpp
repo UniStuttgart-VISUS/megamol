@@ -39,6 +39,11 @@ const glm::mat3x2& AsyncImageRegistrator::getTransform() const {
     return this->transform;
 }
 
+float AsyncImageRegistrator::getMeanSquareError() const {
+    std::unique_lock<std::mutex> lock(mutex);
+    return this->meanSquareError;
+}
+
 void AsyncImageRegistrator::setActive(bool active) {
     if (active && !thread) {
         this->active = true;
@@ -53,7 +58,8 @@ void AsyncImageRegistrator::setActive(bool active) {
                     this->registrator->setReferenceImage(referenceImage);
 
                     this->transform = this->registrator->getTransform();
-                    nextUpdate = now + 100ms;
+                    this->meanSquareError = this->registrator->getMeanSquareError();
+                    nextUpdate = now + 200ms;
                 }
                 registrator->step();
                 // TODO auto-stop once conditions are met

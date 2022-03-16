@@ -24,6 +24,8 @@ public:
 
     const glm::mat3x2& getTransform() const;
 
+    float getMeanSquareError() const;
+
     void setActive(bool active);
     bool isActive() const;
 
@@ -33,6 +35,7 @@ private:
     AsyncImagePtr inputImage;
     AsyncImagePtr referenceImage;
     glm::mat3x2 transform;
+    float meanSquareError = 0.f;
 
     std::atomic_bool active = ATOMIC_VAR_INIT(false);
     std::unique_ptr<std::thread> thread;
