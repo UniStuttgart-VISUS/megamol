@@ -32,9 +32,11 @@ public:
 
     void local_terminate_bit(const tbb::blocked_range<int32_t>& r, FlagStorageTypes::index_vector& bit_ends,
         FlagStorageTypes::index_type curr_bit_start);
+
     static void check_bits(FlagStorageTypes::flag_bits flag_bit, FlagStorageTypes::index_vector& bit_starts,
         FlagStorageTypes::index_vector& bit_ends, FlagStorageTypes::index_type& curr_bit_start,
         FlagStorageTypes::index_type x, const std::shared_ptr<FlagStorageTypes::flag_vector_type>& flags);
+
     static void terminate_bit(const std::shared_ptr<FlagStorageTypes::flag_vector_type>& cdata,
         FlagStorageTypes::index_vector& bit_ends, FlagStorageTypes::index_type curr_bit_start);
 

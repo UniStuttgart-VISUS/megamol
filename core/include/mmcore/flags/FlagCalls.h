@@ -8,11 +8,11 @@
 
 #include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/flags/FlagStorage.h"
+#include "mmcore/flags/FlagCollection.h"
 
 namespace megamol::core {
 
-class FlagCallRead_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
+class FlagCallRead_CPU : public GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, EmptyMetaData> {
 public:
     inline FlagCallRead_CPU() = default;
     ~FlagCallRead_CPU() override = default;
@@ -21,12 +21,11 @@ public:
         return "FlagCallRead_CPU";
     }
     static const char* Description() {
-        return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
-               "reading";
+        return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for reading";
     }
 };
 
-class FlagCallWrite_CPU : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, core::EmptyMetaData> {
+class FlagCallWrite_CPU : public GenericVersionedCall<std::shared_ptr<FlagCollection_CPU>, EmptyMetaData> {
 public:
     inline FlagCallWrite_CPU() = default;
     ~FlagCallWrite_CPU() override = default;
@@ -35,8 +34,7 @@ public:
         return "FlagCallWrite_CPU";
     }
     static const char* Description() {
-        return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for "
-               "writing";
+        return "Call that transports a buffer object representing a FlagStorage in a shader storage buffer for writing";
     }
 };
 

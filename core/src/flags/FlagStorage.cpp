@@ -8,6 +8,7 @@
 
 #include <json.hpp>
 
+#include "FlagStorageBitsChecker.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/StringParam.h"
@@ -16,7 +17,7 @@ using namespace megamol;
 using namespace megamol::core;
 
 
-FlagStorage::FlagStorage(void)
+FlagStorage::FlagStorage()
         : readCPUFlagsSlot("readCPUFlags", "Provides flag data to clients.")
         , writeCPUFlagsSlot("writeCPUFlags", "Accepts updated flag data from clients.")
         , serializedFlags("serializedFlags", "persists the flags in projects") {
@@ -39,12 +40,12 @@ FlagStorage::FlagStorage(void)
 }
 
 
-FlagStorage::~FlagStorage(void) {
+FlagStorage::~FlagStorage() {
     this->Release();
 };
 
 
-bool FlagStorage::create(void) {
+bool FlagStorage::create() {
     const int num = 10;
 
     this->theCPUData = std::make_shared<FlagCollection_CPU>();
@@ -55,7 +56,7 @@ bool FlagStorage::create(void) {
 }
 
 
-void FlagStorage::release(void) {
+void FlagStorage::release() {
     // intentionally empty
 }
 
@@ -85,16 +86,10 @@ bool FlagStorage::writeCPUDataCallback(core::Call& caller) {
 
 
 bool FlagStorage::readMetaDataCallback(core::Call& caller) {
-    // auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
-    // if (fc == nullptr) return false;
-
     return true;
 }
 
 bool FlagStorage::writeMetaDataCallback(core::Call& caller) {
-    // auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
-    // if (fc == nullptr) return false;
-
     return true;
 }
 

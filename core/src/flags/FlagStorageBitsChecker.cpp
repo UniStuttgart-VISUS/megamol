@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "mmcore/flags/FlagStorageBitsChecker.h"
+#include "FlagStorageBitsChecker.h"
 
 #include "mmcore/flags/FlagStorage.h"
 

@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include "tbb/tbb.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <tbb/tbb.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -18,10 +16,10 @@
 #include "mmcore/Module.h"
 #include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/flags/FlagCollectionGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol::core_gl {
-
-class FlagCollection_GL;
 
 /**
  * Class holding a GL buffer of uints which contain flags that say something
@@ -68,7 +66,7 @@ public:
     UniFlagStorage();
 
     /** Dtor. */
-    virtual ~UniFlagStorage();
+    ~UniFlagStorage() override;
 
 protected:
     /**
@@ -76,12 +74,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -141,23 +139,8 @@ protected:
 
     std::unique_ptr<glowl::GLSLProgram> compressGPUFlagsProgram;
     std::shared_ptr<core_gl::FlagCollection_GL> theGLData;
+    bool cpu_stale = true;
     bool gpu_stale = true;
-};
-
-class FlagCollection_GL {
-public:
-    std::shared_ptr<glowl::BufferObject> flags;
-
-    void validateFlagCount(core::FlagStorageTypes::index_type num) {
-        if (flags->getByteSize() / sizeof(core::FlagStorageTypes::flag_item_type) < num) {
-            core::FlagStorageTypes::flag_vector_type temp_data(
-                num, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
-            std::shared_ptr<glowl::BufferObject> temp_buffer =
-                std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data, GL_DYNAMIC_DRAW);
-            glowl::BufferObject::copy(flags.get(), temp_buffer.get(), 0, 0, flags->getByteSize());
-            flags = temp_buffer;
-        }
-    }
 };
 
 } // namespace megamol::core_gl

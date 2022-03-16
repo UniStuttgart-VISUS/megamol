@@ -8,22 +8,19 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/flags/FlagStorageBitsChecker.h"
+#include "mmcore/flags/FlagCollection.h"
 #include "mmcore/flags/FlagStorageTypes.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol::core {
-
-class FlagCollection_CPU;
 
 /**
  * Class holding a buffer of uints which contain flags that say something
  * about a synchronized other piece of data (index equality).
  * Can be used for storing selection etc.
  */
-class MEGAMOLCORE_API FlagStorage : public core::Module {
+class FlagStorage : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -82,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -124,21 +121,7 @@ protected:
     core::param::ParamSlot serializedFlags;
 
     std::shared_ptr<FlagCollection_CPU> theCPUData;
-    bool cpu_stale = true;
     uint32_t version = 0;
-};
-
-class FlagCollection_CPU {
-public:
-    std::shared_ptr<FlagStorageTypes::flag_vector_type> flags;
-
-    void validateFlagCount(FlagStorageTypes::index_type num) {
-        if (flags->size() < num) {
-            flags->resize(num);
-            std::fill(
-                flags->begin(), flags->end(), FlagStorageTypes::to_integral(FlagStorageTypes::flag_bits::ENABLED));
-        }
-    }
 };
 
 } // namespace megamol::core
