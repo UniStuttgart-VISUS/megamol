@@ -1,5 +1,9 @@
 #include "AsyncImageRegistrator.h"
 
+#include <chrono>
+
+using namespace std::chrono_literals;
+
 namespace megamol::ImageSeries::registration {
 
 AsyncImageRegistrator::AsyncImageRegistrator()
@@ -39,15 +43,17 @@ void AsyncImageRegistrator::setActive(bool active) {
     if (active && !thread) {
         this->active = true;
         thread = std::make_unique<std::thread>([this]() {
+            auto nextUpdate = std::chrono::high_resolution_clock::now();
             while (this->active) {
-                {
-                    // Update parameters
+                // Update parameters/result if enough time has passed
+                auto now = std::chrono::high_resolution_clock::now();
+                if (now > nextUpdate) {
                     std::unique_lock<std::mutex> lock(mutex);
                     this->registrator->setInputImage(inputImage);
                     this->registrator->setReferenceImage(referenceImage);
 
-                    // Update result
                     this->transform = this->registrator->getTransform();
+                    nextUpdate = now + 100ms;
                 }
                 registrator->step();
                 // TODO auto-stop once conditions are met
