@@ -170,7 +170,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
             uint32_t idx = mdc.SecondaryStructures()[sec].FirstAminoAcidIndex();
             uint32_t cnt = mdc.SecondaryStructures()[sec].AminoAcidCount();
             auto elemType = mdc.SecondaryStructures()[sec].Type();
-            for (size_t res = idx; res < cnt; ++res) {
+            for (size_t res = idx; res < idx + cnt; ++res) {
                 uint32_t atomIdx = mdc.Residues()[res]->FirstAtomIndex();
                 uint32_t atomCnt = atomIdx + mdc.Residues()[res]->AtomCount();
                 for (size_t atom = atomIdx; atom < atomCnt; ++atom) {
