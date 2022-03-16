@@ -18,17 +18,16 @@
 #include "VecField3f.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeFieldTopologyRenderer : public megamol::core::view::Renderer3DModule {
+class ComparativeFieldTopologyRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 
 public:
     /** CTor */
@@ -88,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -96,7 +95,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
     /**
@@ -358,16 +357,16 @@ private:
     /* GLSL shader objects */
 
     /// Shader for rendering arrows
-    vislib::graphics::gl::GLSLGeometryShader arrowShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
 
     /// Shader for rendering spheres
-    vislib::graphics::gl::GLSLGeometryShader sphereShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader sphereShader;
 
     /// Shader for illuminated streamlines
-    vislib::graphics::gl::GLSLShader streamlineShader;
+    vislib_gl::graphics::gl::GLSLShader streamlineShader;
 
     /// Shader for testure slices
-    vislib::graphics::gl::GLSLShader sliceShader;
+    vislib_gl::graphics::gl::GLSLShader sliceShader;
 
 
     /* Arrow glyph data */
@@ -463,7 +462,7 @@ private:
     SIZE_T dataHash;
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 };
 
 } // namespace protein_cuda

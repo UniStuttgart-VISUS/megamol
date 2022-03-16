@@ -11,13 +11,13 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "cuda_runtime_api.h"
@@ -41,7 +41,7 @@ namespace protein_cuda {
  * Molecular Surface Renderer class.
  * Computes and renders the Solvent Excluded Surface on the GPU.
  */
-class MoleculeCudaSESRenderer : public megamol::core::view::Renderer3DModule {
+class MoleculeCudaSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -67,8 +67,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        //return true;
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** ctor */
@@ -227,7 +226,8 @@ protected:
      * @param cr3d Pointer to the render call.
      * @return 'true' if initialization was successful, otherwise 'false'
      */
-    bool initCuda(megamol::protein_calls::MolecularDataCall* protein, uint gridDim, core::view::CallRender3D* cr3d);
+    bool initCuda(
+        megamol::protein_calls::MolecularDataCall* protein, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
 
     /**
      * Write atom positions and radii to an array for processing in CUDA
@@ -244,7 +244,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -252,7 +252,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Deinitialises this renderer. This is only called if there was a
@@ -314,21 +314,21 @@ private:
     megamol::core::param::ParamSlot probeRadiusParam;
 
     // shaders
-    vislib::graphics::gl::GLSLShader writeSphereIdShader;
-    vislib::graphics::gl::GLSLShader drawPointShader;
-    vislib::graphics::gl::GLSLShader sphereShader;
-    vislib::graphics::gl::GLSLShader reducedSurfaceShader;
-    vislib::graphics::gl::GLSLShader drawTriangleShader;
-    vislib::graphics::gl::GLSLGeometryShader drawVisibleTriangleShader;
-    vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-    vislib::graphics::gl::GLSLShader torusShader;
-    vislib::graphics::gl::GLSLShader adjacentTriangleShader;
-    vislib::graphics::gl::GLSLShader adjacentAtomsShader;
-    vislib::graphics::gl::GLSLShader drawCUDATriangleShader;
-    vislib::graphics::gl::GLSLGeometryShader visibleTriangleIdxShader;
+    vislib_gl::graphics::gl::GLSLShader writeSphereIdShader;
+    vislib_gl::graphics::gl::GLSLShader drawPointShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader reducedSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader drawTriangleShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader drawVisibleTriangleShader;
+    vislib_gl::graphics::gl::GLSLShader sphericalTriangleShader;
+    vislib_gl::graphics::gl::GLSLShader torusShader;
+    vislib_gl::graphics::gl::GLSLShader adjacentTriangleShader;
+    vislib_gl::graphics::gl::GLSLShader adjacentAtomsShader;
+    vislib_gl::graphics::gl::GLSLShader drawCUDATriangleShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader visibleTriangleIdxShader;
 
     // camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     // the bounding box of the protein
     vislib::math::Cuboid<float> bBox;

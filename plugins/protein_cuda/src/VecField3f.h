@@ -14,7 +14,7 @@
 #include "cuda_runtime.h"
 #include "helper_cuda.h"
 #include "helper_functions.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 
 //#include "vislib_vector_typedefs.h"

@@ -23,13 +23,14 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringConverter.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/PerformanceCounter.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <ctime>
 #include <cuda_gl_interop.h>
@@ -42,6 +43,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 
@@ -59,7 +61,7 @@ using namespace megamol::protein_cuda;
  * VolumeMeshRenderer::VolumeMeshRenderer(CTOR)
  */
 VolumeMeshRenderer::VolumeMeshRenderer(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , selectionCallerSlot("getSelection", "Connects the rendering with selection storage.")
@@ -171,7 +173,7 @@ VolumeMeshRenderer::VolumeMeshRenderer(void)
     // fill color table with default values and set the filename param
     vislib::StringA filename("colors.txt");
     Color::ReadColorTableFromFile(filename, this->colorTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename.PeekBuffer()));
     // make all slots available
     this->MakeSlotAvailable(&this->polygonModeParam);
     this->MakeSlotAvailable(&this->blendItParam);
@@ -311,32 +313,28 @@ VolumeMeshRenderer::~VolumeMeshRenderer(void) {
  */
 bool VolumeMeshRenderer::create(void) {
     using megamol::core::utility::log::Log;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_ARB_vertex_buffer_object GL_EXT_framebuffer_object")) {
+    /*if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_ARB_vertex_buffer_object GL_EXT_framebuffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        return false;
-    }
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     ShaderSource vertSrc;
     ShaderSource geomSrc;
     ShaderSource fragSrc;
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+
     // Load normal shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volumemesh::normalVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volumemesh::normalVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for normal shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volumemesh::normalGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("volumemesh::normalGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for normal shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volumemesh::normalFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volumemesh::normalFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for normal shader");
         return false;
     }
@@ -356,14 +354,12 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::perpixellightVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
         return false;
@@ -378,14 +374,12 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::halo::GenerateVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::halo::GenerateFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for halo generation shader", this->ClassName());
         return false;
@@ -401,14 +395,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for gaussian filter (horizontal)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::halo::fragmentHoriz", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentHoriz", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
@@ -423,13 +415,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for gaussian filter (vertical)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::halo::fragmentVert", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentVert", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: gaussian filter (vertical)", this->ClassName());
         return false;
@@ -444,14 +435,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for substract filter
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: halo substract", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::halo::SubstractFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::SubstractFragment", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: halo substract", this->ClassName());
         return false;
@@ -466,13 +455,12 @@ bool VolumeMeshRenderer::create(void) {
     }
 
     // Try to load shader for grow filter
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "proteinDeferred::gaussian::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source: halo grow filter", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::halo::growFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::halo::growFragment", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source: halo grow filter", this->ClassName());
         return false;
@@ -547,12 +535,7 @@ void VolumeMeshRenderer::release(void) {
 /*
  * ProteinRenderer::GetExtents
  */
-bool VolumeMeshRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (!cr3d) {
-        return false;
-    }
-
+bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (!mol) {
         return false;
@@ -562,16 +545,8 @@ bool VolumeMeshRenderer::GetExtents(Call& call) {
         return false;
     }
 
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
 }
@@ -579,35 +554,19 @@ bool VolumeMeshRenderer::GetExtents(Call& call) {
 /*
  * VolumeMeshRenderer::Render
  */
-bool VolumeMeshRenderer::Render(Call& call) {
+bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
     using megamol::core::utility::log::Log;
 
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (!cr3d) {
-        return false;
-    }
-
     if (setCUDAGLDevice) {
-#ifdef _WIN32
-        if (cr3d->IsGpuAffinity()) {
-            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice(&devId, gpuId);
-            cudaGLSetGLDevice(devId);
-        } else {
-            cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-        }
-#else
         cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-#endif
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -769,18 +728,18 @@ bool VolumeMeshRenderer::Render(Call& call) {
                 // only color by color mode 1
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode1),
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             }
         } else {
             if (this->currentColoringMode1 < 0) {
                 // only color by color mode 0
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             } else {
                 // Mix two coloring modes
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
@@ -788,9 +747,9 @@ bool VolumeMeshRenderer::Render(Call& call) {
                     cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
                     1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             }
         }
     }
@@ -847,7 +806,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     // -------- START create mesh -----
     try {
-        float time = cr3d->Time();
+        float time = call.Time();
         if (time != lastTime) {
             // Compute scaling and translation to object space.
             vislib::math::Vector<float, 3> translation(
@@ -1176,41 +1135,42 @@ bool VolumeMeshRenderer::Render(Call& call) {
 
     if (this->haloEnableParam.Param<param::BoolParam>()->Value()) {
         // =============== Query Camera View Dimensions ===============
-        if (static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-            static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height) {
-            this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-            this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+        if (static_cast<unsigned int>(call.GetViewResolution().x) != this->width ||
+            static_cast<unsigned int>(call.GetViewResolution().y) != this->height) {
+            this->width = static_cast<unsigned int>(call.GetViewResolution().x);
+            this->height = static_cast<unsigned int>(call.GetViewResolution().y);
         }
 
         // create the fbo, if necessary
         if (!this->haloFBO.IsValid()) {
             this->haloFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         }
         if (!this->haloBlurFBO.IsValid()) {
             this->haloBlurFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         }
         if (!this->haloBlurFBO2.IsValid()) {
             this->haloBlurFBO2.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         }
         // resize the fbo, if necessary
         if (this->haloFBO.GetWidth() != this->width || this->haloFBO.GetHeight() != this->height) {
             this->haloFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->haloBlurFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->haloBlurFBO2.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
         }
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
 
         vislib::math::Vector<float, 4> haloColor;
-        megamol::core::utility::ColourParser::FromString(this->haloColorParam.Param<param::StringParam>()->Value(),
-            haloColor.PeekComponents()[0], haloColor.PeekComponents()[1], haloColor.PeekComponents()[2]);
+        megamol::core::utility::ColourParser::FromString(
+            this->haloColorParam.Param<param::StringParam>()->Value().c_str(), haloColor.PeekComponents()[0],
+            haloColor.PeekComponents()[1], haloColor.PeekComponents()[2]);
 
         haloColor.SetW(this->haloAlphaParam.Param<param::FloatParam>()->Value());
 
@@ -2700,7 +2660,8 @@ void VolumeMeshRenderer::ParameterRefresh(const MolecularDataCall* mol, const Bi
 
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorTable);
+        Color::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
@@ -2722,18 +2683,18 @@ void VolumeMeshRenderer::ParameterRefresh(const MolecularDataCall* mol, const Bi
                 // only color by color mode 1
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode1),
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             }
         } else {
             if (this->currentColoringMode1 < 0) {
                 // only color by color mode 0
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             } else {
                 // Mix two coloring modes
                 Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
@@ -2741,9 +2702,9 @@ void VolumeMeshRenderer::ParameterRefresh(const MolecularDataCall* mol, const Bi
                     cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
                     1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                     this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             }
         }
 

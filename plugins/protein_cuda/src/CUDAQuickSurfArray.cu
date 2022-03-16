@@ -2,7 +2,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <stdio.h>
 #include <stdlib.h>
