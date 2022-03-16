@@ -186,8 +186,6 @@ private:
     megamol::core::CallerSlot bsDataCallerSlot;
     /** Slot to get the lights */
     megamol::core::CallerSlot getLightsSlot;
-    /** Slot to get the framebuffer */
-    megamol::core::CallerSlot getFramebufferSlot;
 
     /** camera information */
     core::view::Camera cam;
@@ -242,10 +240,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> sphereShader_;
     std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
     std::shared_ptr<glowl::GLSLProgram> lineShader_;
-
-    // the local fbo
-    std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
-    uint32_t fbo_version_;
 
     std::vector<LightParams> pointLights_;
     std::vector<LightParams> directionalLights_;

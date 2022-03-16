@@ -205,7 +205,8 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     auto viewport = call.GetViewResolution();
     if (this->fbo == nullptr || this->fbo->getWidth() != viewport.x || this->fbo->getHeight() != viewport.y) {
-        this->fbo = std::make_shared<glowl::FramebufferObject>(viewport.x, viewport.y, glowl::FramebufferObject::DEPTH24);
+        this->fbo =
+            std::make_shared<glowl::FramebufferObject>(viewport.x, viewport.y, glowl::FramebufferObject::DEPTH24);
 
         this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);

@@ -159,6 +159,13 @@ public:
         return consume;
     }
 
+    /**
+     * Check for updated range value
+     */
+    bool UpdateRange(void) {
+        return this->range_updated;
+    }
+
 protected:
     /** The size of the texture in texel */
     unsigned int texSize;
