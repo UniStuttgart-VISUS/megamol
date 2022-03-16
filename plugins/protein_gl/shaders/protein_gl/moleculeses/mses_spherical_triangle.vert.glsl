@@ -1,21 +1,8 @@
 #version 430
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
-uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec3 zValues;
-uniform vec3 fogCol;
-uniform vec2 texOffset;
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-
-#ifndef CALC_CAM_SYS
-uniform vec3 camIn;
-uniform vec3 camUp;
-uniform vec3 camRight;
-#endif // CALC_CAM_SYS
 layout (location = 0) in vec4 vert_position;
 layout (location = 1) in vec3 vert_color;
 layout (location = 2) in vec4 tri_attrib1;
@@ -25,9 +12,10 @@ layout (location = 5) in vec3 tri_tex_coord1;
 layout (location = 6) in vec3 tri_tex_coord2;
 layout (location = 7) in vec3 tri_tex_coord3;
 
+uniform vec2 texOffset;
+
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
 
 out vec4 inVec1;
 out vec4 inVec2;
@@ -62,13 +50,6 @@ void main(void) {
     // calculate cam position
     camPos = viewInverse[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
-    
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0,0,0,1); // dummy
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -146,9 +127,4 @@ void main(void) {
     
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
-    
-    #ifdef SMALL_SPRITE_LIGHTING
-    // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
-    #endif // SMALL_SPRITE_LIGHTING    
 }

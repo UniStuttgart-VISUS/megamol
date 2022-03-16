@@ -15,6 +15,7 @@
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "PerformanceManager.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -61,7 +62,11 @@ bool GUI_Service::init(const Config& config) {
         "RuntimeConfig",                              // 10 - resource paths
         "optional<WindowManipulation>",               // 11 - GLFW window pointer
         frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
-        "ImagePresentationEntryPoints"                // 13 - Entry point
+        "ImagePresentationEntryPoints",               // 13 - Entry point
+        "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
+#ifdef PROFILING
+        frontend_resources::PerformanceManager_Req_Name // 15 - Performance Manager
+#endif
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
@@ -83,9 +88,6 @@ bool GUI_Service::init(const Config& config) {
     this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
         return this->resource_provide_gui_scale(scale);
     };
-    this->resource_provide_gui_visibility(m_config.gui_show);
-    this->resource_provide_gui_scale(m_config.gui_scale);
-
     this->m_providedRegisterWindowResource.register_window =
         [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
         this->resource_register_window(name, func);
@@ -99,8 +101,9 @@ bool GUI_Service::init(const Config& config) {
         this->resource_register_notification(name, open, message);
     };
 
-    this->m_gui->SetVisibility(m_config.gui_show);
-    this->m_gui->SetScale(m_config.gui_scale);
+    // NB: Config values are applied before project file values and therefore overwritten by project settings
+    this->resource_provide_gui_visibility(m_config.gui_show);
+    this->resource_provide_gui_scale(m_config.gui_scale);
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully");
 
@@ -124,21 +127,6 @@ void GUI_Service::digestChangedRequestedResources() {
     this->setShutdown(this->m_gui->GetTriggeredShutdown());
 
     // Check for updates in requested resources --------------------------------
-
-    /// WindowEvents = resource index 1
-    auto maybe_window_events =
-        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
-    if (maybe_window_events.has_value()) {
-        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
-
-        this->m_time = window_events.time;
-        for (auto& size_event : window_events.size_events) {
-            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
-            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
-        }
-        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
-            window_events._clipboard_user_data);
-    }
 
     /// KeyboardEvents = resource index 2
     auto maybe_keyboard_events =
@@ -222,6 +210,24 @@ void GUI_Service::digestChangedRequestedResources() {
         this->m_framebuffer_size.y = static_cast<float>(size_event.height);
     }
 
+    /// WindowEvents = resource index 1
+    auto maybe_window_events =
+        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
+    if (maybe_window_events.has_value()) {
+        megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
+
+        this->m_time = window_events.time;
+        for (auto& size_event : window_events.size_events) {
+            this->m_window_size.x = static_cast<float>(std::get<0>(size_event));
+            this->m_window_size.y = static_cast<float>(std::get<1>(size_event));
+        }
+        this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
+            window_events._clipboard_user_data);
+    } else {
+        // no GL
+        this->m_window_size = m_framebuffer_size;
+    }
+
     /// Trigger Screenshot = resource index 6
     if (this->m_gui->GetTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger =
@@ -269,7 +275,7 @@ void GUI_Service::preGraphRender() {
         // Synchronise changes between core graph and gui graph
         if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
-            this->m_gui->SynchronizeRunningGraph((*this->m_megamol_graph), (*this->m_config.core_instance));
+            this->m_gui->GraphSynchronization((*this->m_megamol_graph), (*this->m_config.core_instance));
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }
@@ -302,33 +308,24 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 
 void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
-    // (Called only once)
+    /// (Called only once)
 
     this->m_requestedResourceReferences = resources;
     if (this->m_gui == nullptr) {
         return;
     }
 
+    // Check render backend prerequisites
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
-
-    if (maybe_opengl_context.has_value() && m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
-        // GL context is active and we need to use it
-        frontend_resources::OpenGL_Context const& opengl_context = maybe_opengl_context.value().get();
-
-        if (this->m_gui->CreateContext(megamol::gui::ImGuiRenderBackend::OPEN_GL)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "GUI_Service: initialized OpenGL backend successfully");
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: error creating OpenGL backend");
-            this->setShutdown();
-        }
-    } else {
-        // no GL available
-        if (m_config.imgui_rbnd == GUI_Service::ImGuiRenderBackend::OPEN_GL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: no OpenGL_Context available");
-            this->setShutdown();
-        }
+    if (!maybe_opengl_context.has_value() && (m_config.backend == megamol::gui::GUIRenderBackend::OPEN_GL)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
+        m_config.backend = megamol::gui::GUIRenderBackend::CPU;
+    }
+    // Create GUI context
+    if (!this->m_gui->CreateContext(m_config.backend)) {
+        this->setShutdown();
     }
 
     /// MegaMolGraph = resource index 0
@@ -356,14 +353,30 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+    const std::string gui_entry_point_name = "GUI_Service";
     bool view_presentation_ok = image_presentation.add_entry_point(
-        "GUI Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
-                           std::function{get_gui_runtime_resources_requests}});
-
+        gui_entry_point_name, {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+                                  std::function{get_gui_runtime_resources_requests}});
+    view_presentation_ok &= image_presentation.set_entry_point_priority(
+        gui_entry_point_name, 100); // render after views (default priority is 0)
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "GUI_Service: error adding graph entry point. image presentation service rejected GUI Service.");
+            "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
     }
+
+    m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
+        &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
+    m_gui->SetLuaFunc(m_exec_lua);
+
+#ifdef PROFILING
+    // PerformanceManager
+    perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+        &this->m_requestedResourceReferences[15].getResource<megamol::frontend_resources::PerformanceManager>());
+    // this needs to happen before the first (gui) module is spawned to help it look up the timers
+    m_gui->SetPerformanceManager(perf_manager);
+    perf_manager->subscribe_to_updates(
+        [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
+#endif
 }
 
 
@@ -377,25 +390,11 @@ bool GUI_Service::gui_rendering_execution(void* void_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,
     megamol::frontend_resources::ImageWrapper& result_image) {
 
-    // vislib::graphics::gl::FramebufferObject seems to use RGBA8
-    megamol::frontend_resources::ImageWrapper::DataChannels channels =
-        megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
-
     auto gui_ptr = static_cast<megamol::gui::GUIManager*>(void_ptr);
-
-#ifdef WITH_GL
-    unsigned int fbo_color_buffer_gl_handle = 0;
-    size_t fbo_width = 1;
-    size_t fbo_height = 1;
-    gui_ptr->GetFBODataGL(fbo_color_buffer_gl_handle, fbo_width, fbo_height);
-
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
-#else
-    auto fbo = gui_ptr->getFBOHandle();
-    result_image =
-        megamol::frontend_resources::wrap_image({fbo->getWidth(), fbo->getHeight()}, fbo->colorBuffer, channels);
-#endif
+    if (gui_ptr == nullptr) {
+        return false;
+    }
+    result_image = gui_ptr->GetImage();
 
     return true;
 }

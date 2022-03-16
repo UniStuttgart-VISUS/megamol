@@ -18,9 +18,6 @@
 
 #include "simultaneous_sort.h"
 
-#include "mmcore/thecam/math/quaternion.h"
-
-
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
         : volume_in_slot_("volumeIn", "Input of volume containing optical depth")
         , temp_in_slot_("tempIn", "Input of volume containing temperature")
@@ -962,8 +959,9 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(geocalls::Volumetr
                     auto const x = std::sqrt(1.0 - z * z) * cos(phi);
                     glm::vec3 rand(x, y, z);
                     glm::vec3 base(0, 0, 1);
-                    auto const quat = core::thecam::math::quaternion<glm::quat>::from_vectors(base, org_dir);
-                    dir = core::thecam::math::rotate(rand, quat);
+                    // TODO Careful: the next two method calls are adapted from the old new camera and may be broken
+                    auto const quat = quat_from_vectors(base, org_dir);
+                    dir = quat_rotate(rand, quat);
                 } catch (...) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError("SpectralIntensityVolume: Math gone wrong");
                 }

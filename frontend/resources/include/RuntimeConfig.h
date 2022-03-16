@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "mmcore/versioninfo.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 
 namespace megamol {
 namespace frontend_resources {
@@ -75,6 +75,7 @@ struct RuntimeConfig {
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
+    std::string profiling_output_file;
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
@@ -96,6 +97,14 @@ struct RuntimeConfig {
     std::string remote_headnode_zmq_target_address = "tcp://127.0.0.1:62562";
     std::string remote_rendernode_zmq_source_address = "tcp://*:62562";
 
+    enum class VRMode {
+        Off,
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        UnityKolab,
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+    VRMode vr_mode = VRMode::Off;
+
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
             std::string result;
@@ -113,7 +122,7 @@ struct RuntimeConfig {
         return std::string("RuntimeConfig values: "  ) +
             std::string("\n\tExecutable directory: "   ) + "\n\t\t" + megamol_executable_directory +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
-            std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
+            std::string("\n\tVersion: "              ) + megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() +
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +

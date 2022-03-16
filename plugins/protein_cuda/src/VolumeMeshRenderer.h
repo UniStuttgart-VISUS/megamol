@@ -13,22 +13,21 @@
 
 #include "CUDAQuickSurf.h"
 #include "CenterLineGenerator.h"
-#include "Color.h"
 #include "MolecularAOShader.h"
 #include "VolumeMeshRenderer.cuh"
 #include "WKFUtils.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include <cuda_runtime.h>
 
 namespace megamol {
@@ -37,7 +36,7 @@ namespace protein_cuda {
 /**
  * Volume Mesh Renderer class
  */
-class VolumeMeshRenderer : public megamol::core::view::Renderer3DModuleDS {
+class VolumeMeshRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     enum PolygonMode { POINT, LINE, FILL };
 
@@ -102,7 +101,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -110,7 +109,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Calculate the density map and surface.
@@ -281,7 +280,7 @@ private:
 
     /** color table filename */
     megamol::core::param::ParamSlot colorTableFileParam;
-    vislib::Array<vislib::math::Vector<float, 3>> colorTable;
+    std::vector<glm::vec3> fileTable;
 
     /** parameter for minimum distance of center line node to molecular surface */
     megamol::core::param::ParamSlot minDistCenterLineParam;
@@ -384,8 +383,8 @@ private:
     struct cudaGraphicsResource* colorResource;
 
     /** */
-    vislib::graphics::gl::GLSLGeometryShader normalShader;
-    vislib::graphics::gl::GLSLShader lightShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader normalShader;
+    vislib_gl::graphics::gl::GLSLShader lightShader;
 
     /** parameter slot for positional interpolation */
     megamol::core::param::ParamSlot interpolParam;
@@ -413,9 +412,9 @@ private:
     double reptime;        ///< Internal timer for performance instrumentation
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
     /** parameter slot for coloring mode */
     megamol::core::param::ParamSlot coloringModeParam0;
     /** parameter slot for coloring mode */
@@ -432,8 +431,8 @@ private:
     megamol::core::param::ParamSlot areaThresholdParam;
 
     /** The current coloring mode */
-    int currentColoringMode0;
-    int currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     vislib::Array<bool> featureSelection;
     vislib::Array<bool> featureVisibility;
@@ -481,7 +480,7 @@ private:
     vislib::Array<CenterLineGenerator*> clg;
 
     /** camera information */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     cudaEvent_t start, stop; // TIMING
     float time;              // TIMING
@@ -495,17 +494,17 @@ private:
     unsigned int width, height;
 
     /** halo rendering of selected features **/
-    vislib::graphics::gl::FramebufferObject haloFBO;
-    vislib::graphics::gl::FramebufferObject haloBlurFBO;
-    vislib::graphics::gl::FramebufferObject haloBlurFBO2;
+    vislib_gl::graphics::gl::FramebufferObject haloFBO;
+    vislib_gl::graphics::gl::FramebufferObject haloBlurFBO;
+    vislib_gl::graphics::gl::FramebufferObject haloBlurFBO2;
     megamol::core::param::ParamSlot haloEnableParam;
     megamol::core::param::ParamSlot haloAlphaParam;
     megamol::core::param::ParamSlot haloColorParam;
-    vislib::graphics::gl::GLSLShader haloGenerateShader;
-    vislib::graphics::gl::GLSLShader haloGrowShader;
-    vislib::graphics::gl::GLSLShader haloGaussianHoriz;
-    vislib::graphics::gl::GLSLShader haloGaussianVert;
-    vislib::graphics::gl::GLSLShader haloDifferenceShader;
+    vislib_gl::graphics::gl::GLSLShader haloGenerateShader;
+    vislib_gl::graphics::gl::GLSLShader haloGrowShader;
+    vislib_gl::graphics::gl::GLSLShader haloGaussianHoriz;
+    vislib_gl::graphics::gl::GLSLShader haloGaussianVert;
+    vislib_gl::graphics::gl::GLSLShader haloDifferenceShader;
 
     bool setCUDAGLDevice;
 };

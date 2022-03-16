@@ -1,35 +1,37 @@
-#ifndef MEGAMOL_INFOVIS_RENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_RENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
-
-namespace megamol {
-namespace infovis_gl {
-
-#define DEBUG_NAME(name) name, (#name "\0")
+namespace megamol::infovis_gl {
 
 class Renderer2D : public core_gl::view::Renderer2DModuleGL {
 public:
     Renderer2D() : core_gl::view::Renderer2DModuleGL() {}
 
-    virtual ~Renderer2D(){};
+    ~Renderer2D() override = default;
 
 protected:
-    void computeDispatchSizes(
-        uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) const;
+    static void computeDispatchSizes(
+        uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]);
 
-    void makeDebugLabel(GLenum identifier, GLuint name, const char* label) const;
-    void debugNotify(GLuint name, const char* message) const;
-    void debugPush(GLuint name, const char* groupLabel) const;
-    void debugPop() const;
+    static inline void computeDispatchSizes(uint64_t numItems, std::array<GLint, 3> const& localSizes,
+        std::array<GLint, 3> const& maxCounts, std::array<GLuint, 3>& dispatchCounts) {
+        computeDispatchSizes(numItems, localSizes.data(), maxCounts.data(), dispatchCounts.data());
+    }
+
+    static std::tuple<double, double> mouseCoordsToWorld(
+        double mouse_x, double mouse_y, core::view::Camera const& cam, int width, int height);
+
+    static void makeDebugLabel(GLenum identifier, GLuint name, const char* label);
+    static void debugNotify(GLuint name, const char* message);
+    static void debugPush(GLuint name, const char* groupLabel);
+    static void debugPop();
 };
 
-} // namespace infovis_gl
-} // end namespace megamol
-
-#endif // MEGAMOL_INFOVIS_RENDERER2D_H_INCLUDED
+} // namespace megamol::infovis_gl

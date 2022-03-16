@@ -32,7 +32,7 @@ bool TransferFunction::requestTF(core::Call& call) {
     if (cgtf == nullptr)
         return false;
 
-    if (this->tfParam.IsDirty()) {
+    if (this->tfParam.IsDirty() || cgtf->UpdateRange()) {
         this->tfParam.ResetDirty();
 
         // Check if range of initially loaded project value should be ignored

@@ -10,14 +10,15 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/misc/VolumetricDataCallTypes.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCallTypes.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "protein_calls/MolecularDataCall.h"
 
@@ -32,7 +33,7 @@
 #include <driver_functions.h>
 #include <helper_cuda.h>
 #include <vector_functions.h>
-#include <vislib/graphics/gl/IncludeAllGL.h>
+#include <vislib_gl/graphics/gl/IncludeAllGL.h>
 
 extern "C" void copyMVPMatrix(float* mvp, size_t sizeofMatrix);
 extern "C" void setTextureFilterMode(bool bLinearFilter);
@@ -68,7 +69,7 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 namespace megamol {
 namespace protein_cuda {
 
-class QuickSurfRaycaster : public megamol::core::view::Renderer3DModule {
+class QuickSurfRaycaster : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -193,7 +194,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -201,7 +202,7 @@ private:
      * @param call The calling call.
      * @return True on success, false otherwise.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Initializes all CUDA related stuff
@@ -209,7 +210,7 @@ private:
      * @param cr3d The calling call.
      * @return True on success, false otherwise.
      */
-    bool initCuda(megamol::core::view::CallRender3D& cr3d);
+    bool initCuda(megamol::core_gl::view::CallRender3DGL& cr3d);
 
     /**
      * Initializes all OpenGL related structures
@@ -223,7 +224,7 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool initPixelBuffer(megamol::core::view::CallRender3D& cr3d);
+    bool initPixelBuffer(megamol::core_gl::view::CallRender3DGL& cr3d);
 
     /**
      * Calculates the volume data used for ray casting from the given call and other values
@@ -260,7 +261,7 @@ private:
     megamol::core::CallerSlot getClipPlaneSlot;
 
     /** camera information */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     //! Pointer to the CUDAQuickSurf object if it exists
     void* cudaqsurf;
@@ -301,10 +302,10 @@ private:
     GLuint depthTexHandle;
 
     /** The shader program for texture drawing */
-    vislib::graphics::gl::GLSLShader textureShader;
+    vislib_gl::graphics::gl::GLSLShader textureShader;
 
     /** The viewport dimensions of the last frame */
-    vislib::math::Dimension<int, 2U> lastViewport;
+    glm::ivec2 lastViewport;
 
     /** Pointer to the read particle data */
     float* particles;
@@ -359,7 +360,7 @@ private:
     float* map;
 
     /** The fbo the volume rendering result gets rendered to  */
-    vislib::graphics::gl::FramebufferObject volume_fbo;
+    vislib_gl::graphics::gl::FramebufferObject volume_fbo;
 
     float3* mcVertices_d;
     float3* mcNormals_d;

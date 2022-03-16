@@ -18,18 +18,20 @@
 #include "protein_calls/Interpol.h"
 #include "protein_calls/VTIDataCall.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstdlib>
 #include <cuda_gl_interop.h>
 
@@ -46,7 +48,7 @@ const Vec3f StreamlineRenderer::uniformColor = Vec3f(0.88f, 0.86f, 0.39f);
  * StreamlineRenderer::StreamlineRenderer
  */
 StreamlineRenderer::StreamlineRenderer(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         ,
         /* Caller slots */
         fieldDataCallerSlot("getFieldData", "Connects the renderer with the field data")
@@ -144,22 +146,15 @@ StreamlineRenderer::~StreamlineRenderer(void) {
  */
 bool StreamlineRenderer::create(void) {
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) ||
+    /*if (!ogl_IsVersionGEQ(2, 0) ||
         !areExtsAvailable("GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects GL_EXT_gpu_shader4 "
                           "GL_EXT_geometry_shader4 GL_EXT_bindable_uniform GL_ARB_draw_buffers GL_ARB_copy_buffer "
                           "GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        return false;
-    }
-
+    }*/
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -171,16 +166,17 @@ bool StreamlineRenderer::create(void) {
     ShaderSource fragSrc;
     ShaderSource geomSrc;
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load the shader source for the tube shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
@@ -195,17 +191,15 @@ bool StreamlineRenderer::create(void) {
     }
 
     // Load the shader source for the illuminated streamlines
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for illuminated streamlines");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "streamlines::illuminated::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for illuminated streamlines");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "streamlines::illuminated::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for illuminated streamlines");
         return false;
     }
@@ -236,13 +230,7 @@ void StreamlineRenderer::release(void) {
 /*
  * StreamlineRenderer::GetExtents
  */
-bool StreamlineRenderer::GetExtents(core::Call& call) {
-
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
+bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     // Extent of volume data
 
     protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
@@ -250,24 +238,17 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
         return false;
     }
 
-    vtiCall->SetCalltime(cr3d->Time());
-    vtiCall->SetFrameID(static_cast<int>(cr3d->Time()));
+    vtiCall->SetCalltime(call.Time());
+    vtiCall->SetFrameID(static_cast<int>(call.Time()));
     if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
         return false;
     }
 
-    float scale;
     //this->bbox.SetObjectSpaceBBox(vtiCall->GetWholeExtent());
     this->bbox.SetObjectSpaceBBox(vtiCall->AccessBoundingBoxes().ObjectSpaceBBox());
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
     //this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = vtiCall->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(vtiCall->FrameCount());
+    call.AccessBoundingBoxes() = vtiCall->AccessBoundingBoxes();
+    call.SetTimeFramesCount(vtiCall->FrameCount());
 
     return true;
 }
@@ -276,15 +257,10 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
 /*
  * StreamlineRenderer::Render
  */
-bool StreamlineRenderer::Render(core::Call& call) {
+bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // Update parameters
     this->updateParams();
-
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
 
     protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (vtiCall == NULL) {
@@ -292,12 +268,10 @@ bool StreamlineRenderer::Render(core::Call& call) {
     }
 
     // Get volume data
-    vtiCall->SetCalltime(cr3d->Time());
+    vtiCall->SetCalltime(call.Time());
     if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
         return false;
     }
-
-    float scale;
 
     // (Re)compute streamlines if necessary
     if (this->triggerComputeStreamlines) {
@@ -348,16 +322,7 @@ bool StreamlineRenderer::Render(core::Call& call) {
         this->triggerComputeStreamlines = false;
     }
 
-
     glPushMatrix();
-
-    // Compute scale factor and scale world
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
 
     // Render streamlines
     glDisable(GL_BLEND);

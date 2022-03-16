@@ -8,15 +8,15 @@
 #ifndef PROBE_INTERACTION_H_INCLUDED
 #define PROBE_INTERACTION_H_INCLUDED
 
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "ProbeInteractionCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeInteraction : public megamol::core::view::Renderer3DModule_2 {
+class ProbeInteraction : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -83,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -92,9 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
-
-    bool getInteractionCollection(core::Call& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
     bool getInteractionMetaData(core::Call& call);
 
@@ -107,6 +105,16 @@ private:
 
     bool m_open_context_menu;
 
+    bool m_open_showMenu_dropdown;
+    bool m_open_probeMenu_dropdown;
+    bool m_open_dataMenu_dropdown;
+
+    bool m_open_dataFilterByDepth_popup;
+
+    bool m_show_probes;
+    bool m_show_hull;
+    bool m_show_glyphs;
+
     /** Map storing the pressed state of all mouse buttons */
     std::map<core::view::MouseButton, bool> m_mouse_button_states = {{core::view::MouseButton::BUTTON_1, false},
         {core::view::MouseButton::BUTTON_2, false}, {core::view::MouseButton::BUTTON_3, false},
@@ -115,15 +123,15 @@ private:
         {core::view::MouseButton::BUTTON_8, false}, {core::view::MouseButton::BUTTON_LEFT, false},
         {core::view::MouseButton::BUTTON_MIDDLE, false}, {core::view::MouseButton::BUTTON_RIGHT, false}};
 
-    std::shared_ptr<ProbeInteractionCollection> m_interactions;
+    int32_t last_active_probe_id;
 
-    int64_t last_active_probe_id;
+    std::vector<int32_t> m_selected_probes;
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;
     megamol::core::CallerSlot m_glyph_fbo_slot;
 
-    megamol::core::CalleeSlot m_interaction_collection_slot;
+    megamol::core::CallerSlot m_event_write_slot;
 
     // local storage of projection and view matrix (for 3D space interaction computations)
     glm::mat4 m_view_mx_cpy;

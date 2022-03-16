@@ -5,8 +5,12 @@
 
 megamol_plugin(probe_gl
   BUILD_DEFAULT OFF
+  DEPENDS_GL
   DEPENDS_PLUGINS
+    datatools
     probe
     mesh
+    mesh_gl
+    compositing_gl
   DEPENDS_EXTERNALS PUBLIC
     imgui)

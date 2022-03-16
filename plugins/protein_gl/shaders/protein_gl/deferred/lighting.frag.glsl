@@ -8,6 +8,8 @@ struct LightParams
 layout(std430, binding = 1) readonly buffer PointLightParamsBuffer { LightParams point_light_params[]; };
 layout(std430, binding = 2) readonly buffer DistantLightParamsBuffer { LightParams distant_light_params[]; };
 
+layout(location = 0) out vec4 color_out;
+
 uniform int point_light_cnt;
 uniform int distant_light_cnt;
 
@@ -57,6 +59,17 @@ void main(void) {
 
     vec4 retval = albedo;
 
+    gl_FragDepth = depth;
+
+    if(albedo.w < 0.001) {
+        discard;
+    }
+
+    if(no_lighting) {
+        color_out = albedo;
+        return;
+    }
+
     if(depth > 0.0f && depth < 1.0f) {
         vec3 world_pos = depthToWorldPos(depth, uv_coord, inv_view_mx, inv_proj_mx);
         vec3 reflected_light = vec3(0.0);
@@ -76,21 +89,12 @@ void main(void) {
             vec3 view_dir = normalize(camPos - world_pos);
             if(use_lambert){
                 reflected_light += lambert(normal, light_dir);
-            }else {
+            } else {
                 reflected_light += blinnPhong(normal, light_dir, view_dir, ambientColor, diffuseColor, specularColor, vec4(k_amb, k_diff, k_spec, k_exp)) * distant_light_params[i].intensity;
             }
         }
         retval.rgb = reflected_light * albedo.rgb;
     }
 
-    gl_FragColor = vec4(retval.xyz, albedo.w);
-    gl_FragDepth = depth;
-
-    if(no_lighting) {
-        gl_FragColor = albedo;
-    }
-
-    if(albedo.w == 0.0) {
-        discard;
-    }
+    color_out = vec4(retval.xyz, albedo.w);
 }

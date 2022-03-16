@@ -45,9 +45,19 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
-option(ENABLE_PROFILING "Enable profiling code" OFF)
-if (ENABLE_PROFILING)
-  add_compile_definitions(PROFILING)
+if (ENABLE_GL)
+  option(ENABLE_PROFILING "Enable profiling code" OFF)
+  if (ENABLE_PROFILING)
+    add_compile_definitions(PROFILING)
+  endif()
+endif()
+
+# VR Service / mwk-mint, interop, Spout2
+if (ENABLE_GL)
+  option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF)
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+    add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
+  endif()
 endif()
 
 # CUE

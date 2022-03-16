@@ -20,10 +20,10 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 typedef vislib::math::Vector<int, 3> Vec3i;
 typedef unsigned int uint;
@@ -31,7 +31,7 @@ typedef unsigned int uint;
 namespace megamol {
 namespace protein_cuda {
 
-class StreamlineRenderer : public core::view::Renderer3DModuleDS {
+class StreamlineRenderer : public core_gl::view::Renderer3DModuleGL {
 
 public:
     enum RenderModes { NONE = 0, LINES, ILLUMINATED_LINES, TUBES };
@@ -93,7 +93,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -101,7 +101,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Callback called when the clipping plane is requested.
@@ -213,10 +213,10 @@ private:
     /* Rendering */
 
     // Shader for stream tubes
-    vislib::graphics::gl::GLSLGeometryShader tubeShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
 
     // Shader for illuminated streamlines
-    vislib::graphics::gl::GLSLGeometryShader illumShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader illumShader;
 
     /// The uniform color for surface #1
     static const Vec3f uniformColor;

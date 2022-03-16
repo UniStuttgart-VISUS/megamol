@@ -10,7 +10,7 @@
 #include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 
 #include "OpenGL_Context.h"
 
@@ -330,12 +330,25 @@ bool SphereRenderer::create(void) {
     // timer.SetSummaryFileName("summary.csv");
     // timer.SetMaximumFrames(20, 100);
 
+#ifdef PROFILING
+    perf_manager = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    upload_timer.name = "upload";
+    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timers = perf_manager->add_timers(this, {upload_timer, render_timer});
+#endif
+
     return true;
 }
 
 
 void SphereRenderer::release(void) {
-
+#ifdef PROFILING
+    perf_manager->remove_timers(timers);
+#endif
     this->resetResources();
 }
 
@@ -1121,14 +1134,12 @@ bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
     auto fbo = call.GetFramebuffer();
 
     this->curCamPos = glm::vec4(cam_pose.position, 1.0);
     this->curCamView = glm::vec4(cam_pose.direction, 1.0);
     this->curCamUp = glm::vec4(cam_pose.up, 1.0);
     this->curCamRight = glm::vec4(glm::cross(cam_pose.direction, cam_pose.up), 1.0);
-    this->curCamNearClip = cam_intrinsics.near_plane;
 
     this->curMVinv = glm::inverse(view);
     this->curMVtransp = glm::transpose(view);
@@ -1306,7 +1317,13 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
             this->enableBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
         }
 
+#ifdef PROFILING
+        perf_manager->start_timer(timers[1], this->GetCoreInstance()->GetFrameID());
+#endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+#ifdef PROFILING
+        perf_manager->stop_timer(timers[1]);
+#endif
 
         if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
             if (parts.IsVAO()) {

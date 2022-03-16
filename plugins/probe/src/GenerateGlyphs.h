@@ -7,7 +7,6 @@
 #pragma once
 
 #include "DrawTextureUtility.h"
-#include "ProbeCollection.h"
 #include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/Call.h"
@@ -15,6 +14,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe {
@@ -58,6 +59,10 @@ public:
     core::CalleeSlot _deploy_mesh;
     core::CallerSlot _get_probes;
 
+    core::param::ParamSlot _resolutionSlot;
+    core::param::ParamSlot _sizeSlot;
+
+
 protected:
     bool create() override {
         return true;
@@ -71,11 +76,13 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    bool doScalarGlyphGeneration(FloatProbe& probe);
+    bool doScalarGlyphGeneration(FloatProbe& probe, std::array<float, 2> global_min_max);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
 
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
+
+    bool paramChanged(core::param::ParamSlot& p);
 
     uint32_t _version = 0;
 
@@ -93,6 +100,7 @@ private:
     std::vector<DrawTextureUtility> _dtu;
 
     double scale = -1.0;
+    bool _trigger_recalc;
 };
 
 } // namespace probe

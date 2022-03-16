@@ -17,9 +17,10 @@
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "protein/Color.h"
+//#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
@@ -186,8 +187,6 @@ private:
     megamol::core::CallerSlot bsDataCallerSlot;
     /** Slot to get the lights */
     megamol::core::CallerSlot getLightsSlot;
-    /** Slot to get the framebuffer */
-    megamol::core::CallerSlot getFramebufferSlot;
 
     /** camera information */
     core::view::Camera cam;
@@ -243,10 +242,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
     std::shared_ptr<glowl::GLSLProgram> lineShader_;
 
-    // the local fbo
-    std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
-    uint32_t fbo_version_;
-
     std::vector<LightParams> pointLights_;
     std::vector<LightParams> directionalLights_;
 
@@ -265,16 +260,20 @@ private:
     std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
     /** The current coloring mode */
-    protein::Color::ColoringMode currentColoringMode0;
-    protein::Color::ColoringMode currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable_;
+    /** The color lookup table read from file */
+    std::vector<glm::vec3> fileColorTable_;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors_;
+
+    bool tableFromFile_;
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable_;
 
     /** The current rendering mode */
     RenderMode currentRenderMode;
@@ -312,6 +311,6 @@ private:
 
 
 } // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol
 
 #endif // MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED

@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
@@ -14,7 +20,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 #include "delaunator.hpp"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include <sstream>
 
 using namespace megamol;
@@ -108,6 +114,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
         , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
         , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
+        , forceRedrawDebugParam("forceRedrawDebug", "Force redraw every frame (for benchmarking and debugging).")
         , mouse({0, 0, BrushState::NOP})
         , plotSSBO("Plots")
         , valueSSBO("Values")
@@ -115,6 +122,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , triangleIBO(0)
         , triangleVertexCount(0)
         , trianglesValid(false)
+        , currentViewRes(glm::ivec2(0, 0))
         , screenFBO(nullptr)
         , screenValid(false)
         , axisFont(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
@@ -254,6 +262,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
 
+    this->forceRedrawDebugParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->forceRedrawDebugParam);
+
     // Create list of data-sensitive parameters.
     dataParams.push_back(&this->valueSelectorParam);
     dataParams.push_back(&this->labelSelectorParam);
@@ -354,15 +365,8 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 }
 
 bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
-    // Make the following a convenience function in the future
-    auto cam_pose = currentCamera.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = currentCamera.get<core::view::Camera::OrthographicParameters>();
-    float world_x, world_y;
-    world_x = ((x * 2.0f / currentFBO->getWidth()) - 1.0f);
-    world_y = 1.0f - (y * 2.0f / currentFBO->getHeight());
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
 
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, currentCamera, currentViewRes.x, currentViewRes.y);
     this->mouse.x = world_x;
     this->mouse.y = world_y;
 
@@ -382,7 +386,7 @@ bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         auto view = currentCamera.getViewMatrix();
         auto proj = currentCamera.getProjectionMatrix();
         glm::mat4 ortho = proj * view;
-        currentFBO = call.GetFramebuffer();
+        currentViewRes = call.GetViewResolution();
 
         if (!this->validate(call, false))
             return false;
@@ -509,7 +513,7 @@ bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, 
     auto mvp = proj * view;
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
     if (hasDirtyScreen() || hasDirtyData() || (!ignoreMVP && (screenLastMVP != mvp || this->readFlags->hasUpdate())) ||
-        this->transferFunction->IsDirty()) {
+        this->transferFunction->IsDirty() || this->forceRedrawDebugParam.Param<core::param::BoolParam>()->Value()) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
@@ -1277,7 +1281,7 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
     glBlendEquation(GL_FUNC_ADD);
     switch (this->valueMappingParam.Param<core::param::EnumParam>()->Value()) {
     case VALUE_MAPPING_KERNEL_BLEND:
-        // Assuming the View's background color is still set as clear color.
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     case VALUE_MAPPING_KERNEL_DENSITY:

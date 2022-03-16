@@ -9,6 +9,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/TransferFunctionGL.h"
 
@@ -17,6 +18,7 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -48,6 +50,7 @@ SurfaceLICRenderer::SurfaceLICRenderer()
         , ambient_color("lighting::ambient color", "Ambient color")
         , specular_color("lighting::specular color", "Specular color")
         , light_color("lighting::light color", "Light color")
+        , fbo(nullptr)
         , hash(-1) {
 
     this->input_renderer.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
@@ -114,24 +117,25 @@ bool SurfaceLICRenderer::create() {
         vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
         vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                "SurfaceLICRenderer::precompute", precompute_shader_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::precompute", precompute_shader_src))
             return false;
         if (!this->pre_compute_shdr.Compile(precompute_shader_src.Code(), precompute_shader_src.Count()))
             return false;
         if (!this->pre_compute_shdr.Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
             return false;
         if (!this->lic_compute_shdr.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
             return false;
         if (!this->lic_compute_shdr.Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::vert", vertex_shader_src))
             return false;
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+        if (!ssf->MakeShaderSource("SurfaceLICRenderer::frag", fragment_shader_src))
             return false;
         if (!this->render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
@@ -196,42 +200,25 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
 
     ci->SetTime(req_frame);
-    core::view::Camera_2 cam = call.GetCamera();
+    core::view::Camera cam = call.GetCamera();
     ci->SetCamera(cam);
 
-    auto viewport = cam.resolution_gate();
-    if (this->fbo.GetWidth() != viewport.width() || this->fbo.GetHeight() != viewport.height()) {
-        if (this->fbo.IsValid())
-            this->fbo.Release();
+    auto viewport = call.GetViewResolution();
+    if (this->fbo == nullptr || this->fbo->getWidth() != viewport.x || this->fbo->getHeight() != viewport.y) {
+        this->fbo =
+            std::make_shared<glowl::FramebufferObject>(viewport.x, viewport.y, glowl::FramebufferObject::DEPTH24);
 
-        std::array<vislib_gl::graphics::gl::FramebufferObject::ColourAttachParams, 2> cap;
-        cap[0].internalFormat = GL_RGBA8;
-        cap[0].format = GL_RGBA;
-        cap[0].type = GL_UNSIGNED_BYTE;
-        cap[1].internalFormat = GL_RGBA32F;
-        cap[1].format = GL_RGBA;
-        cap[1].type = GL_FLOAT;
-
-        vislib_gl::graphics::gl::FramebufferObject::DepthAttachParams dap;
-        dap.format = GL_DEPTH_COMPONENT24;
-        dap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
-
-        vislib_gl::graphics::gl::FramebufferObject::StencilAttachParams sap;
-        sap.format = GL_STENCIL_INDEX;
-        sap.state = vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
-
-        this->fbo.Create(viewport.width(), viewport.height(), cap.size(), cap.data(), dap, sap);
+        this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
-    this->fbo.Enable();
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ci->SetFramebuffer(this->fbo);
 
     if (!(*ci)(core_gl::view::CallRender3DGL::FnRender))
         return false;
     call.SetTimeFramesCount(ci->TimeFramesCount());
-
-    this->fbo.Disable();
 
     // Get input velocities
     auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
@@ -274,11 +261,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Create velocity target texture
-    if (this->velocity_target == nullptr || this->velocity_target->getWidth() != cam.resolution_gate().width() ||
-        this->velocity_target->getHeight() != cam.resolution_gate().height()) {
+    if (this->velocity_target == nullptr || this->velocity_target->getWidth() != call.GetViewResolution().x ||
+        this->velocity_target->getHeight() != call.GetViewResolution().y) {
 
-        glowl::TextureLayout velocity_tgt_layout(GL_RGBA32F, cam.resolution_gate().width(),
-            cam.resolution_gate().height(), 1, GL_RGBA, GL_FLOAT, 1,
+        glowl::TextureLayout velocity_tgt_layout(GL_RGBA32F, call.GetViewResolution().x, call.GetViewResolution().y, 1,
+            GL_RGBA, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -288,11 +275,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Create render target texture
-    if (this->render_target == nullptr || this->render_target->getWidth() != cam.resolution_gate().width() ||
-        this->render_target->getHeight() != cam.resolution_gate().height()) {
+    if (this->render_target == nullptr || this->render_target->getWidth() != call.GetViewResolution().x ||
+        this->render_target->getHeight() != call.GetViewResolution().y) {
 
-        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
-            1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, call.GetViewResolution().x, call.GetViewResolution().y, 1,
+            GL_RGBA, GL_UNSIGNED_BYTE, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -325,14 +312,13 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Get camera
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_mat, proj_mat;
-    cam.calc_matrices(snapshot, view_mat, proj_mat, core::thecam::snapshot_content::all);
-    glm::mat4 view = view_mat;
-    glm::mat4 proj = proj_mat;
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
 
-    const auto cam_near = cam.near_clipping_plane();
-    const auto cam_far = cam.far_clipping_plane();
+    const auto intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
+
+    const auto cam_near = intrinsics.near_plane.value();
+    const auto cam_far = intrinsics.far_plane.value();
 
     const std::array<float, 2> rt_resolution{
         static_cast<float>(this->render_target->getWidth()), static_cast<float>(this->render_target->getHeight())};
@@ -357,11 +343,11 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform3fv(this->pre_compute_shdr.ParameterLocation("resolution"), 1, resolution.data());
 
     glActiveTexture(GL_TEXTURE0);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->pre_compute_shdr.ParameterLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
-    this->fbo.BindColourTexture(1);
+    this->fbo->bindColorbuffer(1);
     glUniform1i(this->pre_compute_shdr.ParameterLocation("normal_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
@@ -433,7 +419,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->light_color.Param<core::param::ColorParam>()->Value().data());
 
     glActiveTexture(GL_TEXTURE0);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->lic_compute_shdr.ParameterLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
@@ -441,7 +427,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform1i(this->lic_compute_shdr.ParameterLocation("velocity_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
-    this->fbo.BindColourTexture(1);
+    this->fbo->bindColorbuffer(1);
     glUniform1i(this->lic_compute_shdr.ParameterLocation("normal_tx2D"), 2);
 
     glActiveTexture(GL_TEXTURE3);
@@ -479,6 +465,8 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // Render to framebuffer
+    call.GetFramebuffer()->bind();
+
     bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
     bool state_blend = glIsEnabled(GL_BLEND);
 
@@ -494,7 +482,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("src_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
-    this->fbo.BindDepthTexture();
+    this->fbo->bindDepthbuffer();
     glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("depth_tx2D"), 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);

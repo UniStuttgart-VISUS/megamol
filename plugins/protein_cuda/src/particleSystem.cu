@@ -23,7 +23,7 @@
 #include <cstdio>
 #include <string.h>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 

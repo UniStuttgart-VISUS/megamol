@@ -7,9 +7,7 @@
 
 #pragma once
 
-
 #include "windows/WindowCollection.h"
-
 
 namespace megamol {
 namespace frontend_resources {

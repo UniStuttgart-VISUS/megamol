@@ -1,10 +1,14 @@
-#ifndef MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/utility/SDFFont.h"
@@ -15,7 +19,7 @@
 
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "vislib/math/Matrix.h"
 #include <glowl/FramebufferObject.hpp>
 #include <memory>
@@ -264,6 +268,8 @@ private:
 
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
+    core::param::ParamSlot forceRedrawDebugParam;
+
     size_t dataHash;
     unsigned int dataTime;
 
@@ -306,7 +312,7 @@ private:
 
     core::utility::SSBOBufferArray valueSSBO;
 
-    core::FlagStorage::FlagVersionType flagsBufferVersion;
+    core::FlagStorageTypes::flag_version_type flagsBufferVersion;
 
     bool selectionNeedsUpdate = false;
     bool selectionNeedsReset = false;
@@ -317,7 +323,7 @@ private:
     bool trianglesValid;
 
     core::view::Camera currentCamera;
-    std::shared_ptr<glowl::FramebufferObject> currentFBO;
+    glm::ivec2 currentViewRes;
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
     glm::mat4 screenLastMVP;
@@ -333,5 +339,3 @@ private:
 };
 
 } // namespace megamol::infovis_gl
-
-#endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED

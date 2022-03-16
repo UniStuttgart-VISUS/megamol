@@ -31,6 +31,8 @@ glfw_window_blit::~glfw_window_blit() {
 
 void glfw_window_blit::set_framebuffer_active() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0, 0, 0, 0);
+    glClearDepth(1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
@@ -84,7 +86,6 @@ void glfw_window_blit::blit_texture(
                                    "layout(location = 0) out vec4 outFragColor; \n "
                                    "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
-                                   "    if (color.a == 0.0) discard; \n "
                                    "    outFragColor = color; \n "
                                    "} ";
 
@@ -110,6 +111,7 @@ void glfw_window_blit::blit_texture(
 
     glViewport(0, 0, fbo_width, fbo_height);
     glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     blit_shader->use();
     glActiveTexture(GL_TEXTURE0);
@@ -118,6 +120,7 @@ void glfw_window_blit::blit_texture(
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
     glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     /**/

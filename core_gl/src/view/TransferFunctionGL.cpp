@@ -46,7 +46,7 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
     if (cgtf == nullptr)
         return false;
 
-    if ((this->texID == 0) || this->tfParam.IsDirty()) {
+    if ((this->texID == 0) || this->tfParam.IsDirty() || cgtf->UpdateRange()) {
         this->tfParam.ResetDirty();
 
         // Check if range of initially loaded project value should be ignored

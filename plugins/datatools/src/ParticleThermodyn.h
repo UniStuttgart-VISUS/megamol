@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "PointcloudHelpers.h"
+#include "datatools/PointcloudHelpers.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"

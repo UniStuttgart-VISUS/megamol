@@ -76,7 +76,8 @@ void WindowCollection::Draw(bool menu_visible) {
 
     const auto func = [&](AbstractWindow& wc) {
         if (wc.Config().show) {
-            ImGui::SetNextWindowBgAlpha(1.0f);
+
+            // Draw Window ----------------------------------------------------
             ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
 
             // Begin Window
@@ -108,18 +109,13 @@ void WindowCollection::Draw(bool menu_visible) {
             }
 
             ImGui::End();
+
+            // Draw Pop-ups ---------------------------------------------------
+            wc.PopUps();
         }
     };
 
     this->EnumWindows(func);
-}
-
-
-void WindowCollection::PopUps() {
-
-    for (auto& win : this->windows) {
-        win->PopUps();
-    }
 }
 
 
