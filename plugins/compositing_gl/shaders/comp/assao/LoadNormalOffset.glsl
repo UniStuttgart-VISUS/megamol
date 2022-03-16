@@ -21,7 +21,7 @@
 
 vec3 LoadNormal( ivec2 pos, ivec2 offset )
 {
-    vec3 encodedNormal = texelFetchOffset(g_NormalmapSource, pos, 0, offset ).xyz;
+    vec3 encodedNormal = texelFetch(g_NormalmapSource, pos + offset, 0 ).xyz;
     if(g_ASSAOConsts.TransformNormalsToViewSpace == 1) {
         encodedNormal = transpose(inverse(mat3(g_ASSAOConsts.ViewMX))) * (encodedNormal);
     }
