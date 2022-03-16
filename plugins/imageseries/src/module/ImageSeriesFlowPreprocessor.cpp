@@ -2,11 +2,14 @@
 #include "imageseries/ImageSeries2DCall.h"
 
 #include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
+#include "../filter/DeinterlaceFilter.h"
 #include "../filter/MaskFilter.h"
 #include "../filter/SegmentationFilter.h"
 #include "../util/ImageUtils.h"
@@ -20,8 +23,10 @@ ImageSeriesFlowPreprocessor::ImageSeriesFlowPreprocessor()
         : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
         , getMaskCaller("requestMaskImageSeries", "Requests mask data from an image series.")
-        , segmentationThresholdParam("Segmentation threshold", "Per-pixel threshold for image segmentation.")
         , maskFrameParam("Mask frame", "Image timestamp to use for applying a mask.")
+        , deinterlaceParam("Deinterlace", "Number of pixels of horizontal interlacing correction to apply.")
+        , segmentationEnabledParam("Enable segmentation", "Toggles the image segmentation step on/off.")
+        , segmentationThresholdParam("Segmentation threshold", "Per-pixel threshold for image segmentation.")
         , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
@@ -37,15 +42,25 @@ ImageSeriesFlowPreprocessor::ImageSeriesFlowPreprocessor()
         &ImageSeriesFlowPreprocessor::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
 
-    segmentationThresholdParam << new core::param::FloatParam(0.5f, 0.f, 1.f);
-    segmentationThresholdParam.Parameter()->SetGUIPresentation(Presentation::Slider);
-    segmentationThresholdParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
-    MakeSlotAvailable(&segmentationThresholdParam);
-
     maskFrameParam << new core::param::FloatParam(0.f, 0.f, 1.f);
     maskFrameParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     maskFrameParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
     MakeSlotAvailable(&maskFrameParam);
+
+    deinterlaceParam << new core::param::IntParam(0, -10, 10);
+    deinterlaceParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    deinterlaceParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
+    MakeSlotAvailable(&deinterlaceParam);
+
+    segmentationEnabledParam << new core::param::BoolParam(1);
+    segmentationEnabledParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    segmentationEnabledParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
+    MakeSlotAvailable(&segmentationEnabledParam);
+
+    segmentationThresholdParam << new core::param::FloatParam(0.5f, 0.f, 1.f);
+    segmentationThresholdParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    segmentationThresholdParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
+    MakeSlotAvailable(&segmentationThresholdParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -84,16 +99,25 @@ bool ImageSeriesFlowPreprocessor::getDataCallback(core::Call& caller) {
             if ((*getInput)(ImageSeries::ImageSeries2DCall::CallGetData)) {
                 auto output = getInput->GetOutput();
 
+                // Get deinterlacing offset
+                int deinterlace = deinterlaceParam.Param<core::param::IntParam>()->Value();
+
                 // Retrieve cached image or run filter on input data
-                output.imageData = imageCache.findOrCreate(
-                    util::combineHash(output.getHash(), mask.getHash()), [=](AsyncImageData2D::Hash) {
-                        auto image = output.imageData;
-                        if (mask.imageData) {
-                            image = filterRunner->run<filter::MaskFilter>(image, mask.imageData);
-                        }
-                        return filterRunner->run<filter::SegmentationFilter>(
+                auto hash = util::combineHash(output.getHash(), mask.getHash());
+                output.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
+                    auto image = output.imageData;
+                    if (mask.imageData) {
+                        image = filterRunner->run<filter::MaskFilter>(image, mask.imageData);
+                    }
+                    if (deinterlace != 0) {
+                        image = filterRunner->run<filter::DeinterlaceFilter>(image, deinterlace);
+                    }
+                    if (segmentationEnabledParam.Param<core::param::BoolParam>()->Value()) {
+                        image = filterRunner->run<filter::SegmentationFilter>(
                             image, segmentationThresholdParam.Param<core::param::FloatParam>()->Value());
-                    });
+                    }
+                    return image;
+                });
 
                 call->SetOutput(output);
                 return true;

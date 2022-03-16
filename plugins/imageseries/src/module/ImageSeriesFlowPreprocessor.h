@@ -82,8 +82,10 @@ private:
     core::CallerSlot getInputCaller;
     core::CallerSlot getMaskCaller;
 
-    core::param::ParamSlot segmentationThresholdParam;
     core::param::ParamSlot maskFrameParam;
+    core::param::ParamSlot deinterlaceParam;
+    core::param::ParamSlot segmentationEnabledParam;
+    core::param::ParamSlot segmentationThresholdParam;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 
