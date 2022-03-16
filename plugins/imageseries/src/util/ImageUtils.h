@@ -7,9 +7,19 @@
 
 namespace megamol::ImageSeries::util {
 
-template<class T>
+template<typename T>
+T combineHash(T a) {
+    return a;
+}
+
+template<typename T>
 T combineHash(T a, T b) {
     return a ^ (b + 0x9e3779b9 + (a << 6) + (a >> 2));
+}
+
+template<typename T, typename... Args>
+T combineHash(T a, T b, Args... args) {
+    return combineHash(a, combineHash(b, args...));
 }
 
 template<typename Type, std::size_t ChannelCount>
