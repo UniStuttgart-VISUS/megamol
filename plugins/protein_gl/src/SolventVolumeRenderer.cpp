@@ -2116,7 +2116,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
 
     /* make local variables to avoid function alls in for-loops (compiler won't inline in debug mode...) */
     int atomCount = mol->AtomCount();
-    const float* atomColorTablePtr = reinterpret_cast<float *>(this->atomColorTable.data());
+    const float* atomColorTablePtr = reinterpret_cast<float*>(this->atomColorTable.data());
     const unsigned int* atomTypeIndices = mol->AtomTypeIndices();
     const MolecularDataCall::AtomType* atomTypes = mol->AtomTypes();
 
@@ -2205,8 +2205,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
                     float value = (float)hbStatistics[numSolventResidues * atomIdx + j] * factor;
                     // solventAtomColor[j%3] += value;
                     int residueType = solventResidueIndices[j];
-                    auto& residueColor =
-                        this->colorLookupTable[residueType % this->colorLookupTable.size()];
+                    auto& residueColor = this->colorLookupTable[residueType % this->colorLookupTable.size()];
                     solventAtomColor[0] += residueColor.x * value;
                     solventAtomColor[1] += residueColor.y * value;
                     solventAtomColor[2] += residueColor.z * value;

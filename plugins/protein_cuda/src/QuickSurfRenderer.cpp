@@ -9,18 +9,18 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "protein_calls/ProteinColor.h"
 #include "QuickSurfRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"

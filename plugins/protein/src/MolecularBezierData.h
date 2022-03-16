@@ -12,6 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/BezierCurvesListDataCall.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -19,8 +21,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
 
 namespace megamol {
 namespace protein {

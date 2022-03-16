@@ -12,6 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
@@ -19,7 +20,6 @@
 #include "vislib/Pair.h"
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
-#include "glm/glm.hpp"
 
 
 namespace megamol {

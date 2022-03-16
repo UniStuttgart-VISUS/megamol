@@ -605,8 +605,8 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qu
     //    useCol, origin, numvoxels, maxrad,
     //    radscale, gridspacing, isovalue, gausslim,
     //    gpunumverts, gv, gn, gc, gpunumfacets, gf);
-    int rc = cqs->calc_map(mol->AtomCount(), &xyzr[0], (useCol) ? &colors[0] : &this->atomColorTable[0].x, useCol, origin,
-        numvoxels, maxrad, radscale, gridspacing, isovalue, gausslim);
+    int rc = cqs->calc_map(mol->AtomCount(), &xyzr[0], (useCol) ? &colors[0] : &this->atomColorTable[0].x, useCol,
+        origin, numvoxels, maxrad, radscale, gridspacing, isovalue, gausslim);
 
     if (rc == 0) {
         gpuvertexarray = 1;
