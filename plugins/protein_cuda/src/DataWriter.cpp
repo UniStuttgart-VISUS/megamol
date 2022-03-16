@@ -15,7 +15,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "CUDAQuickSurf.h"

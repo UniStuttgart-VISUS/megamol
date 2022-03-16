@@ -18,8 +18,10 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "vislib/StringTokeniser.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <channel_descriptor.h>
 #include <driver_functions.h>
@@ -29,17 +31,17 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::core_gl;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
-using namespace megamol::core::misc;
 using namespace megamol::core::utility::log;
+using namespace megamol::geocalls;
 
 /*
  * QuickSurfRaycaster::QuickSurfRaycaster
  */
 QuickSurfRaycaster::QuickSurfRaycaster(void)
-        : Renderer3DModule()
+        : Renderer3DModuleGL()
         , particleDataSlot("getData", "Connects the surface renderer with the particle data storage")
         , getClipPlaneSlot("getClipPlane", "Connects the surface renderer with a clipplane module")
         , qualityParam("quicksurf::quality", "Quality")
@@ -105,7 +107,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void)
     this->showDepthTextureParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showDepthTextureParam);
 
-    lastViewport.Set(0, 0);
+    lastViewport = glm::ivec2(0, 0);
 
     volumeExtent = make_cudaExtent(0, 0, 0);
 
@@ -374,11 +376,7 @@ void QuickSurfRaycaster::convertToMesh(
 /*
  * QuickSurfRaycaster::GetExtents
  */
-bool QuickSurfRaycaster::GetExtents(Call& call) {
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool QuickSurfRaycaster::GetExtents(core_gl::view::CallRender3DGL& call) {
     MultiParticleDataCall* mpdc = this->particleDataSlot.CallAs<MultiParticleDataCall>();
     MolecularDataCall* mdc = this->particleDataSlot.CallAs<MolecularDataCall>();
     VolumetricDataCall* vdc = this->particleDataSlot.CallAs<VolumetricDataCall>();
@@ -391,45 +389,21 @@ bool QuickSurfRaycaster::GetExtents(Call& call) {
         if (!(*mpdc)(1))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
-        cr3d->AccessBoundingBoxes() = mpdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-        cr3d->SetTimeFramesCount(mpdc->FrameCount());
+        call.AccessBoundingBoxes() = mpdc->AccessBoundingBoxes();
+        call.SetTimeFramesCount(mpdc->FrameCount());
     } // MolecularDataCall in use
     else if (mdc != NULL) {
         if (!(*mdc)(1))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
-        cr3d->AccessBoundingBoxes() = mdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-        cr3d->SetTimeFramesCount(mdc->FrameCount());
+        call.AccessBoundingBoxes() = mdc->AccessBoundingBoxes();
+        call.SetTimeFramesCount(mdc->FrameCount());
     } else if (vdc != NULL) {
         if (!(*vdc)(vdc->IDX_GET_EXTENTS))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
-
-        auto bb = vdc->AccessBoundingBoxes().ObjectSpaceBBox();
-
-        cr3d->AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-        cr3d->SetTimeFramesCount(vdc->FrameCount());
+        call.AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
+        call.SetTimeFramesCount(vdc->FrameCount());
     }
 
     return true;
@@ -438,22 +412,11 @@ bool QuickSurfRaycaster::GetExtents(Call& call) {
 /*
  * QuickSurfRaycaster::initCuda
  */
-bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
+bool QuickSurfRaycaster::initCuda(core_gl::view::CallRender3DGL& cr3d) {
 
     // set cuda device
     if (setCUDAGLDevice) {
-#ifdef _WIN32
-        if (cr3d.IsGpuAffinity()) {
-            HGPUNV gpuId = cr3d.GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice(&devId, gpuId);
-            cudaGLSetGLDevice(devId);
-        } else {
-            cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-        }
-#else
         cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-#endif
         cudaError err = cudaGetLastError();
         if (err != 0) {
             printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(err));
@@ -468,9 +431,9 @@ bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
 /*
  * QuickSurfRaycaster::initPixelBuffer
  */
-bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
+bool QuickSurfRaycaster::initPixelBuffer(core_gl::view::CallRender3DGL& cr3d) {
 
-    auto viewport = cr3d.GetViewport().GetSize();
+    glm::ivec2 viewport = cr3d.GetViewResolution();
 
     if (lastViewport == viewport) {
         return true;
@@ -484,8 +447,7 @@ bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
         glGenTextures(1, &texHandle);
         glActiveTexture(GL_TEXTURE15);
         glBindTexture(GL_TEXTURE_2D, texHandle);
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -498,8 +460,8 @@ bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
         glGenTextures(1, &depthTexHandle);
         glActiveTexture(GL_TEXTURE16);
         glBindTexture(GL_TEXTURE_2D, depthTexHandle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.GetWidth(), viewport.GetHeight(), 0,
-            GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -516,10 +478,8 @@ bool QuickSurfRaycaster::initPixelBuffer(view::CallRender3D& cr3d) {
         cudaDepthImage = NULL;
     }
 
-    checkCudaErrors(
-        cudaMallocHost((void**)&cudaImage, viewport.GetWidth() * viewport.GetHeight() * sizeof(unsigned int)));
-    checkCudaErrors(
-        cudaMallocHost((void**)&cudaDepthImage, viewport.GetWidth() * viewport.GetHeight() * sizeof(float)));
+    checkCudaErrors(cudaMallocHost((void**)&cudaImage, viewport.x * viewport.y * sizeof(unsigned int)));
+    checkCudaErrors(cudaMallocHost((void**)&cudaDepthImage, viewport.x * viewport.y * sizeof(float)));
 
     return true;
 }
@@ -553,19 +513,18 @@ bool QuickSurfRaycaster::initOpenGL() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "quicksurfraycast::texture::textureVertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("quicksurfraycast::texture::textureVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for texture shader");
         return false;
     }
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "quicksurfraycast::texture::textureFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("quicksurfraycast::texture::textureFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for texture shader");
         return false;
     }
@@ -579,23 +538,19 @@ bool QuickSurfRaycaster::initOpenGL() {
 /*
  * QuickSurfRaycaster::Render
  */
-bool QuickSurfRaycaster::Render(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
+bool QuickSurfRaycaster::Render(core_gl::view::CallRender3DGL& call) {
 
     if (isoVals.size() < 1)
         return true;
 
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
+    callTime = call.Time();
 
-    callTime = cr3d->Time();
+    if (!this->volume_fbo.IsValid() || this->volume_fbo.GetWidth() != call.GetFramebuffer()->getWidth() ||
+        this->volume_fbo.GetHeight() != call.GetFramebuffer()->getHeight()) {
 
-    if (!this->volume_fbo.IsValid() || this->volume_fbo.GetWidth() != cameraInfo->VirtualViewSize().GetWidth() ||
-        this->volume_fbo.GetHeight() != cameraInfo->VirtualViewSize().GetHeight()) {
-
-        unsigned int width = cameraInfo->VirtualViewSize().GetWidth();
-        unsigned int height = cameraInfo->VirtualViewSize().GetHeight();
+        unsigned int width = call.GetFramebuffer()->getWidth();
+        unsigned int height = call.GetFramebuffer()->getHeight();
         this->volume_fbo.Create(width, height);
     }
 
@@ -736,8 +691,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
                 unsigned int posStride = parts.GetVertexDataStride();
                 unsigned int colStride = parts.GetColourDataStride();
                 float globalRadius = parts.GetGlobalRadius();
-                bool useGlobRad = (parts.GetVertexDataType() ==
-                                   megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                bool useGlobRad =
+                    (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
                 int numColors = 0;
 
                 switch (parts.GetColourDataType()) {
@@ -759,8 +714,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
                 }
 
                 // if the vertices have no type, take the next list
-                if (parts.GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) { // TODO is this correct?
@@ -892,15 +846,15 @@ bool QuickSurfRaycaster::Render(Call& call) {
         onlyVolumetric = true;
     }
 
-    initCuda(*cr3d);
-    initPixelBuffer(*cr3d);
+    initCuda(call);
+    initPixelBuffer(call);
 
     float factor = scalingFactor.Param<param::FloatParam>()->Value();
 
-    auto viewport = cr3d->GetViewport().GetSize();
+    glm::ivec2 viewport = call.GetViewResolution();
 
     // get the clip plane
-    view::CallClipPlane* ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    core::view::CallClipPlane* ccp = this->getClipPlaneSlot.CallAs<core::view::CallClipPlane>();
     bool clipplaneAvailable = false;
     float4 plane;
 
@@ -943,12 +897,13 @@ bool QuickSurfRaycaster::Render(Call& call) {
     mvpMatrix.Transpose();
     copyMVPMatrix(mvpMatrix.PeekComponents(), 4 * sizeof(float4));
 
-    auto cam = cr3d->GetCameraParameters();
+    auto cam = call.GetCamera();
+    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
 
-    float fovy = (float)(cam->ApertureAngle() * M_PI / 180.0f);
+    float fovy = (float)(cam_intrinsics.fovy * M_PI / 180.0f);
 
-    float aspect = (float)viewport.GetWidth() / (float)viewport.GetHeight();
-    if (viewport.GetHeight() == 0)
+    float aspect = (float)viewport.x / (float)viewport.y;
+    if (viewport.y == 0)
         aspect = 0.0f;
 
     float fovx = 2.0f * atan(tan(fovy / 2.0f) * aspect);
@@ -964,7 +919,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
     printf("max: %f %f %f \n\n", clipBoxMax.x, clipBoxMax.y, clipBoxMax.z);*/
 
     dim3 blockSize = dim3(8, 8);
-    dim3 gridSize = dim3(iDivUp(viewport.GetWidth(), blockSize.x), iDivUp(viewport.GetHeight(), blockSize.y));
+    dim3 gridSize = dim3(iDivUp(viewport.x, blockSize.x), iDivUp(viewport.y, blockSize.y));
 
     if (recomputeVolume && !onlyVolumetric) {
         if (cudaqsurf == NULL) {
@@ -1064,9 +1019,9 @@ bool QuickSurfRaycaster::Render(Call& call) {
     auto depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
     glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
 
-    render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy,
-        camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax,
-        volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f), plane, clipplaneAvailable);
+    render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.x, viewport.y, fovx, fovy, camPos, camDir,
+        camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light,
+        make_float4(0.3f, 0.5f, 0.4f, 10.0f), plane, clipplaneAvailable);
 
     getLastCudaError("kernel failed");
     checkCudaErrors(cudaDeviceSynchronize());
@@ -1088,8 +1043,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
     glGetIntegerv(GL_ACTIVE_TEXTURE, &texID);
     glActiveTexture(GL_TEXTURE15);
     glBindTexture(GL_TEXTURE_2D, texHandle);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, viewport.GetWidth(), viewport.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, cudaImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport.x, viewport.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, cudaImage);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1097,8 +1051,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
     glActiveTexture(GL_TEXTURE16);
     glBindTexture(GL_TEXTURE_2D, depthTexHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.GetWidth(), viewport.GetHeight(), 0,
-        GL_DEPTH_COMPONENT, GL_FLOAT, cudaDepthImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, viewport.x, viewport.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+        cudaDepthImage);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1151,8 +1105,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
     // parse selected isovalues if needed
     if (selectedIsovals.IsDirty() || firstTransfer) {
         isoVals.clear();
-        vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
-        vislib::StringA vala = T2A(valString);
+        vislib::StringA vala = selectedIsovals.Param<param::StringParam>()->Value().c_str();
 
         vislib::StringTokeniserA sta(vala, ',');
         while (sta.HasNext()) {

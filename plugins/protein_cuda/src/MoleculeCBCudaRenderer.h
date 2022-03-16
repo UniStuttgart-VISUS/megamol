@@ -13,12 +13,12 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/graphics/FpsCounter.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <algorithm>
 #include <list>
 #include <set>
@@ -37,7 +37,7 @@ namespace protein_cuda {
  * Computes and renders the solvent excluded (Connolly) surface
  * using the Contour-Buildup Algorithm by Totrov & Abagyan.
  */
-class MoleculeCBCudaRenderer : public megamol::core::view::Renderer3DModule {
+class MoleculeCBCudaRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -63,8 +63,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        //return true;
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** ctor */
@@ -107,7 +106,7 @@ protected:
     /**
      * Initialize CUDA
      */
-    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, core::view::CallRender3D* cr3d);
+    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
 
     /**
      * Write atom positions and radii to an array for processing in CUDA
@@ -156,7 +155,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -164,7 +163,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * CUDA version of contour buildup algorithm
@@ -208,14 +207,14 @@ private:
     megamol::core::param::ParamSlot stepsParam;
 
     // camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     // shader for the sphere raycasting
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
     // shader for the spherical triangle raycasting
-    vislib::graphics::gl::GLSLShader sphericalTriangleShader;
+    vislib_gl::graphics::gl::GLSLShader sphericalTriangleShader;
     // shader for the torus raycasting
-    vislib::graphics::gl::GLSLShader torusShader;
+    vislib_gl::graphics::gl::GLSLShader torusShader;
 
     // the bounding box of the protein
     vislib::math::Cuboid<float> bBox;
@@ -311,6 +310,8 @@ private:
     uint probeNeighborCount;
     unsigned int texHeight;
     unsigned int texWidth;
+    unsigned int width;
+    unsigned int height;
 
     bool setCUDAGLDevice;
 };
