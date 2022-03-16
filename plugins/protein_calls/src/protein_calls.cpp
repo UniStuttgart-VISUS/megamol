@@ -8,7 +8,6 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/CallMouseInput.h"
 #include "protein_calls/CrystalStructureDataCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/IntSelectionCall.h"
@@ -48,7 +47,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::SplitMergeCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VariantMatchDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VTIDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::CallMouseInput>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::PerAtomFloatCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::TunnelResidueDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::RamachandranDataCall>();
