@@ -1,7 +1,7 @@
-#include "stdafx.h"
 #include "MoleculeSequenceRenderer.h"
 #include "mmcore/CallerSlot.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "stdafx.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 
 //#include "vislib/

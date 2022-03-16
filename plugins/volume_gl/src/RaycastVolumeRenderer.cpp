@@ -7,8 +7,10 @@
 
 #include "RaycastVolumeRenderer.h"
 
-#include "mmcore/CoreInstance.h"
+#include "OpenGL_Context.h"
+
 #include "geometry_calls//VolumetricDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -17,6 +19,9 @@
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -24,9 +29,6 @@
 #include <limits>
 #include <memory>
 #include <vector>
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
 
 #include <glm/ext.hpp>
 
@@ -53,7 +55,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
         , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
         , m_transferFunction_callerSlot(
-              "getTranfserFunction", "Connects the volume renderer with a transfer function") {
+              "getTransferFunction", "Connects the volume renderer with a transfer function") {
 
     this->m_renderer_callerSlot.SetCompatibleCall<megamol::core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->m_renderer_callerSlot);
@@ -64,7 +66,8 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->m_lights_callerSlot);
 
-    this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->m_transferFunction_callerSlot
+        .SetCompatibleCall<megamol::core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
     this->m_mode << new megamol::core::param::EnumParam(0);
@@ -115,6 +118,10 @@ RaycastVolumeRenderer::~RaycastVolumeRenderer() {
 }
 
 bool RaycastVolumeRenderer::create() {
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isVersionGEQ(4, 3))
+        return false;
+
     try {
         // create shader program
         auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
@@ -199,7 +206,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            if (this->fbo.IsValid()) this->fbo.Release();
+            if (this->fbo.IsValid())
+                this->fbo.Release();
             this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
@@ -221,8 +229,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->getWidth() ||
         this->m_render_target->getHeight() != cr_fbo->getHeight()) {
 
-        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
-            GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_RGBA,
+            GL_UNSIGNED_BYTE, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -231,8 +239,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
         // create normal target texture
-        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
-            GL_RGBA, GL_FLOAT, 1,
+        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_RGBA,
+            GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -241,8 +249,7 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
 
         // create depth target texture
-        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R,
-            GL_FLOAT, 1,
+        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -355,8 +362,7 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     compute_shdr->setUniform("specular_col", this->m_specular_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_specular_color.Param<core::param::ColorParam>()->Value()[1],
         this->m_specular_color.Param<core::param::ColorParam>()->Value()[2]);
-    compute_shdr->setUniform(
-        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2]);
+    compute_shdr->setUniform("light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2]);
     compute_shdr->setUniform("material_col", this->m_material_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_material_color.Param<core::param::ColorParam>()->Value()[1],
         this->m_material_color.Param<core::param::ColorParam>()->Value()[2]);
@@ -489,6 +495,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     }
 
     // copy image to framebuffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
     bool state_blend = glIsEnabled(GL_BLEND);
 

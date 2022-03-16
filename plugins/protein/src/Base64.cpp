@@ -8,35 +8,26 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "Base64.h"
+#include "stdafx.h"
 
 using namespace megamol::protein;
 
 typedef unsigned int uint;
 
 /// Encodes numbers between 0 .. 63 into the according one byte representation
-const char Base64::MapEncode[64] = {
-    0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
-    0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50,
-    0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
-    0x59, 0x5A, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
-    0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E,
-    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
-    0x77, 0x78, 0x79, 0x7A, 0x30, 0x31, 0x32, 0x33,
-    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x2B, 0x2F
-};
+const char Base64::MapEncode[64] = {0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E,
+    0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
+    0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A,
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x2B, 0x2F};
 
 /// Decodes ascii representation of a letter to the respective number
 /// between 0 .. 63
 const char Base64::MapDecode[128] = {
     // 0 .. 43 are zeros
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
     0x3E, // # 43 '+' <=> 62
     // 44 .. 46 are zeros
     0x00, 0x00, 0x00,
@@ -108,73 +99,69 @@ const char Base64::MapDecode[128] = {
     0x32, // #121 'y' <=> 50
     0x33, // #122 'z' <=> 51
     // 123 .. 127 are zeros
-    0x00, 0x00, 0x00, 0x00, 0x00
-};
+    0x00, 0x00, 0x00, 0x00, 0x00};
 
 /*
  * Base64::Encode
  */
-void Base64::Encode(const char *input, char *output, SIZE_T s) {
+void Base64::Encode(const char* input, char* output, size_t s) {
 
     char bytes[3];
     uint nfillers;
 
     // All byte triples contained in the data
-    for (uint cnt = 0; cnt < s/3; ++cnt) {
-        output[4*cnt+0] = MapEncode[(input[cnt*3+0] & 0xfc) >> 2];
-        output[4*cnt+1] = MapEncode[((input[cnt*3+0] & 0x03) << 4) + ((input[cnt*3+1] & 0xf0) >> 4)];
-        output[4*cnt+2] = MapEncode[((input[cnt*3+1] & 0x0f) << 2) + ((input[cnt*3+2] & 0xc0) >> 6)];
-        output[4*cnt+3] = MapEncode[input[cnt*3+2] & 0x3f];
+    for (uint cnt = 0; cnt < s / 3; ++cnt) {
+        output[4 * cnt + 0] = MapEncode[(input[cnt * 3 + 0] & 0xfc) >> 2];
+        output[4 * cnt + 1] = MapEncode[((input[cnt * 3 + 0] & 0x03) << 4) + ((input[cnt * 3 + 1] & 0xf0) >> 4)];
+        output[4 * cnt + 2] = MapEncode[((input[cnt * 3 + 1] & 0x0f) << 2) + ((input[cnt * 3 + 2] & 0xc0) >> 6)];
+        output[4 * cnt + 3] = MapEncode[input[cnt * 3 + 2] & 0x3f];
     }
 
     // Last byte triple (potentially containing one or two filler bytes). 6-bit
     // bundles that only contain bits from filler bytes are encoded by '=', the
     // number of '=', therefore, indicates the number of filler bytes used
-    nfillers = (3-s%3) % 3;
-    memcpy(&bytes[0], input+s/3, s%3); // Copy valid bytes from the actual data
-    memset(&bytes[s%3], 0, nfillers);  // Set filler bytes
-    output[4*int(s/3)+0] = MapEncode[(bytes[0] & 0xfc) >> 2];
-    output[4*int(s/3)+1] = MapEncode[((bytes[0] & 0x03) << 4) + ((bytes[1] & 0xf0) >> 4)];
+    nfillers = (3 - s % 3) % 3;
+    memcpy(&bytes[0], input + s / 3, s % 3); // Copy valid bytes from the actual data
+    memset(&bytes[s % 3], 0, nfillers);      // Set filler bytes
+    output[4 * int(s / 3) + 0] = MapEncode[(bytes[0] & 0xfc) >> 2];
+    output[4 * int(s / 3) + 1] = MapEncode[((bytes[0] & 0x03) << 4) + ((bytes[1] & 0xf0) >> 4)];
     if (nfillers > 1) {
-        output[4*int(s/3)+2] = '=';
+        output[4 * int(s / 3) + 2] = '=';
     } else {
-        output[4*int(s/3)+2] = MapEncode[((bytes[1] & 0x0f) << 2) + ((bytes[2] & 0xc0) >> 6)];
+        output[4 * int(s / 3) + 2] = MapEncode[((bytes[1] & 0x0f) << 2) + ((bytes[2] & 0xc0) >> 6)];
     }
     if (nfillers > 0) {
-        output[4*int(s/3)+3] = '=';
+        output[4 * int(s / 3) + 3] = '=';
     } else {
-        output[4*int(s/3)+3] = MapEncode[bytes[2] & 0x3f];
+        output[4 * int(s / 3) + 3] = MapEncode[bytes[2] & 0x3f];
     }
 }
 
 /*
  * Base64::Decode
  */
-void Base64::Decode(const char *input, char *output, SIZE_T s) {
+void Base64::Decode(const char* input, char* output, size_t s) {
     char bytes[4];
     uint nFillers;
     // Decode byte triples
-    for (unsigned int cnt = 0; cnt < s/3; cnt++) {
-        char bytes[] = {
-                MapDecode[static_cast<int>(input[cnt*4+0])],
-                MapDecode[static_cast<int>(input[cnt*4+1])],
-                MapDecode[static_cast<int>(input[cnt*4+2])],
-                MapDecode[static_cast<int>(input[cnt*4+3])]};
-        output[3*cnt+0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
-        output[3*cnt+1] = ((bytes[1] & 0xf) << 4) + ((bytes[2] & 0x3c) >> 2);
-        output[3*cnt+2] = ((bytes[2] & 0x3) << 6) + bytes[3];
+    for (unsigned int cnt = 0; cnt < s / 3; cnt++) {
+        char bytes[] = {MapDecode[static_cast<int>(input[cnt * 4 + 0])],
+            MapDecode[static_cast<int>(input[cnt * 4 + 1])], MapDecode[static_cast<int>(input[cnt * 4 + 2])],
+            MapDecode[static_cast<int>(input[cnt * 4 + 3])]};
+        output[3 * cnt + 0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
+        output[3 * cnt + 1] = ((bytes[1] & 0xf) << 4) + ((bytes[2] & 0x3c) >> 2);
+        output[3 * cnt + 2] = ((bytes[2] & 0x3) << 6) + bytes[3];
     }
-    bytes[0] = MapDecode[static_cast<int>(input[int(s/3)*4+0])];
-    bytes[1] = MapDecode[static_cast<int>(input[int(s/3)*4+1])];
-    bytes[2] = MapDecode[static_cast<int>(input[int(s/3)*4+2])];
-    bytes[3] = MapDecode[static_cast<int>(input[int(s/3)*4+3])];
+    bytes[0] = MapDecode[static_cast<int>(input[int(s / 3) * 4 + 0])];
+    bytes[1] = MapDecode[static_cast<int>(input[int(s / 3) * 4 + 1])];
+    bytes[2] = MapDecode[static_cast<int>(input[int(s / 3) * 4 + 2])];
+    bytes[3] = MapDecode[static_cast<int>(input[int(s / 3) * 4 + 3])];
     // Decode last one or two bytes
-    nFillers = (3-s%3) % 3;
+    nFillers = (3 - s % 3) % 3;
     if (nFillers == 2) { // Decode last byte
-        output[3*int(s/3)+0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
+        output[3 * int(s / 3) + 0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
     } else if (nFillers == 1) { // Decode last two bytes
-        output[3*int(s/3)+0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
-        output[3*int(s/3)+1] = ((bytes[1] & 0xf) << 4) + ((bytes[2] & 0x3c) >> 2);
+        output[3 * int(s / 3) + 0] = (bytes[0] << 2) + ((bytes[1] & 0x30) >> 4);
+        output[3 * int(s / 3) + 1] = ((bytes[1] & 0xf) << 4) + ((bytes[2] & 0x3c) >> 2);
     }
 }
-

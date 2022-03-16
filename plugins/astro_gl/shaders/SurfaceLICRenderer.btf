@@ -12,4 +12,14 @@
         <snippet type="file">SurfaceLIC-Functions.glsl</snippet>
         <snippet type="file">SurfaceLIC-Compute.glsl</snippet>
     </shader>
+
+    <shader name="vert">
+        <snippet type="version">430</snippet>
+        <snippet type="file">RaycastVolumeRenderer-Vertex.glsl</snippet>
+    </shader>
+
+    <shader name="frag">
+        <snippet type="version">430</snippet>
+        <snippet type="file">RaycastVolumeRenderer-Fragment.glsl</snippet>
+    </shader>
 </btf>

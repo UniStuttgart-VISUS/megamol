@@ -8,7 +8,7 @@
 #ifndef FEM_MODEL_H_INCLUDED
 #define FEM_MODEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
@@ -60,12 +60,17 @@ public:
         virtual std::vector<size_t> getNodeIndices() const = 0;
     };
 
-    template <typename N> struct ElementModel : ElementConcept {
+    template<typename N>
+    struct ElementModel : ElementConcept {
         ElementModel(ElementType type, N node_indices) : m_type(type), m_node_indices(node_indices) {}
 
-        ElementConcept* clone() const { return new ElementModel(m_type, m_node_indices); }
+        ElementConcept* clone() const {
+            return new ElementModel(m_type, m_node_indices);
+        }
 
-        ElementType getType() const { return m_type; }
+        ElementType getType() const {
+            return m_type;
+        }
 
         std::vector<size_t> getNodeIndices() const {
             return std::vector<size_t>(m_node_indices.begin(), m_node_indices.end());
@@ -77,20 +82,24 @@ public:
 
     class Element {
     public:
-        template <typename N>
+        template<typename N>
         Element(ElementType type, N node_indices) : m_element(new ElementModel<N>(type, node_indices)) {}
 
         Element() : m_element(nullptr){};
 
         ~Element() {
-            if (m_element != nullptr) delete m_element;
+            if (m_element != nullptr)
+                delete m_element;
         }
 
         Element(Element const& other) : m_element(nullptr) {
-            if (other.m_element != nullptr) m_element = other.m_element->clone();
+            if (other.m_element != nullptr)
+                m_element = other.m_element->clone();
         }
 
-        Element(Element&& other) : Element() { std::swap(m_element, other.m_element); }
+        Element(Element&& other) : Element() {
+            std::swap(m_element, other.m_element);
+        }
 
         Element& operator=(Element const& rhs) {
             delete m_element;
@@ -102,15 +111,19 @@ public:
             return *this;
         }
 
-        Element& operator=(Element&& other) { 
+        Element& operator=(Element&& other) {
             std::swap(m_element, other.m_element);
 
             return *this;
         };
 
-        ElementType getType() const { return m_element->getType(); }
+        ElementType getType() const {
+            return m_element->getType();
+        }
 
-        std::vector<size_t> getNodeIndices() const { return m_element->getNodeIndices(); }
+        std::vector<size_t> getNodeIndices() const {
+            return m_element->getNodeIndices();
+        }
 
     private:
         ElementConcept* m_element;
@@ -148,15 +161,18 @@ private:
 };
 
 inline FEMModel::FEMModel()
-    : m_node_cnt(0)
-    , m_timesteps(0) //, m_node_positions(), m_elements(), m_deformations()
+        : m_node_cnt(0)
+        , m_timesteps(0) //, m_node_positions(), m_elements(), m_deformations()
 {}
 
 inline FEMModel::~FEMModel() {}
 
-inline FEMModel::FEMModel(
-    std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
-    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_dynamic_data() {
+inline FEMModel::FEMModel(std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
+        : m_node_cnt(nodes.size())
+        , m_timesteps(0)
+        , m_node_positions(nodes)
+        , m_elements(elements.size())
+        , m_dynamic_data() {
     for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
         m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
     }
@@ -185,13 +201,21 @@ inline void FEMModel::setDynamicData(std::vector<DynamicData> const& dyn_data) {
     m_dynamic_data = dyn_data;
 }
 
-inline std::vector<FEMModel::Vec3> const& FEMModel::getNodes() { return m_node_positions; }
+inline std::vector<FEMModel::Vec3> const& FEMModel::getNodes() {
+    return m_node_positions;
+}
 
-inline size_t FEMModel::getElementCount() { return m_elements.size(); }
+inline size_t FEMModel::getElementCount() {
+    return m_elements.size();
+}
 
-inline std::vector<FEMModel::Element> const& FEMModel::getElements() { return m_elements; }
+inline std::vector<FEMModel::Element> const& FEMModel::getElements() {
+    return m_elements;
+}
 
-inline std::vector<FEMModel::DynamicData> const& FEMModel::getDynamicData() { return m_dynamic_data; }
+inline std::vector<FEMModel::DynamicData> const& FEMModel::getDynamicData() {
+    return m_dynamic_data;
+}
 
 } // namespace archvis
 } // namespace megamol

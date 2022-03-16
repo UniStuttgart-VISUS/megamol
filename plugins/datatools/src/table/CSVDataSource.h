@@ -9,59 +9,61 @@
 #define MEGAMOL_DATATOOLS_CSVDATASOURCE_H_INCLUDED
 #pragma once
 
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "datatools/table/TableDataCall.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include <vector>
 
 namespace megamol {
 namespace datatools {
 namespace table {
 
-    class CSVDataSource : public core::Module {
-    public:
+class CSVDataSource : public core::Module {
+public:
+    static const char* ClassName(void) {
+        return "CSVDataSource";
+    }
+    static const char* Description(void) {
+        return "Data source for parsing tabular comma-separated values";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        static const char *ClassName(void) { return "CSVDataSource"; }
-        static const char *Description(void) { return "Data source for parsing tabular comma-separated values"; }
-        static bool IsAvailable(void) { return true; }
+    CSVDataSource(void);
+    virtual ~CSVDataSource(void);
 
-        CSVDataSource(void);
-        virtual ~CSVDataSource(void);
+protected:
+    virtual bool create(void);
+    virtual void release(void);
 
-    protected:
+private:
+    inline void assertData(void);
+    bool getDataCallback(core::Call& caller);
+    bool getHashCallback(core::Call& caller);
 
-        virtual bool create(void);
-        virtual void release(void);
+    bool clearData(core::param::ParamSlot& caller);
+    void shuffleData();
 
-    private:
+    core::param::ParamSlot filenameSlot;
+    core::param::ParamSlot skipPrefaceSlot;
+    core::param::ParamSlot headerNamesSlot;
+    core::param::ParamSlot headerTypesSlot;
+    core::param::ParamSlot commentPrefixSlot;
+    core::param::ParamSlot clearSlot;
+    core::param::ParamSlot colSepSlot;
+    core::param::ParamSlot decSepSlot;
+    core::param::ParamSlot shuffleSlot;
 
-        inline void assertData(void);
-        bool getDataCallback(core::Call& caller);
-        bool getHashCallback(core::Call& caller);
+    core::CalleeSlot getDataSlot;
 
-        bool clearData(core::param::ParamSlot& caller);
-        void shuffleData();
+    SIZE_T dataHash;
 
-        core::param::ParamSlot filenameSlot;
-		core::param::ParamSlot skipPrefaceSlot;
-		core::param::ParamSlot headerNamesSlot;
-        core::param::ParamSlot headerTypesSlot;
-		core::param::ParamSlot commentPrefixSlot;
-        core::param::ParamSlot clearSlot;
-        core::param::ParamSlot colSepSlot;
-        core::param::ParamSlot decSepSlot;
-        core::param::ParamSlot shuffleSlot;
-
-        core::CalleeSlot getDataSlot;
-
-        SIZE_T dataHash;
-
-        std::vector<TableDataCall::ColumnInfo> columns;
-        std::vector<float> values;
-
-    };
+    std::vector<TableDataCall::ColumnInfo> columns;
+    std::vector<float> values;
+};
 
 } /* end namespace table */
 } /* end namespace datatools */

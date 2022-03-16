@@ -1,7 +1,7 @@
 /*
  * View2DGL.h
  *
- * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -17,8 +17,9 @@
 #include "mmcore/view/BaseView.h"
 #include "mmcore/view/TimeControl.h"
 
-#include "mmcore_gl/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraControllers.h"
+#include "mmcore_gl/view/AbstractViewGL.h"
+#include "mmcore_gl/view/CallRenderViewGL.h"
 
 #include <glowl/FramebufferObject.hpp>
 
@@ -29,15 +30,14 @@ namespace view {
 /**
  * Base class of rendering graph calls
  */
-class View2DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera2DController> {
+class View2DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera2DController, AbstractViewGL> {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "View2DGL";
     }
 
@@ -46,7 +46,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "2D View Module";
     }
 
@@ -79,7 +79,7 @@ public:
     virtual bool create(void);
 };
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_VIEW2DGL_H_INCLUDED */

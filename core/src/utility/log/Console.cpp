@@ -10,16 +10,16 @@
 #include <cstdio>
 
 #ifdef _WIN32
-#include <Windows.h>
 #include "vislib/sys/Path.h"
+#include <Windows.h>
 
 #include "mmcore/utility/sys/DynamicFunctionPointer.h"
 
 #else /* _WIN32 */
 #include <stdlib.h>
 
-#include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <curses.h>
@@ -29,10 +29,10 @@
 
 #endif /* _WIN32 */
 
+#include "mmcore/utility/sys/Thread.h"
+#include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/SystemException.h"
-#include "vislib/UnsupportedOperationException.h"
-#include "mmcore/utility/sys/Thread.h"
 
 
 namespace megamol::core::utility::log {
@@ -40,16 +40,19 @@ namespace megamol::core::utility::log {
 /*
  * Console::ConsoleLogTarget::Msg
  */
-void Console::ConsoleLogTarget::Msg(unsigned int level,
-        megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
-                const char *msg) {
+void Console::ConsoleLogTarget::Msg(unsigned int level, megamol::core::utility::log::Log::TimeStamp time,
+    megamol::core::utility::log::Log::SourceID sid, const char* msg) {
     if (Console::ColorsEnabled()) {
         Console::ColorType color;
 
-        if (level <= megamol::core::utility::log::Log::LEVEL_ERROR) color = Console::RED; // error
-        else if (level <= megamol::core::utility::log::Log::LEVEL_WARN) color = Console::YELLOW; // warning
-        else if (level <= megamol::core::utility::log::Log::LEVEL_INFO) color = Console::WHITE; // info
-        else color = Console::UNKNOWN_COLOR;
+        if (level <= megamol::core::utility::log::Log::LEVEL_ERROR)
+            color = Console::RED; // error
+        else if (level <= megamol::core::utility::log::Log::LEVEL_WARN)
+            color = Console::YELLOW; // warning
+        else if (level <= megamol::core::utility::log::Log::LEVEL_INFO)
+            color = Console::WHITE; // info
+        else
+            color = Console::UNKNOWN_COLOR;
 
         if (color != Console::UNKNOWN_COLOR) {
             Console::SetForegroundColor(color);
@@ -96,13 +99,13 @@ static bool __vl_console_useColors
 bool& Console::useColors(__vl_console_useColors);
 
 
-/* 
+/*
  * Console::defaultFgcolor
  */
 Console::ColorType Console::defaultFgcolor = Console::GetForegroundColor();
 
 
-/* 
+/*
  * Console::defaultBgcolor
  */
 Console::ColorType Console::defaultBgcolor = Console::GetBackgroundColor();
@@ -114,8 +117,7 @@ Console::ColorType Console::defaultBgcolor = Console::GetBackgroundColor();
  */
 class Console::ConsoleHelper {
 public:
-
-    static ConsoleHelper * GetInstance() {
+    static ConsoleHelper* GetInstance() {
         static ConsoleHelper helper = ConsoleHelper();
         return &helper;
     }
@@ -128,12 +130,12 @@ public:
         /** The pipe to read from */
 #ifdef _WIN32
         HANDLE pipe;
-#else /* _WIN32 */
+#else  /* _WIN32 */
         int pipe;
 #endif /* _WIN32 */
 
         /** The target string to receive the read data */
-        vislib::StringA *target;
+        vislib::StringA* target;
 
     } PipeReaderInfo;
 
@@ -147,22 +149,21 @@ public:
      *
      * @return 0 on success, nonzero on failure.
      */
-    static DWORD ReadFromPipe(void *userData) {
-        PipeReaderInfo *info = static_cast<PipeReaderInfo* >(userData);
+    static DWORD ReadFromPipe(void* userData) {
+        PipeReaderInfo* info = static_cast<PipeReaderInfo*>(userData);
         const DWORD bufferSize = 1024;
         char buffer[bufferSize + 1];
         DWORD bytesRead;
 
         while (true) {
 #ifdef _WIN32
-            if (::ReadFile(info->pipe, buffer, bufferSize, &bytesRead, NULL)
-                    == 0) {
+            if (::ReadFile(info->pipe, buffer, bufferSize, &bytesRead, NULL) == 0) {
                 break;
             }
             if (GetLastError() == ERROR_BROKEN_PIPE) {
                 break;
             }
-#else /* _WIN32 */
+#else  /* _WIN32 */
             if ((bytesRead = ::read(info->pipe, buffer, bufferSize)) == 0) {
                 break;
             }
@@ -176,27 +177,24 @@ public:
 #ifdef _WIN32
 
     /**
-     * Keeps record of the old window icons for restoration at program 
+     * Keeps record of the old window icons for restoration at program
      * termination.
      *
      * @param console The hwnd to the console. Must not be NULL.
      */
     void MemorizeWindowIcons(HWND console) {
         // only memorize icons on the very first call.
-        if (this->restoreIcons) return;
+        if (this->restoreIcons)
+            return;
 
-        this->restoreIcons = true; 
-        this->oldBigIcon = reinterpret_cast<HICON>(
-            ::SendMessageA(console, WM_GETICON, ICON_BIG, 0));
-        this->oldSmlIcon = reinterpret_cast<HICON>(
-            ::SendMessageA(console, WM_GETICON, ICON_SMALL, 0));
+        this->restoreIcons = true;
+        this->oldBigIcon = reinterpret_cast<HICON>(::SendMessageA(console, WM_GETICON, ICON_BIG, 0));
+        this->oldSmlIcon = reinterpret_cast<HICON>(::SendMessageA(console, WM_GETICON, ICON_SMALL, 0));
     }
 
 private:
-
     /** ctor */
-    ConsoleHelper(void) : restoreIcons(false) {
-    }
+    ConsoleHelper(void) : restoreIcons(false) {}
 
     /** dtor */
     ~ConsoleHelper(void) {
@@ -208,14 +206,12 @@ private:
             if (getConsoleWindow.IsValid()) {
                 console = getConsoleWindow();
                 if (console != NULL) {
-                    ::SendMessageA(console, WM_SETICON, ICON_BIG, 
-                        (this->oldBigIcon) 
-                        ? reinterpret_cast<LPARAM>(this->oldBigIcon) 
-                        : GetClassLongPtrA(console, GCLP_HICON));
-                    ::SendMessageA(console, WM_SETICON, ICON_SMALL, 
-                        (this->oldSmlIcon) 
-                        ? reinterpret_cast<LPARAM>(this->oldSmlIcon) 
-                        : GetClassLongPtrA(console, GCLP_HICONSM));
+                    ::SendMessageA(console, WM_SETICON, ICON_BIG,
+                        (this->oldBigIcon) ? reinterpret_cast<LPARAM>(this->oldBigIcon)
+                                           : GetClassLongPtrA(console, GCLP_HICON));
+                    ::SendMessageA(console, WM_SETICON, ICON_SMALL,
+                        (this->oldSmlIcon) ? reinterpret_cast<LPARAM>(this->oldSmlIcon)
+                                           : GetClassLongPtrA(console, GCLP_HICONSM));
                 }
             }
         }
@@ -250,26 +246,60 @@ private:
 
         // Translate color codes (the hard way, because of the ANSI-constant screw up
         switch (col) {
-            case BLACK: colType = COLOR_BLACK; break;
-            case DARK_RED: colType = COLOR_RED; break;
-            case DARK_GREEN: colType = COLOR_GREEN; break;
-            case DARK_YELLOW: colType = COLOR_YELLOW; break;
-            case DARK_BLUE: colType = COLOR_BLUE; break;
-            case DARK_MAGENTA: colType = COLOR_MAGENTA; break;
-            case DARK_CYAN: colType = COLOR_CYAN; break;
-            case GRAY: colType = COLOR_WHITE; break;
+        case BLACK:
+            colType = COLOR_BLACK;
+            break;
+        case DARK_RED:
+            colType = COLOR_RED;
+            break;
+        case DARK_GREEN:
+            colType = COLOR_GREEN;
+            break;
+        case DARK_YELLOW:
+            colType = COLOR_YELLOW;
+            break;
+        case DARK_BLUE:
+            colType = COLOR_BLUE;
+            break;
+        case DARK_MAGENTA:
+            colType = COLOR_MAGENTA;
+            break;
+        case DARK_CYAN:
+            colType = COLOR_CYAN;
+            break;
+        case GRAY:
+            colType = COLOR_WHITE;
+            break;
 
-            case DARK_GRAY: colType = COLOR_BLACK; break;
-            case RED: colType = COLOR_RED; break;
-            case GREEN: colType = COLOR_GREEN; break;
-            case YELLOW: colType = COLOR_YELLOW; break;
-            case BLUE: colType = COLOR_BLUE; break;
-            case MAGENTA: colType = COLOR_MAGENTA; break;
-            case CYAN: colType = COLOR_CYAN; break;
-            case WHITE: colType = COLOR_WHITE; break;
+        case DARK_GRAY:
+            colType = COLOR_BLACK;
+            break;
+        case RED:
+            colType = COLOR_RED;
+            break;
+        case GREEN:
+            colType = COLOR_GREEN;
+            break;
+        case YELLOW:
+            colType = COLOR_YELLOW;
+            break;
+        case BLUE:
+            colType = COLOR_BLUE;
+            break;
+        case MAGENTA:
+            colType = COLOR_MAGENTA;
+            break;
+        case CYAN:
+            colType = COLOR_CYAN;
+            break;
+        case WHITE:
+            colType = COLOR_WHITE;
+            break;
 
-            case UNKNOWN_COLOR: 
-            default: return; break;
+        case UNKNOWN_COLOR:
+        default:
+            return;
+            break;
         }
 
         if (foreground) {
@@ -281,7 +311,7 @@ private:
     }
 
     /** sets the console title, if possible */
-    inline void SetConsoleTitle(const char *title) {
+    inline void SetConsoleTitle(const char* title) {
         if (!this->consoleTitleInit) {
             // first time call
 
@@ -298,7 +328,7 @@ private:
                 this->dcopPresent = (err.Length() == 0);
 
                 // check if environment variable $KONSOLE_DCOP_SESSION is present
-                char *v = ::getenv("KONSOLE_DCOP_SESSION");
+                char* v = ::getenv("KONSOLE_DCOP_SESSION");
 
                 this->isKonsole = (v != NULL);
 
@@ -309,7 +339,6 @@ private:
                 if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
                     this->isXterm = false;
                 }
-
             }
 
             if (this->oldConsoleTitle == NULL) {
@@ -323,15 +352,15 @@ private:
 
                 } else if (this->isXterm) {
                     // getting title from xterm is very unsecure
-                    struct termios tty_ts, tty_ts_orig; // termios settings 
-                    struct termios *tty_ts_orig_pt = NULL;
+                    struct termios tty_ts, tty_ts_orig; // termios settings
+                    struct termios* tty_ts_orig_pt = NULL;
 
-                    // get and backup tty_in termios 
+                    // get and backup tty_in termios
                     tcgetattr(STDIN_FILENO, &tty_ts);
                     tty_ts_orig = tty_ts;
                     tty_ts_orig_pt = &tty_ts_orig;
 
-                    // set tty raw 
+                    // set tty raw
                     tty_ts.c_iflag = 0;
                     tty_ts.c_lflag = 0;
 
@@ -352,7 +381,7 @@ private:
                         vislib::sys::Thread stdinreader(ReadFromPipe);
                         stdinreader.Start(&pri);
                         unsigned int cnt = 0;
-                        while(cnt < 1000) {
+                        while (cnt < 1000) {
                             vislib::sys::Thread::Sleep(50);
                             cnt += 50;
                             if (rd.Length() > 0) {
@@ -364,16 +393,14 @@ private:
                         if (rd.Length() > 5) {
                             oldName = rd.Substring(3, rd.Length() - 4);
                         }
-
                     }
 
                     if (tty_ts_orig_pt) {
                         tcsetattr(STDIN_FILENO, TCSAFLUSH, tty_ts_orig_pt);
                     }
 
-                } else { 
+                } else {
                     // another way?
-
                 }
 
                 unsigned int size = oldName.Length();
@@ -387,9 +414,7 @@ private:
                     while ((size > 0) && (this->oldConsoleTitle[size] < 0x20)) {
                         this->oldConsoleTitle[size--] = 0;
                     }
-
                 }
-
             }
 
             this->consoleTitleInit = true;
@@ -410,18 +435,15 @@ private:
             printf("\033]0;%s\007", title);
 
         } else {
-            // another way? 
-
+            // another way?
         }
-
     }
 
 private:
-
     /** ctor */
     ConsoleHelper(void) {
         // initialize terminal information database
-        setupterm(reinterpret_cast<char *>(0), 1, reinterpret_cast<int *>(0));
+        setupterm(reinterpret_cast<char*>(0), 1, reinterpret_cast<int*>(0));
 
         // get number of supported colors (should be 8)
         int i;
@@ -445,7 +467,7 @@ private:
 
     /** dtor */
     ~ConsoleHelper(void) {
-        
+
         if (this->oldConsoleTitle != NULL) {
             this->SetConsoleTitle(this->oldConsoleTitle);
             ARY_SAFE_DELETE(this->oldConsoleTitle);
@@ -468,7 +490,7 @@ private:
     bool isKonsole;
 
     /** old console title stored, which should be restored on exit */
-    char *oldConsoleTitle;
+    char* oldConsoleTitle;
 
 #endif
 };
@@ -477,8 +499,7 @@ private:
 /*
  * Console::Run
  */
-int Console::Run(const char *command, vislib::StringA *outStdOut,
-    vislib::StringA *outStdErr) {
+int Console::Run(const char* command, vislib::StringA* outStdOut, vislib::StringA* outStdErr) {
     // TODO: Could use some of the timeout mechanisms?
 #ifdef _WIN32
     HANDLE hErrorRead, hErrorWrite;
@@ -490,7 +511,7 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
 
     ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.lpSecurityDescriptor = NULL; 
+    sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
 
     // Create pipes
@@ -524,8 +545,8 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
     vislib::StringA cmdLine;
     cmdLine.Format("/A /C \"%s\"", command);
 
-    BOOL cp = ::CreateProcessA(cmd, const_cast<char *>(cmdLine.PeekBuffer()), 
-        NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &pi);
+    BOOL cp = ::CreateProcessA(
+        cmd, const_cast<char*>(cmdLine.PeekBuffer()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &pi);
 
     if (cp == FALSE) {
         ::CloseHandle(hErrorRead);
@@ -539,11 +560,9 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
 
     DWORD exitCode = STILL_ACTIVE;
 
-    vislib::sys::Thread outputReader(
-        Console::ConsoleHelper::ReadFromPipe);
+    vislib::sys::Thread outputReader(Console::ConsoleHelper::ReadFromPipe);
     Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
-    vislib::sys::Thread errorReader(
-        Console::ConsoleHelper::ReadFromPipe);
+    vislib::sys::Thread errorReader(Console::ConsoleHelper::ReadFromPipe);
     Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
 
     if (outStdOut != NULL) {
@@ -593,11 +612,11 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
 
     return exitCode;
 
-#else /* _WIN32 */
-    pid_t pid;                      // PID of child process executing 'command'.
-    int stdErrPipe[2];              // Pipe descriptors for stderr redirect.
-    int stdOutPipe[2];              // Pipe descriptors for stdout redirect.
-    int status;                     // Exit status of 'command'.
+#else  /* _WIN32 */
+    pid_t pid;         // PID of child process executing 'command'.
+    int stdErrPipe[2]; // Pipe descriptors for stderr redirect.
+    int stdOutPipe[2]; // Pipe descriptors for stdout redirect.
+    int status;        // Exit status of 'command'.
 
     /* Create two pipes for redirecting the child console output. */
     if (::pipe(stdOutPipe) == -1) {
@@ -630,9 +649,9 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
         }
 
         /* Replace process image with command to execute. */
-        ::execl("/bin/sh", "/bin/sh", "-c", command, static_cast<char *>(NULL));
+        ::execl("/bin/sh", "/bin/sh", "-c", command, static_cast<char*>(NULL));
 
-        /* 
+        /*
          * If this position is reached, an error occurred as the process image
          * has not successfully been replaced with the command.
          */
@@ -640,11 +659,9 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
 
     } else {
         /* Subprocess created, I am in parent process. */
-        vislib::sys::Thread outputReader(
-            Console::ConsoleHelper::ReadFromPipe);
+        vislib::sys::Thread outputReader(Console::ConsoleHelper::ReadFromPipe);
         Console::ConsoleHelper::PipeReaderInfo outputReaderInfo;
-        vislib::sys::Thread errorReader(
-            Console::ConsoleHelper::ReadFromPipe);
+        vislib::sys::Thread errorReader(Console::ConsoleHelper::ReadFromPipe);
         Console::ConsoleHelper::PipeReaderInfo errorReaderInfo;
 
         if (outStdOut != NULL) {
@@ -670,7 +687,7 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
         ::close(stdErrPipe[1]);
 
         /* Wait for the child to finish. */
-        int retval =  (::wait(&status) != -1) ? WEXITSTATUS(status) : -1;
+        int retval = (::wait(&status) != -1) ? WEXITSTATUS(status) : -1;
 
         if (outStdOut != NULL) {
             outputReader.Join();
@@ -691,9 +708,9 @@ int Console::Run(const char *command, vislib::StringA *outStdOut,
 /*
  * Console::Write
  */
-void Console::Write(const char *fmt, ...) {
+void Console::Write(const char* fmt, ...) {
     va_list argptr;
-    
+
     va_start(argptr, fmt);
     ::vfprintf(stdout, fmt, argptr);
     va_end(argptr);
@@ -703,9 +720,9 @@ void Console::Write(const char *fmt, ...) {
 /*
  * Console::WriteLine
  */
-void Console::WriteLine(const char *fmt, ...) {
+void Console::WriteLine(const char* fmt, ...) {
     va_list argptr;
-    
+
     va_start(argptr, fmt);
     ::vfprintf(stdout, fmt, argptr);
     ::fprintf(stdout, "\n");
@@ -717,16 +734,14 @@ void Console::WriteLine(const char *fmt, ...) {
  * Console::Console
  */
 Console::Console(void) {
-    throw vislib::UnsupportedOperationException("Console::Console", 
-        __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Console::Console", __FILE__, __LINE__);
 }
 
 
 /*
  * Console::~Console
  */
-Console::~Console(void) {
-}
+Console::~Console(void) {}
 
 
 /*
@@ -735,7 +750,7 @@ Console::~Console(void) {
 bool Console::ColorsAvailable(void) {
 #ifdef _WIN32
     return true;
-#else // _WIN32
+#else  // _WIN32
     return Console::ConsoleHelper::GetInstance()->AreColorsAvailable();
 #endif // _WIN32
 }
@@ -771,41 +786,52 @@ void Console::Flush(void) {
  * Console::RestoreDefaultColors
  */
 void Console::RestoreDefaultColors(void) {
-    if (!Console::useColors) return;
+    if (!Console::useColors)
+        return;
 
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return; // TODO: Inform about error?
 
     // get current info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
-    
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return; // TODO: Inform about error?
+
     if (defaultFgcolor != UNKNOWN_COLOR) {
         // clear foreground color bits
         info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
         // set new foreground color bits
         unsigned char col = static_cast<unsigned char>(defaultFgcolor);
-        if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
-        if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
-        if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
-        if ((col & 0x08) != 0) info.wAttributes |= FOREGROUND_INTENSITY;
+        if ((col & 0x01) != 0)
+            info.wAttributes |= FOREGROUND_RED;
+        if ((col & 0x02) != 0)
+            info.wAttributes |= FOREGROUND_GREEN;
+        if ((col & 0x04) != 0)
+            info.wAttributes |= FOREGROUND_BLUE;
+        if ((col & 0x08) != 0)
+            info.wAttributes |= FOREGROUND_INTENSITY;
     }
-    
+
     if (defaultBgcolor != UNKNOWN_COLOR) {
         // clear background color bits
         info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 
         // set new background color bits
         unsigned char col = static_cast<unsigned char>(defaultBgcolor);
-        if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
-        if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
-        if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
-        if ((col & 0x08) != 0) info.wAttributes |= BACKGROUND_INTENSITY;
+        if ((col & 0x01) != 0)
+            info.wAttributes |= BACKGROUND_RED;
+        if ((col & 0x02) != 0)
+            info.wAttributes |= BACKGROUND_GREEN;
+        if ((col & 0x04) != 0)
+            info.wAttributes |= BACKGROUND_BLUE;
+        if ((col & 0x08) != 0)
+            info.wAttributes |= BACKGROUND_INTENSITY;
     }
-    
+
     // set new attribut flaggs
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
@@ -820,28 +846,36 @@ void Console::RestoreDefaultColors(void) {
  * Console::SetForegroundColor
  */
 void Console::SetForegroundColor(Console::ColorType fgcolor) {
-    if (!Console::useColors) return;
-    if (fgcolor == UNKNOWN_COLOR) return;
+    if (!Console::useColors)
+        return;
+    if (fgcolor == UNKNOWN_COLOR)
+        return;
 
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return; // TODO: Inform about error?
 
     // get current info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
-    
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return; // TODO: Inform about error?
+
     // clear bits for foreground color
     info.wAttributes &= ~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
     // set new foreground color bits
     unsigned char col = static_cast<unsigned char>(fgcolor);
-    if ((col & 0x01) != 0) info.wAttributes |= FOREGROUND_RED;
-    if ((col & 0x02) != 0) info.wAttributes |= FOREGROUND_GREEN;
-    if ((col & 0x04) != 0) info.wAttributes |= FOREGROUND_BLUE;
-    if ((col & 0x08) != 0) info.wAttributes |= FOREGROUND_INTENSITY;
-    
+    if ((col & 0x01) != 0)
+        info.wAttributes |= FOREGROUND_RED;
+    if ((col & 0x02) != 0)
+        info.wAttributes |= FOREGROUND_GREEN;
+    if ((col & 0x04) != 0)
+        info.wAttributes |= FOREGROUND_BLUE;
+    if ((col & 0x08) != 0)
+        info.wAttributes |= FOREGROUND_INTENSITY;
+
     // set new attribut flaggs
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
@@ -856,28 +890,36 @@ void Console::SetForegroundColor(Console::ColorType fgcolor) {
  * Console::SetBackgroundColor
  */
 void Console::SetBackgroundColor(Console::ColorType bgcolor) {
-    if (!Console::useColors) return;
-    if (bgcolor == UNKNOWN_COLOR) return;
+    if (!Console::useColors)
+        return;
+    if (bgcolor == UNKNOWN_COLOR)
+        return;
 
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return; // TODO: Inform about error?
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return; // TODO: Inform about error?
 
     // get current info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return; // TODO: Inform about error?
-    
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return; // TODO: Inform about error?
+
     // clear bits for background color
     info.wAttributes &= ~(BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 
     // set new background color bits
     unsigned char col = static_cast<unsigned char>(bgcolor);
-    if ((col & 0x01) != 0) info.wAttributes |= BACKGROUND_RED;
-    if ((col & 0x02) != 0) info.wAttributes |= BACKGROUND_GREEN;
-    if ((col & 0x04) != 0) info.wAttributes |= BACKGROUND_BLUE;
-    if ((col & 0x08) != 0) info.wAttributes |= BACKGROUND_INTENSITY;
-    
+    if ((col & 0x01) != 0)
+        info.wAttributes |= BACKGROUND_RED;
+    if ((col & 0x02) != 0)
+        info.wAttributes |= BACKGROUND_GREEN;
+    if ((col & 0x04) != 0)
+        info.wAttributes |= BACKGROUND_BLUE;
+    if ((col & 0x08) != 0)
+        info.wAttributes |= BACKGROUND_INTENSITY;
+
     // set new attribut flaggs
     SetConsoleTextAttribute(hStdout, info.wAttributes);
 
@@ -892,23 +934,30 @@ void Console::SetBackgroundColor(Console::ColorType bgcolor) {
  * Console::GetForegroundColor
  */
 Console::ColorType Console::GetForegroundColor(void) {
-    if (!useColors) return UNKNOWN_COLOR;
+    if (!useColors)
+        return UNKNOWN_COLOR;
 
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return UNKNOWN_COLOR;
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return UNKNOWN_COLOR;
 
     // get info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return UNKNOWN_COLOR;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return UNKNOWN_COLOR;
 
     // translate foreground color bits
     unsigned char c = 0;
-    if ((info.wAttributes & FOREGROUND_RED) != 0) c += 1;
-    if ((info.wAttributes & FOREGROUND_GREEN) != 0) c += 2;
-    if ((info.wAttributes & FOREGROUND_BLUE) != 0) c += 4;
-    if ((info.wAttributes & FOREGROUND_INTENSITY) != 0) c += 8;
+    if ((info.wAttributes & FOREGROUND_RED) != 0)
+        c += 1;
+    if ((info.wAttributes & FOREGROUND_GREEN) != 0)
+        c += 2;
+    if ((info.wAttributes & FOREGROUND_BLUE) != 0)
+        c += 4;
+    if ((info.wAttributes & FOREGROUND_INTENSITY) != 0)
+        c += 8;
 
     return static_cast<Console::ColorType>(c);
 
@@ -923,23 +972,30 @@ Console::ColorType Console::GetForegroundColor(void) {
  * Console::GetBackgroundColor
  */
 Console::ColorType Console::GetBackgroundColor(void) {
-    if (!useColors) return UNKNOWN_COLOR;
+    if (!useColors)
+        return UNKNOWN_COLOR;
 
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return UNKNOWN_COLOR;
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return UNKNOWN_COLOR;
 
     // get info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return UNKNOWN_COLOR;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return UNKNOWN_COLOR;
 
     // translate background color bits
     unsigned char c = 0;
-    if ((info.wAttributes & BACKGROUND_RED) != 0) c += 1;
-    if ((info.wAttributes & BACKGROUND_GREEN) != 0) c += 2;
-    if ((info.wAttributes & BACKGROUND_BLUE) != 0) c += 4;
-    if ((info.wAttributes & BACKGROUND_INTENSITY) != 0) c += 8;
+    if ((info.wAttributes & BACKGROUND_RED) != 0)
+        c += 1;
+    if ((info.wAttributes & BACKGROUND_GREEN) != 0)
+        c += 2;
+    if ((info.wAttributes & BACKGROUND_BLUE) != 0)
+        c += 4;
+    if ((info.wAttributes & BACKGROUND_INTENSITY) != 0)
+        c += 8;
 
     return static_cast<Console::ColorType>(c);
 
@@ -957,11 +1013,13 @@ unsigned int Console::GetWidth(void) {
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return 0;
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return 0;
 
     // get info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return 0;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return 0;
 
     return info.srWindow.Right + 1 - info.srWindow.Left;
 
@@ -972,7 +1030,7 @@ unsigned int Console::GetWidth(void) {
 #endif // _WIN32
 }
 
- 
+
 /*
  * Console::GetHeight
  */
@@ -980,11 +1038,13 @@ unsigned int Console::GetHeight(void) {
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE)) return 0;
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return 0;
 
     // get info
     CONSOLE_SCREEN_BUFFER_INFO info;
-    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0) return 0;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return 0;
 
     return info.srWindow.Bottom + 1 - info.srWindow.Top;
 
@@ -1041,24 +1101,28 @@ void Console::SetIcon(int id) {
 /*
  * Console::SetIcon
  */
-void Console::SetIcon(char *id) {
+void Console::SetIcon(char* id) {
 #ifdef _WIN32
     // Creates an HWND handle for the console window
     HWND console = NULL;
     vislib::sys::DynamicFunctionPointer<HWND (*)(void)> getConsoleWindow("kernel32", "GetConsoleWindow");
-    if (!getConsoleWindow.IsValid()) return; // function not found. Windows too old.
+    if (!getConsoleWindow.IsValid())
+        return; // function not found. Windows too old.
     console = getConsoleWindow();
-    if (console == NULL) return; // no console present
+    if (console == NULL)
+        return; // no console present
 
     // Creates an HINSTANCE handle for the current application.
-    // 'GetModuleHandleA' creates a HMODULE which should be the same as 
+    // 'GetModuleHandleA' creates a HMODULE which should be the same as
     // HINSTANCE, at least this is the common hope.
     HMODULE instance = ::GetModuleHandleA(NULL);
-    if (instance == NULL) return; // no instance handle available ... hmm
+    if (instance == NULL)
+        return; // no instance handle available ... hmm
 
     // Load the requested icon ressource
-    HICON icon = ::LoadIconA(instance, id); 
-    if (icon == NULL) return; // icon ressource not found.
+    HICON icon = ::LoadIconA(instance, id);
+    if (icon == NULL)
+        return; // icon ressource not found.
 
     // setting the icon.
     Console::ConsoleHelper::GetInstance()->MemorizeWindowIcons(console);
@@ -1070,4 +1134,4 @@ void Console::SetIcon(char *id) {
 
 #endif // _WIN32
 }
-} // end namespace
+} // namespace megamol::core::utility::log

@@ -1,23 +1,7 @@
 #version 430
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
-
-uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
-uniform vec3 zValues;
-uniform vec3 fogCol;
-
-#ifndef CALC_CAM_SYS
-uniform vec3 camIn;
-uniform vec3 camUp;
-uniform vec3 camRight;
-#endif // CALC_CAM_SYS
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
 layout (location = 0) in vec4 vert_position;
 layout (location = 1) in vec4 vert_color;
@@ -28,7 +12,7 @@ layout (location = 5) in vec3 torus_cuttingplane;
 
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+
 out vec4 radii;
 out vec4 visibilitySphere;
 
@@ -91,31 +75,11 @@ void main(void) {
     tmp = viewInverse[3]; // (C) by Christoph
     tmp.xyz -= objPos.xyz; // cam move
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
-    lightPos = vec4(0,0,0,1); // Dummy
-    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
     vec2 d, p, q, h, dd;
-
-    // get camera orthonormal coordinate system
-
-#ifdef CALC_CAM_SYS
-    // camera coordinate system in object space
-    tmp = viewInverse[3] + viewInverse[2];
-    vec3 camIn = normalize(tmp.xyz);
-    tmp = viewInverse[3] + viewInverse[1];
-    vec3 camUp = tmp.xyz;
-    vec3 camRight = normalize(cross(camIn, camUp));
-    camUp = cross(camIn, camRight);
-#endif // CALC_CAM_SYS
 
     vec2 mins, maxs;
     vec3 testPos;
@@ -179,10 +143,4 @@ void main(void) {
     // set position and point size
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
-    
-#ifdef SMALL_SPRITE_LIGHTING
-    // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
-#endif // SMALL_SPRITE_LIGHTING
-
 }

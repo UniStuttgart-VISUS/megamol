@@ -45,9 +45,19 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
-option(ENABLE_PROFILING "Enable profiling code" OFF)
-if (ENABLE_PROFILING)
-  add_compile_definitions(PROFILING)
+if (ENABLE_GL)
+  option(ENABLE_PROFILING "Enable profiling code" OFF)
+  if (ENABLE_PROFILING)
+    add_compile_definitions(PROFILING)
+  endif()
+endif()
+
+# VR Service / mwk-mint, interop, Spout2
+if (ENABLE_GL)
+  option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF)
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+    add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
+  endif()
 endif()
 
 # CUE
@@ -74,10 +84,11 @@ if(ENABLE_MPI)
   endif()
 endif()
 
-# GL
+# OpenGL
 option(ENABLE_GL "Enable GL support" ON)
 if (ENABLE_GL)
   add_compile_definitions(WITH_GL)
+  find_package(OpenGL REQUIRED)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
@@ -96,6 +107,3 @@ if(OPENMP_FOUND OR WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-# OpenGL
-find_package(OpenGL REQUIRED)

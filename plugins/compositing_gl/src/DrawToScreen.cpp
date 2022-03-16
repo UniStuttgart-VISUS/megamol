@@ -6,11 +6,13 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/UniFlagCalls.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
         : core_gl::view::Renderer3DModuleGL()
+        , m_dummy_color_tx(nullptr)
+        , m_dummy_depth_tx(nullptr)
         , m_drawToScreen_prgm(nullptr)
         , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
         , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen")
@@ -39,8 +41,9 @@ bool megamol::compositing::DrawToScreen::create() {
     vislib::StringA vertShaderName = shader_base_name + "::vertex";
     vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-    this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+    ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
 
     try {
         m_drawToScreen_prgm = std::make_unique<GLSLShader>();
@@ -65,8 +68,14 @@ bool megamol::compositing::DrawToScreen::create() {
     auto err = glGetError();
 
     glowl::TextureLayout depth_tx_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1);
-    std::array<float,1> dummy_depth_data = {-1.0f};
-    m_dummy_depth_tx = std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
+    std::array<float, 1> dummy_depth_data = {-1.0f};
+    m_dummy_depth_tx =
+        std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
+
+    glowl::TextureLayout color_tx_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
+    std::array<uint8_t, 4> dummy_color_data = {0, 0, 0, 0};
+    m_dummy_depth_tx =
+        std::make_shared<glowl::Texture2D>("DrawToScreen_dummyColor", color_tx_layout, dummy_color_data.data());
 
     return true;
 }
@@ -86,10 +95,12 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
         return false;
 
     // get rhs texture call
+    std::shared_ptr<glowl::Texture2D> color_texture = m_dummy_color_tx;
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
-    if (ct == NULL)
-        return false;
-    (*ct)(0);
+    if (ct != NULL) {
+        (*ct)(0);
+        color_texture = ct->getData();
+    }
 
     // get rhs depth texture call
     std::shared_ptr<glowl::Texture2D> depth_texture = m_dummy_depth_tx;
@@ -99,21 +110,21 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
         depth_texture = cdt->getData();
     }
 
+    if (color_texture == nullptr || depth_texture == nullptr) {
+        return false;
+    }
+
     auto width = call.GetFramebuffer()->getWidth();
     auto height = call.GetFramebuffer()->getHeight();
-
-    // get input texture from call
-    auto input_texture = ct->getData();
-    if (input_texture == nullptr)
-        return false;
 
     auto readFlagsCall = m_input_flags_call.CallAs<core_gl::FlagCallRead_GL>();
     if (readFlagsCall != nullptr) {
         (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
-        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) || readFlagsCall->hasUpdate()) {
-            readFlagsCall->getData()->validateFlagCount(input_texture->getWidth() * input_texture->getHeight());
-            m_last_tex_size = glm::ivec2(input_texture->getWidth(), input_texture->getHeight());
+        if (m_last_tex_size != glm::ivec2(color_texture->getWidth(), color_texture->getHeight()) ||
+            readFlagsCall->hasUpdate()) {
+            readFlagsCall->getData()->validateFlagCount(color_texture->getWidth() * color_texture->getHeight());
+            m_last_tex_size = glm::ivec2(color_texture->getWidth(), color_texture->getHeight());
         }
         readFlagsCall->getData()->flags->bind(5);
     }
@@ -126,7 +137,7 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
         m_drawToScreen_prgm->Enable();
 
         glActiveTexture(GL_TEXTURE0);
-        input_texture->bindTexture();
+        color_texture->bindTexture();
         glUniform1i(m_drawToScreen_prgm->ParameterLocation("input_tx2D"), 0);
 
         glActiveTexture(GL_TEXTURE1);
@@ -147,5 +158,4 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {
-}
+void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {}

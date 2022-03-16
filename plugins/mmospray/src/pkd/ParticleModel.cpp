@@ -3,30 +3,27 @@
  * Based on project "ospray-module-pkd" files "ParticleModel.h" and "ParticleModel.cpp" (Apache License 2.0)
  */
 
-#include "stdafx.h"
 #include "pkd/ParticleModel.h"
+#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 
 
-VISLIB_FORCEINLINE float floatFromVoidArray(
-    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
+VISLIB_FORCEINLINE float floatFromVoidArray(const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     // const float* parts = static_cast<const float*>(p.GetVertexData());
     // return parts[index * stride + offset];
     return static_cast<const float*>(p.GetVertexData())[index];
 }
 
 
-VISLIB_FORCEINLINE unsigned char byteFromVoidArray(
-    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
+VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     return static_cast<const unsigned char*>(p.GetVertexData())[index];
 }
 
 
-VISLIB_FORCEINLINE float floatColFromVoidArray(
-    const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
+VISLIB_FORCEINLINE float floatColFromVoidArray(const geocalls::MultiParticleDataCall::Particles& p, size_t index) {
     return static_cast<const float*>(p.GetColourData())[index];
 }
 
@@ -38,12 +35,10 @@ VISLIB_FORCEINLINE unsigned char byteColFromVoidArray(
 
 
 typedef float (*floatFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char (*byteFromArrayFunc)(
-    const geocalls::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
 typedef float (*floatColFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char (*byteColFromArrayFunc)(
-    const geocalls::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteColFromArrayFunc)(const geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
 
 inline rkcommon::math::vec3f makeRandomColor(const int i) {
@@ -58,7 +53,8 @@ inline rkcommon::math::vec3f makeRandomColor(const int i) {
 //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
 rkcommon::math::box3f ospray::ParticleModel::getBounds() const {
     rkcommon::math::box3f bounds = rkcommon::math::empty;
-    for (size_t i = 0; i < position.size(); ++i) bounds.extend({position[i].x, position[i].y, position[i].z});
+    for (size_t i = 0; i < position.size(); ++i)
+        bounds.extend({position[i].x, position[i].y, position[i].z});
     return bounds;
 }
 

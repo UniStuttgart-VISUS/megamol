@@ -10,9 +10,9 @@
 
 #include <memory>
 
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
@@ -28,7 +28,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "TextureCombine"; }
+    static const char* ClassName() {
+        return "TextureCombine";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -44,7 +46,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     TextureCombine();
     ~TextureCombine();

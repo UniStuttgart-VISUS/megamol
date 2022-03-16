@@ -9,9 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <iostream>
-#include <math.h>
-#include <time.h>
 #include "SolventVolumeRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -40,6 +37,9 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/glverify.h"
+#include <iostream>
+#include <math.h>
+#include <time.h>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -182,11 +182,11 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer(void)
     // --- set up parameter for volume clipping ---
     this->volClipPlaneFlagParam.SetParameter(new param::BoolParam(this->volClipPlaneFlag));
     // --- set up parameter for volume clipping plane normal ---
-    vislib::math::Vector<float, 3> cp0n((float) this->volClipPlane[0].PeekComponents()[0],
-        (float) this->volClipPlane[0].PeekComponents()[1], (float) this->volClipPlane[0].PeekComponents()[2]);
+    vislib::math::Vector<float, 3> cp0n((float)this->volClipPlane[0].PeekComponents()[0],
+        (float)this->volClipPlane[0].PeekComponents()[1], (float)this->volClipPlane[0].PeekComponents()[2]);
     this->volClipPlane0NormParam.SetParameter(new param::Vector3fParam(cp0n));
     // --- set up parameter for volume clipping plane distance ---
-    float d = (float) this->volClipPlane[0].PeekComponents()[3];
+    float d = (float)this->volClipPlane[0].PeekComponents()[3];
     this->volClipPlane0DistParam.SetParameter(new param::FloatParam(d, 0.0f, 1.0f));
     // --- set up parameter for clipping plane opacity ---
     this->volClipPlaneOpacityParam.SetParameter(new param::FloatParam(this->volClipPlaneOpacity, 0.0f, 1.0f));
@@ -281,12 +281,13 @@ bool protein_gl::SolventVolumeRenderer::loadShader(
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(vert, vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource(vert, vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for shader '%s'",
             this->ClassName(), vert.PeekBuffer());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(frag, fragSrc)) {
+    if (!ssf->MakeShaderSource(frag, fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for shader '%s'",
             this->ClassName(), frag.PeekBuffer());
         return false;
@@ -307,14 +308,6 @@ bool protein_gl::SolventVolumeRenderer::loadShader(
  * protein::SolventVolumeRenderer::create
  */
 bool protein_gl::SolventVolumeRenderer::create(void) {
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform"))
-        return false;
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
-        return false;
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib_gl::graphics::gl::FramebufferObject::InitialiseExtensions())
-        return false;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -403,7 +396,8 @@ bool protein_gl::SolventVolumeRenderer::create(void) {
         return false;
 
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -720,7 +714,7 @@ bool protein_gl::SolventVolumeRenderer::Render(core_gl::view::CallRender3DGL& ca
 
         // interpolate atom positions between frames
 #pragma omp parallel for
-        for (int atomIdx = 0; atomIdx < (int) mol->AtomCount(); atomIdx++) {
+        for (int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
             float localInter = frameInterp;
 #if 0
             vislib::math::ShallowPoint<float,3> atomPosFrame0( interAtomPosFrame0Ptr + atomIdx*3 );
@@ -1226,7 +1220,7 @@ void protein_gl::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall* 
     // parallelisierung geht hier nicht?! weil es von den dynamischen daten abhaengt an welchem index ein zylinder
     // sitzt?! (variable 'cnt' haengt von 'hydrogenConnections' ab ...)
     //#pragma omp parallel for private( idx0, idx1, connection, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir,
-    //position, angle)
+    // position, angle)
     for (unsigned int atomIdx = 0; atomIdx < mol->AtomCount(); atomIdx++) {
         int connection = hydrogenConnections[atomIdx];
         if (connection == -1)
@@ -1241,7 +1235,7 @@ void protein_gl::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall* 
         }
 
         unsigned int idx0 = atomIdx;
-        unsigned int idx1 = (unsigned) connection;
+        unsigned int idx1 = (unsigned)connection;
 
         vislib::math::Vector<float, 3> firstAtomPos(atomPos + 3 * idx0), secondAtomPos(atomPos + 3 * idx1);
 
@@ -1259,8 +1253,8 @@ void protein_gl::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall* 
         this->inParaCylinders[2 * curCount + 1] = (firstAtomPos - secondAtomPos).Length();
 
         // thomasbm: hotfix for jumping molecules near bounding box
-        if(this->inParaCylinders[2*curCount+1] > mol->AtomHydrogenBondDistance() * 1.5f
-                /*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/ ) {
+        if (this->inParaCylinders[2 * curCount + 1] > mol->AtomHydrogenBondDistance() * 1.5f
+            /*mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()*/) {
             this->inParaCylinders[2 * curCount + 1] = 0;
         }
 
@@ -1374,12 +1368,12 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
     if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats &&
         mol->AtomHydrogenBondStatistics()) {
         // render atom spheres size according to their hydrogen bond statistics ...
-        float factor = 1.0f / (float) mol->FrameCount();
+        float factor = 1.0f / (float)mol->FrameCount();
         const unsigned int* hbStatistics = mol->AtomHydrogenBondStatistics();
         unsigned int numSolventResidues = mol->AtomSolventResidueCount();
 
 #pragma omp parallel for
-        for (int atomIdx = 0; atomIdx < (int) mol->AtomCount(); atomIdx++) {
+        for (int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
             this->vertSpheres[4 * atomIdx + 0] = atomPos[3 * atomIdx + 0];
             this->vertSpheres[4 * atomIdx + 1] = atomPos[3 * atomIdx + 1];
             this->vertSpheres[4 * atomIdx + 2] = atomPos[3 * atomIdx + 2];
@@ -1390,12 +1384,12 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
             float radius = (spaceFilling ? mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius() : stickRadius) *
                            atomRadiusFactor;
             this->vertSpheres[4 * atomIdx + 3] =
-                radius + radius * ((float) (atomStatistics /*hbStatistics[cnt]*/) * factor);
+                radius + radius * ((float)(atomStatistics /*hbStatistics[cnt]*/) * factor);
         }
     } else {
 // render spheres in normal mode (sphere-radius is the same as stick-radius)
 #pragma omp parallel for
-        for (int atomIdx = 0; atomIdx < (int) mol->AtomCount(); atomIdx++) {
+        for (int atomIdx = 0; atomIdx < (int)mol->AtomCount(); atomIdx++) {
             this->vertSpheres[4 * atomIdx + 0] = atomPos[3 * atomIdx + 0];
             this->vertSpheres[4 * atomIdx + 1] = atomPos[3 * atomIdx + 1];
             this->vertSpheres[4 * atomIdx + 2] = atomPos[3 * atomIdx + 2];
@@ -1412,7 +1406,7 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
         float angle;
         // loop over all connections and compute cylinder parameters
 #pragma omp parallel for private(quatC, tmpVec, ortho, dir, position, angle)
-        for (int atomIdx = 0; atomIdx < (int) mol->ConnectionCount(); atomIdx++) {
+        for (int atomIdx = 0; atomIdx < (int)mol->ConnectionCount(); atomIdx++) {
             unsigned int idx0 = mol->Connection()[2 * atomIdx];
             unsigned int idx1 = mol->Connection()[2 * atomIdx + 1];
 
@@ -1696,10 +1690,10 @@ void protein_gl::SolventVolumeRenderer::ParameterRefresh(core_gl::view::CallRend
     }
 
     // get current clip plane normal
-    vislib::math::Vector<float, 3> cp0n((float) this->volClipPlane[0].PeekComponents()[0],
-        (float) this->volClipPlane[0].PeekComponents()[1], (float) this->volClipPlane[0].PeekComponents()[2]);
+    vislib::math::Vector<float, 3> cp0n((float)this->volClipPlane[0].PeekComponents()[0],
+        (float)this->volClipPlane[0].PeekComponents()[1], (float)this->volClipPlane[0].PeekComponents()[2]);
     // get current clip plane distance
-    float cp0d = (float) this->volClipPlane[0].PeekComponents()[3];
+    float cp0d = (float)this->volClipPlane[0].PeekComponents()[3];
 
     // check clip plane normal parameter
     if (this->volClipPlane0NormParam.IsDirty()) {
@@ -2186,7 +2180,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
         else if (coloringByHydroBondStats && !isSolvent) {
             // visalize hydrogen bond statistics ...
             unsigned int numSolventResidues = mol->AtomSolventResidueCount();
-            float factor = 1.0f / (float) mol->FrameCount();
+            float factor = 1.0f / (float)mol->FrameCount();
             const unsigned int* hbStatistics = mol->AtomHydrogenBondStatistics();
             const unsigned int* solventResidueIndices = mol->SolventResidueIndices();
 
@@ -2206,7 +2200,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
                 // for quick testing mix the three color channels ...
                 solventAtomColor[0] = solventAtomColor[1] = solventAtomColor[2] = 0;
                 for (unsigned int j = 0; j < numSolventResidues; j++) {
-                    float value = (float) hbStatistics[numSolventResidues * atomIdx + j] * factor;
+                    float value = (float)hbStatistics[numSolventResidues * atomIdx + j] * factor;
                     // solventAtomColor[j%3] += value;
                     int residueType = solventResidueIndices[j];
                     const vislib::math::Vector<float, 3>& residueColor =
@@ -2920,7 +2914,7 @@ void SolventVolumeRenderer::drawClippedPolygon(vislib::math::Cuboid<float> bound
         slices.setupSingleSlice(this->volClipPlane[i].PeekComponents(), position.PeekComponents());
         float d = 0.0f;
         glBegin(GL_TRIANGLE_FAN);
-        slices.drawSingleSlice(-(-d + (float) this->volClipPlane[i].PeekComponents()[3] - 0.0001f));
+        slices.drawSingleSlice(-(-d + (float)this->volClipPlane[i].PeekComponents()[3] - 0.0001f));
         glEnd();
     }
 }

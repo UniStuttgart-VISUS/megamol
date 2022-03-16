@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "DiagramSeries.h"
 
 #include "mmcore/param/FlexEnumParam.h"

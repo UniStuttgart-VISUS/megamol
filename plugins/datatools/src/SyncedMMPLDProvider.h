@@ -8,9 +8,9 @@
 #pragma once
 
 #include "StaticMMPLDProvider.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace datatools {
@@ -23,7 +23,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SyncedMMPLDProvider"; }
+    static const char* ClassName(void) {
+        return "SyncedMMPLDProvider";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -39,7 +41,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     SyncedMMPLDProvider(void);
@@ -48,7 +52,9 @@ public:
     virtual ~SyncedMMPLDProvider(void) {}
 
 protected:
-    bool create() override { return true; }
+    bool create() override {
+        return true;
+    }
 
     void release() override {}
 

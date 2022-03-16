@@ -1,12 +1,11 @@
-#include "stdafx.h"
 #include "DepthFunction.h"
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include <Eigen/LU>
 #include "HD/HD.h"
+#include <Eigen/LU>
 
 using namespace megamol;
 using namespace megamol::infovis;

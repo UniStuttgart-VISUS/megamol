@@ -8,11 +8,11 @@
 #ifndef MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED
 #define MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/param/ParamSlot.h"
 #include "datatools/AbstractParticleManipulator.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -24,13 +24,19 @@ namespace datatools {
 class OverrideParticleBBox : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "OverrideParticleBBox"; }
+    static const char* ClassName(void) {
+        return "OverrideParticleBBox";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Module overriding the bounding box of particle data"; }
+    static const char* Description(void) {
+        return "Module overriding the bounding box of particle data";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor */
     OverrideParticleBBox(void);

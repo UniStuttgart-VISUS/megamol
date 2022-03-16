@@ -5,9 +5,8 @@
  */
 
 #include "stdafx.h"
+
 #include "CartoonTessellationRenderer.h"
-#include <inttypes.h>
-#include <stdint.h>
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -21,6 +20,8 @@
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include <inttypes.h>
+#include <stdint.h>
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -209,7 +210,7 @@ void CartoonTessellationRenderer::getBytesAndStride(MolecularDataCall& mol, unsi
     vertBytes = 0;
     colBytes = 0;
     // colBytes = std::max(colBytes, 3 * 4U);
-    vertBytes = std::max(vertBytes, (unsigned int) sizeof(CAlpha));
+    vertBytes = std::max(vertBytes, (unsigned int)sizeof(CAlpha));
 
     colStride = 0;
     colStride = colStride < colBytes ? colBytes : colStride;
@@ -295,7 +296,7 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    //	timer.BeginFrame();
+    //  timer.BeginFrame();
 
     glm::vec4 clipDat;
     glm::vec4 clipCol;
@@ -403,7 +404,7 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
                 // is the current residue really an aminoacid?
                 if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                    acid = (MolecularDataCall::AminoAcid*) (mol->Residues()[aaIdx]);
+                    acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
                 else
                     continue;
 
@@ -419,7 +420,7 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
 
                 auto type = mol->SecondaryStructures()[secIdx].Type();
-                calpha.type = (int) type;
+                calpha.type = (int)type;
                 molSizes[molIdx]++;
 
                 // TODO do this on GPU?
@@ -534,7 +535,7 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
             UINT64 numVerts, vertCounter;
             numVerts = this->bufSize / vertStride;
-            const char* currVert = (const char*) (this->positionsCa[i].data());
+            const char* currVert = (const char*)(this->positionsCa[i].data());
             const char* currCol = 0;
             vertCounter = 0;
             while (vertCounter < this->positionsCa[i].size() / 4) {
@@ -542,14 +543,14 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 const char* whence = currVert;
                 UINT64 vertsThisTime = std::min(this->positionsCa[i].size() / 4 - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
-                memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
+                memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
-                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
+                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                 glPatchParameteri(GL_PATCH_VERTICES, 1);
-                glDrawArrays(GL_PATCHES, 0, (GLsizei) vertsThisTime - 3);
+                glDrawArrays(GL_PATCHES, 0, (GLsizei)vertsThisTime - 3);
                 this->queueSignal(fences[currBuf]);
 
                 currBuf = (currBuf + 1) % this->numBuffers;
@@ -601,23 +602,23 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
         numVerts = this->bufSize / vertStride;
         UINT64 stride = 0;
 
-        for (int i = 0; i < (int) molSizes.size(); i++) {
+        for (int i = 0; i < (int)molSizes.size(); i++) {
             UINT64 vertCounter = 0;
             while (vertCounter < molSizes[i]) {
-                const char* currVert = (const char*) (&mainchain[(unsigned int) vertCounter + (unsigned int) stride]);
+                const char* currVert = (const char*)(&mainchain[(unsigned int)vertCounter + (unsigned int)stride]);
                 void* mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
                 const char* whence = currVert;
                 UINT64 vertsThisTime = std::min(molSizes[i] - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
-                memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
+                memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
-                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
+                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
                 cartoonShader_->setUniform("instanceOffset", 0);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                 glPatchParameteri(GL_PATCH_VERTICES, 1);
-                glDrawArrays(GL_PATCHES, 0, (GLsizei) (vertsThisTime - 3));
+                glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
                 this->queueSignal(fences[currBuf]);
 
                 currBuf = (currBuf + 1) % this->numBuffers;

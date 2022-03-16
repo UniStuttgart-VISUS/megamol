@@ -7,133 +7,129 @@
 
 #pragma once
 
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CalleeSlot.h"
 #include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
 namespace demos_gl {
 
+/**
+ * Module for loading quartz particle data from binary-fortran files
+ */
+class ParticleFortLoader : public megamol::core::Module {
+public:
     /**
-     * Module for loading quartz particle data from binary-fortran files
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ParticleFortLoader : public megamol::core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "QuartzParticleFortLoader";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "QuartzParticleFortLoader";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module for loading quartz particle data from binary-fortran files";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module for loading quartz particle data from binary-fortran files";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor */
+    ParticleFortLoader(void);
 
-        /** Ctor */
-        ParticleFortLoader(void);
+    /** Dtor */
+    virtual ~ParticleFortLoader(void);
 
-        /** Dtor */
-        virtual ~ParticleFortLoader(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Call callback to get the data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getData(core::Call& c);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Call callback to get the extent
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getExtent(core::Call& c);
 
-        /**
-         * Call callback to get the data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getData(core::Call& c);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Call callback to get the extent
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getExtent(core::Call& c);
+private:
+    /**
+     * Ensures the correct data is loaded
+     */
+    void assertData(void);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The data callee slot */
+    core::CalleeSlot dataOutSlot;
 
-    private:
+    /** The path to the position file */
+    core::param::ParamSlot positionFileNameSlot;
 
-        /**
-         * Ensures the correct data is loaded
-         */
-        void assertData(void);
+    /** The path to the attribute file (radius + orientation) */
+    core::param::ParamSlot attributeFileNameSlot;
 
-        /** The data callee slot */
-        core::CalleeSlot dataOutSlot;
+    /** The data hash */
+    SIZE_T datahash;
 
-        /** The path to the position file */
-        core::param::ParamSlot positionFileNameSlot;
+    /** The number of particle types */
+    unsigned int typeCnt;
 
-        /** The path to the attribute file (radius + orientation) */
-        core::param::ParamSlot attributeFileNameSlot;
+    /** The particle crystal type for each type */
+    unsigned int* partTypes;
 
-        /** The data hash */
-        SIZE_T datahash;
+    /** The particle count for each type */
+    unsigned int* partCnts;
 
-        /** The number of particle types */
-        unsigned int typeCnt;
+    /** The particel data for each type */
+    float** partDatas;
 
-        /** The particle crystal type for each type */
-        unsigned int *partTypes;
+    /** The data bounding box */
+    vislib::math::Cuboid<float> bbox;
 
-        /** The particle count for each type */
-        unsigned int *partCnts;
+    /** The data clip box */
+    vislib::math::Cuboid<float> cbox;
 
-        /** The particel data for each type */
-        float **partDatas;
+    /** Flag whether or not to use the calculated bouning box */
+    core::param::ParamSlot autoBBoxSlot;
 
-        /** The data bounding box */
-        vislib::math::Cuboid<float> bbox;
+    /** The minimum values for the manual bounding box */
+    core::param::ParamSlot bboxMinSlot;
 
-        /** The data clip box */
-        vislib::math::Cuboid<float> cbox;
+    /** The maximum values for the manual bounding box */
+    core::param::ParamSlot bboxMaxSlot;
+};
 
-        /** Flag whether or not to use the calculated bouning box */
-        core::param::ParamSlot autoBBoxSlot;
-
-        /** The minimum values for the manual bounding box */
-        core::param::ParamSlot bboxMinSlot;
-
-        /** The maximum values for the manual bounding box */
-        core::param::ParamSlot bboxMaxSlot;
-
-    };
-
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

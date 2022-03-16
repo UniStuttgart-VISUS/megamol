@@ -35,7 +35,8 @@ private:
 
     // FBOCommFabric encapsulates either MPI or ZMQ communication
     // though called 'FBO' there is not much 'FBO' in the comm
-    megamol::remote::FBOCommFabric comm_fabric_{std::make_unique<megamol::remote::ZMQCommFabric>(zmq::socket_type::push)};
+    megamol::remote::FBOCommFabric comm_fabric_{
+        std::make_unique<megamol::remote::ZMQCommFabric>(zmq::socket_type::push)};
 
     megamol::frontend_resources::ThreadWorker comm_thread_;
     void comm_thread_loop();

@@ -7,7 +7,7 @@
 
 #include "mmcore_gl/utility/RenderUtils.h"
 
-namespace megamol::core::utility {
+namespace megamol::core_gl::utility {
 
 // STATIC functions -------------------------------------------------------
 
@@ -28,12 +28,11 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
     if (megamol::core::utility::FileUtils::LoadRawFile(filename, buf)) {
         if (pbc.Load(static_cast<void*>(buf.data()), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
-            retval =
-                RenderUtils::LoadTextureFromData(out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>(), tex_min_filter, tex_max_filter);
+            retval = RenderUtils::LoadTextureFromData(
+                out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>(), tex_min_filter, tex_max_filter);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
+                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
             retval = false;
         }
     } else {
@@ -44,8 +43,8 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
 }
 
 
-bool RenderUtils::LoadTextureFromData(
-    std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter, GLint tex_max_filter) {
+bool RenderUtils::LoadTextureFromData(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height,
+    float* data, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (data == nullptr)
         return false;
@@ -56,18 +55,18 @@ bool RenderUtils::LoadTextureFromData(
         int_parameters.push_back({GL_TEXTURE_MIN_FILTER, tex_min_filter});
         int_parameters.push_back({GL_TEXTURE_MAG_FILTER, tex_max_filter});
         std::vector<std::pair<GLenum, GLfloat>> float_parameters;
-        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
+        glowl::TextureLayout tex_layout(
+            GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
         if (out_texture_ptr == nullptr) {
             out_texture_ptr =
-                std::make_unique<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
+                std::make_shared<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
         } else {
             // Reload data
             out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
         }
     } catch (glowl::TextureException& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
-            __LINE__);
+            "Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -77,25 +76,19 @@ bool RenderUtils::LoadTextureFromData(
 bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
     const std::string& fragment_code) {
 
-    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-
-    if (!vertex_code.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_code});
-    if (!fragment_code.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_code});
-
     try {
         if (out_shader_ptr != nullptr)
             out_shader_ptr.reset();
-        out_shader_ptr = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+        out_shader_ptr =
+            std::make_shared<glowl::GLSLProgram>(RenderUtils::createShaderSource(vertex_code, fragment_code));
     } catch (glowl::GLSLProgramException const& exc) {
         std::string debug_label;
         if (out_shader_ptr != nullptr) {
             debug_label = out_shader_ptr->getDebugLabel();
         }
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
-            exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(), exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -103,11 +96,30 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
 }
 
 
+std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> RenderUtils::createShaderSource(
+    const std::string& vertex_code, const std::string& fragment_code) {
+
+    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
+    if (!vertex_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_code});
+    if (!fragment_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_code});
+
+    return shader_srcs;
+}
+
+
 // LOCAL functions -------------------------------------------------------
 
 
 RenderUtils::RenderUtils()
-        : smooth(true), init_once(false), vertex_array(0), textures(), queues(), shaders(), buffers() {}
+        : smooth(true)
+        , init_once(false)
+        , vertex_array(0)
+        , textures()
+        , queues()
+        , shaders()
+        , buffers() {}
 
 
 RenderUtils::~RenderUtils() {}
@@ -123,7 +135,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core_gl::utility::ShaderSource
     // Create shaders
     std::vector<std::pair<GLuint, std::string>> location_name_pairs = {{Buffers::POSITION, "inPosition"},
         {Buffers::COLOR, "inColor"}, {Buffers::TEXTURE_COORD, "inTexture"}, {Buffers::ATTRIBUTES, "inAttributes"}};
-    
+
     if (!this->createShader(this->shaders[Primitives::POINTS], shader_factory, "primitives::points::vertex",
             "primitives::points::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -200,8 +212,10 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core_gl::utility::ShaderSource
 bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload) {
 
     if (reload) {
-        auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
-                return (tex_ptr->getName() == out_texture_id); });
+        auto texture_iter = std::find_if(
+            this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
+                return (tex_ptr->getName() == out_texture_id);
+            });
         if (texture_iter != this->textures.end()) {
             if (RenderUtils::LoadTextureFromFile(*texture_iter, filename)) {
                 return true;
@@ -476,7 +490,6 @@ bool RenderUtils::createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
 }
 
 
-
 void RenderUtils::pushQuad(Primitives primitive, GLuint texture_id, const glm::vec3& pos_bottom_left,
     const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
     const glm::vec4& color, const glm::vec4& attributes) {
@@ -565,4 +578,4 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
     }
 }
 
-} // end namespace
+} // namespace megamol::core_gl::utility

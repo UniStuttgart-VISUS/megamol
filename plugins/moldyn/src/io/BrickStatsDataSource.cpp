@@ -5,19 +5,19 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "BrickStatsDataSource.h"
-#include "moldyn/BrickStatsCall.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "vislib/sys/sysfunctions.h"
+#include "moldyn/BrickStatsCall.h"
+#include "stdafx.h"
+#include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/sysfunctions.h"
 
 using namespace megamol::core;
 using namespace megamol::moldyn;
@@ -25,12 +25,16 @@ using namespace megamol::moldyn;
 /*
  * moldyn::BrickStatsDataSource::BrickStatsDataSource
  */
-BrickStatsDataSource::BrickStatsDataSource(void) : Module(),
-filename("filename", "The path to the stat file to load."),
-getData("getdata", "Slot to request data from this data source."),
-skipHeaderLine("skipheader", "Slot to switch skipping of header line in file."),
-file(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0), info() {
+BrickStatsDataSource::BrickStatsDataSource(void)
+        : Module()
+        , filename("filename", "The path to the stat file to load.")
+        , getData("getdata", "Slot to request data from this data source.")
+        , skipHeaderLine("skipheader", "Slot to switch skipping of header line in file.")
+        , file(NULL)
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , data_hash(0)
+        , info() {
 
     this->filename.SetParameter(new param::FilePathParam(""));
     this->filename.SetUpdateCallback(&BrickStatsDataSource::filenameChanged);
@@ -39,8 +43,10 @@ clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0), info() {
     this->skipHeaderLine << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->skipHeaderLine);
 
-    this->getData.SetCallback(BrickStatsCall::ClassName(), BrickStatsCall::FunctionName(0), &BrickStatsDataSource::getDataCallback);
-    this->getData.SetCallback(BrickStatsCall::ClassName(), BrickStatsCall::FunctionName(1), &BrickStatsDataSource::getExtentCallback);
+    this->getData.SetCallback(
+        BrickStatsCall::ClassName(), BrickStatsCall::FunctionName(0), &BrickStatsDataSource::getDataCallback);
+    this->getData.SetCallback(
+        BrickStatsCall::ClassName(), BrickStatsCall::FunctionName(1), &BrickStatsDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->info.SetCapacityIncrement(10000);
@@ -61,8 +67,8 @@ BrickStatsDataSource::~BrickStatsDataSource(void) {
 bool BrickStatsDataSource::create(void) {
     using megamol::core::utility::log::Log;
     if (BrickStatsCall::GetTypeSize() != sizeof(BrickStatsCall::BrickStatsType)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "BrickStatsCall::BrickStatsType has different size across object files!");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "BrickStatsCall::BrickStatsType has different size across object files!");
         return false;
     }
     return true;
@@ -74,7 +80,7 @@ bool BrickStatsDataSource::create(void) {
  */
 void BrickStatsDataSource::release(void) {
     if (this->file != NULL) {
-        vislib::sys::File *f = this->file;
+        vislib::sys::File* f = this->file;
         this->file = NULL;
         f->Close();
         delete f;
@@ -102,9 +108,9 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(),
-            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".",  
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -124,27 +130,40 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
 
         auto arr = vislib::StringTokeniserA::Split(line, ',');
         if (arr.Count() != 14) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
             continue;
         }
         try {
             UINT64 offset = vislib::CharTraitsA::ParseUInt64(arr[0]);
             UINT64 len = vislib::CharTraitsA::ParseUInt64(arr[1]);
-            BrickStatsCall::BrickStatsType minX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[2]));
-            BrickStatsCall::BrickStatsType maxX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[3]));
-            BrickStatsCall::BrickStatsType meanX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[4]));
-            BrickStatsCall::BrickStatsType stddevX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[5]));
-            BrickStatsCall::BrickStatsType minY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[6]));
-            BrickStatsCall::BrickStatsType maxY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[7]));
-            BrickStatsCall::BrickStatsType meanY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[8]));
-            BrickStatsCall::BrickStatsType stddevY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[9]));
-            BrickStatsCall::BrickStatsType minZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[10]));
-            BrickStatsCall::BrickStatsType maxZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[11]));
-            BrickStatsCall::BrickStatsType meanZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[12]));
-            BrickStatsCall::BrickStatsType stddevZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[13]));
+            BrickStatsCall::BrickStatsType minX =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[2]));
+            BrickStatsCall::BrickStatsType maxX =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[3]));
+            BrickStatsCall::BrickStatsType meanX =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[4]));
+            BrickStatsCall::BrickStatsType stddevX =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[5]));
+            BrickStatsCall::BrickStatsType minY =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[6]));
+            BrickStatsCall::BrickStatsType maxY =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[7]));
+            BrickStatsCall::BrickStatsType meanY =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[8]));
+            BrickStatsCall::BrickStatsType stddevY =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[9]));
+            BrickStatsCall::BrickStatsType minZ =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[10]));
+            BrickStatsCall::BrickStatsType maxZ =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[11]));
+            BrickStatsCall::BrickStatsType meanZ =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[12]));
+            BrickStatsCall::BrickStatsType stddevZ =
+                static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[13]));
 
-            this->info.Add(BrickStatsCall::BrickInfo(offset, len,
-                minX, minY, minZ, maxX, maxY, maxZ, meanX, meanY, meanZ, stddevX, stddevY, stddevZ));
+            this->info.Add(BrickStatsCall::BrickInfo(
+                offset, len, minX, minY, minZ, maxX, maxY, maxZ, meanX, meanY, meanZ, stddevX, stddevY, stddevZ));
             //this->bbox.GrowToPoint(minX - stddevX, minY - stddevY, minZ - stddevZ);
             //this->bbox.GrowToPoint(maxX + stddevX, maxY + stddevY, maxZ + stddevZ);
             this->bbox.GrowToPoint(minX, minY, minZ);
@@ -240,8 +259,9 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
  * moldyn::MMPLDDataSource::getDataCallback
  */
 bool BrickStatsDataSource::getDataCallback(Call& caller) {
-    BrickStatsCall *c2 = dynamic_cast<BrickStatsCall*>(&caller);
-    if (c2 == NULL) return false;
+    BrickStatsCall* c2 = dynamic_cast<BrickStatsCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
     c2->SetDataHash(this->data_hash);
     c2->SetBricks(&this->info);
@@ -263,8 +283,9 @@ bool BrickStatsDataSource::getDataCallback(Call& caller) {
  * moldyn::MMPLDDataSource::getExtentCallback
  */
 bool BrickStatsDataSource::getExtentCallback(Call& caller) {
-    BrickStatsCall *c2 = dynamic_cast<BrickStatsCall*>(&caller);
-    if (c2 == NULL) return false;
+    BrickStatsCall* c2 = dynamic_cast<BrickStatsCall*>(&caller);
+    if (c2 == NULL)
+        return false;
 
     c2->SetFrameCount(1);
     c2->AccessBoundingBoxes().Clear();

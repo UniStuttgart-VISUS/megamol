@@ -5,12 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableToADIOS.h"
+#include "stdafx.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
-#include "datatools/table/TableDataCall.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -20,9 +20,9 @@ namespace megamol {
 namespace adios {
 
 TableToADIOS::TableToADIOS(void)
-    : core::Module()
-    , ftSlot("ftSlot", "Slot to request table data from")
-    , adiosSlot("adiosSlot", "Slot to send ADIOS IO to") {
+        : core::Module()
+        , ftSlot("ftSlot", "Slot to request table data from")
+        , adiosSlot("adiosSlot", "Slot to send ADIOS IO to") {
 
 
     this->adiosSlot.SetCallback(
@@ -35,25 +35,33 @@ TableToADIOS::TableToADIOS(void)
     this->MakeSlotAvailable(&this->ftSlot);
 }
 
-TableToADIOS::~TableToADIOS(void) { this->Release(); }
+TableToADIOS::~TableToADIOS(void) {
+    this->Release();
+}
 
-bool TableToADIOS::create(void) { return true; }
+bool TableToADIOS::create(void) {
+    return true;
+}
 
 void TableToADIOS::release(void) {}
 
 bool TableToADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<datatools::table::TableDataCall>();
-    if (cftd == nullptr) return false;
+    if (cftd == nullptr)
+        return false;
 
-    if (!(*cftd)(1)) return false;
+    if (!(*cftd)(1))
+        return false;
 
     // set frame to load from view
     cftd->SetFrameID(cad->getFrameIDtoLoad());
 
-    if (!(*cftd)(0)) return false;
+    if (!(*cftd)(0))
+        return false;
 
     // Get list of column names
 
@@ -74,7 +82,6 @@ bool TableToADIOS::getDataCallback(core::Call& call) {
     }
 
 
-
     // set stuff in call
     cad->setData(std::make_shared<adiosDataMap>(dataMap));
     cad->setDataHash(cftd->DataHash());
@@ -85,13 +92,17 @@ bool TableToADIOS::getDataCallback(core::Call& call) {
 bool TableToADIOS::getHeaderCallback(core::Call& call) {
 
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
-    if (cad == nullptr) return false;
+    if (cad == nullptr)
+        return false;
 
     datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<datatools::table::TableDataCall>();
-    if (cftd == nullptr) return false;
+    if (cftd == nullptr)
+        return false;
 
-    if (!(*cftd)(1)) return false;
-    if (!(*cftd)(0)) return false;
+    if (!(*cftd)(1))
+        return false;
+    if (!(*cftd)(0))
+        return false;
     std::vector<std::string> availVars;
     availVars.reserve(cftd->GetColumnsCount());
 
@@ -103,7 +114,7 @@ bool TableToADIOS::getHeaderCallback(core::Call& call) {
     // set available vars
     cad->setAvailableVars(availVars);
 
-    // get total frame cound from data source
+    // get total frame count from data source
     cad->setFrameCount(cftd->GetFrameCount());
 
     return true;

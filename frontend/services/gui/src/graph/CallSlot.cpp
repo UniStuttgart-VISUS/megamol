@@ -516,6 +516,6 @@ void megamol::gui::CallSlot::Update(const GraphItemsState_t& state) {
         module_size.y -= line_height;
         ImVec2 size = module_size * state.canvas.zooming;
         this->gui_position = ImVec2(pos.x + ((this->type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
-            pos.y + size.y * ((float) slot_idx + 1) / ((float) slot_count + 1));
+            pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
     }
 }

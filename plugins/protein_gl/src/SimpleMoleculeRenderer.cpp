@@ -11,8 +11,6 @@
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-#include <GL/glu.h>
-#include <omp.h>
 #include "SimpleMoleculeRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
@@ -35,6 +33,8 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include <GL/glu.h>
+#include <omp.h>
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
@@ -55,7 +55,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
-        , getFramebufferSlot("getFramebuffer", "Connects the molecule rendering to an optional external framebuffer")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
@@ -74,9 +73,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
         , currentZClipPos(-20)
-        , fbo_version_(0)
-        , vertex_array_(0)
-        , usedFramebufferObj_(nullptr) {
+        , vertex_array_(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -85,8 +82,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
-    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
-    this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
@@ -201,7 +196,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
-    usedFramebufferObj_.reset();
     this->Release();
 }
 
@@ -214,12 +208,8 @@ void SimpleMoleculeRenderer::release(void) {}
  * protein::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0))
-
-        return false;
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -341,7 +331,6 @@ bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    ++fbo_version_;
     auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -352,23 +341,14 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    call_fbo->bind(); // reset to default behavior
+    call_fbo->bind(); // set to default behavior
 
-
-    // if there is a fbo connected, use the connected one
+    // if there is a fbo of appropriate size connected, draw to it.
+    // if not, we handle the lighting
     bool externalfbo = false;
-    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
-    if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
-        auto fbo = cfbo->getData();
-        if (fbo != nullptr) {
-            externalfbo = true;
-            usedFramebufferObj_ = fbo;
-            usedFramebufferObj_->bind();
-        } else {
-            deferredProvider_.bindDeferredFramebufferToDraw();
-        }
+    auto cfbo = call.GetFramebuffer();
+    if (cfbo != nullptr && cfbo->getNumColorAttachments() == 3) {
+        externalfbo = true;
     } else {
         deferredProvider_.bindDeferredFramebufferToDraw();
     }
@@ -446,7 +426,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
                           vislib::math::Min(mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
                               mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) *
                       0.75f;
-#pragma omp parallel for
+
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         if (std::sqrt(std::pow(pos0[3 * cnt + 0] - pos1[3 * cnt + 0], 2) +
                       std::pow(pos0[3 * cnt + 1] - pos1[3 * cnt + 1], 2) +
@@ -505,7 +485,6 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -541,7 +520,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // perform the lighing pass only if no framebuffer is attached
-    if (cfbo == nullptr) {
+    if (!externalfbo) {
         deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>(),
             this->currentRenderMode == LINES || this->currentRenderMode == LINES_FILTER);
     }
@@ -643,7 +622,6 @@ void SimpleMoleculeRenderer::RenderStick(
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -657,7 +635,6 @@ void SimpleMoleculeRenderer::RenderStick(
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -822,7 +799,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -836,7 +812,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -976,7 +951,6 @@ void SimpleMoleculeRenderer::RenderSpacefilling(
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
@@ -1042,7 +1016,6 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
         this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];

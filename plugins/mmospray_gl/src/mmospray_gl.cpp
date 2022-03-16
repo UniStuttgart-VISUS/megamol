@@ -26,7 +26,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ospray_gl::OSPRayToGL>();
 
         // register calls
-
     }
 };
-} // namespace megamol::ospray
+} // namespace megamol::ospray_gl

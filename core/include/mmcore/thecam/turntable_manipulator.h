@@ -20,7 +20,8 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class TurntableManipulator : public manipulator_base<T> {
+template<class T>
+class TurntableManipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
@@ -47,13 +48,8 @@ public:
      * @param x
      * @param y
      */
-    void on_drag(
-        const screen_type x,
-        const screen_type y,
-        const point_type& rotCentre,
-        const screen_type wnd_width,
-        const screen_type wnd_height)
-    {
+    void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre, const screen_type wnd_width,
+        const screen_type wnd_height) {
         if (this->manipulating() && this->enabled()) {
             auto cam = this->camera();
             assert(cam != nullptr);
@@ -68,7 +64,6 @@ public:
 
                 // get camera pose
                 auto cam_pose = cam->template get<view::Camera::Pose>();
-                auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
 
                 // split movement into horizontal and vertical (in camera space)
                 quaternion_type rot_lat;
@@ -76,12 +71,12 @@ public:
 
                 // rotate horizontally
                 rot_lon = glm::angleAxis(factor_x * dx * (3.14159265f / 180.0f), glm::vec3(0.0, 1.0, 0.0));
-                cam_right = glm::rotate(rot_lon, cam_right);
+                cam_pose.right = glm::rotate(rot_lon, cam_pose.right);
                 cam_pose.direction = glm::rotate(rot_lon, cam_pose.direction);
                 cam_pose.up = glm::rotate(rot_lon, cam_pose.up);
 
                 // rotate vertically
-                rot_lat = glm::angleAxis(factor_y * dy * (3.14159265f / 180.0f), -cam_right);
+                rot_lat = glm::angleAxis(factor_y * dy * (3.14159265f / 180.0f), -cam_pose.right);
                 cam_pose.direction = glm::rotate(rot_lat, cam_pose.direction);
                 cam_pose.up = glm::rotate(rot_lat, cam_pose.up);
 
@@ -90,7 +85,7 @@ public:
                 shifted_pos = glm::rotate(rot_lon, shifted_pos);
                 shifted_pos = glm::rotate(rot_lat, shifted_pos);
 
-                // transform back 
+                // transform back
                 cam_pose.position = shifted_pos + glm::vec3(rotCentre);
                 cam->setPose(cam_pose);
 
@@ -119,7 +114,9 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The x-coordinate of the last clicked screen position */

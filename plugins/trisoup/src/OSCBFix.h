@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "vislib/math/Cuboid.h"
 
 
@@ -22,8 +22,8 @@ namespace megamol {
 namespace core {
 namespace moldyn {
 
-    /** forward declaration of supported call */
-    class MultiParticleDataCall;
+/** forward declaration of supported call */
+class MultiParticleDataCall;
 
 } /* end namespace moldyn */
 } /* end namespace core */
@@ -31,97 +31,93 @@ namespace moldyn {
 namespace quartz {
 
 
+/**
+ * Module loading a quartz crystal definition file
+ */
+class OSCBFix : public megamol::core::Module {
+public:
     /**
-     * Module loading a quartz crystal definition file
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class OSCBFix : public megamol::core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "OSCBFix";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "OSCBFix";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module fixing the object space clip box, by accuratly calculating it's extents";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module fixing the object space clip box, by accuratly calculating it's extents";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor */
+    OSCBFix(void);
 
-        /** Ctor */
-        OSCBFix(void);
+    /** Dtor */
+    virtual ~OSCBFix(void);
 
-        /** Dtor */
-        virtual ~OSCBFix(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Call callback to get the data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getData(core::Call& c);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /**
+     * Call callback to get the data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getExtent(core::Call& c);
 
-        /**
-         * Call callback to get the data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getData(core::Call& c);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Call callback to get the data
-         *
-         * @param c The calling call
-         *
-         * @return True on success
-         */
-        bool getExtent(core::Call& c);
+private:
+    void calcOSCB(class geocalls::MultiParticleDataCall& data);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The data callee slot */
+    core::CalleeSlot dataOutSlot;
 
-    private:
+    /** The data caller slot */
+    core::CallerSlot dataInSlot;
 
-        void calcOSCB(class geocalls::MultiParticleDataCall& data);
+    /** The data hash */
+    SIZE_T datahash;
 
-        /** The data callee slot */
-        core::CalleeSlot dataOutSlot;
+    /** The frame number */
+    unsigned int frameNum;
 
-        /** The data caller slot */
-        core::CallerSlot dataInSlot;
-
-        /** The data hash */
-        SIZE_T datahash;
-
-        /** The frame number */
-        unsigned int frameNum;
-
-        /** The new and improved object space clipping box */
-        vislib::math::Cuboid<float> oscb;
-
-    };
+    /** The new and improved object space clipping box */
+    vislib::math::Cuboid<float> oscb;
+};
 
 } /* end namespace quartz */
 } /* end namespace megamol */

@@ -7,9 +7,11 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "AbstractBezierRenderer.h"
 #include "mmcore/AbstractGetData3DCall.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+
+#include "OpenGL_Context.h"
 
 
 namespace megamol {
@@ -19,9 +21,11 @@ namespace demos_gl {
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void) : core_gl::view::Renderer3DModuleGL(),
-        getDataSlot("getdata", "Connects to the data source"),
-        objsHash(0), shader(NULL) {
+AbstractBezierRenderer::AbstractBezierRenderer(void)
+        : core_gl::view::Renderer3DModuleGL()
+        , getDataSlot("getdata", "Connects to the data source")
+        , objsHash(0)
+        , shader(NULL) {
     // intentionally empty
 }
 
@@ -38,7 +42,10 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
  * AbstractBezierRenderer::create
  */
 bool AbstractBezierRenderer::create(void) {
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+        return false;
+
     return true;
 }
 
@@ -48,7 +55,7 @@ bool AbstractBezierRenderer::create(void) {
  */
 bool AbstractBezierRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    core::AbstractGetData3DCall *gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
+    core::AbstractGetData3DCall* gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
     if ((gd != NULL) && ((*gd)(1))) {
         call.SetTimeFramesCount(gd->FrameCount());
         call.AccessBoundingBoxes() = gd->AccessBoundingBoxes();
@@ -74,9 +81,10 @@ void AbstractBezierRenderer::release(void) {
  */
 bool AbstractBezierRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
-    if (this->shader_required() && (this->shader == NULL)) return false;
+    if (this->shader_required() && (this->shader == NULL))
+        return false;
     return this->render(call);
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

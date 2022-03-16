@@ -1,13 +1,13 @@
 /*
  * InputModifiers.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 
-#include "vislib/types.h"
 #include "vislib/graphics/InputModifiers.h"
+#include "vislib/types.h"
 
 
 /*
@@ -31,8 +31,7 @@ const vislib::graphics::InputModifiers::Modifier vislib::graphics::InputModifier
 /*
  * vislib::graphics::InputModifiers::InputModifiers
  */
-vislib::graphics::InputModifiers::InputModifiers(unsigned int modCount) 
-        : modCount(0), modState(NULL), observers() {
+vislib::graphics::InputModifiers::InputModifiers(unsigned int modCount) : modCount(0), modState(NULL), observers() {
     this->SetModifierCount(modCount);
 }
 
@@ -68,24 +67,27 @@ void vislib::graphics::InputModifiers::SetModifierState(Modifier modifier, bool 
     }
 
     // no update message required
-    if (this->modState[modifier] == down) return;
+    if (this->modState[modifier] == down)
+        return;
 
-    if (down) this->modState[modifier] = true;
+    if (down)
+        this->modState[modifier] = true;
 
     vislib::SingleLinkedList<Observer*>::Iterator iter = this->observers.GetIterator();
     while (iter.HasNext()) {
-        Observer *o = iter.Next();
+        Observer* o = iter.Next();
         o->ModifierChanged(*this, modifier, down);
     }
 
-    if (!down) this->modState[modifier] = false;
+    if (!down)
+        this->modState[modifier] = false;
 }
 
 
 /*
  * vislib::graphics::InputModifiers::RegisterObserver
  */
-void vislib::graphics::InputModifiers::RegisterObserver(Observer *observer) {
+void vislib::graphics::InputModifiers::RegisterObserver(Observer* observer) {
     if (!this->observers.Contains(observer)) {
         this->observers.Add(observer);
     }
@@ -95,6 +97,6 @@ void vislib::graphics::InputModifiers::RegisterObserver(Observer *observer) {
 /*
  * vislib::graphics::InputModifiers::UnregisterObserver
  */
-void vislib::graphics::InputModifiers::UnregisterObserver(Observer *observer) {
+void vislib::graphics::InputModifiers::UnregisterObserver(Observer* observer) {
     this->observers.RemoveAll(observer);
 }

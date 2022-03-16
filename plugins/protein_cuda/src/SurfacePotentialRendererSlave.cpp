@@ -9,12 +9,14 @@
 //
 
 
-#include "stdafx.h"
 #include "SurfacePotentialRendererSlave.h"
 #include "VBODataCall.h"
-#include "ogl_error_check.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "ogl_error_check.h"
+#include "stdafx.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -24,9 +26,10 @@ using namespace megamol::core::utility::log;
 /*
  * SurfacePotentialRendererSlave::SurfacePotentialRendererSlave
  */
-SurfacePotentialRendererSlave::SurfacePotentialRendererSlave(void) : Renderer3DModuleDS(),
-        vboSlot("vboIn", "Caller slot to obtain vbo data and extent"),
-        surfAlphaSclSlot("alphaScl", "Transparency scale factor") {
+SurfacePotentialRendererSlave::SurfacePotentialRendererSlave(void)
+        : Renderer3DModuleGL()
+        , vboSlot("vboIn", "Caller slot to obtain vbo data and extent")
+        , surfAlphaSclSlot("alphaScl", "Transparency scale factor") {
 
     // Data caller for vbo
     this->vboSlot.SetCompatibleCall<VBODataCallDescription>();
@@ -35,7 +38,6 @@ SurfacePotentialRendererSlave::SurfacePotentialRendererSlave(void) : Renderer3DM
     // Param for transparency scaling
     this->surfAlphaSclSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->surfAlphaSclSlot);
-
 }
 
 
@@ -52,46 +54,45 @@ SurfacePotentialRendererSlave::~SurfacePotentialRendererSlave(void) {
  */
 bool SurfacePotentialRendererSlave::create(void) {
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("\
+    /*if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
             GL_EXT_texture3D \
             GL_EXT_framebuffer_object \
             GL_ARB_draw_buffers \
             GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance *ci = this->GetCoreInstance();
+    core::CoreInstance* ci = this->GetCoreInstance();
     if (!ci) {
         return false;
     }
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader",
-                this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
         if (!this->pplSurfaceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch (vislib::Exception &e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception& e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -102,14 +103,8 @@ bool SurfacePotentialRendererSlave::create(void) {
 /*
  * SurfacePotentialRendererSlave::GetExtents
  */
-bool SurfacePotentialRendererSlave::GetExtents(core::Call& call) {
-
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    VBODataCall *c = this->vboSlot.CallAs<VBODataCall>();
+bool SurfacePotentialRendererSlave::GetExtents(core_gl::view::CallRender3DGL& call) {
+    VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {
         return false;
     }
@@ -121,40 +116,40 @@ bool SurfacePotentialRendererSlave::GetExtents(core::Call& call) {
     // Note: WS bbox hass already been scaled in master renderer so it does not
     // need to be scaled again
     this->bbox = c->GetBBox();
-    cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(c->GetFrameCnt());
+    call.AccessBoundingBoxes() = this->bbox;
+    call.SetTimeFramesCount(c->GetFrameCnt());
 
-//    printf("Slave Call3d Object Space BBOX %f %f %f, %f %f %f\n",
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Left(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Bottom(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Back(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Right(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Top(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Front());
-//
-//    printf("Slave Call3d World Space  BBOX %f %f %f, %f %f %f\n",
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Left(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Bottom(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Back(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Right(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Top(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Front());
-//
-//    printf("Slave Call3d object Space clip BBOX %f %f %f, %f %f %f\n",
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Left(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Back(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Right(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Top(),
-//            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Front());
-//
-//    printf("Slave Call3d World Space clip BBOX %f %f %f, %f %f %f\n",
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Left(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Bottom(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Back(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Right(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Top(),
-//            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Front());
+    //    printf("Slave Call3d Object Space BBOX %f %f %f, %f %f %f\n",
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Left(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Bottom(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Back(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Right(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Top(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Front());
+    //
+    //    printf("Slave Call3d World Space  BBOX %f %f %f, %f %f %f\n",
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Left(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Bottom(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Back(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Right(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Top(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceBBox().Front());
+    //
+    //    printf("Slave Call3d object Space clip BBOX %f %f %f, %f %f %f\n",
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Left(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Bottom(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Back(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Right(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Top(),
+    //            cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().Front());
+    //
+    //    printf("Slave Call3d World Space clip BBOX %f %f %f, %f %f %f\n",
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Left(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Bottom(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Back(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Right(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Top(),
+    //            cr3d->AccessBoundingBoxes().WorldSpaceClipBox().Front());
 
     return true;
 }
@@ -171,9 +166,9 @@ void SurfacePotentialRendererSlave::release(void) {
 /*
  * SurfacePotentialRendererSlave::Render
  */
-bool SurfacePotentialRendererSlave::Render(core::Call& call) {
+bool SurfacePotentialRendererSlave::Render(core_gl::view::CallRender3DGL& call) {
 
-    VBODataCall *c = this->vboSlot.CallAs<VBODataCall>();
+    VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {
         return false;
     }
@@ -185,27 +180,17 @@ bool SurfacePotentialRendererSlave::Render(core::Call& call) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    // Apply scaling based on combined bounding box
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f/this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    //printf("scale slave %f\n", scale);
-    glScalef(scale, scale, scale);
-
-//    // DEBUG Print modelview matrix
-//    GLfloat matrix[16];
-//    printf("Modelview matrix slave\n");
-//    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
-//    for (int i = 0; i < 4; ++i) {
-//       for (int j = 0; j < 4; ++j)  {
-//           printf("%.4f ", matrix[j*4+i]);
-//       }
-//       printf("\n");
-//    }
-//    // END DEBUG
+    //    // DEBUG Print modelview matrix
+    //    GLfloat matrix[16];
+    //    printf("Modelview matrix slave\n");
+    //    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
+    //    for (int i = 0; i < 4; ++i) {
+    //       for (int j = 0; j < 4; ++j)  {
+    //           printf("%.4f ", matrix[j*4+i]);
+    //       }
+    //       printf("\n");
+    //    }
+    //    // END DEBUG
 
 
     if (!this->renderSurface(c)) {
@@ -221,7 +206,7 @@ bool SurfacePotentialRendererSlave::Render(core::Call& call) {
 /*
  * SurfacePotentialRendererSlave::renderSurface
  */
-bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
+bool SurfacePotentialRendererSlave::renderSurface(VBODataCall* c) {
 
     GLint attribLocPos, attribLocNormal, attribLocTexCoord;
 
@@ -247,15 +232,12 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
     glEnableVertexAttribArrayARB(attribLocTexCoord);
     CheckForGLError(); // OpenGL error check
 
-    glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
-            c->GetDataStride()*sizeof(float),
-            reinterpret_cast<void*>(c->GetDataOffsPosition()*sizeof(float)));
-    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
-            c->GetDataStride()*sizeof(float),
-            reinterpret_cast<void*>(c->GetDataOffsNormal()*sizeof(float)));
-    glVertexAttribPointerARB(attribLocTexCoord, 3, GL_FLOAT, GL_FALSE,
-            c->GetDataStride()*sizeof(float),
-            reinterpret_cast<void*>(c->GetDataOffsTexCoord()*sizeof(float)));
+    glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE, c->GetDataStride() * sizeof(float),
+        reinterpret_cast<void*>(c->GetDataOffsPosition() * sizeof(float)));
+    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE, c->GetDataStride() * sizeof(float),
+        reinterpret_cast<void*>(c->GetDataOffsNormal() * sizeof(float)));
+    glVertexAttribPointerARB(attribLocTexCoord, 3, GL_FLOAT, GL_FALSE, c->GetDataStride() * sizeof(float),
+        reinterpret_cast<void*>(c->GetDataOffsTexCoord() * sizeof(float)));
     CheckForGLError(); // OpenGL error check
 
 
@@ -263,7 +245,7 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
 
     // Set uniform vars
     glUniform1iARB(this->pplSurfaceShader.ParameterLocation("potentialTex"), 0);
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("colorMode"), 3); // Set color mode to 'surface potential'
+    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("colorMode"), 3);  // Set color mode to 'surface potential'
     glUniform1iARB(this->pplSurfaceShader.ParameterLocation("renderMode"), 3); // Set render mode to 'fill'
     glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorMin"), 0.75f, 0.01f, 0.15f);
     glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorZero"), 1.0f, 1.0f, 1.0f);
@@ -273,7 +255,7 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
     glUniform1fARB(this->pplSurfaceShader.ParameterLocation("midPotential"), 0.0f);
     glUniform1fARB(this->pplSurfaceShader.ParameterLocation("maxPotential"), c->GetTexValMax());
     glUniform1fARB(this->pplSurfaceShader.ParameterLocation("alphaScl"),
-            this->surfAlphaSclSlot.Param<core::param::FloatParam>()->Value());
+        this->surfAlphaSclSlot.Param<core::param::FloatParam>()->Value());
 
     glActiveTextureARB(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, c->GetTexId());
@@ -289,12 +271,9 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, c->GetVboTriangleIdx());
     CheckForGLError(); // OpenGL error check
 
-    glDrawElements(GL_TRIANGLES,
-            c->GetTriangleCnt()*3,
-            GL_UNSIGNED_INT,
-            reinterpret_cast<void*>(0));
+    glDrawElements(GL_TRIANGLES, c->GetTriangleCnt() * 3, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
 
-//    glDrawArrays(GL_POINTS, 0, 3*vertexCnt); // DEBUG
+    //    glDrawArrays(GL_POINTS, 0, 3*vertexCnt); // DEBUG
 
     this->pplSurfaceShader.Disable();
 
@@ -309,7 +288,3 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall *c) {
 
     return CheckForGLError(); // OpenGL error check
 }
-
-
-
-

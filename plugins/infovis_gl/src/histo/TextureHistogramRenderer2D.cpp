@@ -7,9 +7,8 @@
 #include "TextureHistogramRenderer2D.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::infovis_gl;
@@ -44,8 +43,8 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
             "histo_tex_minmax_all", shaderOptions, "infovis_gl/histo/tex_minmax_all.comp.glsl");
         calcHistogramProgram_ =
             core::utility::make_glowl_shader("histo_tex_calc", shaderOptions, "infovis_gl/histo/tex_calc.comp.glsl");
-        selectionProgram_ =
-            core::utility::make_glowl_shader("histo_tex_select", shaderOptions, "infovis_gl/histo/tex_select.comp.glsl");
+        selectionProgram_ = core::utility::make_glowl_shader(
+            "histo_tex_select", shaderOptions, "infovis_gl/histo/tex_select.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;

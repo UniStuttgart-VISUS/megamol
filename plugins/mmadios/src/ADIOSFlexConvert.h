@@ -7,38 +7,44 @@
 
 #pragma once
 
-#include "mmcore/Module.h"
+#include "geometry_calls/SimpleSphericalParticles.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "geometry_calls/SimpleSphericalParticles.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace adios {
-    
+
 class ADIOSFlexConvert : public core::Module {
-    
+
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ADIOSFlexConvert"; }
+    static const char* ClassName() {
+        return "ADIOSFlexConvert";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Converts ADIOS-based IO into MegaMol's MultiParticleDataCall."; }
+    static const char* Description() {
+        return "Converts ADIOS-based IO into MegaMol's MultiParticleDataCall.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Ctor. */
     ADIOSFlexConvert();
@@ -68,10 +74,9 @@ protected:
      * @return 'true' on success, 'false' on failure.
      */
     bool getExtentCallback(core::Call& caller);
-    bool paramChanged(core::param::ParamSlot &p);
+    bool paramChanged(core::param::ParamSlot& p);
 
 private:
-
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
@@ -81,6 +86,7 @@ private:
     core::param::ParamSlot flexXSlot;
     core::param::ParamSlot flexYSlot;
     core::param::ParamSlot flexZSlot;
+    core::param::ParamSlot flexAlignedPosSlot;
 
 
     std::vector<float> mix;
@@ -94,7 +100,6 @@ private:
     size_t stride = 0;
 
     bool _trigger_recalc = false;
-
 };
 
 } // end namespace adios

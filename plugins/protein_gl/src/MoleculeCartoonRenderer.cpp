@@ -9,8 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <math.h>
-#include <time.h>
 #include "MoleculeCartoonRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -37,6 +35,8 @@
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
+#include <math.h>
+#include <time.h>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -230,12 +230,7 @@ void MoleculeCartoonRenderer::release(void) {}
 bool MoleculeCartoonRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
@@ -252,18 +247,16 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the cartoon shader //
     ////////////////////////////////////////////////////
 
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::vertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
@@ -282,17 +275,15 @@ bool MoleculeCartoonRenderer::create(void) {
     /////////////////////////////////////////////////
     // load the shader sources for the tube shader //
     /////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::tubeGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::tubeGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
@@ -306,17 +297,15 @@ bool MoleculeCartoonRenderer::create(void) {
     //////////////////////////////////////////////////
     // load the shader sources for the arrow shader //
     //////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::arrowGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::arrowGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
@@ -330,17 +319,15 @@ bool MoleculeCartoonRenderer::create(void) {
     /////////////////////////////////////////////////
     // load the shader sources for the helix shader //
     /////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::helixGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::helixGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for helix shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::cartoon::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
@@ -354,17 +341,15 @@ bool MoleculeCartoonRenderer::create(void) {
     /////////////////////////////////////////////////
     // load the shader sources for the tube shader //
     /////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::tubeGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::tubeGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple tube shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
@@ -378,17 +363,15 @@ bool MoleculeCartoonRenderer::create(void) {
     //////////////////////////////////////////////////
     // load the shader sources for the arrow shader //
     //////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::arrowGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::arrowGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
@@ -402,17 +385,15 @@ bool MoleculeCartoonRenderer::create(void) {
     /////////////////////////////////////////////////
     // load the shader sources for the helix shader //
     /////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::helixGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::helixGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple helix shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::simple::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
@@ -426,17 +407,15 @@ bool MoleculeCartoonRenderer::create(void) {
     /////////////////////////////////////////////////////////
     // load the shader sources for the spline arrow shader //
     /////////////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::arrowGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::arrowGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
@@ -450,17 +429,15 @@ bool MoleculeCartoonRenderer::create(void) {
     ////////////////////////////////////////////////////////
     // load the shader sources for the spline tube shader //
     ////////////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::tubeGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::tubeGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline tube shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
@@ -474,17 +451,15 @@ bool MoleculeCartoonRenderer::create(void) {
     ////////////////////////////////////////////////////////
     // load the shader sources for the spline helix shader //
     ////////////////////////////////////////////////////////
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::helixGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::helixGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline helix shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::spline::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
@@ -499,13 +474,11 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -883,6 +856,7 @@ bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); // default depth function
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     glPopMatrix();
@@ -1073,7 +1047,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -1470,7 +1444,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
 
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
                     else
                         continue;
 
@@ -2200,7 +2174,7 @@ void MoleculeCartoonRenderer::RenderCartoonLineCPU(const MolecularDataCall* mol,
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -2315,7 +2289,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glBegin(GL_LINES_ADJACENCY_EXT);
 
                 // vertex 1
-                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
                 idx = aminoacid->CAlphaIndex();
                 v1.SetX(atomPos[idx * 3 + 0]);
                 v1.SetY(atomPos[idx * 3 + 1]);
@@ -2335,7 +2309,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 else
                     flip = 1.0;
                 n1 *= flip;
-                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 2]);
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 2]);
                 idx = aminoacid->CAlphaIndex();
                 glSecondaryColor3f(this->atomColorTable[3 * idx], this->atomColorTable[3 * idx + 1],
                     this->atomColorTable[3 * idx + 2]);
@@ -2343,7 +2317,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v1.PeekComponents());
 
                 // vertex 2
-                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 1]);
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 1]);
                 idx = aminoacid->CAlphaIndex();
                 v2.SetX(atomPos[idx * 3 + 0]);
                 v2.SetY(atomPos[idx * 3 + 1]);
@@ -2368,7 +2342,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v2.PeekComponents());
 
                 // vertex 3
-                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 2]);
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 2]);
                 idx = aminoacid->CAlphaIndex();
                 v3.SetX(atomPos[idx * 3 + 0]);
                 v3.SetY(atomPos[idx * 3 + 1]);
@@ -2392,7 +2366,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v3.PeekComponents());
 
                 // vertex 4
-                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 3]);
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 3]);
                 idx = aminoacid->CAlphaIndex();
                 v4.SetX(atomPos[idx * 3 + 0]);
                 v4.SetY(atomPos[idx * 3 + 1]);
@@ -2493,7 +2467,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -2553,7 +2527,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
         // --- START store the vertices, colors and parameters ---
         this->totalCountTube = 0;
         for (unsigned int i = 0; i < bSplineCoords.size(); i++) {
-            this->totalCountTube += (unsigned int) bSplineCoords[i].size();
+            this->totalCountTube += (unsigned int)bSplineCoords[i].size();
         }
 
         if (this->vertTube)

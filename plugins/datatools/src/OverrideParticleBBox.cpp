@@ -4,16 +4,16 @@
  * Copyright (C) 2015 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "OverrideParticleBBox.h"
-#include <float.h>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
-#include "mmcore/utility/log/Log.h"
+#include <float.h>
 
 using namespace megamol;
 
@@ -38,17 +38,17 @@ typedef vislib::math::ShallowPoint<float, 3> (*posFromSomethingFunc)(void*, size
  * datatools::OverrideParticleBBox::OverrideParticleBBox
  */
 datatools::OverrideParticleBBox::OverrideParticleBBox(void)
-    : AbstractParticleManipulator("outData", "indata")
-    , overrideBBoxSlot("override", "Activates the overwrite of the bounding box")
-    , overrideLBBoxSlot("overrideLocalBBox", "Activates the overwrite of the local bounding box")
-    , bboxMinSlot("bbox::min", "The minimum values of the bounding box")
-    , bboxMaxSlot("bbox::max", "The maximum values of the bounding box")
-    , resetSlot("reset", "Resets the bounding box values to the incoming data")
-    , autocomputeSlot("autocompute::trigger", "Triggers the automatic computation of the bounding box")
-    , autocomputeSamplesSlot("autocompute::samples", "Number of samples for the automatic computation")
-    , autocomputeXSlot("autocompute::x", "Activates automatic computation of the x size")
-    , autocomputeYSlot("autocompute::y", "Activates automatic computation of the y size")
-    , autocomputeZSlot("autocompute::z", "Activates automatic computation of the z size") {
+        : AbstractParticleManipulator("outData", "indata")
+        , overrideBBoxSlot("override", "Activates the overwrite of the bounding box")
+        , overrideLBBoxSlot("overrideLocalBBox", "Activates the overwrite of the local bounding box")
+        , bboxMinSlot("bbox::min", "The minimum values of the bounding box")
+        , bboxMaxSlot("bbox::max", "The maximum values of the bounding box")
+        , resetSlot("reset", "Resets the bounding box values to the incoming data")
+        , autocomputeSlot("autocompute::trigger", "Triggers the automatic computation of the bounding box")
+        , autocomputeSamplesSlot("autocompute::samples", "Number of samples for the automatic computation")
+        , autocomputeXSlot("autocompute::x", "Activates automatic computation of the x size")
+        , autocomputeYSlot("autocompute::y", "Activates automatic computation of the y size")
+        , autocomputeZSlot("autocompute::z", "Activates automatic computation of the z size") {
 
     this->overrideBBoxSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->overrideBBoxSlot);
@@ -85,7 +85,9 @@ datatools::OverrideParticleBBox::OverrideParticleBBox(void)
 /*
  * datatools::OverrideParticleBBox::~OverrideParticleBBox
  */
-datatools::OverrideParticleBBox::~OverrideParticleBBox(void) { this->Release(); }
+datatools::OverrideParticleBBox::~OverrideParticleBBox(void) {
+    this->Release();
+}
 
 
 /*
@@ -125,7 +127,8 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     //    }
     //}
 
-    if (!(inData)(0)) return false;
+    if (!(inData)(0))
+        return false;
     outData = inData; // also transfers the unlocker to 'outData'
 
     bool doX = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
@@ -145,7 +148,8 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         size_t step;
 
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
-            if (rad < inData.AccessParticles(l).GetGlobalRadius()) rad = inData.AccessParticles(l).GetGlobalRadius();
+            if (rad < inData.AccessParticles(l).GetGlobalRadius())
+                rad = inData.AccessParticles(l).GetGlobalRadius();
             if (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() ==
                     geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ ||
                 inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() ==
@@ -228,7 +232,8 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                         "OverrideParticleBBox does not support re-computation of short coordinates");
                     break;
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("OverrideParticleBBox: skipping empty vertex data");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "OverrideParticleBBox: skipping empty vertex data");
                     break;
                 }
             }
@@ -247,8 +252,9 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
             doZ ? minZ - rad : l.Z(), doX ? maxX - rad : u.X(), doY ? maxY - rad : u.Y(), doZ ? maxZ - rad : u.Z());
         outData.AccessBoundingBoxes().MakeScaledWorld(1.0f);
         if (this->autocomputeSlot.IsDirty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[OverrideParticleBBox] BBox: %f %f %f %f %f %f", doX ? minX : l.X(),
-                doY ? minY : l.Y(), doZ ? minZ : l.Z(), doX ? maxX : u.X(), doY ? maxY : u.Y(), doZ ? maxZ : u.Z());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[OverrideParticleBBox] BBox: %f %f %f %f %f %f",
+                doX ? minX : l.X(), doY ? minY : l.Y(), doZ ? minZ : l.Z(), doX ? maxX : u.X(), doY ? maxY : u.Y(),
+                doZ ? maxZ : u.Z());
             this->autocomputeSlot.ResetDirty();
         }
     }

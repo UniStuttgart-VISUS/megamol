@@ -5,44 +5,44 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/api/MegaMolCore.h"
+#include "stdafx.h"
 
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
 #include "mmcore/ApiHandle.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
-#include "mmcore/factories/ObjectDescription.h"
-#include "mmcore/factories/ObjectDescriptionManager.h"
-#include "mmcore/versioninfo.h"
-#include "mmcore/param/ParamHandle.h"
-#include "mmcore/utility/Configuration.h"
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
-#include "mmcore/view/AbstractView.h"
-#include "mmcore/job/AbstractJob.h"
-#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/CallerSlot.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/ObjectDescription.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
+#include "mmcore/job/AbstractJob.h"
+#include "mmcore/param/ParamHandle.h"
+#include "mmcore/utility/Configuration.h"
+#include "mmcore/view/AbstractView.h"
 
-#include "vislib/assert.h"
-#include "vislib/sys/CriticalSection.h"
+#include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Console.h"
-#include "vislib/sys/File.h"
-#include "vislib/functioncast.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/mathfunctions.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/MD5HashProvider.h"
 #include "vislib/SHA1HashProvider.h"
-#include "vislib/sys/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/Trace.h"
+#include "vislib/assert.h"
+#include "vislib/functioncast.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/net/Socket.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Path.h"
 
 
 #ifdef _WIN32
@@ -53,15 +53,14 @@
 
 HMODULE mmCoreModuleHandle;
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call,
-        LPVOID lpReserved) {
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     mmCoreModuleHandle = hModule;
     switch (ul_reason_for_call) {
-        case DLL_PROCESS_ATTACH:
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-        case DLL_PROCESS_DETACH:
-            break;
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
     }
     return TRUE;
 }
@@ -75,16 +74,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call,
 
 extern "C" {
 
-const char interp[] __attribute__((section(".interp"))) = 
-"/lib/ld-linux.so.2";
+const char interp[] __attribute__((section(".interp"))) = "/lib/ld-linux.so.2";
 
-void mmCoreMain(int argc, char *argv[]) {
+void mmCoreMain(int argc, char* argv[]) {
     printf("Horst!\n");
     //printf("argc = %i (%u)\nargv = %p\n", argc, argc, argv);
     //printf("*argv = %s\n", *argv);
     exit(0);
 }
-
 }
 
 #endif /* _WIN32 */
@@ -96,9 +93,9 @@ void mmCoreMain(int argc, char *argv[]) {
 MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-    rv->VersionNumber[0] = (const char*)MEGAMOL_CORE_MAJOR_VER;
-    rv->VersionNumber[1] = (const char*)MEGAMOL_CORE_MINOR_VER;
-    rv->VersionNumber[2] = MEGAMOL_CORE_COMP_REV;
+    rv->VersionNumber[0] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MAJOR();
+    rv->VersionNumber[1] = (const char*)megamol::core::utility::buildinfo::MEGAMOL_VERSION_MINOR();
+    rv->VersionNumber[2] = megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH().c_str();
 
 
     rv->SystemType = MMC_OSYSTEM_UNKNOWN;
@@ -108,41 +105,44 @@ MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     rv->SystemType = MMC_OSYSTEM_WINDOWS;
 #endif /* (WINVER >= 0x0501) */
 #endif /* defined(WINVER) */
-#else /* _WIN32 */
+#else  /* _WIN32 */
     rv->SystemType = MMC_OSYSTEM_LINUX;
 #endif /* _WIN32 */
 
     rv->HardwareArchitecture = MMC_HARCH_UNKNOWN;
 #if defined(_WIN64) || defined(_LIN64)
     rv->HardwareArchitecture = MMC_HARCH_X64;
-#else /* defined(_WIN64) || defined(_LIN64) */
+#else  /* defined(_WIN64) || defined(_LIN64) */
     rv->HardwareArchitecture = MMC_HARCH_I86;
 #endif /* defined(_WIN64) || defined(_LIN64) */
 
     rv->Flags = 0
 #if defined(_DEBUG) || defined(DEBUG)
-        | MMC_BFLAG_DEBUG
+                | MMC_BFLAG_DEBUG
 #endif /* defined(_DEBUG) || defined(DEBUG) */
 #ifdef MEGAMOL_GLUT_ISDIRTY
-        | MMC_BFLAG_DIRTY
+                | MMC_BFLAG_DIRTY
 #endif /* MEGAMOL_GLUT_ISDIRTY */
         ;
 
-    const char *src = MEGAMOL_CORE_NAME;
+    const char* src = "MegaMol Core";
     size_t buf_len = ::strlen(src);
-    char *buf = static_cast<char*>(::malloc(buf_len + 1));
+    char* buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->NameStr = buf;
 
-    src = MEGAMOL_CORE_COPYRIGHT;
+    src = "Copyright (c) 2006 - 2021 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, "
+          "Germany)\n"
+          "Alle Rechte vorbehalten.\n"
+          "All rights reserved.\n";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->CopyrightStr = buf;
 
-    src = MEGAMOL_CORE_COMMENTS;
+    src = "";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
@@ -157,7 +157,8 @@ MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
  * mmvFreeVersionInfo
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreeVersionInfo(mmcBinaryVersionInfo* info) {
-    if (info == nullptr) return;
+    if (info == nullptr)
+        return;
     if (info->NameStr != nullptr) {
         ::free(const_cast<char*>(info->NameStr));
         info->NameStr = nullptr;
@@ -185,7 +186,7 @@ MEGAMOLCORE_API unsigned int MEGAMOLCORE_CALL mmcGetHandleSize(void) {
 /*
  * mmcDisposeHandle
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl) {
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void* hndl) {
     megamol::core::ApiHandle::DestroyHandle(hndl);
 }
 
@@ -193,35 +194,29 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl) {
 /*
  * mmcIsHandleValid
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void *hndl) {
-    return (megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ApiHandle>(hndl) != NULL);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void* hndl) {
+    return (megamol::core::ApiHandle::InterpretHandle<megamol::core::ApiHandle>(hndl) != NULL);
 }
 
 
 /*
  * mmcGetHandleType
  */
-MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl) {
+MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void* hndl) {
 
-    if (megamol::core::ApiHandle::InterpretHandle<
-            megamol::core::ApiHandle>(hndl) == NULL) {
+    if (megamol::core::ApiHandle::InterpretHandle<megamol::core::ApiHandle>(hndl) == NULL) {
         return MMC_HTYPE_INVALID;
 
-    } else if (megamol::core::ApiHandle::InterpretHandle<
-            megamol::core::CoreInstance>(hndl) == NULL) {
+    } else if (megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hndl) == NULL) {
         return MMC_HTYPE_COREINSTANCE;
 
-    } else if (megamol::core::ApiHandle::InterpretHandle<
-            megamol::core::ViewInstance>(hndl) == NULL) {
+    } else if (megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hndl) == NULL) {
         return MMC_HTYPE_VIEWINSTANCE;
 
-    } else if (megamol::core::ApiHandle::InterpretHandle<
-            megamol::core::JobInstance>(hndl) == NULL) {
+    } else if (megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hndl) == NULL) {
         return MMC_HTYPE_JOBINSTANCE;
 
-    } else if (megamol::core::ApiHandle::InterpretHandle<
-            megamol::core::param::ParamHandle>(hndl) == NULL) {
+    } else if (megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hndl) == NULL) {
         return MMC_HTYPE_PARAMETER;
 
     } else {
@@ -233,7 +228,7 @@ MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl) {
 /*
  * mmcCreateCoreInstance
  */
-MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
+MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void* hCore) {
     if (mmcIsHandleValid(hCore) != 0) {
         return MMC_ERR_HANDLE; // handle was already valid.
     }
@@ -241,110 +236,110 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
         return MMC_ERR_MEMORY; // memory pointer seams to be invalid.
     }
 
-//    { // self test for licencing
-//        vislib::MD5HashProvider hash;
-//        void *apifunctions[] = {
-//__ALL_API_FUNCS
-//        };
-//        void *rp = function_cast<void*>(mmcCreateCore);
-//        SIZE_T r = reinterpret_cast<SIZE_T>(rp);
-//        SIZE_T d = UINT_MAX;
-//        for (unsigned int i = 0; apifunctions[i] != NULL; i++) {
-//            SIZE_T t = r - reinterpret_cast<SIZE_T>(apifunctions[i]);
-//            if ((t > 0) && (t < d)) d = t;
-//        }
-//#ifdef _LOG_CORE_HASH_INFO
-//        UINT logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
-//        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
-//        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Calculating core Hash using %d bytes\n", d);
-//        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
-//#endif /* _LOG_CORE_HASH_INFO */
-//        hash.Initialise();
-//        hash.ComputeHash(NULL, r, static_cast<BYTE*>(rp), d);
-//        BYTE *hashVal = new BYTE[r];
-//        SIZE_T otherr = r;
-//        hash.GetHashValue(hashVal, otherr);
-//        ASSERT(otherr == r);
-//
-//        // Test against manifest hash value
-//
-//        vislib::StringA s, tmp;
-//        for (d = 0; d < r; d++) {
-//            if ((d % 4) == 0) tmp.Append("-");
-//            s.Format("%02x", /*(int)*/hashVal[d]);
-//            tmp.Append(s);
-//        }
-//        delete[] hashVal;
-//        s.Format("%s-%s%d%s%s",
-//            vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
-//#ifdef _WIN32
-//#if defined(WINVER)
-//#if (WINVER >= 0x0501)
-//            "Win",
-//#endif /* (WINVER >= 0x0501) */
-//#endif /* defined(WINVER) */
-//#else /* _WIN32 */
-//            "Lin",
-//#endif /* _WIN32 */
-//#if defined(_WIN64) || defined(_LIN64)
-//            64,
-//#else /* defined(_WIN64) || defined(_LIN64) */
-//            32,
-//#endif /* defined(_WIN64) || defined(_LIN64) */
-//#if defined(_DEBUG) || defined(DEBUG)
-//            "d",
-//#else /* defined(_DEBUG) || defined(DEBUG) */
-//            "",
-//#endif /* defined(_DEBUG) || defined(DEBUG) */
-//            tmp.PeekBuffer());
-//        s.ToLowerCase();
-//        tmp.ToLowerCase();
-//
-//#ifdef _LOG_CORE_HASH_INFO
-//        logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
-//        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
-//        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Core Hash: %s\n", tmp.PeekBuffer() + 1);
-//        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
-//#endif /* _LOG_CORE_HASH_INFO */
-//
-//#ifdef _SEND_CORE_HASH_INFO
-//        // send infos
-//        unsigned short s1, s2, s3, s4;
-//        ::mmcGetVersion(&s1, &s2, &s3, &s4);
-//
-//        tmp.Format("-%d-%d-%d-%d", s1, s2, s3, s4);
-//        s.Append(tmp);
-//
-//        vislib::net::Socket::Startup();
-//        try {
-//            vislib::net::Socket socket;
-//            socket.Create(vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_STREAM, vislib::net::Socket::PROTOCOL_TCP);
-//            try {
-//                vislib::net::IPEndPoint endPoint = vislib::net::IPEndPoint::CreateIPv4("www.vis.uni-stuttgart.de", 80);
-//                socket.Connect(endPoint);
-//                try {
-//                    tmp = "GET /~grottel/megamol/corehashreg.php?hash=";
-//                    tmp.Append(s);
-//                    // socket.SetSndTimeo(5000); // Does not work under linux, why?
-//                    socket.Send(tmp.PeekBuffer(), tmp.Length());
-//                } catch(...) {
-//                }
-//                socket.Shutdown();
-//            } catch(...) {
-//            }
-//            socket.Close();
-//        } catch(...) {
-//        }
-//        vislib::net::Socket::Cleanup();
-//
-//#endif /* _SEND_CORE_HASH_INFO */
-//
-//    }
+    //    { // self test for licencing
+    //        vislib::MD5HashProvider hash;
+    //        void *apifunctions[] = {
+    //__ALL_API_FUNCS
+    //        };
+    //        void *rp = function_cast<void*>(mmcCreateCore);
+    //        SIZE_T r = reinterpret_cast<SIZE_T>(rp);
+    //        SIZE_T d = UINT_MAX;
+    //        for (unsigned int i = 0; apifunctions[i] != NULL; i++) {
+    //            SIZE_T t = r - reinterpret_cast<SIZE_T>(apifunctions[i]);
+    //            if ((t > 0) && (t < d)) d = t;
+    //        }
+    //#ifdef _LOG_CORE_HASH_INFO
+    //        UINT logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
+    //        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
+    //        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Calculating core Hash using %d bytes\n", d);
+    //        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
+    //#endif /* _LOG_CORE_HASH_INFO */
+    //        hash.Initialise();
+    //        hash.ComputeHash(NULL, r, static_cast<BYTE*>(rp), d);
+    //        BYTE *hashVal = new BYTE[r];
+    //        SIZE_T otherr = r;
+    //        hash.GetHashValue(hashVal, otherr);
+    //        ASSERT(otherr == r);
+    //
+    //        // Test against manifest hash value
+    //
+    //        vislib::StringA s, tmp;
+    //        for (d = 0; d < r; d++) {
+    //            if ((d % 4) == 0) tmp.Append("-");
+    //            s.Format("%02x", /*(int)*/hashVal[d]);
+    //            tmp.Append(s);
+    //        }
+    //        delete[] hashVal;
+    //        s.Format("%s-%s%d%s%s",
+    //            vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+    //#ifdef _WIN32
+    //#if defined(WINVER)
+    //#if (WINVER >= 0x0501)
+    //            "Win",
+    //#endif /* (WINVER >= 0x0501) */
+    //#endif /* defined(WINVER) */
+    //#else /* _WIN32 */
+    //            "Lin",
+    //#endif /* _WIN32 */
+    //#if defined(_WIN64) || defined(_LIN64)
+    //            64,
+    //#else /* defined(_WIN64) || defined(_LIN64) */
+    //            32,
+    //#endif /* defined(_WIN64) || defined(_LIN64) */
+    //#if defined(_DEBUG) || defined(DEBUG)
+    //            "d",
+    //#else /* defined(_DEBUG) || defined(DEBUG) */
+    //            "",
+    //#endif /* defined(_DEBUG) || defined(DEBUG) */
+    //            tmp.PeekBuffer());
+    //        s.ToLowerCase();
+    //        tmp.ToLowerCase();
+    //
+    //#ifdef _LOG_CORE_HASH_INFO
+    //        logLevel = megamol::core::utility::log::Log::DefaultLog.GetLevel();
+    //        megamol::core::utility::log::Log::DefaultLog.SetLevel(800);
+    //        megamol::core::utility::log::Log::DefaultLog.WriteMsg(800, "Core Hash: %s\n", tmp.PeekBuffer() + 1);
+    //        megamol::core::utility::log::Log::DefaultLog.SetLevel(logLevel);
+    //#endif /* _LOG_CORE_HASH_INFO */
+    //
+    //#ifdef _SEND_CORE_HASH_INFO
+    //        // send infos
+    //        unsigned short s1, s2, s3, s4;
+    //        ::mmcGetVersion(&s1, &s2, &s3, &s4);
+    //
+    //        tmp.Format("-%d-%d-%d-%d", s1, s2, s3, s4);
+    //        s.Append(tmp);
+    //
+    //        vislib::net::Socket::Startup();
+    //        try {
+    //            vislib::net::Socket socket;
+    //            socket.Create(vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_STREAM, vislib::net::Socket::PROTOCOL_TCP);
+    //            try {
+    //                vislib::net::IPEndPoint endPoint = vislib::net::IPEndPoint::CreateIPv4("www.vis.uni-stuttgart.de", 80);
+    //                socket.Connect(endPoint);
+    //                try {
+    //                    tmp = "GET /~grottel/megamol/corehashreg.php?hash=";
+    //                    tmp.Append(s);
+    //                    // socket.SetSndTimeo(5000); // Does not work under linux, why?
+    //                    socket.Send(tmp.PeekBuffer(), tmp.Length());
+    //                } catch(...) {
+    //                }
+    //                socket.Shutdown();
+    //            } catch(...) {
+    //            }
+    //            socket.Close();
+    //        } catch(...) {
+    //        }
+    //        vislib::net::Socket::Cleanup();
+    //
+    //#endif /* _SEND_CORE_HASH_INFO */
+    //
+    //    }
 
 #if !(defined(DEBUG) || defined(_DEBUG))
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
 #endif /* !(defined(DEBUG) || defined(_DEBUG)) */
-    megamol::core::CoreInstance *inst = new megamol::core::CoreInstance();
+    megamol::core::CoreInstance* inst = new megamol::core::CoreInstance();
     if (inst == NULL) {
         return MMC_ERR_MEMORY; // out of memory or initialisation failed.
     }
@@ -361,22 +356,19 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
 /*
  * mmcSetInitialisationValue
  */
-MEGAMOLCORE_API mmcErrorCode
-MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key, 
-        mmcValueType type, const void* value) {
+MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcSetInitialisationValue(
+    void* hCore, mmcInitValue key, mmcValueType type, const void* value) {
 
-    megamol::core::CoreInstance *inst
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
 
-    if (inst == NULL) { return MMC_ERR_INVALID_HANDLE; }
+    if (inst == NULL) {
+        return MMC_ERR_INVALID_HANDLE;
+    }
     try {
 
         return inst->SetInitValue(key, type, value);
 
-    } catch(vislib::IllegalStateException) {
-        return MMC_ERR_STATE;
-    } catch(...) {
+    } catch (vislib::IllegalStateException) { return MMC_ERR_STATE; } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("mmcSetInitialisationValue: exception");
         return MMC_ERR_UNKNOWN;
     }
@@ -388,12 +380,11 @@ MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key,
 /*
  * mmcInitialiseCoreInstance
  */
-MEGAMOLCORE_API mmcErrorCode
-MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
-    megamol::core::CoreInstance *inst
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (inst == NULL) { return MMC_ERR_INVALID_HANDLE; }
+MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void* hCore) {
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (inst == NULL) {
+        return MMC_ERR_INVALID_HANDLE;
+    }
     try {
         inst->Initialise();
         return MMC_ERR_NO_ERROR;
@@ -401,7 +392,8 @@ MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to initialise core instance: %s (%s; %i)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise core instance: %s\n", "unknown exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to initialise core instance: %s\n", "unknown exception");
     }
     megamol::core::utility::log::Log::DefaultLog.WriteError("mmcInitialiseCoreInstance: exception");
     return MMC_ERR_UNKNOWN;
@@ -411,13 +403,12 @@ MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
 /*
  * mmcGetConfigurationValueA
  */
-MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueA(
-        void *hCore, mmcConfigID id, const char *name, 
-        mmcValueType *outType) {
-    megamol::core::CoreInstance *inst
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (inst == NULL) { return NULL; }
+MEGAMOLCORE_API const void* MEGAMOLCORE_CALL mmcGetConfigurationValueA(
+    void* hCore, mmcConfigID id, const char* name, mmcValueType* outType) {
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (inst == NULL) {
+        return NULL;
+    }
     return inst->Configuration().GetValue(id, name, outType);
 }
 
@@ -425,13 +416,12 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueA(
 /*
  * mmcGetConfigurationValueW
  */
-MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
-        void *hCore, mmcConfigID id, const wchar_t *name, 
-        mmcValueType *outType) {
-    megamol::core::CoreInstance *inst
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (inst == NULL) { return NULL; }
+MEGAMOLCORE_API const void* MEGAMOLCORE_CALL mmcGetConfigurationValueW(
+    void* hCore, mmcConfigID id, const wchar_t* name, mmcValueType* outType) {
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (inst == NULL) {
+        return NULL;
+    }
     return inst->Configuration().GetValue(id, name, outType);
 }
 
@@ -440,20 +430,24 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
  * mmcSetConfigurationValueA
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
-        void *hCore, mmcConfigID id, const char *name, const char* val) {
-    megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
-    if (inst == NULL) { return false; }
+    void* hCore, mmcConfigID id, const char* name, const char* val) {
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (inst == NULL) {
+        return false;
+    }
     return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
 }
 
 
 /*
-* mmcSetConfigurationValueW
-*/
+ * mmcSetConfigurationValueW
+ */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
-        void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val) {
-    megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
-    if (inst == NULL) { return false; }
+    void* hCore, mmcConfigID id, const wchar_t* name, const wchar_t* val) {
+    megamol::core::CoreInstance* inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (inst == NULL) {
+        return false;
+    }
     return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
 }
 
@@ -461,12 +455,11 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
 /*
  * mmcRequestAllInstances
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void* hCore) {
     printf("Request all instances\n");
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
     core->RequestAllInstantiations();
 }
 
@@ -474,12 +467,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {
 /*
  * mmcRequestInstanceA
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
-        void *hCore, const char *name, const char *id) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(void* hCore, const char* name, const char* id) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
 
     std::shared_ptr<const megamol::core::ViewDescription> vd = core->FindViewDescription(name);
     if (vd != NULL) {
@@ -494,29 +485,26 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
 
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
         "Unable to queue instantiation of \"%s\": "
-        "Description \"%s\" has not been found.", id, name);
+        "Description \"%s\" has not been found.",
+        id, name);
 }
 
 
 /*
  * mmcRequestInstanceW
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
-        void *hCore, const wchar_t *name, const wchar_t *id) {
-    mmcRequestInstanceA(hCore, vislib::StringA(name).PeekBuffer(),
-        vislib::StringA(id).PeekBuffer());
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(void* hCore, const wchar_t* name, const wchar_t* id) {
+    mmcRequestInstanceA(hCore, vislib::StringA(name).PeekBuffer(), vislib::StringA(id).PeekBuffer());
 }
 
 
 /*
  * mmcHasPendingViewInstantiationRequests
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
-        void *hCore) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(void* hCore) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
     return core->HasPendingViewInstantiationRequests();
 }
 
@@ -524,10 +512,11 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
 /*
  * mmcGetPendingViewInstanceName
  */
-MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void *hCore) {
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void* hCore) {
     static vislib::StringA name;
-    megamol::core::CoreInstance *core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
-    if (core == nullptr) return nullptr;
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == nullptr)
+        return nullptr;
     name = core->GetPendingViewName();
     return name.PeekBuffer();
 }
@@ -536,22 +525,21 @@ MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void 
 /*
  * mmcInstantiatePendingView
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
-        void *hView) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void* hCore, void* hView) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
 
-    if (megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView) != NULL) return false;
+    if (megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView) != NULL)
+        return false;
 
-    megamol::core::ViewInstance *view = dynamic_cast<megamol::core::ViewInstance*>(core->InstantiatePendingView().get());
-    if (view == NULL) return false;
+    megamol::core::ViewInstance* view =
+        dynamic_cast<megamol::core::ViewInstance*>(core->InstantiatePendingView().get());
+    if (view == NULL)
+        return false;
 
     if (megamol::core::ApiHandle::CreateHandle(hView, view)) {
-        megamol::core::ApiHandle::SetDeallocator(hView, core,
-            megamol::core::CoreInstance::ViewJobHandleDalloc);
+        megamol::core::ApiHandle::SetDeallocator(hView, core, megamol::core::CoreInstance::ViewJobHandleDalloc);
         return true;
     }
     return false;
@@ -561,12 +549,10 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
 /*
  * mmcHasPendingJobInstantiationRequests
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(
-        void *hCore) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(void* hCore) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
     return core->HasPendingJobInstantiationRequests();
 }
 
@@ -574,22 +560,20 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(
 /*
  * mmcInstantiatePendingJob
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
-        void *hJob) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void* hCore, void* hJob) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
 
-    if (megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hJob) != NULL) return false;
+    if (megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hJob) != NULL)
+        return false;
 
-    megamol::core::JobInstance *job = dynamic_cast<megamol::core::JobInstance*>(core->InstantiatePendingJob().get());
-    if (job == NULL) return false;
+    megamol::core::JobInstance* job = dynamic_cast<megamol::core::JobInstance*>(core->InstantiatePendingJob().get());
+    if (job == NULL)
+        return false;
 
     if (megamol::core::ApiHandle::CreateHandle(hJob, job)) {
-        megamol::core::ApiHandle::SetDeallocator(hJob, core,
-            megamol::core::CoreInstance::ViewJobHandleDalloc);
+        megamol::core::ApiHandle::SetDeallocator(hJob, core, megamol::core::CoreInstance::ViewJobHandleDalloc);
         return true;
     }
     return false;
@@ -599,18 +583,15 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
 /*
  * mmcRenderView
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameID) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void* hView, uint32_t frameID) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
+
     if (view != NULL) {
         vislib::sys::AutoLock lock(view->ModuleGraphLock());
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
         /* Pass in the D3D device that we created in the Viewer DLL. */
-        megamol::core::view::ViewDirect3D *vd3d 
-            = dynamic_cast<megamol::core::view::ViewDirect3D *>(view->View());
+        megamol::core::view::ViewDirect3D* vd3d = dynamic_cast<megamol::core::view::ViewDirect3D*>(view->View());
         if (vd3d != NULL) {
             ASSERT(context->Direct3DDevice != NULL);
             vd3d->UpdateFromContext(context);
@@ -646,7 +627,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameI
             core->SetFrameID(frameID);
             double it = core->GetCoreInstanceTime();
             auto time = view->View()->DefaultTime(it);
-            auto instanceTime = it; 
+            auto instanceTime = it;
 
             view->View()->Render(time, instanceTime);
         }
@@ -658,10 +639,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameI
  * mmcRegisterViewCloseRequestFunction
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
-        void *hView, mmcViewCloseRequestFunction func, void *data) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+    void* hView, mmcViewCloseRequestFunction func, void* data) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if (view != NULL) {
         view->SetCloseRequestCallback(func, data);
     }
@@ -671,11 +650,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
 /*
  * mmcResizeView
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
-        unsigned int width, unsigned int height) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void* hView, unsigned int width, unsigned int height) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         view->View()->Resize(width, height);
     }
@@ -685,8 +661,8 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
 /*
  * mmcSendKeyEvent
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
-        mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods) {
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(
+    void* hView, mmcInputKey key, mmcInputKeyAction act, mmcInputModifiers mods) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnKey(static_cast<megamol::core::view::Key>(key),
@@ -699,7 +675,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendKeyEvent(void *hView,
 /*
  * mmcSendCharEvent
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void *hView, unsigned int cp) {
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void* hView, unsigned int cp) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnChar(cp);
@@ -711,8 +687,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendCharEvent(void *hView, unsigned int
 /*
  * mmcSendMouseButtonEvent
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
-        mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods) {
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(
+    void* hView, mmcInputButton btn, mmcInputButtonAction act, mmcInputModifiers mods) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseButton(static_cast<megamol::core::view::MouseButton>(btn),
@@ -725,8 +701,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseButtonEvent(void *hView,
 /*
  * mmcSendMouseMoveEvent
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
-        float x, float y) {
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void* hView, float x, float y) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseMove(x, y);
@@ -738,8 +713,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
 /*
  * mmcSendMouseScrollEvent
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
-    float dx, float dy) {
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void* hView, float dx, float dy) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseScroll(dx, dy);
@@ -751,10 +725,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
 /*
  * mmcIsJobRunning
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob) {
-    megamol::core::JobInstance *job
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hJob);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void* hJob) {
+    megamol::core::JobInstance* job = megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hJob);
     if ((job != NULL) && (job->Job() != NULL)) {
         return job->Job()->IsRunning();
     }
@@ -765,10 +737,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob) {
 /*
  * mmcIsViewRunning
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void* hView) {
+    megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     return (view != NULL) && (view->View() != NULL);
 }
 
@@ -776,10 +746,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView) {
 /*
  * mmcStartJob
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob) {
-    megamol::core::JobInstance *job
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hJob);
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void* hJob) {
+    megamol::core::JobInstance* job = megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hJob);
     if ((job != NULL) && (job->Job() != NULL)) {
         return job->Job()->Start();
     }
@@ -790,10 +758,8 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob) {
 /*
  * mmcTerminateJob
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob) {
-    megamol::core::JobInstance *job
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hJob);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void* hJob) {
+    megamol::core::JobInstance* job = megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hJob);
     if ((job != NULL) && (job->Job() != NULL)) {
         job->Job()->Terminate();
     }
@@ -803,25 +769,22 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob) {
 /*
  * mmcSetParameterA
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
-        const char *value) {
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
-    if (param == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void* hParam, const char* value) {
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
+    if (param == NULL)
+        return;
     if (param->GetParameter()->ParseValue(A2T(value))) {
         vislib::StringA name;
         param->GetIDString(name);
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
+            "Setting parameter \"%s\" to \"%s\"", name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to set parameter \"%s\": Failed to parse value \"%s\"",
-            name.PeekBuffer(), value);
+            "Unable to set parameter \"%s\": Failed to parse value \"%s\"", name.PeekBuffer(), value);
     }
 }
 
@@ -829,25 +792,23 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
 /*
  * mmcSetParameterW
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
-        const wchar_t *value) {
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
-    if (param == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void* hParam, const wchar_t* value) {
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
+    if (param == NULL)
+        return;
     if (param->GetParameter()->ParseValue(W2T(value))) {
         vislib::StringA name;
         param->GetIDString(name);
         // TODO: Change text if it is a button parameter
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Setting parameter \"%s\" to \"%s\"",
-            name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
+            "Setting parameter \"%s\" to \"%s\"", name.PeekBuffer(), param->GetParameter()->ValueString().c_str());
     } else {
         vislib::StringA name;
         param->GetIDString(name);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to set parameter \"%s\": Failed to parse value \"%s\"",
-            name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
+            "Unable to set parameter \"%s\": Failed to parse value \"%s\"", name.PeekBuffer(),
+            vislib::StringA(value).PeekBuffer());
     }
 }
 
@@ -855,12 +816,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
 /*
  * mmcLoadProjectA
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void *hCore,
-        const char *filename) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void* hCore, const char* filename) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
     core->LoadProject(filename);
 }
 
@@ -868,12 +827,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void *hCore,
 /*
  * mmcLoadProjectW
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
-        const wchar_t *filename) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void* hCore, const wchar_t* filename) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
     core->LoadProject(filename);
 }
 
@@ -881,16 +838,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
 /*
  * mmcGetParameterA
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
-        const char *name, void *hParam, bool bCreate) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void* hCore, const char* name, void* hParam, bool bCreate) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
 
-    vislib::SmartPtr<megamol::core::param::AbstractParam>
-        param = core->FindParameter(name, false, bCreate);
-    if (param.IsNull()) return false;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> param = core->FindParameter(name, false, bCreate);
+    if (param.IsNull())
+        return false;
 
     if (mmcIsHandleValid(hParam) != 0) {
         return false; // handle was already valid.
@@ -899,24 +854,21 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
         return false; // memory pointer seams to be invalid.
     }
 
-    return megamol::core::ApiHandle::CreateHandle(hParam,
-        new megamol::core::param::ParamHandle(*core, param));
+    return megamol::core::ApiHandle::CreateHandle(hParam, new megamol::core::param::ParamHandle(*core, param));
 }
 
 
 /*
  * mmcGetParameterW
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
-        const wchar_t *name, void *hParam, bool bCreate) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void* hCore, const wchar_t* name, void* hParam, bool bCreate) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return false;
 
-    vislib::SmartPtr<megamol::core::param::AbstractParam>
-        param = core->FindParameter(name, false, bCreate);
-    if (param.IsNull()) return false;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> param = core->FindParameter(name, false, bCreate);
+    if (param.IsNull())
+        return false;
 
     if (mmcIsHandleValid(hParam) != 0) {
         return false; // handle was already valid.
@@ -925,37 +877,33 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
         return false; // memory pointer seams to be invalid.
     }
 
-    return megamol::core::ApiHandle::CreateHandle(hParam,
-        new megamol::core::param::ParamHandle(*core, param));
+    return megamol::core::ApiHandle::CreateHandle(hParam, new megamol::core::param::ParamHandle(*core, param));
 }
 
 
 /*
  * mmcGetParameterValueA
  */
-MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
-        void *hParam) {
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetParameterValueA(void* hParam) {
     static vislib::StringA retval;
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
-    if (param == NULL) return NULL;
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
+    if (param == NULL)
+        return NULL;
     retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
-
 }
 
 
 /*
  * mmcGetParameterValueW
  */
-MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
-        void *hParam) {
+MEGAMOLCORE_API const wchar_t* MEGAMOLCORE_CALL mmcGetParameterValueW(void* hParam) {
     static vislib::StringW retval;
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
-    if (param == NULL) return NULL;
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
+    if (param == NULL)
+        return NULL;
     retval = param->GetParameter()->ValueString().c_str();
     return retval.PeekBuffer();
 }
@@ -964,12 +912,10 @@ MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
 /*
  * mmcEnumParametersA
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void *hCore,
-        mmcEnumStringAFunction func, void *data) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void* hCore, mmcEnumStringAFunction func, void* data) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
     core->EnumParameters(func, data);
 }
 
@@ -979,7 +925,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void *hCore,
  */
 typedef struct _EnumParamDataHelperW_t {
     mmcEnumStringWFunction func;
-    void *data;
+    void* data;
 } EnumParamDataHelperW;
 
 
@@ -993,22 +939,19 @@ extern "C" {
  */
 static void
 #ifdef _WIN32
-__stdcall
+    __stdcall
 #endif /* _WIN32 */
-EnumParamsW(const char *name, void *data) {
-    EnumParamDataHelperW *context
-        = reinterpret_cast<EnumParamDataHelperW*>(data);
+    EnumParamsW(const char* name, void* data) {
+    EnumParamDataHelperW* context = reinterpret_cast<EnumParamDataHelperW*>(data);
     context->func(vislib::StringW(name).PeekBuffer(), context->data);
 }
-
 }
 
 
 /*
  * mmcEnumParametersW
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
-        mmcEnumStringWFunction func, void *data) {
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void* hCore, mmcEnumStringWFunction func, void* data) {
     EnumParamDataHelperW context;
     context.func = func;
     context.data = data;
@@ -1019,35 +962,29 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
 /*
  * mmcGetInstanceIDA
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void *hInst,
-        char *buf, unsigned int *len) {
-    if (len == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void* hInst, char* buf, unsigned int* len) {
+    if (len == NULL)
+        return;
 
     vislib::StringA id;
 
-    megamol::core::ViewInstance *vi
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hInst);
-    megamol::core::JobInstance *ji
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hInst);
-    megamol::core::param::ParamHandle *ph
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hInst);
+    megamol::core::ViewInstance* vi = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hInst);
+    megamol::core::JobInstance* ji = megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hInst);
+    megamol::core::param::ParamHandle* ph =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hInst);
 
     if (vi != NULL) {
         id = vi->Name();
     } else if (ji != NULL) {
         id = ji->Name();
-    } else if (ph != NULL){
+    } else if (ph != NULL) {
         ph->GetIDString(id);
     }
 
     if (buf == NULL) {
         *len = id.Length() + 1;
     } else {
-        memcpy(buf, id.PeekBuffer(),
-            vislib::math::Min<SIZE_T>(id.Length() + 1, *len));
+        memcpy(buf, id.PeekBuffer(), vislib::math::Min<SIZE_T>(id.Length() + 1, *len));
     }
 }
 
@@ -1055,11 +992,11 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void *hInst,
 /*
  * mmcGetInstanceIDW
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
-        wchar_t *buf, unsigned int *len) {
-    if (len == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void* hInst, wchar_t* buf, unsigned int* len) {
+    if (len == NULL)
+        return;
 
-    char *bufA = new char[*len];
+    char* bufA = new char[*len];
     ::mmcGetInstanceIDA(hInst, bufA, len);
     vislib::StringW id(vislib::StringA(bufA, *len));
     delete[] bufA;
@@ -1067,8 +1004,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
     if (buf == NULL) {
         *len = id.Length() + 1;
     } else {
-        memcpy(buf, id.PeekBuffer(), sizeof(wchar_t)
-            * vislib::math::Min<SIZE_T>(id.Length() + 1, *len));
+        memcpy(buf, id.PeekBuffer(), sizeof(wchar_t) * vislib::math::Min<SIZE_T>(id.Length() + 1, *len));
     }
 }
 
@@ -1076,23 +1012,18 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
 /*
  * mmcIsParameterRelevant
  */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
-        void *hParam) {
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
-    if (param == NULL) return false;
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void* hInst, void* hParam) {
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
+    if (param == NULL)
+        return false;
 
-    megamol::core::JobInstance *ji
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::JobInstance>(hInst);
+    megamol::core::JobInstance* ji = megamol::core::ApiHandle::InterpretHandle<megamol::core::JobInstance>(hInst);
     if ((ji != NULL) && (ji->Job() != NULL)) {
         return ji->Job()->IsParamRelevant(param->GetParameter());
     }
 
-    megamol::core::ViewInstance *vi
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hInst);
+    megamol::core::ViewInstance* vi = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hInst);
     if ((vi != NULL) && (vi->View() != NULL)) {
         return vi->View()->IsParamRelevant(param->GetParameter());
     }
@@ -1105,17 +1036,16 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
  * mmcGetParameterTypeDescription
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
-        void *hParam, unsigned char *buf, unsigned int *len) {
-    megamol::core::param::ParamHandle *param
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::param::ParamHandle>(hParam);
+    void* hParam, unsigned char* buf, unsigned int* len) {
+    megamol::core::param::ParamHandle* param =
+        megamol::core::ApiHandle::InterpretHandle<megamol::core::param::ParamHandle>(hParam);
 
-    if (len == NULL) return;
+    if (len == NULL)
+        return;
     if (param != NULL) {
         auto const rs = param->GetParameter()->Definition();
         if (buf != NULL) {
-            unsigned int s = vislib::math::Min<unsigned int>(
-                static_cast<unsigned int>(rs.size()), *len);
+            unsigned int s = vislib::math::Min<unsigned int>(static_cast<unsigned int>(rs.size()), *len);
             std::copy_n(rs.begin(), s, buf);
             *len = s;
         } else {
@@ -1126,30 +1056,26 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
     }
 }
 
-MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void * hCore) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return 0;
+MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void* hCore) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return 0;
     return core->GetGlobalParameterHash();
 }
 
 /*
  * mmcWriteStateToXML
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
-    if (core == NULL) return;
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void* hCore, const char* outFilename) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == NULL)
+        return;
     core->WriteStateToXML(outFilename);
 }
 
 
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void *hCore) {
-    megamol::core::CoreInstance *core
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::CoreInstance>(hCore);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcPerformGraphUpdates(void* hCore) {
+    megamol::core::CoreInstance* core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
     if (core != NULL) {
         core->PerformGraphUpdates();
     }

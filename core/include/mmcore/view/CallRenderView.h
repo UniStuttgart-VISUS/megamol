@@ -9,26 +9,24 @@
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRenderView.h"
-#include "mmcore/view/Input.h"
 #include "mmcore/view/CPUFramebuffer.h"
+#include "mmcore/view/Input.h"
 
 
 namespace megamol {
 namespace core {
 namespace view {
 
-    inline constexpr char callrenderview_name[] = "CallRenderView";
+inline constexpr char callrenderview_name[] = "CallRenderView";
 
-    inline constexpr char callrenderview_desc[] = "Call for rendering visual elements into a single target";
+inline constexpr char callrenderview_desc[] = "Call for rendering visual elements into a single target";
 
-    using CallRenderView = AbstractCallRenderView<CPUFramebuffer, callrenderview_name, callrenderview_desc>;
+using CallRenderView = AbstractCallRenderView<CPUFramebuffer, callrenderview_name, callrenderview_desc>;
 
-    /** Description class typedef */
-    typedef factories::CallAutoDescription<CallRenderView>
-        CallRenderViewDescription;
+/** Description class typedef */
+typedef factories::CallAutoDescription<CallRenderView> CallRenderViewDescription;
 
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
-

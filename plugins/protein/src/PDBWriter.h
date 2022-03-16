@@ -14,10 +14,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/view/TimeControl.h"
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
@@ -26,13 +26,12 @@ namespace protein {
 class PDBWriter : public core::job::AbstractJob, public core::Module {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "PDBWriter";
     }
 
@@ -41,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Job writing arbitrary trajectories to a series of PDB or PQR\
                 files.";
     }
@@ -98,7 +97,6 @@ public:
     virtual bool Terminate(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -112,13 +110,12 @@ protected:
     virtual void release(void);
 
 private:
-
-	/**
-	 * Callback function called when the trigger button is pressed
-	 *
-	 * @return 'True' on success, 'false' otherwise
-	 */
-	bool buttonCallback(core::param::ParamSlot& slot);
+    /**
+     * Callback function called when the trigger button is pressed
+     *
+     * @return 'True' on success, 'false' otherwise
+     */
+    bool buttonCallback(core::param::ParamSlot& slot);
 
     /**
      * Creates the folders in the output path that do not yet exist.
@@ -133,7 +130,7 @@ private:
      * @param dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool writePDB(megamol::protein_calls::MolecularDataCall *mol);
+    bool writePDB(megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Write one frame to the respective *.pqr file.
@@ -141,7 +138,7 @@ private:
      * @param dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool writePQR(megamol::protein_calls::MolecularDataCall *mol);
+    bool writePQR(megamol::protein_calls::MolecularDataCall* mol);
 
     core::CallerSlot dataCallerSlot;  ///> Data caller slot
     core::view::TimeControl timeCtrl; ///> The time control
@@ -171,11 +168,11 @@ private:
     /// Parameter for the output folder
     core::param::ParamSlot outDirSlot;
 
-	/// Parameter for the trigger button
-	core::param::ParamSlot triggerButtonSlot;
+    /// Parameter for the trigger button
+    core::param::ParamSlot triggerButtonSlot;
 
-	/// Parameter for the b factor rescaling
-	core::param::ParamSlot rescaleBFactorSlot;
+    /// Parameter for the b factor rescaling
+    core::param::ParamSlot rescaleBFactorSlot;
 
     bool jobDone;       ///> Flag whether the job is done
     int filenameDigits; ///> Number of digits used in generated filenames
@@ -183,11 +180,9 @@ private:
     ///  Flag whether the 'MODEL' record should be used, this allows handling
     ///  atom number > 99999
     bool useModelRecord;
-
 };
 
 } /* end namespace protein */
 } /* end namespace megamol */
 
 #endif /* MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED */
-

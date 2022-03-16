@@ -26,7 +26,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn_gl::rendering::BoxRenderer>();
 
         // register calls
-
     }
 };
-} // namespace megamol::thermodyn
+} // namespace megamol::thermodyn_gl

@@ -1,7 +1,7 @@
 /*
  * CallRender2DGL.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -21,10 +21,10 @@ namespace megamol {
 namespace core_gl {
 namespace view {
 
-    
-    inline constexpr char callrender2dgl_name[] = "CallRender2DGL";
 
-    inline constexpr char callrender2dgl_desc[] = "New and improved call for rendering a frame with OpenGL";
+inline constexpr char callrender2dgl_name[] = "CallRender2DGL";
+
+inline constexpr char callrender2dgl_desc[] = "New and improved call for rendering a frame with OpenGL";
 
 
 /**
@@ -39,16 +39,17 @@ namespace view {
  * call (bounding boxes).
  * The renderer should not draw anything outside the bounding box
  */
-    class CallRender2DGL : public core::view::BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc> {
-    public:
-        /** Ctor. */
-        CallRender2DGL(void) : BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc>() {
-            this->caps.RequireOpenGL();
-        }
+class CallRender2DGL
+        : public core::view::BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc> {
+public:
+    /** Ctor. */
+    CallRender2DGL(void) : BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc>() {
+        this->caps.RequireOpenGL();
+    }
 
-        /** Dtor. */
-        virtual ~CallRender2DGL(void) = default;
-    };
+    /** Dtor. */
+    virtual ~CallRender2DGL(void) = default;
+};
 
 
 /** Description class typedef */
@@ -56,7 +57,7 @@ typedef core::factories::CallAutoDescription<CallRender2DGL> CallRender2DGLDescr
 
 
 } /* end namespace view */
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_CALLRENDER2D_H_INCLUDED */

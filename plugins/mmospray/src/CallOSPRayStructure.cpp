@@ -1,12 +1,12 @@
 /*
-* CallOSPRayStructure.cpp
-*
-* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
-* Alle Rechte vorbehalten.
-*/
+ * CallOSPRayStructure.cpp
+ *
+ * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+ * Alle Rechte vorbehalten.
+ */
 
-#include "stdafx.h"
 #include "mmospray/CallOSPRayStructure.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
@@ -17,22 +17,22 @@ using namespace megamol::ospray;
 // #################################
 
 /*
-* megamol::ospray::CallOSPRayStructure::CallOSPRayStructure
-*/
+ * megamol::ospray::CallOSPRayStructure::CallOSPRayStructure
+ */
 CallOSPRayStructure::CallOSPRayStructure() {
     // intentionally empty
 }
 
 /*
-* megamol::ospray::CallOSPRayStructure::~CallOSPRayStructure
-*/
+ * megamol::ospray::CallOSPRayStructure::~CallOSPRayStructure
+ */
 CallOSPRayStructure::~CallOSPRayStructure(void) {
     this->structureMap = NULL;
 }
 
 /*
-* megamol::ospray::CallOSPRayLight::operator=
-*/
+ * megamol::ospray::CallOSPRayLight::operator=
+ */
 CallOSPRayStructure& CallOSPRayStructure::operator=(const CallOSPRayStructure& rhs) {
     this->structureMap = rhs.structureMap;
     this->time = rhs.time;
@@ -40,12 +40,12 @@ CallOSPRayStructure& CallOSPRayStructure::operator=(const CallOSPRayStructure& r
     return *this;
 }
 
-void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap *sm) {
+void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap* sm) {
     this->structureMap = sm;
 }
 
 
-void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
+void CallOSPRayStructure::addStructure(OSPRayStructureContainer& sc) {
     if (sc.isValid) {
         if (this->structureMap != NULL) {
             //this->structureMap->insert_or_assign(this, sc); // C++17
@@ -61,12 +61,12 @@ bool CallOSPRayStructure::fillStructureMap() {
 }
 
 
-void CallOSPRayStructure::setExtendMap(OSPRayExtendMap *em) {
+void CallOSPRayStructure::setExtendMap(OSPRayExtendMap* em) {
     this->extendMap = em;
 }
 
 
-void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {
+void CallOSPRayStructure::addExtend(OSPRayExtendContainer& ec) {
     if (this->extendMap != NULL) {
         //this->extendMap->insert_or_assign(this, ec); // C++17
         this->extendMap->operator[](this) = ec;
@@ -89,4 +89,3 @@ void CallOSPRayStructure::setTime(float time) {
 float CallOSPRayStructure::getTime() {
     return this->time;
 }
-

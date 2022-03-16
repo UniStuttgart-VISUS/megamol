@@ -4,18 +4,19 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "NullParticleWriter.h"
-#include "mmcore/utility/log/Log.h"
-#include <thread>
-#include <cstdint>
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include <cstdint>
+#include <thread>
 
 using namespace megamol;
 using namespace megamol::datatools;
 
-NullParticleWriter::NullParticleWriter(void) : core::AbstractDataWriter(),
-        dataSlot("data", "The slot requesting the data to be written") {
+NullParticleWriter::NullParticleWriter(void)
+        : core::AbstractDataWriter()
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->dataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
@@ -29,14 +30,13 @@ bool NullParticleWriter::create(void) {
     return true;
 }
 
-void NullParticleWriter::release(void) {
-}
+void NullParticleWriter::release(void) {}
 
 bool NullParticleWriter::run(void) {
-    using megamol::core::utility::log::Log;
     using geocalls::MultiParticleDataCall;
+    using megamol::core::utility::log::Log;
 
-    MultiParticleDataCall *mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();
+    MultiParticleDataCall* mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();
     if (mpdc == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
@@ -68,7 +68,8 @@ bool NullParticleWriter::run(void) {
 
             if (mpdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
+                    Log::DefaultLog.WriteMsg(
+                        Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
                 ++missCnt;
 
@@ -79,8 +80,7 @@ bool NullParticleWriter::run(void) {
 
             mpdc->Unlock();
 
-        } while(mpdc->FrameID() != i);
-
+        } while (mpdc->FrameID() != i);
     }
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "All frames touched");

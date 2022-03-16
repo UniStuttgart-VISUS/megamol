@@ -8,13 +8,13 @@
 #ifndef GLTF_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #define GLTF_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace mesh_gl {
@@ -25,7 +25,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "GlTFRenderTasksDataSource"; }
+    static const char* ClassName(void) {
+        return "GlTFRenderTasksDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -41,7 +43,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
 
     GlTFRenderTasksDataSource();
@@ -70,9 +74,9 @@ private:
     std::shared_ptr<GPUMaterialCollection> m_material_collection;
 
     /** The btf file name to override the default gltf material */
-    core::param::ParamSlot m_btf_filename_slot;
+    core::param::ParamSlot m_btf_name_slot;
 };
-} // namespace mesh
+} // namespace mesh_gl
 } // namespace megamol
 
 #endif // !GLTF_RENDER_TASK_DATA_SOURCE_H_INCLUDED

@@ -24,20 +24,26 @@ mat4 rotationMatrix(vec3 axis, float angle)
 void main()
 {
     const vec4 vertices[6] = vec4[6]( vec4( -1.0,-1.0,0.0,0.0 ),
-									  vec4( 1.0,1.0,1.0,1.0 ),
-									  vec4( -1.0,1.0,0.0,1.0 ),
-									  vec4( 1.0,1.0,1.0,1.0 ),
-									  vec4( -1.0,-1.0,0.0,0.0 ),
-                                	  vec4( 1.0,-1.0,1.0,0.0 ) );
+                                      vec4( 1.0,1.0,1.0,1.0 ),
+                                      vec4( -1.0,1.0,0.0,1.0 ),
+                                      vec4( 1.0,1.0,1.0,1.0 ),
+                                      vec4( -1.0,-1.0,0.0,0.0 ),
+                                      vec4( 1.0,-1.0,1.0,0.0 ) );
 
     draw_id = gl_DrawIDARB;
     uv_coords = vertices[gl_VertexID].zw;
 
+    vec2  bboard_vertex = vertices[gl_VertexID].xy;
+    vec3 cam_right = normalize(transpose(mat3(view_mx)) * vec3(1.0,0.0,0.0));
+    vec3 cam_up = normalize(transpose(mat3(view_mx)) * vec3(0.0,1.0,0.0));
+
     vec4 glyph_pos = vec4(mesh_shader_params[gl_DrawIDARB].glpyh_position.xyz, 1.0);
+    glyph_pos.xyz = glyph_pos.xyz 
+                        + (cam_up * bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale) 
+                        + (cam_right * bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale);
     vec4 clip_pos = (proj_mx * view_mx * glyph_pos);  
     float aspect = proj_mx[1][1] / proj_mx[0][0];
-    vec2  bboard_vertex = vertices[gl_VertexID].xy;
     
-    gl_Position = clip_pos + vec4(bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale,
-                                 bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale * aspect, 0.0, 0.0);
+    gl_Position = clip_pos;// + vec4(bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale,
+                             //    bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale * aspect, 0.0, 0.0);
 }

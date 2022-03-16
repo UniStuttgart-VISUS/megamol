@@ -8,7 +8,8 @@
 #include "ArchVisCalls.h"
 
 megamol::archvis::FEMRenderTaskDataSource::FEMRenderTaskDataSource()
-    : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_version(0) {
+        : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data")
+        , m_version(0) {
     this->m_fem_callerSlot.SetCompatibleCall<FEMModelCallDescription>();
     this->MakeSlotAvailable(&this->m_fem_callerSlot);
 }
@@ -99,7 +100,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
 
         auto const& node_deformation = fem_call->getData()->getDynamicData();
 
-        m_rendertask_collection.first->addPerFrameDataBuffer("",node_deformation, 1);
+        m_rendertask_collection.first->addPerFrameDataBuffer("", node_deformation, 1);
 
         //{
         //    // TODO get transfer function texture and add as per frame data
@@ -114,7 +115,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
         //}
     }
 
-    lhs_rtc->setData(gpu_render_tasks,m_version);
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }

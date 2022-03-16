@@ -17,7 +17,8 @@ class MmvtkmGLPluginInstance : public megamol::core::utility::plugins::AbstractP
 
 public:
     MmvtkmGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("vtkm_gl", "Plugin to read and render vtkm data."){};
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "vtkm_gl", "Plugin to read and render vtkm data."){};
 
     virtual ~MmvtkmGLPluginInstance() override = default;
 
@@ -32,4 +33,4 @@ public:
         // register calls
     }
 };
-} // namespace megamol::mmvtkm
+} // namespace megamol::mmvtkm_gl

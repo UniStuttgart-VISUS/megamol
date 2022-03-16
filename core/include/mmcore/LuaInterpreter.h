@@ -4,10 +4,10 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "mmcore/utility/log/Log.h"
 
@@ -41,22 +41,24 @@
 namespace megamol {
 namespace core {
 
-template <class C> using luaCallbackFunc = int (C::*)(lua_State* L);
+template<class C>
+using luaCallbackFunc = int (C::*)(lua_State* L);
 
-template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
+template<class C, luaCallbackFunc<C> func>
+int dispatch(lua_State* L) {
     C* ptr = *static_cast<C**>(lua_getextraspace(L));
     return (ptr->*func)(L);
 }
 
-static int invoke_lua_std_function(lua_State* L){
+static int invoke_lua_std_function(lua_State* L) {
     //const int argc = lua_gettop(L);
 
     const auto index = lua_upvalueindex(1);
     //if (lua_islightuserdata(L, index))
     //{
-        const void* ptr = lua_touserdata(L, index);
-        const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
-        return (*func_ptr)(L);
+    const void* ptr = lua_touserdata(L, index);
+    const auto func_ptr = reinterpret_cast<std::function<int(lua_State*)> const*>(ptr);
+    return (*func_ptr)(L);
 
     //} else {
     //    std::cout << "PANIC: NO USER DATA" << std::endl;
@@ -551,7 +553,9 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
     std::string helpString;
-    for (const auto &s : theHelp)
+    auto copy = theHelp;
+    std::sort(copy.begin(), copy.end());
+    for (const auto &s : copy)
         helpString += s.first + s.second + "\n";
     out << helpString;
     lua_pushstring(L, out.str().c_str());

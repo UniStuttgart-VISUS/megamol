@@ -10,7 +10,6 @@ if(BUILD_FRONTEND_SERVICES)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     
   require_external(glm)
-  require_external(glad)
   require_external(imgui)
   require_external(implot)  
   require_external(imguizmoquat)
@@ -32,9 +31,9 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation/*.hpp"
     "remote_service/*.hpp"
     "profiling_service/*.hpp"
+    "vr_service/*.hpp"
 #   "service_template/*.hpp"
     )
-  file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
 
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "command/*.cpp"
@@ -47,9 +46,49 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader/*.cpp"
     "image_presentation/*.cpp"
     "remote_service/*.cpp"
+    "profiling_service/*.cpp"
+    "vr_service/*.cpp"
     # "service_template/*.cpp"
   )
+
+  # Remove files in gl subdirectories from source list if GL ist not enabled
+  if (NOT ENABLE_GL)
+    foreach(src_file ${source_files})
+      string(FIND "${src_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${src_file}")
+        list(REMOVE_ITEM source_files ${src_file})
+      endif()
+    endforeach()
+    foreach(header_file ${header_files})
+      string(FIND "${header_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${header_file}")
+        list(REMOVE_ITEM header_files ${header_file})
+      endif()
+    endforeach()
+  endif()
+
+  file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
   file(GLOB_RECURSE gui_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.cpp")
+  # Remove files in gl subdirectories from source list if GL ist not enabled
+  if (NOT ENABLE_GL)
+    foreach(src_file ${gui_source_files})
+      string(FIND "${src_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${src_file}")
+        list(REMOVE_ITEM gui_source_files ${src_file})
+      endif()
+    endforeach()
+    foreach(header_file ${gui_header_files})
+      string(FIND "${header_file}" "/gl/" match)
+      if (NOT "${match}" STREQUAL "-1")
+        message("MATCH ${header_file}")
+        list(REMOVE_ITEM gui_header_files ${header_file})
+      endif()
+    endforeach()
+  endif()
+
 
   # Add target
   add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
@@ -68,6 +107,7 @@ if(BUILD_FRONTEND_SERVICES)
     "remote_service"
     "profiling_service"
     "gui/src"
+    "vr_service"
    # "service_template"
   )
 
@@ -89,9 +129,19 @@ if(BUILD_FRONTEND_SERVICES)
   endif()
   
   # GLFW
-  if(USE_GLFW)
-    require_external(glfw)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+  if (ENABLE_GL)
+    if(USE_GLFW)
+      require_external(glfw)
+      target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    endif()
+  endif()
+
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+  if(NOT ENABLE_GL)
+    message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
+  endif()
+    require_external(mwk-mint)
+    target_link_libraries(${PROJECT_NAME} PUBLIC interop Spout2)
   endif()
 
   # Linux Stacktrace
@@ -120,8 +170,14 @@ if(BUILD_FRONTEND_SERVICES)
     endif ()
   endif ()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core core_gl glad glm imgui implot imguizmoquat)
-    
+  if (ENABLE_GL)
+    require_external(glad)
+    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
+  endif()
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
+
+
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gui/resources/ DESTINATION "share/resources")
@@ -133,10 +189,5 @@ if(BUILD_FRONTEND_SERVICES)
   source_group("Source Files" FILES ${source_files})
   source_group("Header Files\\gui" FILES ${gui_header_files})
   source_group("Source Files\\gui" FILES ${gui_source_files})
-
-  # Clang formatting (so far only for gui)
-  add_clang_format(${PROJECT_NAME}
-    STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
-    FILES ${gui_header_files} ${gui_source_files})  
 
 endif()

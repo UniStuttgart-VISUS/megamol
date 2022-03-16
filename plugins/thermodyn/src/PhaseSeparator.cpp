@@ -1,8 +1,8 @@
-#include "stdafx.h"
 #include "PhaseSeparator.h"
+#include "stdafx.h"
 
-#include <numeric>
 #include <cmath>
+#include <numeric>
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -14,15 +14,15 @@
 
 
 megamol::thermodyn::PhaseSeparator::PhaseSeparator()
-    : dataInSlot_("dataIn", "Input of particle data")
-    , dataOutSlot_("dataOut", "Ouput of boxes representing the phases")
-    , criticalTempSlot_("Tc", "Critical temperature of simulated material")
-    , ensembleTempSlot_("T", "Temperature set by the ensemble")
-    , fluidColorSlot_("fluidColor", "Color of the box representing the fluid")
-    , interfaceColorSlot_("interfaceColor", "Color of the box representing the interface")
-    , gasColorSlot_("gasColor", "Color of the box representing the gas")
-    , axisSlot_("axis", "Main axis for density analysis")
-    , numSlicesSlot_("numSlices", "Number of slices for density analysis") {
+        : dataInSlot_("dataIn", "Input of particle data")
+        , dataOutSlot_("dataOut", "Ouput of boxes representing the phases")
+        , criticalTempSlot_("Tc", "Critical temperature of simulated material")
+        , ensembleTempSlot_("T", "Temperature set by the ensemble")
+        , fluidColorSlot_("fluidColor", "Color of the box representing the fluid")
+        , interfaceColorSlot_("interfaceColor", "Color of the box representing the interface")
+        , gasColorSlot_("gasColor", "Color of the box representing the gas")
+        , axisSlot_("axis", "Main axis for density analysis")
+        , numSlicesSlot_("numSlices", "Number of slices for density analysis") {
     dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -60,10 +60,14 @@ megamol::thermodyn::PhaseSeparator::PhaseSeparator()
 }
 
 
-megamol::thermodyn::PhaseSeparator::~PhaseSeparator() { this->Release(); }
+megamol::thermodyn::PhaseSeparator::~PhaseSeparator() {
+    this->Release();
+}
 
 
-bool megamol::thermodyn::PhaseSeparator::create() { return true; }
+bool megamol::thermodyn::PhaseSeparator::create() {
+    return true;
+}
 
 
 void megamol::thermodyn::PhaseSeparator::release() {}
@@ -79,19 +83,24 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
     auto const D = 1.720f * std::pow((Tc - T) / Tc, 1.89f) + 1.103 * std::pow((Tc - T) / Tc, -0.62f);
 
     auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->FrameID(), true);
-    if (!(*inCall)(1)) return false;
-    if (!(*inCall)(0)) return false;
+    if (!(*inCall)(1))
+        return false;
+    if (!(*inCall)(0))
+        return false;
 
     if (inCall->DataHash() != inDataHash_ || inCall->FrameID() != frameID_) {
         auto const plc = inCall->GetParticleListCount();
         if (plc > 1) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("PhaseSeparator: You have to select a specific list entry\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "PhaseSeparator: You have to select a specific list entry\n");
             return false;
         }
 
@@ -191,7 +200,8 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
         auto first = rit;
         bool totalBreak = false;
         for (; rit != trend.crend(); ++rit) {
-            if (totalBreak) break;
+            if (totalBreak)
+                break;
             if (*rit > max - perc) {
                 first = rit;
                 for (; rit > trend.crbegin(); --rit) {
@@ -292,12 +302,15 @@ bool megamol::thermodyn::PhaseSeparator::getDataCallback(core::Call& c) {
 
 bool megamol::thermodyn::PhaseSeparator::getExtentCallback(core::Call& c) {
     auto inCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     auto outCall = dynamic_cast<BoxDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    if (outCall == nullptr)
+        return false;
 
-    if (!(*inCall)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
 
     outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());

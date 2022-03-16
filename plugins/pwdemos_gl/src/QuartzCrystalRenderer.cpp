@@ -4,15 +4,15 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "QuartzCrystalRenderer.h"
 #include "QuartzCrystalDataCall.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore/view/light/PointLight.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "stdafx.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <glm/ext.hpp>
 
@@ -22,12 +22,13 @@ namespace demos_gl {
 /*
  * CrystalRenderer::CrystalRenderer
  */
-CrystalRenderer::CrystalRenderer(void) : core_gl::view::Renderer3DModuleGL(),
-dataInSlot("datain", "slot to get the data"),
-lightsSlot("lights", "Lights are retrieved over this slot."),
-crystalIdx("idx", "The index of the selected crystal") {
+CrystalRenderer::CrystalRenderer(void)
+        : core_gl::view::Renderer3DModuleGL()
+        , dataInSlot("datain", "slot to get the data")
+        , lightsSlot("lights", "Lights are retrieved over this slot.")
+        , crystalIdx("idx", "The index of the selected crystal") {
 
-    this->dataInSlot.SetCompatibleCall<core::factories::CallAutoDescription<CrystalDataCall> >();
+    this->dataInSlot.SetCompatibleCall<core::factories::CallAutoDescription<CrystalDataCall>>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
     this->lightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -35,7 +36,6 @@ crystalIdx("idx", "The index of the selected crystal") {
 
     this->crystalIdx << new core::param::IntParam(0, 0);
     this->MakeSlotAvailable(&this->crystalIdx);
-
 }
 
 
@@ -66,26 +66,28 @@ bool CrystalRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     unsigned int idx = static_cast<unsigned int>(this->crystalIdx.Param<core::param::IntParam>()->Value());
 
-    CrystalDataCall *cdc = this->dataInSlot.CallAs<CrystalDataCall>();
-    if ((cdc == NULL) || (!(*cdc)(0))) return false;
+    CrystalDataCall* cdc = this->dataInSlot.CallAs<CrystalDataCall>();
+    if ((cdc == NULL) || (!(*cdc)(0)))
+        return false;
 
-    if (cdc->GetCount() == 0) return false; // no data :-(
+    if (cdc->GetCount() == 0)
+        return false; // no data :-(
 
     idx = idx % cdc->GetCount();
     const CrystalDataCall::Crystal& c = cdc->GetCrystals()[idx];
 
     c.AssertMesh();
 
-	core::view::Camera cam = call.GetCamera();
+    core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
     glLoadMatrixf(glm::value_ptr(proj));
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
     glLoadMatrixf(glm::value_ptr(view));
 
     ::glEnable(GL_NORMALIZE);
@@ -117,7 +119,7 @@ bool CrystalRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     ::glColor3ub(0, 255, 0);
     ::glBegin(GL_POINTS);
-    const float *verts = c.GetMeshVertexData();
+    const float* verts = c.GetMeshVertexData();
     for (unsigned int i = 0; i < c.GetFaceCount(); i++) {
         unsigned int cnt = c.GetMeshTriangleCounts()[i];
         for (unsigned int j = 0; j < cnt; j++) {
@@ -137,7 +139,7 @@ bool CrystalRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
 
-	// determine position of point light
+    // determine position of point light
     std::array<float, 3> lightPos = {0.0f, 0.0f, 0.0f};
 
     auto call_light = lightsSlot.CallAs<core::view::light::CallLight>();
@@ -189,10 +191,10 @@ bool CrystalRenderer::Render(core_gl::view::CallRender3DGL& call) {
         ::glEnd();
     }
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 
     return true;
 }
@@ -214,5 +216,5 @@ void CrystalRenderer::release(void) {
     // intentionally empty
 }
 
-} /* end namespace demos */
+} // namespace demos_gl
 } /* end namespace megamol */

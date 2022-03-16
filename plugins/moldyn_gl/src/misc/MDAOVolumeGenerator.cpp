@@ -5,12 +5,12 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <random>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <random>
 #include <sstream>
+#include <vector>
 
 #include <GL/glu.h>
 
@@ -18,17 +18,20 @@
 using namespace megamol::moldyn_gl::misc;
 
 
-#define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}
+#define checkGLError                                                                                   \
+    {                                                                                                  \
+        GLenum errCode = glGetError();                                                                 \
+        if (errCode != GL_NO_ERROR)                                                                    \
+            std::cout << "Error in line " << __LINE__ << ": " << gluErrorString(errCode) << std::endl; \
+    }
 
 
-MDAOVolumeGenerator::MDAOVolumeGenerator() : fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
-{
+MDAOVolumeGenerator::MDAOVolumeGenerator() : fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0) {
     clearBuffer = nullptr;
 }
 
 
-MDAOVolumeGenerator::~MDAOVolumeGenerator()
-{
+MDAOVolumeGenerator::~MDAOVolumeGenerator() {
     glDeleteTextures(1, &volumeHandle);
     volumeShader.Release();
     mipmapShader.Release();
@@ -38,20 +41,17 @@ MDAOVolumeGenerator::~MDAOVolumeGenerator()
 }
 
 
-void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory* factory)
-{
+void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory* factory) {
     this->factory = factory;
 }
 
 
-GLuint MDAOVolumeGenerator::GetVolumeTextureHandle()
-{
+GLuint MDAOVolumeGenerator::GetVolumeTextureHandle() {
     return volumeHandle;
 }
 
 
-bool MDAOVolumeGenerator::Init()
-{
+bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx) {
     // Generate and initialize the volume texture
     glGenTextures(1, &this->volumeHandle);
     glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
@@ -73,12 +73,14 @@ bool MDAOVolumeGenerator::Init()
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
     // Check if we can use modern features
-    computeAvailable = (::isExtAvailable("GL_ARB_compute_shader") == GL_TRUE);
-    clearAvailable = (::isExtAvailable("GL_ARB_clear_texture") == GL_TRUE);
+    computeAvailable = ogl_ctx.isExtAvailable("GL_ARB_compute_shader");
+    clearAvailable = ogl_ctx.isExtAvailable("GL_ARB_clear_texture");
 
     std::stringstream outmsg;
-    outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable << ", Clear Texture " << clearAvailable << std::endl;
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, outmsg.str().c_str());
+    outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable
+           << ", Clear Texture " << clearAvailable << std::endl;
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, outmsg.str().c_str());
 
     if (computeAvailable) {
         // Try to initialize the compute shader
@@ -87,24 +89,20 @@ bool MDAOVolumeGenerator::Init()
         try {
             mipmapShader.Compile(mipmapSrc->PeekCode());
             mipmapShader.Link();
-        }
-        catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException &ce) {
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
             outmsg.str("");
             outmsg << "[MDAOVolumeGenerator] Could not compile volume mipmapping shader "
-                << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
-                << ": "
-                << ce.GetMsgA() << std::endl;
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, outmsg.str().c_str());
+                   << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+                          ce.FailedAction())
+                   << ": " << ce.GetMsgA() << std::endl;
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, outmsg.str().c_str());
             return false;
         }
     }
 
     // Initialize our shader
     vislib_gl::graphics::gl::ShaderSource vert, frag, geom;
-    if (!vislib_gl::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        std::cerr << "[MDAOVolumeGenerator] Failed to init OpenGL extensions: GLSLGeometryShader" << std::endl;
-        return false;
-    }
     try {
         // Try to make the vertex shader
         if (!this->factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {
@@ -125,7 +123,8 @@ bool MDAOVolumeGenerator::Init()
         }
 
         // Compile and Link
-        if (!this->volumeShader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+        if (!this->volumeShader.Compile(
+                vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "[MDAOVolumeGenerator] Unable to compile shader: Unknown error\n");
             return false;
@@ -136,12 +135,11 @@ bool MDAOVolumeGenerator::Init()
             return false;
         }
 
-    }
-    catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         std::cerr << "[MDAOVolumeGenerator]  Could not compile shader "
-            << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
-            << ": "
-            << ce.GetMsgA() << std::endl;
+                  << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+                         ce.FailedAction())
+                  << ": " << ce.GetMsgA() << std::endl;
 
         return false;
     }
@@ -150,50 +148,57 @@ bool MDAOVolumeGenerator::Init()
 }
 
 
-
-void MDAOVolumeGenerator::SetResolution(float resX, float resY, float resZ)
-{
+void MDAOVolumeGenerator::SetResolution(float resX, float resY, float resZ) {
     if (volumeRes.Width() == resX && volumeRes.Height() == resY && volumeRes.Depth() == resZ)
         return;
 
     if (!clearAvailable) {
         if (clearBuffer != nullptr)
             delete[] clearBuffer;
-        clearBuffer = new unsigned char[static_cast<unsigned int>(ceil(resX*resY*resZ))];
-        memset(clearBuffer, 0, static_cast<unsigned int>(resX*resY*resZ));
+        clearBuffer = new unsigned char[static_cast<unsigned int>(ceil(resX * resY * resZ))];
+        memset(clearBuffer, 0, static_cast<unsigned int>(resX * resY * resZ));
     }
 
     volumeRes.Set(resX, resY, resZ);
-    glBindTexture(GL_TEXTURE_3D, this->volumeHandle); checkGLError;
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(resX), static_cast<GLsizei>(resY), static_cast<GLsizei>(resZ), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr); checkGLError
-        glGenerateMipmap(GL_TEXTURE_3D);
+    glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
+    checkGLError;
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(resX), static_cast<GLsizei>(resY),
+        static_cast<GLsizei>(resZ), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    checkGLError glGenerateMipmap(GL_TEXTURE_3D);
 }
 
 
-void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const glm::vec4 &clipDat)
-{
+void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid<float>& obb, const glm::vec4& clipDat) {
     this->clipDat = clipDat;
 
     this->boundsSizeInverse = obb.GetSize();
-    for (int i = 0; i < 3; ++i) { this->boundsSizeInverse[i] = 1.0f / this->boundsSizeInverse[i]; }
+    for (int i = 0; i < 3; ++i) {
+        this->boundsSizeInverse[i] = 1.0f / this->boundsSizeInverse[i];
+    }
 
     auto bmin = obb.GetLeftBottomBack();
     this->boundsMin = glm::vec3(bmin.GetX(), bmin.GetY(), bmin.GetZ());
 
     // Save previous OpenGL state
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
-    glEnable(GL_BLEND); checkGLError;
-    glBlendFunc(GL_ONE, GL_ONE); checkGLError;
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    checkGLError;
+    glEnable(GL_BLEND);
+    checkGLError;
+    glBlendFunc(GL_ONE, GL_ONE);
+    checkGLError;
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
-    glBindTexture(GL_TEXTURE_3D, this->volumeHandle); checkGLError;
-    glBindFramebuffer(GL_FRAMEBUFFER, this->fboHandle); checkGLError;
+    glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
+    checkGLError;
+    glBindFramebuffer(GL_FRAMEBUFFER, this->fboHandle);
+    checkGLError;
 
     // Set Viewport size for one slice
     glViewport(0, 0, static_cast<GLsizei>(volumeRes.GetWidth()), static_cast<GLsizei>(volumeRes.GetHeight()));
 
-    volumeShader.Enable(); checkGLError;
+    volumeShader.Enable();
+    checkGLError;
 
     volumeShader.SetParameterArray3("inBoundsMin", 1, glm::value_ptr(this->boundsMin));
     volumeShader.SetParameterArray3("inBoundsSizeInverse", 1, this->boundsSizeInverse.PeekDimension());
@@ -202,26 +207,31 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
 }
 
 
-void MDAOVolumeGenerator::ClearVolume()
-{
+void MDAOVolumeGenerator::ClearVolume() {
     if (clearAvailable) {
         unsigned char clearData = 0;
-        glClearTexImage(this->volumeHandle, 0, GL_RED, GL_UNSIGNED_BYTE, &clearData); checkGLError;
+        glClearTexImage(this->volumeHandle, 0, GL_RED, GL_UNSIGNED_BYTE, &clearData);
+        checkGLError;
         return;
     }
 
     if (clearBuffer == nullptr)
         return;
 
-    glBindTexture(GL_TEXTURE_3D, this->volumeHandle); checkGLError;
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(volumeRes.Width()), static_cast<GLsizei>(volumeRes.Height()), static_cast<GLsizei>(volumeRes.Depth()), 0, GL_RED, GL_UNSIGNED_BYTE, clearBuffer); checkGLError;
-    glBindTexture(GL_TEXTURE_3D, 0); checkGLError;
+    glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
+    checkGLError;
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(volumeRes.Width()),
+        static_cast<GLsizei>(volumeRes.Height()), static_cast<GLsizei>(volumeRes.Depth()), 0, GL_RED, GL_UNSIGNED_BYTE,
+        clearBuffer);
+    checkGLError;
+    glBindTexture(GL_TEXTURE_3D, 0);
+    checkGLError;
 }
 
 
-void MDAOVolumeGenerator::EndInsertion()
-{
-    volumeShader.Disable(); checkGLError;
+void MDAOVolumeGenerator::EndInsertion() {
+    volumeShader.Disable();
+    checkGLError;
 
     glBindVertexArray(0);
 
@@ -244,16 +254,18 @@ void MDAOVolumeGenerator::EndInsertion()
     //outfile.write(rawdata.data(), rawdata.size());
     //outfile.close();
     //std::cout<<"Wrote volume: "<<volumeRes.Width()<<" x "<<volumeRes.Height()<<" x "<<volumeRes.Depth()<<std::endl;
-    //exit(123); 
+    //exit(123);
 }
 
 
-void MDAOVolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
-{
-    volumeShader.SetParameter("inGlobalRadius", globalRadius); checkGLError;
+void MDAOVolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray) {
+    volumeShader.SetParameter("inGlobalRadius", globalRadius);
+    checkGLError;
 
-    glBindVertexArray(vertexArray); checkGLError;
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(count)); checkGLError;
+    glBindVertexArray(vertexArray);
+    checkGLError;
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(count));
+    checkGLError;
 }
 
 
@@ -274,13 +286,16 @@ void MDAOVolumeGenerator::RecreateMipmap() {
     while (res.Width() >= 1.0f || res.Height() >= 1.0f || res.Depth() >= 1.0f) {
         res.Scale(0.5f);
         // Bind input image
-        glBindImageTexture(0, this->volumeHandle, level, GL_TRUE, 0, GL_READ_ONLY, GL_R8); checkGLError;
+        glBindImageTexture(0, this->volumeHandle, level, GL_TRUE, 0, GL_READ_ONLY, GL_R8);
+        checkGLError;
         // Bind output image
-        glBindImageTexture(1, this->volumeHandle, level + 1, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8); checkGLError;
+        glBindImageTexture(1, this->volumeHandle, level + 1, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
+        checkGLError;
 
         mipmapShader.SetParameter("inputImage", 0);
         mipmapShader.SetParameter("outputImage", 1);
-        glDispatchCompute(static_cast<GLuint>(ceil(res.Width() / 64.0f)), static_cast<GLuint>(ceil(res.Height())), static_cast<GLuint>(ceil(res.Depth())));
+        glDispatchCompute(static_cast<GLuint>(ceil(res.Width() / 64.0f)), static_cast<GLuint>(ceil(res.Height())),
+            static_cast<GLuint>(ceil(res.Depth())));
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         level++;
@@ -289,15 +304,11 @@ void MDAOVolumeGenerator::RecreateMipmap() {
 }
 
 
-const vislib::math::Dimension< float, 3>& MDAOVolumeGenerator::GetExtents()
-{
+const vislib::math::Dimension<float, 3>& MDAOVolumeGenerator::GetExtents() {
     return volumeRes;
 }
 
 
-unsigned int MDAOVolumeGenerator::GetDataVersion()
-{
+unsigned int MDAOVolumeGenerator::GetDataVersion() {
     return dataVersion;
 }
-
-

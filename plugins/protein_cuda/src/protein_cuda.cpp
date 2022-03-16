@@ -36,7 +36,6 @@
 // data interfaces (calls)
 #include "PlaneDataCall.h"
 #include "VBODataCall.h"
-#include "mmcore/CallVolumeData.h"
 
 // other modules (filter etc)
 #include "ParticlesToMeshConverter.h"
@@ -48,54 +47,53 @@
 #include "vislib/Trace.h"
 
 namespace megamol::protein_cuda {
-    class ProteinCudaPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(ProteinCudaPluginInstance)
+class ProteinCudaPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(ProteinCudaPluginInstance)
 
-    public:
-        ProteinCudaPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "Protein_CUDA", "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)"){};
+public:
+    ProteinCudaPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "Protein_CUDA", "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)"){};
 
-        ~ProteinCudaPluginInstance() override = default;
+    ~ProteinCudaPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
+        // register modules
 #ifdef WITH_OPENHAPTICS
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::HapticsMoleculeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::HapticsMoleculeRenderer>();
 #endif // WITH_OPENHAPTICS
 #ifdef WITH_OPENBABEL
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::OpenBabelLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::OpenBabelLoader>();
 #endif // WITH_OPENBABEL
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialVolumeRaycaster>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::StreamlineRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCudaSESRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCBCudaRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSESRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer2>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfMTRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeVolumeCudaRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::VolumeMeshRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::DataWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::CrystalStructureVolumeRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ComparativeMolSurfaceRenderer>();
-            this->module_descriptions
-                .RegisterAutoDescription<megamol::protein_cuda::ComparativeFieldTopologyRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ProteinVariantMatch>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRaycaster>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructFlattener>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ParticlesToMeshConverter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructRenderer2D>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialCalculator>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::Filter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SurfacePotentialRendererSlave>();
-            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SombreroWarper>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialVolumeRaycaster>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::StreamlineRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCudaSESRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCBCudaRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSESRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfMTRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeVolumeCudaRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::VolumeMeshRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::DataWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::CrystalStructureVolumeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ComparativeMolSurfaceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ComparativeFieldTopologyRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ProteinVariantMatch>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRaycaster>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructFlattener>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ParticlesToMeshConverter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialCalculator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::Filter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SurfacePotentialRendererSlave>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SombreroWarper>();
 
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::VBODataCall>();
-            this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::PlaneDataCall>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::VBODataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::PlaneDataCall>();
+    }
+};
 } // namespace megamol::protein_cuda

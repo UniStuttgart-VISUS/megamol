@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TableWhere.h"
+#include "stdafx.h"
 
 #include <algorithm>
 #include <cassert>
@@ -44,11 +44,11 @@ enum Operator : int {
  * megamol::datatools::table::TableWhere::TableWhere
  */
 megamol::datatools::table::TableWhere::TableWhere(void)
-        : paramColumn("column", "The column to be filtered."),
-        paramEpsilon("epsilon", "The epsilon value for testing (in-) equality."),
-        paramOperator("operator", "The comparison operator."),
-        paramReference("reference", "The reference value to compare to."),
-        paramUpdateRange("updateRange", "Update the min/max range as the filter changes.") {
+        : paramColumn("column", "The column to be filtered.")
+        , paramEpsilon("epsilon", "The epsilon value for testing (in-) equality.")
+        , paramOperator("operator", "The comparison operator.")
+        , paramReference("reference", "The reference value to compare to.")
+        , paramUpdateRange("updateRange", "Update the min/max range as the filter changes.") {
     /* Configure and export the parameters. */
     this->paramColumn << new core::param::FlexEnumParam("");
     this->MakeSlotAvailable(&this->paramColumn);
@@ -102,33 +102,29 @@ bool megamol::datatools::table::TableWhere::create(void) {
 /*
  * megamol::datatools::table::TableWhere::release
  */
-void megamol::datatools::table::TableWhere::release(void) { }
+void megamol::datatools::table::TableWhere::release(void) {}
 
 
 /*
  * megamol::datatools::table::TableWhere::prepareData
  */
-bool megamol::datatools::table::TableWhere::prepareData(
-        TableDataCall& src, const unsigned int frameID) {
+bool megamol::datatools::table::TableWhere::prepareData(TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
     using megamol::core::utility::log::Log;
 
     /* Request the source data. */
     src.SetFrameID(frameID);
     if (!(src)(0)) {
-        Log::DefaultLog.WriteError(_T("The call to %hs failed in %hs."),
-            TableDataCall::FunctionName(0), TableDataCall::ClassName());
+        Log::DefaultLog.WriteError(
+            _T("The call to %hs failed in %hs."), TableDataCall::FunctionName(0), TableDataCall::ClassName());
         return false;
     }
 
-    auto isParamsChanged = this->paramUpdateRange.IsDirty()
-        || this->paramColumn.IsDirty()
-        || this->paramOperator.IsDirty()
-        || this->paramReference.IsDirty();
+    auto isParamsChanged = this->paramUpdateRange.IsDirty() || this->paramColumn.IsDirty() ||
+                           this->paramOperator.IsDirty() || this->paramReference.IsDirty();
 
     /* (Re-) Generate the data. */
-    if (isParamsChanged || (this->inputHash != src.DataHash())
-            || (this->frameID != src.GetFrameID())) {
+    if (isParamsChanged || (this->inputHash != src.DataHash()) || (this->frameID != src.GetFrameID())) {
         auto column = 0;
         const auto data = src.GetData();
         auto isSort = false;
@@ -142,9 +138,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
             auto r = this->paramReference.Param<FloatParam>()->Value();
 
             this->columns.resize(src.GetColumnsCount());
-            std::copy(src.GetColumnsInfos(),
-                src.GetColumnsInfos() + this->columns.size(),
-                this->columns.begin());
+            std::copy(src.GetColumnsInfos(), src.GetColumnsInfos() + this->columns.size(), this->columns.begin());
 
             {
                 auto param = this->paramColumn.Param<FlexEnumParam>();
@@ -162,8 +156,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
             }
 
             if (column != this->columns.size()) {
-                auto range = std::make_pair(this->columns[column].MinimumValue(),
-                    this->columns[column].MaximumValue());
+                auto range = std::make_pair(this->columns[column].MinimumValue(), this->columns[column].MaximumValue());
 
                 switch (o) {
                 case Operator::Less:
@@ -175,9 +168,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
                     break;
 
                 case Operator::Equal:
-                    selector = [r, e](const float v) {
-                        return (std::abs(v - r) <= e);
-                    };
+                    selector = [r, e](const float v) { return (std::abs(v - r) <= e); };
                     break;
 
                 case Operator::GreaterOrEqual:
@@ -189,9 +180,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
                     break;
 
                 case Operator::NotEqual:
-                    selector = [r, e](const float v) {
-                        return (std::abs(v - r) > e);
-                    };
+                    selector = [r, e](const float v) { return (std::abs(v - r) > e); };
                     break;
 
                 case Operator::LowerRange:
@@ -199,7 +188,6 @@ bool megamol::datatools::table::TableWhere::prepareData(
                         assert(range.second >= range.first);
                         auto d = (range.second - range.first) * r;
                         return (v <= (range.first + d));
-
                     };
                     break;
 
@@ -207,9 +195,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
                     selector = [r, range](const float v) {
                         assert(range.second >= range.first);
                         auto d = 1.0f - 0.5f * (range.second - range.first) * r;
-                        return ((v >= (range.first + d))
-                            && (v <= (range.second - d)));
-
+                        return ((v >= (range.first + d)) && (v <= (range.second - d)));
                     };
                     break;
 
@@ -218,7 +204,6 @@ bool megamol::datatools::table::TableWhere::prepareData(
                         assert(range.second >= range.first);
                         auto d = (range.second - range.first) * r;
                         return (v >= (range.second - d));
-
                     };
                     break;
 
@@ -230,14 +215,16 @@ bool megamol::datatools::table::TableWhere::prepareData(
 
                 default:
                     Log::DefaultLog.WriteError(_T("The comparison operator %d ")
-                        _T("is unsupported."), o);
+                                               _T("is unsupported."),
+                        o);
                     break;
                 }
 
             } else {
                 Log::DefaultLog.WriteWarn(_T("The column \"%hs\" to be filtered ")
-                    _T("was not found in the data set. The %hs module will copy ")
-                    _T("all input rows."), c.c_str(), TableWhere::ClassName());
+                                          _T("was not found in the data set. The %hs module will copy ")
+                                          _T("all input rows."),
+                    c.c_str(), TableWhere::ClassName());
             }
         }
         assert(((column >= 0) && (column < this->columns.size())) || !selector);
@@ -257,58 +244,55 @@ bool megamol::datatools::table::TableWhere::prepareData(
             } else {
                 // Selection requires sorting.
                 const auto o = this->paramOperator.Param<EnumParam>()->Value();
-                const auto r = vislib::math::Clamp(
-                    this->paramReference.Param<FloatParam>()->Value(),
-                    0.0f, 1.0f);
+                const auto r = vislib::math::Clamp(this->paramReference.Param<FloatParam>()->Value(), 0.0f, 1.0f);
 
                 selection.resize(src.GetRowsCount());
                 std::iota(selection.begin(), selection.end(), 0);
 
-                std::stable_sort(selection.begin(), selection.end(),
-                    [this, data, column](const std::size_t l, const std::size_t r) {
-                    auto lhs = data[l * this->columns.size() + column];
-                    auto rhs = data[r * this->columns.size() + column];
-                    return (lhs < rhs);
-                });
+                std::stable_sort(
+                    selection.begin(), selection.end(), [this, data, column](const std::size_t l, const std::size_t r) {
+                        auto lhs = data[l * this->columns.size() + column];
+                        auto rhs = data[r * this->columns.size() + column];
+                        return (lhs < rhs);
+                    });
 
                 // Compute the number of elements we want to retain.
-                const auto cnt = static_cast<std::size_t>(static_cast<double>(r)
-                    * src.GetRowsCount());
+                const auto cnt = static_cast<std::size_t>(static_cast<double>(r) * src.GetRowsCount());
 
                 switch (o) {
-                    case Operator::LowerPercentile:
-                        // Take first 'cnt' values.
-                        selection.resize(cnt);
-                        if (!selection.empty()) {
-                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
-                                _T("within [%f, %f]."),
-                                data[selection.front() * this->columns.size() + column],
-                                data[selection.back() * this->columns.size() + column]);
-                        }
-                        break;
+                case Operator::LowerPercentile:
+                    // Take first 'cnt' values.
+                    selection.resize(cnt);
+                    if (!selection.empty()) {
+                        Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                                  _T("within [%f, %f]."),
+                            data[selection.front() * this->columns.size() + column],
+                            data[selection.back() * this->columns.size() + column]);
+                    }
+                    break;
 
-                    case Operator::MiddlePercentile: {
-                        auto c = (src.GetRowsCount() - cnt) / 2;
-                        selection.erase(selection.begin(), selection.begin() + c);
-                        selection.resize(cnt);
-                        if (!selection.empty()) {
-                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
-                                _T("within [%f, %f]."),
-                                data[selection.front() * this->columns.size() + column],
-                                data[selection.back() * this->columns.size() + column]);
-                        }
-                        } break;
+                case Operator::MiddlePercentile: {
+                    auto c = (src.GetRowsCount() - cnt) / 2;
+                    selection.erase(selection.begin(), selection.begin() + c);
+                    selection.resize(cnt);
+                    if (!selection.empty()) {
+                        Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                                  _T("within [%f, %f]."),
+                            data[selection.front() * this->columns.size() + column],
+                            data[selection.back() * this->columns.size() + column]);
+                    }
+                } break;
 
-                    case Operator::UpperPercentile:
-                        // Remove everything up to last 'cnt' values.
-                        selection.erase(selection.begin(), selection.end() - cnt);
-                        if (!selection.empty()) {
-                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
-                                _T("within [%f, %f]."),
-                                data[selection.front() * this->columns.size() + column],
-                                data[selection.back() * this->columns.size() + column]);
-                        }
-                        break;
+                case Operator::UpperPercentile:
+                    // Remove everything up to last 'cnt' values.
+                    selection.erase(selection.begin(), selection.end() - cnt);
+                    if (!selection.empty()) {
+                        Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                                  _T("within [%f, %f]."),
+                            data[selection.front() * this->columns.size() + column],
+                            data[selection.back() * this->columns.size() + column]);
+                    }
+                    break;
 
                 default:
                     assert(false);
@@ -320,9 +304,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
             this->values.resize(selection.size() * this->columns.size());
             auto d = this->values.data();
             for (auto r : selection) {
-                std::copy(data + r * this->columns.size(),
-                    data + (r + 1) * this->columns.size(),
-                    d);
+                std::copy(data + r * this->columns.size(), data + (r + 1) * this->columns.size(), d);
                 d += this->columns.size();
             }
 
@@ -352,8 +334,7 @@ bool megamol::datatools::table::TableWhere::prepareData(
         } else {
             // Copy everything.
             this->values.resize(src.GetRowsCount() * this->columns.size());
-            std::copy(src.GetData(), src.GetData() + this->values.size(),
-                this->values.begin());
+            std::copy(src.GetData(), src.GetData() + this->values.size(), this->values.begin());
         } /* end if (selector || isSort) */
 
         /* Persist the state of the data. */

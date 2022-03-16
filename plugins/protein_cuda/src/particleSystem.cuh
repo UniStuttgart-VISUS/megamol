@@ -13,6 +13,8 @@
  * 
  */
 
+#include "particles_kernel.cuh"
+
 extern "C"
 {
 void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles);
@@ -202,22 +204,22 @@ void computeArcsCB(
     uint   numNeighbors);
 
 void writeProbePositionsCB(
-    float*	probePos,
-    float*	sphereTriaVec1,
-    float*	sphereTriaVec2,
-    float*	sphereTriaVec3,
-    float*	torusPos,
-    float*	torusVS,
-    float*	torusAxis,
+    float*  probePos,
+    float*  sphereTriaVec1,
+    float*  sphereTriaVec2,
+    float*  sphereTriaVec3,
+    float*  torusPos,
+    float*  torusVS,
+    float*  torusAxis,
     uint*   neighborCount,
     uint*   neighbors,
     float*  sortedAtomPos,
     float*  arcs,
-    uint*	arcCount,
-    uint*	arcCountScan,
-    uint*	scCount,
-    uint*	scCountScan,
-    float*	smallCircles,
+    uint*   arcCount,
+    uint*   arcCountScan,
+    uint*   scCount,
+    uint*   scCountScan,
+    float*  smallCircles,
     uint    numAtoms,
     uint    numNeighbors);
 

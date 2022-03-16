@@ -9,7 +9,7 @@
 //
 #include "stdafx.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "DeformableGPUSurfaceMT.h"
 
 //#ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
@@ -3293,7 +3293,7 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
     int cellIdx = (dim[0]-1)*((dim[1]-1)*coords.z + coords.y) + coords.x;
     uint cellState = targetActiveCells[cellIdx];
 
-	if ((cellState == 1) || (depth >= (int)maxLevel)) {
+    if ((cellState == 1) || (depth >= (int)maxLevel)) {
 
         triArr.Add(newPos1.x);
         triArr.Add(newPos1.y);

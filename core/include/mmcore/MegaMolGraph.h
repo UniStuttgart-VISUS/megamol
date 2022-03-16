@@ -5,23 +5,21 @@
 #include <string>
 #include <vector>
 
+#include "CommandRegistry.h"
+#include "FrontendResource.h"
+#include "FrontendResourcesLookup.h"
+#include "ImagePresentationEntryPoints.h"
+#include "PerformanceManager.h"
+
+#include "mmcore/MegaMolGraphTypes.h"
+#include "mmcore/MegaMolGraph_Convenience.h"
+#include "mmcore/RootModuleNamespace.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-
 #include "mmcore/serializable.h"
-
-#include "mmcore/MegaMolGraphTypes.h"
-#include "mmcore/MegaMolGraph_Convenience.h"
-
-#include "mmcore/RootModuleNamespace.h"
-
-#include "FrontendResource.h"
-#include "FrontendResourcesLookup.h"
-#include "ImagePresentationEntryPoints.h"
-#include "CommandRegistry.h"
 
 namespace megamol {
 namespace core {
@@ -108,7 +106,7 @@ private:
 
     [[nodiscard]] CallList_t::const_iterator find_call(std::string const& from, std::string const& to) const;
 
-    // modules are named using the exact same string that gets requested, 
+    // modules are named using the exact same string that gets requested,
     // i.e. we dont split namespaces like ::Project_1::Group_1::View3D_2_1 to extract the 'actual' modul name 'View3D_2_1'
     [[nodiscard]] bool add_module(ModuleInstantiationRequest_t const& request);
 
@@ -131,7 +129,7 @@ private:
 
     megamol::frontend_resources::FrontendResourcesLookup provided_resources_lookup;
 
-    // for each View in the MegaMol graph we create a GraphEntryPoint
+    // for each View in the MegaMol graph we create a EntryPoint
     // that entry point is used by the Image Presentation Service to
     // poke the rendering, collect the resulting View renderings and present them to the user appropriately
     std::list<Module::ptr_type> graph_entry_points;
@@ -140,6 +138,10 @@ private:
     megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
+
+#ifdef PROFILING
+    megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
+#endif
 };
 
 

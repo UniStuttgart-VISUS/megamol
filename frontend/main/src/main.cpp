@@ -1,27 +1,28 @@
-#include "mmcore/LuaAPI.h"
 #include "CLIConfigParsing.h"
+#include "mmcore/LuaAPI.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/DefaultTarget.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include "RuntimeConfig.h"
 #include "GlobalValueStore.h"
+#include "RuntimeConfig.h"
 
 #include "CUDA_Service.hpp"
 #include "Command_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
+#include "ImagePresentation_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
-#include "Screenshot_Service.hpp"
-#include "ProjectLoader_Service.hpp"
-#include "ImagePresentation_Service.hpp"
-#include "Remote_Service.hpp"
 #include "Profiling_Service.hpp"
+#include "ProjectLoader_Service.hpp"
+#include "Remote_Service.hpp"
+#include "Screenshot_Service.hpp"
+#include "VR_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -45,12 +46,15 @@ int main(const int argc, const char** argv) {
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
+    const bool with_gl = !config.no_opengl;
+
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
-    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
+        std::make_shared<megamol::core::utility::log::DefaultTarget>());
     if (!config.log_file.empty())
         megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
@@ -59,17 +63,16 @@ int main(const int argc, const char** argv) {
 
     megamol::core::CoreInstance core;
     core.SetConfigurationPaths_Frontend3000Compatibility(
-        config.application_directory,
-        config.shader_directories,
-        config.resource_directories);
-    core.Initialise(false); // false means the core ignores some mmconsole legacy features, e.g. we don't collide on Lua host ports
+        config.application_directory, config.shader_directories, config.resource_directories);
+    core.Initialise(
+        false); // false means the core ignores some mmconsole legacy features, e.g. we don't collide on Lua host ports
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = "MegaMol";
     if (config.opengl_context_version.has_value()) {
-        openglConfig.versionMajor         = std::get<0>(config.opengl_context_version.value());
-        openglConfig.versionMinor         = std::get<1>(config.opengl_context_version.value());
+        openglConfig.versionMajor = std::get<0>(config.opengl_context_version.value());
+        openglConfig.versionMinor = std::get<1>(config.opengl_context_version.value());
         openglConfig.glContextCoreProfile = std::get<2>(config.opengl_context_version.value());
     }
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
@@ -88,14 +91,14 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.mon = config.window_monitor;
     using megamol::frontend_resources::RuntimeConfig;
     openglConfig.windowPlacement.fullScreen = config.window_mode & RuntimeConfig::WindowMode::fullscreen;
-    openglConfig.windowPlacement.noDec      = config.window_mode & RuntimeConfig::WindowMode::nodecoration;
-    openglConfig.windowPlacement.topMost    = config.window_mode & RuntimeConfig::WindowMode::topmost;
-    openglConfig.windowPlacement.noCursor   = config.window_mode & RuntimeConfig::WindowMode::nocursor;
+    openglConfig.windowPlacement.noDec = config.window_mode & RuntimeConfig::WindowMode::nodecoration;
+    openglConfig.windowPlacement.topMost = config.window_mode & RuntimeConfig::WindowMode::topmost;
+    openglConfig.windowPlacement.noCursor = config.window_mode & RuntimeConfig::WindowMode::nocursor;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
-    guiConfig.imgui_rbnd = megamol::frontend::GUI_Service::ImGuiRenderBackend::OPEN_GL;
+    guiConfig.backend = (with_gl) ? (megamol::gui::GUIRenderBackend::OPEN_GL) : (megamol::gui::GUIRenderBackend::CPU);
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
@@ -129,18 +132,40 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
     imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
-    imagepresentationConfig.local_viewport_tile = config.local_viewport_tile.has_value()
-        ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
-            config.local_viewport_tile.value().global_framebuffer_resolution,
-            config.local_viewport_tile.value().tile_start_pixel,
-            config.local_viewport_tile.value().tile_resolution
-        })
-        : std::nullopt;
+
+    // when there is no GL we should make sure the user defined some initial framebuffer size via CLI
+    if (!with_gl) {
+        if (!config.local_framebuffer_resolution.has_value()) {
+            if (!config.window_size.has_value()) {
+                log_error("Window and framebuffer size is not set. Abort.");
+                return 1;
+            }
+            imagepresentationConfig.local_framebuffer_resolution = config.window_size;
+        }
+    }
+
+    imagepresentationConfig.local_viewport_tile =
+        config.local_viewport_tile.has_value()
+            ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
+                  config.local_viewport_tile.value().global_framebuffer_resolution,
+                  config.local_viewport_tile.value().tile_start_pixel,
+                  config.local_viewport_tile.value().tile_resolution})
+            : std::nullopt;
     imagepresentation_service.setPriority(3);
-  
+
+    megamol::frontend::VR_Service vr_service;
+    vr_service.setPriority(imagepresentation_service.getPriority() - 1);
+    megamol::frontend::VR_Service::Config vrConfig;
+    vrConfig.mode = megamol::frontend::VR_Service::Config::Mode(static_cast<int>(config.vr_mode));
+    const bool with_vr = vrConfig.mode != megamol::frontend::VR_Service::Config::Mode::Off;
+
     megamol::frontend::Command_Service command_service;
+    // Should be applied after gui service to process only keyboard events not used by gui.
+    command_service.setPriority(24);
 #ifdef PROFILING
     megamol::frontend::Profiling_Service profiling_service;
+    megamol::frontend::Profiling_Service::Config profiling_config;
+    profiling_config.log_file = config.profiling_output_file;
 #endif
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
@@ -162,7 +187,9 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
-    services.add(gl_service, &openglConfig);
+    if (with_gl) {
+        services.add(gl_service, &openglConfig);
+    }
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
@@ -170,8 +197,13 @@ int main(const int argc, const char** argv) {
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
+
+    if (with_vr) {
+        services.add(vr_service, &vrConfig);
+    }
+
 #ifdef PROFILING
-    services.add(profiling_service, nullptr);
+    services.add(profiling_service, &profiling_config);
 #endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
@@ -181,7 +213,8 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Remote_Service::Config remoteConfig;
     if (auto remote_session_role = handle_remote_session_config(config, remoteConfig); !remote_session_role.empty()) {
         openglConfig.windowTitlePrefix += remote_session_role;
-        remote_service.setPriority(lua_service_wrapper.getPriority() - 1); // remote does stuff before everything else, even before lua
+        remote_service.setPriority(
+            lua_service_wrapper.getPriority() - 1); // remote does stuff before everything else, even before lua
         services.add(remote_service, &remoteConfig);
     }
 
@@ -237,12 +270,14 @@ int main(const int argc, const char** argv) {
         {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
-            imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
+            imagepresentation_service
+                .RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 
-        imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
+        imagepresentation_service
+            .PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
@@ -255,7 +290,7 @@ int main(const int argc, const char** argv) {
 
     // image presentation service needs to assign frontend resources to entry points
     auto& frontend_resources = services.getProvidedResources();
-    services.getProvidedResources().push_back({"FrontendResources",frontend_resources});
+    services.getProvidedResources().push_back({"FrontendResources", frontend_resources});
 
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
@@ -276,29 +311,29 @@ int main(const int argc, const char** argv) {
 
     // load project files via lua
     if (run_megamol && graph_resources_ok)
-    for (auto& file : config.project_files) {
-        if (!projectloader_service.load_file(file)) {
-            log_error("Project file \"" + file + "\" did not execute correctly");
-            run_megamol = false;
+        for (auto& file : config.project_files) {
+            if (!projectloader_service.load_file(file)) {
+                log_error("Project file \"" + file + "\" did not execute correctly");
+                run_megamol = false;
 
-            // if interactive, continue to run MegaMol
-            if (config.interactive) {
-                log_warning("Interactive mode: start MegaMol anyway");
-                run_megamol = true;
+                // if interactive, continue to run MegaMol
+                if (config.interactive) {
+                    log_warning("Interactive mode: start MegaMol anyway");
+                    run_megamol = true;
+                }
             }
         }
-    }
 
     // execute Lua commands passed via CLI
     if (graph_resources_ok)
-    if (!config.cli_execute_lua_commands.empty()) {
-        std::string lua_result;
-        bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
-        if (!cli_lua_ok) {
-            run_megamol = false;
-            log_error("Error in CLI Lua command: " + lua_result);
+        if (!config.cli_execute_lua_commands.empty()) {
+            std::string lua_result;
+            bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
+            if (!cli_lua_ok) {
+                run_megamol = false;
+                log_error("Error in CLI Lua command: " + lua_result);
+            }
         }
-    }
 
     while (run_megamol) {
         run_megamol = render_next_frame();
@@ -311,4 +346,3 @@ int main(const int argc, const char** argv) {
 
     return 0;
 }
-

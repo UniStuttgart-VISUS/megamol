@@ -32,21 +32,23 @@
 /*
  * megamol::core::thecam::translate_manipulator<T>::translate_manipulator
  */
-template <class T>
+template<class T>
 megamol::core::thecam::translate_manipulator<T>::translate_manipulator(const world_type stepSize)
-    : stepSize(stepSize) {}
+        : stepSize(stepSize) {}
 
 
 /*
  * megamol::core::thecam::translate_manipulator<T>::~translate_manipulator
  */
-template <class T> megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
+template<class T>
+megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
 
 
 /*
  *  megamol::core::thecam::translate_manipulator<T>::move_forward
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_forward(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_forward(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto cam_pose = cam->template get<view::Camera::Pose>();
@@ -59,7 +61,8 @@ template <class T> void megamol::core::thecam::translate_manipulator<T>::move_fo
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_horizontally
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_horizontally(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_horizontally(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto cam_pose = cam->template get<view::Camera::Pose>();
@@ -73,7 +76,8 @@ template <class T> void megamol::core::thecam::translate_manipulator<T>::move_ho
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_vertically
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_vertically(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_vertically(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto cam_pose = cam->template get<view::Camera::Pose>();

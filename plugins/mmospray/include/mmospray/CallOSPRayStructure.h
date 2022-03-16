@@ -6,29 +6,22 @@
  */
 
 #pragma once
-#include <map>
-#include <vector>
-#include "mmospray/CallOSPRayMaterial.h"
+#include "ParticleDataAccessCollection.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mesh/MeshCalls.h"
-#include "CallOSPRayTransformation.h"
-#include "ParticleDataAccessCollection.h"
+#include "mmospray/CallOSPRayMaterial.h"
+#include "mmospray/CallOSPRayTransformation.h"
+#include <map>
+#include <vector>
 
 namespace megamol {
 namespace ospray {
 
 enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES };
 
-enum geometryTypeEnum {
-    SPHERES,
-    MESH,
-    LINES,
-    CURVES,
-    CYLINDERS,
-    TEST
-};
+enum geometryTypeEnum { SPHERES, MESH, LINES, CURVES, CYLINDERS, TEST };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
 
@@ -93,7 +86,7 @@ struct curveStructure {
 };
 
 struct ClippingPlane {
-    std::array<float,4> coeff = {0,0,0, 0};
+    std::array<float, 4> coeff = {0, 0, 0, 0};
     bool isValid = false;
 };
 
@@ -141,21 +134,27 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallOSPRayStructure"; }
+    static const char* ClassName(void) {
+        return "CallOSPRayStructure";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call for an OSPRay structure"; }
+    static const char* Description(void) {
+        return "Call for an OSPRay structure";
+    }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 2; }
+    static unsigned int FunctionCount(void) {
+        return 2;
+    }
 
     /**
      * Answer the name of the function used for this call.

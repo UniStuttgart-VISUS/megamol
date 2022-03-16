@@ -4,15 +4,15 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "OverrideParticleGlobals.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "stdafx.h"
 #include "vislib/graphics/ColourParser.h"
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
 
 using namespace megamol;
 
@@ -21,16 +21,16 @@ using namespace megamol;
  * datatools::OverrideParticleGlobals::OverrideParticleGlobals
  */
 datatools::OverrideParticleGlobals::OverrideParticleGlobals(void)
-        : AbstractParticleManipulator("outData", "indata"),
-        overrideAllListSlot("overrideAllLists", "Activates overriding the selected values for all particle lists"),
-        overrideListSlot("list", "The particle list to override the values of"),
-        overrideRadiusSlot("overrideRadius", "Activates overriding the radius"),
-        radiusSlot("radius", "The new radius value"),
-        overrideColorSlot("overrideColor", "Activates overriding the color"),
-        colorSlot("color", "The new color value"),
-        overrideIntensityRangeSlot("overrideInt", "Activates overriding the intensity range"),
-        minIntSlot("minInt", "the new minimum intensity"),
-        maxIntSlot("maxInt", "the new maximum intensity") {
+        : AbstractParticleManipulator("outData", "indata")
+        , overrideAllListSlot("overrideAllLists", "Activates overriding the selected values for all particle lists")
+        , overrideListSlot("list", "The particle list to override the values of")
+        , overrideRadiusSlot("overrideRadius", "Activates overriding the radius")
+        , radiusSlot("radius", "The new radius value")
+        , overrideColorSlot("overrideColor", "Activates overriding the color")
+        , colorSlot("color", "The new color value")
+        , overrideIntensityRangeSlot("overrideInt", "Activates overriding the intensity range")
+        , minIntSlot("minInt", "the new minimum intensity")
+        , maxIntSlot("maxInt", "the new maximum intensity") {
 
     this->overrideAllListSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->overrideAllListSlot);
@@ -87,11 +87,8 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     uint8_t color[4];
     try {
         vislib::graphics::ColourParser::FromString(
-            this->colorSlot.Param<core::param::StringParam>()->Value().c_str(),
-            color[0], color[1], color[2], color[3]);
-    } catch(...) {
-        ::memset(color, 0, 4);
-    }
+            this->colorSlot.Param<core::param::StringParam>()->Value().c_str(), color[0], color[1], color[2], color[3]);
+    } catch (...) { ::memset(color, 0, 4); }
 
     outData = inData; // also transfers the unlocker to 'outData'
 
@@ -118,8 +115,8 @@ bool datatools::OverrideParticleGlobals::manipulateData(
         if (overrideRadius) {
             p.SetGlobalRadius(radius);
             if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-                p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-                    p.GetVertexData(), std::max<unsigned int>(16, p.GetVertexDataStride()));
+                p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, p.GetVertexData(),
+                    std::max<unsigned int>(16, p.GetVertexDataStride()));
             }
         }
 
