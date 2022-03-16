@@ -29,7 +29,7 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
-#include "protein/RMSF.h"
+#include "protein_calls/RMSF.h"
 #include "protein_calls/ProteinColor.h"
 
 #include "vislib/assert.h"
@@ -644,7 +644,7 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
 
     if (this->showRMSFParam.Param<megamol::core::param::BoolParam>()->Value()) {
-        firstframe = protein::computeRMSF(mol);
+        firstframe = protein_calls::computeRMSF(mol);
         if (firstframe) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Successfully computed RMSF (min: %.3f, max: %.3f).", mol->MinimumBFactor(), mol->MaximumBFactor());

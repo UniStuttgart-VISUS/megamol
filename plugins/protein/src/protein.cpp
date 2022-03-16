@@ -37,7 +37,6 @@
 // data interfaces (calls)
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
-#include "protein/RMSF.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/SphereDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"

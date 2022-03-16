@@ -1,4 +1,4 @@
-#include "protein/RMSF.h"
+#include "protein_calls/RMSF.h"
 #include "mmcore/utility/log/Log.h"
 #include "stdafx.h"
 #include "vislib/Array.h"
@@ -9,10 +9,9 @@
 #include <fstream>
 
 using namespace megamol;
-using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
-bool megamol::protein::computeRMSF(protein_calls::MolecularDataCall* mol) {
+bool megamol::protein_calls::computeRMSF(protein_calls::MolecularDataCall* mol) {
     if (mol == NULL)
         return false;
 
