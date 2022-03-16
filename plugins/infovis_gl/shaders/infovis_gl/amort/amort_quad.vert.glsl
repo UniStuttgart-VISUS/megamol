@@ -1,6 +1,6 @@
 #version 430
 
-out vec2 uv_coord;
+out vec2 uvCoords;
 
 void main() {
     const vec4 vertices[6] = vec4[6](
@@ -13,6 +13,6 @@ void main() {
 
     vec4 vertex = vertices[gl_VertexID];
 
-    uv_coord = vertex.zw;
     gl_Position =  vec4(vertex.xy, -1.0, 1.0);
+    uvCoords = vertex.zw;
 }
