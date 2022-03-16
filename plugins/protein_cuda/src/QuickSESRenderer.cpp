@@ -9,10 +9,10 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "QuickSESRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -20,6 +20,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -64,36 +65,36 @@ QuickSESRenderer::QuickSESRenderer(void)
     this->MakeSlotAvailable(&this->molDataCallerSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::FilePathParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring mode #0
-    this->currentColoringMode = Color::CHAIN;
+    this->currentColoringMode = ProteinColor::ColoringMode::CHAIN;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode));
-    cm0->SetTypePair(Color::ELEMENT, "Element");
-    cm0->SetTypePair(Color::RESIDUE, "Residue");
-    cm0->SetTypePair(Color::STRUCTURE, "Structure");
-    cm0->SetTypePair(Color::BFACTOR, "BFactor");
-    cm0->SetTypePair(Color::CHARGE, "Charge");
-    cm0->SetTypePair(Color::OCCUPANCY, "Occupancy");
-    cm0->SetTypePair(Color::CHAIN, "Chain");
-    cm0->SetTypePair(Color::MOLECULE, "Molecule");
-    cm0->SetTypePair(Color::RAINBOW, "Rainbow");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::ELEMENT), "Element");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::RESIDUE), "Residue");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::SECONDARY_STRUCTURE), "Structure");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::BFACTOR), "BFactor");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::CHARGE), "Charge");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::OCCUPANCY), "Occupancy");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::CHAIN), "Chain");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::MOLECULE), "Molecule");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::RAINBOW), "Rainbow");
     this->coloringModeParam << cm0;
     this->MakeSlotAvailable(&this->coloringModeParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // en-/disable positional interpolation
@@ -101,7 +102,7 @@ QuickSESRenderer::QuickSESRenderer(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     this->probeRadiusParam.SetParameter(new param::FloatParam(1.4f, 0.0f));
     this->MakeSlotAvailable(&this->probeRadiusParam);
@@ -319,12 +320,16 @@ bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     this->UpdateParameters(mol);
 
     // recompute color table, if necessary
-    if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
+    if (this->atomColorTable.size() < mol->AtomCount()) {
+
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
         // Use one coloring mode
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true);
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
     }
 
     // ---------- render ----------
@@ -343,7 +348,7 @@ bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     glPointSize(5.0f);
     glBegin(GL_POINTS);
     for (unsigned int i = 0; i < mol->AtomCount(); i++) {
-        glColor3fv(&atomColorTable.PeekElements()[3 * i]);
+        glColor3fv(&atomColorTable.data()[i].x);
         glVertex3fv(&posInter[4 * i]);
     }
     glEnd(); // GL_POINTS
@@ -390,21 +395,24 @@ bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 void QuickSESRenderer::UpdateParameters(const MolecularDataCall* mol) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value().string().c_str(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
     if (this->coloringModeParam.IsDirty()) {
 
         this->currentColoringMode =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam.Param<param::EnumParam>()->Value());
+
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
 
         // Use one coloring mode
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true);
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
 
         this->coloringModeParam.ResetDirty();
     }

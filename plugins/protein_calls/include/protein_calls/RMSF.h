@@ -9,7 +9,7 @@
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_calls {
 
 /**
  * Computes the RMSF for all atoms stored in mol.
@@ -19,7 +19,7 @@ namespace protein {
  * @return 'false' if no data is available or if the molecule just one time step; 'true' on success.
  */
 bool computeRMSF(protein_calls::MolecularDataCall* mol);
-} // namespace protein
+} // namespace protein_calls
 } // namespace megamol
 
 #endif // MMPROTEIN_RMSF_H_INCLUDED

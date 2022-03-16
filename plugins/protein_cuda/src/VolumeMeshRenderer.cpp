@@ -16,6 +16,7 @@
 #include "VolumeMeshRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -171,9 +172,9 @@ VolumeMeshRenderer::VolumeMeshRenderer(void)
     this->maxDeltaDistanceParam.SetParameter(
         new param::FloatParam(this->maxDeltaDistance, vislib::math::FLOAT_EPSILON));
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(filename.PeekBuffer()));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     // make all slots available
     this->MakeSlotAvailable(&this->polygonModeParam);
     this->MakeSlotAvailable(&this->blendItParam);
@@ -193,27 +194,23 @@ VolumeMeshRenderer::VolumeMeshRenderer(void)
     this->MakeSlotAvailable(&this->haloEnableParam);
     this->haloAlphaParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->haloAlphaParam);
-    this->haloColorParam.SetParameter(new param::StringParam("#146496"));
+    this->haloColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->haloColorParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::CHAIN;
-    this->currentColoringMode1 = Color::ELEMENT;
+    this->currentColoringMode0 = ProteinColor::ColoringMode::CHAIN;
+    this->currentColoringMode1 = ProteinColor::ColoringMode::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    MolecularDataCall* mol = new MolecularDataCall();
-    BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode = this->currentColoringMode0;
+    for (cCnt = 0; cCnt < static_cast<int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(cCnt, ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(cCnt, ProteinColor::GetName(cMode).c_str());
     }
     cm0->SetTypePair(-1, "SurfaceFeature");
     cm1->SetTypePair(-1, "SurfaceFeature");
-    delete mol;
-    delete bs;
     this->coloringModeParam0 << cm0;
     this->coloringModeParam1 << cm1;
     this->MakeSlotAvailable(&this->coloringModeParam0);
@@ -224,18 +221,18 @@ VolumeMeshRenderer::VolumeMeshRenderer(void)
     this->MakeSlotAvailable(&this->cmWeightParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // en-/disable positional interpolation
@@ -716,40 +713,32 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ParameterRefresh(mol, bs);
 
     // recompute color table, if necessary (i.e. the atom count has changed)
-    if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
-        if (this->currentColoringMode0 < 0) {
-            if (this->currentColoringMode1 < 0) {
+    if (this->atomColorTable.size() < mol->AtomCount()) {
+        std::vector<glm::vec3> colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
+        if (static_cast<int>(this->currentColoringMode0) < 0) {
+            if (static_cast<int>(this->currentColoringMode1) < 0) {
                 // Color by surface feature -> set all colors to white
-                this->atomColorTable.SetCount(mol->AtomCount() * 3);
-                for (unsigned int i = 0; i < mol->AtomCount() * 3; i++) {
-                    this->atomColorTable[i] = 1.0f;
-                }
+                this->atomColorTable.resize(mol->AtomCount(), glm::vec3(1.0));
             } else {
                 // only color by color mode 1
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode1),
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeColorTable(*mol, this->currentColoringMode1, this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             }
         } else {
-            if (this->currentColoringMode1 < 0) {
+            if (static_cast<int>(this->currentColoringMode1) < 0) {
                 // only color by color mode 0
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeColorTable(*mol, this->currentColoringMode0, this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             } else {
                 // Mix two coloring modes
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
-                    static_cast<Color::ColoringMode>(this->currentColoringMode1),
-                    cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-                    1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+                    cmWeightParam.Param<param::FloatParam>()->Value(),
+                    1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             }
         }
     }
@@ -2527,38 +2516,38 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             this->vertexColors[4 * i + 0] = 1.0f;
             this->vertexColors[4 * i + 1] = 0.0f;
             this->vertexColors[4 * i + 2] = 1.0f;
-        } else if (atomIdx >= (this->atomColorTable.Count() / 3)) {
+        } else if (atomIdx >= (this->atomColorTable.size())) {
             // ERROR nearest atom has too large index (color cyan)
             this->vertexColors[4 * i + 0] = 0.0f;
             this->vertexColors[4 * i + 1] = 1.0f;
             this->vertexColors[4 * i + 2] = 1.0f;
         } else if (!this->resSelectionCall || this->atomSelection[atomIdx]) {
             // color triangles
-            if (this->currentColoringMode0 < 0) {
-                if (this->currentColoringMode1 >= 0) {
+            if (static_cast<int>(this->currentColoringMode0) < 0) {
+                if (static_cast<int>(this->currentColoringMode1) >= 0) {
                     // mix between surface feature color and color mode 1
                     this->vertexColors[4 * i + 0] =
-                        (this->vertexColors[4 * i + 0] * ifac + this->atomColorTable[3 * atomIdx + 0] * (1.0f - ifac));
+                        (this->vertexColors[4 * i + 0] * ifac + this->atomColorTable[atomIdx].x * (1.0f - ifac));
                     this->vertexColors[4 * i + 1] =
-                        (this->vertexColors[4 * i + 1] * ifac + this->atomColorTable[3 * atomIdx + 1] * (1.0f - ifac));
+                        (this->vertexColors[4 * i + 1] * ifac + this->atomColorTable[atomIdx].y * (1.0f - ifac));
                     this->vertexColors[4 * i + 2] =
-                        (this->vertexColors[4 * i + 2] * ifac + this->atomColorTable[3 * atomIdx + 2] * (1.0f - ifac));
+                        (this->vertexColors[4 * i + 2] * ifac + this->atomColorTable[atomIdx].z * (1.0f - ifac));
                 }
                 // else - color by surface feature (do nothing)
             } else {
-                if (this->currentColoringMode1 < 0) {
+                if (static_cast<int>(this->currentColoringMode1) < 0) {
                     // mix between color mode 0 and  surface feature color
                     this->vertexColors[4 * i + 0] =
-                        (this->atomColorTable[3 * atomIdx + 0] * ifac + this->vertexColors[4 * i + 0] * (1.0f - ifac));
+                        (this->atomColorTable[atomIdx].x * ifac + this->vertexColors[4 * i + 0] * (1.0f - ifac));
                     this->vertexColors[4 * i + 1] =
-                        (this->atomColorTable[3 * atomIdx + 1] * ifac + this->vertexColors[4 * i + 1] * (1.0f - ifac));
+                        (this->atomColorTable[atomIdx].y * ifac + this->vertexColors[4 * i + 1] * (1.0f - ifac));
                     this->vertexColors[4 * i + 2] =
-                        (this->atomColorTable[3 * atomIdx + 2] * ifac + this->vertexColors[4 * i + 2] * (1.0f - ifac));
+                        (this->atomColorTable[atomIdx].z * ifac + this->vertexColors[4 * i + 2] * (1.0f - ifac));
                 } else {
                     // use only atom colors
-                    this->vertexColors[4 * i + 0] = this->atomColorTable[3 * atomIdx + 0];
-                    this->vertexColors[4 * i + 1] = this->atomColorTable[3 * atomIdx + 1];
-                    this->vertexColors[4 * i + 2] = this->atomColorTable[3 * atomIdx + 2];
+                    this->vertexColors[4 * i + 0] = this->atomColorTable[atomIdx].x;
+                    this->vertexColors[4 * i + 1] = this->atomColorTable[atomIdx].y;
+                    this->vertexColors[4 * i + 2] = this->atomColorTable[atomIdx].z;
                 }
             }
         } else {
@@ -2598,13 +2587,13 @@ float4 VolumeMeshRenderer::GetNextColor() {
     bool repick = true;
     int nextColorIndex = centroidColorsIndex;
     while (repick) {
-        nextColorIndex = (nextColorIndex + 1) % this->colorTable.Count();
+        nextColorIndex = (nextColorIndex + 1) % this->fileTable.size();
         if (nextColorIndex == centroidColorsIndex) {
             Log::DefaultLog.WriteError("Out of colors");
             break;
         }
-        float4 nextColor = make_float4(this->colorTable[nextColorIndex][0], this->colorTable[nextColorIndex][1],
-            this->colorTable[nextColorIndex][2], 1.0f);
+        float4 nextColor = make_float4(this->fileTable[nextColorIndex][0], this->fileTable[nextColorIndex][1],
+            this->fileTable[nextColorIndex][2], 1.0f);
         repick = false;
         if (centroidsLast != 0) {
             for (uint j = 0; j < centroidCountLast; ++j) {
@@ -2617,8 +2606,8 @@ float4 VolumeMeshRenderer::GetNextColor() {
         }
     }
     centroidColorsIndex = nextColorIndex;
-    return make_float4(this->colorTable[centroidColorsIndex][0], this->colorTable[centroidColorsIndex][1],
-        this->colorTable[centroidColorsIndex][2], 1.0f);
+    return make_float4(this->fileTable[centroidColorsIndex][0], this->fileTable[centroidColorsIndex][1],
+        this->fileTable[centroidColorsIndex][2], 1.0f);
 }
 
 /*
@@ -2660,51 +2649,43 @@ void VolumeMeshRenderer::ParameterRefresh(const MolecularDataCall* mol, const Bi
 
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->fileTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
 
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
 
-        if (this->currentColoringMode0 < 0) {
-            if (this->currentColoringMode1 < 0) {
+        std::vector<glm::vec3> colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
+        if (static_cast<int>(this->currentColoringMode0) < 0) {
+            if (static_cast<int>(this->currentColoringMode1) < 0) {
                 // Color by surface feature -> set all colors to white
-                this->atomColorTable.SetCount(mol->AtomCount() * 3);
-                for (unsigned int i = 0; i < mol->AtomCount() * 3; i++) {
-                    this->atomColorTable[i] = 1.0f;
-                }
+                this->atomColorTable.resize(mol->AtomCount(), glm::vec3(1.0));
             } else {
                 // only color by color mode 1
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode1),
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeColorTable(*mol, this->currentColoringMode1, this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             }
         } else {
-            if (this->currentColoringMode1 < 0) {
+            if (static_cast<int>(this->currentColoringMode1) < 0) {
                 // only color by color mode 0
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeColorTable(*mol, this->currentColoringMode0, this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             } else {
                 // Mix two coloring modes
-                Color::MakeColorTable(mol, static_cast<Color::ColoringMode>(this->currentColoringMode0),
-                    static_cast<Color::ColoringMode>(this->currentColoringMode1),
-                    cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-                    1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-                    this->atomColorTable, this->colorTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
+                ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+                    cmWeightParam.Param<param::FloatParam>()->Value(),
+                    1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable, colorLookupTable,
+                    this->fileTable, this->rainbowColors, bs, nullptr, true);
             }
         }
 
@@ -3099,6 +3080,7 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
 
     int ind = 0;
     int ind4 = 0;
+    int ind1 = 0;
     xyzr = (float*)malloc(mol->AtomCount() * sizeof(float) * 4);
     if (useCol) {
         colors = (float*)malloc(mol->AtomCount() * sizeof(float) * 4);
@@ -3112,7 +3094,7 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
             xyzr[ind4 + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius();
 
             //const float *cp = &cmap[colidx[i] * 3];
-            const float* cp = &this->atomColorTable[ind];
+            const float* cp = &this->atomColorTable[ind1].x;
             colors[ind4] = cp[0];
             colors[ind4 + 1] = cp[1];
             colors[ind4 + 2] = cp[2];
@@ -3120,6 +3102,7 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
 
             ind4 += 4;
             ind += 3;
+            ind1++;
         }
     } else {
         // build compacted lists of atom coordinates and radii only

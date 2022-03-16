@@ -29,8 +29,8 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
-#include "protein/RMSF.h"
-#include "protein/UncertaintyColor.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/RMSF.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
@@ -301,8 +301,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
     vislib::StringA filename("colors.txt");
     this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
     this->MakeSlotAvailable(&this->colorTableFileParam);
-    vislib::StringA pat(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str());
-    protein::UncertaintyColor::ReadColorTableFromFile(pat, this->colorTable);
+    auto pat = this->colorTableFileParam.Param<param::FilePathParam>()->Value();
+    ProteinColor::ReadColorTableFromFile(pat, this->colorTable);
 
     this->bFactorAsUncertaintyParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->bFactorAsUncertaintyParam);
@@ -509,11 +509,11 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
     this->pdbIndex.Clear();
     this->pdbIndex.AssertCapacity(this->aminoAcidCount);
 
-    this->chainColors.Clear();
-    this->chainColors.AssertCapacity(this->aminoAcidCount);
+    this->chainColors.clear();
+    this->chainColors.resize(this->aminoAcidCount);
 
-    this->aminoAcidColors.Clear();
-    this->aminoAcidColors.AssertCapacity(this->aminoAcidCount);
+    this->aminoAcidColors.clear();
+    this->aminoAcidColors.resize(this->aminoAcidCount);
 
     // get secondary structure type colors
     for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
@@ -548,11 +548,11 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
             cCnt++;
         }
         // number of different chains: [A-Z] + [a-z] = 52
-        this->chainColors.Add(this->colorTable[(cCnt % this->colorTable.Count())]);
+        this->chainColors.push_back(this->colorTable[(cCnt % this->colorTable.size())]);
 
         // set colors for amino-acids [A-Z] +'?' = 27
         unsigned int tmpAA = static_cast<unsigned int>(udc->GetAminoAcidOneLetterCode(aa));
-        this->aminoAcidColors.Add(this->colorTable[(tmpAA % this->colorTable.Count())]);
+        this->aminoAcidColors.push_back(this->colorTable[(tmpAA % this->colorTable.size())]);
     }
 
 
@@ -644,7 +644,7 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
 
     if (this->showRMSFParam.Param<megamol::core::param::BoolParam>()->Value()) {
-        firstframe = protein::computeRMSF(mol);
+        firstframe = protein_calls::computeRMSF(mol);
         if (firstframe) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Successfully computed RMSF (min: %.3f, max: %.3f).", mol->MinimumBFactor(), mol->MaximumBFactor());
@@ -735,9 +735,8 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
     // read and update the color table, if necessary
     if (this->colorTableFileParam.IsDirty()) {
-        protein::UncertaintyColor::ReadColorTableFromFile(
-            vislib::StringA(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str()),
-            this->colorTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
     // get lighting position

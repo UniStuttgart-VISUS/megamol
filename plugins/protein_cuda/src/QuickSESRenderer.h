@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Color.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
@@ -19,6 +18,7 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "CUDAQuickSES.h"
@@ -185,15 +185,16 @@ private:
     vislib_gl::graphics::gl::GLSLShader lightShaderOR;
 
     /** The current coloring mode */
-    Color::ColoringMode currentColoringMode;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
 
     void* cudaqses; ///< Pointer to CUDAQuickSurf object if it exists
 
