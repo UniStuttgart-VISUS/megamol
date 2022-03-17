@@ -14,24 +14,18 @@ namespace megamol {
 namespace core {
 namespace profiler {
 
-    class Timer {
-    public:
-        enum class TimeUnit
-        {
-            NANOSECONDS = 0,
-            MICROSECONDS = 1,
-            MILLISECONDS = 2,
-            SECONDS = 3
-        };
+class Timer {
+public:
+    enum class TimeUnit { NANOSECONDS = 0, MICROSECONDS = 1, MILLISECONDS = 2, SECONDS = 3 };
 
-        void startTimer();
-        void endTimer();
-        double getDuration(TimeUnit unit);
+    void startTimer();
+    void endTimer();
+    double getDuration(TimeUnit unit);
 
-    private:
-        std::chrono::steady_clock::time_point m_start;
-        std::chrono::steady_clock::time_point m_end;
-    };
+private:
+    std::chrono::steady_clock::time_point m_start;
+    std::chrono::steady_clock::time_point m_end;
+};
 
 } // namespace profiler
 } // namespace core
