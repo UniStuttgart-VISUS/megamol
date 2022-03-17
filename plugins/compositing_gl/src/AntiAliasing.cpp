@@ -5,19 +5,19 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "AntiAliasing.h"
+#include "stdafx.h"
 
 #include <array>
-#include <random>
 #include <chrono>
+#include <random>
 
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "compositing_gl/CompositingCalls.h"
 
 #ifdef PROFILING
 #include "PerformanceManager.h"
@@ -30,30 +30,30 @@
 /*
  * @megamol::compositing::AntiAliasing::AntiAliasing
  */
-megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
-    , m_version(0)
-    , m_output_tx2D(nullptr)
-    , m_mode("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
-    , m_smaa_mode("SMAA Mode", "Sets the SMAA mode: SMAA 1x or SMAA T2x")
-    , m_smaa_quality("QualityLevel", "Sets smaa quality level")
-    , m_smaa_threshold("Threshold", "Sets smaa threshold")
-    , m_smaa_max_search_steps("MaxSearchSteps", "Sets smaa max search steps")
-    , m_smaa_max_search_steps_diag("MaxDiagSearchSteps", "Sets smaa max diagonal search steps")
-    , m_smaa_disable_diag_detection("DisableDiagDetection",
-            "Enables/Disables diagonal detection. If set to false, diagonal detection is enabled")
-    , m_smaa_disable_corner_detection("DisableCornerDetection",
-            "Enables/Disables corner detection. If set to false, corner detection is enabled")
-    , m_smaa_corner_rounding("CornerRounding", "Sets smaa corner rounding parameter")
-    , m_smaa_detection_technique(
-            "EdgeDetection", "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
-                            "texture can be provided as it is mandatory to have one")
-    , m_smaa_view("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
-                            "only be used when directly connected to the screen for debug purposes")
-    , m_output_tex_slot("OutputTexture", "Gives access to the resulting output texture")
-    , m_input_tex_slot("InputTexture", "Connects the input texture")
-    , m_depth_tex_slot("DepthTexture", "Connects the depth texture")
-    , m_settings_have_changed(false)
-{
+megamol::compositing::AntiAliasing::AntiAliasing()
+        : core::Module()
+        , m_version(0)
+        , m_output_tx2D(nullptr)
+        , m_mode("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
+        , m_smaa_mode("SMAA Mode", "Sets the SMAA mode: SMAA 1x or SMAA T2x")
+        , m_smaa_quality("QualityLevel", "Sets smaa quality level")
+        , m_smaa_threshold("Threshold", "Sets smaa threshold")
+        , m_smaa_max_search_steps("MaxSearchSteps", "Sets smaa max search steps")
+        , m_smaa_max_search_steps_diag("MaxDiagSearchSteps", "Sets smaa max diagonal search steps")
+        , m_smaa_disable_diag_detection("DisableDiagDetection",
+              "Enables/Disables diagonal detection. If set to false, diagonal detection is enabled")
+        , m_smaa_disable_corner_detection("DisableCornerDetection",
+              "Enables/Disables corner detection. If set to false, corner detection is enabled")
+        , m_smaa_corner_rounding("CornerRounding", "Sets smaa corner rounding parameter")
+        , m_smaa_detection_technique("EdgeDetection",
+              "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
+              "texture can be provided as it is mandatory to have one")
+        , m_smaa_view("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
+                                "only be used when directly connected to the screen for debug purposes")
+        , m_output_tex_slot("OutputTexture", "Gives access to the resulting output texture")
+        , m_input_tex_slot("InputTexture", "Connects the input texture")
+        , m_depth_tex_slot("DepthTexture", "Connects the depth texture")
+        , m_settings_have_changed(false) {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
@@ -65,7 +65,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA 1x");
     this->m_smaa_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
     this->MakeSlotAvailable(&this->m_smaa_mode);
-    
+
     this->m_smaa_quality << new megamol::core::param::EnumParam(2);
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Low");
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Medium");
@@ -128,8 +128,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->MakeSlotAvailable(&this->m_smaa_view);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
-    this->m_output_tex_slot.SetCallback(
-        CallTexture2D::ClassName(), "GetMetaData", &AntiAliasing::getMetaDataCallback);
+    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &AntiAliasing::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 
     this->m_input_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
@@ -143,11 +142,13 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
 /*
  * @megamol::compositing::AntiAliasing::~AntiAliasing
  */
-megamol::compositing::AntiAliasing::~AntiAliasing() { this->Release(); }
+megamol::compositing::AntiAliasing::~AntiAliasing() {
+    this->Release();
+}
 
 /*
-* @megamol::compositing::AntiAliasing::create
-*/
+ * @megamol::compositing::AntiAliasing::create
+ */
 bool megamol::compositing::AntiAliasing::create() {
     try {
 // profiling
@@ -192,14 +193,12 @@ bool megamol::compositing::AntiAliasing::create() {
 
         if (!ssf->MakeShaderSource("Compositing::smaa::edgeDetectionCS", smaa_edge_detection_src_c))
             return false;
-        if (!m_smaa_edge_detection_prgm->Compile(
-                smaa_edge_detection_src_c.Code(), smaa_edge_detection_src_c.Count()))
+        if (!m_smaa_edge_detection_prgm->Compile(smaa_edge_detection_src_c.Code(), smaa_edge_detection_src_c.Count()))
             return false;
         if (!m_smaa_edge_detection_prgm->Link())
             return false;
 
-        if (!ssf->MakeShaderSource(
-                "Compositing::smaa::blendingWeightsCalculationCS", smaa_blending_weights_src_c))
+        if (!ssf->MakeShaderSource("Compositing::smaa::blendingWeightsCalculationCS", smaa_blending_weights_src_c))
             return false;
         if (!m_smaa_blending_weight_calculation_prgm->Compile(
                 smaa_blending_weights_src_c.Code(), smaa_blending_weights_src_c.Count()))
@@ -214,9 +213,10 @@ bool megamol::compositing::AntiAliasing::create() {
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Link())
             return false;
-        
+
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
@@ -233,13 +233,11 @@ bool megamol::compositing::AntiAliasing::create() {
     // init all textures
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     m_output_tx2D = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
-    
+
     // textures for smaa
-    std::vector<std::pair<GLenum, GLint>> int_params = {
-        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST},
-        {GL_TEXTURE_MAG_FILTER, GL_LINEAR} };
+    std::vector<std::pair<GLenum, GLint>> int_params = {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_LINEAR}};
     m_smaa_layout = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout area_layout(
         GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
@@ -433,12 +431,9 @@ bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSl
 /*
  * @megamol::compositing::AntiAliasing::edgeDetection
  */
-void megamol::compositing::AntiAliasing::edgeDetection(
-    const std::shared_ptr<glowl::Texture2D>& input,
-    const std::shared_ptr<glowl::Texture2D>& depth,
-    const std::shared_ptr<glowl::Texture2D>& edges,
-    GLint detection_technique)
-{
+void megamol::compositing::AntiAliasing::edgeDetection(const std::shared_ptr<glowl::Texture2D>& input,
+    const std::shared_ptr<glowl::Texture2D>& depth, const std::shared_ptr<glowl::Texture2D>& edges,
+    GLint detection_technique) {
     m_smaa_edge_detection_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -448,8 +443,7 @@ void megamol::compositing::AntiAliasing::edgeDetection(
     // find edges based on the depth
     if (detection_technique == 2) {
         if (depth == nullptr) {
-            core::utility::log::Log::DefaultLog.WriteError(
-                "AntiAliasing::edgeDetection: depth texture is nullptr");
+            core::utility::log::Log::DefaultLog.WriteError("AntiAliasing::edgeDetection: depth texture is nullptr");
         } else {
             glActiveTexture(GL_TEXTURE1);
             depth->bindTexture();
@@ -478,12 +472,9 @@ void megamol::compositing::AntiAliasing::edgeDetection(
 /*
  * @megamol::compositing::AntiAliasing::blendingWeightCalculation
  */
-void megamol::compositing::AntiAliasing::blendingWeightCalculation(
-    const std::shared_ptr<glowl::Texture2D>& edges,
-    const std::shared_ptr<glowl::Texture2D>& area,
-    const std::shared_ptr<glowl::Texture2D>& search,
-    const std::shared_ptr<glowl::Texture2D>& weights)
-{
+void megamol::compositing::AntiAliasing::blendingWeightCalculation(const std::shared_ptr<glowl::Texture2D>& edges,
+    const std::shared_ptr<glowl::Texture2D>& area, const std::shared_ptr<glowl::Texture2D>& search,
+    const std::shared_ptr<glowl::Texture2D>& weights) {
     m_smaa_blending_weight_calculation_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -515,11 +506,8 @@ void megamol::compositing::AntiAliasing::blendingWeightCalculation(
 /*
  * @megamol::compositing::AntiAliasing::neighborhoodBlending
  */
-void megamol::compositing::AntiAliasing::neighborhoodBlending(
-    const std::shared_ptr<glowl::Texture2D>& input,
-    const std::shared_ptr<glowl::Texture2D>& weights,
-    const std::shared_ptr<glowl::Texture2D>& result)
-{
+void megamol::compositing::AntiAliasing::neighborhoodBlending(const std::shared_ptr<glowl::Texture2D>& input,
+    const std::shared_ptr<glowl::Texture2D>& weights, const std::shared_ptr<glowl::Texture2D>& result) {
     m_smaa_neighborhood_blending_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -549,9 +537,7 @@ void megamol::compositing::AntiAliasing::neighborhoodBlending(
  * @megamol::compositing::AntiAliasing::fxaa
  */
 void megamol::compositing::AntiAliasing::fxaa(
-    const std::shared_ptr<glowl::Texture2D>& input,
-    const std::shared_ptr<glowl::Texture2D>& output)
-{
+    const std::shared_ptr<glowl::Texture2D>& input, const std::shared_ptr<glowl::Texture2D>& output) {
     m_fxaa_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -575,9 +561,7 @@ void megamol::compositing::AntiAliasing::fxaa(
  * @megamol::compositing::AntiAliasing::copyTextureViaShader
  */
 void megamol::compositing::AntiAliasing::copyTextureViaShader(
-    const std::shared_ptr<glowl::Texture2D>& src,
-    const std::shared_ptr<glowl::Texture2D>& tgt)
-{
+    const std::shared_ptr<glowl::Texture2D>& src, const std::shared_ptr<glowl::Texture2D>& tgt) {
     m_copy_prgm->Enable();
 
     glActiveTexture(GL_TEXTURE0);
@@ -605,9 +589,13 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
     auto rhs_call_input = m_input_tex_slot.CallAs<CallTexture2D>();
     auto rhs_call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
 
-    if (lhs_tc == NULL) return false;
-    
-    if(rhs_call_input != NULL) { if (!(*rhs_call_input)(0)) return false; }
+    if (lhs_tc == NULL)
+        return false;
+
+    if (rhs_call_input != NULL) {
+        if (!(*rhs_call_input)(0))
+            return false;
+    }
 
     GLint technique = m_smaa_detection_technique.Param<core::param::EnumParam>()->Value();
     // depth based edge detection requires the depth texture
@@ -616,19 +604,17 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             if (!(*rhs_call_depth)(0)) {
                 return false;
             }
-        }
-        else {
-            core::utility::log::Log::DefaultLog.WriteError("Depth based edge detection for SMAA requires the depth texture of the"
+        } else {
+            core::utility::log::Log::DefaultLog.WriteError(
+                "Depth based edge detection for SMAA requires the depth texture of the"
                 " rendered mesh. Check the depth texture slot.");
             return false;
         }
     }
 
-    bool something_has_changed =
-        (rhs_call_input != NULL ? rhs_call_input->hasUpdate() : false)
-        || m_settings_have_changed
-        || this->m_smaa_detection_technique.IsDirty()
-        || (technique == 2 ? rhs_call_depth->hasUpdate() : false);
+    bool something_has_changed = (rhs_call_input != NULL ? rhs_call_input->hasUpdate() : false) ||
+                                 m_settings_have_changed || this->m_smaa_detection_technique.IsDirty() ||
+                                 (technique == 2 ? rhs_call_depth->hasUpdate() : false);
 
     if (something_has_changed) {
         // get input
@@ -660,17 +646,16 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_smaa_layout.width = input_width;
                 m_smaa_layout.height = input_height;
                 m_edges_tx2D->reload(m_smaa_layout, nullptr);
-                m_blending_weights_tx2D->reload(m_smaa_layout, nullptr); 
+                m_blending_weights_tx2D->reload(m_smaa_layout, nullptr);
             }
 
             // always clear them to guarantee correct textures
-            GLubyte col[4] = { 0, 0, 0, 0 };
+            GLubyte col[4] = {0, 0, 0, 0};
             m_edges_tx2D->clearTexImage(col);
             m_blending_weights_tx2D->clearTexImage(col);
 
-            if (m_smaa_constants.Rt_metrics[2] != input_width
-                || m_smaa_constants.Rt_metrics[3] != input_height
-                || m_settings_have_changed) {
+            if (m_smaa_constants.Rt_metrics[2] != input_width || m_smaa_constants.Rt_metrics[3] != input_height ||
+                m_settings_have_changed) {
                 m_smaa_constants.Rt_metrics = glm::vec4(
                     1.f / (float)input_width, 1.f / (float)input_height, (float)input_width, (float)input_height);
                 m_ssbo_constants->rebuffer(&m_smaa_constants, sizeof(m_smaa_constants));
@@ -679,7 +664,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 #ifdef PROFILING
             m_perf_manager->start_timer(m_timers[0], this->GetCoreInstance()->GetFrameID());
 #endif
-            
+
             // perform smaa!
             edgeDetection(input_tx2D, depth_tx2D, m_edges_tx2D, technique);
             blendingWeightCalculation(m_edges_tx2D, m_area_tx2D, m_search_tx2D, m_blending_weights_tx2D);
@@ -703,7 +688,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         this->m_smaa_detection_technique.ResetDirty();
     }
 
-    
+
     if (lhs_tc->version() < m_version || this->m_smaa_view.IsDirty()) {
         int view = this->m_smaa_view.Param<core::param::EnumParam>()->Value();
 
@@ -732,4 +717,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 /*
  * @megamol::compositing::AntiAliasing::getMetaDataCallback
  */
-bool megamol::compositing::AntiAliasing::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::compositing::AntiAliasing::getMetaDataCallback(core::Call& caller) {
+    return true;
+}

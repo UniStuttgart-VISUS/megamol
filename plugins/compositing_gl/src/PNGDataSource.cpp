@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "PNGDataSource.h"
+#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
@@ -19,13 +19,13 @@
 using namespace megamol;
 using namespace megamol::compositing;
 
-PNGDataSource::PNGDataSource(void) : core::Module()
-    , m_filename_slot("Filename", "Filename to read from")
-    , m_image_width_slot("ImageWidth", "Width of the loaded image")
-    , m_image_height_slot("ImageHeight", "Height of the loaded image")
-    , m_output_tex_slot("Color", "Slot providing the data as Texture2D (RGBA16F)")
-    , m_version(0)
-{
+PNGDataSource::PNGDataSource(void)
+        : core::Module()
+        , m_filename_slot("Filename", "Filename to read from")
+        , m_image_width_slot("ImageWidth", "Width of the loaded image")
+        , m_image_height_slot("ImageHeight", "Height of the loaded image")
+        , m_output_tex_slot("Color", "Slot providing the data as Texture2D (RGBA16F)")
+        , m_version(0) {
     this->m_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_filename_slot);
 
@@ -37,10 +37,8 @@ PNGDataSource::PNGDataSource(void) : core::Module()
     this->m_image_height_slot.Param<megamol::core::param::IntParam>()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->m_image_height_slot);
 
-    this->m_output_tex_slot.SetCallback(
-       CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
-    this->m_output_tex_slot.SetCallback(
-        CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
+    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
+    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 }
 
@@ -55,8 +53,7 @@ bool PNGDataSource::create(void) {
     return true;
 }
 
-void PNGDataSource::release(void) {
-}
+void PNGDataSource::release(void) {}
 
 bool PNGDataSource::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
@@ -75,8 +72,7 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
         std::filesystem::path file_path = m_filename_slot.Param<core::param::FilePathParam>()->Value();
 
         /* The first argument is the file to read: */
-        if (png_image_begin_read_from_file(&image, file_path.string().c_str()) != 0)
-        {
+        if (png_image_begin_read_from_file(&image, file_path.string().c_str()) != 0) {
             size_t buffer_size = 4ULL * image.width * image.height;
             std::vector<unsigned char> image_buffer(buffer_size);
 
@@ -87,10 +83,8 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
             image.format = PNG_FORMAT_RGBA;
 
 
-            if (buffer_size != NULL &&
-                png_image_finish_read(&image, NULL/*background*/, image_buffer.data(),
-                    0/*row_stride*/, NULL/*colormap*/) != 0)
-            {
+            if (buffer_size != NULL && png_image_finish_read(&image, NULL /*background*/, image_buffer.data(),
+                                           0 /*row_stride*/, NULL /*colormap*/) != 0) {
                 std::vector<unsigned char> tx2D_buffer(buffer_size);
 
                 // need to flip image around horizontal axis
@@ -130,4 +124,6 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool PNGDataSource::getMetaDataCallback(core::Call& caller) { return true; }
+bool PNGDataSource::getMetaDataCallback(core::Call& caller) {
+    return true;
+}

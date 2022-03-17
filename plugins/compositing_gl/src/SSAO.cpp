@@ -20,8 +20,8 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
 #include "SSAO.h"
+#include "stdafx.h"
 
 #include <array>
 #include <random>
@@ -50,58 +50,60 @@
  * @megamol::compositing::SSAO::SSAO
  */
 megamol::compositing::SSAO::SSAO()
-    : core::Module()
-    , m_version(0)
-    , m_outputTexSlot("OutputTexture", "Gives access to resulting output texture")
-    , m_normalsTexSlot("NormalTexture", "Connects the normals render target texture")
-    , m_depthTexSlot("DepthTexture", "Connects the depth render target texture")
-    , m_cameraSlot("Camera", "Connects a (copy of) camera state")
-    , m_halfDepths{nullptr, nullptr, nullptr, nullptr}
-    , m_halfDepthsMipViews{}
-    , m_pingPongHalfResultA(nullptr)
-    , m_pingPongHalfResultB(nullptr)
-    , m_finalResults(nullptr)
-    , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
-    , m_normals(nullptr)
-    , m_finalOutput(nullptr)
-    , m_samplerStatePointClamp()
-    , m_samplerStatePointMirror()
-    , m_samplerStateLinearClamp()
-    , m_samplerStateViewspaceDepthTap()
-    , m_depthBufferViewspaceLinearLayout()
-    , m_AOResultLayout()
-    , m_size(0, 0)
-    , m_halfSize(0, 0)
-    , m_quarterSize(0, 0)
-    , m_depthMipLevels(0)
-    , m_inputs(nullptr)
-    , m_maxBlurPassCount(6)
-    , m_ssboConstants(nullptr)
-    , m_settings()
-    , m_psSSAOMode("SSAO", "Specifices which SSAO technqiue should be used: naive SSAO or ASSAO")
-    , m_psRadius("Radius", "Specifies world (view) space size of the occlusion sphere")
-    , m_psShadowMultiplier("ShadowMultiplier", "Specifies effect strength linear multiplier")
-    , m_psShadowPower("ShadowPower", "Specifies the effect strength pow modifier")
-    , m_psShadowClamp("ShadowClamp", "Specifies the effect max limit")
-    , m_psHorizonAngleThreshold("HorizonAngleThreshold", "Specifies the self-shadowing limit")
-    , m_psFadeOutFrom("FadeOutFrom", "Specifies the distance to start fading out the effect")
-    , m_psFadeOutTo("FadeOutTo", "Specifies the distance at which the effect is faded out")
-    , m_psQualityLevel("QualityLevel", "Specifies the ssao effect quality level")
-    , m_psAdaptiveQualityLimit("AdaptiveQualityLimit", "Specifies the adaptive quality limit (only for quality level 3)")
-    , m_psBlurPassCount("BlurPassCount", "Specifies the number of edge-sensitive smart blur passes to apply")
-    , m_psSharpness("Sharpness", "Specifies how much to bleed over edges")
-    , m_psTemporalSupersamplingAngleOffset("TemporalSupersamplingAngleOffset", "Specifies the rotating of the sampling kernel if temporal AA / supersampling is used")
-    , m_psTemporalSupersamplingRadiusOffset("TemporalSupersamplingRadiusOffset", "Specifies the scaling of the sampling kernel if temporal AA / supersampling is used")
-    , m_psDetailShadowStrength("DetailShadowStrength", "Specifies the high-res detail AO using neighboring depth pixels")
-    , m_psSSAORadius("SSAO Radius", "Sets radius for SSAO")
-    , m_psSSAOSampleCnt("SSAO Samples", "Sets the number of samples used SSAO")
-    , m_settingsHaveChanged(false)
-    , m_slotIsActive(false)
-    , m_updateCausedByNormalSlotChange(false)
-{
+        : core::Module()
+        , m_version(0)
+        , m_outputTexSlot("OutputTexture", "Gives access to resulting output texture")
+        , m_normalsTexSlot("NormalTexture", "Connects the normals render target texture")
+        , m_depthTexSlot("DepthTexture", "Connects the depth render target texture")
+        , m_cameraSlot("Camera", "Connects a (copy of) camera state")
+        , m_halfDepths{nullptr, nullptr, nullptr, nullptr}
+        , m_halfDepthsMipViews{}
+        , m_pingPongHalfResultA(nullptr)
+        , m_pingPongHalfResultB(nullptr)
+        , m_finalResults(nullptr)
+        , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
+        , m_normals(nullptr)
+        , m_finalOutput(nullptr)
+        , m_samplerStatePointClamp()
+        , m_samplerStatePointMirror()
+        , m_samplerStateLinearClamp()
+        , m_samplerStateViewspaceDepthTap()
+        , m_depthBufferViewspaceLinearLayout()
+        , m_AOResultLayout()
+        , m_size(0, 0)
+        , m_halfSize(0, 0)
+        , m_quarterSize(0, 0)
+        , m_depthMipLevels(0)
+        , m_inputs(nullptr)
+        , m_maxBlurPassCount(6)
+        , m_ssboConstants(nullptr)
+        , m_settings()
+        , m_psSSAOMode("SSAO", "Specifices which SSAO technqiue should be used: naive SSAO or ASSAO")
+        , m_psRadius("Radius", "Specifies world (view) space size of the occlusion sphere")
+        , m_psShadowMultiplier("ShadowMultiplier", "Specifies effect strength linear multiplier")
+        , m_psShadowPower("ShadowPower", "Specifies the effect strength pow modifier")
+        , m_psShadowClamp("ShadowClamp", "Specifies the effect max limit")
+        , m_psHorizonAngleThreshold("HorizonAngleThreshold", "Specifies the self-shadowing limit")
+        , m_psFadeOutFrom("FadeOutFrom", "Specifies the distance to start fading out the effect")
+        , m_psFadeOutTo("FadeOutTo", "Specifies the distance at which the effect is faded out")
+        , m_psQualityLevel("QualityLevel", "Specifies the ssao effect quality level")
+        , m_psAdaptiveQualityLimit(
+              "AdaptiveQualityLimit", "Specifies the adaptive quality limit (only for quality level 3)")
+        , m_psBlurPassCount("BlurPassCount", "Specifies the number of edge-sensitive smart blur passes to apply")
+        , m_psSharpness("Sharpness", "Specifies how much to bleed over edges")
+        , m_psTemporalSupersamplingAngleOffset("TemporalSupersamplingAngleOffset",
+              "Specifies the rotating of the sampling kernel if temporal AA / supersampling is used")
+        , m_psTemporalSupersamplingRadiusOffset("TemporalSupersamplingRadiusOffset",
+              "Specifies the scaling of the sampling kernel if temporal AA / supersampling is used")
+        , m_psDetailShadowStrength(
+              "DetailShadowStrength", "Specifies the high-res detail AO using neighboring depth pixels")
+        , m_psSSAORadius("SSAO Radius", "Sets radius for SSAO")
+        , m_psSSAOSampleCnt("SSAO Samples", "Sets the number of samples used SSAO")
+        , m_settingsHaveChanged(false)
+        , m_slotIsActive(false)
+        , m_updateCausedByNormalSlotChange(false) {
     this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
-    this->m_outputTexSlot.SetCallback(
-        CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
+    this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_outputTexSlot);
 
     this->m_normalsTexSlot.SetCompatibleCall<CallTexture2DDescription>();
@@ -166,9 +168,9 @@ megamol::compositing::SSAO::SSAO()
     // generally there are quality levels from -1 (lowest) to 3 (highest, adaptive), but 3 (adaptive) is not implemented yet
     this->m_psQualityLevel << new core::param::EnumParam(2);
     this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(-1, "Lowest");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 0, "Low");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 1, "Medium");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 2, "High");
+    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(0, "Low");
+    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(1, "Medium");
+    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(2, "High");
     this->m_psQualityLevel.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psQualityLevel);
 
@@ -288,7 +290,9 @@ bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) 
 /*
  * @megamol::compositing::SSAO::~SSAO
  */
-megamol::compositing::SSAO::~SSAO() { this->Release(); }
+megamol::compositing::SSAO::~SSAO() {
+    this->Release();
+}
 
 
 /*
@@ -373,7 +377,7 @@ bool megamol::compositing::SSAO::create() {
                 return false;
 
             for (int i = 0; i < SSAODepth_MIP_LEVELS - 1; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i+1);
+                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i + 1);
                 std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
                 if (!ssf->MakeShaderSource(identifier.c_str(), csPrepareDepthMip[i]))
                     return false;
@@ -449,14 +453,18 @@ bool megamol::compositing::SSAO::create() {
             Log::DefaultLog.WriteInfo("Compiling: Compositing::ssao");
             if (!ssf->MakeShaderSource("Compositing::ssao", csNaiveSSAO))
                 return false;
-            if (!m_naiveSSAOPrgm->Compile(csNaiveSSAO.Code(), csNaiveSSAO.Count())) return false;
-            if (!m_naiveSSAOPrgm->Link()) return false;
+            if (!m_naiveSSAOPrgm->Compile(csNaiveSSAO.Code(), csNaiveSSAO.Count()))
+                return false;
+            if (!m_naiveSSAOPrgm->Link())
+                return false;
 
             Log::DefaultLog.WriteInfo("Compiling: Compositing::simpleBlur");
             if (!ssf->MakeShaderSource("Compositing::blur", csNaiveSSAOBlur))
                 return false;
-            if (!m_naiveSSAOBlurPrgm->Compile(csNaiveSSAOBlur.Code(), csNaiveSSAOBlur.Count())) return false;
-            if (!m_naiveSSAOBlurPrgm->Link()) return false;
+            if (!m_naiveSSAOBlurPrgm->Compile(csNaiveSSAOBlur.Code(), csNaiveSSAOBlur.Count()))
+                return false;
+            if (!m_naiveSSAOBlurPrgm->Link())
+                return false;
 
             Log::DefaultLog.WriteInfo("Done compiling (a)ssao shaders.");
         }
@@ -630,17 +638,17 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
             ++m_version;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
-            setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
-                // set output texture size to primary input texture
-                std::array<float, 2> texture_res = {
-                    static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
+                setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
+                    // set output texture size to primary input texture
+                    std::array<float, 2> texture_res = {
+                        static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
-                if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                    glowl::TextureLayout tx_layout(
-                        GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-                    tgt->reload(tx_layout, nullptr);
-                }
-            };
+                    if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
+                        glowl::TextureLayout tx_layout(GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res),
+                            1, GL_RGBA, GL_HALF_FLOAT, 1);
+                        tgt->reload(tx_layout, nullptr);
+                    }
+                };
 
             if (callNormal == NULL && m_slotIsActive)
                 return false;
@@ -690,21 +698,21 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                     generateSSAO(m_settings, m_inputs, false, m_normals);
 
                     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                        {m_finalOutput, 0}
-                    };
+                        {m_finalOutput, 0}};
 
                     // Apply
                     {
                         std::vector<TextureArraySamplerTuple> inputFinals = {
-                            {m_finalResults, "g_FinalSSAOLinearClamp", m_samplerStateLinearClamp} };
+                            {m_finalResults, "g_FinalSSAOLinearClamp", m_samplerStateLinearClamp}};
 
                         if (m_settings.QualityLevel < 0)
-                            fullscreenPassDraw <TextureSamplerTuple, glowl::Texture2D>(m_nonSmartHalfApplyPrgm, {}, outputTextures, true, inputFinals);
+                            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                                m_nonSmartHalfApplyPrgm, {}, outputTextures, true, inputFinals);
                         else if (m_settings.QualityLevel == 0)
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                                 m_nonSmartApplyPrgm, {}, outputTextures, true, inputFinals);
                         else {
-                            inputFinals.push_back({ m_finalResults, "g_FinalSSAO", nullptr });
+                            inputFinals.push_back({m_finalResults, "g_FinalSSAO", nullptr});
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                                 m_applyPrgm, {}, outputTextures, true, inputFinals);
                         }
@@ -719,8 +727,10 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
                 m_SSAOSamples->bind(1);
 
-                glUniform1f(m_naiveSSAOPrgm->ParameterLocation("radius"), m_psSSAORadius.Param<core::param::FloatParam>()->Value());
-                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("sample_cnt"), m_psSSAOSampleCnt.Param<core::param::IntParam>()->Value());
+                glUniform1f(m_naiveSSAOPrgm->ParameterLocation("radius"),
+                    m_psSSAORadius.Param<core::param::FloatParam>()->Value());
+                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("sample_cnt"),
+                    m_psSSAOSampleCnt.Param<core::param::IntParam>()->Value());
 
                 glActiveTexture(GL_TEXTURE0);
                 m_normals->bindTexture();
@@ -734,8 +744,10 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
                 auto invViewMx = glm::inverse(viewMx);
                 auto invProjMx = glm::inverse(projMx);
-                glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(invViewMx));
-                glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(invProjMx));
+                glUniformMatrix4fv(
+                    m_naiveSSAOPrgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(invViewMx));
+                glUniformMatrix4fv(
+                    m_naiveSSAOPrgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(invProjMx));
 
                 glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(viewMx));
                 glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(projMx));
@@ -780,12 +792,9 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 /*
  * @megamol::compositing::SSAO::prepareDepths
  */
-void megamol::compositing::SSAO::prepareDepths(
-    const ASSAO_Settings& settings,
-    const std::shared_ptr<ASSAO_Inputs> inputs,
-    std::shared_ptr<glowl::Texture2D> depthTexture,
-    std::shared_ptr<glowl::Texture2D> normalTexture)
-{
+void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
+    std::shared_ptr<glowl::Texture2D> normalTexture) {
     bool generateNormals = inputs->GenerateNormals;
 
     std::vector<TextureSamplerTuple> inputTextures(1);
@@ -851,12 +860,9 @@ void megamol::compositing::SSAO::prepareDepths(
 /*
  * @megamol::compositing::SSAO::generateSSAO
  */
-void megamol::compositing::SSAO::generateSSAO(
-    const ASSAO_Settings& settings,
-    const std::shared_ptr<ASSAO_Inputs> inputs,
-    bool adaptiveBasePass,
-    std::shared_ptr<glowl::Texture2D> normalTexture)
-{
+void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass,
+    std::shared_ptr<glowl::Texture2D> normalTexture) {
 
     // omitted viewport and scissor code from intel here
 
@@ -883,7 +889,7 @@ void megamol::compositing::SSAO::generateSSAO(
                 blurPasses = Max(1, blurPasses);
         } else
 #endif
-        if (settings.QualityLevel <= 0) {
+            if (settings.QualityLevel <= 0) {
             // just one blur pass allowed for minimum quality
             // MM simply uses one blur pass
             blurPasses = std::min(1, settings.BlurPassCount);
@@ -930,8 +936,7 @@ void megamol::compositing::SSAO::generateSSAO(
         if (blurPasses > 0) {
             int wideBlursRemaining = std::max(0, blurPasses - 2);
 
-            for (int i = 0; i < blurPasses; ++i)
-            {
+            for (int i = 0; i < blurPasses; ++i) {
                 GLuint binding = 0;
 
                 std::vector<TextureSamplerTuple> inputTextures = {
@@ -943,43 +948,33 @@ void megamol::compositing::SSAO::generateSSAO(
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> finalOutputTexs = {
                     {m_finalResultsArrayViews[pass], binding}};
 
-                if (settings.QualityLevel > 0)
-                {
-                    if (wideBlursRemaining > 0)
-                    {
-                        if (i == blurPasses - 1)
-                        {
+                if (settings.QualityLevel > 0) {
+                    if (wideBlursRemaining > 0) {
+                        if (i == blurPasses - 1) {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
                                 m_smartBlurWidePrgm, inputTextures, finalOutputTexs);
-                        } else
-                        {
+                        } else {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                                 m_smartBlurWidePrgm, inputTextures, intermediateOutputTexs);
                         }
 
                         wideBlursRemaining--;
-                    } else
-                    {
-                        if (i == blurPasses - 1)
-                        {
+                    } else {
+                        if (i == blurPasses - 1) {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
                                 m_smartBlurPrgm, inputTextures, finalOutputTexs);
-                        } else
-                        {
+                        } else {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                                 m_smartBlurPrgm, inputTextures, intermediateOutputTexs);
                         }
                     }
-                } else
-                {
+                } else {
                     std::get<2>(inputTextures[0]) = m_samplerStateLinearClamp;
 
-                    if (i == blurPasses - 1)
-                    {
+                    if (i == blurPasses - 1) {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
                             m_nonSmartBlurPrgm, inputTextures, finalOutputTexs);
-                    } else
-                    {
+                    } else {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                             m_nonSmartBlurPrgm, inputTextures, intermediateOutputTexs);
                     }
@@ -995,15 +990,15 @@ void megamol::compositing::SSAO::generateSSAO(
 /*
  * @megamol::compositing::SSAO::getMetaDataCallback
  */
-bool megamol::compositing::SSAO::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::compositing::SSAO::getMetaDataCallback(core::Call& caller) {
+    return true;
+}
 
 
 /*
  * @megamol::compositing::SSAO::updateTextures
  */
-void megamol::compositing::SSAO::updateTextures(
-    const std::shared_ptr<ASSAO_Inputs> inputs)
-{
+void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
@@ -1055,10 +1050,7 @@ void megamol::compositing::SSAO::updateTextures(
  * @megamol::compositing::SSAO::updateConstants
  */
 void megamol::compositing::SSAO::updateConstants(
-    const ASSAO_Settings& settings,
-    const std::shared_ptr<ASSAO_Inputs> inputs,
-    int pass)
-{
+    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass) {
     bool generateNormals = inputs->GenerateNormals;
 
     // update constants
@@ -1193,10 +1185,7 @@ void megamol::compositing::SSAO::updateConstants(
  * @megamol::compositing::SSAO::reCreateIfNeeded
  */
 bool megamol::compositing::SSAO::reCreateIfNeeded(
-    std::shared_ptr<glowl::Texture2D> tex,
-    glm::ivec2 size, const glowl::TextureLayout& ly,
-    bool generateMipMaps)
-{
+    std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps) {
     if ((size.x == 0) || (size.y == 0)) {
         // reset object
     } else {
@@ -1224,10 +1213,7 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
  * @megamol::compositing::SSAO::reCreateIfNeeded
  */
 bool megamol::compositing::SSAO::reCreateIfNeeded(
-    std::shared_ptr<glowl::Texture2DArray> tex,
-    glm::ivec2 size,
-    const glowl::TextureLayout& ly)
-{
+    std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
     if ((size.x == 0) || (size.y == 0)) {
 
     } else {
@@ -1251,12 +1237,8 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
 /*
  * @megamol::compositing::SSAO::reCreateArrayIfNeeded
  */
-bool megamol::compositing::SSAO::reCreateArrayIfNeeded(
-    std::shared_ptr<glowl::Texture2DView> tex,
-    std::shared_ptr<glowl::Texture2DArray> original,
-    glm::ivec2 size,
-    int arraySlice)
-{
+bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
+    std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, int arraySlice) {
     if ((size.x == 0) || (size.y == 0)) {
 
     } else {
@@ -1278,10 +1260,7 @@ bool megamol::compositing::SSAO::reCreateArrayIfNeeded(
  * @megamol::compositing::SSAO::reCreateMIPViewIfNeeded
  */
 bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
-    std::shared_ptr<glowl::Texture2DView> current,
-    std::shared_ptr<glowl::Texture2D> original,
-    int mipViewSlice)
-{
+    std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
 
     if (current != nullptr && original != nullptr) {
         glowl::TextureLayout desc = current->getTextureLayout();
@@ -1300,9 +1279,7 @@ bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
  * @megamol::compositing::SSAO::equalLayoutsWithoutSize
  */
 bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
-    const glowl::TextureLayout& lhs,
-    const glowl::TextureLayout& rhs)
-{
+    const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format = lhs.format == rhs.format;
@@ -1318,11 +1295,8 @@ bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
 /*
  * @megamol::compositing::SSAO::equalLayouts
  */
-bool megamol::compositing::SSAO::equalLayouts(
-    const glowl::TextureLayout& lhs,
-    const glowl::TextureLayout& rhs)
-{
-    bool depth            = lhs.depth == rhs.depth;
+bool megamol::compositing::SSAO::equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+    bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format = lhs.format == rhs.format;
     bool height = lhs.height == rhs.height;

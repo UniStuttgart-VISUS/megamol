@@ -7,18 +7,18 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "AntiAliasing.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
 #include "NormalFromDepth.h"
+#include "PNGDataSource.h"
+#include "SSAO.h"
 #include "ScreenSpaceEffect.h"
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
-#include "SSAO.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "AntiAliasing.h"
-#include "PNGDataSource.h"
 
 namespace megamol::compositing {
 class CompositingPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
