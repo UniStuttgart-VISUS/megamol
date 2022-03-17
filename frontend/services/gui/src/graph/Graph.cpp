@@ -1128,7 +1128,8 @@ bool megamol::gui::Graph::PopSyncQueue(QueueAction& out_action, QueueData& out_d
 }
 
 
-megamol::gui::Graph::QueueData megamol::gui::Graph::FindQueueEntryByActionName(QueueAction action, const std::string& name) {
+megamol::gui::Graph::QueueData megamol::gui::Graph::FindQueueEntryByActionName(
+    QueueAction action, const std::string& name) {
 
     for (auto& entry : this->sync_queue) {
         if ((std::get<0>(entry) == action) && (std::get<1>(entry).name_id == name)) {
@@ -1137,7 +1138,6 @@ megamol::gui::Graph::QueueData megamol::gui::Graph::FindQueueEntryByActionName(Q
     }
     return megamol::gui::Graph::QueueData();
 }
-
 
 
 bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
@@ -3220,7 +3220,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     while (iterp != this->profiling_list.end()) {
         const auto m_ptr = iterp->first.lock();
         const auto c_ptr = iterp->second.lock();
-        if ((m_ptr != nullptr && !m_ptr->ShowProfiling()) || (c_ptr != nullptr && !c_ptr->ShowProfiling()) || (c_ptr == nullptr && m_ptr == nullptr)) {
+        if ((m_ptr != nullptr && !m_ptr->ShowProfiling()) || (c_ptr != nullptr && !c_ptr->ShowProfiling()) ||
+            (c_ptr == nullptr && m_ptr == nullptr)) {
             iterp = this->profiling_list.erase(iterp);
         } else {
             iterp++;

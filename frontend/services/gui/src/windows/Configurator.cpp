@@ -495,8 +495,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                                 selected_graph_ptr->ResetStatePointers();
                                 group_ptr->AddModule(module_ptr);
                                 queue_data.rename_id = module_ptr->FullName();
-                                selected_graph_ptr->PushSyncQueue(
-                                    Graph::QueueAction::RENAME_MODULE, queue_data);
+                                selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                             }
                         }
 
@@ -518,7 +517,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         else if (this->show_module_list_popup) {
                             module_ptr->SetScreenPosition(ImGui::GetMousePos());
                         }
-
                     }
                     if (this->show_module_list_popup) {
                         this->show_module_list_popup = false;
