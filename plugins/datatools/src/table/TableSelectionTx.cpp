@@ -1,21 +1,20 @@
-/*
- * TableSelectionTx.cpp
- *
- * Copyright (C) 2020 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "TableSelectionTx.h"
 
 #include <unordered_set>
 
+#include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 
-using namespace megamol::datatools_gl;
-using namespace megamol::datatools_gl::table;
+using namespace megamol::datatools;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 TableSelectionTx::TableSelectionTx()
@@ -35,25 +34,24 @@ TableSelectionTx::TableSelectionTx()
     this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
-    this->flagStorageReadInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->flagStorageReadInSlot.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
     this->MakeSlotAvailable(&this->flagStorageReadInSlot);
 
-    this->flagStorageWriteInSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    this->flagStorageWriteInSlot.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
     this->MakeSlotAvailable(&this->flagStorageWriteInSlot);
 
-    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(),
-        core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetData),
-        &TableSelectionTx::readDataCallback);
-    this->flagStorageReadOutSlot.SetCallback(core_gl::FlagCallRead_GL::ClassName(),
-        core_gl::FlagCallRead_GL::FunctionName(core_gl::FlagCallRead_GL::CallGetMetaData),
+    this->flagStorageReadOutSlot.SetCallback(core::FlagCallRead_CPU::ClassName(),
+        core::FlagCallRead_CPU::FunctionName(core::FlagCallRead_CPU::CallGetData), &TableSelectionTx::readDataCallback);
+    this->flagStorageReadOutSlot.SetCallback(core::FlagCallRead_CPU::ClassName(),
+        core::FlagCallRead_CPU::FunctionName(core::FlagCallRead_CPU::CallGetMetaData),
         &TableSelectionTx::readMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageReadOutSlot);
 
-    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(),
-        core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetData),
+    this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_CPU::ClassName(),
+        core::FlagCallWrite_CPU::FunctionName(core::FlagCallWrite_CPU::CallGetData),
         &TableSelectionTx::writeDataCallback);
-    this->flagStorageWriteOutSlot.SetCallback(core_gl::FlagCallWrite_GL::ClassName(),
-        core_gl::FlagCallWrite_GL::FunctionName(core_gl::FlagCallWrite_GL::CallGetMetaData),
+    this->flagStorageWriteOutSlot.SetCallback(core::FlagCallWrite_CPU::ClassName(),
+        core::FlagCallWrite_CPU::FunctionName(core::FlagCallWrite_CPU::CallGetMetaData),
         &TableSelectionTx::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->flagStorageWriteOutSlot);
 
@@ -103,7 +101,7 @@ void TableSelectionTx::release() {
 }
 
 bool TableSelectionTx::readDataCallback(core::Call& call) {
-    auto* flagsReadOutCall = dynamic_cast<core_gl::FlagCallRead_GL*>(&call);
+    auto* flagsReadOutCall = dynamic_cast<core::FlagCallRead_CPU*>(&call);
     if (flagsReadOutCall == nullptr) {
         return false;
     }
@@ -116,21 +114,20 @@ bool TableSelectionTx::readDataCallback(core::Call& call) {
         return false;
     }
 
-    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_CPU>();
 
-    (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
+    (*flagsReadInCall)(core::FlagCallRead_CPU::CallGetData);
     flagsReadOutCall->setData(flagsReadInCall->getData(), flagsReadInCall->version());
 
     return true;
 }
 
 bool TableSelectionTx::readMetaDataCallback(core::Call& call) {
-    // FlagCall_GL has empty meta data
     return true;
 }
 
 bool TableSelectionTx::writeDataCallback(core::Call& call) {
-    auto* flagsWriteOutCall = dynamic_cast<core_gl::FlagCallWrite_GL*>(&call);
+    auto* flagsWriteOutCall = dynamic_cast<core::FlagCallWrite_CPU*>(&call);
     if (flagsWriteOutCall == nullptr) {
         return false;
     }
@@ -139,10 +136,10 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
         return false;
     }
 
-    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_CPU>();
 
     flagsWriteInCall->setData(flagsWriteOutCall->getData(), flagsWriteOutCall->version());
-    (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
+    (*flagsWriteInCall)(core::FlagCallWrite_CPU::CallGetData);
 
     // Send data
 
@@ -155,10 +152,10 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     bool useColumnAsIndex = this->useColumnAsIndexParam.Param<core::param::BoolParam>()->Value();
     int indexColumn = this->indexColumnParam.Param<core::param::IntParam>()->Value();
 
-    auto flags = flagsWriteOutCall->getData()->flags;
-    size_t numberOfFlags = flags->getByteSize() / sizeof(uint32_t);
-    size_t numberOfRows = tableInCall->GetRowsCount();
-    size_t numberOfCols = tableInCall->GetColumnsCount();
+    const auto& flags = *flagsWriteOutCall->getData()->flags;
+    std::size_t numberOfFlags = flags.size();
+    std::size_t numberOfRows = tableInCall->GetRowsCount();
+    std::size_t numberOfCols = tableInCall->GetColumnsCount();
     auto* tableData = tableInCall->GetData();
 
     if (indexColumn >= numberOfCols) {
@@ -172,10 +169,6 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
         return false;
     }
 
-    std::vector<uint32_t> flagsData(numberOfFlags);
-    flags->bind();
-    glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData.data());
-
     core::FlagStorageTypes::flag_item_type testMask = core::FlagStorageTypes::to_integral(
         core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::FILTERED);
     constexpr core::FlagStorageTypes::flag_item_type passMask =
@@ -183,9 +176,9 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 
     std::unique_lock<std::mutex> lock(selectedMutex_);
     selected_.clear();
-    for (size_t i = 0; i < numberOfRows; ++i) {
-        if ((flagsData[i] & testMask) == passMask) {
-            if (flagsData[i] & core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED)) {
+    for (std::size_t i = 0; i < numberOfRows; ++i) {
+        if ((flags[i] & testMask) == passMask) {
+            if (flags[i] & core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED)) {
                 if (useColumnAsIndex) {
                     selected_.push_back(static_cast<uint64_t>(tableData[indexColumn + i * numberOfCols]));
                 } else {
@@ -204,14 +197,13 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
 }
 
 bool TableSelectionTx::writeMetaDataCallback(core::Call& call) {
-    // FlagCall_GL has empty meta data
     return true;
 }
 
 bool TableSelectionTx::validateCalls() {
     auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
-    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
-    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_CPU>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_CPU>();
 
     if (tableInCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx requires a table!");
@@ -243,8 +235,8 @@ bool TableSelectionTx::validateSelectionUpdate() {
         return true;
     }
 
-    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core_gl::FlagCallRead_GL>();
-    (*flagsReadInCall)(core_gl::FlagCallRead_GL::CallGetData);
+    auto* flagsReadInCall = this->flagStorageReadInSlot.CallAs<core::FlagCallRead_CPU>();
+    (*flagsReadInCall)(core::FlagCallRead_CPU::CallGetData);
     auto flagCollection = flagsReadInCall->getData();
     auto version = flagsReadInCall->version();
 
@@ -253,7 +245,7 @@ bool TableSelectionTx::validateSelectionUpdate() {
     (*tableInCall)(1);
     (*tableInCall)(0);
 
-    size_t numberOfRows = tableInCall->GetRowsCount();
+    std::size_t numberOfRows = tableInCall->GetRowsCount();
 
     core::FlagStorageTypes::flag_vector_type flags_data(
         numberOfRows, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
@@ -267,7 +259,7 @@ bool TableSelectionTx::validateSelectionUpdate() {
         }
     } else {
         // Select received values
-        size_t numberOfCols = tableInCall->GetColumnsCount();
+        std::size_t numberOfCols = tableInCall->GetColumnsCount();
         auto* tableData = tableInCall->GetData();
         int indexColumn = this->indexColumnParam.Param<core::param::IntParam>()->Value();
         if (indexColumn >= numberOfCols) {
@@ -281,7 +273,7 @@ bool TableSelectionTx::validateSelectionUpdate() {
             s.insert(static_cast<float>(id));
         }
 
-        for (size_t i = 0; i < numberOfRows; i++) {
+        for (std::size_t i = 0; i < numberOfRows; i++) {
             float value = tableData[indexColumn + i * numberOfCols];
             if (s.find(value) != s.end()) {
                 flags_data[i] |= core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::SELECTED);
@@ -289,12 +281,11 @@ bool TableSelectionTx::validateSelectionUpdate() {
         }
     }
 
-    flagCollection->flags =
-        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, flags_data, GL_DYNAMIC_DRAW);
+    *flagCollection->flags = flags_data;
 
-    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto* flagsWriteInCall = this->flagStorageWriteInSlot.CallAs<core::FlagCallWrite_CPU>();
     flagsWriteInCall->setData(flagCollection, version + 1);
-    (*flagsWriteInCall)(core_gl::FlagCallWrite_GL::CallGetData);
+    (*flagsWriteInCall)(core::FlagCallWrite_CPU::CallGetData);
 
     return true;
 }
@@ -338,7 +329,7 @@ void TableSelectionTx::selectionReceiver() {
         try {
             zmq::message_t request;
             socket.recv(request, zmq::recv_flags::none);
-            size_t size = request.size() / sizeof(uint64_t);
+            std::size_t size = request.size() / sizeof(uint64_t);
 
             if (size > 0) {
                 std::lock_guard<std::mutex> lock(receivedSelectionMutex_);
