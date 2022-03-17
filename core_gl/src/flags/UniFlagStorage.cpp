@@ -11,6 +11,7 @@
 #include "OpenGL_Context.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/flags/FlagCalls.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -101,13 +102,15 @@ bool UniFlagStorage::writeGLDataCallback(core::Call& caller) {
         this->version = fc->version();
         cpu_stale = true;
 
-        // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
-        // see compress_bitflags.comp.glsl (never tested yet!)
-        // -> replace the whole block below with serializeData()
-        // actually with TBB performance is fine already haha
-        GL2CPUCopy();
-        cpu_stale = false; // on purpose!
-        serializeCPUData();
+        if (!skipFlagsSerializationParam.Param<core::param::BoolParam>()->Value()) {
+            // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
+            // see compress_bitflags.comp.glsl (never tested yet!)
+            // -> replace the whole block below with serializeData()
+            // actually with TBB performance is fine already haha
+            GL2CPUCopy();
+            cpu_stale = false; // on purpose!
+            serializeCPUData();
+        }
     }
     return true;
 }

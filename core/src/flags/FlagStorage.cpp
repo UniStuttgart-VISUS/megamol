@@ -11,6 +11,7 @@
 #include "FlagStorageBitsChecker.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/flags/FlagCalls.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 
 using namespace megamol;
@@ -20,6 +21,7 @@ using namespace megamol::core;
 FlagStorage::FlagStorage()
         : readCPUFlagsSlot("readCPUFlags", "Provides flag data to clients.")
         , writeCPUFlagsSlot("writeCPUFlags", "Accepts updated flag data from clients.")
+        , skipFlagsSerializationParam("skipFlagsSerialization", "Disable serialization of flags.")
         , serializedFlags("serializedFlags", "persists the flags in projects") {
 
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
@@ -33,6 +35,9 @@ FlagStorage::FlagStorage()
     this->writeCPUFlagsSlot.SetCallback(FlagCallWrite_CPU::ClassName(),
         FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetMetaData), &FlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeCPUFlagsSlot);
+
+    this->skipFlagsSerializationParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->skipFlagsSerializationParam);
 
     this->serializedFlags << new core::param::StringParam("");
     this->serializedFlags.SetUpdateCallback(&FlagStorage::onJSONChanged);
@@ -141,6 +146,10 @@ FlagStorageTypes::index_type FlagStorage::array_max(const nlohmann::json& json) 
 
 
 void FlagStorage::serializeCPUData() {
+    if (skipFlagsSerializationParam.Param<core::param::BoolParam>()->Value()) {
+        return;
+    }
+
     const auto& cdata = theCPUData->flags;
 
     FlagStorageTypes::index_vector enabled_starts, enabled_ends;
@@ -189,6 +198,10 @@ void FlagStorage::serializeCPUData() {
 }
 
 void FlagStorage::deserializeCPUData() {
+    if (skipFlagsSerializationParam.Param<core::param::BoolParam>()->Value()) {
+        return;
+    }
+
     try {
         auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value());
         FlagStorageTypes::index_type num_flags = 10;

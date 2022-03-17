@@ -118,6 +118,7 @@ protected:
     /** The slot for writing the data */
     core::CalleeSlot writeCPUFlagsSlot;
 
+    core::param::ParamSlot skipFlagsSerializationParam;
     core::param::ParamSlot serializedFlags;
 
     std::shared_ptr<FlagCollection_CPU> theCPUData;
