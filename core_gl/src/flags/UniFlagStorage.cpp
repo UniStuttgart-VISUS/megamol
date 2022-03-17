@@ -62,10 +62,7 @@ bool UniFlagStorage::create() {
     }
 
     this->theGLData = std::make_shared<FlagCollection_GL>();
-    core::FlagStorageTypes::flag_vector_type temp_data(
-        num, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
-    this->theGLData->flags =
-        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
+    this->theGLData->validateFlagCount(num);
 
     core::FlagStorage::create();
     return true;
@@ -139,7 +136,7 @@ bool UniFlagStorage::writeCPUDataCallback(core::Call& caller) {
 }
 
 void UniFlagStorage::serializeGLData() {
-    this->theGLData->flags->bind();
+    this->theGLData->flags->bind(GL_SHADER_STORAGE_BUFFER);
     megamol::core::utility::log::Log::DefaultLog.WriteError(
         "UniFlagStorage::serializeData: not implemented! If you see this, you have a problem.");
     // TODO allocate the buffers
@@ -159,8 +156,10 @@ bool UniFlagStorage::onJSONChanged(core::param::ParamSlot& slot) {
 }
 
 void UniFlagStorage::CPU2GLCopy() {
-    theGLData->validateFlagCount(theCPUData->flags->size());
-    theGLData->flags->bufferSubData(*(theCPUData->flags));
+    const auto& flags = *theCPUData->flags;
+    theGLData->validateFlagCount(flags.size());
+    glNamedBufferSubData(
+        theGLData->flags->getName(), 0, flags.size() * sizeof(core::FlagStorageTypes::flag_item_type), flags.data());
 }
 
 void UniFlagStorage::GL2CPUCopy() {

@@ -126,7 +126,7 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
             readFlagsCall->getData()->validateFlagCount(color_texture->getWidth() * color_texture->getHeight());
             m_last_tex_size = glm::ivec2(color_texture->getWidth(), color_texture->getHeight());
         }
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
     }
 
     glEnable(GL_DEPTH_TEST);

@@ -122,7 +122,7 @@ bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
 
         bindCommon(calcHistogramProgram_);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, floatDataBuffer_);
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
         calcHistogramProgram_->setUniform("numRows", static_cast<GLuint>(numRows_));
 
@@ -146,7 +146,7 @@ void TableHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int 
 
         bindCommon(selectionProgram_);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, floatDataBuffer_);
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
         selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows_));
         selectionProgram_->setUniform(

@@ -2237,7 +2237,7 @@ bool SphereRenderer::enableFlagStorage(const vislib_gl::graphics::gl::GLSLShader
             flagc->getData()->validateFlagCount(partsCount);
         }
     }
-    flagc->getData()->flags->bind(SSBOflagsBindingPoint);
+    flagc->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint);
     this->flags_enabled = true;
 
     return true;
