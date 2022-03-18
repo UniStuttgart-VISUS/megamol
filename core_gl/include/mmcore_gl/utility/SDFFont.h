@@ -1,31 +1,21 @@
-/*
- * SDFFont.h
- *
- * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
- * Alle Rechte vorbehalten.
- *
- * This implementation is based on "vislib/graphics/OutlinetFont.h"
+/**
+ * MegaMol
+ * Copyright (c) 2006, MegaMol Dev Team
+ * All rights reserved.
  */
+// This implementation is based on "vislib/graphics/OutlinetFont.h"
 
-#ifndef MEGAMOL_SDFFONT_H_INCLUDED
-#define MEGAMOL_SDFFONT_H_INCLUDED
-
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <memory>
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#include <glm/glm.hpp>
-
-
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * -----------------------------------------------------------------------------------------------------------------
@@ -125,7 +115,7 @@ namespace utility {
  * -----------------------------------------------------------------------------------------------------------------
  */
 
-class MEGAMOLCORE_API SDFFont {
+class SDFFont {
 public:
     // clang-format off
 
@@ -328,6 +318,14 @@ public:
          */
         inline bool GetBatchDrawMode(void) const {
             return this->batchDrawMode;
+        }
+
+        inline void SetSmoothMode(bool state) {
+            this->smoothMode = state;
+        }
+
+        inline bool GetSmoothMode() const {
+            return this->smoothMode;
         }
 
         /**
@@ -558,6 +556,9 @@ public:
         /** String batch cache status. */
         bool batchDrawMode;
 
+        /** Smooth mode. TODO 'off' only works with renderMode filled. */
+        bool smoothMode;
+
         /** Quaternion for font rotation. */
         glm::quat rotation;
 
@@ -574,8 +575,8 @@ public:
         // Render data --------------------------------------------------------
 
         /** The shaders of the font for different color modes. */
-        vislib_gl::graphics::gl::GLSLShader shaderglobcol;
-        vislib_gl::graphics::gl::GLSLShader shadervertcol;
+        std::shared_ptr<glowl::GLSLProgram> shaderglobcol;
+        std::shared_ptr<glowl::GLSLProgram> shadervertcol;
 
         /** The texture of the font. */
         std::shared_ptr<glowl::Texture2D> texture;
@@ -649,7 +650,7 @@ public:
 
         bool loadFontInfo(vislib::StringW filename);
 
-        bool loadFontShader(megamol::core_gl::utility::ShaderSourceFactory &shader_factory);
+        bool loadFontShader(megamol::core::CoreInstance* core_instance_ptr);
 
         /**
         * Answer the number of lines in the glyph run
@@ -723,12 +724,7 @@ public:
             return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
         }
 
-        //clang-format on
-    };
+    // clang-format on
+};
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_SDFFONT_H_INCLUDED */
-
+} // namespace megamol::core::utility

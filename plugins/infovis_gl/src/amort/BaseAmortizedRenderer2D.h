@@ -1,5 +1,10 @@
-#ifndef MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
-#define MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -10,8 +15,7 @@
 
 #include "Renderer2D.h"
 
-namespace megamol {
-namespace infovis_gl {
+namespace megamol::infovis_gl {
 
 class BaseAmortizedRenderer2D : public Renderer2D {
 public:
@@ -51,7 +55,4 @@ private:
     megamol::core::CallerSlot nextRendererSlot;
     core::param::ParamSlot enabledParam;
 };
-} // namespace infovis_gl
-} // namespace megamol
-
-#endif // MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+} // namespace megamol::infovis_gl
