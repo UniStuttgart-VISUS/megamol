@@ -11,12 +11,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Color.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "slicing.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -75,20 +77,11 @@ public:
     virtual ~MoleculeVolumeCudaRenderer(void);
 
     /**********************************************************************
-     * 'get'-functions
-     **********************************************************************/
-
-    /** Get the color of a certain atom of the protein. */
-    const float* GetAtomColor(unsigned int idx) {
-        return &this->atomColorTable[idx * 3];
-    };
-
-    /**********************************************************************
      * 'set'-functions
      **********************************************************************/
 
     /** Set current coloring mode */
-    inline void SetColoringMode(Color::ColoringMode cm) {
+    inline void SetColoringMode(protein_calls::ProteinColor::ColoringMode cm) {
         currentColoringMode = cm;
     };
 
@@ -244,7 +237,7 @@ private:
     vislib_gl::graphics::gl::GLSLShader colorWriterShader;
 
     // current coloring mode
-    Color::ColoringMode currentColoringMode;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode;
 
     // attribute locations for GLSL-Shader
     GLint attribLocInParams;
@@ -255,11 +248,12 @@ private:
     // color table for amino acids
     vislib::Array<vislib::math::Vector<float, 3>> aminoAcidColorTable;
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
     /** color table for protein atoms */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
 
     // the Id of the current frame (for dynamic data)
     unsigned int currentFrameId;

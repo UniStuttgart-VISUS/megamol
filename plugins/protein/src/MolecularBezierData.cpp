@@ -12,7 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/graphics/NamedColours.h"
@@ -55,15 +55,17 @@ MolecularBezierData::MolecularBezierData(void)
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    core::param::EnumParam* colMode1 = new core::param::EnumParam(static_cast<int>(Color::ColoringMode::STRUCTURE));
-    core::param::EnumParam* colMode2 = new core::param::EnumParam(static_cast<int>(Color::ColoringMode::BFACTOR));
+    core::param::EnumParam* colMode1 =
+        new core::param::EnumParam(static_cast<int>(ProteinColor::ColoringMode::SECONDARY_STRUCTURE));
+    core::param::EnumParam* colMode2 =
+        new core::param::EnumParam(static_cast<int>(ProteinColor::ColoringMode::BFACTOR));
 
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
-    for (unsigned int cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        Color::ColoringMode cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        colMode1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        colMode2->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    for (unsigned int cCnt = 0; cCnt < static_cast<uint32_t>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        ProteinColor::ColoringMode cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        colMode1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        colMode2->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
 
     this->color1Slot << colMode1;
@@ -98,8 +100,8 @@ MolecularBezierData::~MolecularBezierData(void) {
  * MolecularBezierData::create
  */
 bool MolecularBezierData::create(void) {
-    Color::ReadColorTableFromFile(nullptr, this->colorLookupTable);
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::ReadColorTableFromFile(std::string(), this->fileLookupTable);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
     return true;
 }
 
@@ -234,15 +236,16 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
     size_t cnt = 0;
 
     const float col_mix = this->colorMixSlot.Param<core::param::FloatParam>()->Value();
-    Color::MakeColorTable(&dat,
-        static_cast<Color::ColoringMode>(this->color1Slot.Param<core::param::EnumParam>()->Value()),
-        static_cast<Color::ColoringMode>(this->color2Slot.Param<core::param::EnumParam>()->Value()),
-        col_mix,        // blending factor between both color maps
-        1.0f - col_mix, //
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorSlot.Param<core::param::ColorParam>()->Value(),
-        this->mixGradColorSlot.Param<core::param::ColorParam>()->Value(),
-        this->maxGradColorSlot.Param<core::param::ColorParam>()->Value(), true);
+
+    this->colorLookupTable = {glm::make_vec3(this->minGradColorSlot.Param<core::param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->mixGradColorSlot.Param<core::param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->maxGradColorSlot.Param<core::param::ColorParam>()->Value().data())};
+
+    ProteinColor::MakeWeightedColorTable(dat,
+        static_cast<ProteinColor::ColoringMode>(this->color1Slot.Param<core::param::EnumParam>()->Value()),
+        static_cast<ProteinColor::ColoringMode>(this->color2Slot.Param<core::param::EnumParam>()->Value()), col_mix,
+        1.0f - col_mix, this->atomColorTable, this->colorLookupTable, this->fileLookupTable, this->rainbowColors,
+        nullptr, nullptr, true);
 
     for (unsigned int mi = 0; mi < dat.MoleculeCount(); mi++) {
         std::vector<const float*> poss;
@@ -276,7 +279,7 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
 
                 poss.push_back(dat.AtomPositions() + (ca * 3));
                 rads.push_back(rad);
-                cols.push_back(atomColorTable.PeekElements() + (ca * 3));
+                cols.push_back(&atomColorTable[0].x + (ca * 3));
             }
         }
 

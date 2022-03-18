@@ -6,8 +6,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -40,7 +40,7 @@ BindingSiteDataSource::BindingSiteDataSource(void)
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam("colors.txt", core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
-    Color::ReadColorTableFromFile(
+    ProteinColor::ReadColorTableFromFile(
         this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
 
     this->enzymeModeParam.SetParameter(new param::BoolParam(false));
@@ -82,7 +82,7 @@ bool BindingSiteDataSource::getData(Call& call) {
 
     // read and update the color table, if necessary
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
+        ProteinColor::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->enzymeModeParam.ResetDirty();
@@ -104,7 +104,8 @@ bool BindingSiteDataSource::getData(Call& call) {
         site->SetBindingSiteDescriptions(&this->bindingSiteDescription);
         site->SetBindingSiteResNames(&this->bindingSiteResNames);
         site->SetBindingSite(&this->bindingSites);
-        site->SetBindingSiteColors(&this->bindingSiteColors);
+        site->SetBindingSiteColors(
+            reinterpret_cast<vislib::Array<vislib::math::Vector<float, 3>>*>(&this->bindingSiteColors));
         site->SetEnzymeMode(this->enzymeModeParam.Param<param::BoolParam>()->Value());
         site->SetGXTypeFlag(this->gxTypeFlag.Param<param::BoolParam>()->Value());
         return true;
@@ -234,11 +235,11 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
         }
         // get binding site descriptons and set colors
         this->bindingSiteDescription.SetCount(this->bindingSiteNames.Count());
-        this->bindingSiteColors.SetCount(this->bindingSiteNames.Count());
+        this->bindingSiteColors.resize(this->bindingSiteNames.Count());
         for (unsigned int i = 0; i < this->bindingSiteNames.Count(); i++) {
             this->bindingSiteDescription[i] =
                 this->ExtractBindingSiteDescripton(this->bindingSiteNames[i], remarkEntries);
-            this->bindingSiteColors[i] = this->colorLookupTable[i % this->colorLookupTable.Count()];
+            this->bindingSiteColors[i] = this->colorLookupTable[i % this->colorLookupTable.size()];
         }
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG

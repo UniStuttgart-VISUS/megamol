@@ -17,7 +17,7 @@
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include <queue>
+#include <list>
 
 
 namespace megamol {
@@ -107,10 +107,9 @@ public:
 
     bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
     bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
+    QueueData FindQueueEntryByActionName(QueueAction action, const std::string& name);
     inline void ClearSyncQueue() {
-        while (!this->sync_queue.empty()) {
-            this->sync_queue.pop();
-        }
+        this->sync_queue.clear();
     }
 
     inline bool IsRunning() const {
@@ -179,7 +178,7 @@ public:
 
 private:
     typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
-    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::list<SyncQueueData_t> SyncQueue_t;
 
     // VARIABLES --------------------------------------------------------------
 

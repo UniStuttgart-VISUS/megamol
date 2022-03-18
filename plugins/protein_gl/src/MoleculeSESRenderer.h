@@ -18,10 +18,10 @@
 #include "mmcore/view/Camera.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "protein/Color.h"
 #include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
@@ -272,7 +272,7 @@ private:
     // radius of the probe atom
     float probeRadius;
 
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
     unsigned int currentArray;
 
     /** 'true' if the data for the current render mode is computed, 'false' otherwise */
@@ -281,8 +281,8 @@ private:
     uint32_t atomCount_;
 
     /** The current coloring mode */
-    protein::Color::ColoringMode currentColoringMode0;
-    protein::Color::ColoringMode currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     /** vertex and attribute arrays for raycasting the tori */
     std::vector<vislib::Array<float>> torusVertexArray;
@@ -312,9 +312,10 @@ private:
     unsigned int height;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     // texture for singularity handling (concave triangles)
     std::vector<GLuint> singularityTexture;

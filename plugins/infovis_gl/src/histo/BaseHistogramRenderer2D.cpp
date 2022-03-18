@@ -145,23 +145,14 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         updateSelection(selectionMode_, selectedComponent_, selectedBin_);
     }
 
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
     // get camera
     core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
-    std::copy(glm::value_ptr(view), glm::value_ptr(view) + 16, &modelViewMatrix_column[0]);
-    std::copy(glm::value_ptr(proj), glm::value_ptr(proj) + 16, &projMatrix_column[0]);
+    const auto viewMx = cam.getViewMatrix();
+    const auto projMx = cam.getProjectionMatrix();
 
     drawHistogramProgram_->use();
-    glUniformMatrix4fv(drawHistogramProgram_->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(drawHistogramProgram_->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    drawHistogramProgram_->setUniform("modelView", viewMx);
+    drawHistogramProgram_->setUniform("projection", projMx);
 
     bindCommon(drawHistogramProgram_);
     tfCall->BindConvenience(drawHistogramProgram_, GL_TEXTURE0, 0);
@@ -179,8 +170,8 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     glUseProgram(0);
 
     drawAxesProgram_->use();
-    glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    drawAxesProgram_->setUniform("modelView", viewMx);
+    drawAxesProgram_->setUniform("projection", projMx);
     drawAxesProgram_->setUniform("componentTotalSize", 12.0f, 14.0f);
     drawAxesProgram_->setUniform("componentDrawSize", 10.0f, 10.0f);
     drawAxesProgram_->setUniform("componentDrawOffset", 1.0f, 2.0f);
@@ -197,7 +188,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
+    glm::mat4 ortho = projMx * viewMx;
 
     for (std::size_t c = 0; c < numComponents_; ++c) {
         float posX = 12.0f * static_cast<float>(c) + 6.0f;
@@ -265,13 +256,7 @@ bool BaseHistogramRenderer2D::OnMouseButton(
 }
 
 bool BaseHistogramRenderer2D::OnMouseMove(double x, double y) {
-    auto cam_pose = camera_.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = camera_.get<core::view::Camera::OrthographicParameters>();
-    float world_x = ((static_cast<float>(x) * 2.0f / static_cast<float>(viewRes_.x)) - 1.0f);
-    float world_y = 1.0f - (static_cast<float>(y) * 2.0f / static_cast<float>(viewRes_.y));
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
-
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, camera_, viewRes_.x, viewRes_.y);
     mouseX_ = world_x;
     mouseY_ = world_y;
     return false;
