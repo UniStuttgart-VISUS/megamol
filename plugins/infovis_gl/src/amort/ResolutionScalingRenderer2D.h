@@ -83,9 +83,7 @@ private:
     int samplingSequencePosition_;
     std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
-    glm::mat4 shiftMx_;
-    glm::mat4 lastProjViewMx_;
-    glm::mat4 currentProjViewMx_;
-    glm::mat4 inversePVMx_;
+    glm::mat4 viewProjMx_;
+    glm::mat4 lastViewProjMx_;
 };
 } // namespace megamol::infovis_gl

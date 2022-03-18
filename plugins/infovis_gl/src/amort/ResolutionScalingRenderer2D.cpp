@@ -62,15 +62,15 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         },
         {});
-    
 
     texRead_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texWrite_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexR", distTexLayout_, nullptr);
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
+
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteError("GL_ERROR in BaseAmortizedRenderer2D: %i", err);
+        Log::DefaultLog.WriteError("GL_ERROR in ResolutionScalingRenderer2D: %i", err);
     }
 
     return true;
@@ -109,8 +109,8 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
 }
 
 void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
-    shiftMx_ = glm::mat4(1.0f);
-    lastProjViewMx_ = glm::mat4(1.0f);
+    viewProjMx_ = glm::mat4(1.0f);
+    lastViewProjMx_ = glm::mat4(1.0f);
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
@@ -123,36 +123,38 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     lowResFBO_->resize(static_cast<int>(std::ceil(static_cast<float>(w) / static_cast<float>(a))),
         static_cast<int>(std::ceil(static_cast<float>(h) / static_cast<float>(a))));
 
-    const std::vector<uint32_t> nullData(2 * w * h, 0); // Only fits RG32F
-
     texLayout_.width = w;
     texLayout_.height = h;
-    texRead_ = std::make_unique<glowl::Texture2D>("texRead", texLayout_, nullData.data());
-    texWrite_ = std::make_unique<glowl::Texture2D>("texWrite", texLayout_, nullData.data());
+    const std::vector<uint32_t> zeroData(w * h, 0); // uin32_t <=> RGBA8.
+    texRead_ = std::make_unique<glowl::Texture2D>("texRead", texLayout_, zeroData.data());
+    texWrite_ = std::make_unique<glowl::Texture2D>("texWrite", texLayout_, zeroData.data());
 
     distTexLayout_.width = w;
     distTexLayout_.height = h;
-    distTexRead_ = std::make_unique<glowl::Texture2D>("distTexRead", distTexLayout_, nullData.data());
-    distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexWrite", distTexLayout_, nullData.data());
+    const std::vector<float> posInit(2 * w * h, std::numeric_limits<float>::lowest()); // RG32F
+    distTexRead_ = std::make_unique<glowl::Texture2D>("distTexRead", distTexLayout_, posInit.data());
+    distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexWrite", distTexLayout_, posInit.data());
 
-    samplingSequence_ = std::vector<int>(0);
-    
-    int patternExp = ceil(log2(a));
+    samplingSequence_.clear();
 
-    int patternOffsetsX[] = {0,1,0,1};
-    int patternOffsetsY[] = {0, 1, 1, 0};
-    int test = pow(2, 2 * patternExp);
-    for (int i = 0; i < int(pow(2, 2 * patternExp)); i++) {
+    const int nextPowerOfTwoExp = static_cast<int>(std::ceil(std::log2(a)));
+    const int nextPowerOfTwoVal = static_cast<int>(std::pow(2, nextPowerOfTwoExp));
+
+    std::array<std::array<int, 2>, 4> offsetPattern{{{0, 0}, {1, 1}, {0, 1}, {1, 0}}};
+    std::vector<int> offsetLength(nextPowerOfTwoExp, 0);
+    for (int i = 0; i < nextPowerOfTwoExp; i++) {
+        offsetLength[i] = static_cast<int>(std::pow(2, nextPowerOfTwoExp - i - 1));
+    }
+
+    for (int i = 0; i < nextPowerOfTwoVal * nextPowerOfTwoVal; i++) {
         int x = 0;
         int y = 0;
-        for (int j = 0; j < patternExp; j++) {
-            int t = pow(2, patternExp - j -1);
-            int levelIndex = int(i / (pow(4,j))) % 4;
-            x += patternOffsetsX[levelIndex] * t;
-            y += patternOffsetsY[levelIndex] * t;
+        for (int j = 0; j < nextPowerOfTwoExp; j++) {
+            const int levelIndex = (i / static_cast<int>(std::pow(4, j))) % 4;
+            x += offsetPattern[levelIndex][0] * offsetLength[j];
+            y += offsetPattern[levelIndex][1] * offsetLength[j];
         }
         if (x < a && y < a) {
-            
             samplingSequence_.push_back(x + y * a);
         }
     }
@@ -162,15 +164,12 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
-    auto const projViewMx = cam.getProjectionMatrix() * cam.getViewMatrix();
-    currentProjViewMx_ = projViewMx;
+    lastViewProjMx_ = viewProjMx_;
+    viewProjMx_ = cam.getProjectionMatrix() * cam.getViewMatrix();
 
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets_[frameIdx_].x,
         -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0f);
-
-    inversePVMx_ = inverse(projViewMx);
-    shiftMx_ = lastProjViewMx_ * inversePVMx_;
 
     auto p = cam.get<core::view::Camera::Pose>();
     p.position = p.position + 0.5f * adj_offset;
@@ -203,13 +202,10 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     shader_->setUniform("resolution", w, h);
     shader_->setUniform("lowResResolution", lowResFBO_->getWidth(), lowResFBO_->getHeight());
     shader_->setUniform("frameIdx", frameIdx_);
-    shader_->setUniform("shiftMx", shiftMx_);
-    shader_->setUniform("inversePVMx", inversePVMx_);
-    shader_->setUniform("PVMx", currentProjViewMx_);
-    shader_->setUniform("lastPVMx", lastProjViewMx_);
+    shader_->setUniform("invViewProjMx", glm::inverse(viewProjMx_));
+    shader_->setUniform("lastViewProjMx", lastViewProjMx_);
     shader_->setUniform(
         "skipInterpolation", static_cast<int>(skipInterpolationParam.Param<core::param::BoolParam>()->Value()));
-    lastProjViewMx_ = currentProjViewMx_;
 
     glActiveTexture(GL_TEXTURE0);
     lowResFBO_->bindColorbuffer(0);
@@ -220,7 +216,7 @@ void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::Framebuffer
     distTexRead_->bindImage(2, GL_READ_ONLY);
     distTexWrite_->bindImage(3, GL_WRITE_ONLY);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glUseProgram(0);
 
