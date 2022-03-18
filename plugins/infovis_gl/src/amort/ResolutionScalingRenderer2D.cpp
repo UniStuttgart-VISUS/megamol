@@ -53,7 +53,7 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         },
         {});
-    distTexLayout_ = glowl::TextureLayout(GL_RG32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    distTexLayout_ = glowl::TextureLayout(GL_RG32F, 1, 1, 1, GL_RG, GL_FLOAT, 1,
         {
             {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -62,12 +62,12 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         },
         {});
+    
 
     texRead_ = std::make_unique<glowl::Texture2D>("texStoreA", texLayout_, nullptr);
     texWrite_ = std::make_unique<glowl::Texture2D>("texStoreB", texLayout_, nullptr);
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexR", distTexLayout_, nullptr);
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexW", distTexLayout_, nullptr);
-
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
         Log::DefaultLog.WriteError("GL_ERROR in BaseAmortizedRenderer2D: %i", err);
@@ -123,7 +123,7 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     lowResFBO_->resize(static_cast<int>(std::ceil(static_cast<float>(w) / static_cast<float>(a))),
         static_cast<int>(std::ceil(static_cast<float>(h) / static_cast<float>(a))));
 
-    const std::vector<uint32_t> nullData(w * h, 0); // Fits for RGBA8 and R32F
+    const std::vector<uint32_t> nullData(2 * w * h, 0); // Only fits RG32F
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -135,12 +135,28 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexRead", distTexLayout_, nullData.data());
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexWrite", distTexLayout_, nullData.data());
 
-    samplingSequence_ = std::vector<int>(a * a);
-    samplingSequence_[0] = 0;
-    // samplingSequence_[0] = (a / 2) * (a + 1); // Alternative to start in the center of a block.
-    for (int i = 1; i < a * a; i++) {
-        samplingSequence_[i] = (samplingSequence_[i - 1] + (a + 1) * (a + 1)) % (a * a);
+    samplingSequence_ = std::vector<int>(0);
+    
+    int patternExp = ceil(log2(a));
+
+    int patternOffsetsX[] = {0,1,0,1};
+    int patternOffsetsY[] = {0, 1, 1, 0};
+    int test = pow(2, 2 * patternExp);
+    for (int i = 0; i < int(pow(2, 2 * patternExp)); i++) {
+        int x = 0;
+        int y = 0;
+        for (int j = 0; j < patternExp; j++) {
+            int t = pow(2, patternExp - j -1);
+            int levelIndex = int(i / (pow(4,j))) % 4;
+            x += patternOffsetsX[levelIndex] * t;
+            y += patternOffsetsY[levelIndex] * t;
+        }
+        if (x < a && y < a) {
+            
+            samplingSequence_.push_back(x + y * a);
+        }
     }
+
     samplingSequencePosition_ = 0;
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
 }
