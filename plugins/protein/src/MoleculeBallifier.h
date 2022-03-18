@@ -11,11 +11,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/RawStorage.h"
 
 namespace megamol {
@@ -54,12 +56,13 @@ private:
     megamol::core::param::ParamSlot maxGradColorParam_;
     megamol::core::param::ParamSlot specialColorParam_;
 
-    protein::Color::ColoringMode curColoringMode0_;
-    protein::Color::ColoringMode curColoringMode1_;
+    protein_calls::ProteinColor::ColoringMode curColoringMode0_;
+    protein_calls::ProteinColor::ColoringMode curColoringMode1_;
 
-    vislib::Array<float> colorArray_;
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable_;
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors_;
+    std::vector<glm::vec3> colorArray_;
+    std::vector<glm::vec3> colorLookupTable_;
+    std::vector<glm::vec3> fileLookupTable_;
+    std::vector<glm::vec3> rainbowColors_;
 
     SIZE_T inHash, outHash;
     vislib::RawStorage data;

@@ -10,7 +10,7 @@
 //#define _USE_MATH_DEFINES 1
 
 #include "ParticlesToMeshConverter.h"
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -27,10 +27,9 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
-using namespace megamol::core::misc;
+using namespace megamol::geocalls;
 
 VISLIB_FORCEINLINE void copyCol_FLOAT_I(const void* source, float* dest) {
     float i = *reinterpret_cast<const float*>(source);
@@ -397,7 +396,7 @@ void ParticlesToMeshConverter::makeMesh(
  * ParticlesToMeshConverter::GetExtents
  */
 bool ParticlesToMeshConverter::GetExtents(Call& call) {
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
+    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d == NULL)
         return false;
 
@@ -413,42 +412,20 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
         if (!(*mpdc)(1))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / mpdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
         cr3d->AccessBoundingBoxes() = mpdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
         cr3d->SetTimeFramesCount(mpdc->FrameCount());
     } // MolecularDataCall in use
     else if (mdc != NULL) {
         if (!(*mdc)(1))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
         cr3d->AccessBoundingBoxes() = mdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
         cr3d->SetTimeFramesCount(mdc->FrameCount());
     } else if (vdc != NULL) {
         if (!(*vdc)(vdc->IDX_GET_EXTENTS))
             return false;
 
-        float scale;
-        if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        } else {
-            scale = 1.0f;
-        }
-
         cr3d->AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
-        cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
         cr3d->SetTimeFramesCount(vdc->FrameCount());
     }
 
@@ -460,7 +437,7 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
  * QuickSurfRaycaster::GetData
  */
 bool ParticlesToMeshConverter::GetData(Call& call) {
-    geocalls::CallTriMeshData* cmesh = dynamic_cast<geocalls::CallTriMeshData*>(&call);
+    geocalls_gl::CallTriMeshDataGL* cmesh = dynamic_cast<geocalls_gl::CallTriMeshDataGL*>(&call);
     if (cmesh == NULL)
         return false;
 
@@ -549,8 +526,8 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
                 unsigned int posStride = parts.GetVertexDataStride();
                 unsigned int colStride = parts.GetColourDataStride();
                 float globalRadius = parts.GetGlobalRadius();
-                bool useGlobRad = (parts.GetVertexDataType() ==
-                                   megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                bool useGlobRad =
+                    (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
                 int numColors = 0;
 
                 switch (parts.GetColourDataType()) {
@@ -577,8 +554,7 @@ bool ParticlesToMeshConverter::GetData(Call& call) {
                 }
 
                 // if the vertices have no type, take the next list
-                if (parts.GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) { // TODO is this correct?

@@ -1,28 +1,15 @@
 #version 430
-#extension GL_EXT_gpu_shader4 : enable
-
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
-#include "lightdirectional.glsl"
-
-uniform vec4 viewAttr;
-uniform vec3 zValues;
-uniform vec3 fogCol;
-uniform vec2 texOffset;
-// texture sampler
-uniform sampler2D tex;
-uniform float alpha = 0.5;
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
+#include "protein_gl/deferred/gbuffer_output.glsl"
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
 in vec4 objPos;
 in vec4 camPos;
-in vec4 lightPos;
+
+// texture sampler
+uniform sampler2D tex;
+uniform vec2 texOffset;
 
 in vec4 inVec1;
 in vec4 inVec2;
@@ -33,8 +20,8 @@ in vec3 texCoord1;
 in vec3 texCoord2;
 in vec3 texCoord3;
 
-#include "moleculeses/mses_decodecolor.glsl"
-#include "moleculeses/mses_dot1.glsl"
+#include "protein_gl/moleculeses/mses_decodecolor.glsl"
+#include "protein_gl/moleculeses/mses_dot1.glsl"
 
 void main(void) {
     vec4 coord;
@@ -99,7 +86,7 @@ void main(void) {
     int numProbes = min( int(texCoord1.x), 32);
     if( numProbes > 0 ) {
         for( i = 0; i < numProbes; i++ ) {
-            probePos = texelFetch2D( tex, ivec2( texCoord1.yz) + ivec2( i, 0), 0).xyz;
+            probePos = texelFetch(tex, ivec2( texCoord1.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
@@ -109,7 +96,7 @@ void main(void) {
         for( i = 0; i < numProbes; i++ )
         {
             //probePos = texture2D( tex, ( texCoord2.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            probePos = texelFetch2D( tex, ivec2( texCoord2.yz) + ivec2( i, 0), 0).xyz;
+            probePos = texelFetch(tex, ivec2( texCoord2.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
@@ -119,14 +106,14 @@ void main(void) {
         for( i = 0; i < numProbes; i++ )
         {
             //probePos = texture2D( tex, ( texCoord3.yz + vec2( 0.5, 0.5) + vec2( float( i), 0.0))*texOffset).xyz;
-            probePos = texelFetch2D( tex, ivec2( texCoord3.yz) + ivec2( i, 0), 0).xyz;
+            probePos = texelFetch(tex, ivec2( texCoord3.yz) + ivec2( i, 0), 0).xyz;
             if( dot1( probePos - objPos.xyz) > 0.1 && ( dot1( pos1 - probePos) < squarRad ) ) { discard; }
         }
     }
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
 #ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
+    normal = mix(-ray, normal, 1);
 #endif // SMALL_SPRITE_LIGHTING
 
     // ========== START compute color ==========
@@ -155,18 +142,9 @@ void main(void) {
     else
         color = decodeColor( inColors.z);
 #endif // FLATSHADE_SES
-    // ========== END compute color ==========
-    // uniform color
-    //color = vec3( 0.0, 0.75, 1.0);
-    //color = vec3( 0.0, 0.6, 0.6 ); // for VIS
-    //color = vec3( texCoord2.xy, 0.0);
-    //color = vec3( 0.8, 0.0, 0.2);
-    //color = vec3( 0.19, 0.52, 0.82);
 
-    // phong lighting with directional light
-    //gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(color,1.0);
-    gl_FragDepth = gl_FragCoord.z;
+    albedo_out = vec4(color,1.0);
+    float depthval = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
@@ -174,16 +152,14 @@ void main(void) {
     float depth = dot(mvptransposed[2], Ding);
     float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    //gl_FragDepth = ( depth + zValues.x) / zValues.y;
+    depthval = (depth + zValues.x)/( zValues.y + zValues.x);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
 
-#ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
-#endif // FOGGING_SES
-    gl_FragColor.a = alpha;
+    normal_out = normal;
+    gl_FragDepth = depthval;
+    depth_out = depthval;
 }

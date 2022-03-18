@@ -26,8 +26,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <algorithm>
 // For profiling
@@ -130,7 +132,7 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
  * ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer
  */
 ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , vboSlaveSlot1("vboOut1", "Provides access to the vbo containing data for data set #1")
         , vboSlaveSlot2("vboOut2", "Provides access to the vbo containing data for data set #2")
         , molDataSlot1("molIn1", "Input molecule #1")
@@ -722,7 +724,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
  * ComparativeMolSurfaceRenderer::create
  */
 bool ComparativeMolSurfaceRenderer::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Create quicksurf objects
     if (!this->cudaqsurf1) {
@@ -733,39 +735,25 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") ||
+    /*if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") ||
         !isExtAvailable("GL_EXT_framebuffer_object") || !isExtAvailable("GL_ARB_multitexture") ||
         !isExtAvailable("GL_ARB_draw_buffers") || !isExtAvailable("GL_ARB_copy_buffer") ||
         !isExtAvailable("GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-
-    if (!DeformableGPUSurfaceMT::InitExtensions()) {
-        return false;
-    }
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci) {
-        return false;
-    }
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -781,15 +769,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexMapped", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexMapped", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentMapped", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentMapped", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -805,15 +791,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -830,15 +814,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -1306,7 +1288,7 @@ atoms instead.",
 /*
  * ComparativeMolSurfaceRenderer::GetExtents
  */
-bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
+bool ComparativeMolSurfaceRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) {
         return false;
@@ -1361,7 +1343,7 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     //    core::BoundingBoxes bboxPotential0 = cmd0->AccessBoundingBoxes();
     core::BoundingBoxes bboxPotential1 = cmd1->AccessBoundingBoxes();
 
-    core::BoundingBoxes bbox_external1, bbox_external2;
+    core::BoundingBoxes_2 bbox_external1, bbox_external2;
     if (ren1 != NULL) {
         bbox_external1 = ren1->AccessBoundingBoxes();
     }
@@ -1377,10 +1359,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceBBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.ObjectSpaceBBox());
+        bboxTmp.Union(bbox_external1.BoundingBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.ObjectSpaceBBox());
+        bboxTmp.Union(bbox_external2.BoundingBox());
     }
     this->bbox.SetObjectSpaceBBox(bboxTmp);
 
@@ -1389,10 +1371,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceClipBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.ObjectSpaceClipBox());
+        bboxTmp.Union(bbox_external1.ClipBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.ObjectSpaceClipBox());
+        bboxTmp.Union(bbox_external2.ClipBox());
     }
     this->bbox.SetObjectSpaceClipBox(bboxTmp);
 
@@ -1401,10 +1383,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceBBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.WorldSpaceBBox());
+        bboxTmp.Union(bbox_external1.BoundingBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.WorldSpaceBBox());
+        bboxTmp.Union(bbox_external2.BoundingBox());
     }
     this->bbox.SetWorldSpaceBBox(bboxTmp);
 
@@ -1413,35 +1395,19 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceClipBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.WorldSpaceClipBox());
+        bboxTmp.Union(bbox_external1.ClipBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.WorldSpaceClipBox());
+        bboxTmp.Union(bbox_external2.ClipBox());
     }
     this->bbox.SetWorldSpaceClipBox(bboxTmp);
 
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    float scale2;
-    if (!vislib::math::IsEqual(mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale2 = 2.0f / mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale2 = 1.0f;
-    }
-
     this->bbox.SetObjectSpaceBBox(mol0->AccessBoundingBoxes().ObjectSpaceBBox());
-    this->bbox.MakeScaledWorld(scale2);
 #ifndef USE_PROCEDURAL_DATA
     cr3d->AccessBoundingBoxes() = mol0->AccessBoundingBoxes();
 #else  // USE_PROCEDURAL DATA
     cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(this->bboxParticles);
 #endif // USE_PROCEDURAL DATA
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale2);
 
     // The available frame count is determined by the 'compareFrames' parameter
     if (this->cmpMode == COMPARE_1_1) {
@@ -1728,7 +1694,7 @@ void ComparativeMolSurfaceRenderer::release(void) {
 /*
  *  ComparativeMolSurfaceRenderer::Render
  */
-bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
+bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) {
     using namespace vislib::math;
 
 #ifdef USE_TIMER
@@ -1738,13 +1704,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // Update parameters if necessary
     this->updateParams();
 
-    // Get render call
-    core::view::AbstractCallRender3D* cr3d = dynamic_cast<core::view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    float calltime = cr3d->Time();
+    float calltime = call.Time();
 
     if (this->oldCalltime != calltime) {
         this->triggerRMSFit = true;
@@ -2513,7 +2473,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     }
 
     // Get camera information
-    this->cameraInfo = dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
     /* Rendering of scene objects */
 
@@ -2540,13 +2500,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     core::view::CallRender3D* ren1 = this->rendererCallerSlot1.CallAs<core::view::CallRender3D>();
     if (ren1 != NULL) {
         // Call additional renderer
-        ren1->SetCameraParameters(this->cameraInfo);
+        ren1->SetCamera(this->cameraInfo);
         ren1->SetTime(static_cast<float>(frameIdx1));
         glPushMatrix();
         // Revert scaling done by external renderer in advance
         float scaleRevert;
-        if (!vislib::math::IsEqual(ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scaleRevert = 2.0f / ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (!vislib::math::IsEqual(ren1->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f / ren1->AccessBoundingBoxes().BoundingBox().LongestEdge();
         } else {
             scaleRevert = 1.0f;
         }
@@ -2561,7 +2521,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     core::view::CallRender3D* ren2 = this->rendererCallerSlot2.CallAs<core::view::CallRender3D>();
     if (ren2 != NULL) {
         // Call additional renderer
-        ren2->SetCameraParameters(this->cameraInfo);
+        ren2->SetCamera(this->cameraInfo);
         ren2->SetTime(static_cast<float>(frameIdx2));
         glPushMatrix();
 
@@ -2574,8 +2534,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Revert scaling done by external renderer in advance
         float scaleRevert;
-        if (!vislib::math::IsEqual(ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scaleRevert = 2.0f / ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (!vislib::math::IsEqual(ren2->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f / ren2->AccessBoundingBoxes().BoundingBox().LongestEdge();
         } else {
             scaleRevert = 1.0f;
         }

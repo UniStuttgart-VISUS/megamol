@@ -9,32 +9,34 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "QuickSESRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <algorithm>
 #include <omp.h>
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::utility::log;
@@ -44,7 +46,7 @@ using namespace megamol::core::utility::log;
  * protein_cuda::QuickSESRenderer::QuickSESRenderer (CTOR)
  */
 QuickSESRenderer::QuickSESRenderer(void)
-        : Renderer3DModule()
+        : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam("color::coloringMode", "The first coloring mode.")
@@ -63,36 +65,36 @@ QuickSESRenderer::QuickSESRenderer(void)
     this->MakeSlotAvailable(&this->molDataCallerSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::FilePathParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring mode #0
-    this->currentColoringMode = Color::CHAIN;
+    this->currentColoringMode = ProteinColor::ColoringMode::CHAIN;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode));
-    cm0->SetTypePair(Color::ELEMENT, "Element");
-    cm0->SetTypePair(Color::RESIDUE, "Residue");
-    cm0->SetTypePair(Color::STRUCTURE, "Structure");
-    cm0->SetTypePair(Color::BFACTOR, "BFactor");
-    cm0->SetTypePair(Color::CHARGE, "Charge");
-    cm0->SetTypePair(Color::OCCUPANCY, "Occupancy");
-    cm0->SetTypePair(Color::CHAIN, "Chain");
-    cm0->SetTypePair(Color::MOLECULE, "Molecule");
-    cm0->SetTypePair(Color::RAINBOW, "Rainbow");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::ELEMENT), "Element");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::RESIDUE), "Residue");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::SECONDARY_STRUCTURE), "Structure");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::BFACTOR), "BFactor");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::CHARGE), "Charge");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::OCCUPANCY), "Occupancy");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::CHAIN), "Chain");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::MOLECULE), "Molecule");
+    cm0->SetTypePair(static_cast<int>(ProteinColor::ColoringMode::RAINBOW), "Rainbow");
     this->coloringModeParam << cm0;
     this->MakeSlotAvailable(&this->coloringModeParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // en-/disable positional interpolation
@@ -100,7 +102,7 @@ QuickSESRenderer::QuickSESRenderer(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     this->probeRadiusParam.SetParameter(new param::FloatParam(1.4f, 0.0f));
     this->MakeSlotAvailable(&this->probeRadiusParam);
@@ -139,11 +141,8 @@ void QuickSESRenderer::release(void) {}
  * protein_cuda::QuickSESRenderer::create
  */
 bool QuickSESRenderer::create(void) {
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
-        return false;
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
+    /*if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
+        return false;*/
 
     //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
     //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
@@ -154,7 +153,7 @@ bool QuickSESRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -162,14 +161,13 @@ bool QuickSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -179,13 +177,11 @@ bool QuickSESRenderer::create(void) {
     // load the shader files for the per pixel lighting (OFFSCREEN/PASSTHROUGH RENDERER) //
     ///////////////////////////////////////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight OR shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight OR shader");
         return false;
     }
@@ -198,27 +194,15 @@ bool QuickSESRenderer::create(void) {
 /*
  * protein_cuda::QuickSESRenderer::GetExtents
  */
-bool QuickSESRenderer::GetExtents(Call& call) {
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool QuickSESRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
     if (!(*mol)(MolecularDataCall::CallForGetExtent))
         return false;
 
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
 }
@@ -231,13 +215,9 @@ bool QuickSESRenderer::GetExtents(Call& call) {
 /*
  * protein_cuda::QuickSESRenderer::Render
  */
-bool QuickSESRenderer::Render(Call& call) {
+bool QuickSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
-    // cast the call to Render3D
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+#if 0
     if (setCUDAGLDevice) {
 #ifdef _WIN32
         if (cr3d->IsGpuAffinity()) {
@@ -254,11 +234,12 @@ bool QuickSESRenderer::Render(Call& call) {
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }
+#endif
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
 
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -339,12 +320,16 @@ bool QuickSESRenderer::Render(Call& call) {
     this->UpdateParameters(mol);
 
     // recompute color table, if necessary
-    if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
+    if (this->atomColorTable.size() < mol->AtomCount()) {
+
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
         // Use one coloring mode
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
     }
 
     // ---------- render ----------
@@ -363,7 +348,7 @@ bool QuickSESRenderer::Render(Call& call) {
     glPointSize(5.0f);
     glBegin(GL_POINTS);
     for (unsigned int i = 0; i < mol->AtomCount(); i++) {
-        glColor3fv(&atomColorTable.PeekElements()[3 * i]);
+        glColor3fv(&atomColorTable.data()[i].x);
         glVertex3fv(&posInter[4 * i]);
     }
     glEnd(); // GL_POINTS
@@ -373,6 +358,8 @@ bool QuickSESRenderer::Render(Call& call) {
         this->cudaqses = new CUDAQuickSES();
     }
 
+    auto camera_intrinsics = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // enable per-pixel light shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
         // direct rendering
@@ -380,7 +367,8 @@ bool QuickSESRenderer::Render(Call& call) {
     } else {
         // offscreen rendering (Render to fragment buffer)
         this->lightShaderOR.Enable();
-        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+        glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), camera_intrinsics.near_plane,
+            camera_intrinsics.far_plane);
     }
 
     // TODO calculate and render SES
@@ -407,21 +395,24 @@ bool QuickSESRenderer::Render(Call& call) {
 void QuickSESRenderer::UpdateParameters(const MolecularDataCall* mol) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
     if (this->coloringModeParam.IsDirty()) {
 
         this->currentColoringMode =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam.Param<param::EnumParam>()->Value());
+
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
 
         // Use one coloring mode
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
 
         this->coloringModeParam.ResetDirty();
     }

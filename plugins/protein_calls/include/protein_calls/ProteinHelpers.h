@@ -4,12 +4,15 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Vector.h"
+#include <algorithm>
+#include <string>
 
 namespace megamol {
-namespace protein {
+namespace protein_calls {
 
 /**
  * Computes and returns the approximate positions of the binding site of a molecule.
@@ -107,7 +110,154 @@ inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(
     return result;
 }
 
-} /* end namespace protein */
+/**
+ * Get the hydrophobicity value for an amino acid according to the method of Monera et al.
+ *
+ * @param resName The 3 letter code of the amino acid
+ * @return The hydrophicity value of the amino acid
+ */
+inline float GetHydrophobicityByResNameMonera(std::string resName) {
+    std::string name = resName;
+    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
+    // O.D.Monera, T.J.Sereda, N.E.Zhou, C.M.Kay, R.S.Hodges
+    // "Relationship of sidechain hydrophobicity and alpha-helical propensity on the stability of the single-stranded
+    // amphipathic alpha-helix." J.Pept.Sci. 1995 Sep - Oct; 1(5) : 319 - 29.
+    if (name.compare("ALA") == 0)
+        return 41.0f;
+    else if (name.compare("ARG") == 0)
+        return -14.0f;
+    else if (name.compare("LEU") == 0)
+        return 97.0f;
+    else if (name.compare("LYS") == 0)
+        return -23.0f;
+    else if (name.compare("MET") == 0)
+        return 74.0f;
+    else if (name.compare("GLN") == 0)
+        return -10.0f;
+    else if (name.compare("ILE") == 0)
+        return 99.0f;
+    else if (name.compare("TRP") == 0)
+        return 97.0f;
+    else if (name.compare("PHE") == 0)
+        return 100.0f;
+    else if (name.compare("TYR") == 0)
+        return 63.0f;
+    else if (name.compare("CYS") == 0)
+        return 49.0f;
+    else if (name.compare("VAL") == 0)
+        return 76.0f;
+    else if (name.compare("ASN") == 0)
+        return -28.0f;
+    else if (name.compare("SER") == 0)
+        return -5.0f;
+    else if (name.compare("HIS") == 0)
+        return 8.0f;
+    else if (name.compare("GLU") == 0)
+        return -31.0f;
+    else if (name.compare("THR") == 0)
+        return 13.0f;
+    else if (name.compare("ASP") == 0)
+        return -55.0f;
+    else if (name.compare("GLY") == 0)
+        return 0.0f;
+    else if (name.compare("PRO") == 0)
+        return -46.0f;
+    return 0.0f;
+}
+
+/**
+ * Get the hydrophobicity value for an amino acid according to the method of Kyte and Doolittle
+ *
+ * @param resName The 3 letter code of the amino acid
+ * @return The hydrophicity value of the amino acid
+ */
+inline float GetHydrophobicityByResNameKyte(std::string resName) {
+    std::string name = resName;
+    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
+    // J. Kyte, R. F. Doolittle
+    // "A simple method for displaying the hydropathic character of a protein."
+    // J. Mol. Biol. 1982 May 5; 157(1) : 105 - 32.
+    if (name.compare("ALA") == 0)
+        return 1.8f;
+    else if (name.compare("ARG") == 0)
+        return -4.5f;
+    else if (name.compare("ASN") == 0)
+        return -3.5f;
+    else if (name.compare("ASP") == 0)
+        return -3.5f;
+    else if (name.compare("CYS") == 0)
+        return 2.5f;
+    else if (name.compare("GLU") == 0)
+        return -3.5f;
+    else if (name.compare("GLN") == 0)
+        return -3.5f;
+    else if (name.compare("GLY") == 0)
+        return -0.4f;
+    else if (name.compare("HIS") == 0)
+        return -3.2f;
+    else if (name.compare("ILE") == 0)
+        return 4.5f;
+    else if (name.compare("LEU") == 0)
+        return 3.8f;
+    else if (name.compare("LYS") == 0)
+        return -3.9f;
+    else if (name.compare("MET") == 0)
+        return 1.9f;
+    else if (name.compare("PHE") == 0)
+        return 2.8f;
+    else if (name.compare("PRO") == 0)
+        return -1.6f;
+    else if (name.compare("SER") == 0)
+        return -0.8f;
+    else if (name.compare("THR") == 0)
+        return -0.7f;
+    else if (name.compare("TRP") == 0)
+        return -0.9f;
+    else if (name.compare("TYR") == 0)
+        return -1.3f;
+    else if (name.compare("VAL") == 0)
+        return 4.2f;
+    return 0.0f;
+}
+
+/**
+ * Get the min and max value of the hydrophobicity table of Monera et al.
+ *
+ * @return vec2 where x stores the min value and y the max value
+ */
+inline glm::vec2 GetHydrophobicityBoundsMonera(void) {
+    return glm::vec2(-100.0, 100.0);
+}
+
+/**
+ * Get the min and max value of the hydrophobicity table of Kyte and Doolittle.
+ *
+ * @return vec2 where x stores the min value and y the max value
+ */
+inline glm::vec2 GetHydrophobicityBoundsKyte(void) {
+    return glm::vec2(-4.5, 4.5);
+}
+
+/**
+ * Get the min and max value of the hydrophobicity table. The current standard is the method by Kyte and Doolittle.
+ *
+ * @return vec2 where x stores the min value and y the max value
+ */
+inline glm::vec2 GetHydrophobicityBounds(void) {
+    return GetHydrophobicityBoundsKyte();
+}
+
+/**
+ * Get the hydrophobicity value for an amino acid. The current standard is the method by Kyte and Doolittle.
+ *
+ * @param resName The 3 letter code of the amino acid
+ * @return The hydrophicity value of the amino acid
+ */
+inline float GetHydrophibicityByResName(std::string resName) {
+    return GetHydrophobicityByResNameKyte(resName);
+}
+
+} // namespace protein_calls
 } /* end namespace megamol */
 
 #endif

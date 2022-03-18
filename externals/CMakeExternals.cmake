@@ -84,7 +84,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
+      GIT_TAG "dafee75f11c5d759df30ff651d6763e4e674dd0e"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
@@ -248,6 +248,28 @@ function(require_external NAME)
       DEPENDS asmjit
       INCLUDE_DIR "include"
       LIBRARY ${BLEND2D_LIB})
+
+  # chemfiles
+  elseif(NAME STREQUAL "chemfiles")
+    if (TARGET chemfiles)
+      return()
+    endif()
+
+    if (WIN32)
+      set(CHEMFILES_LIB "lib/chemfiles.lib")
+    else ()
+      set(CHEMFILES_LIB "lib/chemfiles.a")
+    endif ()
+
+    add_external_project(chemfiles STATIC
+      GIT_REPOSITORY https://github.com/chemfiles/chemfiles.git
+      GIT_TAG "0.10.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${CHEMFILES_LIB}"
+    )
+
+    add_external_library(chemfiles
+      INCLUDE_DIR "include"
+      LIBRARY ${CHEMFILES_LIB})
 
   # Corsair CUE SDK
   elseif (NAME STREQUAL "CUESDK")

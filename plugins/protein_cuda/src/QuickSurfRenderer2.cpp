@@ -11,28 +11,30 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "MolecularSurfaceFeature.h"
 #include "QuickSurfRenderer2.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <cfloat>
 #include <omp.h>
@@ -40,8 +42,8 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_cuda;
-using namespace megamol::core::moldyn;
 using namespace megamol::protein_calls;
+using namespace megamol::geocalls;
 using namespace megamol::core::utility::log;
 
 
@@ -49,7 +51,7 @@ using namespace megamol::core::utility::log;
  * protein_cuda::QuickSurfRenderer2::QuickSurfRenderer2 (CTOR)
  */
 QuickSurfRenderer2::QuickSurfRenderer2(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , areaDiagramCalleeSlot("areadiagramout", "Provides data for the area line graph")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
@@ -78,9 +80,9 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->areaDiagramCalleeSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // en-/disable positional interpolation
@@ -88,7 +90,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     this->qualityParam.SetParameter(new param::IntParam(1, 0, 4));
     this->MakeSlotAvailable(&this->qualityParam);
@@ -106,7 +108,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void)
     this->MakeSlotAvailable(&this->twoSidedLightParam);
 
     // the surface color
-    this->surfaceColorParam.SetParameter(new param::StringParam("#7092be"));
+    this->surfaceColorParam.SetParameter(new param::ColorParam("#7092be"));
     this->MakeSlotAvailable(&this->surfaceColorParam);
 
     // the recompute area diagram button
@@ -191,11 +193,8 @@ void QuickSurfRenderer2::release(void) {}
  * protein_cuda::QuickSurfRenderer2::create
  */
 bool QuickSurfRenderer2::create(void) {
-    if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
-        return false;
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
+    /*if (!isExtAvailable("GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2, 0))
+        return false;*/
 
     //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
     //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
@@ -206,22 +205,22 @@ bool QuickSurfRenderer2::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
+
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
 
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "quicksurf::perpixellightVertexClip", vertSrc)) {
+    if (!ssf->MakeShaderSource("quicksurf::perpixellightVertexClip", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "quicksurf::perpixellightFragmentClip", fragSrc)) {
+    if (!ssf->MakeShaderSource("quicksurf::perpixellightFragmentClip", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -234,27 +233,15 @@ bool QuickSurfRenderer2::create(void) {
 /*
  * protein_cuda::QuickSurfRenderer2::GetExtents
  */
-bool QuickSurfRenderer2::GetExtents(Call& call) {
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool QuickSurfRenderer2::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     MultiParticleDataCall* mol = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
     if (mol == NULL)
         return false;
     if (!(*mol)(1))
         return false;
 
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
 }
@@ -267,34 +254,17 @@ bool QuickSurfRenderer2::GetExtents(Call& call) {
 /*
  * protein_cuda::QuickSurfRenderer2::Render
  */
-bool QuickSurfRenderer2::Render(Call& call) {
-
-    // cast the call to Render3D
-    view::AbstractCallRender3D* cr3d = dynamic_cast<view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool QuickSurfRenderer2::Render(megamol::core_gl::view::CallRender3DGL& call) {
     if (setCUDAGLDevice) {
-#ifdef _WIN32
-        if (cr3d->IsGpuAffinity()) {
-            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice(&devId, gpuId);
-            cudaGLSetGLDevice(devId);
-        } else {
-            cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-        }
-#else
         cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-#endif
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
-    callTime = cr3d->Time();
+    callTime = call.Time();
     if (callTime < 1.0f)
         callTime = 1.0f;
 
@@ -331,13 +301,12 @@ bool QuickSurfRenderer2::Render(Call& call) {
 
     UINT64 particleCnt = 0;
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-        megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float* pos = static_cast<const float*>(parts.GetVertexData());
         unsigned int posStride = parts.GetVertexDataStride();
         float globRad = parts.GetGlobalRadius();
-        bool useGlobRad =
-            (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-        if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+        bool useGlobRad = (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+        if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
         if (useGlobRad) {
@@ -376,16 +345,12 @@ bool QuickSurfRenderer2::Render(Call& call) {
     this->UpdateParameters(c2);
 
     // recompute color table, if necessary
-    if (this->atomColorTable.Count() / 3 < numParticles || this->surfaceColorParam.IsDirty()) {
-        float r, g, b;
-        utility::ColourParser::FromString(this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    if (this->atomColorTable.size() < numParticles || this->surfaceColorParam.IsDirty()) {
+        auto col = this->surfaceColorParam.Param<param::ColorParam>()->Value();
         // Use one coloring mode
-        this->atomColorTable.AssertCapacity(numParticles * 3);
-        this->atomColorTable.Clear();
+        this->atomColorTable.clear();
         for (unsigned int i = 0; i < numParticles; i++) {
-            this->atomColorTable.Add(r);
-            this->atomColorTable.Add(g);
-            this->atomColorTable.Add(b);
+            this->atomColorTable.push_back(glm::make_vec3(col.data()));
         }
         this->surfaceColorParam.ResetDirty();
     }
@@ -487,13 +452,12 @@ bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& sl
             memset(m_hPos, 0, numParticles * 3 * sizeof(float));
             UINT64 particleCnt = 0;
             for (unsigned int k = 0; k < parts->GetParticleListCount(); k++) {
-                megamol::core::moldyn::MultiParticleDataCall::Particles& particles = parts->AccessParticles(k);
+                geocalls::MultiParticleDataCall::Particles& particles = parts->AccessParticles(k);
                 const float* pos = static_cast<const float*>(particles.GetVertexData());
                 unsigned int posStride = particles.GetVertexDataStride();
-                bool useGlobRad = (particles.GetVertexDataType() ==
-                                   megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-                if (particles.GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                bool useGlobRad =
+                    (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) {
@@ -568,7 +532,8 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
         this->areaDiagramData = new DiagramCall::DiagramSeries(
             "Surface Area", new MolecularSurfaceFeature(log(static_cast<float>(parts->FrameCount()))));
         float r, g, b;
-        utility::ColourParser::FromString(this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
+        utility::ColourParser::FromString(
+            this->surfaceColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
         this->areaDiagramData->SetColor(r, g, b);
         dc->AddSeries(this->areaDiagramData);
         // loop over all frames
@@ -591,13 +556,12 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
             memset(m_hPos, 0, numParticles * 3 * sizeof(float));
             UINT64 particleCnt = 0;
             for (unsigned int i = 0; i < parts->GetParticleListCount(); i++) {
-                megamol::core::moldyn::MultiParticleDataCall::Particles& particles = parts->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& particles = parts->AccessParticles(i);
                 const float* pos = static_cast<const float*>(particles.GetVertexData());
                 unsigned int posStride = particles.GetVertexDataStride();
-                bool useGlobRad = (particles.GetVertexDataType() ==
-                                   megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-                if (particles.GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                bool useGlobRad =
+                    (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+                if (particles.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
                     continue;
                 }
                 if (useGlobRad) {
@@ -616,17 +580,12 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
                 }
             }
             // recompute color table, if necessary
-            if (this->atomColorTable.Count() / 3 < numParticles || this->surfaceColorParam.IsDirty()) {
-                float r, g, b;
-                utility::ColourParser::FromString(
-                    this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
+            if (this->atomColorTable.size() < numParticles || this->surfaceColorParam.IsDirty()) {
+                auto col = this->surfaceColorParam.Param<param::ColorParam>()->Value();
                 // Use one coloring mode
-                this->atomColorTable.AssertCapacity(numParticles * 3);
-                this->atomColorTable.Clear();
+                this->atomColorTable.clear();
                 for (unsigned int i = 0; i < numParticles; i++) {
-                    this->atomColorTable.Add(r);
-                    this->atomColorTable.Add(g);
-                    this->atomColorTable.Add(b);
+                    this->atomColorTable.push_back(glm::make_vec3(col.data()));
                 }
                 this->surfaceColorParam.ResetDirty();
             }
@@ -809,6 +768,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
 
     int ind = 0;
     int ind4 = 0;
+    int ind1 = 0;
     //    xyzr = (float *) malloc( numParticles * sizeof(float) * 4);
     if (useCol) {
         colors = (float*)malloc(numParticles * sizeof(float) * 4);
@@ -822,7 +782,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
             //            xyzr[ind4 + 3] = minrad;
 
             //const float *cp = &cmap[colidx[i] * 3];
-            const float* cp = &this->atomColorTable[ind];
+            const float* cp = &this->atomColorTable[ind1].x;
             colors[ind4] = cp[0];
             colors[ind4 + 1] = cp[1];
             colors[ind4 + 2] = cp[2];
@@ -830,6 +790,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
 
             ind4 += 4;
             ind += 3;
+            ind1++;
         }
     }
     //    else {
@@ -872,9 +833,9 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall* mol, float* posInter, in
     cqs->useGaussKernel = true;
 
     // compute both density map and floating point color texture map
-    int rc = cqs->calc_surf(static_cast<long>(numParticles), posInter, (useCol) ? &colors[0] : &this->atomColorTable[0],
-        useCol, origin, numvoxels, maxrad, radscale, gridSpacing3D, isovalue, gausslim, gpunumverts, gv, gn, gc,
-        gpunumfacets, gf);
+    int rc = cqs->calc_surf(static_cast<long>(numParticles), posInter,
+        (useCol) ? &colors[0] : &this->atomColorTable[0].x, useCol, origin, numvoxels, maxrad, radscale, gridSpacing3D,
+        isovalue, gausslim, gpunumverts, gv, gn, gc, gpunumfacets, gf);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)

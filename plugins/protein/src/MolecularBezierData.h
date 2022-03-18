@@ -12,6 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/BezierCurvesListDataCall.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -19,7 +21,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
-
 
 namespace megamol {
 namespace protein {
@@ -128,9 +129,10 @@ private:
     /** The data */
     geocalls::BezierCurvesListDataCall::Curves data;
 
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
-    vislib::Array<float> atomColorTable;
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
+    std::vector<glm::vec3> atomColorTable;
+    std::vector<glm::vec3> rainbowColors;
 
     core::param::ParamSlot color1Slot;
     core::param::ParamSlot color2Slot;
