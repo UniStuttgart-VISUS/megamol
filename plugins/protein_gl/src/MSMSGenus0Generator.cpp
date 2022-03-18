@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "MSMSGenus0Generator.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "stdafx.h"
 #include <fstream>
 
@@ -75,7 +75,7 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
@@ -95,20 +95,20 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     this->MakeSlotAvailable(&this->msmsMaxTryNumParam);
 
     // make the rainbow color table
-    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // coloring modes
-    param::EnumParam* cm0 = new param::EnumParam(int(protein::Color::ColoringMode::CHAIN));
-    param::EnumParam* cm1 = new param::EnumParam(int(protein::Color::ColoringMode::ELEMENT));
+    param::EnumParam* cm0 = new param::EnumParam(int(ProteinColor::ColoringMode::CHAIN));
+    param::EnumParam* cm1 = new param::EnumParam(int(ProteinColor::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     PerAtomFloatCall* pa = new PerAtomFloatCall();
     unsigned int cCnt;
-    protein::Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol, bs, pa); ++cCnt) {
-        cMode = protein::Color::GetModeByIndex(mol, bs, pa, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), protein::Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), protein::Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -237,22 +237,23 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 this->midGradColorParam.IsDirty() || this->maxGradColorParam.IsDirty() ||
                 this->prevTime != int(ctmd->FrameID())) {
 
-                protein::Color::ColoringMode currentColoringMode0 = static_cast<protein::Color::ColoringMode>(
+                ProteinColor::ColoringMode currentColoringMode0 = static_cast<ProteinColor::ColoringMode>(
                     this->coloringModeParam0.Param<param::EnumParam>()->Value());
-                protein::Color::ColoringMode currentColoringMode1 = static_cast<protein::Color::ColoringMode>(
+                ProteinColor::ColoringMode currentColoringMode1 = static_cast<ProteinColor::ColoringMode>(
                     this->coloringModeParam1.Param<param::EnumParam>()->Value());
-                vislib::Array<float> atomColorTable;
-                vislib::Array<float> atomColorTable2;
+                std::vector<glm::vec3> atomColorTable;
+                std::vector<glm::vec3> atomColorTable2;
 
-                protein::Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
+                this->colorLookupTable = {
+                    glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+                    glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+                    glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
 
-                protein::Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
+                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode0, atomColorTable,
+                    this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
+
+                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
+                    this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
@@ -390,8 +391,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
 
                     // create hightmap colours or read per atom colours
-                    if (currentColoringMode0 == protein::Color::ColoringMode::HEIGHTMAP_COL ||
-                        currentColoringMode0 == protein::Color::ColoringMode::HEIGHTMAP_VAL) {
+                    if (currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR ||
+                        currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_VALUE) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -403,7 +404,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode0 == protein::Color::ColoringMode::HEIGHTMAP_COL) {
+                        if (currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(
@@ -420,16 +421,13 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         color[i * 3 + 1] += static_cast<unsigned char>(weight0 * col[1]);
                         color[i * 3 + 2] += static_cast<unsigned char>(weight0 * col[2]);
                     } else {
-                        color[i * 3 + 0] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 0] * 255);
-                        color[i * 3 + 1] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 1] * 255);
-                        color[i * 3 + 2] +=
-                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 2] * 255);
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].x * 255);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].y * 255);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i]].z * 255);
                     }
 
-                    if (currentColoringMode1 == protein::Color::ColoringMode::HEIGHTMAP_COL ||
-                        currentColoringMode1 == protein::Color::ColoringMode::HEIGHTMAP_VAL) {
+                    if (currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR ||
+                        currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_VALUE) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -441,7 +439,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode1 == protein::Color::ColoringMode::HEIGHTMAP_COL) {
+                        if (currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(
@@ -458,12 +456,9 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
                         color[i * 3 + 2] += static_cast<unsigned char>(weight1 * col[2]);
                     } else {
-                        color[i * 3 + 0] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 0] * 255);
-                        color[i * 3 + 1] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 1] * 255);
-                        color[i * 3 + 2] +=
-                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 2] * 255);
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].x * 255);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].y * 255);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i]].z * 255);
                     }
                 }
 

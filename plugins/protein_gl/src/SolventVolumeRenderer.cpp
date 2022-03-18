@@ -22,9 +22,9 @@
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/Color.h"
 #include "protein/Diagram2DCall.h"
 #include "protein/VolumeSliceCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -124,13 +124,13 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer(void)
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    param::EnumParam* polymerCMEnum = new param::EnumParam(int(protein::Color::ColoringMode::ELEMENT));
+    param::EnumParam* polymerCMEnum = new param::EnumParam(int(ProteinColor::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
-    protein::Color::ColoringMode cMode;
-    unsigned int numClrModes = protein::Color::GetNumOfColoringModes(mol);
+    ProteinColor::ColoringMode cMode;
+    unsigned int numClrModes = static_cast<unsigned int>(ProteinColor::ColoringMode::MODE_COUNT);
     for (unsigned int cCnt = 0; cCnt < numClrModes; ++cCnt) {
-        cMode = protein::Color::GetModeByIndex(mol, cCnt);
-        polymerCMEnum->SetTypePair(static_cast<int>(cMode), protein::Color::GetName(cMode).c_str());
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        polymerCMEnum->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
 
@@ -197,7 +197,7 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
@@ -255,10 +255,8 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer(void)
     this->MakeSlotAvailable(&this->volClipPlane0DistParam);
     this->MakeSlotAvailable(&this->volClipPlaneOpacityParam);
 
-    // fill amino acid color table
-    protein::Color::FillAminoAcidColorTable(this->aminoAcidColorTable);
     // fill rainbow color table
-    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 }
 
 
@@ -509,10 +507,10 @@ bool SolventVolumeRenderer::getVolumeData(core::Call& call) {
 
 
 void protein_gl::SolventVolumeRenderer::ColorAtom(
-    float* atomColor, MolecularDataCall* mol, protein::Color::ColoringMode colorMode, int atomIdx, int residueIdx) {
+    float* atomColor, MolecularDataCall* mol, ProteinColor::ColoringMode colorMode, int atomIdx, int residueIdx) {
     switch (colorMode) {
     default:
-    case protein::Color::ColoringMode::ELEMENT: {
+    case ProteinColor::ColoringMode::ELEMENT: {
 #if 1
         const unsigned char* c = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Colour();
         atomColor[0] = c[0] / 255.0f;
@@ -526,48 +524,48 @@ void protein_gl::SolventVolumeRenderer::ColorAtom(
         atomColor[2] = c.Z();
 #endif
     } break;
-    case protein::Color::ColoringMode::RESIDUE: {
+    case ProteinColor::ColoringMode::RESIDUE: {
         int resTypeIdx = mol->Residues()[residueIdx]->Type();
-        vislib::math::Vector<float, 3>& c = this->colorLookupTable[resTypeIdx % this->colorLookupTable.Count()];
-        atomColor[0] = c.X();
-        atomColor[1] = c.Y();
-        atomColor[2] = c.Z();
+        auto& c = this->colorLookupTable[resTypeIdx % this->colorLookupTable.size()];
+        atomColor[0] = c.x;
+        atomColor[1] = c.y;
+        atomColor[2] = c.z;
     } break;
-    case protein::Color::ColoringMode::STRUCTURE: {
+    case ProteinColor::ColoringMode::SECONDARY_STRUCTURE: {
         ; // MolecularDataCall::SecStructure::TYPE_HELIX, TYPE_COIL etc
     } break;
-    case protein::Color::ColoringMode::BFACTOR: {
+    case ProteinColor::ColoringMode::BFACTOR: {
         ;
     } break;
-    case protein::Color::ColoringMode::CHARGE: {
+    case ProteinColor::ColoringMode::CHARGE: {
         ;
     } break;
-    case protein::Color::ColoringMode::OCCUPANCY:
+    case ProteinColor::ColoringMode::OCCUPANCY:
         break;
-    case protein::Color::ColoringMode::CHAIN: {
+    case ProteinColor::ColoringMode::CHAIN: {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
         int chainIdx = mol->Molecules()[moleculeIdx].ChainIndex();
-        vislib::math::Vector<float, 3>& c = this->colorLookupTable[chainIdx % this->colorLookupTable.Count()];
-        atomColor[0] = c.X();
-        atomColor[1] = c.Y();
-        atomColor[2] = c.Z();
+        auto& c = this->colorLookupTable[chainIdx % this->colorLookupTable.size()];
+        atomColor[0] = c.x;
+        atomColor[1] = c.y;
+        atomColor[2] = c.z;
     } break;
-    case protein::Color::ColoringMode::MOLECULE: {
+    case ProteinColor::ColoringMode::MOLECULE: {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
-        vislib::math::Vector<float, 3>& c = this->colorLookupTable[moleculeIdx % this->colorLookupTable.Count()];
-        atomColor[0] = c.X();
-        atomColor[1] = c.Y();
-        atomColor[2] = c.Z();
+        auto& c = this->colorLookupTable[moleculeIdx % this->colorLookupTable.size()];
+        atomColor[0] = c.x;
+        atomColor[1] = c.y;
+        atomColor[2] = c.z;
     } break;
-    case protein::Color::ColoringMode::RAINBOW:
+    case ProteinColor::ColoringMode::RAINBOW:
         break;
     }
 }
 
 void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol) {
-    if (!forceUpdateColoringMode && this->atomColorTable.Count() == mol->AtomCount() * 3)
+    if (!forceUpdateColoringMode && this->atomColorTable.size() == mol->AtomCount() * 3)
         return;
 
     forceUpdateColoringMode = false;
@@ -582,13 +580,13 @@ void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol)
             this->maxGradColorParam.Param<param::StringParam>()->Value(),
             true);*/
 
-    if (this->atomColorTable.Count() < mol->AtomCount() * 3)
-        this->atomColorTable.SetCount(mol->AtomCount() * 3);
+    if (this->atomColorTable.size() < mol->AtomCount() * 3)
+        this->atomColorTable.resize(mol->AtomCount() * 3);
 
-    float* atomColorTablePtr = &this->atomColorTable[0];
+    float* atomColorTablePtr = &this->atomColorTable[0].x;
 
     auto solventColorMode =
-        static_cast<protein::Color::ColoringMode>(this->coloringModeSolventParam.Param<param::EnumParam>()->Value());
+        static_cast<ProteinColor::ColoringMode>(this->coloringModeSolventParam.Param<param::EnumParam>()->Value());
     int polymerColorMode = this->coloringModePolymerParam.Param<param::EnumParam>()->Value();
 
     for (unsigned int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++) {
@@ -603,13 +601,17 @@ void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol)
             if (isSolvent)
                 ColorAtom(atomColor, mol, solventColorMode, atomIdx, residueIdx);
             else {
-                protein::Color::ColoringMode currentColoringMode0 = static_cast<protein::Color::ColoringMode>(
+                ProteinColor::ColoringMode currentColoringMode0 = static_cast<ProteinColor::ColoringMode>(
                     int(this->coloringModePolymerParam.Param<param::EnumParam>()->Value()));
                 // ColorAtom(atomColor, mol, polymerColorMode, atomIdx, residueIdx );
-                protein::Color::MakeColorTable(mol, currentColoringMode0, this->atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
-                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true);
+
+                std::vector<glm::vec3> coltab = {
+                    glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+                    glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+                    glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
+                ProteinColor::MakeColorTable(*mol, currentColoringMode0, this->atomColorTable, coltab,
+                    this->colorLookupTable, this->rainbowColors, nullptr, nullptr, true);
             }
         }
     }
@@ -1436,13 +1438,13 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
             this->quatCylinders[4 * atomIdx + 2] = quatC.GetZ();
             this->quatCylinders[4 * atomIdx + 3] = quatC.GetW();
 
-            this->color1Cylinders[3 * atomIdx + 0] = this->atomColorTable[3 * idx0 + 0];
-            this->color1Cylinders[3 * atomIdx + 1] = this->atomColorTable[3 * idx0 + 1];
-            this->color1Cylinders[3 * atomIdx + 2] = this->atomColorTable[3 * idx0 + 2];
+            this->color1Cylinders[3 * atomIdx + 0] = this->atomColorTable[idx0].x;
+            this->color1Cylinders[3 * atomIdx + 1] = this->atomColorTable[idx0].y;
+            this->color1Cylinders[3 * atomIdx + 2] = this->atomColorTable[idx0].z;
 
-            this->color2Cylinders[3 * atomIdx + 0] = this->atomColorTable[3 * idx1 + 0];
-            this->color2Cylinders[3 * atomIdx + 1] = this->atomColorTable[3 * idx1 + 1];
-            this->color2Cylinders[3 * atomIdx + 2] = this->atomColorTable[3 * idx1 + 2];
+            this->color2Cylinders[3 * atomIdx + 0] = this->atomColorTable[idx1].x;
+            this->color2Cylinders[3 * atomIdx + 1] = this->atomColorTable[idx1].y;
+            this->color2Cylinders[3 * atomIdx + 2] = this->atomColorTable[idx1].z;
 
             this->vertCylinders[4 * atomIdx + 0] = position.X();
             this->vertCylinders[4 * atomIdx + 1] = position.Y();
@@ -1487,7 +1489,7 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
         solventMolThreshold.Param<param::FloatParam>()->Value());
     // set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.data());
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
     // disable sphere shader
     this->sphereSolventShader.Disable();
@@ -1644,7 +1646,7 @@ void protein_gl::SolventVolumeRenderer::ParameterRefresh(core_gl::view::CallRend
         /* hydrogen statistics map surface by residue color -> only residue coloring makes sense for solvent here */
         if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats)
             this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(
-                static_cast<int>(protein::Color::ColoringMode::RESIDUE));
+                static_cast<int>(ProteinColor::ColoringMode::RESIDUE));
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;
     }
@@ -1780,7 +1782,7 @@ void protein_gl::SolventVolumeRenderer::ParameterRefresh(core_gl::view::CallRend
 
     // update color table
     if (this->colorTableFileParam.IsDirty()) {
-        protein::Color::ReadColorTableFromFile(
+        ProteinColor::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
@@ -2114,7 +2116,7 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
 
     /* make local variables to avoid function alls in for-loops (compiler won't inline in debug mode...) */
     int atomCount = mol->AtomCount();
-    const float* atomColorTablePtr = this->atomColorTable.PeekElements();
+    const float* atomColorTablePtr = reinterpret_cast<float*>(this->atomColorTable.data());
     const unsigned int* atomTypeIndices = mol->AtomTypeIndices();
     const MolecularDataCall::AtomType* atomTypes = mol->AtomTypes();
 
@@ -2203,11 +2205,10 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
                     float value = (float)hbStatistics[numSolventResidues * atomIdx + j] * factor;
                     // solventAtomColor[j%3] += value;
                     int residueType = solventResidueIndices[j];
-                    const vislib::math::Vector<float, 3>& residueColor =
-                        this->colorLookupTable[residueType % this->colorLookupTable.Count()];
-                    solventAtomColor[0] += residueColor.X() * value;
-                    solventAtomColor[1] += residueColor.Y() * value;
-                    solventAtomColor[2] += residueColor.Z() * value;
+                    auto& residueColor = this->colorLookupTable[residueType % this->colorLookupTable.size()];
+                    solventAtomColor[0] += residueColor.x * value;
+                    solventAtomColor[1] += residueColor.y * value;
+                    solventAtomColor[2] += residueColor.z * value;
                 }
 
                 atomCntColor++;
@@ -2252,9 +2253,9 @@ void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* m
                 atomPos[3] = atomTypes[atomTypeIndices[atomIdx]].Radius() * this->scale;
 #if 1 // HACKHACKHACK
                 float* atomCol = &updatVolumeTextureColors[atomIdx * 3];
-                atomCol[0] = this->atomColorTable[3 * atomIdx];
-                atomCol[1] = this->atomColorTable[3 * atomIdx + 1];
-                atomCol[2] = this->atomColorTable[3 * atomIdx + 2];
+                atomCol[0] = this->atomColorTable[atomIdx].x;
+                atomCol[1] = this->atomColorTable[atomIdx].y;
+                atomCol[2] = this->atomColorTable[atomIdx].z;
 #endif // HACKHACKHACK
             }
             atomCntDensity += (lastAtomIndx - firstAtomIndex);

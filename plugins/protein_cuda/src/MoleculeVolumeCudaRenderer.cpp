@@ -9,10 +9,10 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "MoleculeVolumeCudaRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -22,6 +22,7 @@
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -97,16 +98,14 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    this->SetColoringMode(Color::ELEMENT);
+    this->SetColoringMode(ProteinColor::ColoringMode::ELEMENT);
     param::EnumParam* cm = new param::EnumParam(int(this->currentColoringMode));
-    MolecularDataCall* mol = new MolecularDataCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, cCnt);
-        cm->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm->SetTypePair(cCnt, ProteinColor::GetName(cMode).c_str());
     }
-    delete mol;
     this->coloringModeParam << cm;
     this->MakeSlotAvailable(&this->coloringModeParam);
 
@@ -145,21 +144,21 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->volClipPlaneOpacityParam);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(filename.PeekBuffer()));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // --- set up parameter for volume rendering ---
@@ -171,7 +170,7 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->renderProteinParam);
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // initialize vertex and color array for tests
     c = new float[3 * NUM];
@@ -549,10 +548,13 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(core_gl::view::CallRender3
         if (mol->AtomCount() == 0)
             return true;
 
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true);
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
     }
 
 
@@ -658,7 +660,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(core_gl::view::C
     // parameter refresh
     if (this->coloringModeParam.IsDirty()) {
         this->SetColoringMode(
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
         this->coloringModeParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -777,8 +779,8 @@ void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(core_gl::view::C
 
     // update color table
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -896,7 +898,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::UpdateVolumeTexture(MolecularData
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(4, GL_FLOAT, 0, atoms);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.data());
     for (z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);

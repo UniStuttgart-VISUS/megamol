@@ -13,13 +13,14 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
-
 
 namespace megamol {
 namespace protein_gl {
@@ -156,9 +157,10 @@ private:
     megamol::core::param::ParamSlot msmsMaxTryNumParam;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     /** the number of vertices */
     unsigned int vertexCount;
