@@ -210,7 +210,8 @@ public:
                     if (concisereply.length() > limit) {
                         concisereply = concisereply.substr(0, limit) + "...";
                     }
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: sending reply %s", concisereply.c_str());
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "LRH: sending reply %s", concisereply.c_str());
                     if (num_sent == reply.size()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
                     } else {

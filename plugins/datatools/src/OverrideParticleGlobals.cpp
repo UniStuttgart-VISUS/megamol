@@ -101,7 +101,8 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     }
     outData.SetDataHash(myHash);
 
-    if (!overrideColor && !overrideRadius && !overrideInt) return true;
+    if (!overrideColor && !overrideRadius && !overrideInt)
+        return true;
 
     unsigned int plc = outData.GetParticleListCount();
     unsigned int i = 0;

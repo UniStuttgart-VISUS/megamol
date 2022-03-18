@@ -84,7 +84,7 @@ private:
     void resetAllDirty();
 
     SIZE_T myHash = std::numeric_limits<SIZE_T>::max();
-    
+
     /** the new range */
     core::param::ParamSlot minIntSlot;
     core::param::ParamSlot maxIntSlot;
