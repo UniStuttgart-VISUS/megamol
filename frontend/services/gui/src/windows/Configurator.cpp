@@ -473,16 +473,40 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
-                        bool added_call = false;
-                        if (compat_filter && (selected_callslot_ptr != nullptr)) {
+                        bool add_call = compat_filter && (selected_callslot_ptr != nullptr);
+
+                        // If there is a group selected or hovered or the new call is connected to module which is part
+                        // of group, add module to this group
+                        if (!interfaceslot_selected) {
+                            ImGuiID connected_group = GUI_INVALID_ID;
+                            if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                                connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
+                            }
+                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+                            ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
+                                                    ? (connected_group)
+                                                    : ((selected_group_uid != GUI_INVALID_ID)
+                                                              ? (selected_group_uid)
+                                                              : (this->module_list_popup_hovered_group_uid));
+
+                            if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                selected_graph_ptr->ResetStatePointers();
+                                group_ptr->AddModule(module_ptr);
+                                queue_data.rename_id = module_ptr->FullName();
+                                selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            }
+                        }
+
+                        // Add new call after module is created and after possible renaming due to group joining of module!
+                        if (add_call) {
                             // Get call slots of last added module
                             for (auto& callslot_map : module_ptr->CallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->Name() == compat_callslot_name) {
-                                        added_call =
-                                            (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
-                                                 selected_callslot_ptr, callslot_ptr) != nullptr);
-                                        if (added_call) {
+                                        if (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
+                                                selected_callslot_ptr, callslot_ptr)) {
                                             module_ptr->SetSelectedSlotPosition();
                                         }
                                     }
@@ -492,35 +516,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         // Place new module at mouse pos if added via separate module list child window.
                         else if (this->show_module_list_popup) {
                             module_ptr->SetScreenPosition(ImGui::GetMousePos());
-                        }
-
-                        // If there is a group selected or hoverd or the new call is connceted to module which is part
-                        // of group, add module to this group
-                        if (!interfaceslot_selected) {
-                            ImGuiID connceted_group = GUI_INVALID_ID;
-                            if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connceted_group = selected_callslot_ptr->GetParentModule()->GroupUID();
-                            }
-                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
-                            ImGuiID group_uid = (connceted_group != GUI_INVALID_ID)
-                                                    ? (connceted_group)
-                                                    : ((selected_group_uid != GUI_INVALID_ID)
-                                                              ? (selected_group_uid)
-                                                              : (this->module_list_popup_hovered_group_uid));
-
-                            if (group_uid != GUI_INVALID_ID) {
-                                for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                                    if (group_ptr->UID() == group_uid) {
-                                        Graph::QueueData queue_data;
-                                        queue_data.name_id = module_ptr->FullName();
-                                        selected_graph_ptr->ResetStatePointers();
-                                        group_ptr->AddModule(module_ptr);
-                                        queue_data.rename_id = module_ptr->FullName();
-                                        selected_graph_ptr->PushSyncQueue(
-                                            Graph::QueueAction::RENAME_MODULE, queue_data);
-                                    }
-                                }
-                            }
                         }
                     }
                     if (this->show_module_list_popup) {
