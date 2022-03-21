@@ -30,12 +30,9 @@
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 
 // data interfaces (calls)
-#include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
 #include "protein/SolPathDataCall.h"
-#include "protein/SphereDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
-#include "protein/VolumeSliceCall.h"
 
 #include "MoleculeBallifier.h"
 
@@ -43,7 +40,6 @@
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
 #include "MolecularNeighborhood.h"
-#include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 #include "ProteinAligner.h"
 #include "ProteinExploder.h"
@@ -91,7 +87,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::AggregatedDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataLoaderUnstructuredGrid>();
 
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
@@ -107,9 +102,6 @@ public:
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::SphereDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
     }
