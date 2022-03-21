@@ -3197,6 +3197,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
+    // Clipping: Graph Canvas plus profiling bar size
     ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
