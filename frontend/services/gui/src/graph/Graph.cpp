@@ -3193,11 +3193,13 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
-    assert(draw_list != nullptr);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     ImGui::SetNextWindowPos(position);
     ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
@@ -3380,6 +3382,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     this->scroll_delta_time = std::chrono::system_clock::now();
 
     ImGui::EndChild();
+
+    ImGui::PopClipRect();
     ImGui::PopStyleVar(2);
 }
 
