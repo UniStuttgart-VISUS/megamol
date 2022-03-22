@@ -10,6 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -273,10 +274,6 @@ private:
     uint* m_dCellStart;         // index of start of each cell in sorted list
     uint* m_dCellEnd;           // index of end of cell
     uint gridSortBits;
-    uint m_colorVBO;       // vertex buffer object for colors
-    float* m_cudaPosVBO;   // these are the CUDA deviceMem Pos
-    float* m_cudaColorVBO; // these are the CUDA deviceMem Color
-
 
     vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
     vislib::Array<vislib::Array<float>> smallCircleRadii;
@@ -298,6 +295,21 @@ private:
     GLuint torusVSVBO;
     // VBO for torus axis
     GLuint torusAxisVBO;
+
+    enum class Buffers : GLuint {
+        PROBE_POS = 0,
+        SPHERE_TRIA_VEC_1 = 1,
+        SPHERE_TRIA_VEC2 = 2,
+        SPHERE_TRIA_VEC3 = 3,
+        TORUS_POS = 4,
+        TORUS_VS = 5,
+        TORUS_AXIS = 6,
+        SING_TEX = 7,
+        TEX_COORD = 8,
+        ATOM_POS = 9,
+        BUFF_COUNT = 10
+    };
+    std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
     // singularity texture
     GLuint singTex;
