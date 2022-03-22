@@ -129,7 +129,6 @@ private:
     struct TranspCtrlIconState {
         TranspCtrlIcon icon;
         float current_anim_time;
-        float start_anim_time;
         std::chrono::system_clock::time_point start_real_time;
     };
 

@@ -1149,18 +1149,23 @@ void GUIManager::draw_menu() {
             float scale = megamol::gui::gui_scaling.Get();
             if (ImGui::RadioButton("100%", (scale == 1.0f))) {
                 this->SetScale(1.0f);
+                ImGui::CloseCurrentPopup();
             }
             if (ImGui::RadioButton("150%", (scale == 1.5f))) {
                 this->SetScale(1.5f);
+                ImGui::CloseCurrentPopup();
             }
             if (ImGui::RadioButton("200%", (scale == 2.0f))) {
                 this->SetScale(2.0f);
+                ImGui::CloseCurrentPopup();
             }
             if (ImGui::RadioButton("250%", (scale == 2.5f))) {
                 this->SetScale(2.5f);
+                ImGui::CloseCurrentPopup();
             }
             if (ImGui::RadioButton("300%", (scale == 3.0f))) {
                 this->SetScale(3.0f);
+                ImGui::CloseCurrentPopup();
             }
 
             ImGui::EndMenu();
