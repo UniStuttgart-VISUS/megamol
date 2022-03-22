@@ -177,7 +177,6 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
 
     // Init rendering ---------------------------------------------------------
     auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
 
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
@@ -239,8 +238,6 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
 
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho, vp_dim);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

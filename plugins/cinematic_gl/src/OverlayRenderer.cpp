@@ -180,6 +180,14 @@ void OverlayRenderer::release() {
 
 bool OverlayRenderer::create() {
 
+    auto ssf =
+        std::make_shared<core_gl::utility::ShaderSourceFactory>(this->GetCoreInstance()->Configuration().ShaderDirectories());
+    if (!this->InitPrimitiveRendering(*ssf)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     return this->onToggleMode(this->paramMode);
 }
 
@@ -454,7 +462,6 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->onTriggerRecalcRectangle(this->paramMode);
     }
 
-    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
     // Draw mode dependent stuff

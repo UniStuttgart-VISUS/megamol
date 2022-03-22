@@ -148,7 +148,6 @@ bool TimeLineRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
 bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     auto lhsFbo = call.GetFramebuffer();
-    lhsFbo->bind();
 
     // Get camera
     view::Camera camera = call.GetCamera();
@@ -525,8 +524,6 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

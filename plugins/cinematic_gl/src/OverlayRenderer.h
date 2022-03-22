@@ -33,7 +33,7 @@ class OverlayRenderer
           megamol::core_gl::utility::RenderUtils {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"IOpenGL_Context", "MegaMolGraph"};
+        return {"MegaMolGraph"};
     }
 
     /**
