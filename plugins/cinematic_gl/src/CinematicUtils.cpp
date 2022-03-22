@@ -308,6 +308,13 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 void CinematicUtils::gui_update(void) {
 
     this->menu_font_size = ImGui::GetFontSize() * 1.5f;
+    if (this->menu_font_size == 0.0f) {
+        this->menu_font_size = 20.0f;
+        //int vp[4];
+        //glGetIntegerv(GL_VIEWPORT, vp);
+        // font size = 2% of viewport height
+        //this->menu_font_size = static_cast<float>(vp[2]) * 0.02f;
+    }
     this->menu_height = this->menu_font_size; // +ImGui::GetFrameHeightWithSpacing();
 }
 
