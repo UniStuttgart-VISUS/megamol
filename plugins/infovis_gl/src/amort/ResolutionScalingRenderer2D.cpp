@@ -97,10 +97,14 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
     lowResFBO_->bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    setupCamera(cam, w, h, a);
+    lastViewProjMx_ = viewProjMx_;
+    viewProjMx_ = cam.getProjectionMatrix() * cam.getViewMatrix();
+
+    auto lowResCam = cam;
+    setupCamera(lowResCam, w, h, a);
 
     nextRendererCall.SetFramebuffer(lowResFBO_);
-    nextRendererCall.SetCamera(cam);
+    nextRendererCall.SetCamera(lowResCam);
     (nextRendererCall)(core::view::AbstractCallRender::FnRender);
 
     reconstruct(fbo, a);
@@ -114,14 +118,13 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     camOffsets_.resize(a * a);
     for (int j = 0; j < a; j++) {
         for (int i = 0; i < a; i++) {
-            const float x = (static_cast<float>(a) - 1.0f - 2.0f * static_cast<float>(i)) / static_cast<float>(w);
-            const float y = (static_cast<float>(a) - 1.0f - 2.0f * static_cast<float>(j)) / static_cast<float>(h);
+            const float x = static_cast<float>(2 * i - a + 1) / static_cast<float>(w);
+            const float y = static_cast<float>(2 * j - a + 1) / static_cast<float>(h);
             camOffsets_[j * a + i] = glm::vec3(x, y, 0.0f);
         }
     }
 
-    lowResFBO_->resize(static_cast<int>(std::ceil(static_cast<float>(w) / static_cast<float>(a))),
-        static_cast<int>(std::ceil(static_cast<float>(h) / static_cast<float>(a))));
+    lowResFBO_->resize((w + a - 1) / a, (h + a - 1) / a); // Integer division with round up.
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -164,30 +167,31 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
 }
 
 void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
-    lastViewProjMx_ = viewProjMx_;
-    viewProjMx_ = cam.getProjectionMatrix() * cam.getViewMatrix();
-
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
-    glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets_[frameIdx_].x,
-        -intrinsics.frustrum_height * camOffsets_[frameIdx_].y, 0.0f);
+    auto pose = cam.get<core::view::Camera::Pose>();
 
-    auto p = cam.get<core::view::Camera::Pose>();
-    p.position = p.position + 0.5f * adj_offset;
+    const float aspect = intrinsics.aspect.value();
+    const float frustumHeight = intrinsics.frustrum_height.value();
+    const float frustumWidth = aspect * frustumHeight;
 
-    const float ha = static_cast<float>(height) / static_cast<float>(a);
-    const float wa = static_cast<float>(width) / static_cast<float>(a);
-    const float hAdj = std::ceil(ha) / ha;
-    const float wAdj = std::ceil(wa) / wa;
+    float wOffs = 0.5f * frustumWidth * camOffsets_[frameIdx_].x;
+    float hOffs = 0.5f * frustumHeight * camOffsets_[frameIdx_].y;
 
-    const float hOffs = hAdj * intrinsics.frustrum_height - intrinsics.frustrum_height;
-    const float wOffs =
-        wAdj * intrinsics.aspect * intrinsics.frustrum_height - intrinsics.aspect * intrinsics.frustrum_height;
-    p.position = p.position + glm::vec3(0.5f * wOffs, 0.5f * hOffs, 0.0f);
-    intrinsics.frustrum_height = hAdj * intrinsics.frustrum_height.value();
-    intrinsics.aspect = wAdj / hAdj * intrinsics.aspect;
+    const int lowResWidth = (width + a - 1) / a;
+    const int lowResHeight = (height + a - 1) / a;
+
+    const float wAdj = static_cast<float>(lowResWidth * a) / static_cast<float>(width);
+    const float hAdj = static_cast<float>(lowResHeight * a) / static_cast<float>(height);
+
+    wOffs += 0.5f * (wAdj - 1.0f) * frustumWidth;
+    hOffs += 0.5f * (hAdj - 1.0f) * frustumHeight;
+
+    pose.position += glm::vec3(wOffs, hOffs, 0.0f);
+    intrinsics.frustrum_height = hAdj * frustumHeight;
+    intrinsics.aspect = wAdj / hAdj * aspect;
 
     cam.setOrthographicProjection(intrinsics);
-    cam.setPose(p);
+    cam.setPose(pose);
 }
 
 void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, int a) {
