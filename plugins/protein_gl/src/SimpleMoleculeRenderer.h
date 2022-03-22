@@ -242,9 +242,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
     std::shared_ptr<glowl::GLSLProgram> lineShader_;
 
-    std::vector<LightParams> pointLights_;
-    std::vector<LightParams> directionalLights_;
-
     // buffer objects
     enum class Buffers : GLuint {
         POSITION = 0,

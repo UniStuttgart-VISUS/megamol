@@ -16,6 +16,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -101,11 +102,6 @@ MoleculeCBCudaRenderer::~MoleculeCBCudaRenderer(void) {
  */
 void protein_cuda::MoleculeCBCudaRenderer::release(void) {
 
-    // release shaders
-    this->sphereShader.Release();
-    this->torusShader.Release();
-    this->sphericalTriangleShader.Release();
-
     if (this->cudaInitalized) {
         delete[] m_hPos;
         delete[] m_hNeighborCount;
@@ -146,93 +142,36 @@ void protein_cuda::MoleculeCBCudaRenderer::release(void) {
  * MoleculeCBCudaRenderer::create
  */
 bool MoleculeCBCudaRenderer::create(void) {
-    using namespace vislib_gl::graphics::gl;
-    /*if (!areExtsAvailable("GL_ARB_multitexture GL_EXT_framebuffer_object") || !ogl_IsVersionGEQ(2, 0)) {
-        return false;
-    }*/
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    float spec[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
-
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
-    ////////////////////////////////////////////////////
-    // load the shader source for the sphere renderer //
-    ////////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragmentCB", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
-    ///////////////////////////////////////////////////
-    // load the shader source for the torus renderer //
-    ///////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein_cuda::ses::torusVertex2", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::ses::torusFragment2", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->torusShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create torus shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphere.vert.glsl"),
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphere.frag.glsl"));
 
-    ////////////////////////////////////////////////////////////////
-    // load the shader source for the spherical triangle renderer //
-    ////////////////////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphericalTriangleShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
+        torusShader_ = core::utility::make_shared_glowl_shader("torus", shdr_options,
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_torus.vert.glsl"),
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_torus.frag.glsl"));
+
+        sphericalTriangleShader_ = core::utility::make_shared_glowl_shader("sphericalTriangle", shdr_options,
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphericaltriangle.vert.glsl"),
+            std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphericaltriangle.frag.glsl"));
+
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeCBCudaRenderer] %s", ex.what());
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception.");
     }
 
     return true;
@@ -292,14 +231,6 @@ bool MoleculeCBCudaRenderer::Render(megamol::core_gl::view::CallRender3DGL& call
 
     // ==================== Scale & Translate ====================
     glPushMatrix();
-    // compute scale factor and scale world
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
 
     // ==================== Start actual rendering ====================
     glDisable(GL_BLEND);
@@ -545,9 +476,15 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     ///////////////////////////////////////////////////////////////////////////
     // RENDER THE SOLVENT EXCLUDED SURFACE
     ///////////////////////////////////////////////////////////////////////////
+    glm::mat4 view = this->cameraInfo.getViewMatrix();
+    glm::mat4 proj = this->cameraInfo.getProjectionMatrix();
+    glm::mat4 mvp = proj * view;
+    glm::mat4 mvpinv = glm::inverse(mvp);
+    glm::mat4 mvptrans = glm::transpose(mvp);
+    glm::mat4 invview = glm::inverse(view);
 
     // do actual rendering
-    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    glm::vec4 viewportStuff(0.0f, 0.0f, this->width, this->height);
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -560,11 +497,15 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     auto cp = this->cameraInfo.getPose();
 
     // enable and set up sphere shader
-    this->sphereShader.Enable();
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", viewportStuff);
+    sphereShader_->setUniform("camIn", cp.direction);
+    sphereShader_->setUniform("camRight", cp.right);
+    sphereShader_->setUniform("camUp", cp.up);
+    sphereShader_->setUniform("mvp", mvp);
+    sphereShader_->setUniform("invview", invview);
+    sphereShader_->setUniform("mvpinv", mvpinv);
+    sphereShader_->setUniform("mvptrans", mvptrans);
 
     // render atoms VBO
 #ifndef SFB_DEMO
@@ -591,7 +532,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     glDisable(GL_BLEND);
 
     // disable sphere shader
-    sphereShader.Disable();
+    glUseProgram(0);
 
     // get clear color (i.e. background color) for fogging
     float* clearColor = new float[4];
@@ -607,22 +548,26 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     // bind texture
     glBindTexture(GL_TEXTURE_2D, this->singTex);
     // enable spherical triangle shader
-    this->sphericalTriangleShader.Enable();
+    sphericalTriangleShader_->use();
     // set shader variables
-    glUniform4fvARB(this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
-    glUniform3fARB(
-        this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-    //glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
-    glUniform1fARB(this->sphericalTriangleShader.ParameterLocation("alpha"), 1.0f);
+    sphericalTriangleShader_->setUniform("viewAttr", viewportStuff);
+    sphericalTriangleShader_->setUniform("camIn", cp.direction);
+    sphericalTriangleShader_->setUniform("camRight", cp.right);
+    sphericalTriangleShader_->setUniform("camUp", cp.up);
+    sphericalTriangleShader_->setUniform("zValues", 0.5f, cv.near_plane, cv.far_plane);
+    sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+    //sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
+    sphericalTriangleShader_->setUniform("alpha", 1.0f);
+    sphericalTriangleShader_->setUniform("mvp", mvp);
+    sphericalTriangleShader_->setUniform("invview", invview);
+    sphericalTriangleShader_->setUniform("mvpinv", mvpinv);
+    sphericalTriangleShader_->setUniform("mvptrans", mvptrans);
+
     // get attribute locations
-    GLuint attribVec1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec1");
-    GLuint attribVec2 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec2");
-    GLuint attribVec3 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec3");
-    GLuint attribTexCoord1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord1");
+    GLuint attribVec1 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec1");
+    GLuint attribVec2 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec2");
+    GLuint attribVec3 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec3");
+    GLuint attribTexCoord1 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribTexCoord1");
     //GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
     //GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
     //GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
@@ -669,7 +614,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     //glDisableVertexAttribArrayARB( attribColors);
     glDisableClientState(GL_VERTEX_ARRAY);
     // disable spherical triangle shader
-    this->sphericalTriangleShader.Disable();
+    //this->sphericalTriangleShader.Disable();
+    glUseProgram(0);
     // unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -677,19 +623,23 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     // ray cast the tori on the GPU //
     //////////////////////////////////
     // enable torus shader
-    this->torusShader.Enable();
+    torusShader_->use();
     // set shader variables
-    glUniform4fvARB(this->torusShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform3fARB(this->torusShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
-    glUniform3fARB(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-    glUniform1fARB(this->torusShader.ParameterLocation("alpha"), 1.0f);
+    torusShader_->setUniform("viewAttr", viewportStuff);
+    torusShader_->setUniform("camIn", cp.direction);
+    torusShader_->setUniform("camRight", cp.right);
+    torusShader_->setUniform("camUp", cp.up);
+    torusShader_->setUniform("zValues", 0.5f, cv.near_plane, cv.far_plane);
+    torusShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+    torusShader_->setUniform("alpha", 1.0f);
+    torusShader_->setUniform("mvp", mvp);
+    torusShader_->setUniform("invview", invview);
+    torusShader_->setUniform("mvpinv", mvpinv);
+    torusShader_->setUniform("mvptrans", mvptrans);
     // get attribute locations
-    GLuint attribInTorusAxis = glGetAttribLocationARB(this->torusShader, "inTorusAxis");
-    GLuint attribInSphere = glGetAttribLocationARB(this->torusShader, "inSphere");
-    GLuint attribInColors = glGetAttribLocationARB(this->torusShader, "inColors");
+    GLuint attribInTorusAxis = glGetAttribLocationARB(torusShader_->getHandle(), "inTorusAxis");
+    GLuint attribInSphere = glGetAttribLocationARB(torusShader_->getHandle(), "inSphere");
+    GLuint attribInColors = glGetAttribLocationARB(torusShader_->getHandle(), "inColors");
     // set color to orange
     glColor3f(1.0f, 0.75f, 0.0f);
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -712,7 +662,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     glDisableVertexAttribArrayARB(attribInColors);
     glDisableClientState(GL_VERTEX_ARRAY);
     // enable torus shader
-    this->torusShader.Disable();
+    //this->torusShader.Disable();
+    glUseProgram(0);
 #endif
 #endif
 
@@ -876,7 +827,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
         m_hSmallCircles, m_dSmallCircles, 0, sizeof(float) * 4 * this->numAtoms * this->atomNeighborCount);
 
     // do actual rendering
-    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    glm::vec4 viewportStuff(0.0f, 0.0f, this->width, this->height);
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -998,11 +949,23 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
 
     auto cp = this->cameraInfo.getPose();
 
-    this->sphereShader.Enable();
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glm::mat4 view = this->cameraInfo.getViewMatrix();
+    glm::mat4 proj = this->cameraInfo.getProjectionMatrix();
+    glm::mat4 mvp = proj * view;
+    glm::mat4 mvpinv = glm::inverse(mvp);
+    glm::mat4 mvptrans = glm::transpose(mvp);
+    glm::mat4 invview = glm::inverse(view);
+
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", viewportStuff);
+    sphereShader_->setUniform("camIn", cp.direction);
+    sphereShader_->setUniform("camRight", cp.right);
+    sphereShader_->setUniform("camUp", cp.up);
+    sphereShader_->setUniform("mvp", mvp);
+    sphereShader_->setUniform("invview", invview);
+    sphereShader_->setUniform("mvpinv", mvpinv);
+    sphereShader_->setUniform("mvptrans", mvptrans);
+
 #define DRAW_SMALL_ALL_CIRCLES 1
 #if DRAW_SMALL_ALL_CIRCLES
     // draw small circles
@@ -1483,7 +1446,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
     glEnd();
     // ... END draw atoms
 
-    this->sphereShader.Disable();
+    glUseProgram(0);
     glDisable(GL_BLEND);
 }
 

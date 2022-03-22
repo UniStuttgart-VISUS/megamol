@@ -10,6 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
@@ -21,6 +22,7 @@
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -209,12 +211,9 @@ private:
     // camera information
     core::view::Camera cameraInfo;
 
-    // shader for the sphere raycasting
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
-    // shader for the spherical triangle raycasting
-    vislib_gl::graphics::gl::GLSLShader sphericalTriangleShader;
-    // shader for the torus raycasting
-    vislib_gl::graphics::gl::GLSLShader torusShader;
+    std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+    std::shared_ptr<glowl::GLSLProgram> torusShader_;
+    std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
 
     // the bounding box of the protein
     vislib::math::Cuboid<float> bBox;

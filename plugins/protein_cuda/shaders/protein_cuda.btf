@@ -54,6 +54,8 @@
 #define HALO_RAD  0.1
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
+uniform mat4 invview;
+uniform mat4 mvp;
 
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
@@ -85,15 +87,15 @@ void main(void) {
 
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = invview[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
 
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = invview * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    lightPos = invview * normalize( gl_LightSource[0].position);
     
     
 
@@ -111,9 +113,9 @@ void main(void) {
 
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = invview[3] + invview[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = invview[3] + invview[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -157,25 +159,25 @@ void main(void) {
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -640,7 +642,7 @@ void main(void) {
         <shader name="sphereFragmentCB">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -650,6 +652,8 @@ void main(void) {
 #define HALO_RAD  0.1
 
 uniform vec4 viewAttr;
+uniform mat4 mvpinv;
+uniform mat4 mvptrans;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -676,7 +680,7 @@ void main(void) {
     
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
     
@@ -743,8 +747,8 @@ void main(void) {
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4( sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptrans[2], Ding);
+    float depthW = dot(mvptrans[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     
 #ifndef CLIP
@@ -772,6 +776,7 @@ if(puxels_use != 0)
 
     //gl_FragColor.rgb = normal;
     //gl_FragColor.rgb = lightPos.xyz;
+    gl_FragColor.rgb = color;
 }
 -->
       </snippet>
@@ -780,7 +785,7 @@ if(puxels_use != 0)
     <shader name="sphereFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -920,7 +925,7 @@ if(puxels_use != 0)
     <shader name="sphereFragmentOR">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -1074,7 +1079,7 @@ void main(void) {
     <shader name="sphereFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -1326,7 +1331,7 @@ void main(void) {
     <shader name="sphereClipPlaneFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -2287,7 +2292,7 @@ void main(void) {
     <shader name="cylinderFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -2450,7 +2455,7 @@ void main(void) {
     <shader name="cylinderFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -2819,7 +2824,7 @@ void main(void) {
 <shader name="cylinderClipPlaneFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -3465,7 +3470,7 @@ void main()
     <shader name="arrowVertex">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
@@ -3677,7 +3682,7 @@ void main(void) {
     <shader name="arrowVertexGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform mat4 modelview;
@@ -3703,7 +3708,7 @@ void main(void) {
     <shader name="arrowFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 // #undef CLIP
@@ -3879,7 +3884,7 @@ void main(void) {
     <shader name="arrowGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -4108,7 +4113,7 @@ void main(void) {
     <shader name="arrowFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 // #undef CLIP
@@ -4750,7 +4755,7 @@ void main(void) {
     <shader name="filterCylinderFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -8705,7 +8710,7 @@ void main(void) {
     <shader name="sphereFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -8845,7 +8850,7 @@ void main(void) {
     <shader name="sphereFragmentNew">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -8963,7 +8968,7 @@ void main(void) {
     <shader name="sphereFragmentOR">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -9279,7 +9284,7 @@ void main(void) {
     <shader name="torusFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -9493,7 +9498,7 @@ void main(void) {
     <shader name="torusFragmentOR">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -9711,7 +9716,7 @@ void main(void) {
         <shader name="torusFragmentPuxels">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -10015,6 +10020,8 @@ uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
+uniform mat4 invview;
+uniform mat4 mvp;
 
 attribute vec4 inTorusAxis;       // torus axis + probe radius (torus radius r)
 attribute vec4 inSphere;        // everything inside this sphere (x,y,z,rad) is visible
@@ -10070,15 +10077,15 @@ void main(void) {
     visibilitySphere.w = inSphere.w;
         
     // calculate cam position
-    tmp = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    tmp = invview[3]; // (C) by Christoph
     tmp.xyz -= objPos.xyz; // cam move
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
 
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = invview * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    lightPos = invview * normalize( gl_LightSource[0].position);
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
@@ -10090,9 +10097,9 @@ void main(void) {
 
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = invview[3] + invview[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = invview[3] + invview[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -10133,26 +10140,26 @@ void main(void) {
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     ////testPos = objPos.xyz + cpj1 + cpm1;
     testPos = inSphere.xyz + objPos.xyz + cpj1 + cpm1;    
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     ////testPos = objPos.xyz + cpj2 + cpm2;
     testPos = inSphere.xyz + objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -10174,7 +10181,7 @@ void main(void) {
     <shader name="torusFragment2">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -10182,6 +10189,8 @@ uniform vec4 viewAttr;
 uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
+uniform mat4 mvpinv;
+uniform mat4 mvptrans;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -10209,7 +10218,7 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and move
 
@@ -10328,8 +10337,8 @@ void main(void) {
     intersection += objPos.xyz;
 
     vec4 Ding = vec4( intersection, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptrans[2], Ding);
+    float depthW = dot(mvptrans[3], Ding);
 #ifdef OGL_DEPTH_SES
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #else
@@ -10343,6 +10352,7 @@ void main(void) {
     gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
 #endif // FOGGING_SES
     gl_FragColor.a = alpha;
+    gl_FragColor.rgb = color;
 }
 -->
       </snippet>
@@ -10363,6 +10373,8 @@ void main(void) {
     uniform vec3 camUp;
     uniform vec3 camRight;
     #endif // CALC_CAM_SYS
+    uniform mat4 mvp;
+    uniform mat4 invview;
     
     attribute vec4 attribVec1;
     attribute vec4 attribVec2;
@@ -10407,14 +10419,14 @@ void main(void) {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
     
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = invview[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = invview * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    lightPos = invview * normalize( gl_LightSource[0].position);
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -10426,9 +10438,9 @@ void main(void) {
     
     #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = invview[3] + invview[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = invview[3] + invview[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -10467,25 +10479,25 @@ void main(void) {
     
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
     
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
     
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
     
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -10506,7 +10518,7 @@ void main(void) {
     <shader name="sphericaltriangleFragment">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
@@ -10518,6 +10530,8 @@ uniform vec2 texOffset;
 // texture sampler
 uniform sampler2D tex;
 uniform float alpha = 0.5;
+uniform mat4 mvpinv;
+uniform mat4 mvptrans;
 
 varying vec4 objPos;
 varying vec4 camPos;
@@ -10552,7 +10566,7 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
     
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
 
@@ -10684,8 +10698,8 @@ void main(void) {
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptrans[2], Ding);
+    float depthW = dot(mvptrans[3], Ding);
 #ifdef OGL_DEPTH_SES
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #else
@@ -10718,6 +10732,8 @@ if(puxels_use != 0)
     puxels_store(makePuxel(packUnorm4x8(gl_FragColor), normal, gl_FragDepth));
 #endif
 
+    gl_FragColor.rgb = vec3(1,0,0);
+
 }
 -->
       </snippet>
@@ -10726,7 +10742,7 @@ if(puxels_use != 0)
     <shader name="sphericaltriangleFragmentPuxels">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
@@ -11053,7 +11069,7 @@ void main(void) {
     <shader name="sphericaltriangleFragmentOR">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
