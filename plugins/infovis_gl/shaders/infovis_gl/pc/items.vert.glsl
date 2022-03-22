@@ -10,6 +10,7 @@ uniform vec4 itemColor = vec4(1.0f);
 uniform int colorDimensionIdx = -1;
 uniform uint itemTestMask = 0;
 uniform uint itemPassMask = 0;
+uniform bool useLineWidthInPixels = true;
 uniform float lineWidth = 1.0f;
 uniform ivec2 viewSize = ivec2(1, 1);
 
@@ -76,7 +77,12 @@ void main() {
     }
 
     // Set length to lineWidth / 2, measuerd in orthogonal direction.
-    h *= lineWidth / float(viewSize.x);
+    if (useLineWidthInPixels) {
+        h *= lineWidth / float(viewSize.x);
+    } else {
+        const vec4 oneVec = projMx * viewMx * vec4(1.0f, 0.0f, 0.0f, 0.0f);
+        h *= oneVec.x * lineWidth / 2.0f;
+    }
 
     if (isTop) {
         vertex.xy += h;
