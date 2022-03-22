@@ -8,13 +8,13 @@
 
 #include "vislib/net/TcpCommChannel.h"
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/net/PeerDisconnectedException.h"
 #include "vislib/net/SocketException.h"
-#include "vislib/Trace.h"
-#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -38,28 +38,25 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
 /*
  * vislib::net::TcpCommChannel::Accept
  */
-vislib::SmartRef<vislib::net::AbstractCommClientChannel> 
-vislib::net::TcpCommChannel::Accept(void) {
+vislib::SmartRef<vislib::net::AbstractCommClientChannel> vislib::net::TcpCommChannel::Accept(void) {
     Socket socket = this->socket.Accept();
     // Ctor of TcpCommChannel will assign flags to actual socket.
 
-    return SmartRef<AbstractCommClientChannel>(
-        new TcpCommChannel(socket, this->flags), false);
+    return SmartRef<AbstractCommClientChannel>(new TcpCommChannel(socket, this->flags), false);
 }
 
 
 /*
  * vislib::net::TcpCommChannel::Bind
  */
-void vislib::net::TcpCommChannel::Bind(
-        SmartRef<AbstractCommEndPoint> endPoint) {
+void vislib::net::TcpCommChannel::Bind(SmartRef<AbstractCommEndPoint> endPoint) {
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
         throw IllegalParamException("endPoint", __FILE__, __LINE__);
     }
 
-    this->createSocket(static_cast<IPEndPoint>(*ep));   // Create lazily.
+    this->createSocket(static_cast<IPEndPoint>(*ep)); // Create lazily.
     this->socket.Bind(static_cast<IPEndPoint>(*ep));
 }
 
@@ -78,8 +75,10 @@ void vislib::net::TcpCommChannel::Close(void) {
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException when closing socket "
-            "in TcpCommChannel::Close: %s\n", e.GetMsgA());
+        VLTRACE(Trace::LEVEL_VL_WARN,
+            "SocketException when closing socket "
+            "in TcpCommChannel::Close: %s\n",
+            e.GetMsgA());
         throw e;
     }
 }
@@ -88,15 +87,14 @@ void vislib::net::TcpCommChannel::Close(void) {
 /*
  * vislib::net::TcpCommChannel::Connect
  */
-void vislib::net::TcpCommChannel::Connect(
-        SmartRef<AbstractCommEndPoint> endPoint) {
+void vislib::net::TcpCommChannel::Connect(SmartRef<AbstractCommEndPoint> endPoint) {
     SmartRef<IPCommEndPoint> ep = endPoint.DynamicCast<IPCommEndPoint>();
 
     if (ep.IsNull()) {
         throw IllegalParamException("endPoint", __FILE__, __LINE__);
     }
 
-    this->createSocket(static_cast<IPEndPoint>(*ep));   // Create lazily.
+    this->createSocket(static_cast<IPEndPoint>(*ep)); // Create lazily.
     this->socket.Connect(static_cast<IPEndPoint>(*ep));
 }
 
@@ -104,8 +102,7 @@ void vislib::net::TcpCommChannel::Connect(
 /*
  * vislib::net::TcpCommChannel::GetLocalEndPoint
  */
-vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
-vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
     return IPCommEndPoint::Create(this->socket.GetLocalEndPoint());
 }
 
@@ -113,8 +110,7 @@ vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
 /*
  * vislib::net::TcpCommChannel::GetRemoteEndPoint
  */
-vislib::SmartRef<vislib::net::AbstractCommEndPoint>
-vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
     return IPCommEndPoint::Create(this->socket.GetPeerEndPoint());
 }
 
@@ -130,18 +126,16 @@ void vislib::net::TcpCommChannel::Listen(const int backlog) {
 /*
  * vislib::net::TcpCommChannel::Receive
  */
-SIZE_T vislib::net::TcpCommChannel::Receive(void *outData, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+SIZE_T vislib::net::TcpCommChannel::Receive(
+    void* outData, const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
     SIZE_T retval = 0;
-    
+
     if (cntBytes > 0) {
-        retval = this->socket.Receive(outData, cntBytes, timeout, 0, 
-            forceReceive);
+        retval = this->socket.Receive(outData, cntBytes, timeout, 0, forceReceive);
 
         if ((retval == 0) || (forceReceive && (retval < cntBytes))) {
-            throw PeerDisconnectedException(
-                PeerDisconnectedException::FormatMessageForLocalEndpoint(
-                this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()), 
+            throw PeerDisconnectedException(PeerDisconnectedException::FormatMessageForLocalEndpoint(
+                                                this->socket.GetLocalEndPoint().ToStringW().PeekBuffer()),
                 __FILE__, __LINE__);
         }
     }
@@ -153,8 +147,8 @@ SIZE_T vislib::net::TcpCommChannel::Receive(void *outData,
 /*
  * vislib::net::TcpCommChannel::Send
  */
-SIZE_T vislib::net::TcpCommChannel::Send(const void *data, 
-        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+SIZE_T vislib::net::TcpCommChannel::Send(
+    const void* data, const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
     return this->socket.Send(data, cntBytes, timeout, 0, forceSend);
 }
 
@@ -162,16 +156,16 @@ SIZE_T vislib::net::TcpCommChannel::Send(const void *data,
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) 
-        : Super(), flags(flags) {
-}
+vislib::net::TcpCommChannel::TcpCommChannel(const UINT64 flags) : Super(), flags(flags) {}
 
 
 /*
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
-vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags) 
-        : Super(), socket(socket), flags(flags) {
+vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags)
+        : Super()
+        , socket(socket)
+        , flags(flags) {
     socket.SetNoDelay(this->IsSetNoDelay());
     socket.SetReuseAddr(this->IsSetReuseAddress());
     if (this->IsSetNoSendBuffer()) {
@@ -184,8 +178,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(Socket& socket, const UINT64 flags)
  * vislib::net::TcpCommChannel::TcpCommChannel
  */
 vislib::net::TcpCommChannel::TcpCommChannel(const TcpCommChannel& rhs) {
-    throw UnsupportedOperationException("TcpCommChannel::TcpCommChannel", 
-        __FILE__, __LINE__);
+    throw UnsupportedOperationException("TcpCommChannel::TcpCommChannel", __FILE__, __LINE__);
 }
 
 

@@ -14,28 +14,26 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/CallerSlot.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 //#include "vislib_vector_typedefs.h"
-#include "mmcore/param/ParamSlot.h"
 #include "VBODataCall.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class SurfacePotentialRendererSlave : public core::view::Renderer3DModuleDS {
+class SurfacePotentialRendererSlave : public core_gl::view::Renderer3DModuleGL {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "SurfacePotentialRendererSlave";
     }
 
@@ -45,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers rendering of molecular surfaces textured by electrostatic potential";
     }
 
@@ -56,9 +54,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
-            return false;
-        }
         return true;
     }
 
@@ -72,7 +67,6 @@ public:
 
 
 protected:
-
     /**
      * Implementation of 'create'.
      *
@@ -90,7 +84,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
 
     /**
@@ -105,7 +99,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Renders the isosurface using different rendering modes and surface
@@ -115,11 +109,10 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderSurface(VBODataCall *c);
+    bool renderSurface(VBODataCall* c);
 
 
 private:
-
     /// Caller slot to obtaing vbo data
     core::CallerSlot vboSlot;
 
@@ -130,8 +123,7 @@ private:
     core::BoundingBoxes bbox;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShader;
-
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
 };
 
 } // namespace protein_cuda

@@ -14,12 +14,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "AbstractGPUSurfaceCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/math/Cuboid.h"
 #include "mmcore/view/CallRender3D.h"
+#include "vislib/math/Cuboid.h"
 #include <GL/gl.h>
-#include "AbstractGPUSurfaceCall.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -27,7 +27,6 @@ namespace protein_cuda {
 class DeformableGPUSurfaceMTCall : public core::Call {
 
 public:
-
     /// Index of the 'GetCamparams' function
     static const unsigned int CallForGetExtent;
 
@@ -38,15 +37,14 @@ public:
     DeformableGPUSurfaceMTCall(void) : AbstractGPUSurfaceCall() {}
 
     /** Dtor. */
-    virtual ~DeformableGPUSurfaceMTCall(void) {
-    }
+    virtual ~DeformableGPUSurfaceMTCall(void) {}
 
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "AbstractGPUSurfaceCall";
     }
 
@@ -55,7 +53,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Call to transmit a deformable surface VBO with positions,\
                 normals, and texture coordinates.";
     }
@@ -76,8 +74,8 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char * FunctionName(unsigned int idx) {
-        switch( idx) {
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
         case 0:
             return "getExtent";
         case 1:
@@ -134,17 +132,14 @@ public:
     /**
      * Sets the surface of this call.
      */
-    inline void SetSurface(const DeformableGPUSurfaceMT *surface) {
+    inline void SetSurface(const DeformableGPUSurfaceMT* surface) {
         this->surface = surface;
     }
 
 protected:
-
 private:
-
     /// The surface
-    const DeformableGPUSurfaceMT *surface;
-
+    const DeformableGPUSurfaceMT* surface;
 };
 
 /// Description class typedef

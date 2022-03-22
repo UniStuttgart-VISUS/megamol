@@ -5,16 +5,20 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/InstanceDescription.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::InstanceDescription::InstanceDescription
  */
-megamol::core::InstanceDescription::InstanceDescription(const char *classname)
-        : ObjectDescription(), ParamValueSetRequest(), classname(classname),
-        description(), modules(), calls() {
+megamol::core::InstanceDescription::InstanceDescription(const char* classname)
+        : ObjectDescription()
+        , ParamValueSetRequest()
+        , classname(classname)
+        , description()
+        , modules()
+        , calls() {
     this->description.Format("Instance %s", this->classname.PeekBuffer());
 }
 

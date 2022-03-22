@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "HeadnodeServer.h"
+#include "stdafx.h"
 
 #include <array>
 #include <chrono>
@@ -14,22 +14,22 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "vislib/RawStorageSerialiser.h"
 #include "mmcore/view/CameraSerializer.h"
+#include "vislib/RawStorageSerialiser.h"
 
 //#include "mmcore/param/Vector4fParam.h"
 
 
 megamol::remote::HeadnodeServer::HeadnodeServer()
-    : view_slot_("viewSlot", "Connects to the view.")
-    , address_slot_("address", "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")")
-    , start_server_slot_("start", "Start listening to port.")
-    , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
-    , deploy_project_slot_("deployProject", "Sends project file on connect")
-    , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::push))
-    , run_threads_(false)
-    , is_job_running_(false)
-    , msg_id_(0) {
+        : view_slot_("viewSlot", "Connects to the view.")
+        , address_slot_("address", "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")")
+        , start_server_slot_("start", "Start listening to port.")
+        , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
+        , deploy_project_slot_("deployProject", "Sends project file on connect")
+        , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::push))
+        , run_threads_(false)
+        , is_job_running_(false)
+        , msg_id_(0) {
 
 
     lua_command_slot_ << new megamol::core::param::StringParam("");
@@ -54,7 +54,9 @@ megamol::remote::HeadnodeServer::HeadnodeServer()
 }
 
 
-megamol::remote::HeadnodeServer::~HeadnodeServer() { this->Release(); }
+megamol::remote::HeadnodeServer::~HeadnodeServer() {
+    this->Release();
+}
 
 
 bool megamol::remote::HeadnodeServer::create() {
@@ -112,7 +114,8 @@ void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot)
 
 
 void megamol::remote::HeadnodeServer::BatchParamUpdated(param_updates_vec_t const& updates) {
-    if (!run_threads_ || updates.empty()) return;
+    if (!run_threads_ || updates.empty())
+        return;
 
 
     std::lock_guard<std::mutex> guard(send_buffer_guard_);
@@ -151,21 +154,17 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
         avp = call->PeekCalleeSlot()->Parent();
         av = dynamic_cast<const core::view::AbstractView*>(avp.get());
     }
-    if (av == nullptr) return false;
+    if (av == nullptr)
+        return false;
 
     csn = av->GetCameraSyncNumber();
     if ((csn != syncnumber)) {
         syncnumber = csn;
-        core::view::Camera_2 cam;
-        call->GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-        cam_type::minimal_state_type min_state;
-        cam.get_minimal_state(min_state);
+        core::view::Camera cam = call->GetCamera();
+        auto cam_pose = cam.get<core::view::Camera::Pose>();
 
         core::view::CameraSerializer serializer;
-        const std::string mem = serializer.serialize(min_state);
+        const std::string mem = serializer.serialize(cam);
 
 
         msg.resize(MessageHeaderSize + mem.size());
@@ -249,7 +248,8 @@ void megamol::remote::HeadnodeServer::do_communication() {
     }
     try {
         while (run_threads_) {
-            if (!run_threads_) break;
+            if (!run_threads_)
+                break;
 
 
             {
@@ -282,7 +282,8 @@ bool megamol::remote::HeadnodeServer::onStartServer(core::param::ParamSlot& para
 
 
 bool megamol::remote::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param) {
-    if (!run_threads_) return true;
+    if (!run_threads_)
+        return true;
 
     std::vector<char> msg;
     std::string mg = std::string(param.Param<core::param::StringParam>()->ValueString());

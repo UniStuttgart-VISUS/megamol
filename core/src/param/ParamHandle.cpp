@@ -5,17 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/ParamHandle.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::param::ParamHandle::ParamHandle
  */
 megamol::core::param::ParamHandle::ParamHandle(
-        const megamol::core::CoreInstance& inst,
-        const vislib::SmartPtr<megamol::core::param::AbstractParam>& param)
-        : inst(inst), param(param) {
+    const megamol::core::CoreInstance& inst, const vislib::SmartPtr<megamol::core::param::AbstractParam>& param)
+        : inst(inst)
+        , param(param) {
     // intentionally empty
 }
 
@@ -23,9 +23,9 @@ megamol::core::param::ParamHandle::ParamHandle(
 /*
  * megamol::core::param::ParamHandle::ParamHandle
  */
-megamol::core::param::ParamHandle::ParamHandle(
-        const megamol::core::param::ParamHandle& src) : inst(src.inst),
-        param(src.param) {
+megamol::core::param::ParamHandle::ParamHandle(const megamol::core::param::ParamHandle& src)
+        : inst(src.inst)
+        , param(src.param) {
     // intentionally empty
 }
 
@@ -44,7 +44,5 @@ megamol::core::param::ParamHandle::~ParamHandle(void) {
 void megamol::core::param::ParamHandle::GetIDString(vislib::StringA& outID) {
     try {
         outID = inst.FindParameterName(this->param);
-    } catch(...) {
-        outID.Clear();
-    }
+    } catch (...) { outID.Clear(); }
 }

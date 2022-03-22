@@ -8,14 +8,13 @@
 #ifndef DRAW_TO_SCREEN_H_INCLUDED
 #define DRAW_TO_SCREEN_H_INCLUDED
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -25,21 +24,25 @@ namespace compositing {
 /**
  * TODO
  */
-class DrawToScreen : public megamol::core::view::Renderer3DModuleGL {
+class DrawToScreen : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "DrawToScreen"; }
+    static const char* ClassName(void) {
+        return "DrawToScreen";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "...TODO..."; }
+    static const char* Description(void) {
+        return "...TODO...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -79,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3DGL& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -88,17 +91,20 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3DGL& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core::view::CallRender3DGL& call);
+    void PreRender(core_gl::view::CallRender3DGL& call);
 
 private:
-    typedef vislib::graphics::gl::GLSLShader GLSLShader;
+    typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
+
+    /** Dummy color texture to use when no texture is connected */
+    std::shared_ptr<glowl::Texture2D> m_dummy_color_tx;
 
     /** Dummy depth texture to use when no depth texture is connected */
     std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
@@ -111,7 +117,9 @@ private:
 
     core::CallerSlot m_input_depth_texture_call;
 
-    GLint m_screenRestoreFBO;
+    core::CallerSlot m_input_flags_call;
+
+    glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
 } // namespace compositing

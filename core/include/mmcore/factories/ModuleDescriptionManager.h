@@ -1,73 +1,57 @@
-/*
- * ModuleDescriptionManager.h
- * Copyright (C) 2008 - 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED
 #define MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "ModuleAutoDescription.h"
+#include "ModuleDescription.h"
+#include "ObjectDescriptionManager.h"
 
-#include "mmcore/factories/ObjectDescriptionManager.h"
-#include "mmcore/factories/ModuleDescription.h"
-#include "mmcore/factories/ModuleAutoDescription.h"
-#include "vislib/SmartPtr.h"
+namespace megamol::core::factories {
 
+/**
+ * Class of rendering graph module description manager
+ */
+class ModuleDescriptionManager : public ObjectDescriptionManager<ModuleDescription> {
+public:
+    /** ctor */
+    ModuleDescriptionManager() : ObjectDescriptionManager<megamol::core::factories::ModuleDescription>() {}
 
-namespace megamol {
-namespace core {
-namespace factories {
+    /** dtor */
+    ~ModuleDescriptionManager() override = default;
 
-    /** exporting template specialization */
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API ObjectDescriptionManager<ModuleDescription>;
+    /* deleted copy ctor */
+    ModuleDescriptionManager(const ModuleDescriptionManager& src) = delete;
+
+    /* deleted assignment operator */
+    ModuleDescriptionManager& operator=(const ModuleDescriptionManager& rhs) = delete;
 
     /**
-     * Class of rendering graph module description manager
+     * Registers a module description
+     *
+     * @param Cp The ModuleDescription class
      */
-    class MEGAMOLCORE_API ModuleDescriptionManager : public ObjectDescriptionManager<ModuleDescription> {
-    public:
+    template<class Cp>
+    void RegisterDescription() {
+        this->Register(std::make_shared<const Cp>());
+    }
 
-        /** ctor */
-        ModuleDescriptionManager();
+    /**
+     * Registers a module using a module auto description
+     *
+     * @param Cp The Module class
+     */
+    template<class Cp>
+    void RegisterAutoDescription() {
+        this->RegisterDescription<ModuleAutoDescription<Cp>>();
+    }
+};
 
-        /** dtor */
-        virtual ~ModuleDescriptionManager();
+} // namespace megamol::core::factories
 
-        /**
-         * Registers a module description
-         *
-         * @param Cp The ModuleDescription class
-         */
-        template<class Cp>
-        void RegisterDescription() {
-            this->Register(std::make_shared<const Cp>());
-        }
-
-        /**
-         * Registers a module using a module auto description
-         *
-         * @param Cp The Module class
-         */
-        template<class Cp>
-        void RegisterAutoDescription() {
-            this->RegisterDescription<ModuleAutoDescription<Cp> >();
-        }
-
-    private:
-
-        /* deleted copy ctor */
-        ModuleDescriptionManager(const ModuleDescriptionManager& src) = delete;
-
-        /* deleted assignment operator */
-        ModuleDescriptionManager& operator=(const ModuleDescriptionManager& rhs) = delete;
-
-    };
-
-} /* end namespace factories */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED */
+#endif // MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED

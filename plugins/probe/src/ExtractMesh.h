@@ -6,12 +6,12 @@
 #pragma once
 
 #include "concave_hull.h"
-#include "poisson.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mesh/MeshCalls.h"
+#include "poisson.h"
 #include <cstdlib>
 
 namespace megamol {
@@ -24,21 +24,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ExtractMesh"; }
+    static const char* ClassName(void) {
+        return "ExtractMesh";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Extracts a mesh from point data."; }
+    static const char* Description(void) {
+        return "Extracts a mesh from point data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ExtractMesh(void);
@@ -65,11 +71,10 @@ protected:
     core::param::ParamSlot _alphaSlot;
 
 
-
 private:
     bool InterfaceIsDirty();
     bool flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
-    bool flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::PointNormal> &point_cloud);
+    bool flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::PointNormal>& point_cloud);
     bool extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
     void applyMeshCorrections();
     // virtual void readParams();
@@ -88,8 +93,7 @@ private:
 
     bool getKDMetaData(core::Call& call);
     bool getKDData(core::Call& call);
-    
-    
+
 
     bool toggleFormat(core::param::ParamSlot& p);
 
@@ -103,11 +107,11 @@ private:
     std::vector<float> _normal_data;
 
     // PCL stuff
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _inputCloud; 
+    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _inputCloud;
     pcl::PointCloud<pcl::PointXYZ> _cloud;
     std::vector<pcl::Vertices> _polygons;
     std::vector<pcl::PointIndices> _indices;
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _alphaHullCloud; 
+    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _alphaHullCloud;
     pcl::PointCloud<pcl::PointNormal> _poissonCloud;
     std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> _resultNormalCloud;
     std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _full_data_tree;
@@ -129,7 +133,6 @@ private:
     bool _recalc = true;
 
     uint32_t m_version;
-
 };
 
 } // namespace probe

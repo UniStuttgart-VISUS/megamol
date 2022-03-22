@@ -1,7 +1,7 @@
 /*
  * UnexpectedMessageException.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -23,72 +23,69 @@ namespace vislib {
 namespace net {
 
 
+/**
+ * This exception should be thrown in case a SimpleMessage was received
+ * which was not expected.
+ */
+class UnexpectedMessageException : public Exception {
+
+public:
     /**
-     * This exception should be thrown in case a SimpleMessage was received
-     * which was not expected.
+     * Ctor.
+     *
+     * @param actualID   The ID of the message which was actually received.
+     * @param expectedID The ID of the message which was expected.
+     * @param file       The file the exception was thrown in.
+     * @param line       The line the exception was thrown in.
      */
-    class UnexpectedMessageException : public Exception {
+    UnexpectedMessageException(
+        const SimpleMessageID actualID, const SimpleMessageID expectedID, const char* file, const int line);
 
-    public:
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    UnexpectedMessageException(const UnexpectedMessageException& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param actualID   The ID of the message which was actually received.
-         * @param expectedID The ID of the message which was expected.
-         * @param file       The file the exception was thrown in.
-         * @param line       The line the exception was thrown in.
-         */
-        UnexpectedMessageException(const SimpleMessageID actualID,
-            const SimpleMessageID expectedID, const char *file, const int line);
+    /** Dtor. */
+    virtual ~UnexpectedMessageException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        UnexpectedMessageException(const UnexpectedMessageException& rhs);
+    /**
+     * Answer the actually received message ID.
+     *
+     * @return The actually received message ID.
+     */
+    inline SimpleMessageID GetActualID(void) const {
+        return this->actualID;
+    }
 
-        /** Dtor. */
-        virtual ~UnexpectedMessageException(void);
+    /**
+     * Answer the expected message ID.
+     *
+     * @return The expected message ID.
+     */
+    inline SimpleMessageID GetExpectedID(void) const {
+        return this->expectedID;
+    }
 
-        /**
-         * Answer the actually received message ID.
-         *
-         * @return The actually received message ID.
-         */
-        inline SimpleMessageID GetActualID(void) const {
-            return this->actualID;
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    virtual UnexpectedMessageException& operator=(const UnexpectedMessageException& rhs);
 
-        /**
-         * Answer the expected message ID.
-         *
-         * @return The expected message ID.
-         */
-        inline SimpleMessageID GetExpectedID(void) const {
-            return this->expectedID;
-        }
+private:
+    /** The ID of the message which was actually received. */
+    SimpleMessageID actualID;
 
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        virtual UnexpectedMessageException& operator =(
-			const UnexpectedMessageException& rhs);
+    /** The ID of the message which was expected. */
+    SimpleMessageID expectedID;
+};
 
-    private:
-
-        /** The ID of the message which was actually received. */
-        SimpleMessageID actualID;
-
-        /** The ID of the message which was expected. */
-        SimpleMessageID expectedID;
-    };
-    
 } /* end namespace net */
 } /* end namespace vislib */
 
@@ -96,4 +93,3 @@ namespace net {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_UNEXPECTEDMESSAGEEXCEPTION_H_INCLUDED */
-

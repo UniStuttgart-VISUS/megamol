@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "FBOCompositor2.h"
+#include "stdafx.h"
 
 #include <fstream>
 #include <sstream>
@@ -11,43 +11,44 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "snappy.h"
 
-#include <exception>
 #include "vislib/Exception.h"
+#include <exception>
 
 //#define _DEBUG 1
 //#define VERBOSE 1
 
 megamol::remote::FBOCompositor2::FBOCompositor2()
-    : provide_img_slot_{"getImg", "Provides received images"}
-    , commSelectSlot_{"communicator", "Select the communicator to use"}
-    // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
-    , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
-    , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
-    , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
-    , startSlot_{"start", "Start listening for connections"}
-    , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , renderOnlyRequestedFramesSlot_{"only_requested_frames",
-          "Required to be set for cinematic rendering. If true, rendering is skipped until frame for requested camera "
-          "and time is received."}
-    , close_future_{close_promise_.get_future()}
-    , fbo_msg_write_{new std::vector<fbo_msg_t>}
-    , fbo_msg_recv_{new std::vector<fbo_msg_t>}
-    , data_has_changed_{false}
-    , col_buf_el_size_{4}
-    , depth_buf_el_size_{4}
-    , width_{0}
-    , height_{0}
-    , frame_times_{0.0f}
-    , camera_params_{0.0f}
-    , connected_{false}
-    , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
-    , isRegistered_{false} {
+        : provide_img_slot_{"getImg", "Provides received images"}
+        , commSelectSlot_{"communicator", "Select the communicator to use"}
+        // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
+        , targetBandwidthSlot_{"targetBandwidth", "The targeted bandwidth for the compositor to use in MB"}
+        , numRendernodesSlot_{"NumRenderNodes", "Set the expected number of rendernodes"}
+        , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
+        , startSlot_{"start", "Start listening for connections"}
+        , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
+        , renderOnlyRequestedFramesSlot_{"only_requested_frames",
+              "Required to be set for cinematic rendering. If true, rendering is skipped until frame for requested "
+              "camera "
+              "and time is received."}
+        , close_future_{close_promise_.get_future()}
+        , fbo_msg_write_{new std::vector<fbo_msg_t>}
+        , fbo_msg_recv_{new std::vector<fbo_msg_t>}
+        , data_has_changed_{false}
+        , col_buf_el_size_{4}
+        , depth_buf_el_size_{4}
+        , width_{0}
+        , height_{0}
+        , frame_times_{0.0f}
+        , camera_params_{0.0f}
+        , connected_{false}
+        , registerComm_{std::make_unique<ZMQCommFabric>(zmq::socket_type::rep)}
+        , isRegistered_{false} {
     provide_img_slot_.SetCallback(megamol::image_calls::Image2DCall::ClassName(),
         megamol::image_calls::Image2DCall::FunctionName(0), &FBOCompositor2::getImageCallback);
     this->MakeSlotAvailable(&provide_img_slot_);
@@ -73,7 +74,9 @@ megamol::remote::FBOCompositor2::FBOCompositor2()
 }
 
 
-megamol::remote::FBOCompositor2::~FBOCompositor2() { this->Release(); }
+megamol::remote::FBOCompositor2::~FBOCompositor2() {
+    this->Release();
+}
 
 
 bool megamol::remote::FBOCompositor2::create() {
@@ -91,10 +94,10 @@ bool megamol::remote::FBOCompositor2::create() {
     auto vert_shader = glCreateShader(GL_VERTEX_SHADER);
     auto frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    auto path_to_vert = core::utility::ResourceWrapper::getFileName(
-        this->GetCoreInstance()->Configuration(), "compositor.vert.glsl");
-    auto path_to_frag = core::utility::ResourceWrapper::getFileName(
-        this->GetCoreInstance()->Configuration(), "compositor.frag.glsl");
+    auto path_to_vert =
+        core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "compositor.vert.glsl");
+    auto path_to_frag =
+        core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), "compositor.frag.glsl");
 
     std::ifstream shader_file(W2A(path_to_vert.PeekBuffer()));
     std::string shader_string =
@@ -138,7 +141,9 @@ bool megamol::remote::FBOCompositor2::create() {
 }
 
 
-void megamol::remote::FBOCompositor2::release() { shutdownThreads(); }
+void megamol::remote::FBOCompositor2::release() {
+    shutdownThreads();
+}
 
 
 bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender3DGL& call) {
@@ -202,14 +207,13 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL
     // initThreads();
 
     auto req_time = call.Time();
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    core::view::Camera_2::snapshot_type cam_snap;
-    core::view::Camera_2::matrix_type view, proj;
-    cam.calc_matrices(cam_snap, view, proj, core::thecam::snapshot_content::all);
-    auto req_cam_pos = cam_snap.position;
-    auto req_cam_up = cam_snap.up_vector;
-    auto req_cam_view = cam_snap.view_vector;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto req_cam_pos = cam_pose.position;
+    auto req_cam_up = cam_pose.up;
+    auto req_cam_view = cam_pose.direction;
     auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
     // if data changed check if size has changed
@@ -259,15 +263,15 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL
         float min = 0.00001f; // == 0 does not work (?)
         // Aborting rendering if requested frame has not been received yet
         if ((std::fabs(req_time - this->frame_times_[0]) >= min) ||
-            (std::fabs(req_cam_pos.x() - this->camera_params_[0]) >= min) ||
-            (std::fabs(req_cam_pos.y() - this->camera_params_[1]) >= min) ||
-            (std::fabs(req_cam_pos.z() - this->camera_params_[2]) >= min) ||
-            (std::fabs(req_cam_up.x() - this->camera_params_[3]) >= min) ||
-            (std::fabs(req_cam_up.y() - this->camera_params_[4]) >= min) ||
-            (std::fabs(req_cam_up.z() - this->camera_params_[5]) >= min) || 
-            (std::fabs(req_cam_view.x() - this->camera_params_[6]) >= min) ||
-            (std::fabs(req_cam_view.y() - this->camera_params_[7]) >= min) ||
-            (std::fabs(req_cam_view.z() - this->camera_params_[8]) >= min)) {
+            (std::fabs(req_cam_pos.x - this->camera_params_[0]) >= min) ||
+            (std::fabs(req_cam_pos.y - this->camera_params_[1]) >= min) ||
+            (std::fabs(req_cam_pos.z - this->camera_params_[2]) >= min) ||
+            (std::fabs(req_cam_up.x - this->camera_params_[3]) >= min) ||
+            (std::fabs(req_cam_up.y - this->camera_params_[4]) >= min) ||
+            (std::fabs(req_cam_up.z - this->camera_params_[5]) >= min) ||
+            (std::fabs(req_cam_view.x - this->camera_params_[6]) >= min) ||
+            (std::fabs(req_cam_view.y - this->camera_params_[7]) >= min) ||
+            (std::fabs(req_cam_view.z - this->camera_params_[8]) >= min)) {
             // Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while
             // rendering.
             call.SetFramebufferObject(nullptr);
@@ -311,7 +315,8 @@ bool megamol::remote::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     // initThreads();
 
     auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
-    if (imgc == nullptr) return false;
+    if (imgc == nullptr)
+        return false;
 
     if (data_has_changed_.load()) {
         std::lock_guard<std::mutex> write_guard(this->buffer_write_guard_);
@@ -396,7 +401,8 @@ void megamol::remote::FBOCompositor2::receiverJob(
     try {
         while (!shutdown_) {
             auto const status = close.wait_for(std::chrono::milliseconds(1));
-            if (status == std::future_status::ready) break;
+            if (status == std::future_status::ready)
+                break;
 
             // send a request for data
             std::vector<char> buf{'r', 'e', 'q'};
@@ -405,7 +411,8 @@ void megamol::remote::FBOCompositor2::receiverJob(
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Sending request\n");
 #endif
                 if (!comm.Send(buf, send_type::SEND)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "FBOCompositor2: Exception during send in 'receiverJob'\n");
                 }
 #if _DEBUG
                 else {
@@ -413,7 +420,8 @@ void megamol::remote::FBOCompositor2::receiverJob(
                 }
 #endif
             } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during send in 'receiverJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "FBOCompositor2: Exception during send in 'receiverJob'\n");
             }
 
             // receive requested frame info
@@ -433,14 +441,16 @@ void megamol::remote::FBOCompositor2::receiverJob(
                         "FBOCompositor2: Recv failed in 'receiverJob', trying again\n");
 #endif
                 }
-                if (shutdown_) break;
+                if (shutdown_)
+                    break;
                 /*#if _DEBUG
                                 else {
                                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
                                 }
                 #endif*/
             } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "FBOCompositor2: Exception during recv in 'receiverJob'\n");
             }
 
             fbo_msg_header_t header;
@@ -494,21 +504,19 @@ void megamol::remote::FBOCompositor2::receiverJob(
                 try {
                     fbo_msg_future->SetPromise(msg);
                     break;
-                } catch (std::future_error const& e) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                }
+                } catch (std::future_error const& e) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
             }
 
 #if 0
         {
-#    if _DEBUG
+#if _DEBUG
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex receiverJob Heartbeat\n");
-#    endif
+#endif
             std::shared_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
-#    if _DEBUG
+#if _DEBUG
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex receiverJob Heartbeat\n");
-#    endif
+#endif
             heartbeat_.wait(heartbeat_guard);
         }
 #endif
@@ -518,9 +526,7 @@ void megamol::remote::FBOCompositor2::receiverJob(
         megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.what());
     } catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.GetMsgA());
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n");
-    }
+    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n"); }
 }
 
 
@@ -583,22 +589,26 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
                 }
             }
 
-            if (shutdown_) break;
+            if (shutdown_)
+                break;
 
             {
 
 #if _DEBUG && VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collectorJob collect\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "FBOCompositor2: Entering mutex collectorJob collect\n");
 #endif
 
                 std::lock_guard<std::mutex> fbo_recv_guard(this->buffer_recv_guard_);
 
 #if _DEBUG && VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex colectorJob collect\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "FBOCompositor2: Leaving mutex colectorJob collect\n");
 #endif
 
 #ifdef _DEBUG
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Got all messages ... comitting\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "FBOCompositor2: Got all messages ... comitting\n");
 #endif
 
                 for (size_t i = 0; i < fbo_msg_futures.size(); ++i) {
@@ -620,19 +630,19 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
             this->targetBandwidthSlot_.Param<megamol::core::param::IntParam>()->Value() * 1000 * 1000;
         float const target_fps = target_bandwidth / msg_size;
 
-#    if _DEBUG
+#if _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Bandwidth %f\n", bandwidth);
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Target FPS %f\n", target_fps);
-#    endif
+#endif
         {
-#    if _DEBUG
+#if _DEBUG
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex collector Job heartbeat\n");
-#    endif
+#endif
             std::unique_lock<std::shared_mutex> heartbeat_guard(heartbeat_lock_);
 
-#    if _DEBUG
+#if _DEBUG
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Leaving mutex collectorJob heartbeat\n");
-#    endif
+#endif
 
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<size_t>(1000.0f / target_fps)));
             heartbeat_.notify_all();
@@ -651,9 +661,7 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
             job.join();
         }
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n");
-    }
+    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n"); }
 }
 
 
@@ -669,7 +677,8 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
 #endif
 
         do {
-            if (shutdown_) break;
+            if (shutdown_)
+                break;
 
             try {
 #if _DEBUG
@@ -692,9 +701,11 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
             }
             std::string str{buf.begin(), buf.end()};
 
-            if (shutdown_) break;
+            if (shutdown_)
+                break;
 #if _DEBUG
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOCompositor2: Received address: %s\n", str.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "FBOCompositor2: Received address: %s\n", str.c_str());
 #endif
             addresses.push_back(str);
 
@@ -714,9 +725,7 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
         if (!this->shutdown_) {
             this->isRegistered_.store(true);
         }
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
-    }
+    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n"); }
 }
 
 
@@ -855,8 +864,10 @@ bool megamol::remote::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) con
 bool megamol::remote::FBOCompositor2::shutdownThreads() {
     // close_promise_.set_value(true);
     shutdown_ = true;
-    if (collector_thread_.joinable()) collector_thread_.join();
-    if (this->initThreadsThread_.joinable()) this->initThreadsThread_.join();
+    if (collector_thread_.joinable())
+        collector_thread_.join();
+    if (this->initThreadsThread_.joinable())
+        this->initThreadsThread_.join();
 
     connected_ = false;
     isRegistered_.store(false);

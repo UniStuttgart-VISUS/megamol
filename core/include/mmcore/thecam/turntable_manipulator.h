@@ -8,11 +8,8 @@
 #ifndef TURNTABLE_MANIPULATOR_H_INCLUDED
 #define TURNTABLE_MANIPULATOR_H_INCLUDED
 
-
-#include "mmcore/thecam/utility/config.h"
-
 #include "mmcore/thecam/manipulator_base.h"
-
+#include <glm/ext.hpp>
 
 namespace megamol {
 namespace core {
@@ -23,21 +20,19 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class TurntableManipulator : public manipulator_base<T> {
+template<class T>
+class TurntableManipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
 
-    /** The mathematical traits of the camera. */
-    typedef typename manipulator_base<T>::maths_type maths_type;
-
     // Typedef all mathematical types we need in the manipulator.
-    typedef typename maths_type::point_type point_type;
-    typedef typename maths_type::quaternion_type quaternion_type;
-    typedef typename maths_type::screen_type screen_type;
-    typedef typename maths_type::vector_type vector_type;
-    typedef typename maths_type::world_type world_type;
+    typedef typename glm::vec4 point_type;
+    typedef typename glm::quat quaternion_type;
+    typedef int screen_type;
+    typedef typename glm::vec4 vector_type;
+    typedef float world_type;
 
     TurntableManipulator() = default;
 
@@ -53,48 +48,48 @@ public:
      * @param x
      * @param y
      */
-    void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre) {
+    void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre, const screen_type wnd_width,
+        const screen_type wnd_height) {
         if (this->manipulating() && this->enabled()) {
             auto cam = this->camera();
-            THE_ASSERT(cam != nullptr);
+            assert(cam != nullptr);
 
             if (this->m_last_sx != x || this->m_last_sy != y) {
+
+                float factor_x = 720.0f / wnd_width;
+                float factor_y = 720.0f / wnd_height;
 
                 screen_type dx = x - m_last_sx;
                 screen_type dy = y - m_last_sy;
 
+                // get camera pose
+                auto cam_pose = cam->template get<view::Camera::Pose>();
+
+                // split movement into horizontal and vertical (in camera space)
                 quaternion_type rot_lat;
                 quaternion_type rot_lon;
-                
-                auto wndSize = cam->resolution_gate();
-                float factor_x = 720.0f / wndSize.width();
-                float factor_y = 720.0f / wndSize.height();
 
-                auto intial_pos = cam->eye_position();
-                auto initial_orientation = cam->orientation();
+                // rotate horizontally
+                rot_lon = glm::angleAxis(factor_x * dx * (3.14159265f / 180.0f), glm::vec3(0.0, 1.0, 0.0));
+                cam_pose.right = glm::rotate(rot_lon, cam_pose.right);
+                cam_pose.direction = glm::rotate(rot_lon, cam_pose.direction);
+                cam_pose.up = glm::rotate(rot_lon, cam_pose.up);
 
-                auto shifted_pos = intial_pos - rotCentre;
-                quaternion_type pos_rot(shifted_pos.x(), shifted_pos.y(), shifted_pos.z(), 0.0f);
+                // rotate vertically
+                rot_lat = glm::angleAxis(factor_y * dy * (3.14159265f / 180.0f), -cam_pose.right);
+                cam_pose.direction = glm::rotate(rot_lat, cam_pose.direction);
+                cam_pose.up = glm::rotate(rot_lat, cam_pose.up);
 
-                thecam::math::set_from_angle_axis(
-                    rot_lon, factor_x * dx * (3.14159265f / 180.0f), vector_type(0.0, 1.0, 0.0, 0.0));
-                auto rot_lon_conj = thecam::math::conjugate(rot_lon);
+                // transform s.t. rotation center is origin
+                auto shifted_pos = cam_pose.position - glm::vec3(rotCentre);
+                shifted_pos = glm::rotate(rot_lon, shifted_pos);
+                shifted_pos = glm::rotate(rot_lat, shifted_pos);
 
-                cam->orientation(rot_lon * initial_orientation);
-                initial_orientation = cam->orientation();
+                // transform back
+                cam_pose.position = shifted_pos + glm::vec3(rotCentre);
+                cam->setPose(cam_pose);
 
-                auto cam_right = cam->right_vector();
-                thecam::math::set_from_angle_axis(rot_lat, factor_y * dy * (3.14159265f / 180.0f), -cam_right);
-                auto rot_lat_conj = thecam::math::conjugate(rot_lat);
-
-                cam->orientation(rot_lat * initial_orientation);
-
-                pos_rot = rot_lon * pos_rot * rot_lon_conj;
-                pos_rot = rot_lat * pos_rot * rot_lat_conj;
-
-                cam->position(point_type(
-                    pos_rot.x() + rotCentre.x(), pos_rot.y() + rotCentre.y(), pos_rot.z() + rotCentre.z(), 1.0f));
-
+                // update reference values for next call to on_drag (that happens without drag start event)
                 this->m_last_sx = x;
                 this->m_last_sy = y;
             }
@@ -119,7 +114,9 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The x-coordinate of the last clicked screen position */

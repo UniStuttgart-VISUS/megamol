@@ -6,12 +6,12 @@
  * All rights reserved.
  */
 
+#include "protein/VolumeSliceCall.h"
 #include "stdafx.h"
-#include "VolumeSliceCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -24,9 +24,14 @@ const unsigned int protein::VolumeSliceCall::CallForGetData = 0;
 /*
  * VolumeSliceCall::VolumeSliceCall
  */
-VolumeSliceCall::VolumeSliceCall(void) : Call(),
-        volumeTex( 0), texRCoord( 0.5f), clipPlaneNormal( 0,-1, 0),
-        bBoxDim( 1, 1, 1), mousePos( 0, 0, 0), clickPos( 0, 0, 0) {
+VolumeSliceCall::VolumeSliceCall(void)
+        : Call()
+        , volumeTex(0)
+        , texRCoord(0.5f)
+        , clipPlaneNormal(0, -1, 0)
+        , bBoxDim(1, 1, 1)
+        , mousePos(0, 0, 0)
+        , clickPos(0, 0, 0) {
     // intentionally empty
 }
 
@@ -34,6 +39,4 @@ VolumeSliceCall::VolumeSliceCall(void) : Call(),
 /*
  * VolumeSliceCall::~VolumeSliceCall
  */
-VolumeSliceCall::~VolumeSliceCall(void) {
-
-}
+VolumeSliceCall::~VolumeSliceCall(void) {}

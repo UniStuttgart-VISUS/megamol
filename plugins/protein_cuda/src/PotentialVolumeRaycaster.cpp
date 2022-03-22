@@ -13,34 +13,36 @@
 // + Set max frame to min fram
 
 
-#include "stdafx.h"
 #include "PotentialVolumeRaycaster.h"
+#include "stdafx.h"
 
-#include "protein_calls/VTIDataCall.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
-#include "slicing.h"
 #include "cuda_error_check.h"
 #include "ogl_error_check.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "slicing.h"
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
 
 using namespace megamol;
@@ -53,54 +55,67 @@ using namespace megamol::core::utility::log;
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::PotentialVolumeRaycaster
  */
-PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
-                Renderer3DModuleDS(),
-                /* Caller slots */
-                potentialDataCallerSlot("getVolData", "Connects the rendering with data storage"),
-                particleDataCallerSlot("getParticleData", "Connects the rendering with data storage"),
-                rendererCallerSlot("protren", "Connects the renderer with another render module"),
-                /* Parameters for volume rendering */
-                colorMinPotentialSclSlot("colorMinPotentialScl", "Minimum potential value for the color map"),
-                colorMaxPotentialSclSlot("colorMaxPotentialScl", "Maximum potential value for the color map"),
-                colorMinPotentialSlot("colorMinPotential", "Color for the minimum potential value"),
-                colorZeroPotentialSlot("colorZeroPotential", "Color for zero potential"),
-                colorMaxPotentialSlot("colorMaxPotential", "Color for the maximum potential value"),
-                volIsoValSlot("volIsoVal", "Iso value for volume rendering"),
-                volDeltaSlot("volDelta", "Delta for ray casting"),
-                volAlphaSclSlot("volAlphaScl", "Alpha scale factor for iso surface"),
-                volClipZSlot("volClipZ", "Parameter for the distance of the volume clipping plane"),
-                volMaxItSlot("volMaxIt", "Parameter for the maximum number of steps when raycasting"),
-                gradOffsSlot("gradOffs", "Parameter for the gradient offset"),
-                /* Parameters for the 'quicksurf' class */
-                qsParticleRadSlot("qsParticleRad", "Assumed radius of density grid data"),
-                qsGaussLimSlot("qsGaussLim", "The cutoff radius for the gaussian kernel"),
-                qsGridSpacingSlot("qsGridSpacing", "Spacing for the density grid"),
-                qsSclVanDerWaalsSlot("qsSclVanDerWaals", "Toggle scaling of the density radius by van der Waals radius"),
-                /* Parameters for slice rendering */
-                sliceRMSlot("texslice::render", "The rendering mode for the slices"),
-                xPlaneSlot("texslice::xPlanePos", "Change the position of the x-Plane"),
-                yPlaneSlot("texslice::yPlanePos", "Change the position of the y-Plane"),
-                zPlaneSlot("texslice::zPlanePos", "Change the position of the z-Plane"),
-                toggleXPlaneSlot("texslice::showXPlane", "Change the position of the x-Plane"),
-                toggleYPlaneSlot("texslice::showYPlane", "Change the position of the y-Plane"),
-                toggleZPlaneSlot("texslice::showZPlane", "Change the position of the z-Plane"),
-                sliceColorMinPotentialSclSlot("texslice::colorMinPotentialScl", "Minimum potential value for the color map"),
-                sliceColorMidPotentialSclSlot("texslice::colorMidPotentialScl", "Minimum potential value for the color map"),
-                sliceColorMaxPotentialSclSlot("texslice::colorMaxPotentialScl", "Maximum potential value for the color map"),
-                sliceColorMinPotentialSlot("texslice::colorMinPotential", "Color for the minimum potential value"),
-                sliceColorZeroPotentialSlot("texslice::colorZeroPotential", "Color for zero potential"),
-                sliceColorMaxPotentialSlot("texslice::colorMaxPotential", "Color for the maximum potential value"),
-                sliceMinValSlot("texslice::minTex", "Minimum texture value"),
-                sliceMaxValSlot("texslice::maxTex", "Maximum texture value"),
-                /* Raycasting */
-                fboDim(-1, -1), volumeTex(0),
-                potentialTex(0), volume(NULL),
-                /* Volume generation */
-                cudaqsurf(NULL),
-                /* The data */
-                datahashParticles(0), datahashPotential(0),
-                /* Boolean flags */
-                computeVolume(true), initPotentialTex(true), frameOld(-1) {
+PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
+        : Renderer3DModuleGL()
+        ,
+        /* Caller slots */
+        potentialDataCallerSlot("getVolData", "Connects the rendering with data storage")
+        , particleDataCallerSlot("getParticleData", "Connects the rendering with data storage")
+        , rendererCallerSlot("protren", "Connects the renderer with another render module")
+        ,
+        /* Parameters for volume rendering */
+        colorMinPotentialSclSlot("colorMinPotentialScl", "Minimum potential value for the color map")
+        , colorMaxPotentialSclSlot("colorMaxPotentialScl", "Maximum potential value for the color map")
+        , colorMinPotentialSlot("colorMinPotential", "Color for the minimum potential value")
+        , colorZeroPotentialSlot("colorZeroPotential", "Color for zero potential")
+        , colorMaxPotentialSlot("colorMaxPotential", "Color for the maximum potential value")
+        , volIsoValSlot("volIsoVal", "Iso value for volume rendering")
+        , volDeltaSlot("volDelta", "Delta for ray casting")
+        , volAlphaSclSlot("volAlphaScl", "Alpha scale factor for iso surface")
+        , volClipZSlot("volClipZ", "Parameter for the distance of the volume clipping plane")
+        , volMaxItSlot("volMaxIt", "Parameter for the maximum number of steps when raycasting")
+        , gradOffsSlot("gradOffs", "Parameter for the gradient offset")
+        ,
+        /* Parameters for the 'quicksurf' class */
+        qsParticleRadSlot("qsParticleRad", "Assumed radius of density grid data")
+        , qsGaussLimSlot("qsGaussLim", "The cutoff radius for the gaussian kernel")
+        , qsGridSpacingSlot("qsGridSpacing", "Spacing for the density grid")
+        , qsSclVanDerWaalsSlot("qsSclVanDerWaals", "Toggle scaling of the density radius by van der Waals radius")
+        ,
+        /* Parameters for slice rendering */
+        sliceRMSlot("texslice::render", "The rendering mode for the slices")
+        , xPlaneSlot("texslice::xPlanePos", "Change the position of the x-Plane")
+        , yPlaneSlot("texslice::yPlanePos", "Change the position of the y-Plane")
+        , zPlaneSlot("texslice::zPlanePos", "Change the position of the z-Plane")
+        , toggleXPlaneSlot("texslice::showXPlane", "Change the position of the x-Plane")
+        , toggleYPlaneSlot("texslice::showYPlane", "Change the position of the y-Plane")
+        , toggleZPlaneSlot("texslice::showZPlane", "Change the position of the z-Plane")
+        , sliceColorMinPotentialSclSlot("texslice::colorMinPotentialScl", "Minimum potential value for the color map")
+        , sliceColorMidPotentialSclSlot("texslice::colorMidPotentialScl", "Minimum potential value for the color map")
+        , sliceColorMaxPotentialSclSlot("texslice::colorMaxPotentialScl", "Maximum potential value for the color map")
+        , sliceColorMinPotentialSlot("texslice::colorMinPotential", "Color for the minimum potential value")
+        , sliceColorZeroPotentialSlot("texslice::colorZeroPotential", "Color for zero potential")
+        , sliceColorMaxPotentialSlot("texslice::colorMaxPotential", "Color for the maximum potential value")
+        , sliceMinValSlot("texslice::minTex", "Minimum texture value")
+        , sliceMaxValSlot("texslice::maxTex", "Maximum texture value")
+        ,
+        /* Raycasting */
+        fboDim(-1, -1)
+        , volumeTex(0)
+        , potentialTex(0)
+        , volume(NULL)
+        ,
+        /* Volume generation */
+        cudaqsurf(NULL)
+        ,
+        /* The data */
+        datahashParticles(0)
+        , datahashPotential(0)
+        ,
+        /* Boolean flags */
+        computeVolume(true)
+        , initPotentialTex(true)
+        , frameOld(-1) {
 
 
     // Data caller slota for the potential maps
@@ -129,23 +144,23 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
 
     // Parameter for minimum potential value for the color map
     this->colorMinPotential.Set(0.75f, 0.01f, 0.15f);
-    this->colorMinPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->colorMinPotential.X(),
-                    this->colorMinPotential.Y(), this->colorMinPotential.Z())));
+    this->colorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->colorMinPotential.X(), this->colorMinPotential.Y(), this->colorMinPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->colorZeroPotential.Set(1.0f, 1.0f, 1.0f);
-    this->colorZeroPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->colorZeroPotential.X(),
-                    this->colorZeroPotential.Y(), this->colorZeroPotential.Z())));
+    this->colorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->colorZeroPotential.X(), this->colorZeroPotential.Y(), this->colorZeroPotential.Z())
+                                                                               .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->colorMaxPotential.Set(0.23f, 0.29f, 0.75f);
-    this->colorMaxPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->colorMaxPotential.X(),
-                    this->colorMaxPotential.Y(), this->colorMaxPotential.Z())));
+    this->colorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->colorMaxPotential.X(), this->colorMaxPotential.Y(), this->colorMaxPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMaxPotentialSlot);
 
     // Parameter for iso value for volume rendering
@@ -206,7 +221,7 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
 
     // Render modes for slices
     this->sliceRM = 0;
-    param::EnumParam *srm = new core::param::EnumParam(this->sliceRM);
+    param::EnumParam* srm = new core::param::EnumParam(this->sliceRM);
     srm->SetTypePair(0, "Potential");
     srm->SetTypePair(1, "Density");
     this->sliceRMSlot << srm;
@@ -259,23 +274,23 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
 
     // Parameter for minimum potential value for the color map
     this->sliceColorMinPotential.Set(0.75f, 0.01f, 0.15f);
-    this->sliceColorMinPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->sliceColorMinPotential.X(),
-                    this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z())));
+    this->sliceColorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->sliceColorMinPotential.X(), this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->sliceColorZeroPotential.Set(1.0f, 1.0f, 1.0f);
-    this->sliceColorZeroPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->sliceColorZeroPotential.X(),
-                    this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z())));
+    this->sliceColorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->sliceColorZeroPotential.X(), this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z())
+                                                                                    .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->sliceColorMaxPotential.Set(0.23f, 0.29f, 0.75f);
-    this->sliceColorMaxPotentialSlot.SetParameter(new core::param::StringParam(
-            utility::ColourParser::ToString(this->sliceColorMaxPotential.X(),
-                    this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z())));
+    this->sliceColorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
+        this->sliceColorMaxPotential.X(), this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMaxPotentialSlot);
 
     // Minimum texture value
@@ -332,14 +347,16 @@ PotentialVolumeRaycaster::~PotentialVolumeRaycaster(void) {
  */
 void PotentialVolumeRaycaster::release(void) {
 
-    if(glIsTexture(this->volumeTex)) glDeleteTextures(1, &this->volumeTex);
-    if(glIsTexture(this->potentialTex)) glDeleteTextures(1, &this->potentialTex);
+    if (glIsTexture(this->volumeTex))
+        glDeleteTextures(1, &this->volumeTex);
+    if (glIsTexture(this->potentialTex))
+        glDeleteTextures(1, &this->potentialTex);
 
     this->rcShader.Release();
     this->rcShaderRay.Release();
 
-    if(this->cudaqsurf != NULL) {
-        CUDAQuickSurf *cqs = (CUDAQuickSurf *)this->cudaqsurf;
+    if (this->cudaqsurf != NULL) {
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
         delete cqs;
     }
 
@@ -351,14 +368,13 @@ void PotentialVolumeRaycaster::release(void) {
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::computeVolumeTex
  */
-bool PotentialVolumeRaycaster::computeDensityMap(
-        const MolecularDataCall *mol) {
+bool PotentialVolumeRaycaster::computeDensityMap(const MolecularDataCall* mol) {
 
     using namespace vislib::math;
 
     //Vec3f gridXAxis, gridYAxis, gridZAxis;
 
-    int volSizeOld = gridDensMap.size[0]*gridDensMap.size[1]*gridDensMap.size[2];
+    int volSizeOld = gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2];
 
     // Init uniform grid
     gridDensMap.minC[0] = this->bbox.ObjectSpaceBBox().Left();
@@ -368,10 +384,10 @@ bool PotentialVolumeRaycaster::computeDensityMap(
     gridDensMap.maxC[1] = this->bbox.ObjectSpaceBBox().Top();
     gridDensMap.maxC[2] = this->bbox.ObjectSpaceBBox().Front();
 
-//    printf("raycaster bbox density %f %f %f %f %f %f\n",
-//            this->bbox.ObjectSpaceBBox().Left(), this->bbox.ObjectSpaceBBox().Right(),
-//            this->bbox.ObjectSpaceBBox().Bottom(), this->bbox.ObjectSpaceBBox().Top(),
-//            this->bbox.ObjectSpaceBBox().Back(),this->bbox.ObjectSpaceBBox().Front());
+    //    printf("raycaster bbox density %f %f %f %f %f %f\n",
+    //            this->bbox.ObjectSpaceBBox().Left(), this->bbox.ObjectSpaceBBox().Right(),
+    //            this->bbox.ObjectSpaceBBox().Bottom(), this->bbox.ObjectSpaceBBox().Top(),
+    //            this->bbox.ObjectSpaceBBox().Back(),this->bbox.ObjectSpaceBBox().Front());
 
     gridXAxis[0] = gridDensMap.maxC[0] - gridDensMap.minC[0];
     gridYAxis[1] = gridDensMap.maxC[1] - gridDensMap.minC[1];
@@ -381,24 +397,25 @@ bool PotentialVolumeRaycaster::computeDensityMap(
     //printf("grids: %f %f %f\n", gridXAxis[0], gridYAxis[1], gridZAxis[2]);
     //printf("spacing %f\n", this->qsGridSpacing);
     //printf("rad %f\n", this->qsParticleRad);
-    gridDensMap.size[0] = (int) ceil(gridXAxis[0] / this->qsGridSpacing);
-    gridDensMap.size[1] = (int) ceil(gridYAxis[1] / this->qsGridSpacing);
-    gridDensMap.size[2] = (int) ceil(gridZAxis[2] / this->qsGridSpacing);
-    gridXAxis[0] = (gridDensMap.size[0]-1) * this->qsGridSpacing;
-    gridYAxis[1] = (gridDensMap.size[1]-1) * this->qsGridSpacing;
-    gridZAxis[2] = (gridDensMap.size[2]-1) * this->qsGridSpacing;
+    gridDensMap.size[0] = (int)ceil(gridXAxis[0] / this->qsGridSpacing);
+    gridDensMap.size[1] = (int)ceil(gridYAxis[1] / this->qsGridSpacing);
+    gridDensMap.size[2] = (int)ceil(gridZAxis[2] / this->qsGridSpacing);
+    gridXAxis[0] = (gridDensMap.size[0] - 1) * this->qsGridSpacing;
+    gridYAxis[1] = (gridDensMap.size[1] - 1) * this->qsGridSpacing;
+    gridZAxis[2] = (gridDensMap.size[2] - 1) * this->qsGridSpacing;
     gridDensMap.maxC[0] = gridDensMap.minC[0] + gridXAxis[0];
     gridDensMap.maxC[1] = gridDensMap.minC[1] + gridYAxis[1];
     gridDensMap.maxC[2] = gridDensMap.minC[2] + gridZAxis[2];
 
 
-    float *gridDataPos = new float[mol->AtomCount()*4]; // TODO Do not allocate every in frame
+    float* gridDataPos = new float[mol->AtomCount() * 4]; // TODO Do not allocate every in frame
 
-	if (volSizeOld < (int)(gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2])) { // TODO Do not allocate every time
-        if(this->volume != NULL) {
+    if (volSizeOld <
+        (int)(gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2])) { // TODO Do not allocate every time
+        if (this->volume != NULL) {
             delete[] this->volume;
         }
-        this->volume = new float[gridDensMap.size[0]*gridDensMap.size[1]*gridDensMap.size[2]];
+        this->volume = new float[gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2]];
     }
 
     // Gather atom positions for the density map
@@ -411,24 +428,24 @@ bool PotentialVolumeRaycaster::computeDensityMap(
             MolecularDataCall::Chain chainTmp = mol->Chains()[c];
             for (uint m = 0; m < chainTmp.MoleculeCount(); ++m) { // Loop through molecules
 
-                MolecularDataCall::Molecule molTmp = mol->Molecules()[chainTmp.FirstMoleculeIndex()+m];
+                MolecularDataCall::Molecule molTmp = mol->Molecules()[chainTmp.FirstMoleculeIndex() + m];
                 for (uint res = 0; res < molTmp.ResidueCount(); ++res) { // Loop through residues
 
-                    const MolecularDataCall::Residue *resTmp = mol->Residues()[molTmp.FirstResidueIndex()+res];
+                    const MolecularDataCall::Residue* resTmp = mol->Residues()[molTmp.FirstResidueIndex() + res];
                     for (uint at = 0; at < resTmp->AtomCount(); ++at) { // Loop through atoms
                         uint atomIdx = resTmp->FirstAtomIndex() + at;
 
-                        gridDataPos[4*particleCnt+0] = mol->AtomPositions()[3*atomIdx+0] - gridDensMap.minC[0];
-                        gridDataPos[4*particleCnt+1] = mol->AtomPositions()[3*atomIdx+1] - gridDensMap.minC[1];
-                        gridDataPos[4*particleCnt+2] = mol->AtomPositions()[3*atomIdx+2] - gridDensMap.minC[2];
-                        if(this->qsSclVanDerWaals) {
-                            gridDataPos[4*particleCnt+3] = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
+                        gridDataPos[4 * particleCnt + 0] = mol->AtomPositions()[3 * atomIdx + 0] - gridDensMap.minC[0];
+                        gridDataPos[4 * particleCnt + 1] = mol->AtomPositions()[3 * atomIdx + 1] - gridDensMap.minC[1];
+                        gridDataPos[4 * particleCnt + 2] = mol->AtomPositions()[3 * atomIdx + 2] - gridDensMap.minC[2];
+                        if (this->qsSclVanDerWaals) {
+                            gridDataPos[4 * particleCnt + 3] =
+                                mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Radius();
+                        } else {
+                            gridDataPos[4 * particleCnt + 3] = 1.0f;
                         }
-                        else {
-                            gridDataPos[4*particleCnt+3] = 1.0f;
-                        }
-                        if(gridDataPos[4*particleCnt+3] > maxRad) {
-                            maxRad = gridDataPos[4*particleCnt+3];
+                        if (gridDataPos[4 * particleCnt + 3] > maxRad) {
+                            maxRad = gridDataPos[4 * particleCnt + 3];
                         }
                         particleCnt++;
                     }
@@ -438,19 +455,13 @@ bool PotentialVolumeRaycaster::computeDensityMap(
     }
 
     // Compute uniform grid
-    CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
-    int rc = cqs->calc_map(
-            particleCnt,
-            &gridDataPos[0],
-            NULL,                 // Pointer to 'color' array
-            false,                // Do not use 'color' array
-            (float*)&gridDensMap.minC,
-            (int*)&gridDensMap.size,
-            maxRad,
-            this->qsParticleRad, // Radius scaling
-            this->qsGridSpacing,
-            this->volIsoVal,
-            this->qsGaussLim);
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    int rc = cqs->calc_map(particleCnt, &gridDataPos[0],
+        NULL,  // Pointer to 'color' array
+        false, // Do not use 'color' array
+        (float*)&gridDensMap.minC, (int*)&gridDensMap.size, maxRad,
+        this->qsParticleRad, // Radius scaling
+        this->qsGridSpacing, this->volIsoVal, this->qsGaussLim);
 
     // DEBUG print parameters
     /*printf("QS PARAM Atom count %u\n", mol->AtomCount());
@@ -463,28 +474,26 @@ bool PotentialVolumeRaycaster::computeDensityMap(
     printf("QS PARAM iso val %f\n", this->volIsoVal);
     printf("QS PARAM gauss limit %f\n", this->qsGaussLim);*/
 
-    if(rc != 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Quicksurf class returned val != 0\n", this->ClassName());
+    if (rc != 0) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Quicksurf class returned val != 0\n", this->ClassName());
         return false;
     }
 
     // Copy data from device to host
     CudaSafeCall(cudaMemcpy(this->volume, cqs->getMap(),
-            gridDensMap.size[0]*gridDensMap.size[1]*gridDensMap.size[2]*sizeof(float),
-            cudaMemcpyDeviceToHost));
-    if(cudaGetLastError() != cudaSuccess) {
+        gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2] * sizeof(float), cudaMemcpyDeviceToHost));
+    if (cudaGetLastError() != cudaSuccess) {
         return false;
     }
 
-//    for(int i = 0; i < gridDim[0]*gridDim[1]*gridDim[2]; i++) {
-//        printf("volume (raycaster) %i: %f\n", i, this->volume0[i]);
-//    }
+    //    for(int i = 0; i < gridDim[0]*gridDim[1]*gridDim[2]; i++) {
+    //        printf("volume (raycaster) %i: %f\n", i, this->volume0[i]);
+    //    }
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-//            "%s: time for computing volume #0 %f",
-//            this->ClassName(),
-//            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //            "%s: time for computing volume #0 %f",
+    //            this->ClassName(),
+    //            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 
     delete[] gridDataPos;
 
@@ -493,20 +502,12 @@ bool PotentialVolumeRaycaster::computeDensityMap(
 
     glEnable(GL_TEXTURE_3D);
 
-    if(!glIsTexture(this->volumeTex)) {
+    if (!glIsTexture(this->volumeTex)) {
         glGenTextures(1, &this->volumeTex);
     }
     glBindTexture(GL_TEXTURE_3D, this->volumeTex);
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_ALPHA,
-            gridDensMap.size[0],
-            gridDensMap.size[1],
-            gridDensMap.size[2],
-            0,
-            GL_ALPHA,
-            GL_FLOAT,
-            this->volume);
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA, gridDensMap.size[0], gridDensMap.size[1], gridDensMap.size[2], 0,
+        GL_ALPHA, GL_FLOAT, this->volume);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -523,93 +524,88 @@ bool PotentialVolumeRaycaster::computeDensityMap(
  * megamol::protein_cuda::PotentialVolumeRaycaster::create
  */
 bool PotentialVolumeRaycaster::create() {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Create quicksurf objects
-    if(!this->cudaqsurf) {
+    if (!this->cudaqsurf) {
         this->cudaqsurf = new CUDAQuickSurf();
     }
 
     // Init extensions
-    if(! ogl_IsVersionGEQ(2,0) || !areExtsAvailable("\
+    /*if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
             GL_EXT_texture3D \
             GL_EXT_framebuffer_object \
             GL_ARB_multitexture \
             GL_ARB_draw_buffers \
             GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance *ci = this->GetCoreInstance();
-    if(!ci) return false;
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::raycasting::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
-                this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::raycasting::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     try {
-        if(!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch(vislib::Exception &e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception& e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::raycasting::vertexRay", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
-                this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertexRay", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("electrostatics::raycasting::fragmentRay", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragmentRay", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     try {
-        if(!this->rcShaderRay.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->rcShaderRay.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch(vislib::Exception &e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception& e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
 
     // Load slice shader
-    if(!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source: slice shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
-    if(!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;
     }
     try {
-        if(!this->sliceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+        if (!this->sliceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    }
-    catch(vislib::Exception &e){
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception& e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -623,10 +619,10 @@ bool PotentialVolumeRaycaster::create() {
 bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-               "%s: (re)creating raycasting fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -649,10 +645,11 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
     sap0.format = GL_STENCIL_INDEX;
     sap0.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-    if(!this->rcFbo.Create(width, height, 3, cap0, dap0, sap0)) return false;
+    if (!this->rcFbo.Create(width, height, 3, cap0, dap0, sap0))
+        return false;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-               "%s: (re)creating source fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -676,81 +673,75 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::GetExtents
  */
-bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
+bool PotentialVolumeRaycaster::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-//    printf("PotentialVolumeRaycaster::GetExtents\n");
-
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
+    //    printf("PotentialVolumeRaycaster::GetExtents\n");
 
     // Get pointer to potential map data call
-	protein_calls::VTIDataCall *cmd =
-			this->potentialDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
-    if (cmd == NULL) return false;
-    if (!(*cmd)(VTIDataCall::CallForGetExtent)) return false;
+    protein_calls::VTIDataCall* cmd = this->potentialDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+    if (cmd == NULL)
+        return false;
+    if (!(*cmd)(VTIDataCall::CallForGetExtent))
+        return false;
 
     // Get a pointer to particle data call
-    MolecularDataCall *mol = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
-    if (mol == NULL) return false;
-    if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
+    MolecularDataCall* mol = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
+    if (mol == NULL)
+        return false;
+    if (!(*mol)(MolecularDataCall::CallForGetExtent))
+        return false;
 
     // Get a pointer to the outgoing render call
-    view::CallRender3D *ren = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if(ren == NULL) return false;
-    if(!(*ren)(1)) return false;
+    view::CallRender3D* ren = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (ren == NULL)
+        return false;
+    if (!(*ren)(1))
+        return false;
 
     this->bboxParticles = mol->AccessBoundingBoxes();
     this->bboxPotential = cmd->AccessBoundingBoxes();
 
-    core::BoundingBoxes bbox_external = ren->AccessBoundingBoxes();
+    auto bbox_external = ren->AccessBoundingBoxes();
 
     // Calc union of all bounding boxes
     vislib::math::Cuboid<float> bboxTmp;
 
     bboxTmp = cmd->AccessBoundingBoxes().ObjectSpaceBBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().ObjectSpaceBBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().BoundingBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().ObjectSpaceBBox());
-    bboxTmp.Union(bbox_external.ObjectSpaceBBox());
+    bboxTmp.Union(bbox_external.BoundingBox());
     this->bbox.SetObjectSpaceBBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().ObjectSpaceClipBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().ObjectSpaceClipBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().ClipBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().ObjectSpaceClipBox());
-    bboxTmp.Union(bbox_external.ObjectSpaceClipBox());
+    bboxTmp.Union(bbox_external.ClipBox());
     this->bbox.SetObjectSpaceClipBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().WorldSpaceBBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().WorldSpaceBBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().BoundingBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().WorldSpaceBBox());
-    bboxTmp.Union(bbox_external.WorldSpaceBBox());
+    bboxTmp.Union(bbox_external.BoundingBox());
     this->bbox.SetWorldSpaceBBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().WorldSpaceClipBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().WorldSpaceClipBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().ClipBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().WorldSpaceClipBox());
-    bboxTmp.Union(bbox_external.WorldSpaceClipBox());
+    bboxTmp.Union(bbox_external.ClipBox());
     this->bbox.SetWorldSpaceClipBox(bboxTmp);
 
-    float scale;
-    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
+    //    // DEBUG
+    //    printf("Raycaster scale %f       , org %f %f %f, maxCoord %f %f %f\n",
+    //            scale,
+    //            this->bbox.ObjectSpaceBBox().GetOrigin().X(),
+    //            this->bbox.ObjectSpaceBBox().GetOrigin().Y(),
+    //            this->bbox.ObjectSpaceBBox().GetOrigin().Z(),
+    //            this->bbox.ObjectSpaceBBox().GetRightTopFront().X(),
+    //            this->bbox.ObjectSpaceBBox().GetRightTopFront().Y(),
+    //            this->bbox.ObjectSpaceBBox().GetRightTopFront().Z());
 
-//    // DEBUG
-//    printf("Raycaster scale %f       , org %f %f %f, maxCoord %f %f %f\n",
-//            scale,
-//            this->bbox.ObjectSpaceBBox().GetOrigin().X(),
-//            this->bbox.ObjectSpaceBBox().GetOrigin().Y(),
-//            this->bbox.ObjectSpaceBBox().GetOrigin().Z(),
-//            this->bbox.ObjectSpaceBBox().GetRightTopFront().X(),
-//            this->bbox.ObjectSpaceBBox().GetRightTopFront().Y(),
-//            this->bbox.ObjectSpaceBBox().GetRightTopFront().Z());
-
-    this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(std::min(cmd->FrameCount(), mol->FrameCount()));
+    call.AccessBoundingBoxes() = this->bbox;
+    call.SetTimeFramesCount(std::min(cmd->FrameCount(), mol->FrameCount()));
 
     return true;
 }
@@ -760,14 +751,17 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
  * megamol::protein_cuda::PotentialVolumeRaycaster::freeBuffers
  */
 void PotentialVolumeRaycaster::freeBuffers() {
-    if(this->volume != NULL) { delete[] this->volume; this->volume = NULL; }
+    if (this->volume != NULL) {
+        delete[] this->volume;
+        this->volume = NULL;
+    }
 }
 
 
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::initPotential
  */
-bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
+bool PotentialVolumeRaycaster::initPotential(VTIDataCall* cmd) {
     using namespace vislib::sys;
 
     // Setup grid parameters
@@ -786,25 +780,17 @@ bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
 
     //  Setup textures
     glEnable(GL_TEXTURE_3D);
-    if(!glIsTexture(this->potentialTex)) {
+    if (!glIsTexture(this->potentialTex)) {
         glGenTextures(1, &this->potentialTex);
     }
     glBindTexture(GL_TEXTURE_3D, this->potentialTex);
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_RGBA32F,
-            cmd->GetGridsize().X(),
-            cmd->GetGridsize().Y(),
-            cmd->GetGridsize().Z(),
-            0,
-            GL_ALPHA,
-            GL_FLOAT,
-            (float*)(cmd->GetPointDataByIdx(0, 0)));
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_RGBA32F, cmd->GetGridsize().X(), cmd->GetGridsize().Y(),
+        cmd->GetGridsize().Z(), 0, GL_ALPHA, GL_FLOAT, (float*)(cmd->GetPointDataByIdx(0, 0)));
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+    //    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    //    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    //    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
@@ -820,22 +806,15 @@ bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::Render
  */
-bool PotentialVolumeRaycaster::Render(core::Call& call) {
+bool PotentialVolumeRaycaster::Render(core_gl::view::CallRender3DGL& call) {
 
     using namespace vislib::math;
 
-    // Get render call
-    core::view::AbstractCallRender3D *cr3d =
-            dynamic_cast<core::view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    float calltime = cr3d->Time();
+    float calltime = call.Time();
     uint frameIdx = static_cast<int>(calltime);
 
     // Get a pointer to the outgoing render call
-    view::CallRender3D *ren = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    view::CallRender3D* ren = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (ren == NULL) {
         return false;
     }
@@ -844,19 +823,18 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     ren->SetTimeFramesCount(frameIdx);
 
     // Get the potential data
-	protein_calls::VTIDataCall *cmd =
-		this->potentialDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+    protein_calls::VTIDataCall* cmd = this->potentialDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (cmd == NULL) {
         return false;
     }
-    cmd->SetCalltime(calltime);       // Set calltime
-    cmd->SetFrameID(frameIdx, true);  // Set 'force' flag
+    cmd->SetCalltime(calltime);      // Set calltime
+    cmd->SetFrameID(frameIdx, true); // Set 'force' flag
     if (!(*cmd)(VTIDataCall::CallForGetData)) {
         return false;
     }
 
     // Get the particle data
-    MolecularDataCall *mol = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* mol = this->particleDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL) {
         return false;
     }
@@ -868,26 +846,21 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
 
 
     // Update parameters if necessary
-    if(!this->updateParams()) {
-        Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to update parameters",
-                this->ClassName());
+    if (!this->updateParams()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to update parameters", this->ClassName());
         return false;
     }
 
     // (Re-)compute volume texture if necessary
-    if ((this->computeVolume)
-            || (mol->DataHash() != this->datahashParticles)
-            || (this->frameOld != frameIdx)) {
+    if ((this->computeVolume) || (mol->DataHash() != this->datahashParticles) || (this->frameOld != frameIdx)) {
         this->datahashParticles = mol->DataHash();
-        if(!this->computeDensityMap(mol)) return false;
+        if (!this->computeDensityMap(mol))
+            return false;
         this->computeVolume = false;
     }
 
     // (Re-)compute potential texture if necessary
-    if ((this->initPotentialTex)
-            || (cmd->DataHash() != this->datahashPotential)
-            || (this->frameOld != frameIdx)) {
+    if ((this->initPotentialTex) || (cmd->DataHash() != this->datahashPotential) || (this->frameOld != frameIdx)) {
         this->datahashPotential = cmd->DataHash();
         if (!this->initPotential(cmd)) {
             return false;
@@ -896,19 +869,20 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     }
 
     // Get camera information
-    this->cameraInfo =  dynamic_cast<core::view::CallRender3D*>(&call)->GetCameraParameters();
-    ren->SetCameraParameters(this->cameraInfo);
+    this->cameraInfo = call.GetCamera();
+    ren->SetCamera(this->cameraInfo);
 
     // Set call time
-    ren->SetTime(cr3d->Time());
+    ren->SetTime(call.Time());
 
     // Get current viewport and recreate fbo if necessary
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
-    if((curVP[2] != this->fboDim.X()) || (curVP[3] != fboDim.Y())) {
+    if ((curVP[2] != this->fboDim.X()) || (curVP[3] != fboDim.Y())) {
         this->fboDim.SetX(static_cast<int>(curVP[2]));
         this->fboDim.SetY(static_cast<int>(curVP[3]));
-		if (!this->createFbos(static_cast<GLsizei>(curVP[2]), static_cast<GLsizei>(curVP[3]))) return false;
+        if (!this->createFbos(static_cast<GLsizei>(curVP[2]), static_cast<GLsizei>(curVP[3])))
+            return false;
     }
 
 
@@ -926,8 +900,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
 
     // Apply scaling based on combined bounding box
     float scaleCombined;
-    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scaleCombined = 2.0f/this->bbox.ObjectSpaceBBox().LongestEdge();
+    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+        scaleCombined = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
     } else {
         scaleCombined = 1.0f;
     }
@@ -938,12 +912,12 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glPushMatrix();
     // Revert scaling done by external renderer
     float scaleRevert;
-    if(!vislib::math::IsEqual(ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scaleRevert = 2.0f/ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    if (!vislib::math::IsEqual(ren->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+        scaleRevert = 2.0f / ren->AccessBoundingBoxes().BoundingBox().LongestEdge();
     } else {
         scaleRevert = 1.0f;
     }
-    scaleRevert = 1.0f/scaleRevert;
+    scaleRevert = 1.0f / scaleRevert;
     glScalef(scaleRevert, scaleRevert, scaleRevert);
     //printf("Scale by %f (scaleRevert)\n", scaleRevert); // DEBUG
     (*ren)(0);
@@ -951,19 +925,18 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
 
     CheckForGLError();
 
-//    // DEBUG
-//    glDisable(GL_CULL_FACE);
-//    glBegin(GL_QUADS);
-//        glColor3f(0.0, 1.0, 0.0);
-//        glVertex3f(10.0, 10.0, 11.0);
-//        glVertex3f(60.0, 10.0, 11.0);
-//        glVertex3f(60.0, 60.0, 11.0);
-//        glVertex3f(10.0, 60.0, 11.0);
-//    glEnd();
+    //    // DEBUG
+    //    glDisable(GL_CULL_FACE);
+    //    glBegin(GL_QUADS);
+    //        glColor3f(0.0, 1.0, 0.0);
+    //        glVertex3f(10.0, 10.0, 11.0);
+    //        glVertex3f(60.0, 10.0, 11.0);
+    //        glVertex3f(60.0, 60.0, 11.0);
+    //        glVertex3f(10.0, 60.0, 11.0);
+    //    glEnd();
 
     // Render slices
-    if (!this->renderSlices(this->volumeTex, this->potentialTex,
-            this->gridPotentialMap, this->gridDensMap)) {
+    if (!this->renderSlices(this->volumeTex, this->potentialTex, this->gridPotentialMap, this->gridDensMap)) {
         return false;
     }
 
@@ -981,8 +954,7 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    this->rcFbo.EnableMultiple(3, GL_COLOR_ATTACHMENT0_EXT,
-            GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
+    this->rcFbo.EnableMultiple(3, GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     this->rcShaderRay.Enable();
@@ -998,6 +970,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
 
+    auto camera_intrinsics = cameraInfo.get<view::Camera::PerspectiveParameters>();
+
     this->rcShader.Enable();
     glUniform1iARB(this->rcShader.ParameterLocation("densityTex"), 0);
     glUniform1iARB(this->rcShader.ParameterLocation("srcColorBuff"), 1);
@@ -1006,28 +980,26 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glUniform1iARB(this->rcShader.ParameterLocation("posESBuff"), 4);
     glUniform1iARB(this->rcShader.ParameterLocation("tcBuff1"), 5);
     glUniform1iARB(this->rcShader.ParameterLocation("potential"), 6);
-    glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta*0.01f);
+    glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta * 0.01f);
     glUniform1fARB(this->rcShader.ParameterLocation("isoVal"), this->volIsoVal);
     glUniform1fARB(this->rcShader.ParameterLocation("alphaScl"), this->volAlphaScl);
-	glUniform1iARB(this->rcShader.ParameterLocation("maxIt"), static_cast<int>(this->volMaxIt));
-    glUniform1fARB(this->rcShader.ParameterLocation("gradOffset"), this->gradOffs/10.0f);
+    glUniform1iARB(this->rcShader.ParameterLocation("maxIt"), static_cast<int>(this->volMaxIt));
+    glUniform1fARB(this->rcShader.ParameterLocation("gradOffset"), this->gradOffs / 10.0f);
     glUniform1fARB(this->rcShader.ParameterLocation("colorMinVal"), this->colorMinPotentialScl);
     glUniform1fARB(this->rcShader.ParameterLocation("colorMaxVal"), this->colorMaxPotentialScl);
     glUniform3fvARB(this->rcShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(this->rcShader.ParameterLocation("colorZero"), 1, this->colorZeroPotential.PeekComponents());
     glUniform3fvARB(this->rcShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
-	glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()), static_cast<float>(fboDim.Y()),
-            this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+    glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()),
+        static_cast<float>(fboDim.Y()), camera_intrinsics.near_plane, camera_intrinsics.far_plane);
     glUniform3fvARB(this->rcShader.ParameterLocation("potTexOrg"), 1, (float*)&gridPotentialMap.minC);
     glUniform3fARB(this->rcShader.ParameterLocation("potTexSize"),
-            gridPotentialMap.delta[0]*(gridPotentialMap.size[0]-1),
-            gridPotentialMap.delta[1]*(gridPotentialMap.size[1]-1),
-            gridPotentialMap.delta[2]*(gridPotentialMap.size[2]-1));
+        gridPotentialMap.delta[0] * (gridPotentialMap.size[0] - 1),
+        gridPotentialMap.delta[1] * (gridPotentialMap.size[1] - 1),
+        gridPotentialMap.delta[2] * (gridPotentialMap.size[2] - 1));
     glUniform3fvARB(this->rcShader.ParameterLocation("volTexOrg"), 1, (float*)&gridDensMap.minC);
-    glUniform3fARB(this->rcShader.ParameterLocation("volTexSize"),
-            gridDensMap.delta[0]*(gridDensMap.size[0]-1),
-            gridDensMap.delta[1]*(gridDensMap.size[1]-1),
-            gridDensMap.delta[2]*(gridDensMap.size[2]-1));
+    glUniform3fARB(this->rcShader.ParameterLocation("volTexSize"), gridDensMap.delta[0] * (gridDensMap.size[0] - 1),
+        gridDensMap.delta[1] * (gridDensMap.size[1] - 1), gridDensMap.delta[2] * (gridDensMap.size[2] - 1));
 
     glActiveTextureARB(GL_TEXTURE1_ARB);
     this->srcFbo.BindColourTexture(0);
@@ -1069,14 +1041,13 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     view.SetZ(modelMatrix.GetAt(2, 2));
 
     glPushMatrix();
-    glTranslatef(this->bbox.ObjectSpaceBBox().GetOrigin().X(),
-            this->bbox.ObjectSpaceBBox().GetOrigin().Y(),
-            this->bbox.ObjectSpaceBBox().GetOrigin().Z());
+    glTranslatef(this->bbox.ObjectSpaceBBox().GetOrigin().X(), this->bbox.ObjectSpaceBBox().GetOrigin().Y(),
+        this->bbox.ObjectSpaceBBox().GetOrigin().Z());
     this->viewSlicing.setupSingleSlice(view.PeekComponents(), bboxExtents.PeekComponents());
     // Render single view aligned slice
     glColor3f(1.0f, 0.0, 0.0);
     glBegin(GL_TRIANGLE_FAN);
-	this->viewSlicing.drawSingleSlice(static_cast<float>(VS_EPS));
+    this->viewSlicing.drawSingleSlice(static_cast<float>(VS_EPS));
     //this->viewSlicing.drawSingleSlice(VS_EPS - this->volClipZ);
     glEnd();
     glEnable(GL_CULL_FACE);
@@ -1103,8 +1074,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
 /*
  * PotentialVolumeRaycaster::renderSlices
  */
-bool PotentialVolumeRaycaster::renderSlices(GLuint densityTex,
-        GLuint potentialTex, gridParams potGrid, gridParams densGrid) {
+bool PotentialVolumeRaycaster::renderSlices(
+    GLuint densityTex, GLuint potentialTex, gridParams potGrid, gridParams densGrid) {
 
     Vec3f gridMinCoord, gridMaxCoord;
     gridMinCoord[0] = this->bbox.ObjectSpaceBBox().Left();
@@ -1115,26 +1086,29 @@ bool PotentialVolumeRaycaster::renderSlices(GLuint densityTex,
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
 
     // Texture coordinates for potential map
-    float minXPotTC = (this->bbox.ObjectSpaceBBox().Left() - potGrid.minC[0])/(potGrid.maxC[0]-potGrid.minC[0]);
-    float minYPotTC = (this->bbox.ObjectSpaceBBox().Bottom() - potGrid.minC[1])/(potGrid.maxC[1]-potGrid.minC[1]);
-    float minZPotTC = (this->bbox.ObjectSpaceBBox().Back() - potGrid.minC[2])/(potGrid.maxC[2]-potGrid.minC[2]);
-    float maxXPotTC = (this->bbox.ObjectSpaceBBox().Right() - potGrid.minC[0])/(potGrid.maxC[0]-potGrid.minC[0]);
-    float maxYPotTC = (this->bbox.ObjectSpaceBBox().Top() - potGrid.minC[1])/(potGrid.maxC[1]-potGrid.minC[1]);
-    float maxZPotTC = (this->bbox.ObjectSpaceBBox().Front() - potGrid.minC[2])/(potGrid.maxC[2]-potGrid.minC[2]);
-    float planeXPotTC = (this->xPlane-potGrid.minC[0])/(potGrid.maxC[0]- potGrid.minC[0]);
-    float planeYPotTC = (this->yPlane-potGrid.minC[1])/(potGrid.maxC[1]- potGrid.minC[1]);
-    float planeZPotTC = (this->zPlane-potGrid.minC[2])/(potGrid.maxC[2]- potGrid.minC[2]);
+    float minXPotTC = (this->bbox.ObjectSpaceBBox().Left() - potGrid.minC[0]) / (potGrid.maxC[0] - potGrid.minC[0]);
+    float minYPotTC = (this->bbox.ObjectSpaceBBox().Bottom() - potGrid.minC[1]) / (potGrid.maxC[1] - potGrid.minC[1]);
+    float minZPotTC = (this->bbox.ObjectSpaceBBox().Back() - potGrid.minC[2]) / (potGrid.maxC[2] - potGrid.minC[2]);
+    float maxXPotTC = (this->bbox.ObjectSpaceBBox().Right() - potGrid.minC[0]) / (potGrid.maxC[0] - potGrid.minC[0]);
+    float maxYPotTC = (this->bbox.ObjectSpaceBBox().Top() - potGrid.minC[1]) / (potGrid.maxC[1] - potGrid.minC[1]);
+    float maxZPotTC = (this->bbox.ObjectSpaceBBox().Front() - potGrid.minC[2]) / (potGrid.maxC[2] - potGrid.minC[2]);
+    float planeXPotTC = (this->xPlane - potGrid.minC[0]) / (potGrid.maxC[0] - potGrid.minC[0]);
+    float planeYPotTC = (this->yPlane - potGrid.minC[1]) / (potGrid.maxC[1] - potGrid.minC[1]);
+    float planeZPotTC = (this->zPlane - potGrid.minC[2]) / (potGrid.maxC[2] - potGrid.minC[2]);
 
     // Texture coordinates for the density grid
-    float minXDensTC = (this->bbox.ObjectSpaceBBox().Left() - densGrid.minC[0])/(densGrid.maxC[0]-densGrid.minC[0]);
-    float minYDensTC = (this->bbox.ObjectSpaceBBox().Bottom() - densGrid.minC[1])/(densGrid.maxC[1]-densGrid.minC[1]);
-    float minZDensTC = (this->bbox.ObjectSpaceBBox().Back() - densGrid.minC[2])/(densGrid.maxC[2]-densGrid.minC[2]);
-    float maxXDensTC = (this->bbox.ObjectSpaceBBox().Right() - densGrid.minC[0])/(densGrid.maxC[0]-densGrid.minC[0]);
-    float maxYDensTC = (this->bbox.ObjectSpaceBBox().Top() - densGrid.minC[1])/(densGrid.maxC[1]-densGrid.minC[1]);
-    float maxZDensTC = (this->bbox.ObjectSpaceBBox().Front() - densGrid.minC[2])/(densGrid.maxC[2]-densGrid.minC[2]);
-    float planeXDensTC = (this->xPlane-densGrid.minC[0])/(densGrid.maxC[0]-densGrid.minC[0]);
-    float planeYDensTC = (this->yPlane-densGrid.minC[1])/(densGrid.maxC[1]-densGrid.minC[1]);
-    float planeZDensTC = (this->zPlane-densGrid.minC[2])/(densGrid.maxC[2]-densGrid.minC[2]);
+    float minXDensTC = (this->bbox.ObjectSpaceBBox().Left() - densGrid.minC[0]) / (densGrid.maxC[0] - densGrid.minC[0]);
+    float minYDensTC =
+        (this->bbox.ObjectSpaceBBox().Bottom() - densGrid.minC[1]) / (densGrid.maxC[1] - densGrid.minC[1]);
+    float minZDensTC = (this->bbox.ObjectSpaceBBox().Back() - densGrid.minC[2]) / (densGrid.maxC[2] - densGrid.minC[2]);
+    float maxXDensTC =
+        (this->bbox.ObjectSpaceBBox().Right() - densGrid.minC[0]) / (densGrid.maxC[0] - densGrid.minC[0]);
+    float maxYDensTC = (this->bbox.ObjectSpaceBBox().Top() - densGrid.minC[1]) / (densGrid.maxC[1] - densGrid.minC[1]);
+    float maxZDensTC =
+        (this->bbox.ObjectSpaceBBox().Front() - densGrid.minC[2]) / (densGrid.maxC[2] - densGrid.minC[2]);
+    float planeXDensTC = (this->xPlane - densGrid.minC[0]) / (densGrid.maxC[0] - densGrid.minC[0]);
+    float planeYDensTC = (this->yPlane - densGrid.minC[1]) / (densGrid.maxC[1] - densGrid.minC[1]);
+    float planeZDensTC = (this->zPlane - densGrid.minC[2]) / (densGrid.maxC[2] - densGrid.minC[2]);
 
     this->sliceShader.Enable();
     glUniform1iARB(this->sliceShader.ParameterLocation("potentialTex"), 0);
@@ -1143,7 +1117,8 @@ bool PotentialVolumeRaycaster::renderSlices(GLuint densityTex,
     glUniform1fARB(this->sliceShader.ParameterLocation("colorMinVal"), this->sliceMinVal);
     glUniform1fARB(this->sliceShader.ParameterLocation("colorMaxVal"), this->sliceMaxVal);
     glUniform3fvARB(this->sliceShader.ParameterLocation("colorMin"), 1, this->sliceColorMinPotential.PeekComponents());
-    glUniform3fvARB(this->sliceShader.ParameterLocation("colorZero"), 1, this->sliceColorZeroPotential.PeekComponents());
+    glUniform3fvARB(
+        this->sliceShader.ParameterLocation("colorZero"), 1, this->sliceColorZeroPotential.PeekComponents());
     glUniform3fvARB(this->sliceShader.ParameterLocation("colorMax"), 1, this->sliceColorMaxPotential.PeekComponents());
     glUniform1fARB(this->sliceShader.ParameterLocation("minPotential"), this->sliceColorMinPotentialScl);
     glUniform1fARB(this->sliceShader.ParameterLocation("midPotential"), this->sliceColorMidPotentialScl);
@@ -1239,21 +1214,24 @@ bool PotentialVolumeRaycaster::RenderVolCube() {
 
     // Texture coordinates for potential map
     potGrid = this->gridPotentialMap;
-    float minXPotTC = (this->bbox.ObjectSpaceBBox().Left() - potGrid.minC[0])/(potGrid.maxC[0]-potGrid.minC[0]);
-    float minYPotTC = (this->bbox.ObjectSpaceBBox().Bottom() - potGrid.minC[1])/(potGrid.maxC[1]-potGrid.minC[1]);
-    float minZPotTC = (this->bbox.ObjectSpaceBBox().Back() - potGrid.minC[2])/(potGrid.maxC[2]-potGrid.minC[2]);
-    float maxXPotTC = (this->bbox.ObjectSpaceBBox().Right() - potGrid.minC[0])/(potGrid.maxC[0]-potGrid.minC[0]);
-    float maxYPotTC = (this->bbox.ObjectSpaceBBox().Top() - potGrid.minC[1])/(potGrid.maxC[1]-potGrid.minC[1]);
-    float maxZPotTC = (this->bbox.ObjectSpaceBBox().Front() - potGrid.minC[2])/(potGrid.maxC[2]-potGrid.minC[2]);
+    float minXPotTC = (this->bbox.ObjectSpaceBBox().Left() - potGrid.minC[0]) / (potGrid.maxC[0] - potGrid.minC[0]);
+    float minYPotTC = (this->bbox.ObjectSpaceBBox().Bottom() - potGrid.minC[1]) / (potGrid.maxC[1] - potGrid.minC[1]);
+    float minZPotTC = (this->bbox.ObjectSpaceBBox().Back() - potGrid.minC[2]) / (potGrid.maxC[2] - potGrid.minC[2]);
+    float maxXPotTC = (this->bbox.ObjectSpaceBBox().Right() - potGrid.minC[0]) / (potGrid.maxC[0] - potGrid.minC[0]);
+    float maxYPotTC = (this->bbox.ObjectSpaceBBox().Top() - potGrid.minC[1]) / (potGrid.maxC[1] - potGrid.minC[1]);
+    float maxZPotTC = (this->bbox.ObjectSpaceBBox().Front() - potGrid.minC[2]) / (potGrid.maxC[2] - potGrid.minC[2]);
 
     // Texture coordinates for the density grid
     densGrid = this->gridDensMap;
-    float minXDensTC = (this->bbox.ObjectSpaceBBox().Left() - densGrid.minC[0])/(densGrid.maxC[0]-densGrid.minC[0]);
-    float minYDensTC = (this->bbox.ObjectSpaceBBox().Bottom() - densGrid.minC[1])/(densGrid.maxC[1]-densGrid.minC[1]);
-    float minZDensTC = (this->bbox.ObjectSpaceBBox().Back() - densGrid.minC[2])/(densGrid.maxC[2]-densGrid.minC[2]);
-    float maxXDensTC = (this->bbox.ObjectSpaceBBox().Right() - densGrid.minC[0])/(densGrid.maxC[0]-densGrid.minC[0]);
-    float maxYDensTC = (this->bbox.ObjectSpaceBBox().Top() - densGrid.minC[1])/(densGrid.maxC[1]-densGrid.minC[1]);
-    float maxZDensTC = (this->bbox.ObjectSpaceBBox().Front() - densGrid.minC[2])/(densGrid.maxC[2]-densGrid.minC[2]);
+    float minXDensTC = (this->bbox.ObjectSpaceBBox().Left() - densGrid.minC[0]) / (densGrid.maxC[0] - densGrid.minC[0]);
+    float minYDensTC =
+        (this->bbox.ObjectSpaceBBox().Bottom() - densGrid.minC[1]) / (densGrid.maxC[1] - densGrid.minC[1]);
+    float minZDensTC = (this->bbox.ObjectSpaceBBox().Back() - densGrid.minC[2]) / (densGrid.maxC[2] - densGrid.minC[2]);
+    float maxXDensTC =
+        (this->bbox.ObjectSpaceBBox().Right() - densGrid.minC[0]) / (densGrid.maxC[0] - densGrid.minC[0]);
+    float maxYDensTC = (this->bbox.ObjectSpaceBBox().Top() - densGrid.minC[1]) / (densGrid.maxC[1] - densGrid.minC[1]);
+    float maxZDensTC =
+        (this->bbox.ObjectSpaceBBox().Front() - densGrid.minC[2]) / (densGrid.maxC[2] - densGrid.minC[2]);
 
     glBegin(GL_QUADS);
 
@@ -1384,7 +1362,7 @@ bool PotentialVolumeRaycaster::RenderVolCube() {
     glMultiTexCoord3fARB(GL_TEXTURE1, minXPotTC, minYPotTC, maxZPotTC);
     glVertex3f(gridMinCoord[0], gridMinCoord[1], gridMaxCoord[2]);
 
-    glColor3f(minXDensTC, minYDensTC,minZDensTC);
+    glColor3f(minXDensTC, minYDensTC, minZDensTC);
     glMultiTexCoord3fARB(GL_TEXTURE0, minXDensTC, minYDensTC, minZDensTC);
     glMultiTexCoord3fARB(GL_TEXTURE1, minXPotTC, minYPotTC, minZPotTC);
     glVertex3f(gridMinCoord[0], gridMinCoord[1], gridMinCoord[2]);
@@ -1418,24 +1396,27 @@ bool PotentialVolumeRaycaster::updateParams() {
 
     // Parameter for minimum potential color
     if (this->colorMinPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->colorMinPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->colorMinPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorMinPotential.Set(r, g, b);
         this->colorMinPotentialSlot.ResetDirty();
     }
 
     // Parameter for zero potential color
     if (this->colorZeroPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->colorZeroPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->colorZeroPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorZeroPotential.Set(r, g, b);
         this->colorZeroPotentialSlot.ResetDirty();
     }
 
     // Parameter for maximum potential color
     if (this->colorMaxPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->colorMaxPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->colorMaxPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorMaxPotential.Set(r, g, b);
         this->colorMaxPotentialSlot.ResetDirty();
     }
@@ -1513,7 +1494,7 @@ bool PotentialVolumeRaycaster::updateParams() {
 
     // Render mode for slices
     if (this->sliceRMSlot.IsDirty()) {
-        this->sliceRM= this->sliceRMSlot.Param<core::param::EnumParam>()->Value();
+        this->sliceRM = this->sliceRMSlot.Param<core::param::EnumParam>()->Value();
         this->sliceRMSlot.ResetDirty();
     }
 
@@ -1573,24 +1554,27 @@ bool PotentialVolumeRaycaster::updateParams() {
 
     // Parameter for minimum potential color
     if (this->sliceColorMinPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->sliceColorMinPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->sliceColorMinPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorMinPotential.Set(r, g, b);
         this->sliceColorMinPotentialSlot.ResetDirty();
     }
 
     // Parameter for zero potential color
     if (this->sliceColorZeroPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->sliceColorZeroPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->sliceColorZeroPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorZeroPotential.Set(r, g, b);
         this->sliceColorZeroPotentialSlot.ResetDirty();
     }
 
     // Parameter for maximum potential color
     if (this->sliceColorMaxPotentialSlot.IsDirty()) {
-        float r,g,b;
-        utility::ColourParser::FromString(this->sliceColorMaxPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+        float r, g, b;
+        utility::ColourParser::FromString(
+            this->sliceColorMaxPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorMaxPotential.Set(r, g, b);
         this->sliceColorMaxPotentialSlot.ResetDirty();
     }

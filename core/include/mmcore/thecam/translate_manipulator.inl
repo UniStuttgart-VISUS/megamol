@@ -32,27 +32,28 @@
 /*
  * megamol::core::thecam::translate_manipulator<T>::translate_manipulator
  */
-template <class T>
+template<class T>
 megamol::core::thecam::translate_manipulator<T>::translate_manipulator(const world_type stepSize)
-    : stepSize(stepSize) {}
+        : stepSize(stepSize) {}
 
 
 /*
  * megamol::core::thecam::translate_manipulator<T>::~translate_manipulator
  */
-template <class T> megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
+template<class T>
+megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
 
 
 /*
  *  megamol::core::thecam::translate_manipulator<T>::move_forward
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_forward(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_forward(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
-        auto pos = cam->position();
-        auto dir = cam->view_vector();
-        pos += dist * dir;
-        cam->position(pos);
+        auto cam_pose = cam->template get<view::Camera::Pose>();
+        cam_pose.position += dist * cam_pose.direction;
+        cam->setPose(cam_pose);
     }
 }
 
@@ -60,13 +61,14 @@ template <class T> void megamol::core::thecam::translate_manipulator<T>::move_fo
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_horizontally
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_horizontally(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_horizontally(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
-        auto pos = cam->position();
-        auto dir = cam->right_vector();
-        pos += dist * dir;
-        cam->position(pos);
+        auto cam_pose = cam->template get<view::Camera::Pose>();
+        auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
+        cam_pose.position += dist * cam_right;
+        cam->setPose(cam_pose);
     }
 }
 
@@ -74,13 +76,12 @@ template <class T> void megamol::core::thecam::translate_manipulator<T>::move_ho
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_vertically
  */
-template <class T> void megamol::core::thecam::translate_manipulator<T>::move_vertically(const world_type dist) {
+template<class T>
+void megamol::core::thecam::translate_manipulator<T>::move_vertically(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
-        auto pos = cam->position();
-        auto dir = cam->up_vector();
-        auto x = this->stepSize * dir;
-        pos += dist * dir;
-        cam->position(pos);
+        auto cam_pose = cam->template get<view::Camera::Pose>();
+        cam_pose.position += dist * cam_pose.up;
+        cam->setPose(cam_pose);
     }
 }

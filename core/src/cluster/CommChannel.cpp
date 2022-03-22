@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/cluster/CommChannel.h"
-#include "vislib/IllegalStateException.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
@@ -18,9 +18,10 @@ using namespace megamol::core;
  * cluster::CommChannel::CommChannel
  */
 cluster::CommChannel::CommChannel(void)
-        : vislib::Listenable<CommChannel>(),
-        vislib::net::SimpleMessageDispatchListener(),
-        channel(), counterpartName("Unknown") {
+        : vislib::Listenable<CommChannel>()
+        , vislib::net::SimpleMessageDispatchListener()
+        , channel()
+        , counterpartName("Unknown") {
     // Intentionally empty
     this->receiver.AddListener(this);
 }
@@ -29,13 +30,13 @@ cluster::CommChannel::CommChannel(void)
 /*
  * cluster::CommChannel::CommChannel
  */
-cluster::CommChannel::CommChannel(const cluster::CommChannel& src) 
-        : vislib::Listenable<CommChannel>(),
-        vislib::net::SimpleMessageDispatchListener(),
-        channel(), counterpartName("Unknown") {
+cluster::CommChannel::CommChannel(const cluster::CommChannel& src)
+        : vislib::Listenable<CommChannel>()
+        , vislib::net::SimpleMessageDispatchListener()
+        , channel()
+        , counterpartName("Unknown") {
     if (!(src == *this)) {
-        throw vislib::UnsupportedOperationException("copy ctor",
-            __FILE__, __LINE__);
+        throw vislib::UnsupportedOperationException("copy ctor", __FILE__, __LINE__);
     }
 }
 
@@ -58,8 +59,7 @@ void cluster::CommChannel::Close(void) {
     if (!this->channel.IsNull()) {
         try {
             this->channel->Close();
-        } catch(...) {
-        }
+        } catch (...) {}
         this->channel = NULL;
     }
 }
@@ -84,8 +84,7 @@ void cluster::CommChannel::Open(vislib::SmartRef<vislib::net::AbstractCommClient
     if ((!this->receiver.IsRunning()) && (!this->channel.IsNull())) {
         try {
             this->channel->Close();
-        } catch(...) {
-        }
+        } catch (...) {}
         this->channel = NULL;
     }
 }
@@ -127,8 +126,10 @@ cluster::CommChannel& cluster::CommChannel::operator=(const cluster::CommChannel
 /*
  * cluster::CommChannel::OnCommunicationError
  */
-bool cluster::CommChannel::OnCommunicationError(vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Communication Channel: %s\n", exception.GetMsgA());
+bool cluster::CommChannel::OnCommunicationError(
+    vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() {
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_WARN, "Communication Channel: %s\n", exception.GetMsgA());
     return true; // keep receiver running
 }
 
@@ -139,15 +140,15 @@ bool cluster::CommChannel::OnCommunicationError(vislib::net::SimpleMessageDispat
 void cluster::CommChannel::OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() {
     vislib::Listenable<CommChannel>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener *>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelDisconnect(*this);
     }
     if (!this->channel.IsNull()) {
         try {
             this->channel->Close();
-        } catch(...) {
-        }
+        } catch (...) {}
         this->channel = NULL;
     }
 }
@@ -159,8 +160,9 @@ void cluster::CommChannel::OnDispatcherExited(vislib::net::SimpleMessageDispatch
 void cluster::CommChannel::OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() {
     vislib::Listenable<CommChannel>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener *>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelConnect(*this);
     }
 }
@@ -169,11 +171,13 @@ void cluster::CommChannel::OnDispatcherStarted(vislib::net::SimpleMessageDispatc
 /*
  * cluster::CommChannel::OnMessageReceived
  */
-bool cluster::CommChannel::OnMessageReceived(vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
+bool cluster::CommChannel::OnMessageReceived(
+    vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() {
     vislib::Listenable<CommChannel>::ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
-        Listener *l = dynamic_cast<Listener *>(iter.Next());
-        if (l == NULL) continue;
+        Listener* l = dynamic_cast<Listener*>(iter.Next());
+        if (l == NULL)
+            continue;
         l->OnCommChannelMessage(*this, msg);
     }
     return true; // keep receiver running

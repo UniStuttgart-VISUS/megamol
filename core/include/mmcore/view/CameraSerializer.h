@@ -10,8 +10,8 @@
 
 #include <json.hpp>
 
-#include "mmcore/view/Camera_2.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Camera.h"
 
 namespace megamol {
 namespace core {
@@ -32,7 +32,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~CameraSerializer(void);
+    virtual ~CameraSerializer();
 
     /*
      * Serializes a single camera into a json string
@@ -40,7 +40,7 @@ public:
      * @param cam The camera to serialize.
      * @return A json string containing the serialized camera information
      */
-    std::string serialize(const Camera_2::minimal_state_type& cam) const;
+    std::string serialize(Camera const& cam) const;
 
     /**
      * Serializes a vector of cameras into a string containing a json array
@@ -48,7 +48,7 @@ public:
      * @param camVec The vector containing the camera descriptions
      * @return A json string containing the information of the serialized cameras
      */
-    std::string serialize(const std::vector<Camera_2::minimal_state_type>& camVec) const;
+    std::string serialize(std::vector<Camera> const& camVec) const;
 
     /**
      * Serializes an array of cameras into a string containing a json array.
@@ -59,9 +59,8 @@ public:
      * @param validityFlags The array containing the validity flags
      * @return A json string containing the information of the serialized cameras
      */
-    template <size_t N>
-    std::string serialize(
-        const std::array<Camera_2::minimal_state_type, N>& camVec, const std::array<bool, N>& validityFlags) const;
+    template<size_t N>
+    std::string serialize(std::array<Camera, N> const& camVec, const std::array<bool, N>& validityFlags) const;
 
     /**
      * Serializes an array of cameras into a string containing a json array.
@@ -71,8 +70,8 @@ public:
      * @param camVec The array containing the camera information
      * @return A json string containing the information of the serialized cameras
      */
-    template <size_t N>
-    std::string serialize(const std::array<std::pair<Camera_2::minimal_state_type, bool>, N>& camVec) const;
+    template<size_t N>
+    std::string serialize(std::array<std::pair<Camera, bool>, N> const& camVec) const;
 
     /**
      * Deserializes a text containing a single camera description.
@@ -82,7 +81,7 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise
      */
-    bool deserialize(Camera_2::minimal_state_type& outCamera, const std::string text) const;
+    bool deserialize(Camera& outCamera, std::string const text) const;
 
     /**
      * Deserializes multiple camera at once when given a text containing a vector of camera descriptions
@@ -92,7 +91,7 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise.
      */
-    bool deserialize(std::vector<Camera_2::minimal_state_type>& outCameras, const std::string text) const;
+    bool deserialize(std::vector<Camera>& outCameras, std::string const text) const;
 
     /**
      * Deserializes a predetermined amount of cameras at once, also reading the additionally stored validity flags.
@@ -105,9 +104,8 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise
      */
-    template <size_t N>
-    bool deserialize(std::array<Camera_2::minimal_state_type, N>& outCameras, std::array<bool, N>& outValidity,
-        const std::string text) const;
+    template<size_t N>
+    bool deserialize(std::array<Camera, N>& outCameras, std::array<bool, N>& outValidity, std::string const text) const;
 
     /**
      * Deserializes a predetermined amount of cameras at once, also reading the additionally stored validity flags.
@@ -118,9 +116,8 @@ public:
      * @param text The input text to deserialize
      * @return True on success, false otherwise
      */
-    template <size_t N>
-    bool deserialize(
-        std::array<std::pair<Camera_2::minimal_state_type, bool>, N>& outCameras, const std::string text) const;
+    template<size_t N>
+    bool deserialize(std::array<std::pair<Camera, bool>, N>& outCameras, std::string const text) const;
 
     /**
      * Enables or disables the pretty serialization mode.
@@ -136,7 +133,7 @@ private:
      * @param outObj The json object that wil contain the camera description
      * @param cam The camera description that will be stored in the json object
      */
-    void addCamToJsonObject(nlohmann::json& outObj, const Camera_2::minimal_state_type& cam) const;
+    void addCamToJsonObject(nlohmann::json& outObj, Camera const& cam) const;
 
     /**
      * Extracts camera information from a json object that shall contain the camera.
@@ -146,7 +143,7 @@ private:
      * @param True if the reading was successful and either a 'true' valid flag is present or none at all. False
      * otherwise.
      */
-    bool getCamFromJsonObject(Camera_2::minimal_state_type& cam, const nlohmann::json::value_type& val) const;
+    bool getCamFromJsonObject(Camera& cam, nlohmann::json::value_type const& val) const;
 
     /** The indentation for the pretty mode */
     const int prettyIndent = 2;

@@ -14,24 +14,22 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "mmcore/CallerSlot.h"
-#include "protein_calls/VTIDataCall.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/math/Matrix.h"
-#include "VecField3f.h"
 #include "Streamline.h"
+#include "VecField3f.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "protein_calls/VTIDataCall.h"
+#include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeFieldTopologyRenderer : public megamol::core::view::Renderer3DModule {
+class ComparativeFieldTopologyRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 
 public:
-
     /** CTor */
     ComparativeFieldTopologyRenderer(void);
 
@@ -43,7 +41,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "ComparativeFieldTopologyRenderer";
     }
 
@@ -52,7 +50,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Renders topology information of vector fields.";
     }
 
@@ -66,8 +64,7 @@ public:
     }
 
 protected:
-
-    enum StreamlineShading {UNIFORM=0, POTENTIAL};
+    enum StreamlineShading { UNIFORM = 0, POTENTIAL };
 
     /**
      * Implementation of 'Create'.
@@ -90,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -98,10 +95,9 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
-
     /**
      * (Re)calculate the electric field using the provided potential map.
      * The field direction is defined by -grad(potential). Partial derivatives
@@ -112,8 +108,7 @@ private:
      * @param egradfield Vector field object for the gradient of the electric
      *                   field strength
      */
-    void calcElectrostaticField(protein_calls::VTIDataCall *cmd,
-            VecField3f &efield, VecField3f &egradfield);
+    void calcElectrostaticField(protein_calls::VTIDataCall* cmd, VecField3f& efield, VecField3f& egradfield);
 
     /**
      * Render critical points using sphere glyph ray casting.
@@ -127,7 +122,7 @@ private:
      *
      * @param cmd The data call.
      */
-    bool renderFieldArrows(const protein_calls::VTIDataCall *cmd);
+    bool renderFieldArrows(const protein_calls::VTIDataCall* cmd);
 
     /**
      * Renders a streamline bundle around the manually set seed point.
@@ -144,9 +139,7 @@ private:
      * @param cmd1 The data call for the second field
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderStreamlinesRoi(
-            const protein_calls::VTIDataCall *cmd0,
-            const protein_calls::VTIDataCall *cmd1);
+    bool renderStreamlinesRoi(const protein_calls::VTIDataCall* cmd0, const protein_calls::VTIDataCall* cmd1);
 
     /**
      * Search for neighbours in a certain distance for all sources/sinks in
@@ -161,10 +154,8 @@ private:
     void updateParams();
 
     /** TODO */
-    inline float GetPotentialAt(protein_calls::VTIDataCall *dc, unsigned int x, unsigned int y,
-            unsigned int z) {
-        return dc->GetPointDataByIdx(0, 0)[
-                 dc->GetGridsize().X()*(dc->GetGridsize().Y()*z+y)+x];
+    inline float GetPotentialAt(protein_calls::VTIDataCall* dc, unsigned int x, unsigned int y, unsigned int z) {
+        return dc->GetPointDataByIdx(0, 0)[dc->GetGridsize().X() * (dc->GetGridsize().Y() * z + y) + x];
     }
 
 
@@ -366,16 +357,16 @@ private:
     /* GLSL shader objects */
 
     /// Shader for rendering arrows
-    vislib::graphics::gl::GLSLGeometryShader arrowShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
 
     /// Shader for rendering spheres
-    vislib::graphics::gl::GLSLGeometryShader sphereShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader sphereShader;
 
     /// Shader for illuminated streamlines
-    vislib::graphics::gl::GLSLShader streamlineShader;
+    vislib_gl::graphics::gl::GLSLShader streamlineShader;
 
     /// Shader for testure slices
-    vislib::graphics::gl::GLSLShader sliceShader;
+    vislib_gl::graphics::gl::GLSLShader sliceShader;
 
 
     /* Arrow glyph data */
@@ -393,16 +384,16 @@ private:
     vislib::Array<int> arrowVisIdx;
 
     /// Array containing grid positions on which the arrows are defined
-    vislib::Array <vislib::math::Vector<float, 3> > gridPos;
+    vislib::Array<vislib::math::Vector<float, 3>> gridPos;
 
 
     /* Streamline related data */
 
     /// Arrays containing indices of ending streamlines for every cell
-    vislib::Array<vislib::Array<unsigned int > > cellEndpoints0, cellEndpoints1;
+    vislib::Array<vislib::Array<unsigned int>> cellEndpoints0, cellEndpoints1;
 
     /// Arrays containing indices of ending streamlines for every cell (backward)
-    vislib::Array<vislib::Array<unsigned int > > cellEndpointsBackward0, cellEndpointsBackwards1;
+    vislib::Array<vislib::Array<unsigned int>> cellEndpointsBackward0, cellEndpointsBackwards1;
 
     /// Array containing streamline objects
     vislib::Array<Streamline*> streamlines0, streamlines1;
@@ -423,7 +414,7 @@ private:
     /* Critical point related data */
 
     /// List with pointers to partner critpoints in different data sets
-    vislib::Array<vislib::Array< const VecField3f::CritPoint* > > neighbours0, neighbours1;
+    vislib::Array<vislib::Array<const VecField3f::CritPoint*>> neighbours0, neighbours1;
 
 
     /* Boolean flags */
@@ -459,7 +450,7 @@ private:
     GLfloat modelMatrix[16];
 
     /// The current projection matrix
-    GLfloat projMatrix [16];
+    GLfloat projMatrix[16];
 
     /// The light position
     GLfloat lightPos[4];
@@ -471,8 +462,7 @@ private:
     SIZE_T dataHash;
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
-
+    core::view::Camera cameraInfo;
 };
 
 } // namespace protein_cuda

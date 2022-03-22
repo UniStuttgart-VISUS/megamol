@@ -13,11 +13,11 @@
 #define HELPER_CUDA_GL_H
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 // includes, graphics
-#if defined (__APPLE__) || defined(MACOSX)
+#if defined(__APPLE__) || defined(MACOSX)
 #include <OpenGL/gl.h>
 #else
 #include <GL/gl.h>
@@ -41,13 +41,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // These are CUDA OpenGL Helper functions
 
-inline int gpuGLDeviceInit(int ARGC, const char **ARGV)
-{
+inline int gpuGLDeviceInit(int ARGC, const char** ARGV) {
     int deviceCount;
     checkCudaErrors(cudaGetDeviceCount(&deviceCount));
 
-    if (deviceCount == 0)
-    {
+    if (deviceCount == 0) {
         fprintf(stderr, "CUDA error: no devices supporting CUDA.\n");
         exit(EXIT_FAILURE);
     }
@@ -55,13 +53,11 @@ inline int gpuGLDeviceInit(int ARGC, const char **ARGV)
     int dev = 0;
     dev = getCmdLineArgumentInt(ARGC, ARGV, "device=");
 
-    if (dev < 0)
-    {
+    if (dev < 0) {
         dev = 0;
     }
 
-    if (dev > deviceCount-1)
-    {
+    if (dev > deviceCount - 1) {
         fprintf(stderr, "\n");
         fprintf(stderr, ">> %d CUDA capable GPU device(s) detected. <<\n", deviceCount);
         fprintf(stderr, ">> gpuGLDeviceInit (-device=%d) is not a valid GPU device. <<\n", dev);
@@ -72,20 +68,18 @@ inline int gpuGLDeviceInit(int ARGC, const char **ARGV)
     cudaDeviceProp deviceProp;
     checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-    if (deviceProp.computeMode == cudaComputeModeProhibited)
-    {
-        fprintf(stderr, "Error: device is running in <Compute Mode Prohibited>, no threads can use ::cudaSetDevice().\n");
+    if (deviceProp.computeMode == cudaComputeModeProhibited) {
+        fprintf(
+            stderr, "Error: device is running in <Compute Mode Prohibited>, no threads can use ::cudaSetDevice().\n");
         return -1;
     }
 
-    if (deviceProp.major < 1)
-    {
+    if (deviceProp.major < 1) {
         fprintf(stderr, "Error: device does not support CUDA.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (checkCmdLineFlag(ARGC, ARGV, "quiet") == false)
-    {
+    if (checkCmdLineFlag(ARGC, ARGV, "quiet") == false) {
         fprintf(stderr, "Using device %d: %s\n", dev, deviceProp.name);
     }
 
@@ -94,24 +88,19 @@ inline int gpuGLDeviceInit(int ARGC, const char **ARGV)
 }
 
 // This function will pick the best CUDA device available with OpenGL interop
-inline int findCudaGLDevice(int argc, const char **argv)
-{
+inline int findCudaGLDevice(int argc, const char** argv) {
     int devID = 0;
 
     // If the command-line has a device number specified, use it
-    if (checkCmdLineFlag(argc, (const char **)argv, "device"))
-    {
-        devID = gpuGLDeviceInit(argc, (const char **)argv);
+    if (checkCmdLineFlag(argc, (const char**)argv, "device")) {
+        devID = gpuGLDeviceInit(argc, (const char**)argv);
 
-        if (devID < 0)
-        {
+        if (devID < 0) {
             printf("no CUDA capable devices found, exiting...\n");
             DEVICE_RESET
             exit(EXIT_SUCCESS);
         }
-    }
-    else
-    {
+    } else {
         // Otherwise pick the device with highest Gflops/s
         devID = gpuGetMaxGflopsDeviceId();
         cudaGLSetGLDevice(devID);
@@ -120,11 +109,11 @@ inline int findCudaGLDevice(int argc, const char **argv)
     return devID;
 }
 
-static inline const char* glErrorToString(GLenum err)
-{
-#define CASE_RETURN_MACRO(arg) case arg: return #arg
-    switch(err)
-    {
+static inline const char* glErrorToString(GLenum err) {
+#define CASE_RETURN_MACRO(arg) \
+    case arg:                  \
+        return #arg
+    switch (err) {
         CASE_RETURN_MACRO(GL_NO_ERROR);
         CASE_RETURN_MACRO(GL_INVALID_ENUM);
         CASE_RETURN_MACRO(GL_INVALID_VALUE);
@@ -135,7 +124,8 @@ static inline const char* glErrorToString(GLenum err)
 #ifdef GL_INVALID_FRAMEBUFFER_OPERATION
         CASE_RETURN_MACRO(GL_INVALID_FRAMEBUFFER_OPERATION);
 #endif
-        default: break;
+    default:
+        break;
     }
 #undef CASE_RETURN_MACRO
     return "*UNKNOWN*";
@@ -148,16 +138,13 @@ static inline const char* glErrorToString(GLenum err)
 //! @note The GL error is listed on stderr
 //! @note This function should be used via the CHECK_ERROR_GL() macro
 ////////////////////////////////////////////////////////////////////////////
-inline bool
-sdkCheckErrorGL(const char *file, const int line)
-{
+inline bool sdkCheckErrorGL(const char* file, const int line) {
     bool ret_val = true;
 
     // check for error
     GLenum gl_error = glGetError();
 
-    if (gl_error != GL_NO_ERROR)
-    {
+    if (gl_error != GL_NO_ERROR) {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
         char tmpStr[512];
         // NOTE: "%s(%i) : " allows Visual Studio to directly jump to the file at the right line
@@ -173,10 +160,10 @@ sdkCheckErrorGL(const char *file, const int line)
     return ret_val;
 }
 
-#define SDK_CHECK_ERROR_GL()                                              \
-    if( false == sdkCheckErrorGL( __FILE__, __LINE__)) {                  \
-        DEVICE_RESET                                                      \
-        exit(EXIT_FAILURE);                                               \
+#define SDK_CHECK_ERROR_GL()                            \
+    if (false == sdkCheckErrorGL(__FILE__, __LINE__)) { \
+        DEVICE_RESET                                    \
+        exit(EXIT_FAILURE);                             \
     }
 #endif
 

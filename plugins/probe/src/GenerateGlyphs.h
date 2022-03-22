@@ -7,7 +7,6 @@
 #pragma once
 
 #include "DrawTextureUtility.h"
-#include "ProbeCollection.h"
 #include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/Call.h"
@@ -15,6 +14,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe {
@@ -26,21 +27,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "GenerateGlyphs"; }
+    static const char* ClassName(void) {
+        return "GenerateGlyphs";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Creator for GenerateGlyphs."; }
+    static const char* Description(void) {
+        return "Creator for GenerateGlyphs.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Dtor. */
     virtual ~GenerateGlyphs(void);
@@ -52,8 +59,14 @@ public:
     core::CalleeSlot _deploy_mesh;
     core::CallerSlot _get_probes;
 
+    core::param::ParamSlot _resolutionSlot;
+    core::param::ParamSlot _sizeSlot;
+
+
 protected:
-    bool create() override { return true; };
+    bool create() override {
+        return true;
+    };
     void release() override{};
 
 private:
@@ -63,11 +76,13 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    bool doScalarGlyphGeneration(FloatProbe& probe);
+    bool doScalarGlyphGeneration(FloatProbe& probe, std::array<float, 2> global_min_max);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
- 
+
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
+
+    bool paramChanged(core::param::ParamSlot& p);
 
     uint32_t _version = 0;
 
@@ -85,6 +100,7 @@ private:
     std::vector<DrawTextureUtility> _dtu;
 
     double scale = -1.0;
+    bool _trigger_recalc;
 };
 
 } // namespace probe

@@ -1,7 +1,7 @@
 /*
  * AbstractVISLogo.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -19,43 +19,40 @@ namespace vislib {
 namespace graphics {
 
 
+/**
+ * This class provides a VIS logo object for test renderings.
+ */
+class AbstractVISLogo {
+
+public:
+    /** Dtor. */
+    virtual ~AbstractVISLogo(void);
+
     /**
-     * This class provides a VIS logo object for test renderings.
+     * Create all required resources for rendering a VIS logo.
+     *
+     * @throws Exception In case of an error.
      */
-    class AbstractVISLogo {
+    virtual void Create(void) = 0;
 
-    public:
+    /**
+     * Render the VIS logo. Create() must have been called before.
+     *
+     * @throws Exception In case of an error.
+     */
+    virtual void Draw(void) = 0;
 
-        /** Dtor. */
-        virtual ~AbstractVISLogo(void);
+    /**
+     * Release all resources of the VIS logo.
+     *
+     * @throws Exception In case of an error.
+     */
+    virtual void Release(void) = 0;
 
-        /**
-         * Create all required resources for rendering a VIS logo.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Create(void) = 0;
-
-        /**
-         * Render the VIS logo. Create() must have been called before.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Draw(void) = 0;
-
-        /**
-         * Release all resources of the VIS logo.
-         *
-         * @throws Exception In case of an error.
-         */
-        virtual void Release(void) = 0;
-
-    protected:
-
-        /** Ctor. */
-        AbstractVISLogo(void);
-
-    };
+protected:
+    /** Ctor. */
+    AbstractVISLogo(void);
+};
 
 } /* end namespace graphics */
 } /* end namespace vislib */

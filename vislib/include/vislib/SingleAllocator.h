@@ -1,7 +1,7 @@
 /*
  * SingleAllocator.h
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -21,58 +21,56 @@
 namespace vislib {
 
 
+/**
+ * This class creates typed memory for a single object of the template type.
+ * It therefore cannot be used for allocating continuous arrays.
+ *
+ * The allocator uses the C++ allocation and deallocation mechanisms and
+ * therefore guarantees that the default ctor is called on the newly
+ * allocated object and that the dtor is called before deallocating an
+ * object.
+ */
+template<class T>
+class SingleAllocator {
+
+public:
+    /** The type of the object handled by the allocator.*/
+    typedef T TargetType;
+
+    /** The pointer type that is handled by the allocator. */
+    typedef T* TargetPtrType;
+
     /**
-     * This class creates typed memory for a single object of the template type.
-     * It therefore cannot be used for allocating continuous arrays.
+     * Allocate an object of type T.
      *
-     * The allocator uses the C++ allocation and deallocation mechanisms and 
-     * therefore guarantees that the default ctor is called on the newly
-     * allocated object and that the dtor is called before deallocating an
-     * object.
+     * @return A pointer to the newly allocated object.
+     *
+     * @throws std::bad_alloc If there was not enough memory to allocate the
+     *                        object.
      */
-    template<class T> class SingleAllocator {
+    static inline TargetPtrType Allocate(void) {
+        return new T;
+    }
 
-    public:
+    /**
+     * Deallocate 'ptr' and set it NULL.
+     *
+     * @param inOutPtr The pointer to be deallocated. The pointer will be
+     *                 set NULL before the method returns.
+     */
+    static inline void Deallocate(TargetPtrType& inOutPtr) {
+        delete inOutPtr;
+        inOutPtr = NULL;
+    }
 
-        /** The type of the object handled by the allocator.*/
-        typedef T TargetType;
+private:
+    /** Disallow instances. */
+    SingleAllocator(void);
 
-        /** The pointer type that is handled by the allocator. */
-        typedef T *TargetPtrType;
+    /** Dtor. */
+    ~SingleAllocator(void);
+};
 
-        /**
-         * Allocate an object of type T.
-         *
-         * @return A pointer to the newly allocated object.
-         *
-         * @throws std::bad_alloc If there was not enough memory to allocate the
-         *                        object.
-         */
-        static inline TargetPtrType Allocate(void) {
-            return new T;
-        }
-
-        /**
-         * Deallocate 'ptr' and set it NULL.
-         *
-         * @param inOutPtr The pointer to be deallocated. The pointer will be 
-         *                 set NULL before the method returns.
-         */
-        static inline void Deallocate(TargetPtrType& inOutPtr) {
-            delete inOutPtr;
-            inOutPtr = NULL;
-        }
-
-    private:
-
-        /** Disallow instances. */
-        SingleAllocator(void);
-
-        /** Dtor. */
-        ~SingleAllocator(void);
-
-    };
-    
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)

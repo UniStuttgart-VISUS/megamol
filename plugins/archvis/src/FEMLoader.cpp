@@ -27,13 +27,14 @@ namespace megamol {
 namespace archvis {
 
 FEMLoader::FEMLoader()
-    : core::Module()
-    , m_femNodes_filename_slot("FEM node list filename", "The name of the txt file containing the FEM nodes")
-    , m_femElements_filename_slot("FEM element list filename", "The name of the txt file containing the FEM elemets")
-    , m_femDeformation_filename_slot(
-          "FEM displacment filename", "The name of the txt file containing displacements for the FEM nodes")
-    , m_getData_slot("getData", "The slot for publishing the loaded data") {
-    this->m_getData_slot.SetCallback(FEMDataCall::ClassName(), "GetData", &FEMLoader::getDataCallback);
+        : core::Module()
+        , m_femNodes_filename_slot("FEM node list filename", "The name of the txt file containing the FEM nodes")
+        , m_femElements_filename_slot(
+              "FEM element list filename", "The name of the txt file containing the FEM elemets")
+        , m_femDeformation_filename_slot(
+              "FEM displacment filename", "The name of the txt file containing displacements for the FEM nodes")
+        , m_getData_slot("getData", "The slot for publishing the loaded data") {
+    this->m_getData_slot.SetCallback(CallFEMModel::ClassName(), "GetData", &FEMLoader::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_femNodes_filename_slot << new core::param::FilePathParam("");
@@ -54,46 +55,47 @@ bool FEMLoader::create(void) {
 }
 
 bool FEMLoader::getDataCallback(core::Call& caller) {
-    FEMDataCall* cd = dynamic_cast<FEMDataCall*>(&caller);
+    CallFEMModel* cd = dynamic_cast<CallFEMModel*>(&caller);
 
-    if (cd == NULL) return false;
+    if (cd == NULL)
+        return false;
 
     //      cd->clearUpdateFlag();
     //      m_update_flag = std::max(0, m_update_flag - 1);
-    //      
+    //
     //      if (this->m_femNodes_filename_slot.IsDirty()) {
     //          this->m_femNodes_filename_slot.ResetDirty();
-    //      
+    //
     //          auto vislib_filename = m_femNodes_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
     //          std::string filename(vislib_filename.PeekBuffer());
-    //      
+    //
     //          m_fem_data->setNodes(loadNodesFromFile(filename));
-    //      
+    //
     //          m_update_flag = std::min(2, m_update_flag + 2);
     //      }
-    //      
+    //
     //      if (this->m_femElements_filename_slot.IsDirty()) {
     //          this->m_femElements_filename_slot.ResetDirty();
-    //      
+    //
     //          auto vislib_filename = m_femElements_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
     //          std::string filename(vislib_filename.PeekBuffer());
-    //      
+    //
     //          m_fem_data->setElements(loadElementsFromFile(filename));
-    //      
+    //
     //          m_update_flag = std::min(2, m_update_flag + 2);
     //      }
-    //      
+    //
     //      if (this->m_femDeformation_filename_slot.IsDirty()) {
     //          this->m_femDeformation_filename_slot.ResetDirty();
-    //      
+    //
     //          auto vislib_filename = m_femDeformation_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
     //          std::string filename(vislib_filename.PeekBuffer());
-    //      
+    //
     //          m_fem_data->setNodeDeformations(loadNodeDeformationsFromFile(filename));
-    //      
+    //
     //          m_update_flag = std::min(2, m_update_flag + 2);
     //      }
-    //      
+    //
     //      cd->setFEMData(m_fem_data);
     //      if (m_update_flag > 0) cd->setUpdateFlag();
 

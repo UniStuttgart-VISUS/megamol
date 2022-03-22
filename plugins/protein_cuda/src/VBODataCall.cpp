@@ -9,8 +9,8 @@
 //
 
 
-#include "stdafx.h"
 #include "VBODataCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -23,16 +23,18 @@ const unsigned int VBODataCall::CallForGetData = 1;
 /*
  * VBODataCall::VBODataCall
  */
-VBODataCall::VBODataCall(void) : Call(), vbo(0), tex(0), dataStride(-1),
-        dataOffsPosition(-1), dataOffsNormal(-1), dataOffsTexCoord(-1),
-        vboHandle(NULL) {
-
-}
+VBODataCall::VBODataCall(void)
+        : Call()
+        , vbo(0)
+        , tex(0)
+        , dataStride(-1)
+        , dataOffsPosition(-1)
+        , dataOffsNormal(-1)
+        , dataOffsTexCoord(-1)
+        , vboHandle(NULL) {}
 
 
 /*
  * VBODataCall::~VBODataCall
  */
-VBODataCall::~VBODataCall(void) {
-
-}
+VBODataCall::~VBODataCall(void) {}

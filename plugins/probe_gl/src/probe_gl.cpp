@@ -1,70 +1,49 @@
-/*
- * probe_gl.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
+#include "ComputeDistance.h"
+#include "FilterByProbe.h"
+#include "PrecomputeGlyphTextures.h"
 #include "ProbeBillboardGlyphMaterial.h"
 #include "ProbeBillboardGlyphRenderTasks.h"
+#include "ProbeDetailViewRenderTasks.h"
+#include "ProbeGlCalls.h"
+#include "ProbeHullRenderTasks.h"
 #include "ProbeInteraction.h"
 #include "ProbeRenderTasks.h"
-#include "ProbeGlCalls.h"
+#include "ProbeShellElementsRenderTasks.h"
 
 namespace megamol::probe_gl {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class ProbeGlPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(ProbeGlPluginInstance)
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    ProbeGlPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("probe_gl", "The probe_gl plugin."){};
 
-              /* machine-readable plugin assembly name */
-              "probe_gl", // TODO: Change this!
+    ~ProbeGlPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Describing probe_gl (TODO: Change this!)"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
-
-        //
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::MyModule2>();
-        //   ...
-        //
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphMaterial>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeDetailViewRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeInteraction>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::FilterByProbe>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeHullRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::PrecomputeGlyphTextures>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeShellElementsRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ComputeDistance>();
 
-        // register calls here:
-
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::probe_gl::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::probe_gl::MyCall2>();
-        //   ...
-        //
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::probe_gl::CallProbeInteraction>();
     }
 };

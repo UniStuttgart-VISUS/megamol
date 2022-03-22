@@ -31,16 +31,14 @@
 #ifndef THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
+#pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/thecam/utility/config.h"
-
 #include "mmcore/thecam/manipulator_base.h"
-
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace core {
@@ -51,21 +49,19 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class arcball_manipulator : public manipulator_base<T> {
+template<class T>
+class arcball_manipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
 
-    /** The mathematical traits of the camera. */
-    typedef typename manipulator_base<T>::maths_type maths_type;
-
     // Typedef all mathematical types we need in the manipulator.
-    typedef typename maths_type::point_type point_type;
-    typedef typename maths_type::quaternion_type quaternion_type;
-    typedef typename maths_type::screen_type screen_type;
-    typedef typename maths_type::vector_type vector_type;
-    typedef typename maths_type::world_type world_type;
+    typedef typename glm::vec4 point_type;
+    typedef typename glm::quat quaternion_type;
+    typedef int screen_type;
+    typedef typename glm::vec4 vector_type;
+    typedef float world_type;
 
     arcball_manipulator() = default;
 
@@ -95,10 +91,11 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
-    
     /** The x-coordinate of the last clicked screen position */
     screen_type lastSx;
 
@@ -113,6 +110,6 @@ private:
 #include "mmcore/thecam/arcball_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(pop)
+#pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED */

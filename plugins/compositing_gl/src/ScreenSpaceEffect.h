@@ -8,13 +8,12 @@
 #ifndef SCREEN_SPACE_EFFECT_H_INCLUDED
 #define SCREEN_SPACE_EFFECT_H_INCLUDED
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -28,21 +27,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ScreenSpaceEffect"; }
+    static const char* ClassName() {
+        return "ScreenSpaceEffect";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Compositing module that compute a screen space effect"; }
+    static const char* Description() {
+        return "Compositing module that compute a screen space effect";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     ScreenSpaceEffect();
     ~ScreenSpaceEffect();
@@ -71,7 +76,7 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     uint32_t m_version;
 

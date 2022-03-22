@@ -8,11 +8,7 @@
 #ifndef ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
 #define ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
 
-
-#include "mmcore/thecam/utility/config.h"
-
 #include "mmcore/thecam/manipulator_base.h"
-
 
 namespace megamol {
 namespace core {
@@ -23,21 +19,19 @@ namespace thecam {
  *
  * @tparam T The type of the camera to be manipulated.
  */
-template <class T> class OrbitAltitudeManipulator : public manipulator_base<T> {
+template<class T>
+class OrbitAltitudeManipulator : public manipulator_base<T> {
 
 public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
 
-    /** The mathematical traits of the camera. */
-    typedef typename manipulator_base<T>::maths_type maths_type;
-
     // Typedef all mathematical types we need in the manipulator.
-    typedef typename maths_type::point_type point_type;
-    typedef typename maths_type::quaternion_type quaternion_type;
-    typedef typename maths_type::screen_type screen_type;
-    typedef typename maths_type::vector_type vector_type;
-    typedef typename maths_type::world_type world_type;
+    typedef typename glm::vec4 point_type;
+    typedef typename glm::quat quaternion_type;
+    typedef int screen_type;
+    typedef typename glm::vec4 vector_type;
+    typedef float world_type;
 
     OrbitAltitudeManipulator() = default;
 
@@ -49,23 +43,23 @@ public:
     void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre) {
         if (this->manipulating() && this->enabled()) {
             auto cam = this->camera();
-            THE_ASSERT(cam != nullptr);
+            assert(cam != nullptr);
 
             if (this->m_last_sy != y) {
 
-                screen_type dy = y - m_last_sy;
+                world_type dy = static_cast<world_type>(y - m_last_sy);
 
-                auto cam_pos = cam->eye_position();
-                auto rot_cntr = rotCentre;
+                auto cam_pose = cam->template get<view::Camera::Pose>();
 
-                cam_pos.w() = 0.0f;
-                rot_cntr.w() = 0.0f;
+                auto cam_pos = cam_pose.position;
+                auto rot_cntr = glm::vec3(rotCentre);
 
-                auto v = thecam::math::normalise(rot_cntr - cam_pos);
+                auto v = glm::normalize(rot_cntr - cam_pos);
 
-                auto altitude = thecam::math::length(rot_cntr - cam_pos);
+                auto altitude = glm::length(rot_cntr - cam_pos);
 
-                cam->position(cam_pos - (v * dy * (altitude / 500.0f)));
+                cam_pose.position = cam_pos - (v * dy * (altitude / 500.0f));
+                cam->setPose(cam_pose);
             }
 
             this->m_last_sx = x;
@@ -91,7 +85,9 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) { this->end_manipulation(); }
+    inline void setInactive(void) {
+        this->end_manipulation();
+    }
 
 private:
     /** The x-coordinate of the last clicked screen position */

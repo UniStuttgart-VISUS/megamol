@@ -1,10 +1,9 @@
-#include "stdafx.h"
 #include "TSNEProjection.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 #include <sstream>
 #include <tsne.h>
@@ -28,13 +27,13 @@ TSNEProjection::TSNEProjection(void)
 
     TSNE* tsne = new TSNE(); // lib load test
 
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &TSNEProjection::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &TSNEProjection::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(0), &TSNEProjection::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(1), &TSNEProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -65,13 +64,12 @@ void TSNEProjection::release(void) {}
 
 bool TSNEProjection::getDataCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -105,13 +103,12 @@ bool TSNEProjection::getDataCallback(core::Call& c) {
 
 bool TSNEProjection::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -130,7 +127,7 @@ bool TSNEProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableDataCall* inCall) {
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
         if (!reduceToNSlot.IsDirty() && !maxIterSlot.IsDirty() && !thetaSlot.IsDirty() && !perplexitySlot.IsDirty() &&
@@ -158,7 +155,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::ta
     }
 
     // Load data in a double Array
-    double* inputData = (double*) malloc(columnCount * rowsCount * sizeof(double));
+    double* inputData = (double*)malloc(columnCount * rowsCount * sizeof(double));
     for (int col = 0; col < columnCount; col++) {
         for (int row = 0; row < rowsCount; row++) {
             inputData[row * columnCount + col] = inData[row * columnCount + col];
@@ -169,7 +166,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::ta
 
     TSNE* tsne = new TSNE();
 
-    double* result = (double*) malloc(rowsCount * outputColumnCount * sizeof(double));
+    double* result = (double*)malloc(rowsCount * outputColumnCount * sizeof(double));
     // void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
     // bool skip_random_init, int max_iter = 1000, int stop_lying_iter = 250, int mom_switch_iter = 250);
     tsne->run(
@@ -205,7 +202,7 @@ bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::ta
     for (int indexX = 0; indexX < outputColumnCount; indexX++) {
         this->columnInfos[indexX]
             .SetName("TSNE" + std::to_string(indexX))
-            .SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
+            .SetType(megamol::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
             .SetMinimumValue(minimas[indexX])
             .SetMaximumValue(maximas[indexX]);
     }

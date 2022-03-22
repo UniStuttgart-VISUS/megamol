@@ -8,10 +8,10 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "AbstractGPUSurface.h"
 #include "ogl_error_check.h"
+#include "stdafx.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -27,10 +27,13 @@ const size_t AbstractGPUSurface::vertexDataStride = 9;
 /*
  * AbstractGPUSurface::AbstractGPUSurface
  */
-AbstractGPUSurface::AbstractGPUSurface() : vertexDataReady(false),
-        triangleIdxReady(false), vboVtxData(0), vboTriangleIdx(0),
-        vertexCnt(0), triangleCnt(0) {
-}
+AbstractGPUSurface::AbstractGPUSurface()
+        : vertexDataReady(false)
+        , triangleIdxReady(false)
+        , vboVtxData(0)
+        , vboTriangleIdx(0)
+        , vertexCnt(0)
+        , triangleCnt(0) {}
 
 
 /*
@@ -60,11 +63,10 @@ AbstractGPUSurface::AbstractGPUSurface(const AbstractGPUSurface& other) {
         // Map as copy buffer
         glBindBufferARB(GL_COPY_READ_BUFFER, other.vboTriangleIdx);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboTriangleIdx);
-        glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                sizeof(unsigned int)*this->triangleCnt*3, 0, GL_DYNAMIC_DRAW);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER, sizeof(unsigned int) * this->triangleCnt * 3, 0, GL_DYNAMIC_DRAW);
         // Copy data
-        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                sizeof(unsigned int)*this->triangleCnt*3);
+        glCopyBufferSubData(
+            GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(unsigned int) * this->triangleCnt * 3);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
 
@@ -95,11 +97,11 @@ AbstractGPUSurface::AbstractGPUSurface(const AbstractGPUSurface& other) {
         //    // Map as copy buffer
         glBindBufferARB(GL_COPY_READ_BUFFER, other.vboVtxData);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboVtxData);
-        glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                this->vertexCnt*this->vertexDataStride*sizeof(float), 0, GL_DYNAMIC_DRAW);
+        glBufferDataARB(
+            GL_COPY_WRITE_BUFFER, this->vertexCnt * this->vertexDataStride * sizeof(float), 0, GL_DYNAMIC_DRAW);
         // Copy data
-        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                this->vertexCnt*this->vertexDataStride*sizeof(float));
+        glCopyBufferSubData(
+            GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->vertexCnt * this->vertexDataStride * sizeof(float));
         CheckForGLError();
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
@@ -109,15 +111,13 @@ AbstractGPUSurface::AbstractGPUSurface(const AbstractGPUSurface& other) {
 
         CheckForGLError();
     }
-
 }
 
 
 /*
  * AbstractGPUSurface::~AbstractGPUSurface
  */
-AbstractGPUSurface::~AbstractGPUSurface() {
-}
+AbstractGPUSurface::~AbstractGPUSurface() {}
 
 
 /*
@@ -136,18 +136,16 @@ bool AbstractGPUSurface::InitTriangleIdxVBO(size_t triangleCnt) {
     // Create vertex buffer object for triangle indices
     glGenBuffersARB(1, &this->vboTriangleIdx);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, this->vboTriangleIdx);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER,
-            sizeof(unsigned int)*triangleCnt*3, 0, GL_DYNAMIC_DRAW);
+    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * triangleCnt * 3, 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-//    printf("InitTriangleIdxVBO: %u bytes\n", sizeof(unsigned int)*triangleCnt*3);
+    //    printf("InitTriangleIdxVBO: %u bytes\n", sizeof(unsigned int)*triangleCnt*3);
 
     this->triangleCnt = triangleCnt;
     this->triangleIdxReady = true;
 
     return CheckForGLError();
 }
-
 
 
 /*
@@ -166,11 +164,10 @@ bool AbstractGPUSurface::InitVertexDataVBO(size_t vertexCnt) {
     // Create vertex buffer object for vertex data
     glGenBuffersARB(1, &this->vboVtxData);
     glBindBufferARB(GL_ARRAY_BUFFER, this->vboVtxData);
-    glBufferDataARB(GL_ARRAY_BUFFER,
-            vertexCnt*this->vertexDataStride*sizeof(float), 0, GL_DYNAMIC_DRAW);
+    glBufferDataARB(GL_ARRAY_BUFFER, vertexCnt * this->vertexDataStride * sizeof(float), 0, GL_DYNAMIC_DRAW);
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
-//    printf("InitVertexDataVBO: %u bytes\n", vertexCnt*this->vertexDataStride*sizeof(float));
+    //    printf("InitVertexDataVBO: %u bytes\n", vertexCnt*this->vertexDataStride*sizeof(float));
 
     this->vertexCnt = vertexCnt;
     this->vertexDataReady = true;
@@ -182,7 +179,7 @@ bool AbstractGPUSurface::InitVertexDataVBO(size_t vertexCnt) {
 /*
  * AbstractGPUSurface::AbstractGPUSurface
  */
-AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface &rhs) {
+AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface& rhs) {
 
     /* Make deep copy of triangle index buffer */
 
@@ -206,11 +203,10 @@ AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface &rhs)
         // Map as copy buffer
         glBindBufferARB(GL_COPY_READ_BUFFER, rhs.vboTriangleIdx);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboTriangleIdx);
-        glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                sizeof(unsigned int)*this->triangleCnt*3, 0, GL_DYNAMIC_DRAW);
+        glBufferDataARB(GL_COPY_WRITE_BUFFER, sizeof(unsigned int) * this->triangleCnt * 3, 0, GL_DYNAMIC_DRAW);
         // Copy data
-        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                sizeof(unsigned int)*this->triangleCnt*3);
+        glCopyBufferSubData(
+            GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(unsigned int) * this->triangleCnt * 3);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
 
@@ -241,11 +237,11 @@ AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface &rhs)
         //    // Map as copy buffer
         glBindBufferARB(GL_COPY_READ_BUFFER, rhs.vboVtxData);
         glBindBufferARB(GL_COPY_WRITE_BUFFER, this->vboVtxData);
-        glBufferDataARB(GL_COPY_WRITE_BUFFER,
-                this->vertexCnt*this->vertexDataStride*sizeof(float), 0, GL_DYNAMIC_DRAW);
+        glBufferDataARB(
+            GL_COPY_WRITE_BUFFER, this->vertexCnt * this->vertexDataStride * sizeof(float), 0, GL_DYNAMIC_DRAW);
         // Copy data
-        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
-                this->vertexCnt*this->vertexDataStride*sizeof(float));
+        glCopyBufferSubData(
+            GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->vertexCnt * this->vertexDataStride * sizeof(float));
         CheckForGLError();
         glBindBufferARB(GL_COPY_WRITE_BUFFER, 0);
         glBindBufferARB(GL_COPY_READ_BUFFER, 0);
@@ -257,7 +253,6 @@ AbstractGPUSurface& AbstractGPUSurface::operator=(const AbstractGPUSurface &rhs)
     }
 
     return *this;
-
 }
 
 

@@ -2,18 +2,19 @@
 
 #include "mmcore/param/EnumParam.h"
 
-megamol::mesh::MeshBakery::MeshBakery() 
-    : AbstractMeshDataSource()
-    , m_version(0)
-    , m_geometry_type("GeometryType", "...")
-{
+megamol::mesh::MeshBakery::MeshBakery()
+        : AbstractMeshDataSource()
+        , m_version(0)
+        , m_geometry_type("GeometryType", "...") {
     this->m_geometry_type << new megamol::core::param::EnumParam(0);
     this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Quad");
     this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Cone");
     this->MakeSlotAvailable(&this->m_geometry_type);
 }
 
-megamol::mesh::MeshBakery::~MeshBakery() { this->Release(); }
+megamol::mesh::MeshBakery::~MeshBakery() {
+    this->Release();
+}
 
 bool megamol::mesh::MeshBakery::create(void) {
     AbstractMeshDataSource::create();
@@ -112,7 +113,7 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
 
     lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
 
-    return true; 
+    return true;
 }
 
 bool megamol::mesh::MeshBakery::getMeshMetaDataCallback(core::Call& caller) {
@@ -131,12 +132,12 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
     m_indices.clear();
 
     int segments = 8;
-    float radius = 0.05f;
+    float radius = 0.0025f;
     float height = 1.0f;
     float alpha = std::atan(radius / height);
 
     //TODO create cone base
-    
+
 
     //TODO create cone side
     for (int i = 0; i < segments; ++i) {
@@ -153,13 +154,13 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
         m_vertex_positions.push_back(y);
         m_vertex_positions.push_back(z);
 
-        m_vertex_normals.push_back(nx/nl);
-        m_vertex_normals.push_back(ny/nl);
-        m_vertex_normals.push_back(nz/nl);
+        m_vertex_normals.push_back(nx / nl);
+        m_vertex_normals.push_back(ny / nl);
+        m_vertex_normals.push_back(nz / nl);
 
-        m_vertex_tangents.push_back(y/radius);
-        m_vertex_tangents.push_back(x/radius);
-        m_vertex_tangents.push_back(z/radius);
+        m_vertex_tangents.push_back(y / radius);
+        m_vertex_tangents.push_back(x / radius);
+        m_vertex_tangents.push_back(z / radius);
 
         m_vertex_uvs.push_back(0.0f);
         m_vertex_uvs.push_back(0.0f);
@@ -169,9 +170,9 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
     for (int i = 0; i < segments; ++i) {
         float x = 0.0f, y = 0.0f, z = height;
 
-        float nx = (m_vertex_normals[i * 3 + 0] + m_vertex_normals[((i+1) % segments) * 3 + 0]) / 2.0f;
-        float ny = (m_vertex_normals[i * 3 + 1] + m_vertex_normals[((i+1) % segments) * 3 + 1]) / 2.0f;
-        float nz = (m_vertex_normals[i * 3 + 2] + m_vertex_normals[((i+1) % segments) * 3 + 2]) / 2.0f;
+        float nx = (m_vertex_normals[i * 3 + 0] + m_vertex_normals[((i + 1) % segments) * 3 + 0]) / 2.0f;
+        float ny = (m_vertex_normals[i * 3 + 1] + m_vertex_normals[((i + 1) % segments) * 3 + 1]) / 2.0f;
+        float nz = (m_vertex_normals[i * 3 + 2] + m_vertex_normals[((i + 1) % segments) * 3 + 2]) / 2.0f;
 
         float tx = (m_vertex_tangents[i * 3 + 0] + m_vertex_tangents[((i + 1) % segments) * 3 + 0]) / 2.0f;
         float ty = (m_vertex_tangents[i * 3 + 1] + m_vertex_tangents[((i + 1) % segments) * 3 + 1]) / 2.0f;
@@ -195,7 +196,7 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
 
     for (uint32_t i = 0; i < segments; ++i) {
         m_indices.push_back(i);
-        m_indices.push_back( (i+1) % segments );
+        m_indices.push_back((i + 1) % segments);
         m_indices.push_back(i + segments);
     }
 }

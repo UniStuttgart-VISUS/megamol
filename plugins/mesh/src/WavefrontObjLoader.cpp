@@ -48,7 +48,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
         ++m_version;
 
         auto vislib_filename = m_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        std::string filename(vislib_filename.generic_u8string());
 
         m_obj_model = std::make_shared<TinyObjModel>();
 
@@ -101,7 +101,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
             auto& lines = m_obj_model->shapes[s].lines;
 
             uint64_t vertex_cnt = 0;
-            if (!mesh.indices.empty()) { 
+            if (!mesh.indices.empty()) {
                 // Loop over faces(polygon)
                 size_t index_offset = 0;
 
@@ -146,7 +146,8 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
 
                         if (has_texcoords && idx.texcoord_index >= 0) {
                             auto current_texcoords_ptr = &(m_obj_model->attrib.texcoords[2 * idx.texcoord_index]);
-                            m_texcoords[s].insert(m_texcoords[s].end(), current_texcoords_ptr, current_texcoords_ptr + 2);
+                            m_texcoords[s].insert(
+                                m_texcoords[s].end(), current_texcoords_ptr, current_texcoords_ptr + 2);
                         }
                     }
                     index_offset += fv;

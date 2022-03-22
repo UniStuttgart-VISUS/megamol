@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "TriangleMeshRenderer.h"
+#include "stdafx.h"
 
 #define SHADER_BASED
 
@@ -201,13 +201,10 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3DGL& call, bool lightin
     }
     shader->use();
 
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_mat, proj_mat;
-    cam.calc_matrices(snapshot, view_mat, proj_mat, core::thecam::snapshot_content::all);
-    glm::mat4 view = view_mat;
-    glm::mat4 proj = proj_mat;
+    auto cam = call.GetCamera();
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
+    auto view_vector = cam.getPose().direction;
 
     glm::vec3 light_direction = glm::vec3(0.75f, -1.0f, 0.0f);
     if (!lighting) {
@@ -217,8 +214,7 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3DGL& call, bool lightin
     glUniformMatrix4fv(shader->getUniformLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(shader->getUniformLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform3f(shader->getUniformLocation("light_direction"), light_direction.x, light_direction.y, light_direction.z);
-    glUniform3f(shader->getUniformLocation("viewVec"), snapshot.view_vector.x(), snapshot.view_vector.y(),
-        snapshot.view_vector.z());
+    glUniform3f(shader->getUniformLocation("viewVec"), view_vector.x, view_vector.y, view_vector.z);
 
     glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(this->faces->size()), GL_UNSIGNED_INT, nullptr);
 

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "DiagramSeries.h"
 
 #include "mmcore/param/FlexEnumParam.h"
@@ -8,7 +7,7 @@
 #include "vislib/StringConverter.h"
 
 using namespace megamol::infovis;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
 /*
@@ -44,7 +43,7 @@ DiagramSeries::DiagramSeries(void)
     this->MakeSlotAvailable(&this->scalingParam);
 
     this->colorParam << new core::param::StringParam(
-        core::utility::ColourParser::ToString(this->color[0], this->color[1], this->color[2]));
+        core::utility::ColourParser::ToString(this->color[0], this->color[1], this->color[2]).PeekBuffer());
     this->MakeSlotAvailable(&this->colorParam);
 }
 
@@ -129,11 +128,11 @@ bool DiagramSeries::assertData(const table::TableDataCall* const ft) {
     auto colname = this->columnSelectorParam.Param<core::param::FlexEnumParam>()->ValueString();
 
     uint32_t colIdx = 0;
-    if (!this->getColumnIdx(colIdx, colname, ft))
+    if (!this->getColumnIdx(colIdx, colname.c_str(), ft))
         return false;
 
-    core::utility::ColourParser::FromString(
-        this->colorParam.Param<core::param::StringParam>()->Value(), this->color[0], this->color[1], this->color[2]);
+    core::utility::ColourParser::FromString(this->colorParam.Param<core::param::StringParam>()->Value().c_str(),
+        this->color[0], this->color[1], this->color[2]);
 
     this->series = std::make_tuple(0, colIdx, std::string(T2A(colname)),
         this->scalingParam.Param<core::param::FloatParam>()->Value(), this->color);

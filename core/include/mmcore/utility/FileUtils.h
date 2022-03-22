@@ -9,216 +9,214 @@
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
 
-#include "vislib/UTF8Encoder.h"
 #include "mmcore/utility/log/Log.h"
-#include <fstream>
-#include <istream>
-#include <iostream>
+#include "vislib/UTF8Encoder.h"
 #include <codecvt>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <istream>
 #include <locale>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 
 namespace megamol {
 namespace core {
 namespace utility {
 
-    // #### Utility string conversion functions ############################ //
+// #### Utility string conversion functions ############################ //
 
-    static inline std::string ToString(const std::wstring& wstr) {
-         return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
-    }
+static inline std::string WChar2Utf8String(const std::wstring& wstr) {
+    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
+}
 
-    static inline std::wstring ToWString(const std::string& str) {
-        return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
-    }
-
-    static inline std::string Utf8Decode(const std::string& input) {
-        vislib::StringA dec_tmp;
-        if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(input.c_str()))) {
-            return std::string(dec_tmp.PeekBuffer());
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Utf8Decode Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return std::string();
-    }
-
-    static inline std::string Utf8Encode(const std::string& input) {
-        vislib::StringA enc_tmp;
-        if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(input.c_str()))) {
-            return std::string(enc_tmp.PeekBuffer());
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "UTF8Encoder Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return std::string();
-    }
-
-    // ##################################################################### //
+// ##################################################################### //
+/**
+ * File utility functions.
+ */
+class FileUtils {
+public:
     /**
-     * File utility functions.
+     * Check if file exists.
+     *
+     * @param path_str  The file or directory path.
      */
-    class FileUtils {
-    public:
-        /**
-         * Load raw data from file (e.g. texture data)
-         */
-        static bool LoadRawFile(const std::wstring& filename, std::vector<char>& out_data) {
-            return megamol::core::utility::FileUtils::LoadRawFile(megamol::core::utility::ToString(filename), out_data);
-        }
-
-        static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);
-
-        /**
-         * Check if file exists.
-         *
-         * @param path  The file or directory path.
-         */
-        template<typename T>
-        static bool FileExists(const T& path_str);
-
-        /**
-         * Check if any file exists and has specified file extension.
-         *
-         * @param path  The file or directory path.
-         * @param ext   The extension the given file should have.
-         */
-        template<typename T>
-        static bool FileWithExtensionExists(const T& path_str, const std::string& ext);
-
-        /**
-         * Check if any file exists and has specified file extension.
-         *
-         * @param path  The file or directory path.
-         * @param ext   The extension the given file should have.
-         */
-        template<typename T>
-        static bool FileHasExtension(const T& path_str, const std::string& ext);
-
-        /**
-         * Get stem of filename (filename without leading path and extension).
-         *
-         * @param path  The file or directory path.
-         */
-        template<typename T>
-        static std::string GetFilenameStem(const T& path_str);
-
-        /**
-         * Search recursively for file or path beginning at given directory.
-         *
-         * @param file          The file to search for.
-         * @param searchPath    The path of a directory as start for recursive search.
-         *
-         * @return              The complete path of the found file, empty string otherwise.
-         */
-        template<typename T, typename S>
-        static std::string SearchFileRecursive(const T& search_path_str, const S& search_file_str);
-
-        /**
-         * Writes content to file.
-         *
-         * @param filename      The file name of the file.
-         * @param in_content    The content to wirte to the file.
-         * @param silent        Disable log output.
-         *
-         * @return True on success, false otherwise.
-         */
-        static bool WriteFile(const std::string& filename, const std::string& in_content, bool silent = false);
-
-        /**
-         * Read content from file.
-         *
-         * @param filename      The file name of the file.
-         * @param out_content   The content to read from file.
-         * @param silent        Disable log output.
-         *
-         * @return True on success, false otherwise.
-         */
-        static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
-
-    private:
-        FileUtils() = default;
-        ~FileUtils() = default;
-    };
-
-
     template<typename T>
-    bool megamol::core::utility::FileUtils::FileExists(const T& path_str) {
-        auto path = std::filesystem::u8path(path_str);
-        try {
-            if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
-                return true;
-            }
-        } catch (std::filesystem::filesystem_error const& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        }
-        return false;
-    }
+    static bool FileExists(const T& path_str);
 
-
+    /**
+     * Check if any file exists and has specified file extension.
+     *
+     * @param path_str  The file or directory path.
+     * @param ext   The extension the given file should have.
+     */
     template<typename T>
-    bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
-        try {
-            if (FileUtils::FileExists<T>(path_str)) {
-                auto path = std::filesystem::u8path(path_str);
-                return (path.extension().generic_u8string() == std::string("." + ext));
-            }
-        }
-        catch (std::filesystem::filesystem_error const& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        }
-        return false;
-    }
+    static bool FileWithExtensionExists(const T& path_str, const std::string& ext);
 
-
+    /**
+     * Check if any file exists and has specified file extension.
+     *
+     * @param path_str  The file or directory path.
+     * @param ext   The extension the given file should have.
+     */
     template<typename T>
-    bool megamol::core::utility::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
-        auto path = std::filesystem::u8path(path_str);
-        return (path.extension().generic_u8string() == ext);
-    }
+    static bool FileHasExtension(const T& path_str, const std::string& ext);
 
-
+    /**
+     * Get stem of file name (file name __without__ leading path and without extension).
+     *
+     * @param path_str  The file or directory path.
+     */
     template<typename T>
-    std::string megamol::core::utility::FileUtils::GetFilenameStem(const T& path_str) {
-        try {
-            auto path = std::filesystem::u8path(path_str);
-            std::string filename;
-            if (path.has_stem()) {
-                filename = path.stem().generic_u8string();
-            }
-            return filename;
-        }
-        catch (std::filesystem::filesystem_error const& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return std::string();
-        }
-    }
+    static std::string GetFileNameStem(const T& path_str);
 
+    /**
+     * Get stem of file path (file name __with__ leading path but without extension).
+     *
+     * @param path_str  The file or directory path.
+     */
+    template<typename T>
+    static std::string GetFilePathStem(const T& path_str);
 
+    /**
+     * Search recursively for file or path beginning at given directory.
+     *
+     * @param file          The file to search for.
+     * @param searchPath    The path of a directory as start for recursive search.
+     *
+     * @return              The complete path of the found file, empty string otherwise.
+     */
     template<typename T, typename S>
-    std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
-        try {
-            auto search_path = std::filesystem::u8path(search_path_str);
-            auto file_path = std::filesystem::u8path(search_file_str);
-            std::string found_path;
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
-                if (entry.path().filename() == file_path) {
-                    found_path = entry.path().generic_u8string();
-                    break;
-                }
-            }
-            return found_path;
+    static std::string SearchFileRecursive(const T& search_path_str, const S& search_file_str);
+
+    /**
+     * Writes content to file.
+     *
+     * @param filename      The file name of the file.
+     * @param in_content    The content to wirte to the file.
+     * @param silent        Disable log output.
+     *
+     * @return True on success, false otherwise.
+     */
+    static bool WriteFile(const std::filesystem::path& filename, const std::string& in_content, bool silent = false);
+
+    /**
+     * Read content from file.
+     *
+     * @param filename      The file name of the file.
+     * @param out_content   The content to read from file.
+     * @param silent        Disable log output.
+     *
+     * @return True on success, false otherwise.
+     */
+    static bool ReadFile(const std::filesystem::path& filename, std::string& out_content, bool silent = false);
+
+    /**
+     * Load raw data from file (e.g. texture data)
+     */
+    static bool LoadRawFile(const std::filesystem::path& filename, std::vector<char>& out_data);
+
+private:
+    FileUtils() = default;
+    ~FileUtils() = default;
+};
+
+
+template<typename T>
+bool megamol::core::utility::FileUtils::FileExists(const T& path_str) {
+    auto filepath = std::filesystem::u8path(path_str);
+    try {
+        if (std::filesystem::exists(filepath) && std::filesystem::is_regular_file(filepath)) {
+            return true;
         }
-        catch (std::filesystem::filesystem_error const& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+    } catch (std::filesystem::filesystem_error const& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+    }
+    return false;
+}
+
+
+template<typename T>
+bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
+    try {
+        if (FileUtils::FileExists<T>(path_str)) {
+            auto filepath = std::filesystem::u8path(path_str);
+            return (filepath.extension().generic_u8string() == std::string("." + ext));
         }
+    } catch (std::filesystem::filesystem_error const& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+    }
+    return false;
+}
+
+
+template<typename T>
+bool megamol::core::utility::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
+    auto filepath = std::filesystem::u8path(path_str);
+    return (filepath.extension().generic_u8string() == ext);
+}
+
+
+template<typename T>
+std::string megamol::core::utility::FileUtils::GetFileNameStem(const T& path_str) {
+    try {
+        auto filepath = std::filesystem::u8path(path_str);
+        std::string filename;
+        if (filepath.has_stem()) {
+            filename = filepath.stem().generic_u8string();
+        }
+        return filename;
+    } catch (std::filesystem::filesystem_error const& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return std::string();
     }
+}
+
+
+template<typename T>
+std::string megamol::core::utility::FileUtils::GetFilePathStem(const T& path_str) {
+    try {
+        auto filepath = std::filesystem::u8path(path_str);
+        std::string filename;
+        if (filepath.has_stem()) {
+            if (filepath.has_parent_path()) {
+                filename = (filepath.parent_path() / filepath.stem()).generic_u8string();
+            } else {
+                filename = filepath.stem().generic_u8string();
+            }
+        }
+        return filename;
+    } catch (std::filesystem::filesystem_error const& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
+    }
+}
+
+
+template<typename T, typename S>
+std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
+    try {
+        auto search_path = std::filesystem::u8path(search_path_str);
+        auto file_path = std::filesystem::u8path(search_file_str);
+        std::string found_path;
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
+            if (entry.path().filename() == file_path) {
+                found_path = entry.path().generic_u8string();
+                break;
+            }
+        }
+        return found_path;
+    } catch (std::filesystem::filesystem_error const& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+    }
+    return std::string();
+}
 
 
 } // namespace utility

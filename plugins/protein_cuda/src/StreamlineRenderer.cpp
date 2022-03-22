@@ -8,30 +8,32 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "StreamlineRenderer.h"
+#include "stdafx.h"
 
+#include "CUDAFieldTopology.cuh"
 #include "VBODataCall.h"
-#include "protein_calls/VTIDataCall.h"
 #include "cuda_error_check.h"
 #include "ogl_error_check.h"
-#include "CUDAFieldTopology.cuh"
 #include "protein_calls/Interpol.h"
+#include "protein_calls/VTIDataCall.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include <cuda_gl_interop.h>
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstdlib>
+#include <cuda_gl_interop.h>
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -45,21 +47,25 @@ const Vec3f StreamlineRenderer::uniformColor = Vec3f(0.88f, 0.86f, 0.39f);
 /*
  * StreamlineRenderer::StreamlineRenderer
  */
-StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
+StreamlineRenderer::StreamlineRenderer(void)
+        : Renderer3DModuleGL()
+        ,
         /* Caller slots */
-        fieldDataCallerSlot("getFieldData", "Connects the renderer with the field data"),
-        getClipPlaneSlot("getClipPlane", "Provides the clip plane"),
+        fieldDataCallerSlot("getFieldData", "Connects the renderer with the field data")
+        , getClipPlaneSlot("getClipPlane", "Provides the clip plane")
+        ,
         /* Streamline integration parameters */
-        nStreamlinesSlot("nStreamlines", "Set the number of streamlines"),
-        streamlineMaxStepsSlot("nSteps", "Set the number of steps for streamline integration"),
-        streamlineStepSlot("step","Set stepsize for the streamline integration"),
-        seedClipZSlot("seedClipZ","Starting z value for the clipping plane"),
-        seedIsoSlot("seedIso","Iso value for the seed point"),
-        renderModeSlot("renderMode", "Set rendermode for the streamlines"),
-        streamtubesThicknessSlot("tubesScl","The scale factor for the streamtubes thickness"),
-        minColSlot("minCol","Minimum color value"),
-        maxColSlot("maxCol","Maximum color value"),
-        triggerComputeGradientField(true), triggerComputeStreamlines(true) {
+        nStreamlinesSlot("nStreamlines", "Set the number of streamlines")
+        , streamlineMaxStepsSlot("nSteps", "Set the number of steps for streamline integration")
+        , streamlineStepSlot("step", "Set stepsize for the streamline integration")
+        , seedClipZSlot("seedClipZ", "Starting z value for the clipping plane")
+        , seedIsoSlot("seedIso", "Iso value for the seed point")
+        , renderModeSlot("renderMode", "Set rendermode for the streamlines")
+        , streamtubesThicknessSlot("tubesScl", "The scale factor for the streamtubes thickness")
+        , minColSlot("minCol", "Minimum color value")
+        , maxColSlot("maxCol", "Maximum color value")
+        , triggerComputeGradientField(true)
+        , triggerComputeStreamlines(true) {
 
     // Data caller for volume data
     this->fieldDataCallerSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
@@ -67,8 +73,7 @@ StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
 
     // Data caller for clipping plane
     view::CallClipPlaneDescription ccpd;
-    this->getClipPlaneSlot.SetCallback(ccpd.ClassName(), ccpd.FunctionName(0),
-        &StreamlineRenderer::requestPlane);
+    this->getClipPlaneSlot.SetCallback(ccpd.ClassName(), ccpd.FunctionName(0), &StreamlineRenderer::requestPlane);
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
 
@@ -103,10 +108,10 @@ StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
     /* Streamline render parameters */
 
     this->renderMode = NONE;
-    param::EnumParam *rm = new param::EnumParam(int(this->renderMode));
+    param::EnumParam* rm = new param::EnumParam(int(this->renderMode));
     rm->SetTypePair(NONE, "None");
     rm->SetTypePair(LINES, "Lines");
-    rm->SetTypePair(ILLUMINATED_LINES, "Illuminated lines" );
+    rm->SetTypePair(ILLUMINATED_LINES, "Illuminated lines");
     rm->SetTypePair(TUBES, "Stream tubes");
     this->renderModeSlot << rm;
     this->MakeSlotAvailable(&this->renderModeSlot);
@@ -141,46 +146,43 @@ StreamlineRenderer::~StreamlineRenderer(void) {
  */
 bool StreamlineRenderer::create(void) {
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2,0) || !areExtsAvailable(
-            "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform GL_ARB_draw_buffers GL_ARB_copy_buffer GL_ARB_vertex_buffer_object")) {
+    /*if (!ogl_IsVersionGEQ(2, 0) ||
+        !areExtsAvailable("GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects GL_EXT_gpu_shader4 "
+                          "GL_EXT_geometry_shader4 GL_EXT_bindable_uniform GL_ARB_draw_buffers GL_ARB_copy_buffer "
+                          "GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        return false;
-    }
-
+    }*/
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable( GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable( GL_VERTEX_PROGRAM_TWO_SIDE);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
     ShaderSource geomSrc;
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load the shader source for the tube shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
         return false;
     }
-    this->tubeShader.Compile(vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY);
+    this->tubeShader.Compile(
+        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
     this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
     this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
     if (!this->tubeShader.Link()) {
@@ -189,21 +191,22 @@ bool StreamlineRenderer::create(void) {
     }
 
     // Load the shader source for the illuminated streamlines
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for illuminated streamlines");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for illuminated streamlines");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for illuminated streamlines");
         return false;
     }
-    this->illumShader.Compile(vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->illumShader.Compile(
+        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
 
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT , GL_LINES_ADJACENCY);
+    this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
     this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
     this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
     if (!this->illumShader.Link()) {
@@ -213,7 +216,6 @@ bool StreamlineRenderer::create(void) {
 
     return true;
 }
-
 
 
 /*
@@ -228,38 +230,25 @@ void StreamlineRenderer::release(void) {
 /*
  * StreamlineRenderer::GetExtents
  */
-bool StreamlineRenderer::GetExtents(core::Call& call) {
+bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    // Extent of volume data
 
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) {
+    protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+    if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
-    // Extent of volume data
-
-	protein_calls::VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
-	if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetExtent)) {
-         return false;
+    vtiCall->SetCalltime(call.Time());
+    vtiCall->SetFrameID(static_cast<int>(call.Time()));
+    if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
+        return false;
     }
 
-    vtiCall->SetCalltime(cr3d->Time());
-    vtiCall->SetFrameID(static_cast<int>(cr3d->Time()));
-	if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
-         return false;
-    }
-
-    float scale;
     //this->bbox.SetObjectSpaceBBox(vtiCall->GetWholeExtent());
     this->bbox.SetObjectSpaceBBox(vtiCall->AccessBoundingBoxes().ObjectSpaceBBox());
-    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
     //this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = vtiCall->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(vtiCall->FrameCount());
+    call.AccessBoundingBoxes() = vtiCall->AccessBoundingBoxes();
+    call.SetTimeFramesCount(vtiCall->FrameCount());
 
     return true;
 }
@@ -268,106 +257,72 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
 /*
  * StreamlineRenderer::Render
  */
-bool StreamlineRenderer::Render(core::Call& call) {
+bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // Update parameters
     this->updateParams();
 
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-	protein_calls::VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
+    protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (vtiCall == NULL) {
         return false;
     }
 
     // Get volume data
-    vtiCall->SetCalltime(cr3d->Time());
-	if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
-         return false;
+    vtiCall->SetCalltime(call.Time());
+    if (!(*vtiCall)(protein_calls::VTIDataCall::CallForGetData)) {
+        return false;
     }
-
-    float scale;
 
     // (Re)compute streamlines if necessary
     if (this->triggerComputeStreamlines) {
 
-        float zHeight = (vtiCall->GetGridsize().GetZ()-1)*vtiCall->GetSpacing().GetZ();
-        this->genSeedPoints(vtiCall, zHeight*this->seedClipZ, this->seedIso); // Isovalues
+        float zHeight = (vtiCall->GetGridsize().GetZ() - 1) * vtiCall->GetSpacing().GetZ();
+        this->genSeedPoints(vtiCall, zHeight * this->seedClipZ, this->seedIso); // Isovalues
 
         //printf("height: %f, clip %f %f %f %f\n", zHeight, zHeight*0.2, zHeight*0.4, zHeight*0.6,zHeight*0.8);
 
-        if (!this->strLines.InitStreamlines(this->streamlineMaxSteps,
-                this->nStreamlines, CUDAStreamlines::BIDIRECTIONAL)) {
+        if (!this->strLines.InitStreamlines(
+                this->streamlineMaxSteps, this->nStreamlines, CUDAStreamlines::BIDIRECTIONAL)) {
             return false;
         }
 
         // Integrate streamlines
-        if (!this->strLines.IntegrateRK4(
-                this->seedPoints.PeekElements(),
-                this->streamlineStep,
+        if (!this->strLines.IntegrateRK4(this->seedPoints.PeekElements(), this->streamlineStep,
                 (float*)vtiCall->GetPointDataByIdx(1, 0), // TODO Do not hardcode array
-                make_int3(vtiCall->GetGridsize().GetX(),
-                        vtiCall->GetGridsize().GetY(),
-                        vtiCall->GetGridsize().GetZ()),
-                make_float3(vtiCall->GetOrigin().GetX(),
-                        vtiCall->GetOrigin().GetY(),
-                        vtiCall->GetOrigin().GetZ()),
-                make_float3(vtiCall->GetSpacing().GetX(),
-                                vtiCall->GetSpacing().GetY(),
-                                vtiCall->GetSpacing().GetZ()))) {
+                make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
+                make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
+                make_float3(
+                    vtiCall->GetSpacing().GetX(), vtiCall->GetSpacing().GetY(), vtiCall->GetSpacing().GetZ()))) {
             return false;
         }
 
         // Sample the density field to the alpha component
         if (!this->strLines.SampleScalarFieldToAlpha(
                 (float*)vtiCall->GetPointDataByIdx(0, 0), // TODO do not hardcode array
-                make_int3(vtiCall->GetGridsize().GetX(),
-                        vtiCall->GetGridsize().GetY(),
-                        vtiCall->GetGridsize().GetZ()),
-                        make_float3(vtiCall->GetOrigin().GetX(),
-                                vtiCall->GetOrigin().GetY(),
-                                vtiCall->GetOrigin().GetZ()),
-                                make_float3(vtiCall->GetSpacing().GetX(),
-                                        vtiCall->GetSpacing().GetY(),
-                                        vtiCall->GetSpacing().GetZ()))) {
+                make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
+                make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
+                make_float3(
+                    vtiCall->GetSpacing().GetX(), vtiCall->GetSpacing().GetY(), vtiCall->GetSpacing().GetZ()))) {
             return false;
         }
 
         // Set RGB color value
-//        if (!this->strLines.SetUniformRGBColor(make_float3(1.0, 0.0, 1.0))) {
-//            return false;
-//        }
+        //        if (!this->strLines.SetUniformRGBColor(make_float3(1.0, 0.0, 1.0))) {
+        //            return false;
+        //        }
 
-        if (!this->strLines.SampleVecFieldToRGB(
-                (float*)vtiCall->GetPointDataByIdx(1, 0), // TODO do not hardcode array
-                make_int3(vtiCall->GetGridsize().GetX(),
-                                        vtiCall->GetGridsize().GetY(),
-                                        vtiCall->GetGridsize().GetZ()),
-                                        make_float3(vtiCall->GetOrigin().GetX(),
-                                                vtiCall->GetOrigin().GetY(),
-                                                vtiCall->GetOrigin().GetZ()),
-                                                make_float3(vtiCall->GetSpacing().GetX(),
-                                                        vtiCall->GetSpacing().GetY(),
-                                                        vtiCall->GetSpacing().GetZ()))) {
+        if (!this->strLines.SampleVecFieldToRGB((float*)vtiCall->GetPointDataByIdx(1, 0), // TODO do not hardcode array
+                make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
+                make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
+                make_float3(
+                    vtiCall->GetSpacing().GetX(), vtiCall->GetSpacing().GetY(), vtiCall->GetSpacing().GetZ()))) {
             return false;
         }
 
         this->triggerComputeStreamlines = false;
     }
 
-
     glPushMatrix();
-
-    // Compute scale factor and scale world
-    if( !vislib::math::IsEqual( this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
 
     // Render streamlines
     glDisable(GL_BLEND);
@@ -385,9 +340,8 @@ bool StreamlineRenderer::Render(core::Call& call) {
         }
         this->tubeShader.Disable();
     } else if (this->renderMode == LINES) {
-        glColor3f(StreamlineRenderer::uniformColor.GetX(),
-                StreamlineRenderer::uniformColor.GetY(),
-                StreamlineRenderer::uniformColor.GetZ());
+        glColor3f(StreamlineRenderer::uniformColor.GetX(), StreamlineRenderer::uniformColor.GetY(),
+            StreamlineRenderer::uniformColor.GetZ());
         if (!this->strLines.RenderLineStrip()) {
             return false;
         }
@@ -408,33 +362,31 @@ bool StreamlineRenderer::Render(core::Call& call) {
 /*
  * StreamlineRenderer::genSeedPoints
  */
-void StreamlineRenderer::genSeedPoints(
-		protein_calls::VTIDataCall *vti, float zClip, float isoval) {
+void StreamlineRenderer::genSeedPoints(protein_calls::VTIDataCall* vti, float zClip, float isoval) {
 
 
-    float posZ= vti->GetOrigin().GetZ() + zClip; // Start above the lower boundary
+    float posZ = vti->GetOrigin().GetZ() + zClip; // Start above the lower boundary
 
-    float xMax = vti->GetOrigin().GetX() + vti->GetSpacing().GetX()*(vti->GetGridsize().GetX()-1);
-    float yMax = vti->GetOrigin().GetY() + vti->GetSpacing().GetY()*(vti->GetGridsize().GetY()-1);
+    float xMax = vti->GetOrigin().GetX() + vti->GetSpacing().GetX() * (vti->GetGridsize().GetX() - 1);
+    float yMax = vti->GetOrigin().GetY() + vti->GetSpacing().GetY() * (vti->GetGridsize().GetY() - 1);
     //float zMax = vti->GetOrigin().GetZ() + vtiCall->GetSpacing().GetZ()*(vtiCall->GetGridsize().GetZ()-1);
     float xMin = vti->GetOrigin().GetX();
     float yMin = vti->GetOrigin().GetY();
 
     // Initialize random seed
-    srand (static_cast<unsigned int>(time(NULL)));
+    srand(static_cast<unsigned int>(time(NULL)));
     this->seedPoints.SetCount(0);
     //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
-    while (this->seedPoints.Count()/3 < this->nStreamlines) {
+    while (this->seedPoints.Count() / 3 < this->nStreamlines) {
         Vec3f pos;
-        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000)/10000.0f)*(xMax-xMin));
-        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000)/10000.0f)*(yMax-yMin));
-        pos.SetZ(posZ + (float(rand() % 10000)/10000.0f)*(10));
-//        pos.SetZ(posZ);
+        pos.SetX(vti->GetOrigin().GetX() + (float(rand() % 10000) / 10000.0f) * (xMax - xMin));
+        pos.SetY(vti->GetOrigin().GetY() + (float(rand() % 10000) / 10000.0f) * (yMax - yMin));
+        pos.SetZ(posZ + (float(rand() % 10000) / 10000.0f) * (10));
+        //        pos.SetZ(posZ);
         //printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
         float sample = this->sampleFieldAtPosTrilin(
-                vti, make_float3(pos.GetX(),
-                        pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+            vti, make_float3(pos.GetX(), pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
 
         // Sample density value
         //if (vislib::math::Abs(sample - isoval) < 0.05) {
@@ -450,50 +402,47 @@ void StreamlineRenderer::genSeedPoints(
 /*
  * StreamlineRenderer::sampleFieldAtPosTrilin
  */
-float StreamlineRenderer::sampleFieldAtPosTrilin(protein_calls::VTIDataCall *vtiCall, float3 pos, float *field_D) {
+float StreamlineRenderer::sampleFieldAtPosTrilin(protein_calls::VTIDataCall* vtiCall, float3 pos, float* field_D) {
 
     int3 c;
     float3 f;
 
-    int3 gridSize_D = make_int3(vtiCall->GetGridsize().GetX(),
-            vtiCall->GetGridsize().GetY(),
-            vtiCall->GetGridsize().GetZ());
-    float3 gridOrg_D =  make_float3(vtiCall->GetOrigin().GetX(),
-            vtiCall->GetOrigin().GetY(),
-            vtiCall->GetOrigin().GetZ());
-    float3 gridDelta_D = make_float3(vtiCall->GetSpacing().GetX(),
-            vtiCall->GetSpacing().GetY(),
-            vtiCall->GetSpacing().GetZ());
+    int3 gridSize_D =
+        make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ());
+    float3 gridOrg_D =
+        make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ());
+    float3 gridDelta_D =
+        make_float3(vtiCall->GetSpacing().GetX(), vtiCall->GetSpacing().GetY(), vtiCall->GetSpacing().GetZ());
 
     // Get id of the cell containing the given position and interpolation
     // coefficients
-    f.x = (pos.x-gridOrg_D.x)/gridDelta_D.x;
-    f.y = (pos.y-gridOrg_D.y)/gridDelta_D.y;
-    f.z = (pos.z-gridOrg_D.z)/gridDelta_D.z;
+    f.x = (pos.x - gridOrg_D.x) / gridDelta_D.x;
+    f.y = (pos.y - gridOrg_D.y) / gridDelta_D.y;
+    f.z = (pos.z - gridOrg_D.z) / gridDelta_D.z;
     c.x = (int)(f.x);
     c.y = (int)(f.y);
     c.z = (int)(f.z);
-    f.x = f.x-(float)c.x; // alpha
-    f.y = f.y-(float)c.y; // beta
-    f.z = f.z-(float)c.z; // gamma
+    f.x = f.x - (float)c.x; // alpha
+    f.y = f.y - (float)c.y; // beta
+    f.z = f.z - (float)c.z; // gamma
 
-    c.x = vislib::math::Clamp(c.x, int(0), gridSize_D.x-2);
-    c.y = vislib::math::Clamp(c.y, int(0), gridSize_D.y-2);
-    c.z = vislib::math::Clamp(c.z, int(0), gridSize_D.z-2);
+    c.x = vislib::math::Clamp(c.x, int(0), gridSize_D.x - 2);
+    c.y = vislib::math::Clamp(c.y, int(0), gridSize_D.y - 2);
+    c.z = vislib::math::Clamp(c.z, int(0), gridSize_D.z - 2);
 
     // Get values at corners of current cell
     float s[8];
-    s[0] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+0];
-    s[1] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+0))+c.x+1];
-    s[2] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+0];
-    s[3] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+0) + (c.y+1))+c.x+1];
-    s[4] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+0];
-    s[5] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+0))+c.x+1];
-    s[6] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+0];
-    s[7] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+1];
+    s[0] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 0) + (c.y + 0)) + c.x + 0];
+    s[1] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 0) + (c.y + 0)) + c.x + 1];
+    s[2] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 0) + (c.y + 1)) + c.x + 0];
+    s[3] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 0) + (c.y + 1)) + c.x + 1];
+    s[4] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 1) + (c.y + 0)) + c.x + 0];
+    s[5] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 1) + (c.y + 0)) + c.x + 1];
+    s[6] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 1) + (c.y + 1)) + c.x + 0];
+    s[7] = field_D[gridSize_D.x * (gridSize_D.y * (c.z + 1) + (c.y + 1)) + c.x + 1];
 
     // Use trilinear interpolation to sample the volume
-	return protein_calls::Interpol::Trilin(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f.x, f.y, f.z);
+    return protein_calls::Interpol::Trilin(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f.x, f.y, f.z);
 }
 
 
@@ -501,11 +450,13 @@ float StreamlineRenderer::sampleFieldAtPosTrilin(protein_calls::VTIDataCall *vti
  * StreamlineRenderer::requestPlane
  */
 bool StreamlineRenderer::requestPlane(Call& call) {
-    view::CallClipPlane *ccp = dynamic_cast<view::CallClipPlane*>(&call);
+    view::CallClipPlane* ccp = dynamic_cast<view::CallClipPlane*>(&call);
 
-    if (ccp == NULL) return false;
+    if (ccp == NULL)
+        return false;
 
-    this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ * this->bbox.ObjectSpaceBBox().Depth()), Vec3f(0.0, 0.0, 1.0));
+    this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ * this->bbox.ObjectSpaceBBox().Depth()),
+        Vec3f(0.0, 0.0, 1.0));
     this->clipPlane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
 
     ccp->SetColour(0, 0, 0, 0);
@@ -562,8 +513,7 @@ void StreamlineRenderer::updateParams() {
 
     // parameter refresh
     if (this->renderModeSlot.IsDirty()) {
-        this->renderMode =
-                static_cast<RenderModes>(int(this->renderModeSlot.Param<param::EnumParam>()->Value()));
+        this->renderMode = static_cast<RenderModes>(int(this->renderModeSlot.Param<param::EnumParam>()->Value()));
         this->renderModeSlot.ResetDirty();
     }
 
@@ -584,5 +534,4 @@ void StreamlineRenderer::updateParams() {
         this->maxCol = this->maxColSlot.Param<core::param::FloatParam>()->Value();
         this->maxColSlot.ResetDirty();
     }
-
 }

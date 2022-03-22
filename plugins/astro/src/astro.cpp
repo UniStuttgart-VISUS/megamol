@@ -1,82 +1,46 @@
-/*
- * astro.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
-#include "astro/AstroDataCall.h"
 #include "AstroParticleConverter.h"
 #include "AstroSchulz.h"
 #include "Contest2019DataLoader.h"
 #include "DirectionToColour.h"
 #include "FilamentFilter.h"
 #include "SimpleAstroFilter.h"
-#include "SurfaceLICRenderer.h"
 #include "SpectralIntensityVolume.h"
 #include "VolumetricGlobalMinMax.h"
-
+#include "astro/AstroDataCall.h"
 
 namespace megamol::astro {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
-    public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+class AstroPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(AstroPluginInstance)
 
-                /* machine-readable plugin assembly name */
-                "astro",
+public:
+    AstroPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("astro", "The astro plugin."){};
 
-                /* human-readable plugin description */
-                "Describing astro (TODO: Change this!)") {
+    ~AstroPluginInstance() override = default;
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules here:
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::VolumetricGlobalMinMax>();
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::astro::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::astro::MyModule2>();
-            //   ...
-            //
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
-			this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::VolumetricGlobalMinMax>();
-
-            // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::astro::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::astro::MyCall2>();
-            //   ...
-            //
-            this->call_descriptions.RegisterAutoDescription<megamol::astro::AstroDataCall>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::astro::AstroDataCall>();
+    }
+};
 } // namespace megamol::astro

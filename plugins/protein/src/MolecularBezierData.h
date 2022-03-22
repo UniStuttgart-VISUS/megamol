@@ -11,138 +11,136 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/Module.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/misc/BezierCurvesListDataCall.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
-#include "mmcore/param/ParamSlot.h"
-
 
 namespace megamol {
 namespace protein {
 
+/**
+ * Mesh-based renderer for bézier curve tubes
+ */
+class MolecularBezierData : public core::Module {
+public:
     /**
-     * Mesh-based renderer for bézier curve tubes
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class MolecularBezierData : public core::Module {
-    public:
+    static const char* ClassName(void) {
+        return "MolecularBezierData";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "MolecularBezierData";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Converts from 'MolecularDataCall' to 'BezierCurvesListDataCall'";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Converts from 'MolecularDataCall' to 'BezierCurvesListDataCall'";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /** Ctor. */
+    MolecularBezierData(void);
 
-        /** Ctor. */
-        MolecularBezierData(void);
+    /** Dtor. */
+    virtual ~MolecularBezierData(void);
 
-        /** Dtor. */
-        virtual ~MolecularBezierData(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Get the line data
+     *
+     * @param caller The calling caller
+     *
+     * @return The return value
+     */
+    bool getDataCallback(core::Call& caller);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Get the extent of the line data
+     *
+     * @param caller The calling caller
+     *
+     * @return The return value
+     */
+    bool getExtentCallback(core::Call& caller);
 
-    private:
+    /**
+     * Updates the curve data from the incoming data
+     *
+     * @param dat The incoming data
+     */
+    void update(megamol::protein_calls::MolecularDataCall& dat);
 
-        /**
-         * Get the line data
-         *
-         * @param caller The calling caller
-         *
-         * @return The return value
-         */
-        bool getDataCallback(core::Call& caller);
+    /** The call for data */
+    core::CalleeSlot outDataSlot;
 
-        /**
-         * Get the extent of the line data
-         *
-         * @param caller The calling caller
-         *
-         * @return The return value
-         */
-        bool getExtentCallback(core::Call& caller);
+    /** The call for data */
+    core::CallerSlot inDataSlot;
 
-        /**
-         * Updates the curve data from the incoming data
-         *
-         * @param dat The incoming data
-         */
-		void update(megamol::protein_calls::MolecularDataCall& dat);
+    /** The data hash */
+    SIZE_T hash;
 
-        /** The call for data */
-        core::CalleeSlot outDataSlot;
+    /** The data hash */
+    SIZE_T outhash;
 
-        /** The call for data */
-        core::CallerSlot inDataSlot;
+    /** The time code */
+    unsigned int timeCode;
 
-        /** The data hash */
-        SIZE_T hash;
+    /** The data */
+    geocalls::BezierCurvesListDataCall::Curves data;
 
-        /** The data hash */
-        SIZE_T outhash;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
+    std::vector<glm::vec3> atomColorTable;
+    std::vector<glm::vec3> rainbowColors;
 
-        /** The time code */
-        unsigned int timeCode;
-
-        /** The data */
-        core::misc::BezierCurvesListDataCall::Curves data;
-
-        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
-        vislib::Array<float> atomColorTable;
-        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
-
-        core::param::ParamSlot color1Slot;
-        core::param::ParamSlot color2Slot;
-        core::param::ParamSlot minGradColorSlot;
-        core::param::ParamSlot mixGradColorSlot;
-        core::param::ParamSlot maxGradColorSlot;
-        core::param::ParamSlot colorMixSlot;
-
-    };
+    core::param::ParamSlot color1Slot;
+    core::param::ParamSlot color2Slot;
+    core::param::ParamSlot minGradColorSlot;
+    core::param::ParamSlot mixGradColorSlot;
+    core::param::ParamSlot maxGradColorSlot;
+    core::param::ParamSlot colorMixSlot;
+};
 
 } /* end namespace protein */
 } /* end namespace megamol */

@@ -5,16 +5,16 @@
  */
 
 #include "ExtractCenterline.h"
-#include <limits>
-#include "CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "normal_3d_omp.h"
 #include "mmcore/utility/log/Log.h"
+#include "normal_3d_omp.h"
+#include "probe/CallKDTree.h"
 #include <atomic>
+#include <limits>
 
 
 namespace megamol {
@@ -22,9 +22,9 @@ namespace probe {
 
 
 ExtractCenterline::ExtractCenterline()
-    : Module()
-    , _getDataCall("getData", "")
-    , _deployLineCall("deployCenterline", "") {
+        : Module()
+        , _getDataCall("getData", "")
+        , _deployLineCall("deployCenterline", "") {
 
     this->_deployLineCall.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ExtractCenterline::getData);
@@ -37,13 +37,19 @@ ExtractCenterline::ExtractCenterline()
     this->MakeSlotAvailable(&this->_getDataCall);
 }
 
-ExtractCenterline::~ExtractCenterline() { this->Release(); }
+ExtractCenterline::~ExtractCenterline() {
+    this->Release();
+}
 
-bool ExtractCenterline::create() { return true; }
+bool ExtractCenterline::create() {
+    return true;
+}
 
 void ExtractCenterline::release() {}
 
-bool ExtractCenterline::InterfaceIsDirty() { return false; }
+bool ExtractCenterline::InterfaceIsDirty() {
+    return false;
+}
 
 bool ExtractCenterline::extractCenterLine(float* vertices, uint32_t num_vertices, uint32_t num_components) {
 
@@ -66,8 +72,8 @@ bool ExtractCenterline::extractCenterLine(float* vertices, uint32_t num_vertices
         this->_bbox.SetBoundingBox(min_x, min_y, max_z, max_x, max_y, min_z);
     }
 
-    std::array<float, 3> whd = {this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(),
-        this->_bbox.BoundingBox().Depth()};
+    std::array<float, 3> whd = {
+        this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
     const auto longest_edge_index = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
 
     const uint32_t num_steps = 20;
@@ -134,10 +140,12 @@ bool ExtractCenterline::extractCenterLine(float* vertices, uint32_t num_vertices
 bool ExtractCenterline::getMetaData(core::Call& call) {
 
     auto cl = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cl == nullptr) return false;
+    if (cl == nullptr)
+        return false;
 
     auto cm = this->_getDataCall.CallAs<mesh::CallMesh>();
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto line_meta_data = cl->getMetaData();
     auto mesh_meta_data = cm->getMetaData();
@@ -145,7 +153,8 @@ bool ExtractCenterline::getMetaData(core::Call& call) {
     // get metadata from adios
     mesh_meta_data.m_frame_ID = line_meta_data.m_frame_ID;
     cm->setMetaData(mesh_meta_data);
-    if (!(*cm)(1)) return false;
+    if (!(*cm)(1))
+        return false;
     mesh_meta_data = cm->getMetaData();
 
     // put metadata in line call
@@ -159,22 +168,24 @@ bool ExtractCenterline::getMetaData(core::Call& call) {
 
 bool ExtractCenterline::getData(core::Call& call) {
     auto cl = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cl == nullptr) return false;
+    if (cl == nullptr)
+        return false;
 
     auto cm = this->_getDataCall.CallAs<mesh::CallMesh>();
-    if (cm == nullptr) return false;
-    if (!(*cm)(0)) return false;
+    if (cm == nullptr)
+        return false;
+    if (!(*cm)(0))
+        return false;
 
-    auto meta_data = cm->getMetaData();
-    
+    auto mesh_meta_data = cm->getMetaData();
+    _bbox = mesh_meta_data.m_bboxs;
 
-    if (cm->hasUpdate())
-    {
+    if (cm->hasUpdate()) {
         ++_version;
 
         auto data = cm->getData();
 
-        if (data->accessMesh().size() > 1 || data->accessMesh().empty()) {
+        if (data->accessMeshes().size() > 1 || data->accessMeshes().empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
             return false;
         }
@@ -182,7 +193,7 @@ bool ExtractCenterline::getData(core::Call& call) {
         float* vertices = nullptr;
         uint32_t num_vertices = 0;
         uint32_t num_components = 0;
-        for (auto& attrib : data->accessMesh()[0].attributes) {
+        for (auto& attrib : data->accessMeshes().begin()->second.attributes) {
             if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                 if (attrib.component_type != mesh::MeshDataAccessCollection::FLOAT) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -190,14 +201,14 @@ bool ExtractCenterline::getData(core::Call& call) {
                     return false;
                 }
                 vertices = reinterpret_cast<float*>(attrib.data);
-                num_vertices =
-                    attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt);
+                num_vertices = attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                      attrib.component_cnt);
                 num_components = attrib.component_cnt;
             }
         }
 
         assert(vertices != nullptr || num_vertices != 0 || num_components != 0);
-            
+
         this->extractCenterLine(vertices, num_vertices, num_components);
 
         _line_attribs.resize(1);
@@ -208,7 +219,7 @@ bool ExtractCenterline::getData(core::Call& call) {
         _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
         _line_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
 
-        _cl_indices.resize(_centerline.size()-1);
+        _cl_indices.resize(_centerline.size() - 1);
         std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
 
         _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
@@ -218,8 +229,9 @@ bool ExtractCenterline::getData(core::Call& call) {
 
     // put data in line
     mesh::MeshDataAccessCollection line;
-    line.addMesh(_line_attribs, _line_indices, mesh::MeshDataAccessCollection::LINES);
-    cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)),_version);
+    std::string identifier = std::string(FullName()) + "_line";
+    line.addMesh(identifier, _line_attribs, _line_indices, mesh::MeshDataAccessCollection::LINES);
+    cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), _version);
 
     auto line_meta_data = cl->getMetaData();
     line_meta_data.m_bboxs = this->_bbox;

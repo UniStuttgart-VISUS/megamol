@@ -1,31 +1,31 @@
-#include "stdafx.h"
 #include "TextureCombine.h"
+#include "stdafx.h"
 
 #include <array>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureCombine::TextureCombine()
-    : core::Module()
-    , m_version(0)
-    , m_output_texture(nullptr)
-    , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_input_tex_0_slot(
-          "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
-    , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") {
+        : core::Module()
+        , m_version(0)
+        , m_output_texture(nullptr)
+        , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
+        , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+        , m_input_tex_0_slot(
+              "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
+        , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
     this->MakeSlotAvailable(&this->m_mode);
 
-    this->m_output_tex_slot.SetCallback(
-        CallTexture2D::ClassName(), "GetData", &TextureCombine::getDataCallback);
+    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &TextureCombine::getDataCallback);
     this->m_output_tex_slot.SetCallback(
         CallTexture2D::ClassName(), "GetMetaData", &TextureCombine::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
@@ -37,7 +37,9 @@ megamol::compositing::TextureCombine::TextureCombine()
     this->MakeSlotAvailable(&this->m_input_tex_1_slot);
 }
 
-megamol::compositing::TextureCombine::~TextureCombine() { this->Release(); }
+megamol::compositing::TextureCombine::~TextureCombine() {
+    this->Release();
+}
 
 bool megamol::compositing::TextureCombine::create() {
 
@@ -46,22 +48,29 @@ bool megamol::compositing::TextureCombine::create() {
         m_add_prgm = std::make_unique<GLSLComputeShader>();
         m_mult_prgm = std::make_unique<GLSLComputeShader>();
 
-        vislib::graphics::gl::ShaderSource compute_add_src;
-        vislib::graphics::gl::ShaderSource compute_mult_src;
+        vislib_gl::graphics::gl::ShaderSource compute_add_src;
+        vislib_gl::graphics::gl::ShaderSource compute_mult_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureAdd", compute_add_src))
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::textureAdd", compute_add_src))
             return false;
-        if (!m_add_prgm->Compile(compute_add_src.Code(), compute_add_src.Count())) return false;
-        if (!m_add_prgm->Link()) return false;
-
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
+        if (!m_add_prgm->Compile(compute_add_src.Code(), compute_add_src.Count()))
             return false;
-        if (!m_mult_prgm->Compile(compute_mult_src.Code(), compute_mult_src.Count())) return false;
-        if (!m_mult_prgm->Link()) return false;
+        if (!m_add_prgm->Link())
+            return false;
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+        if (!ssf->MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
+            return false;
+        if (!m_mult_prgm->Compile(compute_mult_src.Code(), compute_mult_src.Count()))
+            return false;
+        if (!m_mult_prgm->Link())
+            return false;
+
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile shader (@%s): %s\n",
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
@@ -87,12 +96,17 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
     auto rhs_tc0 = m_input_tex_0_slot.CallAs<CallTexture2D>();
     auto rhs_tc1 = m_input_tex_1_slot.CallAs<CallTexture2D>();
 
-    if (lhs_tc == NULL) return false;
-    if (rhs_tc0 == NULL) return false;
-    if (rhs_tc1 == NULL) return false;
+    if (lhs_tc == NULL)
+        return false;
+    if (rhs_tc0 == NULL)
+        return false;
+    if (rhs_tc1 == NULL)
+        return false;
 
-    if (!(*rhs_tc0)(0)) return false;
-    if (!(*rhs_tc1)(0)) return false;
+    if (!(*rhs_tc0)(0))
+        return false;
+    if (!(*rhs_tc1)(0))
+        return false;
 
     // something has changed in the neath...
     bool something_has_changed = rhs_tc0->hasUpdate() || rhs_tc1->hasUpdate();
@@ -148,9 +162,7 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
         }
     }
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture, m_version);
-    }
+    lhs_tc->setData(m_output_texture, m_version);
 
     return true;
 }

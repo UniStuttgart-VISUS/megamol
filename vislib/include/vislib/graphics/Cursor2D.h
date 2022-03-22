@@ -14,123 +14,119 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/SmartPtr.h"
 #include "vislib/graphics/AbstractCursor.h"
 #include "vislib/graphics/graphicstypes.h"
-#include "vislib/SmartPtr.h"
 
 
 namespace vislib {
 namespace graphics {
 
-    /* forward declarations */
-    class AbstractCursorEvent;
-    class AbstractCursor2DEvent;
+/* forward declarations */
+class AbstractCursorEvent;
+class AbstractCursor2DEvent;
 
+
+/**
+ * Class modelling a two dimensional cursor, like a pc mouse.
+ */
+class Cursor2D : public AbstractCursor {
+public:
+    /** ctor */
+    Cursor2D(void);
 
     /**
-     * Class modelling a two dimensional cursor, like a pc mouse.
+     * copy ctor
+     *
+     * @param rhs Sourc object.
      */
-    class Cursor2D: public AbstractCursor {
-    public:
+    Cursor2D(const Cursor2D& rhs);
 
-        /** ctor */
-        Cursor2D(void);
+    /** Dtor. */
+    virtual ~Cursor2D(void);
 
-        /**
-         * copy ctor
-         *
-         * @param rhs Sourc object.
-         */
-        Cursor2D(const Cursor2D& rhs);
+    /**
+     * Sets the position of the cursor in virtual image space of the
+     * associated camera. The previous position of the cursor is also
+     * changed.
+     *
+     * @param x The new x coordinate
+     * @param y The new y coordinate
+     * @param flipY Indicates whether to flip the y coordinate accordingly
+     *              to the associated camera. This is used to ensure the
+     *              origin is placed in the lower left corner of the
+     *              window.
+     * @param height Height of the virtual view
+     */
+    void SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY, float height);
 
-        /** Dtor. */
-        virtual ~Cursor2D(void);
+    /**
+     * Assignment operator
+     *
+     * @param rhs Sourc object.
+     *
+     * @return Reference to this.
+     */
+    Cursor2D& operator=(const Cursor2D& rhs);
 
-        /**
-         * Sets the position of the cursor in virtual image space of the 
-         * associated camera. The previous position of the cursor is also 
-         * changed.
-         *
-         * @param x The new x coordinate
-         * @param y The new y coordinate
-         * @param flipY Indicates whether to flip the y coordinate accordingly
-         *              to the associated camera. This is used to ensure the
-         *              origin is placed in the lower left corner of the 
-         *              window.
-         * @param height Height of the virtual view
-         */
-        void SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY, float height);
+    /**
+     * Behaves like AbstractCursor::RegisterCursorEvent.
+     *
+     * @param cursorEvent The cursor event to be added.
+     */
+    virtual void RegisterCursorEvent(AbstractCursor2DEvent* cursorEvent);
 
-        /**
-         * Assignment operator
-         *
-         * @param rhs Sourc object.
-         *
-         * @return Reference to this.
-         */
-        Cursor2D& operator=(const Cursor2D& rhs);
+    /**
+     * Returns the x coordinate of the cursor.
+     *
+     * @return The x coordinate.
+     */
+    inline ImageSpaceType X(void) const {
+        return this->x;
+    }
 
-        /**
-         * Behaves like AbstractCursor::RegisterCursorEvent.
-         *
-         * @param cursorEvent The cursor event to be added.
-         */
-        virtual void RegisterCursorEvent(AbstractCursor2DEvent *cursorEvent);
+    /**
+     * Returns the y coordinate of the cursor.
+     *
+     * @return The y coordinate.
+     */
+    inline ImageSpaceType Y(void) const {
+        return this->y;
+    }
 
-        /**
-         * Returns the x coordinate of the cursor.
-         *
-         * @return The x coordinate.
-         */
-        inline ImageSpaceType X(void) const {
-            return this->x;
-        }
+    /**
+     * Returns the previous x coordinate of the cursor. The pervious
+     * position of the cursor is set by cursor movements.
+     *
+     * @return The previous x coordinate.
+     */
+    inline ImageSpaceType PreviousX(void) const {
+        return this->prevX;
+    }
 
-        /**
-         * Returns the y coordinate of the cursor.
-         *
-         * @return The y coordinate.
-         */
-        inline ImageSpaceType Y(void) const {
-            return this->y;
-        }
+    /**
+     * Returns the previous y coordinate of the cursor. The pervious
+     * position of the cursor is set by cursor movements.
+     *
+     * @return The previous y coordinate.
+     */
+    inline ImageSpaceType PreviousY(void) const {
+        return this->prevY;
+    }
 
-        /**
-         * Returns the previous x coordinate of the cursor. The pervious 
-         * position of the cursor is set by cursor movements.
-         *
-         * @return The previous x coordinate.
-         */
-        inline ImageSpaceType PreviousX(void) const {
-            return this->prevX;
-        }
+private:
+    /** x position of the cursor space */
+    ImageSpaceType x;
 
-        /**
-         * Returns the previous y coordinate of the cursor. The pervious 
-         * position of the cursor is set by cursor movements.
-         *
-         * @return The previous y coordinate.
-         */
-        inline ImageSpaceType PreviousY(void) const {
-            return this->prevY;
-        }
+    /** y position of the cursor space */
+    ImageSpaceType y;
 
-    private:
+    /** previous x position of the cursor space */
+    ImageSpaceType prevX;
 
-        /** x position of the cursor space */
-        ImageSpaceType x;
-
-        /** y position of the cursor space */
-        ImageSpaceType y;
-
-        /** previous x position of the cursor space */
-        ImageSpaceType prevX;
-
-        /** previous y position of the cursor space */
-        ImageSpaceType prevY;
-
-
-    };
+    /** previous y position of the cursor space */
+    ImageSpaceType prevY;
+};
 
 } /* end namespace graphics */
 } /* end namespace vislib */

@@ -15,7 +15,7 @@ struct ownVector
 
 layout(std430, binding = 1) buffer VertexList
 {
-	ownVector vertices[];
+    ownVector vertices[];
 };
 
 layout(std430, binding = 2) buffer NormalList
@@ -25,7 +25,7 @@ layout(std430, binding = 2) buffer NormalList
 
 layout(std430, binding = 3) buffer ColourList
 {
-	vec4 outColours[];
+    vec4 outColours[];
 };
 
 uniform float aoSampFact = 1.0; // factor for AO samples
@@ -111,7 +111,7 @@ void main(void) {
     for (int i = 0; i < sampleNum; i++) {
         float density = 0.0;
 
-		// we have to rotate the main direction onto the surface normal
+        // we have to rotate the main direction onto the surface normal
         vec4 dir = texture(directionTex, (float(i) + 0.5) / (float(sampleNum))).xyzw;
         vec3 dirT = vec4(rotMat * vec4(dir.xyz, 1.0)).xyz;
         dirT = normalize(dirT);
@@ -133,7 +133,7 @@ void main(void) {
             vec3 pos = aoPos + dirT * dist;
             pos = (pos - posOrigin) / posExtents;
             texVal = texture(aoVol, pos).r * distFalloff(dist, divisor);
-			
+
             if(texVal > 0.6) {
                 numHits += 1;
             }

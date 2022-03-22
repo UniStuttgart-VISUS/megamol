@@ -13,9 +13,7 @@ using namespace vislib::sys;
 /*
  * MemoryFile::MemoryFile
  */
-MemoryFile::MemoryFile(void) : File(), accessMode(READ_ONLY), buffer(NULL),
-        bufferLen(0), pos(0), storage(NULL) {
-}
+MemoryFile::MemoryFile(void) : File(), accessMode(READ_ONLY), buffer(NULL), bufferLen(0), pos(0), storage(NULL) {}
 
 
 /*
@@ -50,9 +48,8 @@ void MemoryFile::Flush(void) {
  * MemoryFile::GetSize
  */
 File::FileSize MemoryFile::GetSize(void) const {
-    return (this->storage != NULL)
-        ? static_cast<File::FileSize>(this->storage->GetSize())
-        : ((this->buffer != NULL) ? this->bufferLen : 0);
+    return (this->storage != NULL) ? static_cast<File::FileSize>(this->storage->GetSize())
+                                   : ((this->buffer != NULL) ? this->bufferLen : 0);
 }
 
 
@@ -67,9 +64,9 @@ bool MemoryFile::IsOpen(void) const {
 /*
  * MemoryFile::Open
  */
-bool MemoryFile::Open(void *buffer, SIZE_T bufferLength,
-        File::AccessMode accessMode) {
-    if (buffer == NULL) return false;
+bool MemoryFile::Open(void* buffer, SIZE_T bufferLength, File::AccessMode accessMode) {
+    if (buffer == NULL)
+        return false;
     this->Close();
     this->accessMode = accessMode;
     this->buffer = static_cast<unsigned char*>(buffer);
@@ -83,8 +80,7 @@ bool MemoryFile::Open(void *buffer, SIZE_T bufferLength,
 /*
  * MemoryFile::Open
  */
-bool MemoryFile::Open(vislib::RawStorage& storage,
-        File::AccessMode accessMode) {
+bool MemoryFile::Open(vislib::RawStorage& storage, File::AccessMode accessMode) {
     this->Close();
     this->accessMode = accessMode;
     this->buffer = NULL; // paranoia
@@ -98,9 +94,8 @@ bool MemoryFile::Open(vislib::RawStorage& storage,
 /*
  * MemoryFile::Open
  */
-bool MemoryFile::Open(const char *filename, const File::AccessMode accessMode,
-        const File::ShareMode shareMode,
-        const File::CreationMode creationMode) {
+bool MemoryFile::Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+    const File::CreationMode creationMode) {
     // Intentionally empty as memory files cannot open real files
     return false;
 }
@@ -109,9 +104,8 @@ bool MemoryFile::Open(const char *filename, const File::AccessMode accessMode,
 /*
  * MemoryFile::Open
  */
-bool MemoryFile::Open(const wchar_t *filename,
-        const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode) {
+bool MemoryFile::Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+    const File::CreationMode creationMode) {
     // Intentionally empty as memory files cannot open real files
     return false;
 }
@@ -120,11 +114,12 @@ bool MemoryFile::Open(const wchar_t *filename,
 /*
  * MemoryFile::Read
  */
-File::FileSize MemoryFile::Read(void *outBuf, const File::FileSize bufSize) {
+File::FileSize MemoryFile::Read(void* outBuf, const File::FileSize bufSize) {
     FileSize s = bufSize;
     FileSize l = this->GetSize();
 
-    if (this->accessMode == WRITE_ONLY) return 0;
+    if (this->accessMode == WRITE_ONLY)
+        return 0;
 
     if (this->pos > l) {
         this->pos = l;
@@ -136,9 +131,9 @@ File::FileSize MemoryFile::Read(void *outBuf, const File::FileSize bufSize) {
         s = 0;
     }
     if (s > 0) {
-        ::memcpy(outBuf, (this->storage != NULL)
-            ? this->storage->At(static_cast<SIZE_T>(this->pos))
-            : (this->buffer + this->pos), static_cast<SIZE_T>(s));
+        ::memcpy(outBuf,
+            (this->storage != NULL) ? this->storage->At(static_cast<SIZE_T>(this->pos)) : (this->buffer + this->pos),
+            static_cast<SIZE_T>(s));
         this->pos += s;
     }
     return s;
@@ -148,36 +143,35 @@ File::FileSize MemoryFile::Read(void *outBuf, const File::FileSize bufSize) {
 /*
  * MemoryFile::Seek
  */
-File::FileSize MemoryFile::Seek(const File::FileOffset offset,
-        const File::SeekStartPoint from) {
+File::FileSize MemoryFile::Seek(const File::FileOffset offset, const File::SeekStartPoint from) {
     FileSize np = this->pos;
     switch (from) {
-        case BEGIN:
-            if (offset >= 0) {
-                np = offset;
-            }
-            break;
-        case CURRENT:
-            if (offset < 0) {
-                if (static_cast<FileSize>(-offset) > this->pos) {
-                    np = 0;
-                } else {
-                    np = this->pos + offset;
-                }
+    case BEGIN:
+        if (offset >= 0) {
+            np = offset;
+        }
+        break;
+    case CURRENT:
+        if (offset < 0) {
+            if (static_cast<FileSize>(-offset) > this->pos) {
+                np = 0;
             } else {
                 np = this->pos + offset;
             }
-            break;
-        case END:
-            np = this->GetSize();
-            if (offset < 0) {
-                if (static_cast<FileSize>(-offset) > np) {
-                    np = 0;
-                } else {
-                    np += offset;
-                }
+        } else {
+            np = this->pos + offset;
+        }
+        break;
+    case END:
+        np = this->GetSize();
+        if (offset < 0) {
+            if (static_cast<FileSize>(-offset) > np) {
+                np = 0;
+            } else {
+                np += offset;
             }
-            break;
+        }
+        break;
     }
     if (np > this->GetSize()) {
         np = this->GetSize();
@@ -198,11 +192,11 @@ File::FileSize MemoryFile::Tell(void) const {
 /*
  * MemoryFile::Write
  */
-File::FileSize MemoryFile::Write(const void *buf,
-        const File::FileSize bufSize) {
+File::FileSize MemoryFile::Write(const void* buf, const File::FileSize bufSize) {
     FileSize s = 0;
 
-    if (this->accessMode == READ_ONLY) return 0;
+    if (this->accessMode == READ_ONLY)
+        return 0;
 
     if (this->buffer != NULL) {
         s = bufSize;
@@ -219,15 +213,13 @@ File::FileSize MemoryFile::Write(const void *buf,
         s = bufSize;
         if (this->storage->GetSize() < this->pos + s) {
             // growing by size could be nice here, but ATM I don't care
-            this->storage->AssertSize(static_cast<SIZE_T>(this->pos + s),
-                true);
+            this->storage->AssertSize(static_cast<SIZE_T>(this->pos + s), true);
             if (this->pos > this->storage->GetSize()) {
                 this->pos = this->storage->GetSize();
             }
             s = this->storage->GetSize() - this->pos;
         }
-        ::memcpy(this->storage->At(static_cast<SIZE_T>(this->pos)), buf,
-            static_cast<SIZE_T>(s));
+        ::memcpy(this->storage->At(static_cast<SIZE_T>(this->pos)), buf, static_cast<SIZE_T>(s));
         this->pos += s;
 
     } else {

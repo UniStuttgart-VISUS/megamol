@@ -1,7 +1,7 @@
 /*
  * AbstractAsyncContext.cpp
  *
- * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
@@ -36,9 +36,9 @@ void vislib::sys::AbstractAsyncContext::Reset(void) {
 /*
  * vislib::sys::AbstractAsyncContext::AbstractAsyncContext
  */
-vislib::sys::AbstractAsyncContext::AbstractAsyncContext(
-        AsyncCallback callback, void *userContext) 
-        : callback(callback), userContext(userContext) {
+vislib::sys::AbstractAsyncContext::AbstractAsyncContext(AsyncCallback callback, void* userContext)
+        : callback(callback)
+        , userContext(userContext) {
     this->Reset();
 }
 
@@ -59,8 +59,7 @@ bool vislib::sys::AbstractAsyncContext::notifyCompleted(void) {
 /*
  * vislib::sys::AbstractAsyncContext::operator =
  */
-vislib::sys::AbstractAsyncContext& 
-vislib::sys::AbstractAsyncContext::operator =(const AbstractAsyncContext& rhs) {
+vislib::sys::AbstractAsyncContext& vislib::sys::AbstractAsyncContext::operator=(const AbstractAsyncContext& rhs) {
 
     if (this != &rhs) {
         this->callback = rhs.callback;

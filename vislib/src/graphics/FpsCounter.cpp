@@ -1,29 +1,34 @@
 /*
  * FpsCounter.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "vislib/graphics/FpsCounter.h"
-#include <climits>
-#include <cfloat>
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/IllegalStateException.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "vislib/UnsupportedOperationException.h"
+#include <cfloat>
+#include <climits>
 
 
 /*
  * vislib::graphics::FpsCounter::FpsCounter
  */
-vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength) 
-        : now(0), timeValues(NULL), timeValuesCount(0), timeValuesPos(0), 
-        wholeBufferValid(false), frameRunning(false), avrMillis(FLT_MAX), 
-        fpsValuesValid(false) {
+vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength)
+        : now(0)
+        , timeValues(NULL)
+        , timeValuesCount(0)
+        , timeValuesPos(0)
+        , wholeBufferValid(false)
+        , frameRunning(false)
+        , avrMillis(FLT_MAX)
+        , fpsValuesValid(false) {
     this->SetBufferLength(bufLength);
 }
 
@@ -42,8 +47,7 @@ vislib::graphics::FpsCounter::~FpsCounter(void) {
  */
 void vislib::graphics::FpsCounter::FrameBegin(void) {
     if (this->frameRunning) {
-        throw IllegalStateException("Must call \"FrameEnd\" first.", 
-            __FILE__, __LINE__);
+        throw IllegalStateException("Must call \"FrameEnd\" first.", __FILE__, __LINE__);
     }
 
     double newNow = vislib::sys::PerformanceCounter::QueryMillis();
@@ -60,8 +64,7 @@ void vislib::graphics::FpsCounter::FrameBegin(void) {
  */
 void vislib::graphics::FpsCounter::FrameEnd(void) {
     if (!this->frameRunning) {
-        throw IllegalStateException("Must call \"FrameBegin\" first.", 
-            __FILE__, __LINE__);
+        throw IllegalStateException("Must call \"FrameBegin\" first.", __FILE__, __LINE__);
     }
 
     double newNow = vislib::sys::PerformanceCounter::QueryMillis();
@@ -120,16 +123,14 @@ void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
  * vislib::graphics::FpsCounter::FpsCounter
  */
 vislib::graphics::FpsCounter::FpsCounter(const FpsCounter& rhs) {
-    throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, 
-        __LINE__);
+    throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::graphics::FpsCounter::operator =
  */
-vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
-        const vislib::graphics::FpsCounter& rhs) {
+vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator=(const vislib::graphics::FpsCounter& rhs) {
     if (&rhs != this) {
         throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
     }
@@ -141,8 +142,8 @@ vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
  * vislib::graphics::FpsCounter::evaluate
  */
 void vislib::graphics::FpsCounter::evaluate(void) const {
-    unsigned int count = (this->wholeBufferValid ? this->timeValuesCount : 
-        vislib::math::Max<int>(this->timeValuesPos - 1, 0));
+    unsigned int count =
+        (this->wholeBufferValid ? this->timeValuesCount : vislib::math::Max<int>(this->timeValuesPos - 1, 0));
 
     if (count == 0) {
         this->avrFPS = this->minFPS = this->maxFPS = 0.0f;
@@ -167,14 +168,15 @@ void vislib::graphics::FpsCounter::evaluate(void) const {
             }
         }
 
-        if (maxTime < time) maxTime = time;
-        if (minTime > time) minTime = time;
+        if (maxTime < time)
+            maxTime = time;
+        if (minTime > time)
+            minTime = time;
     }
 
     /** average fps */
     if (allTime > 0) {
-        this->avrFPS = static_cast<float>(static_cast<double>(avrCount) 
-            * 1000.0 / allTime);
+        this->avrFPS = static_cast<float>(static_cast<double>(avrCount) * 1000.0 / allTime);
     } else {
         this->avrFPS = 0.0f;
     }
@@ -192,6 +194,6 @@ void vislib::graphics::FpsCounter::evaluate(void) const {
     } else {
         this->minFPS = 0.0f;
     }
-    
+
     this->fpsValuesValid = true;
 }

@@ -4,13 +4,13 @@
 
 namespace megamol {
 namespace optix_hpg {
-    namespace device {
+namespace device {
 
-        struct MeshGeoData {
-            glm::uvec3* index_buffer;
-            glm::vec3* vertex_buffer;
-        };
+struct MeshGeoData {
+    glm::uvec3* index_buffer;
+    glm::vec3* vertex_buffer;
+};
 
-    } // namespace device
+} // namespace device
 } // namespace optix_hpg
 } // namespace megamol

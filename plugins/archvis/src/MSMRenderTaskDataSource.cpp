@@ -5,147 +5,156 @@
 #include "mesh/GPUMeshCollection.h"
 #include "mesh/MeshCalls.h"
 
-#include "MSMDataCall.h"
+#include "ArchVisCalls.h"
 
 megamol::archvis::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
-    : m_MSM_callerSlot("getMSM", "Connects the "), m_MSM_hash(0) {
-    this->m_MSM_callerSlot.SetCompatibleCall<MSMDataCallDescription>();
+        : m_MSM_callerSlot("getMSM", "Connects the ")
+        , m_version(0) {
+    this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
 megamol::archvis::MSMRenderTaskDataSource::~MSMRenderTaskDataSource() {}
 
 bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
+    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    if (lhs_rtc == nullptr) {
+        return false;
+    }
 
-    mesh::CallGPURenderTaskData* rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (rtc == NULL) return false;
+    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
+    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
+            return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_render_tasks = rhs_rtc->getData();
+    }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    if (!(*mtlc)(0)) return false;
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL) return false;
-
-    if (!(*mc)(0)) return false;
-
-    auto gpu_mtl_storage = mtlc->getData();
-    auto gpu_mesh_storage = mc->getData();
-
-    if (gpu_mtl_storage == nullptr) return false;
-    if (gpu_mesh_storage == nullptr) return false;
-
-    MSMDataCall* msm_call = this->m_MSM_callerSlot.CallAs<MSMDataCall>();
-    if (msm_call == NULL) return false;
-
-    if (!(*msm_call)(0)) return false;
-
-    if (this->m_MSM_hash == msm_call->DataHash()) {
-        return true;
+    if (mc == nullptr) {
+        return false;
     }
 
-    m_gpu_render_tasks->clear();
-
-
-    struct MeshShaderParams {
-        vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> transform;
-        float force;
-        float padding0;
-        float padding1;
-        float padding2;
-    };
-
-
-    auto msm = msm_call->getMSM();
-    auto elem_cnt = msm->getElementCount();
-
-    for (int i = 0; i < elem_cnt; ++i) {
-        auto elem_tpye = msm->getElementType(i);
-
-        if (elem_tpye == ScaleModel::STRUT) {
-            auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData()[0];
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[gpu_sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-
-            std::vector<glowl::DrawElementsCommand> draw_commands(1, gpu_sub_mesh.sub_mesh_draw_command);
-            std::array<MeshShaderParams, 1> obj_data;
-
-            obj_data[0].transform = msm->getElementTransform(i);
-            obj_data[0].force = msm->getElementForce(i);
-
-            m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, obj_data);
-        }
-        else if (elem_tpye == ScaleModel::DIAGONAL)
-        {
-            auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData()[1];
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[gpu_sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-
-            std::vector<glowl::DrawElementsCommand> draw_commands(1, gpu_sub_mesh.sub_mesh_draw_command);
-            std::array<MeshShaderParams, 1> obj_data;
-
-            obj_data[0].transform = msm->getElementTransform(i);
-            obj_data[0].force = msm->getElementForce(i);
-
-            m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, obj_data);
-        } 
-        else if (elem_tpye == ScaleModel::FLOOR) 
-        {
-            auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData()[2];
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[gpu_sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-
-            std::vector<glowl::DrawElementsCommand> draw_commands(1, gpu_sub_mesh.sub_mesh_draw_command);
-            std::array<MeshShaderParams, 1> obj_data;
-
-            obj_data[0].transform = msm->getElementTransform(i);
-            obj_data[0].force = msm->getElementForce(i);
-
-            m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, obj_data);
-        }
+    CallScaleModel* msm_call = this->m_MSM_callerSlot.CallAs<CallScaleModel>();
+    if (msm_call == nullptr) {
+        return false;
     }
 
+    if (!(*mc)(0)) {
+        return false;
+    }
+    if (!(*msm_call)(0)) {
+        return false;
+    }
 
-    // for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
-    //    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-    //    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-    //
-    //    std::vector<glowl::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
-    //
-    //    std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1000);
-    //    typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> PerTaskData;
-    //
-    //    GLfloat scale = 1.0f;
-    //    object_transform[0].SetAt(0, 0, scale);
-    //    object_transform[0].SetAt(1, 1, scale);
-    //    object_transform[0].SetAt(2, 2, scale);
-    //
-    //    object_transform[0].SetAt(3, 3, 1.0f);
-    //
-    //    object_transform[9].SetAt(0, 3, 0.0f);
-    //    object_transform[9].SetAt(1, 3, 0.0f);
-    //    object_transform[9].SetAt(2, 3, 0.0f);
-    //
-    //    m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
-    //}
+    if (mc->hasUpdate() || msm_call->hasUpdate()) {
+        ++m_version;
 
-    rtc->setData(m_gpu_render_tasks);
+        clearRenderTaskCollection();
 
-    this->m_MSM_hash = msm_call->DataHash();
+        auto gpu_mesh_storage = mc->getData();
+
+        struct MeshShaderParams {
+            vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> transform;
+            float force;
+            float padding0;
+            float padding1;
+            float padding2;
+        };
+
+        auto msm = msm_call->getData();
+        auto elem_cnt = msm->getElementCount();
+
+        for (int i = 0; i < elem_cnt; ++i) {
+            auto elem_tpye = msm->getElementType(i);
+
+            mesh::GPUMeshCollection::SubMeshData sub_mesh;
+            if (elem_tpye == ScaleModel::STRUT) {
+                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                    sub_mesh = gpu_mesh_collection->getSubMesh("strut");
+
+                    if (sub_mesh.mesh != nullptr) {
+                        break;
+                    }
+                }
+            } else if (elem_tpye == ScaleModel::DIAGONAL) {
+                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                    sub_mesh = gpu_mesh_collection->getSubMesh("diagonal");
+
+                    if (sub_mesh.mesh != nullptr) {
+                        break;
+                    }
+                }
+            } else if (elem_tpye == ScaleModel::FLOOR) {
+                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                    sub_mesh = gpu_mesh_collection->getSubMesh("floor");
+
+                    if (sub_mesh.mesh != nullptr) {
+                        break;
+                    }
+                }
+            }
+
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+            auto const& shader = m_material_collection->getMaterial("scalemodel").shader_program;
+
+            MeshShaderParams obj_data;
+
+            obj_data.transform = msm->getElementTransform(i);
+            obj_data.force = msm->getElementForce(i);
+
+            std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(i));
+            m_rendertask_collection.first->addRenderTask(
+                rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, obj_data);
+            m_rendertask_collection.second.push_back(rt_identifier);
+        }
+
+
+        // for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
+        //    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+        //    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+        //
+        //    std::vector<glowl::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
+        //
+        //    std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1000);
+        //    typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> PerTaskData;
+        //
+        //    GLfloat scale = 1.0f;
+        //    object_transform[0].SetAt(0, 0, scale);
+        //    object_transform[0].SetAt(1, 1, scale);
+        //    object_transform[0].SetAt(2, 2, scale);
+        //
+        //    object_transform[0].SetAt(3, 3, 1.0f);
+        //
+        //    object_transform[9].SetAt(0, 3, 0.0f);
+        //    object_transform[9].SetAt(1, 3, 0.0f);
+        //    object_transform[9].SetAt(2, 3, 0.0f);
+        //
+        //    m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
+        //}
+    }
+
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }
 
-bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) 
-{ 
+bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
     megamol::mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     auto meta_data = lhs_rtc->getMetaData();
 
     megamol::core::BoundingBoxes bboxs;
-    bboxs.SetObjectSpaceBBox(-5.f,-5.0f,-5.0f,5.0f,5.0,5.0f);
+    bboxs.SetObjectSpaceBBox(-5.f, -5.0f, -5.0f, 5.0f, 5.0, 5.0f);
     bboxs.SetObjectSpaceClipBox(-5.f, -5.0f, -5.0f, 5.0f, 5.0, 5.0f);
 
     meta_data.m_frame_cnt = 1;
@@ -153,5 +162,5 @@ bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& 
 
     lhs_rtc->setMetaData(meta_data);
 
-    return true; 
+    return true;
 }

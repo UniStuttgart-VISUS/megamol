@@ -8,8 +8,8 @@
 
 #include <string>
 
-#include <vector>
 #include "FrontendResource.h"
+#include <vector>
 
 namespace megamol {
 namespace frontend {
@@ -30,18 +30,25 @@ public:
         m_processingPriority = p;
         return old;
     }
-    int getPriority() const { return m_processingPriority; }
+    int getPriority() const {
+        return m_processingPriority;
+    }
 
-    bool shouldShutdown() const { return m_shouldShutdown; }
-    void setShutdown(const bool s = true) { m_shouldShutdown = s; }
+    bool shouldShutdown() const {
+        return m_shouldShutdown;
+    }
+    void setShutdown(const bool s = true) {
+        m_shouldShutdown = s;
+    }
 
 public:
     virtual std::string serviceName() const = 0;
     virtual ~AbstractFrontendService() = default;
 
-    virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
+    virtual bool init(
+        void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     virtual void close() = 0;
-    
+
     virtual void updateProvidedResources() = 0;
     virtual void digestChangedRequestedResources() = 0;
     virtual void resetProvidedResources() = 0;
@@ -64,4 +71,3 @@ public:
 
 } // namespace frontend
 } // namespace megamol
-

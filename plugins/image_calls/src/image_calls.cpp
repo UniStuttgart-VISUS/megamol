@@ -1,63 +1,31 @@
-/*
- * image_calls.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "image_calls/Image2DCall.h"
 
 namespace megamol::image_calls {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
-    public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+class ImageCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(ImageCallsPluginInstance)
 
-                /* machine-readable plugin assembly name */
-                "image_calls", // TODO: Change this!
+public:
+    ImageCallsPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("image_calls", "The image_calls plugin."){};
 
-                /* human-readable plugin description */
-                "Describing image_calls (TODO: Change this!)") {
+    ~ImageCallsPluginInstance() override = default;
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules here:
+        // register modules
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::image_calls::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::image_calls::MyModule2>();
-            //   ...
-            //
-
-            // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::image_calls::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::image_calls::MyCall2>();
-            //   ...
-            //
-            this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall>();
+    }
+};
 } // namespace megamol::image_calls
