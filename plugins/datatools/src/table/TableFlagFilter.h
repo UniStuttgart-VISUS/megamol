@@ -1,12 +1,10 @@
-/*
- * TableFlagFilter.h
- *
- * Copyright (C) 2020 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEFLAGFILTER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEFLAGFILTER_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -14,9 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to filter rows from a table based on a flag storage.
@@ -76,8 +72,4 @@ private:
     std::vector<float> data;
 };
 
-} /* end namespace table */
-} // namespace datatools_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEFLAGFILTER_H_INCLUDED */
+} // namespace megamol::datatools::table

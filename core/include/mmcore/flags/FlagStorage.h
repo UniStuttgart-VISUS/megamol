@@ -1,38 +1,33 @@
-/*
- * FlagStorage.h
- *
- * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorageBitsChecker.h"
-#include "mmcore/FlagStorageTypes.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagCollection.h"
+#include "mmcore/flags/FlagStorageTypes.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace core {
-
-class FlagCollection_CPU;
+namespace megamol::core {
 
 /**
  * Class holding a buffer of uints which contain flags that say something
  * about a synchronized other piece of data (index equality).
  * Can be used for storing selection etc.
  */
-class MEGAMOLCORE_API FlagStorage : public core::Module {
+class FlagStorage : public core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "FlagStorage";
     }
 
@@ -41,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module representing an index-synced array of flag uints as a CPU buffer";
     }
 
@@ -50,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    FlagStorage(void);
+    FlagStorage();
 
     /** Dtor. */
-    virtual ~FlagStorage(void);
+    ~FlagStorage() override;
 
     /**
      * Access the metadata provided by the UniFlagStorage
@@ -84,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -123,25 +118,11 @@ protected:
     /** The slot for writing the data */
     core::CalleeSlot writeCPUFlagsSlot;
 
+    core::param::ParamSlot skipFlagsSerializationParam;
     core::param::ParamSlot serializedFlags;
 
     std::shared_ptr<FlagCollection_CPU> theCPUData;
-    bool cpu_stale = true;
     uint32_t version = 0;
 };
 
-class FlagCollection_CPU {
-public:
-    std::shared_ptr<FlagStorageTypes::flag_vector_type> flags;
-
-    void validateFlagCount(FlagStorageTypes::index_type num) {
-        if (flags->size() < num) {
-            flags->resize(num);
-            std::fill(
-                flags->begin(), flags->end(), FlagStorageTypes::to_integral(FlagStorageTypes::flag_bits::ENABLED));
-        }
-    }
-};
-
-} // namespace core
-} /* end namespace megamol */
+} // namespace megamol::core

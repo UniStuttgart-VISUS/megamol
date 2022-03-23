@@ -118,11 +118,9 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         needMaxBinValueUpdate_ = false;
 
         GLuint maxBinValueBuffer;
-        glGenBuffers(1, &maxBinValueBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBinValueBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLint), nullptr, GL_STATIC_COPY);
+        glCreateBuffers(1, &maxBinValueBuffer);
         GLint zero = 0;
-        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
+        glNamedBufferStorage(maxBinValueBuffer, sizeof(GLint), &zero, GL_DYNAMIC_STORAGE_BIT | GL_CLIENT_STORAGE_BIT);
 
         calcMaxBinProgram_->use();
         bindCommon(calcMaxBinProgram_);
@@ -133,8 +131,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Download max bin value for text label.
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBinValueBuffer);
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &maxBinValue_);
+        glGetNamedBufferSubData(maxBinValueBuffer, 0, sizeof(GLint), &maxBinValue_);
 
         glDeleteBuffers(1, &maxBinValueBuffer);
     }
