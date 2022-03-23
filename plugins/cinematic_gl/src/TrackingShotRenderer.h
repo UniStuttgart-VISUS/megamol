@@ -128,6 +128,8 @@ private:
     bool showHelpText;
     float lineWidth;
 
+    bool skipped_first_mouse_interact; // XXX TODO Find bug why this is necessary
+
     /**********************************************************************
      * callbacks
      **********************************************************************/

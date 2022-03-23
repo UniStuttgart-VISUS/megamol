@@ -40,7 +40,8 @@ TrackingShotRenderer::TrackingShotRenderer(void)
         , manipulatorGrabbed(false)
         , interpolSteps(20)
         , showHelpText(false)
-        , lineWidth(1.0f) {
+        , lineWidth(1.0f)
+        , skipped_first_mouse_interact(false) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<cinematic::CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -272,6 +273,11 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
     bool down = (action == core::view::MouseButtonAction::PRESS);
     if (button == MouseButton::BUTTON_LEFT) {
         if (down) {
+            if (!this->skipped_first_mouse_interact) {
+                this->skipped_first_mouse_interact = true;
+                return false;
+            }
+
             // Check if manipulator is selected
             if (this->manipulators.CheckForHitManipulator(this->mouseX, this->mouseY)) {
                 this->manipulatorGrabbed = true;
