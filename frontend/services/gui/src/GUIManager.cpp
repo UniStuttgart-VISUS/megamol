@@ -376,10 +376,6 @@ bool GUIManager::PostDraw() {
                         "to changed scaling factor. [%s, %s, line %d]\n",
                         this->gui_state.font_load_name.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
                         __LINE__);
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
-                        this->gui_state.font_load_name.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-                        __LINE__);
                 }
             }
 
