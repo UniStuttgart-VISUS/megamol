@@ -21,7 +21,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
@@ -671,7 +671,7 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
     dataBuffer_->bind(0);
     auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
     readFlagsCall->getData()->validateFlagCount(static_cast<int32_t>(itemCount_));
-    readFlagsCall->getData()->flags->bind(1);
+    readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
     dimensionRangesBuffer_->bind(2);
     axisIndirectionBuffer_->bind(3);
     filtersBuffer_->bind(4);

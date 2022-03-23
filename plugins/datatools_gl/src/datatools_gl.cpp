@@ -17,8 +17,6 @@
 #include "misc/ParticleInspector.h"
 #include "misc/ParticleListMergeModule.h"
 #include "misc/ParticleWorker.h"
-#include "table/TableFlagFilter.h"
-#include "table/TableSelectionTx.h"
 
 
 namespace megamol::datatools_gl {
@@ -37,8 +35,6 @@ public:
 
         // register modules
 
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::table::TableFlagFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleDensityOpacityModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleInspector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleListMergeModule>();

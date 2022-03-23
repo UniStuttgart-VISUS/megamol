@@ -18,8 +18,8 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 #include "Renderer2D.h"
-#include "mmcore/FlagStorage.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore/flags/FlagStorage.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "vislib/math/Matrix.h"
 #include <glowl/FramebufferObject.hpp>
 #include <memory>

@@ -1,18 +1,26 @@
-#include "mmcore_gl/UniFlagStorage.h"
-#include "json.hpp"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCalls.h"
-#include "mmcore/param/StringParam.h"
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#include "mmcore_gl/flags/UniFlagStorage.h"
+
+#include <json.hpp>
 
 #include "OpenGL_Context.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/flags/FlagCalls.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol;
 using namespace megamol::core_gl;
 
 
-UniFlagStorage::UniFlagStorage(void)
+UniFlagStorage::UniFlagStorage()
         : FlagStorage()
         , readGLFlagsSlot("readFlags", "Provides flag data to clients.")
         , writeGLFlagsSlot("writeFlags", "Accepts updated flag data from clients.") {
@@ -31,12 +39,12 @@ UniFlagStorage::UniFlagStorage(void)
 }
 
 
-UniFlagStorage::~UniFlagStorage(void) {
+UniFlagStorage::~UniFlagStorage() {
     this->Release();
 };
 
 
-bool UniFlagStorage::create(void) {
+bool UniFlagStorage::create() {
     const int num = 10;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -55,17 +63,14 @@ bool UniFlagStorage::create(void) {
     }
 
     this->theGLData = std::make_shared<FlagCollection_GL>();
-    core::FlagStorageTypes::flag_vector_type temp_data(
-        num, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
-    this->theGLData->flags =
-        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
+    this->theGLData->validateFlagCount(num);
 
     core::FlagStorage::create();
     return true;
 }
 
 
-void UniFlagStorage::release(void) {
+void UniFlagStorage::release() {
     // intentionally empty
 }
 
@@ -97,13 +102,15 @@ bool UniFlagStorage::writeGLDataCallback(core::Call& caller) {
         this->version = fc->version();
         cpu_stale = true;
 
-        // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
-        // see compress_bitflags.comp.glsl (never tested yet!)
-        // -> replace the whole block below with serializeData()
-        // actually with TBB performance is fine already haha
-        GL2CPUCopy();
-        cpu_stale = false; // on purpose!
-        serializeCPUData();
+        if (!skipFlagsSerializationParam.Param<core::param::BoolParam>()->Value()) {
+            // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
+            // see compress_bitflags.comp.glsl (never tested yet!)
+            // -> replace the whole block below with serializeData()
+            // actually with TBB performance is fine already haha
+            GL2CPUCopy();
+            cpu_stale = false; // on purpose!
+            serializeCPUData();
+        }
     }
     return true;
 }
@@ -132,7 +139,7 @@ bool UniFlagStorage::writeCPUDataCallback(core::Call& caller) {
 }
 
 void UniFlagStorage::serializeGLData() {
-    this->theGLData->flags->bind();
+    this->theGLData->flags->bind(GL_SHADER_STORAGE_BUFFER);
     megamol::core::utility::log::Log::DefaultLog.WriteError(
         "UniFlagStorage::serializeData: not implemented! If you see this, you have a problem.");
     // TODO allocate the buffers
@@ -152,8 +159,10 @@ bool UniFlagStorage::onJSONChanged(core::param::ParamSlot& slot) {
 }
 
 void UniFlagStorage::CPU2GLCopy() {
-    theGLData->validateFlagCount(theCPUData->flags->size());
-    theGLData->flags->bufferSubData(*(theCPUData->flags));
+    const auto& flags = *theCPUData->flags;
+    theGLData->validateFlagCount(flags.size());
+    glNamedBufferSubData(
+        theGLData->flags->getName(), 0, flags.size() * sizeof(core::FlagStorageTypes::flag_item_type), flags.data());
 }
 
 void UniFlagStorage::GL2CPUCopy() {

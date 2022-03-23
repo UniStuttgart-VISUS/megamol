@@ -8,7 +8,7 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::infovis_gl;
@@ -143,7 +143,7 @@ bool TextureHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call)
         glNamedBufferData(minValueBuffer, bufSize, nullptr, GL_STATIC_COPY);
         glNamedBufferData(maxValueBuffer, bufSize, nullptr, GL_STATIC_COPY);
     }
-    readFlagsCall->getData()->flags->bind(5);
+    readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
     applySelections();
 
@@ -230,7 +230,7 @@ void TextureHistogramRenderer2D::applySelections() {
         glActiveTexture(GL_TEXTURE0);
         data_->bindTexture();
         selectionProgram_->setUniform("tex", 0);
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
         auto numRows = data_->getWidth() * data_->getHeight();
         selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows));

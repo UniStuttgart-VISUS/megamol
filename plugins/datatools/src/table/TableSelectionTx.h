@@ -1,12 +1,10 @@
-/*
- * TableSelectionTx.h
- *
- * Copyright (C) 2020 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED
+#pragma once
 
 #include <condition_variable>
 #include <thread>
@@ -18,9 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <zmq.hpp>
 
-namespace megamol {
-namespace datatools_gl {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to send table selection to an other process.
@@ -95,8 +91,4 @@ private:
     std::mutex receivedSelectionMutex_;
 };
 
-} /* end namespace table */
-} // namespace datatools_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESELECTIONTX_H_INCLUDED */
+} // namespace megamol::datatools::table

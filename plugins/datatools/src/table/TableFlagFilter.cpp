@@ -1,17 +1,16 @@
-/*
- * TableFlagFilter.cpp
- *
- * Copyright (C) 2020 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "TableFlagFilter.h"
+#include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/FlagCallsGL.h"
 
-using namespace megamol::datatools_gl;
-using namespace megamol::datatools_gl::table;
+using namespace megamol::datatools;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 TableFlagFilter::TableFlagFilter()
@@ -29,7 +28,7 @@ TableFlagFilter::TableFlagFilter()
     this->tableInSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
-    this->flagStorageInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->flagStorageInSlot.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
     this->tableOutSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
@@ -83,7 +82,7 @@ bool TableFlagFilter::getHash(core::Call& call) {
 bool TableFlagFilter::handleCall(core::Call& call) {
     auto* tableOutCall = dynamic_cast<datatools::table::TableDataCall*>(&call);
     auto* tableInCall = this->tableInSlot.CallAs<datatools::table::TableDataCall>();
-    auto* flagsInCall = this->flagStorageInSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* flagsInCall = this->flagStorageInSlot.CallAs<core::FlagCallRead_CPU>();
 
     if (tableOutCall == nullptr) {
         return false;
@@ -104,7 +103,7 @@ bool TableFlagFilter::handleCall(core::Call& call) {
     tableInCall->SetFrameID(tableOutCall->GetFrameID());
     (*tableInCall)(1);
     (*tableInCall)(0);
-    (*flagsInCall)(core_gl::FlagCallRead_GL::CallGetData);
+    (*flagsInCall)(core::FlagCallRead_CPU::CallGetData);
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() ||
         flagsInCall->hasUpdate()) {
@@ -119,10 +118,7 @@ bool TableFlagFilter::handleCall(core::Call& call) {
 
         // download flags
         flagsInCall->getData()->validateFlagCount(tableInRowCount);
-        auto flags = flagsInCall->getData()->flags;
-        uint32_t* flagsData = new uint32_t[flags->getByteSize() / sizeof(uint32_t)];
-        flags->bind();
-        glGetBufferSubData(flags->getTarget(), 0, flags->getByteSize(), flagsData);
+        const auto& flagsData = *flagsInCall->getData()->flags;
 
         // copy column infos
         this->colInfos.resize(this->tableInColCount);
@@ -166,8 +162,6 @@ bool TableFlagFilter::handleCall(core::Call& call) {
 
         // delete memory of filtered rows
         this->data.resize(this->tableInColCount * this->rowCount);
-
-        delete[] flagsData;
 
         // nicer output
         if (this->rowCount == 0) {
