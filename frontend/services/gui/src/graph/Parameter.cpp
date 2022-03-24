@@ -1580,7 +1580,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
             std::get<std::string>(this->gui_widget_value), file_extensions, file_flags);
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
-        if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {y
+        if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
             auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
             std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
             val = std::filesystem::path(tmp_val_str);
