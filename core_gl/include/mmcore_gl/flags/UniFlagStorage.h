@@ -1,29 +1,25 @@
-/*
- * UniFlagStorage.h
- *
- * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "tbb/tbb.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <tbb/tbb.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/flags/FlagCollectionGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-namespace megamol {
-namespace core_gl {
-
-class FlagCollection_GL;
+namespace megamol::core_gl {
 
 /**
  * Class holding a GL buffer of uints which contain flags that say something
@@ -38,7 +34,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UniFlagStorageGL";
     }
 
@@ -47,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module representing an index-synced array of flag uints as a CPU or GL buffer";
     }
 
@@ -56,7 +52,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -67,10 +63,10 @@ public:
     }
 
     /** Ctor. */
-    UniFlagStorage(void);
+    UniFlagStorage();
 
     /** Dtor. */
-    virtual ~UniFlagStorage(void);
+    ~UniFlagStorage() override;
 
 protected:
     /**
@@ -78,12 +74,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Access the flags provided by the UniFlagStorage
@@ -143,24 +139,8 @@ protected:
 
     std::unique_ptr<glowl::GLSLProgram> compressGPUFlagsProgram;
     std::shared_ptr<core_gl::FlagCollection_GL> theGLData;
+    bool cpu_stale = true;
     bool gpu_stale = true;
 };
 
-class FlagCollection_GL {
-public:
-    std::shared_ptr<glowl::BufferObject> flags;
-
-    void validateFlagCount(core::FlagStorageTypes::index_type num) {
-        if (flags->getByteSize() / sizeof(core::FlagStorageTypes::flag_item_type) < num) {
-            core::FlagStorageTypes::flag_vector_type temp_data(
-                num, core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED));
-            std::shared_ptr<glowl::BufferObject> temp_buffer =
-                std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data, GL_DYNAMIC_DRAW);
-            glowl::BufferObject::copy(flags.get(), temp_buffer.get(), 0, 0, flags->getByteSize());
-            flags = temp_buffer;
-        }
-    }
-};
-
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl

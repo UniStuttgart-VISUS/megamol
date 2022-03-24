@@ -20,7 +20,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 #include "delaunator.hpp"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include <sstream>
 
 using namespace megamol;
@@ -849,7 +849,7 @@ void ScatterplotMatrixRenderer2D::bindFlagsAttribute() {
     }
     auto count = this->floatTable->GetRowsCount();
     this->readFlags->getData()->validateFlagCount(count);
-    this->readFlags->getData()->flags->bind(FlagsBindingPoint);
+    this->readFlags->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint);
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints() {
@@ -1369,7 +1369,7 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(0));
-    this->readFlags->getData()->flags->bind(FlagsBindingPoint);
+    this->readFlags->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint);
 
     GLuint groupCounts[3];
     computeDispatchSizes(this->floatTable->GetRowsCount(), pickWorkgroupSize, maxWorkgroupCount, groupCounts);

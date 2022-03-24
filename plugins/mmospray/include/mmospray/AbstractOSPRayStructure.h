@@ -9,8 +9,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCalls.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagCalls.h"
 #include "mmospray/CallOSPRayStructure.h"
 
 
