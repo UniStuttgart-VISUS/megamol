@@ -1,3 +1,8 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -15,7 +20,7 @@ namespace megamol::compositing {
  * T. Luft, C. Colditz, and O. Deussen. Image Enhancement by Unsharp Masking the Depth Buffer.
  * ACM Transactions on Graphics 25(3):1206-1213, 2006.
  *
- * For fast calculation it seperates the 
+ * For fast calculation it seperates the needed gauss kernel.
  */
 class DepthDarkening : public core::Module {
 public:

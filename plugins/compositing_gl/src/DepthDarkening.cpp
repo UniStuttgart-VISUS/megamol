@@ -1,3 +1,8 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 #include "DepthDarkening.h"
 
 #include <glm/glm.hpp>
@@ -16,7 +21,8 @@ megamol::compositing::DepthDarkening::DepthDarkening()
         , outputTexSlot_("OutputTexture", "Gives access to the resulting output texture")
         , inputColorSlot_("ColorTexture", "Connects the color render target texture")
         , inputDepthSlot_("DepthTexture", "Connects the depth render target texture")
-        , kernelRadiusParam_("kernelRadius", "The radius of the used gauss kernel in pixels (for Full HD 40 is recommended)")
+        , kernelRadiusParam_(
+              "kernelRadius", "The radius of the used gauss kernel in pixels (for Full HD 40 is recommended)")
         , lambdaValueParam_("lambda", "Lambda value determining the strength of the darkening effect. 0 shuts it off")
         , version_(0)
         , blurShader_(nullptr)
