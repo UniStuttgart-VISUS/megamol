@@ -170,6 +170,7 @@ protected:
     core::param::ParamSlot triangleModeParam_;
     core::param::ParamSlot lineWidthParam_;
     core::param::ParamSlot dimensionNameParam_;
+    core::param::ParamSlot useLineWidthInPixelsParam_;
     core::param::ParamSlot drawItemsParam_;
     core::param::ParamSlot drawSelectedItemsParam_;
     core::param::ParamSlot ignoreTransferFunctionParam_;
