@@ -1581,7 +1581,9 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            val = std::filesystem::u8path(std::get<std::string>(this->gui_widget_value));
+            auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
+            std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
+            val = std::filesystem::path(tmp_val_str);
             try {
                 if (last_val != val) {
                     auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
