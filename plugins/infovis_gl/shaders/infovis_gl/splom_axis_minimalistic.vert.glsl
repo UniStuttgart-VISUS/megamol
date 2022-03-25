@@ -11,6 +11,8 @@ uniform bool drawOuter;
 uniform bool drawDiagonal;
 uniform bool invertY;
 uniform int columnCount;
+uniform float axisWidth;
+uniform ivec2 viewSize;
 
 out vec4 vsColor;
 
@@ -38,10 +40,8 @@ vec2 corner(const Plot plot, const uint vertexIndex) {
     return vec2(0.0f);
 }
 
-vec2 tick(const Plot plot, const uint vertexIndex) {
-    const uint verticesPerAxis = numTicks * 2;
-    const uint axisIndex = vertexIndex / verticesPerAxis; // 0 = bottom, 1 = rightm 2 = top, 3 = left
-    const uint tickIndex = vertexIndex % verticesPerAxis;
+vec2 tick(const Plot plot, const uint tickID) {
+    const uint axisIndex = tickID / numTicks;
 
     const bool isNextToOuterX = plot.indexX == 0;
     const bool isNextToOuterY = plot.indexY == columnCount - 1;
@@ -56,56 +56,101 @@ vec2 tick(const Plot plot, const uint vertexIndex) {
         return vec2(0);
     }
 
-    float t = float(tickIndex / 2) / float(numTicks - 1);
+    // relative position on each edge for current tick
+    float t = float(tickID % (numTicks)) / float(numTicks - 1);
     vec2 pos = vec2(0.0);
+    float width = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).x;
+    float height = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).y;
+    //each instance only contains 4 vertices
     if (axisIndex == 0) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_BR), t);
-        if (tickIndex % 2 == 1) {
-            pos.y -= tickLength;
-        }
+        pos.y -= gl_VertexID / 2 * tickLength / height;
+        pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
     } else if (axisIndex == 1) {
         pos = mix(corner(plot, CORNER_BR), corner(plot, CORNER_TR), t);
-        if (tickIndex % 2 == 1) {
-            pos.x += tickLength;
-        }
+        pos.x += gl_VertexID / 2 * tickLength / width;
+        pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
     } else if (axisIndex == 2) {
         pos = mix(corner(plot, CORNER_TL), corner(plot, CORNER_TR), t);
-        if (tickIndex % 2 == 1) {
-            pos.y += tickLength;
-        }
+        pos.y += gl_VertexID / 2 * tickLength / height;
+        pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
     } else if (axisIndex == 3) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_TL), t);
-        if (tickIndex % 2 == 1) {
-            pos.x -= tickLength;
-        }
+        pos.x -= gl_VertexID / 2 * tickLength / width;
+        pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
     }
     return pos;
 }
 
 void main(void) {
-    const Plot plot = plots[gl_InstanceID];
+    // Instance corresponds to unique line
+    // 4 + 4 * numTicks belong to each Plot
+    const Plot plot = plots[gl_InstanceID / (4 + 4 * numTicks)];
+
+    //quick and dirty conversion of pixel dependant size to witch space
+    float width = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).x;
+    float height = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).y;
 
     // Map index to border and tick positions.
     vec2 position = vec2(0,0);
-    switch (gl_VertexID) {
-    case 0:
-    case 7:
-        position = corner(plot, CORNER_BR);
+    switch (gl_InstanceID % (4 + 4 * numTicks)) {
+    case 0:// bottom line
+        //true for the first two vertices of each line => left side
+        if(gl_VertexID / 2 == 0){
+            position = corner(plot, CORNER_BL);
+        }else{ //right side of bottom line
+            position = corner(plot, CORNER_BR);
+        }
+        //offset to generate line width
+        position.y += ((gl_VertexID % 2) - 0.5) * axisWidth / height;
+        // second offset to get 45° angle on corners
+        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1){
+            position.x += 0.5 * axisWidth / width;
+        }else{
+            position.x -= 0.5 * axisWidth / width;
+        }
         break;
-    case 1:
-    case 2:
-        position = corner(plot, CORNER_BL);
+    case 1:// right
+        if(gl_VertexID / 2 == 0){
+            position = corner(plot, CORNER_BR);
+        }else{
+            position = corner(plot, CORNER_TR);
+        }
+        position.x += ((gl_VertexID % 2) - 0.5) * axisWidth / width;
+        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1){
+            position.y -= 0.5 * axisWidth / height;
+        }else{
+            position.y += 0.5 * axisWidth / height;
+        }
         break;
-    case 3:
-    case 4:
-        position = corner(plot, CORNER_TL);
+    case 2:// top
+        if(gl_VertexID / 2 == 0){
+            position = corner(plot, CORNER_TR);
+        }else{
+            position = corner(plot, CORNER_TL);
+        }
+        position.y += ((gl_VertexID % 2) - 0.5) * axisWidth / height;
+        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1){
+            position.x += 0.5 * axisWidth / width;
+        }else{
+            position.x -= 0.5 * axisWidth / width;
+        }
         break;
-    case 5:
-    case 6:
-        position = corner(plot, CORNER_TR);
+    case 3:// left
+        if(gl_VertexID / 2 == 0){
+            position = corner(plot, CORNER_TL);
+        }else{
+            position = corner(plot, CORNER_BL);
+        }
+        position.x -= ((gl_VertexID % 2) - 0.5) * axisWidth / width;
+        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1){
+            position.y += 0.5 * axisWidth / height;
+        }else{
+            position.y -= 0.5 * axisWidth / height;
+        }
         break;
-    default:
-        position = tick(plot, uint(gl_VertexID - 8));
+    default: // catch for all ticks
+        position = tick(plot, gl_InstanceID % (4 + 4 * numTicks) - 4);
         break;
     }
 
