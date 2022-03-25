@@ -6,7 +6,6 @@
 #include "DepthDarkening.h"
 
 #include <glm/glm.hpp>
-#include <numbers>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
