@@ -15,6 +15,8 @@
 #include "mmcore/utility/log/Log.h"
 #include "stdafx.h"
 
+#include <iomanip>
+
 
 using namespace megamol;
 using namespace megamol::core;
