@@ -21,6 +21,14 @@ namespace megamol::ImageSeries::GL {
 
 class ImageDisplay2D {
 public:
+    enum class Mode {
+        Auto = 0,
+        Color = 1,
+        Grayscale = 2,
+        Labels = 3,
+        TimeDifference = 4,
+    };
+
     ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFactoryOptions);
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
@@ -28,13 +36,20 @@ public:
     bool render(megamol::core_gl::view::CallRender2DGL& call);
     bool render(megamol::core_gl::view::CallRender3DGL& call);
 
+    void setDisplayMode(Mode mode);
+    Mode getDisplayMode() const;
+
 private:
+    Mode getEffectiveDisplayMode() const;
+
     bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix);
     static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
 
     std::shared_ptr<glowl::GLSLProgram> shader;
     std::unique_ptr<glowl::Texture2D> texture;
     std::unique_ptr<glowl::Mesh> mesh;
+
+    Mode mode = Mode::Auto;
 };
 
 } // namespace megamol::ImageSeries::GL

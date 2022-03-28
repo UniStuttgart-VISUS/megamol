@@ -13,8 +13,6 @@ namespace megamol::ImageSeries::filter {
  *
  * Inputs and outputs are provided via async image objects.
  * The filter itself may also perform its work on a separate thread.
- *
- * TODO: not actually multi-threaded yet!
  */
 class AsyncFilterRunner {
 public:

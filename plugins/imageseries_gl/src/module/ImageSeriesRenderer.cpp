@@ -1,14 +1,28 @@
 #include "ImageSeriesRenderer.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/EnumParam.h"
 
 using Log = megamol::core::utility::log::Log;
 
 namespace megamol::ImageSeries::GL {
 
-ImageSeriesRenderer::ImageSeriesRenderer() : getDataCaller("requestImageSeries", "Requests image data from a series.") {
+ImageSeriesRenderer::ImageSeriesRenderer()
+        : getDataCaller("requestImageSeries", "Requests image data from a series.")
+        , displayModeParam("Display Mode", "Controls how the image should be presented.") {
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
+
+    auto* displayMode = new core::param::EnumParam(static_cast<int>(ImageDisplay2D::Mode::Auto));
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Auto), "Automatic");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Color), "Color");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Grayscale), "Grayscale");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Labels), "Labels");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TimeDifference), "Time Difference");
+
+    displayModeParam << displayMode;
+    displayModeParam.SetUpdateCallback(&ImageSeriesRenderer::displayModeChangedCallback);
+    MakeSlotAvailable(&displayModeParam);
 }
 
 ImageSeriesRenderer::~ImageSeriesRenderer() {
@@ -81,6 +95,13 @@ bool ImageSeriesRenderer::Render(core_gl::view::CallRender2DGL& call) {
     }
 
     return display->render(call);
+}
+
+bool ImageSeriesRenderer::displayModeChangedCallback(core::param::ParamSlot& param) {
+    if (display) {
+        display->setDisplayMode(static_cast<ImageDisplay2D::Mode>(param.Param<core::param::EnumParam>()->Value()));
+    }
+    return true;
 }
 
 

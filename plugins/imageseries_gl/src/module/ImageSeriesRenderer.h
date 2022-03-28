@@ -87,11 +87,18 @@ protected:
      */
     bool Render(core_gl::view::CallRender2DGL& call) override;
 
+    /**
+     * Callback for changes to the 'display mode' parameter.
+     */
+    bool displayModeChangedCallback(core::param::ParamSlot& param);
+
 private:
     std::unique_ptr<ImageDisplay2D> display;
     std::shared_ptr<const AsyncImageData2D> currentImage;
 
     core::CallerSlot getDataCaller;
+
+    core::param::ParamSlot displayModeParam;
 
     ImageSeries2DCall::Output metadata;
 

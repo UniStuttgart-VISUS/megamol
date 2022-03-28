@@ -87,6 +87,22 @@ bool ImageDisplay2D::render(megamol::core_gl::view::CallRender3DGL& call) {
     return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix());
 }
 
+void ImageDisplay2D::setDisplayMode(Mode mode) {
+    this->mode = mode;
+}
+
+ImageDisplay2D::Mode ImageDisplay2D::getDisplayMode() const {
+    return mode;
+}
+
+ImageDisplay2D::Mode ImageDisplay2D::getEffectiveDisplayMode() const {
+    if (mode == Mode::Auto) {
+        return texture && texture->getFormat() == GL_RED ? Mode::Grayscale : Mode::Color;
+    } else {
+        return mode;
+    }
+}
+
 bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix) {
     if (!framebuffer || !shader || !texture || !mesh) {
         return false;
@@ -100,7 +116,7 @@ bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> frameb
     shader->use();
     shader->setUniform("matrix", matrix);
     shader->setUniform("image", 0);
-    shader->setUniform("grayscale", static_cast<GLint>(texture->getFormat() == GL_RED));
+    shader->setUniform("displayMode", static_cast<GLint>(getEffectiveDisplayMode()));
 
     mesh->draw();
 

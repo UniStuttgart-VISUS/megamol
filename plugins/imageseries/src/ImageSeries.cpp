@@ -7,10 +7,11 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "imageseries/ImageSeries2DCall.h"
 #include "imageseries/AffineTransform2DCall.h"
+#include "imageseries/ImageSeries2DCall.h"
 
 #include "module/ImageSeriesFlowPreprocessor.h"
+#include "module/ImageSeriesLabeler.h"
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
 #include "module/ImageSeriesTimeDiffFilter.h"
@@ -42,6 +43,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowPreprocessor>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimeDiffFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLabeler>();
     }
 };
 

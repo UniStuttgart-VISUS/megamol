@@ -16,8 +16,8 @@ public:
 
     ImageRegistrator();
 
-    ImageRegistrator(ImageRegistrator& registrator) = default;
-    ImageRegistrator& operator=(ImageRegistrator& registrator) = default;
+    ImageRegistrator(const ImageRegistrator& registrator) = default;
+    ImageRegistrator& operator=(const ImageRegistrator& registrator) = default;
 
     void setInputImage(AsyncImagePtr image);
     AsyncImagePtr getInputImage() const;

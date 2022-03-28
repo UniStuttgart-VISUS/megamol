@@ -27,6 +27,7 @@ ImageSeriesFlowPreprocessor::ImageSeriesFlowPreprocessor()
         , deinterlaceParam("Deinterlace", "Number of pixels of horizontal interlacing correction to apply.")
         , segmentationEnabledParam("Enable segmentation", "Toggles the image segmentation step on/off.")
         , segmentationThresholdParam("Segmentation threshold", "Per-pixel threshold for image segmentation.")
+        , segmentationNegationParam("Segmentation negation", "Negates the output of the segmentation filter.")
         , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
@@ -61,6 +62,11 @@ ImageSeriesFlowPreprocessor::ImageSeriesFlowPreprocessor()
     segmentationThresholdParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     segmentationThresholdParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
     MakeSlotAvailable(&segmentationThresholdParam);
+
+    segmentationNegationParam << new core::param::BoolParam(0);
+    segmentationNegationParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    segmentationNegationParam.SetUpdateCallback(&ImageSeriesFlowPreprocessor::filterParametersChangedCallback);
+    MakeSlotAvailable(&segmentationNegationParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -113,8 +119,9 @@ bool ImageSeriesFlowPreprocessor::getDataCallback(core::Call& caller) {
                         image = filterRunner->run<filter::DeinterlaceFilter>(image, deinterlace);
                     }
                     if (segmentationEnabledParam.Param<core::param::BoolParam>()->Value()) {
-                        image = filterRunner->run<filter::SegmentationFilter>(
-                            image, segmentationThresholdParam.Param<core::param::FloatParam>()->Value());
+                        image = filterRunner->run<filter::SegmentationFilter>(image,
+                            segmentationThresholdParam.Param<core::param::FloatParam>()->Value(),
+                            segmentationNegationParam.Param<core::param::BoolParam>()->Value());
                     }
                     return image;
                 });

@@ -1,5 +1,5 @@
-#ifndef IMAGESERIES_SRC_MODULE_IMAGESERIESFLOWPREPROCESSOR_HPP_
-#define IMAGESERIES_SRC_MODULE_IMAGESERIESFLOWPREPROCESSOR_HPP_
+#ifndef IMAGESERIES_SRC_MODULE_IMAGESERIESLABELER_HPP_
+#define IMAGESERIES_SRC_MODULE_IMAGESERIESLABELER_HPP_
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -16,23 +16,23 @@
 namespace megamol::ImageSeries {
 
 /**
- * Preprocesses 2D image series of fluid flow experiments or simulations.
+ * Labels connected components in monochrome images within an image series.
  */
-class ImageSeriesFlowPreprocessor : public core::Module {
+class ImageSeriesLabeler : public core::Module {
 
 public:
     /**
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "ImageSeriesFlowPreprocessor";
+        return "ImageSeriesLabeler";
     }
 
     /**
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Preprocesses 2D image series of fluid flow experiments or simulations.";
+        return "Labels connected components in monochrome images within an image series.";
     }
 
     /**
@@ -44,9 +44,9 @@ public:
         return true;
     }
 
-    ImageSeriesFlowPreprocessor();
+    ImageSeriesLabeler();
 
-    ~ImageSeriesFlowPreprocessor() override;
+    ~ImageSeriesLabeler() override;
 
 protected:
     /**
@@ -83,10 +83,9 @@ private:
     core::CallerSlot getMaskCaller;
 
     core::param::ParamSlot maskFrameParam;
-    core::param::ParamSlot deinterlaceParam;
-    core::param::ParamSlot segmentationEnabledParam;
-    core::param::ParamSlot segmentationThresholdParam;
-    core::param::ParamSlot segmentationNegationParam;
+    core::param::ParamSlot minBlobSizeParam;
+    core::param::ParamSlot thresholdParam;
+    core::param::ParamSlot negateThresholdParam;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 
