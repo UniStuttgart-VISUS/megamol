@@ -661,6 +661,8 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
         const float offsetY = (invertY ? (columnCount - i - 1) : i) * (size + margin);
 
         std::string label = columnInfos[i].Name();
+        //TODO
+        const float tickLengthConstant = tickLength * size / 10.0;
 
         // draw labels
         // horizontal
@@ -691,7 +693,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
 
         // draw tick labels
         float horizontalY =
-            offsetY + (invertY ? -margin + tickLength / resOffset.y * 2.0 : size + margin - tickLength / resOffset.y * 2.0);
+            offsetY + (invertY ? -margin + tickLengthConstant : size + margin - tickLengthConstant);
         for (size_t tick = 0; tick < numTicks; ++tick) {
             const float t = static_cast<float>(tick) / (numTicks - 1);
             const float px = lerp(offsetX, offsetX + size, t);
@@ -701,11 +703,11 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
             const std::string pLabelY = to_string(pValue, tickPrecisionY);
             if (drawOuter && i < columnCount - 1) {
                 if (invertY) {
-                    this->axisFont.DrawString(ortho, axisColor.data(), px, -tickLength / resOffset.y * 2.0, tickSize,
+                    this->axisFont.DrawString(ortho, axisColor.data(), px, -tickLengthConstant, tickSize,
                         false,
                         pLabelX.c_str(), core::utility::SDFFont::ALIGN_CENTER_TOP);
                 } else {
-                    this->axisFont.DrawString(ortho, axisColor.data(), px, totalSize + tickLength / resOffset.y * 2.0,
+                    this->axisFont.DrawString(ortho, axisColor.data(), px, totalSize + tickLengthConstant,
                         tickSize, false,
                         pLabelX.c_str(), core::utility::SDFFont::ALIGN_CENTER_BOTTOM);
                 }
@@ -716,12 +718,12 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
             }
 
             if (drawOuter && i > 0) {
-                this->axisFont.DrawString(ortho, axisColor.data(), -tickLength / resOffset.x * 2.0, py, tickSize, false,
+                this->axisFont.DrawString(ortho, axisColor.data(), - tickLengthConstant, py, tickSize, false,
                     pLabelY.c_str(),
                     core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
             }
             if (drawDiagonal && i > 0) {
-                this->axisFont.DrawString(ortho, axisColor.data(), offsetX - margin + tickLength / resOffset.x * 2.0,
+                this->axisFont.DrawString(ortho, axisColor.data(), offsetX - margin + tickLengthConstant,
                     py,
                     tickSize, false,
                     pLabelY.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
@@ -780,6 +782,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glUniform1ui(this->scientificAxisShader->getUniformLocation("depth"), recursiveDepth);
     glUniform4fv(this->scientificAxisShader->getUniformLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
+    this->scientificAxisShader->setUniform("tickLength", tickLength);
+    this->scientificAxisShader->setUniform("axisWidth", axisWidthParam.Param<core::param::FloatParam>()->Value());
 
     // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));

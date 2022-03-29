@@ -61,22 +61,23 @@ vec2 tick(const Plot plot, const uint tickID) {
     vec2 pos = vec2(0.0);
     float width = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).x;
     float height = 0.5 * ((modelViewProjection) * vec4(viewSize, 0.0, 1.0)).y;
+    const float tickLengthConstant = tickLength * (corner(plot, CORNER_TR).y - corner(plot, CORNER_BR).y) / 10.0;
     //each instance only contains 4 vertices
     if (axisIndex == 0) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_BR), t);
-        pos.y -= gl_VertexID / 2 * tickLength / height;
+        pos.y -= gl_VertexID / 2 * tickLengthConstant;
         pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
     } else if (axisIndex == 1) {
         pos = mix(corner(plot, CORNER_BR), corner(plot, CORNER_TR), t);
-        pos.x += gl_VertexID / 2 * tickLength / width;
+        pos.x += gl_VertexID / 2 * tickLengthConstant;
         pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
     } else if (axisIndex == 2) {
         pos = mix(corner(plot, CORNER_TL), corner(plot, CORNER_TR), t);
-        pos.y += gl_VertexID / 2 * tickLength / height;
+        pos.y += gl_VertexID / 2 * tickLengthConstant;
         pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
     } else if (axisIndex == 3) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_TL), t);
-        pos.x -= gl_VertexID / 2 * tickLength / width;
+        pos.x -= gl_VertexID / 2 * tickLengthConstant;
         pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
     }
     return pos;
