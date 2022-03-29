@@ -50,7 +50,9 @@ bool FilePathParam::ParseValue(std::string const& v) {
 void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
     try {
-        auto new_value = v;
+        auto tmp_val_str = v.generic_u8string();
+        std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
+        auto new_value = std::filesystem::path(tmp_val_str);
         if (this->value != new_value) {
             auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
