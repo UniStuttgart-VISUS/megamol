@@ -108,7 +108,8 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
         vislib::math::Vector<float, 3> X(static_cast<float>((new_rand() % 2) * 2 - 1), 0.0f, 0.0f);
         vislib::math::Vector<float, 3> Y(0.0f, static_cast<float>((new_rand() % 2) * 2 - 1), 0.0f);
         vislib::math::Vector<float, 3> Z(static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
-            static_cast<float>(1000 - new_rand() % 2001) * 0.001f, static_cast<float>(1000 - new_rand() % 2001) * 0.001f);
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f);
         switch (new_rand() % 6) {
         case 0:
             Z.SetX(1.0f);
@@ -146,7 +147,8 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
 
         r = 0.05f + static_cast<float>(new_rand() % 501) * 0.0001f;
 
-        Z.Set(static_cast<float>(1000 - new_rand() % 2001) * 0.001f, static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+        Z.Set(static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
             static_cast<float>(1000 - new_rand() % 2001) * 0.001f);
         switch (new_rand() % 6) {
         case 0:
