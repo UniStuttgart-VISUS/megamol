@@ -164,6 +164,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     auto* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
+    geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT_TRIANGLE_SPRITE, "Point(TriangleSprite)");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_TEXT, "Text");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_TRIANGULATION, "Delaunay Triangulation");
@@ -309,6 +310,8 @@ bool ScatterplotMatrixRenderer2D::create() {
             "infovis_gl/splom_axis_scientific.vert.glsl", "infovis_gl/splom_axis_scientific.frag.glsl");
         pointShader = core::utility::make_glowl_shader(
             "splom_point", shader_options, "infovis_gl/splom.vert.glsl", "infovis_gl/splom_point.frag.glsl");
+        pointTriangleSpriteShader = core::utility::make_glowl_shader(
+            "splom_trianlge_point_sprite", shader_options, "infovis_gl/splom_triangle_point_sprite.vert.glsl", "infovis_gl/splom_triangle_point_sprite.frag.glsl");
         lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis_gl/splom.vert.glsl",
             "infovis_gl/splom_line.geom.glsl", "infovis_gl/splom_line.frag.glsl");
         triangleShader = core::utility::make_glowl_shader("splom_triangle", shader_options,
@@ -414,6 +417,11 @@ bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         case GEOMETRY_TYPE_POINT:
             glEnable(GL_CLIP_DISTANCE0);
             this->drawPoints();
+            glDisable(GL_CLIP_DISTANCE0);
+            break;
+        case GEOMETRY_TYPE_POINT_TRIANGLE_SPRITE:
+            glEnable(GL_CLIP_DISTANCE0);
+            this->drawPointTriangleSprites();
             glDisable(GL_CLIP_DISTANCE0);
             break;
         case GEOMETRY_TYPE_LINE:
@@ -925,6 +933,60 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_POINT_SPRITE);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    debugPop();
+}
+
+void ScatterplotMatrixRenderer2D::drawPointTriangleSprites() {
+    if (this->screenValid) {
+        return;
+    }
+
+    debugPush(11, "drawPointTriangleSprites");
+
+    //TODO use different
+    this->pointTriangleSpriteShader->use();
+    this->bindAndClearScreen();
+    this->bindMappingUniforms(this->pointTriangleSpriteShader);
+
+    // Transformation uniforms.
+    auto ortho_params = currentCamera.get<core::view::Camera::OrthographicParameters>();
+    glm::vec2 frustrumSize = glm::vec2(ortho_params.frustrum_height * ortho_params.aspect, ortho_params.frustrum_height);
+    glUniform2fv(this->pointTriangleSpriteShader->getUniformLocation("frustrumSize"), 1, glm::value_ptr(frustrumSize));
+    glUniform2iv(this->pointTriangleSpriteShader->getUniformLocation("viewRes"), 1, glm::value_ptr(currentViewRes));
+    glUniformMatrix4fv(this->pointTriangleSpriteShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
+        glm::value_ptr(screenLastMVP));
+
+    // Other uniforms.
+    const auto columnCount = this->floatTable->GetColumnsCount();
+    glUniform1i(this->pointTriangleSpriteShader->getUniformLocation("rowStride"), columnCount);
+    glUniform1f(this->pointTriangleSpriteShader->getUniformLocation("kernelWidth"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(this->pointTriangleSpriteShader->getUniformLocation("kernelType"),
+        this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
+    glUniform1i(this->pointTriangleSpriteShader->getUniformLocation("attenuateSubpixel"),
+        this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    this->bindFlagsAttribute();
+
+    // Setup streaming.
+    // const GLuint numBuffers = 3;
+    // const GLuint bufferSize = 32 * 1024 * 1024;
+    const float* data = this->floatTable->GetData();
+    const GLuint dataStride = columnCount * sizeof(float);
+    const GLuint dataItems = this->floatTable->GetRowsCount();
+    this->valueSSBO.SetData(data, dataStride, dataStride, dataItems);
+
+    // For each chunk of values, render all points in the lower half of the scatterplot matrix at once.
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(0));
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, static_cast<GLsizei>(dataItems) * 3, this->plots.size());
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    this->unbindScreen();
+    glUseProgram(0);
 
     debugPop();
 }
