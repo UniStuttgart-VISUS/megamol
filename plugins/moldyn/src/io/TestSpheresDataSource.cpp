@@ -16,10 +16,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Vector.h"
-#define USE_MERSENNE_TWISTER
-#ifdef USE_MERSENNE_TWISTER
 #include <random>
-#endif
 
 namespace megamol::moldyn::io {
 
@@ -97,14 +94,9 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
     auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
     auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
     frm->data = new float[8 * sphereCount];
-#ifdef USE_MERSENNE_TWISTER
     std::mt19937 twister;
     auto new_rand = [&twister]() -> int32_t { return twister() & RAND_MAX; };
     auto new_seed = [&twister](uint32_t i) { twister.seed(i); };
-#else
-    auto new_rand = []() -> int32_t { return ::rand(); };
-    auto new_seed = [](uint32_t i) { ::srand(i); };
-#endif
     for (unsigned int i = 0; i < sphereCount; i++) {
         vislib::math::ShallowVector<float, 3> pos(&frm->data[i * 8]);
         new_seed(i); // stablize values for particles
