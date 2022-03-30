@@ -376,7 +376,7 @@ for filename in parseResult.inputfiles:
                 outFile.write("%s frame %u\n" % (filename, fi))
                 f.seek(frameTable[fi], os.SEEK_SET)
 
-                timeStamp, numLists = readFrameHeader(f)
+                timeStamp, numLists, _ = readFrameHeader(f)
                 for li in range(numLists):
                     vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, particleMem = readListHeader(f)
                     readParticles(listNumParts, vertType, colType, f, li)
