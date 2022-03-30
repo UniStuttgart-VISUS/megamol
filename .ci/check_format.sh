@@ -4,13 +4,10 @@ set -o pipefail
 
 EXIT_CODE=0
 
-file_list=$(find . -type f | sort)
-while read -r file; do
-  #ignore .git dir
-  if [[ $file == "./.git/"* ]]; then
-    continue
-  fi
+# Find all files, ignore .git dirs.
+file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
 
+while read -r file; do
   # ignore files ignored by git
   if git check-ignore -q "$file"; then
     continue
