@@ -86,7 +86,7 @@ void main() {
 
     if (frameIdx == idx) {
         // Current high res pixel matches exactly the low res pixel of the current pass.
-        color = vec4(texelFetch(texLowResFBO, imgCoord / amortLevel, 0).xyz, 1.0f);
+        color = texelFetch(texLowResFBO, imgCoord / amortLevel, 0);
 
         imageStore(imgPosWrite, imgCoord, vec4(posWorldSpace, 0.0f, 0.0f));
     } else {
@@ -117,7 +117,7 @@ void main() {
         const float distNewSample = length(posWorldSpace - samplePosWorldSpace);
 
         if (distNewSample <= distOldSample && !skipInterpolation) {
-            color = vec4(texelFetch(texLowResFBO, lowResImgCoord, 0).xyz, 1.0f);
+            color = texelFetch(texLowResFBO, lowResImgCoord, 0);
             imageStore(imgPosWrite, imgCoord, vec4(samplePosWorldSpace, 0.0f, 0.0f));
         } else {
             color = imageLoad(imgRead, lastImgCoord); // If this sample is nearer the coords should be within the bounds.

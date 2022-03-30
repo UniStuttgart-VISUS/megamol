@@ -53,8 +53,7 @@ protected:
 
     void releaseImpl() override;
 
-    bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-        std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) override;
+    bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) override;
 
     void updateSize(int a, int w, int h);
 

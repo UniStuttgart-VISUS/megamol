@@ -80,8 +80,12 @@ void ResolutionScalingRenderer2D::releaseImpl() {
     // nothing to do
 }
 
-bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-    std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
+bool ResolutionScalingRenderer2D::renderImpl(
+    core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) {
+
+    auto const& fbo = call.GetFramebuffer();
+    auto const& cam = call.GetCamera();
+    auto const& bg = call.BackgroundColor();
 
     const int a = amortLevelParam.Param<core::param::IntParam>()->Value();
     const int w = fbo->getWidth();
@@ -95,6 +99,7 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
     }
 
     lowResFBO_->bind();
+    glClearColor(bg.r, bg.g, bg.b, bg.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     lastViewProjMx_ = viewProjMx_;
@@ -194,7 +199,8 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
     cam.setPose(pose);
 }
 
-void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
+void ResolutionScalingRenderer2D::reconstruct(
+    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
     int w = fbo->getWidth();
     int h = fbo->getHeight();
 
