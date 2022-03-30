@@ -60,7 +60,7 @@ protected:
 
     void setupCamera(core::view::Camera& cam, int width, int height, int a);
 
-    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, int a);
+    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a);
 
 private:
     core::param::ParamSlot amortLevelParam;
