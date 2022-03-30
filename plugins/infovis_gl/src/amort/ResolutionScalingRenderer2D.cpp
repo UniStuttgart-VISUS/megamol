@@ -80,8 +80,12 @@ void ResolutionScalingRenderer2D::releaseImpl() {
     // nothing to do
 }
 
-bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-    std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) {
+bool ResolutionScalingRenderer2D::renderImpl(
+    core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) {
+
+    auto const& fbo = call.GetFramebuffer();
+    auto const& cam = call.GetCamera();
+    auto const& bg = call.BackgroundColor();
 
     const int a = amortLevelParam.Param<core::param::IntParam>()->Value();
     const int w = fbo->getWidth();
@@ -95,6 +99,7 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
     }
 
     lowResFBO_->bind();
+    glClearColor(bg.r, bg.g, bg.b, bg.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     lastViewProjMx_ = viewProjMx_;
@@ -107,7 +112,7 @@ bool ResolutionScalingRenderer2D::renderImpl(core_gl::view::CallRender2DGL& next
     nextRendererCall.SetCamera(lowResCam);
     (nextRendererCall)(core::view::AbstractCallRender::FnRender);
 
-    reconstruct(fbo, a);
+    reconstruct(fbo, cam, a);
 
     return true;
 }
@@ -194,20 +199,28 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
     cam.setPose(pose);
 }
 
-void ResolutionScalingRenderer2D::reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, int a) {
+void ResolutionScalingRenderer2D::reconstruct(
+    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
     int w = fbo->getWidth();
     int h = fbo->getHeight();
 
     glViewport(0, 0, w, h);
     fbo->bind();
 
+    // Calculate inverse and shift matrix in double precision
+    const glm::dmat4 shiftMx = glm::dmat4(lastViewProjMx_) * glm::inverse(glm::dmat4(viewProjMx_));
+
+    const auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
+
     shader_->use();
     shader_->setUniform("amortLevel", a);
     shader_->setUniform("resolution", w, h);
     shader_->setUniform("lowResResolution", lowResFBO_->getWidth(), lowResFBO_->getHeight());
     shader_->setUniform("frameIdx", frameIdx_);
-    shader_->setUniform("invViewProjMx", glm::inverse(viewProjMx_));
-    shader_->setUniform("lastViewProjMx", lastViewProjMx_);
+    shader_->setUniform("shiftMx", glm::mat4(shiftMx));
+    shader_->setUniform("camCenter", cam.getPose().position);
+    shader_->setUniform("camAspect", intrinsics.aspect.value());
+    shader_->setUniform("frustumHeight", intrinsics.frustrum_height.value());
     shader_->setUniform(
         "skipInterpolation", static_cast<int>(skipInterpolationParam.Param<core::param::BoolParam>()->Value()));
 

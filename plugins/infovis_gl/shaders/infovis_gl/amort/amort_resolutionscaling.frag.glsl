@@ -1,4 +1,4 @@
-#version 430
+#version 450
 
 uniform sampler2D texLowResFBO;
 
@@ -12,9 +12,10 @@ uniform ivec2 resolution;
 uniform ivec2 lowResResolution;
 uniform int frameIdx;
 uniform mat4 shiftMx;
+uniform vec3 camCenter;
+uniform float camAspect;
+uniform float frustumHeight;
 uniform bool skipInterpolation;
-uniform mat4 invViewProjMx;
-uniform mat4 lastViewProjMx;
 
 in vec2 uvCoords;
 
@@ -74,9 +75,10 @@ vec2 readPosition(ivec2 coords) {
 }
 
 void main() {
+    const vec2 frustumSize = vec2(frustumHeight * camAspect, frustumHeight);
+
     const ivec2 imgCoord = ivec2(int(uvCoords.x * float(resolution.x)), int(uvCoords.y * float(resolution.y)));
-    const vec4 posClipSpace = vec4(2.0f * uvCoords - 1.0f, 0.0f, 1.0f);
-    const vec4 posWorldSpace = invViewProjMx * posClipSpace;
+    const vec2 posWorldSpace = camCenter.xy + frustumSize * (uvCoords - 0.5f);
 
     const ivec2 quadCoord = imgCoord % amortLevel; // Position within the current a*a quad on the high res texture.
     const int idx = (amortLevel * quadCoord.y + quadCoord.x); // Linear version of quadCoord as as frame id.
@@ -84,12 +86,13 @@ void main() {
 
     if (frameIdx == idx) {
         // Current high res pixel matches exactly the low res pixel of the current pass.
-        color = vec4(texelFetch(texLowResFBO, imgCoord / amortLevel, 0).xyz, 1.0f);
+        color = texelFetch(texLowResFBO, imgCoord / amortLevel, 0);
 
-        imageStore(imgPosWrite, imgCoord, vec4(posWorldSpace.xy, 0.0f, 0.0f));
+        imageStore(imgPosWrite, imgCoord, vec4(posWorldSpace, 0.0f, 0.0f));
     } else {
         // Find shifted image coords. This is where the current high res position was in the previous frame.
-        const vec4 lastPosClipSpace = lastViewProjMx * posWorldSpace;
+        const vec4 posClipSpace = vec4(2.0f * uvCoords - 1.0f, 0.0f, 1.0f);
+        const vec4 lastPosClipSpace = shiftMx * posClipSpace;
         const ivec2 lastImgCoord = ivec2((lastPosClipSpace.xy / 2.0f + 0.5f) * vec2(resolution));
 
         const vec2 lastPosWorldSpace = readPosition(lastImgCoord);
@@ -107,15 +110,15 @@ void main() {
         lowResImgCoord += offsetLowRes;
         const ivec2 sampleImgCoord = imgCoord + offsetHighRes;
 
-        const vec2 samplePosClipSpace = (2.0f * (vec2(sampleImgCoord) + 0.5f) / vec2(resolution)) - 1.0f;
-        const vec4 samplePosWorldSpace = invViewProjMx * vec4(samplePosClipSpace, 0.0f, 1.0f);
+        const vec2 sampleUvCoords = (vec2(sampleImgCoord) + 0.5f) / vec2(resolution);
+        const vec2 samplePosWorldSpace = camCenter.xy + frustumSize * (sampleUvCoords - 0.5f);
 
-        const float distOldSample = length(posWorldSpace.xy - lastPosWorldSpace);
-        const float distNewSample = length(posWorldSpace.xy - samplePosWorldSpace.xy);
+        const float distOldSample = length(posWorldSpace - lastPosWorldSpace);
+        const float distNewSample = length(posWorldSpace - samplePosWorldSpace);
 
         if (distNewSample <= distOldSample && !skipInterpolation) {
-            color = vec4(texelFetch(texLowResFBO, lowResImgCoord, 0).xyz, 1.0f);
-            imageStore(imgPosWrite, imgCoord, vec4(samplePosWorldSpace.xy, 0.0f, 0.0f));
+            color = texelFetch(texLowResFBO, lowResImgCoord, 0);
+            imageStore(imgPosWrite, imgCoord, vec4(samplePosWorldSpace, 0.0f, 0.0f));
         } else {
             color = imageLoad(imgRead, lastImgCoord); // If this sample is nearer the coords should be within the bounds.
             imageStore(imgPosWrite, imgCoord, vec4(lastPosWorldSpace, 0.0f, 0.0f));
