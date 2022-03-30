@@ -1,4 +1,4 @@
-#version 430
+#version 450
 
 uniform sampler2D texLowResFBO;
 
