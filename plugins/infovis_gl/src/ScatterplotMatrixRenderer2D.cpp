@@ -101,6 +101,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , axisTicksParam("axisTicks", "Number of ticks on the axis")
         , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
         , axisTickLengthParam("axisTickLength", "Line length for the ticks")
+        , axisTickMarginParam("axisTickMargin", "Gap between tick line and font")
         , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
         , axisTickPrecisionX("axisTickPrecisionX", "Sets the float precision for the x ticks")
         , axisTickPrecisionY("axisTickPrecisionY", "Sets the float precision for the y ticks")
@@ -223,6 +224,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->axisTickLengthParam << new core::param::FloatParam(0.5f, 0.0f);
     this->MakeSlotAvailable(&this->axisTickLengthParam);
+
+    this->axisTickMarginParam << new core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->axisTickMarginParam);
 
     this->axisTickSizeParam << new core::param::FloatParam(0.5f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->axisTickSizeParam);
@@ -662,7 +666,8 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
 
         std::string label = columnInfos[i].Name();
         //TODO
-        const float tickLengthConstant = tickLength * size / 10.0;
+        const float tickLengthConstant =
+            (tickLength + this->axisTickMarginParam.Param<core::param::FloatParam>()->Value()) * size / 20.0;
 
         // draw labels
         // horizontal

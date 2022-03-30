@@ -250,6 +250,8 @@ private:
 
     core::param::ParamSlot axisTickLengthParam;
 
+    core::param::ParamSlot axisTickMarginParam;
+
     core::param::ParamSlot axisTickSizeParam;
 
     core::param::ParamSlot axisTickPrecisionX;
