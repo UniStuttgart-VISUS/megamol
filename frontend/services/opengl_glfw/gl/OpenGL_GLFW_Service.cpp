@@ -354,9 +354,7 @@ void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fulls
     }
 }
 
-namespace megamol {
-namespace frontend {
-
+namespace megamol::frontend {
 
 struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
@@ -364,12 +362,12 @@ struct OpenGL_GLFW_Service::PimplData {
     std::string fullWindowTitle;
     std::chrono::system_clock::time_point last_time;
     megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
-    std::array<GLFWcursor*, 9> mouse_cursors;
+    std::array<GLFWcursor*, 9> mouse_cursors{};
 };
 
-OpenGL_GLFW_Service::OpenGL_GLFW_Service() {}
+OpenGL_GLFW_Service::OpenGL_GLFW_Service() = default;
 
-OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {}
+OpenGL_GLFW_Service::~OpenGL_GLFW_Service() = default;
 
 bool OpenGL_GLFW_Service::init(void* configPtr) {
     if (configPtr == nullptr)
@@ -496,7 +494,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
     // context profiles available since 3.2
     bool has_profiles =
-        m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+        m_pimpl->config.versionMajor > 3 || (m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2);
     if (has_profiles)
         glfwWindowHint(GLFW_OPENGL_PROFILE,
             m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
@@ -539,7 +537,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         return false;
     }
 #else
-    Display* display = XOpenDisplay(NULL);
+    Display* display = XOpenDisplay(nullptr);
     gladLoaderLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
@@ -654,7 +652,7 @@ void OpenGL_GLFW_Service::do_every_second() {
     }
 }
 
-#define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
+#define that (static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd)))
 void OpenGL_GLFW_Service::register_glfw_callbacks() {
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
 
@@ -773,7 +771,7 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     // which in turn causes callbacks to be called outside of regular event processing.
 
     auto& should_close_events = this->m_windowEvents.should_close_events;
-    if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
+    if (!should_close_events.empty() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
 
     auto& global_framebuffer_events =
@@ -916,7 +914,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
-void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
+void OpenGL_GLFW_Service::create_glfw_mouse_cursors() {
     // See imgui_impl_glfw.cpp for reference
     for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
         mouse_cursor_ptr = nullptr;
@@ -971,5 +969,4 @@ void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
 // }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

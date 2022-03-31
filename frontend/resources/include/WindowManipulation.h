@@ -9,8 +9,7 @@
 
 #include "GL_STUB.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct WindowManipulation {
     void set_window_title(const char* title) const GL_STUB();
@@ -28,5 +27,4 @@ struct WindowManipulation {
     void* window_ptr = nullptr;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources
