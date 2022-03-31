@@ -192,7 +192,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
             "FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
         std::array<float, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        this->extractBkgndColor(backgroundColor);
+        this->extractBackgroundColor(backgroundColor);
 
         int tilevp[4] = {xoff, yoff, tile_width, tile_height}; // define current valid pixel viewport for icet
 #if _DEBUG
@@ -530,7 +530,7 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
+bool megamol::remote::FBOTransmitter2::extractBackgroundColor(std::array<float, 4>& bg_color) {
     using megamol::core::utility::log::Log;
 
     bool success = true;
@@ -538,13 +538,13 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractView>(
-        mvn, [&bkgnd_color](core::view::AbstractView* arv) {
-            auto bkgndCol = arv->BkgndColour();
-            if (bkgndCol != glm::vec4(0, 0, 0, 0)) {
-                bkgnd_color[0] = bkgndCol[0];
-                bkgnd_color[1] = bkgndCol[1];
-                bkgnd_color[2] = bkgndCol[2];
-                bkgnd_color[3] = 1.0f;
+        mvn, [&bg_color](core::view::AbstractView* arv) {
+            auto bgCol = arv->BackgroundColor();
+            if (bgCol != glm::vec4(0, 0, 0, 0)) {
+                bg_color[0] = bgCol[0];
+                bg_color[1] = bgCol[1];
+                bg_color[2] = bgCol[2];
+                bg_color[3] = 1.0f;
             }
         });
 

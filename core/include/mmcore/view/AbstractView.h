@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -32,9 +28,7 @@
 
 #include "ImageWrapper.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using megamol::frontend_resources::Key;
 using megamol::frontend_resources::KeyAction;
@@ -231,7 +225,7 @@ public:
      *
      * @return The background colour for the view
      */
-    glm::vec4 BkgndColour(void) const;
+    glm::vec4 BackgroundColor() const;
 
     /**
      * Restores the view
@@ -391,19 +385,14 @@ protected:
     std::chrono::microseconds _lastFrameDuration;
 
     /** The background colour for the view */
-    mutable param::ParamSlot _bkgndColSlot;
+    mutable param::ParamSlot _backgroundColSlot;
 
 private:
     /** List of registered hooks */
     vislib::SingleLinkedList<Hooks*> _hooks;
 
     /** The background colour for the view */
-    mutable glm::vec4 _bkgndCol;
+    mutable glm::vec4 _backgroundCol;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED */
+} // namespace megamol::core::view

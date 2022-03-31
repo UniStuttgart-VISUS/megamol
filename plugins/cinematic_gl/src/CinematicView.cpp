@@ -487,7 +487,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 this->_fbo->bind();
 
                 // Set letter box background
-                auto bgcol = this->BkgndColour();
+                auto bgcol = this->BackgroundColor();
                 this->utils.SetBackgroundColor(bgcol);
                 bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
                 this->utils.SetBackgroundColor(bgcol);
