@@ -304,19 +304,21 @@ void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(
     int fbo_width = 0, fbo_height = 0;
     int window_width = 0, window_height = 0;
 
-    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowSizeLimits(window, width, height, width, height);
     glfwSetWindowSize(window, width, height);
     glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
     glfwGetWindowSize(window, &window_width, &window_height);
 
-    if (fbo_width != width || fbo_height != height) {
-        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" +
-            std::to_string(height) + ". You wont be able to resize the window manually after this.");
-        glfwSetWindowSizeLimits(window, width, height, width, height);
-        glfwSetWindowSize(window, width, height);
+    int i = 0;
+    while ((fbo_width != width || fbo_height != height) && i < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        glfwPollEvents();
         glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
         glfwGetWindowSize(window, &window_width, &window_height);
+        i++;
     }
+
+    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     if (fbo_width != width || fbo_height != height) {
         log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested "
