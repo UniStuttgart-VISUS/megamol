@@ -278,6 +278,8 @@ private:
 
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
+    core::param::ParamSlot smoothFontParam;
+
     core::param::ParamSlot forceRedrawDebugParam;
 
     size_t dataHash;

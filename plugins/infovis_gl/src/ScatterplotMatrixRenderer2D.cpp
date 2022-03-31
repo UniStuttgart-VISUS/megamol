@@ -115,6 +115,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
         , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
         , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
+        , smoothFontParam("smoothFont", "Font rendering with smooth edges")
         , forceRedrawDebugParam("forceRedrawDebug", "Force redraw every frame (for benchmarking and debugging).")
         , mouse({0, 0, BrushState::NOP})
         , plotSSBO("Plots")
@@ -266,6 +267,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
+
+    this->smoothFontParam << new core::param::BoolParam(true);
+    MakeSlotAvailable(&this->smoothFontParam);
 
     this->forceRedrawDebugParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->forceRedrawDebugParam);
@@ -658,6 +662,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
     glUseProgram(0);
 
     this->axisFont.ClearBatchDrawCache();
+    this->axisFont.SetSmoothMode(smoothFontParam.Param<core::param::BoolParam>()->Value());
 
     for (size_t i = 0; i < columnCount; ++i) {
         // this will be bottom left of diagonal cell
@@ -805,6 +810,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glEnable(GL_DEPTH_TEST);
 
     this->axisFont.ClearBatchDrawCache();
+    this->axisFont.SetSmoothMode(smoothFontParam.Param<core::param::BoolParam>()->Value());
 
     for (size_t i = 0; i < columnCount; ++i) {
         // this will be bottom left of diagonal cell
@@ -1305,6 +1311,7 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels(glm::mat4 ortho) {
 
     auto oldMode = this->axisFont.GetBatchDrawMode();
     this->axisFont.SetBatchDrawMode(false);
+    this->axisFont.SetSmoothMode(smoothFontParam.Param<core::param::BoolParam>()->Value());
 
     // bottom left of cell
     const float offsetX = static_cast<float>(cellPosIdX) * (cellSize + cellMargin);
