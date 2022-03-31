@@ -406,6 +406,20 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
                                          : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
     ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
 
+    // Hack for window size larger than screen:
+    // The width and height for glfwCreateWindow is just a hint for the underlying window manager. Most window
+    // managers (Windows + Linux/X11) will just resize and maximise the window on the screen, when a size
+    // larger than the screen is requested. When we do not allow resizing, the window managers seems to use the
+    // wanted size.
+    // But we want a resizable window, therefore we need to set the window resizable again. But the second
+    // problem with window managers is, that window creation is an async task (at least with X11). When we
+    // immediately after window creation set the window to be resizable again, the automatic resize will happen
+    // again. We need to delay this to a later point in time (i.e. rendering of first frame).
+    // The async task problem holds (of course) also for querying the window size with glfwGetWindowSize.
+    // Calling this right after glfwCreateWindow will just return our values, not the actual window size.
+    // Therefore here we cannot test for correct window size.
+    ::glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
     int monCnt = 0;
     GLFWmonitor** monitors = ::glfwGetMonitors(&monCnt); // primary monitor is first in list
     if (!monitors)
@@ -625,6 +639,9 @@ void OpenGL_GLFW_Service::do_every_second() {
         std::string mspf = std::to_string(m_pimpl->frame_statistics->last_averaged_mspf);
         std::string title = m_pimpl->config.windowTitlePrefix + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
         glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
+
+        // set window resizable according to the asnyc nature of the initial window size stated in init()
+        glfwSetWindowAttrib(m_pimpl->glfwContextWindowPtr, GLFW_RESIZABLE, GLFW_TRUE);
 
 #ifdef _WIN32
         // TODO fix this for EGL + Win
