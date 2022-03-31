@@ -536,8 +536,8 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
             currentFbo->bindToRead(0);
             glGetError();
-            glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(), (backgroundMode == 1) ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE, buffer);
+            glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(),
+                (backgroundMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
             if (glGetError() != GL_NO_ERROR) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
