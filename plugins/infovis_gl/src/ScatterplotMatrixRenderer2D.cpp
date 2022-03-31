@@ -318,8 +318,8 @@ bool ScatterplotMatrixRenderer2D::create() {
             "infovis_gl/splom_axis_scientific.vert.glsl", "infovis_gl/splom_axis_scientific.frag.glsl");
         pointShader = core::utility::make_glowl_shader(
             "splom_point", shader_options, "infovis_gl/splom.vert.glsl", "infovis_gl/splom_point.frag.glsl");
-        pointTriangleSpriteShader = core::utility::make_glowl_shader(
-            "splom_trianlge_point_sprite", shader_options, "infovis_gl/splom_triangle_point_sprite.vert.glsl", "infovis_gl/splom_triangle_point_sprite.frag.glsl");
+        pointTriangleSpriteShader = core::utility::make_glowl_shader("splom_trianlge_point_sprite", shader_options,
+            "infovis_gl/splom_triangle_point_sprite.vert.glsl", "infovis_gl/splom_triangle_point_sprite.frag.glsl");
         lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis_gl/splom.vert.glsl",
             "infovis_gl/splom_line.geom.glsl", "infovis_gl/splom_line.frag.glsl");
         triangleShader = core::utility::make_glowl_shader("splom_triangle", shader_options,
@@ -702,8 +702,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
         glm::vec2 resOffset = (screenLastMVP * glm::vec4(currentViewRes, 0.0, 1.0));
 
         // draw tick labels
-        float horizontalY =
-            offsetY + (invertY ? -margin + tickLengthConstant : size + margin - tickLengthConstant);
+        float horizontalY = offsetY + (invertY ? -margin + tickLengthConstant : size + margin - tickLengthConstant);
         for (size_t tick = 0; tick < numTicks; ++tick) {
             const float t = static_cast<float>(tick) / (numTicks - 1);
             const float px = lerp(offsetX, offsetX + size, t);
@@ -713,13 +712,11 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
             const std::string pLabelY = to_string(pValue, tickPrecisionY);
             if (drawOuter && i < columnCount - 1) {
                 if (invertY) {
-                    this->axisFont.DrawString(ortho, axisColor.data(), px, -tickLengthConstant, tickSize,
-                        false,
+                    this->axisFont.DrawString(ortho, axisColor.data(), px, -tickLengthConstant, tickSize, false,
                         pLabelX.c_str(), core::utility::SDFFont::ALIGN_CENTER_TOP);
                 } else {
-                    this->axisFont.DrawString(ortho, axisColor.data(), px, totalSize + tickLengthConstant,
-                        tickSize, false,
-                        pLabelX.c_str(), core::utility::SDFFont::ALIGN_CENTER_BOTTOM);
+                    this->axisFont.DrawString(ortho, axisColor.data(), px, totalSize + tickLengthConstant, tickSize,
+                        false, pLabelX.c_str(), core::utility::SDFFont::ALIGN_CENTER_BOTTOM);
                 }
             }
             if (drawDiagonal && i < columnCount - 1) {
@@ -728,15 +725,12 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
             }
 
             if (drawOuter && i > 0) {
-                this->axisFont.DrawString(ortho, axisColor.data(), - tickLengthConstant, py, tickSize, false,
-                    pLabelY.c_str(),
-                    core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
+                this->axisFont.DrawString(ortho, axisColor.data(), -tickLengthConstant, py, tickSize, false,
+                    pLabelY.c_str(), core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
             }
             if (drawDiagonal && i > 0) {
-                this->axisFont.DrawString(ortho, axisColor.data(), offsetX - margin + tickLengthConstant,
-                    py,
-                    tickSize, false,
-                    pLabelY.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
+                this->axisFont.DrawString(ortho, axisColor.data(), offsetX - margin + tickLengthConstant, py, tickSize,
+                    false, pLabelY.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -765,8 +759,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glGetFloatv(GL_VIEWPORT, viewport);
 
     auto ndcSpaceSize = screenLastMVP * glm::vec4(size, size, 0.0f, 0.0f);
-    auto screenSpaceSize =
-        vislib::math::Vector<float, 2>(currentViewRes.x / 2.0 * ndcSpaceSize.x, currentViewRes.y / 2.0 * ndcSpaceSize.y);
+    auto screenSpaceSize = vislib::math::Vector<float, 2>(
+        currentViewRes.x / 2.0 * ndcSpaceSize.x, currentViewRes.y / 2.0 * ndcSpaceSize.y);
     float approximateLineWidth = screenSpaceSize.X() * axisWidth * 0.0025 / 2.0;
     // 0: no grid <-> 3: big,mid,small grid
     GLint recursiveDepth = 0;
@@ -962,7 +956,8 @@ void ScatterplotMatrixRenderer2D::drawPointTriangleSprites() {
 
     // Transformation uniforms.
     auto ortho_params = currentCamera.get<core::view::Camera::OrthographicParameters>();
-    glm::vec2 frustrumSize = glm::vec2(ortho_params.frustrum_height * ortho_params.aspect, ortho_params.frustrum_height);
+    glm::vec2 frustrumSize =
+        glm::vec2(ortho_params.frustrum_height * ortho_params.aspect, ortho_params.frustrum_height);
     glUniform2fv(this->pointTriangleSpriteShader->getUniformLocation("frustrumSize"), 1, glm::value_ptr(frustrumSize));
     glUniform2iv(this->pointTriangleSpriteShader->getUniformLocation("viewRes"), 1, glm::value_ptr(currentViewRes));
     glUniformMatrix4fv(this->pointTriangleSpriteShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
