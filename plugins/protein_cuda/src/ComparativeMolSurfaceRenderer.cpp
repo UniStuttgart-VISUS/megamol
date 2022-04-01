@@ -687,9 +687,9 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     int rc = cqs->calc_map(mol->AtomCount(), &this->gridDataPos.Peek()[0],
         NULL,  // Pointer to 'color' array
         false, // Do not use 'color' array
-        (float*)&this->volOrg, (int*)&this->volDim, this->maxAtomRad,
+        CUDAQuickSurf::VolTexFormat::RGB3F, (float*)&this->volOrg, (int*)&this->volDim, this->maxAtomRad,
         this->qsRadScl, // Radius scaling
-        this->qsGridDelta, this->qsIsoVal, this->qsGaussLim);
+        this->qsGridDelta, this->qsIsoVal, this->qsGaussLim, false);
 
     //    printf("QUICKSURF PARAMETERS");
     //    printf("Particle count %u\n", mol->AtomCount());

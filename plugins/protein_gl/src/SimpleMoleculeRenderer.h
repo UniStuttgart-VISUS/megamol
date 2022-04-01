@@ -11,16 +11,15 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "DeferredRenderingProvider.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-//#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"

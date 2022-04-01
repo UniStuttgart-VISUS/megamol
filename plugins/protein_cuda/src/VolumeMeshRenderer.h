@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CUDAQuickSurf.h"
+#include "quicksurf/CUDAQuickSurf.h"
 #include "CenterLineGenerator.h"
 #include "MolecularAOShader.h"
 #include "VolumeMeshRenderer.cuh"
-#include "WKFUtils.h"
+#include "quicksurf/WKFUtils.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"

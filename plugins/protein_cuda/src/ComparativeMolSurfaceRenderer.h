@@ -31,13 +31,13 @@ typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 
-#include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"
 #include "DeformableGPUSurfaceMT.h"
 #include "HostArr.h"
 #include "gridParams.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
+#include "quicksurf/CUDAQuickSurf.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {

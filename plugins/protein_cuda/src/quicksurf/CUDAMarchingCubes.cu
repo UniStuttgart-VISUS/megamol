@@ -1,6 +1,6 @@
 /***************************************************************************
  *cr
- *cr            (C) Copyright 1995-2011 The Board of Trustees of the
+ *cr            (C) Copyright 1995-2019 The Board of Trustees of the
  *cr                        University of Illinois
  *cr                         All Rights Reserved
  *cr
@@ -10,48 +10,77 @@
  *
  *      $RCSfile: CUDAMarchingCubes.cu,v $
  *      $Author: johns $        $Locker:  $             $State: Exp $
- *      $Revision: 1.8 $       $Date: 2011/11/22 21:17:57 $
- *
- ***************************************************************************
- * DESCRIPTION:
- *   CUDA Marching Cubes Implementation
- *
- * LICENSE:
- *   UIUC Open Source License
- *   http://www.ks.uiuc.edu/Research/vmd/plugins/pluginlicense.html
+ *      $Revision: 1.39 $       $Date: 2020/07/01 05:25:53 $
  *
  ***************************************************************************/
-
-//
-// Description: This class computes an isosurface for a given density grid
-//              using a CUDA Marching Cubes (MC) alorithm. 
-//              The implementation is based on the MC demo from the 
-//              Nvidia GPU Computing SDK, but has been improved 
-//              and extended.  This implementation achieves higher 
-//              performance by reducing the number of temporary memory
-//              buffers, reduces the number of scan calls by using vector
-//              integer types, and allows extraction of per-vertex normals 
-//              optionally computes per-vertex colors if provided with a 
-//              volumetric texture map.
-//
-// Author: Michael Krone <michael.krone@visus.uni-stuttgart.de>
-//         John Stone <johns@ks.uiuc.edu>
-//
-// Copyright 2011
-//
+/**
+ * \file CUDAMarchingCubes.cu
+ * \brief CUDA implementation of Marching Cubes 
+ *
+ * This class computes an isosurface for a given density grid
+ * using a CUDA Marching Cubes (MC) alorithm. 
+ * The implementation is loosely modeled after the MC demo from 
+ * the Nvidia GPU Computing SDK, but the design has been improved 
+ * and extended in several ways.  
+ * This implementation achieves higher performance by reducing the 
+ * number of temporary memory buffers, reduces the number of scan 
+ * calls by using vector integer types, and allows extraction of 
+ * per-vertex normals and optionally computes per-vertex colors 
+ * if a volumetric texture map is provided by the caller.
+ *
+ * This work is described in the following papers:
+ *
+ *  "Evaluation of Emerging Energy-Efficient Heterogeneous Computing Platforms 
+ *  for Biomolecular and Cellular Simulation Workloads"
+ *  John E. Stone, Michael J. Hallock, James C. Phillips, Joseph R. Peterson, 
+ *  Zaida Luthey-Schulten, and Klaus Schulten.
+ *  25th International Heterogeneity in Computing Workshop, 
+ *  2016 IEEE International Parallel and Distributed Processing Symposium 
+ *  Workshops (IPDPSW), pp. 89-100, 2016.
+ *  http://dx.doi.org/10.1109/IPDPSW.2016.130
+ *
+ *  "Fast Visualization of Gaussian Density Surfaces for
+ *   Molecular Dynamics and Particle System Trajectories"
+ *  Michael Krone, John E. Stone, Thomas Ertl, and Klaus Schulten.
+ *  EuroVis - Short Papers, pp. 67-71, 2012.
+ *  http://dx.doi.org/10.2312/PE/EuroVisShort/EuroVisShort2012/067-071
+ *
+ * $Revision: 1.39 $       $Date: 2020/07/01 05:25:53 $
+ *
+ * \author Michael Krone <michael.krone@visus.uni-stuttgart.de>
+ * \author John Stone <johns@ks.uiuc.edu>
+ *
+ * \copyright 
+ * (C) Copyright 1995-2019 The Board of Trustees of the
+ * University of Illinois, All Rights Reserved \n
+ * UIUC Open Source License: 
+ * http://www.ks.uiuc.edu/Research/vmd/plugins/pluginlicense.html
+ */
 
 #include "CUDAKernels.h"
 #define CUDAMARCHINGCUBES_INTERNAL 1
 #include "CUDAMarchingCubes.h"
+#include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 #include <thrust/functional.h>
-#include <thrust/device_ptr.h>
+
+#include "CUDAParPrefixOps.h"
+
+//
+// Restrict macro to make it easy to do perf tuning tests
+//
+#if 1 && (CUDART_VERSION >= 4000)
+#define RESTRICT __restrict__
+#else
+#define RESTRICT
+#endif
 
 // The number of threads to use for triangle generation 
 // (limited by shared memory size)
 #define NTHREADS 48
 
-#define USE_CUDA_3D_TEXTURE
+// The number of threads to use for all of the other kernels
+#define KERNTHREADS 256
 
 //
 // Various math operators for vector types not already 
@@ -86,15 +115,71 @@ inline __host__ __device__ float dot(float3 a, float3 b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
+// fma() for float and float3
+inline __host__ __device__ float3 fmaf3(float x, float3 y, float3 z) {
+  return make_float3(fmaf(x, y.x, z.x), 
+                     fmaf(x, y.y, z.y), 
+                     fmaf(x, y.z, z.z));
+}
+
+
 // lerp()
 inline __device__ __host__ float3 lerp(float3 a, float3 b, float t) {
+#if 0
+  return fmaf3(t, b, fmaf3(-t, a, a));
+#elif 1
   return a + t*(b-a);
+#else
+  return (1-t)*a + t*b;
+#endif
 }
 
 // length()
 inline __host__ __device__ float length(float3 v) {
   return sqrtf(dot(v, v));
 }
+
+//
+// color format conversion routines
+//
+inline __device__ void convert_color(float3 & cf, float3 cf2) {
+  cf = cf2;
+}
+
+inline __device__ void convert_color(uchar4 & cu, float3 cf) {
+  // conversion to GLubyte format, Table 2.6, p. 44 of OpenGL spec 1.2.1
+  // clamp color values to prevent integer wraparound
+  cu = make_uchar4(fminf(cf.x * 255.0f, 255.0f),
+                   fminf(cf.y * 255.0f, 255.0f),
+                   fminf(cf.z * 255.0f, 255.0f),
+                   255);
+}
+
+inline __device__ void convert_color(float3 & cf, uchar4 cu) {
+  const float i2f = 1.0f / 255.0f;
+  cf.x = cu.x * i2f;
+  cf.y = cu.y * i2f;
+  cf.z = cu.z * i2f;
+}
+
+//
+// normal format conversion routines
+//
+inline __device__ void convert_normal(float3 & nf, float3 nf2) {
+  nf = nf2;
+}
+
+// Note: The CUDA char3 type is explicitly a signed type
+inline __device__ void convert_normal(char3 & cc, float3 cf) {
+  // normalize input values before conversion to fixed point representation
+  float invlen = rsqrtf(cf.x*cf.x + cf.y*cf.y + cf.z*cf.z);
+
+  // conversion to GLbyte format, Table 2.6, p. 44 of OpenGL spec 1.2.1
+  cc = make_char3(cf.x * invlen * 127.5f - 0.5f,
+                  cf.y * invlen * 127.5f - 0.5f,
+                  cf.z * invlen * 127.5f - 0.5f);
+}
+
 
 //
 // CUDA textures containing marching cubes look-up tables
@@ -105,25 +190,31 @@ texture<unsigned int, 1, cudaReadModeElementType> numVertsTex;
 // 3D 24-bit RGB texture
 texture<float, 3, cudaReadModeElementType> volumeTex;
 
-// sample volume data set at a point
-__device__ float sampleVolume(float *data, uint3 p, uint3 gridSize) {
-    // gridPos CAN NEVER BE OUT OF BOUNDS
-    //p.x = (p.x >= gridSize.x) ? gridSize.x - 1 : p.x;
-    //p.y = (p.y >= gridSize.y) ? gridSize.y - 1 : p.y;
-    //p.z = (p.z >= gridSize.z) ? gridSize.z - 1 : p.z;
-    unsigned int i = (p.z*gridSize.x*gridSize.y) + (p.y*gridSize.x) + p.x;
-    return data[i];
+// sample volume data set at a point p, p CAN NEVER BE OUT OF BOUNDS
+// XXX The sampleVolume() call underperforms vs. peak memory bandwidth
+//     because we don't strictly enforce coalescing requirements in the
+//     layout of the input volume presently.  If we forced X/Y dims to be
+//     warp-multiple it would become possible to use wider fetches and
+//     a few other tricks to improve global memory bandwidth 
+__device__ float sampleVolume(const float * RESTRICT data, 
+                              uint3 p, uint3 gridSize) {
+    return data[(p.z*gridSize.x*gridSize.y) + (p.y*gridSize.x) + p.x];
 }
 
 
-// sample volume data set at a point
-__device__ float3 sampleColors(float3 *data, uint3 p, uint3 gridSize) {
-    // gridPos CAN NEVER BE OUT OF BOUNDS
-    //p.x = (p.x >= gridSize.x) ? gridSize.x - 1 : p.x;
-    //p.y = (p.y >= gridSize.y) ? gridSize.y - 1 : p.y;
-    //p.z = (p.z >= gridSize.z) ? gridSize.z - 1 : p.z;
-    unsigned int i = (p.z*gridSize.x*gridSize.y) + (p.y*gridSize.x) + p.x;
-    return data[i];
+// sample volume texture at a point p, p CAN NEVER BE OUT OF BOUNDS
+__device__ float3 sampleColors(const float3 * RESTRICT data,
+                               uint3 p, uint3 gridSize) {
+    return data[(p.z*gridSize.x*gridSize.y) + (p.y*gridSize.x) + p.x];
+}
+
+// sample volume texture at a point p, p CAN NEVER BE OUT OF BOUNDS
+__device__ float3 sampleColors(const uchar4 * RESTRICT data,
+                               uint3 p, uint3 gridSize) {
+    uchar4 cu = data[(p.z*gridSize.x*gridSize.y) + (p.y*gridSize.x) + p.x];
+    float3 cf;
+    convert_color(cf, cu);
+    return cf;
 }
 
 
@@ -147,12 +238,14 @@ __device__ float3 vertexInterp(float isolevel, float3 p0, float3 p1, float f0, f
 
 
 // classify voxel based on number of vertices it will generate one thread per two voxels
-// due to type system changes in CUDA, uint2 had to be replaced by myuint2
 template <int gridis3d, int subgrid>
-__global__ void classifyVoxel(myuint2* voxelVerts, float *volume,
-                              uint3 gridSize, unsigned int numVoxels, float3 voxelSize,
-                              uint3 subGridStart, uint3 subGridEnd,
-                              float isoValue) {
+__global__ void 
+// __launch_bounds__ ( KERNTHREADS, 1 )
+classifyVoxel(uint2 * RESTRICT voxelVerts, 
+              const float * RESTRICT volume,
+              uint3 gridSize, unsigned int numVoxels, float3 voxelSize,
+              uint3 subGridStart, uint3 subGridEnd,
+              float isoValue) {
     uint3 gridPos;
     unsigned int i;
 
@@ -211,7 +304,7 @@ __global__ void classifyVoxel(myuint2* voxelVerts, float *volume,
     float field[8];
     field[0] = sampleVolume(volume, gridPos, gridSize);
     // TODO early exit test for
-    //if( field[0] < 0.000001f )  {
+    //if (field[0] < 0.000001f)  {
     //    voxelVerts[i] = numVerts;
     //    return;
     //}
@@ -243,26 +336,36 @@ __global__ void classifyVoxel(myuint2* voxelVerts, float *volume,
 
 
 // compact voxel array
-// due to type system changes in CUDA, uint2 had to be replaced by myuint2
-__global__ void compactVoxels(unsigned int *compactedVoxelArray, myuint2 *voxelOccupied, unsigned int lastVoxel, unsigned int numVoxels, unsigned int numVoxelsp1) {
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = (blockId * blockDim.x) + threadIdx.x;
+__global__ void 
+// __launch_bounds__ ( KERNTHREADS, 1 )
+compactVoxels(unsigned int * RESTRICT compactedVoxelArray, 
+              const uint2 * RESTRICT voxelOccupied, 
+              unsigned int lastVoxel, unsigned int numVoxels, 
+              unsigned int numVoxelsm1) {
+  unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+  unsigned int i = (blockId * blockDim.x) + threadIdx.x;
 
-    if ((i < numVoxels) && ( (i < numVoxelsp1) ? voxelOccupied[i].y < voxelOccupied[i+1].y : lastVoxel) ) {
-      compactedVoxelArray[ voxelOccupied[i].y ] = i;
-    }
+  if ((i < numVoxels) && ((i < numVoxelsm1) ? voxelOccupied[i].y < voxelOccupied[i+1].y : lastVoxel)) {
+    compactedVoxelArray[ voxelOccupied[i].y ] = i;
+  }
 }
 
 
 // version that calculates no surface normal or color,  only triangle vertices
-// due to type system changes in CUDA, uint2 had to be replaced by myuint2
-__global__ void generateTriangleVerticesSMEM(float3 *pos, unsigned int *compactedVoxelArray, myuint2 *numVertsScanned, float *volume,
-                   uint3 gridSize, float3 voxelSize, float isoValue, unsigned int activeVoxels, unsigned int maxVertsM3) {
+__global__ void 
+// __launch_bounds__ ( NTHREADS, 1 )
+generateTriangleVerticesSMEM(float3 * RESTRICT pos, 
+                             const unsigned int * RESTRICT compactedVoxelArray, 
+                             const uint2 * RESTRICT numVertsScanned, 
+                             const float * RESTRICT volume,
+                             uint3 gridSize, float3 voxelSize, 
+                             float isoValue, unsigned int activeVoxels, 
+                             unsigned int maxVertsM3) {
     unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
     unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset * ( blockDim.x * blockDim.y) + (blockId * blockDim.x) + threadIdx.x;
+    unsigned int i = zOffset * (blockDim.x * blockDim.y) + (blockId * blockDim.x) + threadIdx.x;
 
-    if (i >= activeVoxels )
+    if (i >= activeVoxels)
         return;
 
     unsigned int voxel = compactedVoxelArray[i];
@@ -356,233 +459,136 @@ __global__ void generateTriangleVerticesSMEM(float3 *pos, unsigned int *compacte
 }
 
 
-__global__ void offsetTriangleVertices(float3 *pos, float3 origin, unsigned int numVertsM1) {
-    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
+__global__ void 
+// __launch_bounds__ ( KERNTHREADS, 1 )
+offsetTriangleVertices(float3 * RESTRICT pos,
+                       float3 origin, unsigned int numVertsM1) {
+  unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
+  unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+  unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
 
-    if (i > numVertsM1)
-      return;
+  if (i > numVertsM1)
+    return;
 
-    float3 p = pos[i];
-    p.x += origin.x;
-    p.y += origin.y;
-    p.z += origin.z;
-    pos[i] = p;
+  float3 p = pos[i];
+  p.x += origin.x;
+  p.y += origin.y;
+  p.z += origin.z;
+  pos[i] = p;
 }
 
 
 // version that calculates the surface normal for each triangle vertex
-__global__ void generateTriangleNormals(float3 *pos, float3 *norm, float3 gridSizeInv, float3 bBoxInv, unsigned int numVerts) {
-    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
+template <class NORMAL>
+__global__ void 
+// __launch_bounds__ ( KERNTHREADS, 1 )
+generateTriangleNormals(const float3 * RESTRICT pos,
+                        NORMAL *norm, float3 gridSizeInv, 
+                        float3 bBoxInv, unsigned int numVerts) {
+  unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
+  unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+  unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
 
-    if (i > numVerts - 1)
-      return;
+  if (i > numVerts - 1)
+    return;
 
-    float3 n;
-    float3 p, p1, p2;
-    // normal calculation using central differences
-    // TODO
-    //p = ( pos[i] + make_float3( 1.0f)) * 0.5f;
-    p = pos[i];
-    p.x *= bBoxInv.x;
-    p.y *= bBoxInv.y;
-    p.z *= bBoxInv.z;
-    p1 = p + make_float3( gridSizeInv.x * 1.0f, 0.0f, 0.0f);
-    p2 = p - make_float3( gridSizeInv.x * 1.0f, 0.0f, 0.0f);
-    n.x = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
-    p1 = p + make_float3( 0.0f, gridSizeInv.y * 1.0f, 0.0f);
-    p2 = p - make_float3( 0.0f, gridSizeInv.y * 1.0f, 0.0f);
-    n.y = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
-    p1 = p + make_float3( 0.0f, 0.0f, gridSizeInv.z * 1.0f);
-    p2 = p - make_float3( 0.0f, 0.0f, gridSizeInv.z * 1.0f);
-    n.z = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
+  float3 n;
+  float3 p, p1, p2;
+  // normal calculation using central differences
+  // TODO
+  //p = (pos[i] + make_float3(1.0f)) * 0.5f;
+  p = pos[i];
+  p.x *= bBoxInv.x;
+  p.y *= bBoxInv.y;
+  p.z *= bBoxInv.z;
+  p1 = p + make_float3(gridSizeInv.x, 0.0f, 0.0f);
+  p2 = p - make_float3(gridSizeInv.x, 0.0f, 0.0f);
+  n.x = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
+  p1 = p + make_float3(0.0f, gridSizeInv.y, 0.0f);
+  p2 = p - make_float3(0.0f, gridSizeInv.y, 0.0f);
+  n.y = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
+  p1 = p + make_float3(0.0f, 0.0f, gridSizeInv.z);
+  p2 = p - make_float3(0.0f, 0.0f, gridSizeInv.z);
+  n.z = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
 
-    norm[i] = n;
-}
-
-
-inline __host__ __device__ float3 cross(float3 a, float3 b) {
-    return make_float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); 
-}
-
-// version that calculates the surface normal for each triangle vertex
-__global__ void generateTriangleNormalsNo3DTex(float3 *pos, float3 *norm, float *volume, uint3 gridSize, float3 voxelSize, unsigned int numVerts) {
-    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
-
-    if (i > numVerts - 1)
-      return;
-    
-    float3 n;
-    float3 p1, p2, p3;
-    p1 = pos[3*i+0];
-    p2 = pos[3*i+1] - p1;
-    p3 = pos[3*i+2] - p1;
-    n = cross(p2, p3);
-    /*
-    float3 p;
-    p = pos[i];
-    // compute position in 3d grid
-    uint3 gridPos = make_uint3(
-        (unsigned int)(p.x / voxelSize.x),
-        (unsigned int)(p.y / voxelSize.y),
-        (unsigned int)(p.z / voxelSize.z));
-    
-    float field[6];
-    field[0] = sampleVolume(volume, gridPos + make_uint3(1, 0, 0), gridSize);
-    field[1] = sampleVolume(volume, gridPos - make_uint3(1, 0, 0), gridSize);
-    field[2] = sampleVolume(volume, gridPos + make_uint3(0, 1, 0), gridSize);
-    field[3] = sampleVolume(volume, gridPos - make_uint3(0, 1, 0), gridSize);
-    field[4] = sampleVolume(volume, gridPos + make_uint3(0, 0, 1), gridSize);
-    field[5] = sampleVolume(volume, gridPos - make_uint3(0, 0, 1), gridSize);
-    // normal calculation using central differences
-    n.x = field[1] - field[0];
-    n.y = field[3] - field[2];
-    n.z = field[5] - field[4];
-    */
-    float lenN = length(n);
-    n.x = n.x / lenN;
-    n.y = n.y / lenN;
-    n.z = n.z / lenN;
-    
-    norm[3*i+0] = n;
-    norm[3*i+1] = n;
-    norm[3*i+2] = n;
+  NORMAL no;
+  convert_normal(no, n);
+  norm[i] = no;
 }
 
 
 // version that calculates the surface normal and color for each triangle vertex
-__global__ void generateTriangleColorNormal(float3 *pos, float3 *col, float3 *norm, float3 *colors, uint3 gridSize, float3 gridSizeInv, float3 bBoxInv, unsigned int numVerts) {
-    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
+template <class VERTEXCOL, class VOLTEX, class NORMAL>
+__global__ void
+// __launch_bounds__ ( KERNTHREADS, 1 )
+generateTriangleColorNormal(const float3 * RESTRICT pos, 
+                            VERTEXCOL * RESTRICT col,
+                            NORMAL * RESTRICT norm,
+                            const VOLTEX * RESTRICT colors,
+                            uint3 gridSize, float3 gridSizeInv, 
+                            float3 bBoxInv, unsigned int numVerts) {
+  unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
+  unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
+  unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
 
-    if (i > numVerts - 1)
-      return;
+  if (i > numVerts - 1)
+    return;
 
-    float3 p = pos[i];
-    p.x *= bBoxInv.x;
-    p.y *= bBoxInv.y;
-    p.z *= bBoxInv.z;
-    // color computation
-    float3 gridPosF = p;
-    gridPosF.x *= float( gridSize.x);
-    gridPosF.y *= float( gridSize.y);
-    gridPosF.z *= float( gridSize.z);
-    float3 gridPosFloor;
-    // Without the offset, rounding errors can occur
-    // TODO why do we need the offset??
-    gridPosFloor.x = floorf(gridPosF.x + 0.0001f);
-    gridPosFloor.y = floorf(gridPosF.y + 0.0001f);
-    gridPosFloor.z = floorf(gridPosF.z + 0.0001f);
-    float3 gridPosCeil;
-    // Without the offset, rounding errors can occur
-    // TODO why do we need the offset??
-    gridPosCeil.x = ceilf(gridPosF.x - 0.0001f);
-    gridPosCeil.y = ceilf(gridPosF.y - 0.0001f);
-    gridPosCeil.z = ceilf(gridPosF.z - 0.0001f);
-    uint3 gridPos0;
-    gridPos0.x = gridPosFloor.x;
-    gridPos0.y = gridPosFloor.y;
-    gridPos0.z = gridPosFloor.z;
-    uint3 gridPos1;
-    gridPos1.x = gridPosCeil.x;
-    gridPos1.y = gridPosCeil.y;
-    gridPos1.z = gridPosCeil.z;
+  float3 p = pos[i];
+  p.x *= bBoxInv.x;
+  p.y *= bBoxInv.y;
+  p.z *= bBoxInv.z;
+  // color computation
+  float3 gridPosF = p;
+  gridPosF.x *= float(gridSize.x);
+  gridPosF.y *= float(gridSize.y);
+  gridPosF.z *= float(gridSize.z);
+  float3 gridPosFloor;
+  // Without the offset, rounding errors can occur
+  // TODO why do we need the offset??
+  gridPosFloor.x = floorf(gridPosF.x + 0.0001f);
+  gridPosFloor.y = floorf(gridPosF.y + 0.0001f);
+  gridPosFloor.z = floorf(gridPosF.z + 0.0001f);
+  float3 gridPosCeil;
+  // Without the offset, rounding errors can occur
+  // TODO why do we need the offset??
+  gridPosCeil.x = ceilf(gridPosF.x - 0.0001f);
+  gridPosCeil.y = ceilf(gridPosF.y - 0.0001f);
+  gridPosCeil.z = ceilf(gridPosF.z - 0.0001f);
+  uint3 gridPos0;
+  gridPos0.x = gridPosFloor.x;
+  gridPos0.y = gridPosFloor.y;
+  gridPos0.z = gridPosFloor.z;
+  uint3 gridPos1;
+  gridPos1.x = gridPosCeil.x;
+  gridPos1.y = gridPosCeil.y;
+  gridPos1.z = gridPosCeil.z;
 
-    float3 field[2];
-    field[0] = sampleColors(colors, gridPos0, gridSize);
-    field[1] = sampleColors(colors, gridPos1, gridSize);
+  // compute interpolated color
+  float3 field[2];
+  field[0] = sampleColors(colors, gridPos0, gridSize);
+  field[1] = sampleColors(colors, gridPos1, gridSize);
+  float3 tmp = gridPosF - gridPosFloor;
+  float a = fmaxf(fmaxf(tmp.x, tmp.y), tmp.z);
+  VERTEXCOL c;
+  convert_color(c, lerp(field[0], field[1], a));
+  col[i] = c;
 
-    float3 tmp = gridPosF - gridPosFloor;
-    float a = max( max( tmp.x, tmp.y), tmp.z);
-    float3 c = lerp( field[0], field[1], a);
+  // normal calculation using central differences
+  float3 p1, p2, n;
+  p1 = p + make_float3(gridSizeInv.x, 0.0f, 0.0f);
+  p2 = p - make_float3(gridSizeInv.x, 0.0f, 0.0f);
+  n.x = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
+  p1 = p + make_float3(0.0f, gridSizeInv.y, 0.0f);
+  p2 = p - make_float3(0.0f, gridSizeInv.y, 0.0f);
+  n.y = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
+  p1 = p + make_float3(0.0f, 0.0f, gridSizeInv.z);
+  p2 = p - make_float3(0.0f, 0.0f, gridSizeInv.z);
+  n.z = tex3D(volumeTex, p2.x, p2.y, p2.z) - tex3D(volumeTex, p1.x, p1.y, p1.z);
 
-    float3 p1, p2;
-    // normal calculation using central differences
-    float3 n;
-    p1 = p + make_float3( gridSizeInv.x * 1.0f, 0.0f, 0.0f);
-    p2 = p - make_float3( gridSizeInv.x * 1.0f, 0.0f, 0.0f);
-    n.x = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
-    p1 = p + make_float3( 0.0f, gridSizeInv.y * 1.0f, 0.0f);
-    p2 = p - make_float3( 0.0f, gridSizeInv.y * 1.0f, 0.0f);
-    n.y = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
-    p1 = p + make_float3( 0.0f, 0.0f, gridSizeInv.z * 1.0f);
-    p2 = p - make_float3( 0.0f, 0.0f, gridSizeInv.z * 1.0f);
-    n.z = tex3D( volumeTex, p2.x, p2.y, p2.z) - tex3D( volumeTex, p1.x, p1.y, p1.z);
-
-    norm[i] = n;
-    col[i] = c;
-}
-
-// version that calculates the surface normal and color for each triangle vertex
-__global__ void generateTriangleColorNormalNo3DTex(float3 *pos, float3 *col, float3 *norm, float *volume, float3 *colors, uint3 gridSize, float3 voxelSize, float3 bBoxInv, unsigned int numVerts) {
-    unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
-    unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
-    unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
-
-    if (i > numVerts - 1)
-      return;
-
-    float3 p = pos[3*i+0];
-    p.x *= bBoxInv.x;
-    p.y *= bBoxInv.y;
-    p.z *= bBoxInv.z;
-    // color computation
-    float3 gridPosF = p;
-    gridPosF.x *= float( gridSize.x);
-    gridPosF.y *= float( gridSize.y);
-    gridPosF.z *= float( gridSize.z);
-    float3 gridPosFloor;
-    // Without the offset, rounding errors can occur
-    // TODO why do we need the offset??
-    gridPosFloor.x = floorf(gridPosF.x + 0.0001f);
-    gridPosFloor.y = floorf(gridPosF.y + 0.0001f);
-    gridPosFloor.z = floorf(gridPosF.z + 0.0001f);
-    float3 gridPosCeil;
-    // Without the offset, rounding errors can occur
-    // TODO why do we need the offset??
-    gridPosCeil.x = ceilf(gridPosF.x - 0.0001f);
-    gridPosCeil.y = ceilf(gridPosF.y - 0.0001f);
-    gridPosCeil.z = ceilf(gridPosF.z - 0.0001f);
-    uint3 gridPos0;
-    gridPos0.x = gridPosFloor.x;
-    gridPos0.y = gridPosFloor.y;
-    gridPos0.z = gridPosFloor.z;
-    uint3 gridPos1;
-    gridPos1.x = gridPosCeil.x;
-    gridPos1.y = gridPosCeil.y;
-    gridPos1.z = gridPosCeil.z;
-
-    float3 field[2];
-    field[0] = sampleColors(colors, gridPos0, gridSize);
-    field[1] = sampleColors(colors, gridPos1, gridSize);
-
-    float3 tmp = gridPosF - gridPosFloor;
-    float a = max( max( tmp.x, tmp.y), tmp.z);
-    float3 c = lerp( field[0], field[1], a);
-    
-    float3 n;
-    float3 p1, p2, p3;
-    p1 = pos[3*i+0];
-    p2 = pos[3*i+1] - p1;
-    p3 = pos[3*i+2] - p1;
-    n = cross(p2, p3);
-    float lenN = length(n);
-    n.x = n.x / lenN;
-    n.y = n.y / lenN;
-    n.z = n.z / lenN;
-    
-    norm[3*i+0] = n;
-    norm[3*i+1] = n;
-    norm[3*i+2] = n;
-    col[3*i+0] = c;
-    col[3*i+1] = c;
-    col[3*i+2] = c;
+  NORMAL no;
+  convert_normal(no, n);
+  norm[i] = no;
 }
 
 
@@ -599,7 +605,7 @@ void allocateTextures(int **d_triTable, unsigned int **d_numVertsTable) {
 }
 
 
-void bindVolumeTexture( cudaArray *d_vol, cudaChannelFormatDesc desc) {
+void bindVolumeTexture(cudaArray *d_vol, cudaChannelFormatDesc desc) {
     // set texture parameters
     volumeTex.normalized = 1;
     volumeTex.filterMode = cudaFilterModeLinear;
@@ -608,30 +614,56 @@ void bindVolumeTexture( cudaArray *d_vol, cudaChannelFormatDesc desc) {
     volumeTex.addressMode[1] = cudaAddressModeClamp;
     volumeTex.addressMode[2] = cudaAddressModeClamp;
     // bind array to 3D texture
-    cudaBindTextureToArray( volumeTex, d_vol, desc);
+    cudaBindTextureToArray(volumeTex, d_vol, desc);
 }
 
 
 #if 0
-void ThrustScanWrapper(unsigned int* output, unsigned int* input, unsigned int numElements) {
-    thrust::exclusive_scan(thrust::device_ptr<unsigned int>(input), 
-                           thrust::device_ptr<unsigned int>(input + numElements),
-                           thrust::device_ptr<unsigned int>(output));
-}
-#endif
 
-/**
- * This whole method used to have all uint2 instead of myuint2. Changes in the type system of CUDA made this stunt necessary,
- * since the assignment operators of uint2 are not overloaded properly.
- */
-void ThrustScanWrapperUint2(myuint2* output, myuint2* input, unsigned int numElements) {
-    const myuint2 zero{0, 0};
-    thrust::exclusive_scan(thrust::device_ptr<myuint2>(input),
-                           thrust::device_ptr<myuint2>(input + numElements),
-                           thrust::device_ptr<myuint2>(output),
+void ThrustScanWrapperUint2(uint2* output, uint2* input, unsigned int numElements) {
+  const uint2 zero = make_uint2(0, 0);
+  long scanwork_sz = 0;
+  scanwork_sz = dev_excl_scan_sum_tmpsz(input, ((long) numElements), output, zero);
+  void *scanwork_d = NULL;
+  cudaMalloc(&scanwork_d, scanwork_sz);
+  dev_excl_scan_sum(input, ((long) numElements), output, scanwork_d, scanwork_sz, zero);
+  cudaFree(scanwork_d);
+}
+
+#elif CUDART_VERSION >= 9000
+//
+// XXX CUDA 9.0RC breaks the usability of Thrust scan() prefix sums when
+//     used with the built-in uint2 vector integer types.  To workaround
+//     the problem we have to define our own type and associated conversion
+//     routines etc.
+//
+
+// XXX workaround for uint2 breakage in all CUDA revs 9.0 through 10.0
+struct myuint2 : uint2 {
+  __host__ __device__ myuint2() : uint2(make_uint2(0, 0)) {}
+  __host__ __device__ myuint2(int val) : uint2(make_uint2(val, val)) {}
+  __host__ __device__ myuint2(uint2 val) : uint2(make_uint2(val.x, val.y)) {}
+};
+
+void ThrustScanWrapperUint2(uint2* output, uint2* input, unsigned int numElements) {
+    const uint2 zero = make_uint2(0, 0);
+    thrust::exclusive_scan(thrust::device_ptr<myuint2>((myuint2*)input),
+                           thrust::device_ptr<myuint2>((myuint2*)input + numElements),
+                           thrust::device_ptr<myuint2>((myuint2*)output),
+                           (myuint2) zero);
+}
+
+#else
+
+void ThrustScanWrapperUint2(uint2* output, uint2* input, unsigned int numElements) {
+    const uint2 zero = make_uint2(0, 0);
+    thrust::exclusive_scan(thrust::device_ptr<uint2>(input),
+                           thrust::device_ptr<uint2>(input + numElements),
+                           thrust::device_ptr<uint2>(output),
                            zero);
 }
 
+#endif
 
 void ThrustScanWrapperArea(float* output, float* input, unsigned int numElements) {
     thrust::inclusive_scan(thrust::device_ptr<float>(input), 
@@ -640,7 +672,10 @@ void ThrustScanWrapperArea(float* output, float* input, unsigned int numElements
 }
 
 
-__global__ void computeTriangleAreas( float3 *pos, float *area, unsigned int maxTria) {
+__global__ void 
+// __launch_bounds__ ( KERNTHREADS, 1 )
+computeTriangleAreas(const float3 * RESTRICT pos,
+                     float * RESTRICT area, unsigned int maxTria) {
     unsigned int zOffset = blockIdx.z * gridDim.x * gridDim.y;
     unsigned int blockId = (blockIdx.y * gridDim.x) + blockIdx.x;
     unsigned int i = zOffset + (blockId * blockDim.x) + threadIdx.x;
@@ -655,15 +690,15 @@ __global__ void computeTriangleAreas( float3 *pos, float *area, unsigned int max
     float3 v2 = pos[3*i+2];
 
     // compute edge lengths
-    float a = length( v0 - v1);
-    float b = length( v0 - v2);
-    float c = length( v1 - v2);
+    float a = length(v0 - v1);
+    float b = length(v0 - v2);
+    float c = length(v1 - v2);
 
     // compute area (Heron's formula)
-    float rad = ( a + b + c) * ( a + b - c) * ( b + c - a) * ( c + a - b);
+    float rad = (a + b + c) * (a + b - c) * (b + c - a) * (c + a - b);
     // make sure radicand is not negative
     rad = rad > 0.0f ? rad : 0.0f;
-    area[i] = 0.25f * sqrt( rad);
+    area[i] = 0.25f * sqrtf(rad);
 }
 
 
@@ -682,6 +717,7 @@ CUDAMarchingCubes::CUDAMarchingCubes() {
     totalVerts   = 0;
     d_volume = 0;
     d_colors = 0;
+    texformat = RGB3F;
     d_volumeArray = 0;
     d_voxelVerts = 0;
     d_numVertsTable = 0;
@@ -692,9 +728,6 @@ CUDAMarchingCubes::CUDAMarchingCubes() {
     setdata = false;
     cudadevice = 0;
     cudacomputemajor = 0;
-    d_areas = 0;
-    areaMemSize = 0;
-    totalArea = 0.0f;
 
     // Query GPU device attributes so we can launch the best kernel type
     cudaDeviceProp deviceProp;
@@ -718,15 +751,15 @@ CUDAMarchingCubes::~CUDAMarchingCubes() {
 
 
 void CUDAMarchingCubes::Cleanup() {
-    if( d_triTable ) cudaFree(d_triTable);
-    if( d_numVertsTable ) cudaFree(d_numVertsTable);
-    if( d_voxelVerts ) cudaFree(d_voxelVerts);
-    if( d_compVoxelArray ) cudaFree(d_compVoxelArray);
-    if( ownCudaDataArrays ) {
-        if( d_volume ) cudaFree(d_volume);
-        if( d_colors ) cudaFree(d_colors);
+    if (d_triTable) cudaFree(d_triTable);
+    if (d_numVertsTable) cudaFree(d_numVertsTable);
+    if (d_voxelVerts) cudaFree(d_voxelVerts);
+    if (d_compVoxelArray) cudaFree(d_compVoxelArray);
+    if (ownCudaDataArrays) {
+        if(d_volume) cudaFree(d_volume);
+        if(d_colors) cudaFree(d_colors);
     }
-    if( d_volumeArray) cudaFreeArray(d_volumeArray);
+    if (d_volumeArray) cudaFreeArray(d_volumeArray);
 
     maxNumVoxels = 0;
     numVoxels    = 0;
@@ -746,33 +779,23 @@ void CUDAMarchingCubes::Cleanup() {
 ////////////////////////////////////////////////////////////////////////////////
 //! Run the Cuda part of the computation
 ////////////////////////////////////////////////////////////////////////////////
-void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, float3* colOut, unsigned int maxverts) {
+void CUDAMarchingCubes::computeIsosurfaceVerts(float3* vertOut, unsigned int maxverts, dim3 & grid3) {
     // check if data is available
-    if( !this->setdata ) return;
-
-    //cudaEvent_t start, stop;
-    //float time;
-    //float totalTime = 0.0f;
-    //cudaEventCreate(&start);
-    //cudaEventCreate(&stop);
+    if (!this->setdata)
+      return;
 
     int threads = 256;
-    //dim3 grid(int(ceil(float(numVoxels) / float( 2 * threads))), 1, 1); // for Mult2
     dim3 grid((unsigned int) (ceil(float(numVoxels) / float(threads))), 1, 1);
     // get around maximum grid size of 65535 in each dimension
     if (grid.x > 65535) {
-        grid.y = (unsigned int) (ceil(float( grid.x) / 32768.0f));
+        grid.y = (unsigned int) (ceil(float(grid.x) / 32768.0f));
         grid.x = 32768;
     }
 
-    dim3 threads3D( 256, 1, 1);
+    dim3 threads3D(256, 1, 1);
     dim3 grid3D((unsigned int) (ceil(float(gridSize.x) / float(threads3D.x))), 
                 (unsigned int) (ceil(float(gridSize.y) / float(threads3D.y))), 
                 (unsigned int) (ceil(float(gridSize.z) / float(threads3D.z))));
-
-    //cudaEventRecord( start, 0);
-
-    cudaThreadSynchronize();
 
     // calculate number of vertices need per voxel
     if (cudacomputemajor >= 2) {
@@ -799,30 +822,11 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
       }
     }
 
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "CUDA-MC: launch_classifyVoxel: %s\n", cudaGetErrorString( cudaGetLastError()));
-    //cudaEventRecord( stop, 0);
-    //cudaEventSynchronize( stop);
-    //cudaEventElapsedTime(&time, start, stop);
-    //printf ("-----------------------------------------------------\n");
-    //printf ("Time for the launch_classifyVoxel kernel: %f ms\n", time);
-    //totalTime += time;
-
-    //cudaEventRecord( start, 0);
     // scan voxel vertex/occupation array (use in-place prefix sum for lower memory consumption)
     uint2 lastElement, lastScanElement;
     cudaMemcpy((void *) &lastElement, (void *)(d_voxelVerts + numVoxels-1), sizeof(uint2), cudaMemcpyDeviceToHost);
-    cudaThreadSynchronize();
+
     ThrustScanWrapperUint2(d_voxelVerts, d_voxelVerts, numVoxels);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "CUDA-MC: ThrustScanWrapper I: %s\n", cudaGetErrorString( cudaGetLastError()));
-    //cudaEventRecord( stop, 0);
-    //cudaEventSynchronize( stop);
-    //cudaEventElapsedTime(&time, start, stop);
-    //printf ("Time for the ThrustScanWrapper kernel: %f ms\n", time);
-    //totalTime += time;
 
     // read back values to calculate total number of non-empty voxels
     // since we are using an exclusive scan, the total is the last value of
@@ -834,9 +838,9 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
     totalVerts = totalVerts < maxverts ? totalVerts : maxverts; // min
 
     if (activeVoxels==0) {
-        // return if there are no full voxels
-        totalVerts = 0;
-        return;
+      // return if there are no full voxels
+      totalVerts = 0;
+      return;
     }
 
     grid.x = (unsigned int) (ceil(float(numVoxels) / float(threads)));
@@ -847,18 +851,8 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
         grid.x = 32768;
     }
 
-    //cudaEventRecord( start, 0);
     // compact voxel index array
-    compactVoxels<<<grid, threads>>>(d_compVoxelArray, d_voxelVerts, lastElement.y, numVoxels, numVoxels + 1);
-    // check for errors
-    //cudaThreadSynchronize();
-    //printf( "CUDA-MC: launch_compactVoxels: %s\n", cudaGetErrorString( cudaGetLastError()));
-    //cudaEventRecord( stop, 0);
-    //cudaEventSynchronize( stop);
-    //cudaEventElapsedTime(&time, start, stop);
-    //printf ("Time for the launch_compactVoxels kernel: %f ms\n", time);
-    //totalTime += time;
-
+    compactVoxels<<<grid, threads>>>(d_compVoxelArray, d_voxelVerts, lastElement.y, numVoxels, numVoxels - 1);
 
     dim3 grid2((unsigned int) (ceil(float(activeVoxels) / (float) NTHREADS)), 1, 1);
     while(grid2.x > 65535) {
@@ -866,7 +860,7 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
         grid2.y *= 2;
     }
 
-    dim3 grid3((unsigned int) (ceil(float(totalVerts) / (float) threads)), 1, 1);
+    grid3 = dim3((unsigned int) (ceil(float(totalVerts) / (float) threads)), 1, 1);
     while(grid3.x > 65535) {
         grid3.x = (unsigned int) (ceil(float(grid3.x) / 2.0f));
         grid3.y *= 2;
@@ -876,53 +870,107 @@ void CUDAMarchingCubes::computeIsosurface( float3* vertOut, float3* normOut, flo
         grid3.z *= 2;
     }
 
-    //cudaEventRecord( start, 0);
-
     // separate computation of vertices and vertex color/normal for higher occupancy and speed
-    generateTriangleVerticesSMEM<<<grid2, NTHREADS>>>( vertOut, 
+    generateTriangleVerticesSMEM<<<grid2, NTHREADS>>>(vertOut, 
         d_compVoxelArray, d_voxelVerts, d_volume, gridSize, voxelSize, 
         isoValue, activeVoxels, maxverts - 3);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "CUDA-MC: launch_generateTriangleVertices: %s\n", cudaGetErrorString( cudaGetLastError()));
+}
 
-    float3 gridSizeInv = make_float3( 1.0f / float( gridSize.x), 1.0f / float( gridSize.y), 1.0f / float( gridSize.z));
-    float3 bBoxInv = make_float3( 1.0f / bBox.x, 1.0f / bBox.y, 1.0f / bBox.z);
-#ifdef USE_CUDA_3D_TEXTURE
-    if( this->useColor ) {
-        generateTriangleColorNormal<<<grid3, threads>>>(vertOut, colOut, normOut, (float3*)d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
-    } else {
-        generateTriangleNormals<<<grid3, threads>>>(vertOut, normOut, gridSizeInv, bBoxInv, totalVerts);
-    }
-#else
-    if( this->useColor ) {
-        //generateTriangleColorNormal<<<grid3, threads>>>(vertOut, colOut, normOut, (float3*)d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
-        generateTriangleColorNormalNo3DTex<<<grid3, threads>>>(vertOut, colOut, normOut, d_volume, (float3*)d_colors, gridSize, voxelSize, bBoxInv, totalVerts/3);
-    } else {
-        generateTriangleNormalsNo3DTex<<<grid3, threads>>>(vertOut, normOut, d_volume, gridSize, voxelSize, totalVerts/3);
-    }
-#endif // USE_CUDA_3D_TEXTURE
 
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "CUDA-MC: launch_generateTriangleColorNormal: %s\n", cudaGetErrorString( cudaGetLastError()));
+//
+// Generate colors using float3 vertex array format
+//
+void CUDAMarchingCubes::computeIsosurface(float3* vertOut, float3* normOut, float3* colOut, unsigned int maxverts) {
+    // check if data is available
+    if (!this->setdata)
+      return;
+
+    int threads = 256;
+    dim3 grid3;
+    computeIsosurfaceVerts(vertOut, maxverts, grid3);
+
+    float3 gridSizeInv = make_float3(1.0f / float(gridSize.x), 1.0f / float(gridSize.y), 1.0f / float(gridSize.z));
+    float3 bBoxInv = make_float3(1.0f / bBox.x, 1.0f / bBox.y, 1.0f / bBox.z);
+    if (this->useColor) {
+      switch (texformat) {
+        case RGB3F:
+          generateTriangleColorNormal<float3, float3, float3><<<grid3, threads>>>(vertOut, colOut, normOut, (float3 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+
+        case RGB4U:
+          generateTriangleColorNormal<float3, uchar4, float3><<<grid3, threads>>>(vertOut, colOut, normOut, (uchar4 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+      }
+    } else {
+      generateTriangleNormals<float3><<<grid3, threads>>>(vertOut, normOut, gridSizeInv, bBoxInv, totalVerts);
+    }
 
     offsetTriangleVertices<<<grid3, threads>>>(vertOut, this->origin, totalVerts - 1);
+}
 
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "CUDA-MC: launch_offsetTriangleVertices: %s\n", cudaGetErrorString( cudaGetLastError()));
 
-    //cudaEventRecord( stop, 0);
-    //cudaEventSynchronize( stop);
-    //cudaEventElapsedTime(&time, start, stop);
-    //printf ("Time for the generateTriangles kernel: %f ms\n", time);
-    //totalTime += time;
-    
-    //printf (" CUDA MC: Total kernel runtime time: %f ms = %.3f fps\n", totalTime, 1000.0f/totalTime);
-    // check for errors
-    //cudaThreadSynchronize();
-    //printf( "compute Marching Cubes: %s\n", cudaGetErrorString( cudaGetLastError()));
+//
+// Generate colors using uchar4 vertex array format
+//
+void CUDAMarchingCubes::computeIsosurface(float3* vertOut, float3* normOut, uchar4* colOut, unsigned int maxverts) {
+    // check if data is available
+    if (!this->setdata)
+      return;
+
+    int threads = 256;
+    dim3 grid3;
+    computeIsosurfaceVerts(vertOut, maxverts, grid3);
+
+    float3 gridSizeInv = make_float3(1.0f / float(gridSize.x), 1.0f / float(gridSize.y), 1.0f / float(gridSize.z));
+    float3 bBoxInv = make_float3(1.0f / bBox.x, 1.0f / bBox.y, 1.0f / bBox.z);
+    if (this->useColor) {
+      switch (texformat) {
+        case RGB3F:
+          generateTriangleColorNormal<uchar4, float3, float3><<<grid3, threads>>>(vertOut, colOut, normOut, (float3 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+
+        case RGB4U:
+          generateTriangleColorNormal<uchar4, uchar4, float3><<<grid3, threads>>>(vertOut, colOut, normOut, (uchar4 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+      }
+    } else {
+      generateTriangleNormals<float3><<<grid3, threads>>>(vertOut, normOut, gridSizeInv, bBoxInv, totalVerts);
+    }
+
+    offsetTriangleVertices<<<grid3, threads>>>(vertOut, this->origin, totalVerts - 1);
+}
+
+
+//
+// Generate normals w/ char format, colors w/ uchar4 vertex array format
+//
+// Note: The CUDA char3 type is explicitly a signed type
+void CUDAMarchingCubes::computeIsosurface(float3* vertOut, char3* normOut, uchar4* colOut, unsigned int maxverts) {
+    // check if data is available
+    if (!this->setdata)
+      return;
+
+    int threads = 256;
+    dim3 grid3;
+    computeIsosurfaceVerts(vertOut, maxverts, grid3);
+
+    float3 gridSizeInv = make_float3(1.0f / float(gridSize.x), 1.0f / float(gridSize.y), 1.0f / float(gridSize.z));
+    float3 bBoxInv = make_float3(1.0f / bBox.x, 1.0f / bBox.y, 1.0f / bBox.z);
+    if (this->useColor) {
+      switch (texformat) {
+        case RGB3F:
+          generateTriangleColorNormal<uchar4, float3, char3><<<grid3, threads>>>(vertOut, colOut, normOut, (float3 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+
+        case RGB4U:
+          generateTriangleColorNormal<uchar4, uchar4, char3><<<grid3, threads>>>(vertOut, colOut, normOut, (uchar4 *) d_colors, this->gridSize, gridSizeInv, bBoxInv, totalVerts);
+          break;
+      }
+    } else {
+      generateTriangleNormals<char3><<<grid3, threads>>>(vertOut, normOut, gridSizeInv, bBoxInv, totalVerts);
+    }
+
+    offsetTriangleVertices<<<grid3, threads>>>(vertOut, this->origin, totalVerts - 1);
 }
 
 
@@ -959,18 +1007,14 @@ bool CUDAMarchingCubes::Initialize(uint3 maxgridsize) {
 }
 
 
-bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsize, 
-                                      float3 gridOrigin, float3 boundingBox, bool cudaArray) {
+bool CUDAMarchingCubes::SetVolumeData(float *volume, void *colors, 
+                                      VolTexFormat vtexformat, uint3 gridsize, 
+                                      float3 gridOrigin, float3 boundingBox, 
+                                      bool cudaArray) {
   bool newgridsize = false;
 
   // check if initialize was successful
   if (!initialized) return false;
-
-#if 0
-  // return if volume data was already set
-  if (setdata) return false;
-  if (d_volume != NULL) return false;
-#endif
 
   // check if the grid size matches
   if (gridsize.x != gridSize.x ||
@@ -1014,6 +1058,7 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
     // copy data pointers
     d_volume = volume;
     d_colors = colors;
+    texformat = vtexformat;
 
     // set ownership flag
     ownCudaDataArrays = false;
@@ -1037,11 +1082,26 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
     if (colors) {
       if (!d_colors) {
         // create the color array and copy colors
-        if (cudaMalloc((void**) &d_colors, maxsize*3) != cudaSuccess) {
+        unsigned int maxtxsize = 0; 
+        unsigned int txsize = 0;
+        texformat = vtexformat;
+        switch (texformat) {
+          case RGB3F: 
+            txsize = numVoxels * sizeof(float3);
+            maxtxsize = maxNumVoxels * sizeof(float3);
+            break;
+
+          case RGB4U: 
+            txsize = numVoxels * sizeof(uchar4);
+            maxtxsize = maxNumVoxels * sizeof(uchar4);
+            break;
+        } 
+
+        if (cudaMalloc((void**) &d_colors, maxtxsize) != cudaSuccess) {
           Cleanup();
           return false;
         }
-        if (cudaMemcpy(d_colors, colors, size*3, cudaMemcpyHostToDevice) != cudaSuccess ) {
+        if (cudaMemcpy(d_colors, colors, txsize, cudaMemcpyHostToDevice) != cudaSuccess) {
           Cleanup();
           return false;
         }
@@ -1063,7 +1123,6 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
     d_volumeArray = NULL;
   }
 
-#ifdef USE_CUDA_3D_TEXTURE
   // allocate the 3D array if needed
   if (!d_volumeArray) { 
     // create 3D array
@@ -1075,8 +1134,10 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
 
   // copy data to 3D array
   cudaMemcpy3DParms copyParams = {0};
-  //copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, 0, 0, 0);
-  copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, sizeof(float)*gridSize.x, gridSize.x, gridSize.y);
+  copyParams.srcPtr   = make_cudaPitchedPtr((void*)d_volume, 
+                                            gridExtent.width*sizeof(float),
+                                            gridExtent.width,
+                                            gridExtent.height);
   copyParams.dstArray = d_volumeArray;
   copyParams.extent   = gridExtent;
   copyParams.kind     = cudaMemcpyDeviceToDevice;
@@ -1087,13 +1148,25 @@ bool CUDAMarchingCubes::SetVolumeData(float *volume, float *colors, uint3 gridsi
 
   // bind the array to a volume texture
   bindVolumeTexture(d_volumeArray, channelDesc);
-#endif
 
   // success
   setdata = true;
 
   return true;
 }
+
+
+bool CUDAMarchingCubes::SetVolumeData(float *volume, float3 *colors, uint3 gridsize, float3 gridOrigin, float3 boundingBox, bool cudaArray) {
+  return SetVolumeData(volume, colors, RGB3F, gridsize, gridOrigin, 
+                       boundingBox, cudaArray);
+}
+
+
+bool CUDAMarchingCubes::SetVolumeData(float *volume, uchar4 *colors, uint3 gridsize, float3 gridOrigin, float3 boundingBox, bool cudaArray) {
+  return SetVolumeData(volume, colors, RGB4U, gridsize, gridOrigin, 
+                       boundingBox, cudaArray);
+}
+
 
 
 void CUDAMarchingCubes::SetSubVolume(uint3 start, uint3 end) {
@@ -1110,19 +1183,18 @@ void CUDAMarchingCubes::SetSubVolume(uint3 start, uint3 end) {
 }
 
 
-bool CUDAMarchingCubes::computeIsosurface(float *volume, float *colors, 
+bool CUDAMarchingCubes::computeIsosurface(float *volume, void *colors, 
+                                          VolTexFormat vtexformat,
                                           uint3 gridsize, float3 gridOrigin, 
                                           float3 boundingBox, bool cudaArray, 
                                           float3* vertOut, float3* normOut, 
                                           float3* colOut, unsigned int maxverts) {
     // Setup
-    if (!Initialize(gridsize)) {
+    if (!Initialize(gridsize))
         return false;
-    }
 
-    if (!SetVolumeData(volume, colors, gridsize, gridOrigin, boundingBox, cudaArray)) {
+    if (!SetVolumeData(volume, colors, vtexformat, gridsize, gridOrigin, boundingBox, cudaArray))
         return false;
-    }
 
     // Compute and Render Isosurface
     computeIsosurface(vertOut, normOut, colOut, maxverts);
@@ -1134,31 +1206,19 @@ bool CUDAMarchingCubes::computeIsosurface(float *volume, float *colors,
 }
 
 
-float CUDAMarchingCubes::computeSurfaceArea( float3 *verts, unsigned int triaCount) {
+float CUDAMarchingCubes::computeSurfaceArea(float3 *verts, unsigned int triaCount) {
     // do nothing for zero triangles
     if(triaCount <= 0) return 0.0f;
 
     // initialize and allocate device arrays
-    size_t memSize = sizeof(float) * triaCount;
-    if (memSize > this->areaMemSize ) {
-        if (this->areaMemSize > 0) {
-            // clean up
-            cudaFree(this->d_areas);
-            // check for errors
-            cudaThreadSynchronize();
-        }
-        //printf( "cudaFree: %s\n", cudaGetErrorString( cudaGetLastError()));
-        if (cudaMalloc((void**) &this->d_areas, memSize) != cudaSuccess) {
-            return -1.0f;
-        }
-        this->areaMemSize = memSize;
-        // check for errors
-        cudaThreadSynchronize();
-        //printf( "cudaMalloc: %s\n", cudaGetErrorString( cudaGetLastError()));
+    float *d_areas;
+    unsigned long memSize = sizeof(float) * triaCount;
+    if (cudaMalloc((void**) &d_areas, memSize) != cudaSuccess) {
+        return -1.0f;
     }
 
     // compute area for each triangle
-    int threads = 256;
+    const int threads = 256;
     dim3 grid(int(ceil(float(triaCount) / float(threads))), 1, 1);
 
     // get around maximum grid size of 65535 in each dimension
@@ -1171,25 +1231,17 @@ float CUDAMarchingCubes::computeSurfaceArea( float3 *verts, unsigned int triaCou
         grid.z *= 2;
     }
 
-    computeTriangleAreas<<<grid, threads>>>(verts, this->d_areas, triaCount);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "launch_computeTriangleAreas: %s\n", cudaGetErrorString( cudaGetLastError()));
+    computeTriangleAreas<<<grid, threads>>>(verts, d_areas, triaCount);
 
     // use prefix sum to compute total surface area
-    ThrustScanWrapperArea(this->d_areas, this->d_areas, triaCount);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "ThrustScanWrapperArea: %s\n", cudaGetErrorString( cudaGetLastError()));
+    ThrustScanWrapperArea(d_areas, d_areas, triaCount);
 
     // readback total surface area
-    cudaMemcpy((void *)&this->totalArea, (void *)(this->d_areas + triaCount - 1), sizeof(float), cudaMemcpyDeviceToHost);
-    // check for errors
-    cudaThreadSynchronize();
-    //printf( "cudaMemcpy: %s\n", cudaGetErrorString( cudaGetLastError()));
+    float totalArea;
+    cudaMemcpy((void *)&totalArea, (void *)(d_areas + triaCount - 1), sizeof(float), cudaMemcpyDeviceToHost);
 
-    // return result
-    return totalArea;
+    cudaFree(d_areas); // clean up
+    return totalArea;  // return result
 }
 
 
