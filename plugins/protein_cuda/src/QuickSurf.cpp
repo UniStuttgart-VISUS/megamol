@@ -428,7 +428,6 @@ bool QuickSurf::calculateSurface(
         xyzr[i].w = mdc.AtomTypes()[mdc.AtomTypeIndices()[i]].Radius();
 
         // color
-        // TODO generate a color table for the atoms and use it
         glm::vec3 col = atomColorTable_[i];
         colors[i].r = col.r;
         colors[i].g = col.g;

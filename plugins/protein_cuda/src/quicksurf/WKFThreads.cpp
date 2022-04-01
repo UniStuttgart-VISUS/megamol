@@ -87,8 +87,11 @@
 #define _WIN32_WINNT 0x0400 /**< needed for TryEnterCriticalSection(), etc */
 #define WINVER 0x0400       /**< needed for TryEnterCriticalSection(), etc */
 #endif
-#include <winbase.h> /**< system services headers */
+// Switch clangformat off here is essential as the following two headers need to be included in that order
+// clang-format off
 #include <windows.h> /**< main Win32 APIs and types */
+#include <winbase.h> /**< system services headers */
+// clang-format on
 #endif
 
 #if defined(_AIX) || defined(_CRAY) || defined(__irix) || defined(__linux) || defined(__osf__) || defined(__sun)
