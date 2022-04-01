@@ -15,30 +15,16 @@
  ***************************************************************************/
 /**
  * \file CUDASpatialSearch.h
- * \brief CUDA kernels that build data structures for spatial sorting, 
+ * \brief CUDA kernels that build data structures for spatial sorting,
  *        hashing, and searching, used by QuickSurf, MDFF, etc.
  */
 
 #define GRID_CELL_EMPTY 0xffffffff
 
-int vmd_cuda_build_density_atom_grid(int natoms,
-                                     const float4 * xyzr_d,
-                                     const float4 * color_d,
-                                     float4 * sorted_xyzr_d,
-                                     float4 * sorted_color_d,
-                                     unsigned int *atomIndex_d,
-                                     unsigned int *sorted_atomIndex_d,
-                                     unsigned int *atomHash_d,
-                                     uint2 * cellStartEnd_d,
-                                     int3 volsz,
-                                     float invgridspacing);
+int vmd_cuda_build_density_atom_grid(int natoms, const float4* xyzr_d, const float4* color_d, float4* sorted_xyzr_d,
+    float4* sorted_color_d, unsigned int* atomIndex_d, unsigned int* sorted_atomIndex_d, unsigned int* atomHash_d,
+    uint2* cellStartEnd_d, int3 volsz, float invgridspacing);
 
 
-int vmd_cuda_build_density_atom_grid(int natoms,
-                                     const float4 * xyzr_d,
-                                     float4 *& sorted_xyzr_d,
-                                     uint2 *& cellStartEnd_d,
-                                     int3 volsz,
-                                     float invgridspacing);
-
-
+int vmd_cuda_build_density_atom_grid(
+    int natoms, const float4* xyzr_d, float4*& sorted_xyzr_d, uint2*& cellStartEnd_d, int3 volsz, float invgridspacing);

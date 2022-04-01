@@ -14,10 +14,10 @@
 #include "ComparativeMolSurfaceRenderer.h"
 #include "CrystalStructureVolumeRenderer.h"
 #include "MoleculeCBCudaRenderer.h"
+#include "QuickSurf.h"
 #include "StreamlineRenderer.h"
 #include "SurfacePotentialRendererSlave.h"
 #include "VolumeMeshRenderer.h"
-#include "QuickSurf.h"
 
 // 2D renderers
 #include "SecStructRenderer2D.h"

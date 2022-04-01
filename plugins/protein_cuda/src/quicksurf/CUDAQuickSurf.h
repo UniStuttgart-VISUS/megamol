@@ -8,9 +8,9 @@
 /***************************************************************************
  * RCS INFORMATION:
  *
- *	$RCSfile: CUDAQuickSurf.h,v $
- *	$Author: johns $	$Locker:  $		$State: Exp $
- *	$Revision: 1.11 $	$Date: 2021/10/05 06:03:00 $
+ *  $RCSfile: CUDAQuickSurf.h,v $
+ *  $Author: johns $    $Locker:  $     $State: Exp $
+ *  $Revision: 1.11 $   $Date: 2021/10/05 06:03:00 $
  *
  ***************************************************************************/
 /**
@@ -44,8 +44,8 @@
 
 #include "glm/glm.hpp"
 #include "glowl/BufferObject.hpp"
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace megamol::protein_cuda {
 
