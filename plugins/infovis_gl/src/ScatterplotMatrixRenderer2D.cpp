@@ -173,7 +173,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->geometryTypeParam << geometryTypes;
     this->MakeSlotAvailable(&this->geometryTypeParam);
 
-    this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
+    this->kernelWidthParam << new core::param::FloatParam(
+        0.1f, std::numeric_limits<float>::epsilon(), std::numeric_limits<float>::max(), 0.1f);
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
     auto* kernelTypes = new core::param::EnumParam(0);
