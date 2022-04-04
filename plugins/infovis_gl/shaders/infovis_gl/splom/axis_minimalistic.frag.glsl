@@ -1,9 +1,9 @@
-#version 430
+#version 450
 
-in vec4 vsColor;
+uniform vec4 axisColor;
 
 out vec4 fsColor;
 
 void main(void) {
-    fsColor = vsColor;
+    fsColor = axisColor;
 }
