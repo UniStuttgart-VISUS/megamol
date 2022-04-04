@@ -1302,8 +1302,7 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels(glm::mat4 ortho) {
         return;
     }
 
-    auto oldMode = this->axisFont.GetBatchDrawMode();
-    this->axisFont.SetBatchDrawMode(false);
+    this->axisFont.ClearBatchDrawCache();
     this->axisFont.SetSmoothMode(smoothFontParam.Param<core::param::BoolParam>()->Value());
 
     // bottom left of cell
@@ -1326,7 +1325,7 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels(glm::mat4 ortho) {
     // draw tick labels
     // float horizontalY = offsetY + (invertY ? -margin + tickLength : size + margin - tickLength);
     for (size_t tick = 0; tick < numTicks; ++tick) {
-        const float t = static_cast<float>(tick) / (numTicks - 1);
+        const float t = static_cast<float>(tick) / static_cast<float>(numTicks - 1);
         const float px = lerp(offsetX, offsetX + cellSize, t);
         const float py = lerp(offsetY, offsetY + cellSize, t);
         const float pValueX = lerp(columnInfos[cellColIdX].MinimumValue(), columnInfos[cellColIdX].MaximumValue(), t);
@@ -1340,7 +1339,7 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels(glm::mat4 ortho) {
             core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
     }
 
-    this->axisFont.SetBatchDrawMode(oldMode);
+    this->axisFont.BatchDrawString(ortho);
 }
 
 void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
