@@ -96,7 +96,7 @@ def createReport(path, btfresult, srcresult):
         else:
             for e in dictres:
                 print("        " + e)
-
+        print(divisorsmall)
     print(divisor)
     print("WARNING: There is NO GUARANTEE that alle usages are listed, as shader names can be constructed programmatically!")
 
