@@ -21,6 +21,12 @@ const int CORNER_BL = 1;
 const int CORNER_BR = 2;
 const int CORNER_TR = 3;
 
+float width;
+float height;
+float tickLengthConstant;
+float tickWidthOffset;
+float tickLengthOffset;
+
 // Maps a plot and a vertex index to world space.
 vec2 corner(const Plot plot, const uint vertexIndex) {
     switch (vertexIndex) {
@@ -59,26 +65,24 @@ vec2 tick(const Plot plot, const uint tickID) {
     // relative position on each edge for current tick
     float t = float(tickID % (numTicks)) / float(numTicks - 1);
     vec2 pos = vec2(0.0);
-    float width = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).x;
-    float height = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).y;
-    const float tickLengthConstant = tickLength * (corner(plot, CORNER_TR).y - corner(plot, CORNER_BR).y) / 20.0;
+
     // each instance only contains 4 vertices
     if (axisIndex == 0) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_BR), t);
-        pos.y -= float(gl_VertexID / 2) * tickLengthConstant;
-        pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
+        pos.y -= tickLengthOffset;
+        pos.x -= tickWidthOffset / width;
     } else if (axisIndex == 1) {
         pos = mix(corner(plot, CORNER_BR), corner(plot, CORNER_TR), t);
-        pos.x += float(gl_VertexID / 2) * tickLengthConstant;
-        pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
+        pos.x += tickLengthOffset;
+        pos.y -= tickWidthOffset / height;
     } else if (axisIndex == 2) {
         pos = mix(corner(plot, CORNER_TL), corner(plot, CORNER_TR), t);
-        pos.y += float(gl_VertexID / 2) * tickLengthConstant;
-        pos.x -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / width;
+        pos.y += tickLengthOffset;
+        pos.x -= tickWidthOffset / width;
     } else if (axisIndex == 3) {
         pos = mix(corner(plot, CORNER_BL), corner(plot, CORNER_TL), t);
-        pos.x -= float(gl_VertexID / 2) * tickLengthConstant;
-        pos.y -= (float((gl_VertexID % 2)) - 0.5) * axisWidth / height;
+        pos.x -= tickLengthOffset;
+        pos.y -= tickWidthOffset / height;
     }
     return pos;
 }
@@ -89,65 +93,73 @@ void main(void) {
     const Plot plot = plots[gl_InstanceID / (4 + 4 * numTicks)];
 
     // quick and dirty conversion of pixel dependant size to witch space
-    float width = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).x;
-    float height = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).y;
+    width = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).x;
+    height = 0.5 * (modelViewProjection * vec4(viewSize, 0.0, 1.0)).y;
+    tickLengthConstant = tickLength * (corner(plot, CORNER_TR).y - corner(plot, CORNER_BR).y) / 20.0;
+    tickWidthOffset = (float((gl_VertexID % 2)) - 0.5) * axisWidth;
+    tickLengthOffset = float(gl_VertexID / 2) * tickLengthConstant;
+    float axisWidthOffset = (float(gl_VertexID % 2) - 0.5) * axisWidth;
+
+    bool trapezizationDirectionA = gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1;
+    bool isLineStart = gl_VertexID / 2 == 0;
 
     // Map index to border and tick positions.
     vec2 position = vec2(0,0);
+
     switch (gl_InstanceID % (4 + 4 * numTicks)) {
     case 0: // bottom line
         // true for the first two vertices of each line => left side
-        if( gl_VertexID / 2 == 0){
+        if(isLineStart){
             position = corner(plot, CORNER_BL);
         } else { //right side of bottom line
             position = corner(plot, CORNER_BR);
         }
         // offset to generate line width
-        position.y += (float(gl_VertexID % 2) - 0.5) * axisWidth / height;
+        position.y += tickWidthOffset / height;
         // second offset to get 45° angle on corners
-        if (gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1) {
-            position.x += 0.5 * axisWidth / width;
+        if (trapezizationDirectionA) {
+            position.x += tickWidthOffset / width;
         } else {
-            position.x -= 0.5 * axisWidth / width;
+            position.x -= tickWidthOffset / width;
         }
         break;
     case 1: // right
-        if (gl_VertexID / 2 == 0) {
+        if (isLineStart) {
             position = corner(plot, CORNER_BR);
         } else {
             position = corner(plot, CORNER_TR);
         }
-        position.x += (float(gl_VertexID % 2) - 0.5) * axisWidth / width;
-        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1) {
-            position.y -= 0.5 * axisWidth / height;
+        position.x += axisWidthOffset / width;
+        if(trapezizationDirectionA) {
+            position.y -= tickWidthOffset / height;
         } else {
-            position.y += 0.5 * axisWidth / height;
+            position.y += tickWidthOffset / height;
         }
         break;
     case 2: // top
-        if (gl_VertexID / 2 == 0) {
+        if (isLineStart) {
             position = corner(plot, CORNER_TR);
         } else {
             position = corner(plot, CORNER_TL);
         }
-        position.y += (float(gl_VertexID % 2) - 0.5) * axisWidth / height;
-        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1) {
-            position.x += 0.5 * axisWidth / width;
+        position.y += axisWidthOffset / height;
+        if(trapezizationDirectionA) {
+            position.x += tickWidthOffset / width;
         } else {
-            position.x -= 0.5 * axisWidth / width;
+            position.x -= tickWidthOffset / width;
         }
         break;
     case 3: // left
-        if (gl_VertexID / 2 == 0) {
+        if (isLineStart) {
             position = corner(plot, CORNER_TL);
         } else {
             position = corner(plot, CORNER_BL);
         }
-        position.x -= (float(gl_VertexID % 2) - 0.5) * axisWidth / width;
-        if(gl_VertexID % 2 == 1 ^^ (gl_VertexID / 2) % 2 == 1) {
-            position.y += 0.5 * axisWidth / height;
+        position.x -= axisWidthOffset / width;
+        if(trapezizationDirectionA) {
+            position.y += tickWidthOffset / height;
         } else {
-            position.y -= 0.5 * axisWidth / height;
+            position.y -= tickWidthOffset / height;
         }
         break;
     default: // catch for all ticks

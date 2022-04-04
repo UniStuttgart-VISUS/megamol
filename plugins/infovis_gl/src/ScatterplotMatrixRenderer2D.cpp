@@ -696,7 +696,6 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
             this->axisFont.DrawString(ortho, axisColor.data(), offsetX, offsetY + size, size, size, nameSize, false,
                 label.c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
-        //TODO
         glm::vec2 resOffset = (screenLastMVP * glm::vec4(currentViewRes, 0.0, 1.0));
 
         // draw tick labels
@@ -759,10 +758,10 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     auto ndcSpaceSize = screenLastMVP * glm::vec4(size, size, 0.0f, 0.0f);
     auto screenSpaceSize = vislib::math::Vector<float, 2>(
         currentViewRes.x / 2.0 * ndcSpaceSize.x, currentViewRes.y / 2.0 * ndcSpaceSize.y);
-    float approximateLineWidth = screenSpaceSize.X() * axisWidth * 0.0025 / 2.0;
+    float approximateLineWidth = screenSpaceSize.X() * axisWidth * 0.005;
     // 0: no grid <-> 3: big,mid,small grid
     GLint recursiveDepth = 0;
-    if (true) {
+    if (approximateLineWidth / 25.0 > 1.0) {
         recursiveDepth = 3;
     } else if (approximateLineWidth / 5.0 > 1.0) {
         recursiveDepth = 2;
