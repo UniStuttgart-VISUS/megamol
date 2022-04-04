@@ -314,22 +314,22 @@ bool ScatterplotMatrixRenderer2D::create() {
 
     try {
         minimalisticAxisShader = core::utility::make_glowl_shader("splom_axis_minimalistic", shader_options,
-            "infovis_gl/splom_axis_minimalistic.vert.glsl", "infovis_gl/splom_axis_minimalistic.frag.glsl");
+            "infovis_gl/splom/axis_minimalistic.vert.glsl", "infovis_gl/splom/axis_minimalistic.frag.glsl");
         scientificAxisShader = core::utility::make_glowl_shader("splom_axis_scientific", shader_options,
-            "infovis_gl/splom_axis_scientific.vert.glsl", "infovis_gl/splom_axis_scientific.frag.glsl");
+            "infovis_gl/splom/axis_scientific.vert.glsl", "infovis_gl/splom/axis_scientific.frag.glsl");
         pointShader = core::utility::make_glowl_shader(
-            "splom_point", shader_options, "infovis_gl/splom.vert.glsl", "infovis_gl/splom_point.frag.glsl");
+            "splom_point", shader_options, "infovis_gl/splom/splom.vert.glsl", "infovis_gl/splom/point.frag.glsl");
         pointTriangleSpriteShader = core::utility::make_glowl_shader("splom_trianlge_point_sprite", shader_options,
-            "infovis_gl/splom_triangle_point_sprite.vert.glsl", "infovis_gl/splom_triangle_point_sprite.frag.glsl");
-        lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis_gl/splom.vert.glsl",
-            "infovis_gl/splom_line.geom.glsl", "infovis_gl/splom_line.frag.glsl");
+            "infovis_gl/splom/triangle_point_sprite.vert.glsl", "infovis_gl/splom/triangle_point_sprite.frag.glsl");
+        lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis_gl/splom/splom.vert.glsl",
+            "infovis_gl/splom/line.geom.glsl", "infovis_gl/splom/line.frag.glsl");
         triangleShader = core::utility::make_glowl_shader("splom_triangle", shader_options,
-            "infovis_gl/splom_triangle.vert.glsl", "infovis_gl/splom_triangle.frag.glsl");
+            "infovis_gl/splom/triangle.vert.glsl", "infovis_gl/splom/triangle.frag.glsl");
         pickIndicatorShader = core::utility::make_glowl_shader("splom_pick_indicator", shader_options,
-            "infovis_gl/splom_pick_indicator.vert.glsl", "infovis_gl/splom_pick_indicator.frag.glsl");
+            "infovis_gl/splom/pick_indicator.vert.glsl", "infovis_gl/splom/pick_indicator.frag.glsl");
         screenShader = core::utility::make_glowl_shader(
-            "splom_screen", shader_options, "infovis_gl/splom_screen.vert.glsl", "infovis_gl/splom_screen.frag.glsl");
-        pickProgram = core::utility::make_glowl_shader("splom_pick", shader_options, "infovis_gl/splom_pick.comp.glsl");
+            "splom_screen", shader_options, "infovis_gl/splom/screen.vert.glsl", "infovis_gl/splom/screen.frag.glsl");
+        pickProgram = core::utility::make_glowl_shader("splom_pick", shader_options, "infovis_gl/splom/pick.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             ("ScatterplotMatrixRenderer2D: " + std::string(e.what())).c_str());
