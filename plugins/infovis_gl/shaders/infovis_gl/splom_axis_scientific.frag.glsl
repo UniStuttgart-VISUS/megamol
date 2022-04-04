@@ -47,5 +47,4 @@ void main(void) {
         discard;
     }
     fsColor = vec4(vsColor.rgb, vsColor.a * rho);
-    //fsColor = vec4(vsColor.rgb,1.0);
 }

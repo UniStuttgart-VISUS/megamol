@@ -657,7 +657,6 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
     const GLsizei numItems = numBorderVertices + numTickVertices;
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 4 * this->plots.size() * (1 + numTicks));
 
-
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glUseProgram(0);
 
@@ -670,7 +669,6 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
         const float offsetY = (invertY ? (columnCount - i - 1) : i) * (size + margin);
 
         std::string label = columnInfos[i].Name();
-        //TODO
         const float tickLengthConstant =
             (tickLength + this->axisTickMarginParam.Param<core::param::FloatParam>()->Value()) * size / 20.0;
 
