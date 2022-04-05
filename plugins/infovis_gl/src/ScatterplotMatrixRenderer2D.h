@@ -90,7 +90,13 @@ private:
         VALUE_MAPPING_KERNEL_DENSITY,
         VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY
     };
-    enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT, GEOMETRY_TYPE_TRIANGULATION };
+    enum GeometryType {
+        GEOMETRY_TYPE_POINT = 0,
+        GEOMETRY_TYPE_LINE,
+        GEOMETRY_TYPE_TEXT,
+        GEOMETRY_TYPE_TRIANGULATION,
+        GEOMETRY_TYPE_POINT_TRIANGLE_SPRITE
+    };
     enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
     enum AxisMode { AXIS_MODE_NONE = 0, AXIS_MODE_MINIMALISTIC, AXIS_MODE_SCIENTIFIC };
 
@@ -168,6 +174,8 @@ private:
 
     void drawPoints();
 
+    void drawPointTriangleSprites();
+
     void drawLines();
 
     void validateTriangulation();
@@ -242,6 +250,8 @@ private:
 
     core::param::ParamSlot axisTickLengthParam;
 
+    core::param::ParamSlot axisTickMarginParam;
+
     core::param::ParamSlot axisTickSizeParam;
 
     core::param::ParamSlot axisTickPrecisionX;
@@ -268,6 +278,8 @@ private:
 
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
+    core::param::ParamSlot smoothFontParam;
+
     core::param::ParamSlot forceRedrawDebugParam;
 
     size_t dataHash;
@@ -292,6 +304,8 @@ private:
     std::unique_ptr<glowl::GLSLProgram> scientificAxisShader;
 
     std::unique_ptr<glowl::GLSLProgram> pointShader;
+
+    std::unique_ptr<glowl::GLSLProgram> pointTriangleSpriteShader;
 
     std::unique_ptr<glowl::GLSLProgram> lineShader;
 
