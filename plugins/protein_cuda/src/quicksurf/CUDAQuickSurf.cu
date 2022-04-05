@@ -756,6 +756,7 @@ int CUDAQuickSurf::free_bufs() {
     // zero out max buffer capacities
     gpuh->natoms = 0;
     gpuh->colorperatom = 0;
+    gpuh->vtexformat = VolTexFormat::RGB3F;
     gpuh->acx = 0;
     gpuh->acy = 0;
     gpuh->acz = 0;
@@ -830,7 +831,6 @@ int CUDAQuickSurf::free_bufs() {
     if (gpuh->c4u_d != NULL)
         cudaFree(gpuh->c4u_d);
     gpuh->c4u_d = NULL;
-
 
     return 0;
 }
@@ -1210,6 +1210,13 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float* xyzr_f, const float* 
     VolTexFormat voltexformat, float* origin, int* numvoxels, float maxrad, float radscale, float gridspacing,
     float isovalue, float gausslim, std::vector<QuickSurfGraphicBuffer>& meshResult) {
     qsurf_gpuhandle* gpuh = (qsurf_gpuhandle*)voidgpu;
+
+    // for paranoia, clear the existing buffers
+    for (auto& buf : meshResult) {
+        buf.positionBuffer_->rebuffer(nullptr, 0);
+        buf.normalBuffer_->rebuffer(nullptr, 0);
+        buf.colorBuffer_->rebuffer(nullptr, 0);
+    }
     meshResult.clear(); // just make shure it is empty
 
     // if there were any problems when the constructor tried to get

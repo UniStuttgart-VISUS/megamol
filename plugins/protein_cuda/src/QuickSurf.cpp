@@ -373,26 +373,16 @@ bool QuickSurf::calculateSurface(
     /** Calculate positional and radial bounds */
     glm::vec3 firstpos = glm::make_vec3(mdc.AtomPositions());
     float firstrad = mdc.AtomTypes()[mdc.AtomTypeIndices()[0]].Radius();
-    glm::vec2 bounds_x{firstpos.x}, bounds_y{firstpos.y}, bounds_z{firstpos.z}, bounds_r{firstrad};
+    glm::vec2 bounds_r{firstrad};
     for (size_t i = 0; i < mdc.AtomCount(); ++i) {
         glm::vec3 pos = glm::make_vec3(&mdc.AtomPositions()[i * 3]);
         float rad = mdc.AtomTypes()[mdc.AtomTypeIndices()[i]].Radius();
-
-        bounds_x.x = (pos.x < bounds_x.x) ? pos.x : bounds_x.x;
-        bounds_x.y = (pos.x > bounds_x.y) ? pos.x : bounds_x.y;
-
-        bounds_y.x = (pos.y < bounds_y.x) ? pos.y : bounds_y.x;
-        bounds_y.y = (pos.y > bounds_y.y) ? pos.y : bounds_y.y;
-
-        bounds_z.x = (pos.z < bounds_z.x) ? pos.z : bounds_z.x;
-        bounds_z.y = (pos.z > bounds_z.y) ? pos.z : bounds_z.y;
 
         bounds_r.x = (rad < bounds_r.x) ? rad : bounds_r.x;
         bounds_r.y = (rad > bounds_r.y) ? rad : bounds_r.y;
     }
 
-    glm::vec3 mincoord{bounds_x.x, bounds_y.x, bounds_z.x};
-    glm::vec3 maxcoord{bounds_x.y, bounds_y.y, bounds_z.y};
+    
 
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
@@ -402,9 +392,10 @@ bool QuickSurf::calculateSurface(
     padrad = static_cast<float>(0.4 * sqrt(4.0 / 3.0 * pi * padrad * padrad * padrad));
     gridpadding = std::max(gridpadding, padrad);
 
-    // TODO check whether we just could use the bounding box values instead of this for min and maxcoord
-    mincoord -= glm::vec3(gridpadding);
-    maxcoord += glm::vec3(gridpadding);
+    // we ignore the padding and the radscale. For us, the following is enough
+    auto& bbox = mdc.AccessBoundingBoxes().ObjectSpaceBBox();
+    glm::vec3 mincoord(bbox.Left(), bbox.Bottom(), bbox.Back());
+    glm::vec3 maxcoord(bbox.Right(), bbox.Top(), bbox.Front());
 
     xAxis_.x = maxcoord.x - mincoord.x;
     yAxis_.y = maxcoord.y - mincoord.y;
