@@ -53,14 +53,13 @@ protected:
 
     void releaseImpl() override;
 
-    bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-        std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) override;
+    bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) override;
 
     void updateSize(int a, int w, int h);
 
     void setupCamera(core::view::Camera& cam, int width, int height, int a);
 
-    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, int a);
+    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a);
 
 private:
     core::param::ParamSlot amortLevelParam;
@@ -83,9 +82,7 @@ private:
     int samplingSequencePosition_;
     std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
-    glm::mat4 shiftMx_;
-    glm::mat4 lastProjViewMx_;
-    glm::mat4 currentProjViewMx_;
-    glm::mat4 inversePVMx_;
+    glm::mat4 viewProjMx_;
+    glm::mat4 lastViewProjMx_;
 };
 } // namespace megamol::infovis_gl

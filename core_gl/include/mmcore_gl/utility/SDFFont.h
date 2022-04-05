@@ -460,9 +460,8 @@ public:
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        /// TODO XXX FIXME Currently not working ...
         inline void SetRotation(float a, glm::vec3 v) {
-            this->rotation = glm::quat(glm::radians(a), v.x, v.y, v.z);
+            this->rotation = glm::angleAxis(glm::radians(a), v);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {

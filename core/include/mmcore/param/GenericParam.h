@@ -38,7 +38,7 @@ public:
     template<typename U = T>
     GenericParam(
         T const& initVal, T const& minVal, T const& maxVal, std::enable_if_t<enable_cond_v<U>, void>* = nullptr)
-            : GenericParam(initVal, minVal, maxVal, std::numeric_limits<T>::max()) {}
+            : GenericParam(initVal, minVal, maxVal, static_cast<T>(1)) {}
 
     // stepSize has no effect on Slider
     template<typename U = T>
@@ -137,7 +137,7 @@ private:
         if constexpr (std::is_arithmetic_v<T>) {
             minVal = std::numeric_limits<T>::lowest();
             maxVal = std::numeric_limits<T>::max();
-            stepSize = std::numeric_limits<T>::max();
+            stepSize = static_cast<T>(1);
         } else if constexpr (is_vislib_vector_f_v<T>) {
             minVal = T(std::numeric_limits<typename T::ValueT>::lowest());
             maxVal = T(std::numeric_limits<typename T::ValueT>::max());

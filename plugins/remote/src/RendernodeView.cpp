@@ -266,7 +266,7 @@ void megamol::remote::RendernodeView::Render(double time, double instanceTime) {
             }
         }
         this->_fbo->Enable();
-        auto bgcol = this->BkgndColour();
+        auto bgcol = this->BackgroundColor();
         glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
