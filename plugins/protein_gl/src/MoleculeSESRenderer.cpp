@@ -24,7 +24,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
@@ -107,18 +107,18 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->MakeSlotAvailable(&this->probeRadiusSlot);
 
     // coloring modes
-    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
-    this->currentColoringMode1 = Color::ColoringMode::ELEMENT;
+    this->currentColoringMode0 = ProteinColor::ColoringMode::CHAIN;
+    this->currentColoringMode1 = ProteinColor::ColoringMode::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<uint32_t>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -160,13 +160,13 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // width and height of the screen
     this->width = 0;
@@ -478,14 +478,16 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     if (!this->preComputationDone) {
+        this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
         // compute the color table
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable,
+            this->colorLookupTable, this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
+
         // compute the data needed for the current render mode
         this->ComputeRaycastingArrays();
         // set the precomputation of the data as done
@@ -534,17 +536,18 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     // ==================== check parameters ====================
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
 
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+        this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable,
+            this->colorLookupTable, this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
 
         this->preComputationDone = false;
         this->coloringModeParam0.ResetDirty();
@@ -567,8 +570,8 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     }
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;
     }
@@ -852,12 +855,12 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->sphericTriaTexCoord3[cntRS][i * 3 + 2] =
                 (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
             // colors
-            this->sphericTriaColors[cntRS][i * 3 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex() * 3]);
-            this->sphericTriaColors[cntRS][i * 3 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex() * 3]);
-            this->sphericTriaColors[cntRS][i * 3 + 2] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex() * 3]);
+            this->sphericTriaColors[cntRS][i * 3 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 2] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
             // sphere center
             this->sphericTriaVertexArray[cntRS][i * 4 + 0] =
                 this->reducedSurface[cntRS]->GetRSFace(i)->GetProbeCenter().GetX();
@@ -957,10 +960,10 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->torusInSphereArray[cntRS][i * 4 + 2] = C.GetZ();
             this->torusInSphereArray[cntRS][i * 4 + 3] = distance;
             // colors
-            this->torusColors[cntRS][i * 4 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex() * 3]);
-            this->torusColors[cntRS][i * 4 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex() * 3]);
+            this->torusColors[cntRS][i * 4 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
+            this->torusColors[cntRS][i * 4 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
             this->torusColors[cntRS][i * 4 + 2] = d;
             // this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
             this->torusColors[cntRS][i * 4 + 3] =
@@ -1000,11 +1003,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
                 continue;
             // set vertex color
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 0]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].x);
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 1]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].y);
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 2]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].z);
             // set vertex position
             this->sphereVertexArray[cntRS].Append(this->reducedSurface[cntRS]->GetRSVertex(i)->GetPosition().GetX());
             this->sphereVertexArray[cntRS].Append(this->reducedSurface[cntRS]->GetRSVertex(i)->GetPosition().GetY());
@@ -1127,11 +1130,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
             (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
         // colors
         this->sphericTriaColors[idxRS][i * 3 + 0] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex1()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
         this->sphericTriaColors[idxRS][i * 3 + 1] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex2()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
         this->sphericTriaColors[idxRS][i * 3 + 2] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex3()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
         // sphere center
         this->sphericTriaVertexArray[idxRS][i * 4 + 0] =
             this->reducedSurface[idxRS]->GetRSFace(i)->GetProbeCenter().GetX();
@@ -1232,9 +1235,9 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
         this->torusInSphereArray[idxRS][i * 4 + 3] = distance;
         // colors
         this->torusColors[idxRS][i * 4 + 0] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex1()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
         this->torusColors[idxRS][i * 4 + 1] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
         this->torusColors[idxRS][i * 4 + 2] = d;
         this->torusColors[idxRS][i * 4 + 3] =
             (X2 + this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetPosition() -
@@ -1266,11 +1269,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
             continue;
         // set vertex color
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 0]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].x);
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 1]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].y);
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 2]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].z);
         // set vertex position
         this->sphereVertexArray[idxRS].Append(this->reducedSurface[idxRS]->GetRSVertex(i)->GetPosition().GetX());
         this->sphereVertexArray[idxRS].Append(this->reducedSurface[idxRS]->GetRSVertex(i)->GetPosition().GetY());

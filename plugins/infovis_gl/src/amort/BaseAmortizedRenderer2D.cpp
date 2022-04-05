@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "BaseAmortizedRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
@@ -70,7 +76,7 @@ bool BaseAmortizedRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     cr2d->SetViewResolution(call.GetViewResolution());
 
     if (this->enabledParam.Param<core::param::BoolParam>()->Value()) {
-        return renderImpl(*cr2d, call.GetFramebuffer(), call.GetCamera());
+        return renderImpl(call, *cr2d);
     } else {
         cr2d->SetFramebuffer(call.GetFramebuffer());
         cr2d->SetCamera(call.GetCamera());

@@ -3236,6 +3236,8 @@ void megamol::core::CoreInstance::loadPlugin(
     } catch (const vislib::Exception& vex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             loadFailedLevel, "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s", ex.what());
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             loadFailedLevel, "Unable to load Plugin: unknown exception");

@@ -10,7 +10,7 @@
 #include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 
 #include "OpenGL_Context.h"
 
@@ -2237,7 +2237,7 @@ bool SphereRenderer::enableFlagStorage(const vislib_gl::graphics::gl::GLSLShader
             flagc->getData()->validateFlagCount(partsCount);
         }
     }
-    flagc->getData()->flags->bind(SSBOflagsBindingPoint);
+    flagc->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint);
     this->flags_enabled = true;
 
     return true;

@@ -1,13 +1,18 @@
-#ifndef MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "BaseAmortizedRenderer2D.h"
 
-#include <glm/matrix.hpp>
-#include <glowl/glowl.h>
+namespace megamol::infovis_gl {
 
-namespace megamol {
-namespace infovis_gl {
 class ResolutionScalingRenderer2D : public BaseAmortizedRenderer2D {
 public:
     /**
@@ -48,34 +53,36 @@ protected:
 
     void releaseImpl() override;
 
-    bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-        std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) override;
+    bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) override;
 
     void updateSize(int a, int w, int h);
 
-    void setupCamera(core::view::Camera& cam);
+    void setupCamera(core::view::Camera& cam, int width, int height, int a);
 
-    void reconstruct(std::shared_ptr<glowl::FramebufferObject>& fbo, int a);
+    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a);
 
 private:
     core::param::ParamSlot amortLevelParam;
+    core::param::ParamSlot skipInterpolationParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
     glowl::TextureLayout texLayout_;
-    std::unique_ptr<glowl::Texture2D> texA_;
-    std::unique_ptr<glowl::Texture2D> texB_;
+    glowl::TextureLayout distTexLayout_;
+    std::unique_ptr<glowl::Texture2D> texRead_;
+    std::unique_ptr<glowl::Texture2D> texWrite_;
+    std::unique_ptr<glowl::Texture2D> distTexRead_;
+    std::unique_ptr<glowl::Texture2D> distTexWrite_;
 
     int oldWidth_ = -1;
     int oldHeight_ = -1;
-    int oldLevel_ = -1;
+    int oldAmortLevel_ = -1;
 
     int frameIdx_ = 0;
+    int samplingSequencePosition_;
+    std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
-    glm::mat4 movePush_;
-    glm::mat4 lastProjViewMx_;
+    glm::mat4 viewProjMx_;
+    glm::mat4 lastViewProjMx_;
 };
-} // namespace infovis_gl
-} // namespace megamol
-
-#endif // MEGAMOL_INFOVIS_RESOLUTIONSCALINGRENDERER2D_H_INCLUDED
+} // namespace megamol::infovis_gl

@@ -82,8 +82,8 @@ megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double ins
         // the view is the owner of this fbo and therefore responsible
         // for clearing it at the beginning of a render frame
         this->_fbo->bind();
-        auto bgcol = this->BkgndColour();
-        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+        auto bgcol = this->BackgroundColor();
+        glClearColor(bgcol.r * bgcol.a, bgcol.g * bgcol.a, bgcol.b * bgcol.a, bgcol.a); // Premultiply alpha
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

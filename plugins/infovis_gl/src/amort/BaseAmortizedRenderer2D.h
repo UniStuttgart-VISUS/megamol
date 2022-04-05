@@ -1,5 +1,10 @@
-#ifndef MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
-#define MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -10,8 +15,7 @@
 
 #include "Renderer2D.h"
 
-namespace megamol {
-namespace infovis_gl {
+namespace megamol::infovis_gl {
 
 class BaseAmortizedRenderer2D : public Renderer2D {
 public:
@@ -44,14 +48,10 @@ protected:
 
     virtual void releaseImpl() = 0;
 
-    virtual bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-        std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) = 0;
+    virtual bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) = 0;
 
 private:
     megamol::core::CallerSlot nextRendererSlot;
     core::param::ParamSlot enabledParam;
 };
-} // namespace infovis_gl
-} // namespace megamol
-
-#endif // MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+} // namespace megamol::infovis_gl

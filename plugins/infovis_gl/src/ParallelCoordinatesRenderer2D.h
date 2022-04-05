@@ -1,11 +1,14 @@
-#ifndef MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include <map>
+#pragma once
 
-#include <glm/matrix.hpp>
-#include <json.hpp>
+#include <unordered_map>
 
+#include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
 #include "Renderer2D.h"
@@ -13,16 +16,14 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-namespace megamol {
-namespace infovis_gl {
+namespace megamol::infovis_gl {
 
 class ParallelCoordinatesRenderer2D : public Renderer2D {
 public:
@@ -31,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "ParallelCoordinatesRenderer2D";
     }
 
@@ -40,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Parallel coordinates renderer for generic tables.\n"
                "Left-Click to pick/stroke\npress [Shift] to filter axis using the two delimiters (hats)\n"
                "press [Alt] to re-order axes";
@@ -51,19 +52,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    ParallelCoordinatesRenderer2D(void);
+    ParallelCoordinatesRenderer2D();
 
     /**
      * Finalises an instance.
      */
-    virtual ~ParallelCoordinatesRenderer2D(void);
+    ~ParallelCoordinatesRenderer2D() override;
 
 protected:
     /**
@@ -71,232 +72,192 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
-     * The render callback.
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
      *
      * @param call The calling call.
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
-
-    // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    /**
+     * The OpenGL Render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool Render(core_gl::view::CallRender2DGL& call) override;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 
-    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
-
-    bool scalingChangedCallback(core::param::ParamSlot& caller);
-    bool resetFlagsSlotCallback(core::param::ParamSlot& caller);
-    bool resetFiltersSlotCallback(core::param::ParamSlot& caller);
-
-private:
-    enum DrawMode { DRAW_DISCRETE = 0, DRAW_CONTINUOUS, DRAW_HISTOGRAM };
-
-    enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
-
-    enum InteractionState { NONE = 0, INTERACTION_DRAG, INTERACTION_FILTER, INTERACTION_SELECT };
-
-    struct DimensionFilter {
-        uint32_t dimension; // useless but good padding
-        float lower;
-        float upper;
-        uint32_t flags;
-
-        static inline void to_json(nlohmann::json& j, const DimensionFilter& d) {
-            j = nlohmann::json{{"dim", d.dimension}, {"lower", d.lower}, {"upper", d.upper}, {"flags", d.flags}};
-        }
-
-        static inline void from_json(const nlohmann::json& j, DimensionFilter& d) {
-            j.at("dim").get_to(d.dimension);
-            j.at("lower").get_to(d.lower);
-            j.at("upper").get_to(d.upper);
-            j.at("flags").get_to(d.flags);
-        }
+protected:
+    enum DrawMode {
+        DRAW_DISCRETE = 0,
+        DRAW_DENSITY,
     };
 
-    inline float relToAbsValue(int axis, float val) {
-        return (val * (this->maximums[axis] - this->minimums[axis])) + this->minimums[axis];
-    }
+    enum SelectionMode {
+        SELECT_PICK = 0,
+        SELECT_STROKE,
+    };
 
-    void pickIndicator(float x, float y, int& axis, int& index);
+    enum InteractionState {
+        NONE = 0,
+        INTERACTION_DRAG,
+        INTERACTION_FILTER,
+        INTERACTION_SELECT,
+    };
+
+    struct Range {
+        float min;
+        float max;
+    };
 
     bool assertData(core_gl::view::CallRender2DGL& call);
 
-    void computeScaling(void);
-
-    void drawAxes(glm::mat4 ortho);
-
-    void drawDiscrete(
-        const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
-
-    void drawItemsDiscrete(
-        uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes);
-
-    void drawPickIndicator(float x, float y, float pickRadius, const float color[4]);
-
-    void drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]);
-
-    void drawItemsContinuous();
-
-    void drawItemsHistogram();
-
-    void doPicking(float x, float y, float pickRadius);
-
-    void doStroking(float x0, float y0, float x1, float y1);
-
-    void doFragmentCount();
-
-    void drawParcos(glm::ivec2 const& viewRes);
-    void store_filters();
-    void load_filters();
+    void calcSizes();
 
     int mouseXtoAxis(float x);
 
-    bool enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program);
+    void mouseToFilterIndicator(float x, float y, int& axis, int& index);
 
-    core::CallerSlot getDataSlot;
+    bool useProgramAndBindCommon(std::unique_ptr<glowl::GLSLProgram> const& program);
 
-    core::CallerSlot getTFSlot;
+    void doPicking(glm::vec2 pos, float pickRadius);
 
-    core::CallerSlot readFlagsSlot;
+    void doStroking(glm::vec2 start, glm::vec2 end);
 
-    core::CallerSlot writeFlagsSlot;
+    void drawItemLines(uint32_t testMask, uint32_t passMask, bool useTf, glm::vec4 const& color);
 
-    size_t currentHash;
+    void drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor);
 
-    core::FlagStorageTypes::flag_version_type currentFlagsVersion;
+    void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
-    ::vislib_gl::graphics::gl::FramebufferObject densityFBO;
+    void drawAxes(glm::mat4 ortho);
 
-    core::param::ParamSlot drawModeSlot;
+    void drawIndicatorPick(glm::vec2 pos, float pickRadius, glm::vec4 const& color);
 
-    core::param::ParamSlot drawSelectedItemsSlot;
-    core::param::ParamSlot selectedItemsColorSlot;
+    void drawIndicatorStroke(glm::vec2 start, glm::vec2 end, glm::vec4 const& color);
 
-    core::param::ParamSlot drawOtherItemsSlot;
-    core::param::ParamSlot otherItemsColorSlot;
-    core::param::ParamSlot otherItemsAttribSlot;
+    void storeFilters();
 
-    core::param::ParamSlot drawAxesSlot;
-    core::param::ParamSlot axesColorSlot;
+    void loadFilters();
 
-    core::param::ParamSlot filterIndicatorColorSlot;
+    // Slots
+    core::CallerSlot dataSlot_;
+    core::CallerSlot tfSlot_;
+    core::CallerSlot readFlagsSlot_;
+    core::CallerSlot writeFlagsSlot_;
 
-    core::param::ParamSlot selectionModeSlot;
-    core::param::ParamSlot drawSelectionIndicatorSlot;
-    core::param::ParamSlot selectionIndicatorColorSlot;
+    // Params
+    core::param::ParamSlot drawModeParam_;
+    core::param::ParamSlot normalizeDensityParam_;
+    core::param::ParamSlot sqrtDensityParam_;
+    core::param::ParamSlot triangleModeParam_;
+    core::param::ParamSlot lineWidthParam_;
+    core::param::ParamSlot dimensionNameParam_;
+    core::param::ParamSlot useLineWidthInPixelsParam_;
+    core::param::ParamSlot drawItemsParam_;
+    core::param::ParamSlot drawSelectedItemsParam_;
+    core::param::ParamSlot ignoreTransferFunctionParam_;
+    core::param::ParamSlot itemsColorParam_;
+    core::param::ParamSlot selectedItemsColorParam_;
+    core::param::ParamSlot drawAxesParam_;
+    core::param::ParamSlot axesLineWidthParam_;
+    core::param::ParamSlot axesColorParam_;
+    core::param::ParamSlot filterIndicatorColorParam_;
+    core::param::ParamSlot smoothFontParam_;
+    core::param::ParamSlot selectionModeParam_;
+    core::param::ParamSlot pickRadiusParam_;
+    core::param::ParamSlot drawSelectionIndicatorParam_;
+    core::param::ParamSlot selectionIndicatorColorParam_;
+    core::param::ParamSlot scaleToFitParam_;
+    core::param::ParamSlot resetFiltersParam_;
+    core::param::ParamSlot filterStateParam_;
 
-    core::param::ParamSlot pickRadiusSlot;
+    // Data Info
+    std::size_t currentTableDataHash_;
+    unsigned int currentTableFrameId_;
 
-    core::param::ParamSlot scaleToFitSlot;
-    // core::param::ParamSlot scalingFactorSlot;
-    // core::param::ParamSlot scaleFullscreenSlot;
-    // core::param::ParamSlot projectionMatrixSlot;
-    // core::param::ParamSlot viewMatrixSlot;
-    // core::param::ParamSlot useCustomMatricesSlot;
+    std::size_t dimensionCount_;
+    std::size_t itemCount_;
+    std::vector<std::string> names_;
+    std::vector<Range> dimensionRanges_;
+    std::vector<int> axisIndirection_;
+    std::unordered_map<std::string, int> dimensionIndex_;
+    std::vector<Range> filters_;
+    const std::array<uint32_t, 2> densityMinMaxInit_;
 
-    // core::param::ParamSlot storeCamSlot;
-    // bool storeCamSlotCallback(core::param::ParamSlot & caller);
+    std::unique_ptr<glowl::BufferObject> dataBuffer_;
+    std::unique_ptr<glowl::BufferObject> dimensionRangesBuffer_;
+    std::unique_ptr<glowl::BufferObject> axisIndirectionBuffer_;
+    std::unique_ptr<glowl::BufferObject> filtersBuffer_;
+    std::unique_ptr<glowl::BufferObject> densityMinMaxBuffer_;
 
-    core::param::ParamSlot glDepthTestSlot;
-    core::param::ParamSlot glLineSmoothSlot;
-    core::param::ParamSlot glLineWidthSlot;
-    core::param::ParamSlot sqrtDensitySlot;
+    // Layout
+    float marginX_;
+    float marginY_;
+    float axisDistance_;
+    float axisHeight_;
+    int numTicks_;
+    float tickLength_;
+    float fontSize_;
+    megamol::core::utility::SDFFont font_;
+    core::BoundingBoxes_2 bounds_;
 
-    // core::param::ParamSlot resetFlagsSlot;
-    core::param::ParamSlot resetFiltersSlot;
+    // Interaction state
+    float mouseX_;
+    float mouseY_;
+    InteractionState interactionState_;
+    int pickedAxis_;
+    int pickedIndicatorAxis_;
+    int pickedIndicatorIndex_;
+    glm::vec2 strokeStart_;
+    glm::vec2 strokeEnd_;
+    bool needAxisUpdate_;
+    bool needFilterUpdate_;
+    bool needSelectionUpdate_;
+    bool needFlagsUpdate_;
 
-    core::param::ParamSlot filterStateSlot;
+    // OpenGL
+    std::unique_ptr<glowl::GLSLProgram> filterProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectPickProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectStrokeProgram_;
+    std::unique_ptr<glowl::GLSLProgram> densityMinMaxProgram_;
 
-    core::param::ParamSlot triangleModeSlot;
-    core::param::ParamSlot lineThicknessSlot;
-    core::param::ParamSlot axesLineThicknessSlot;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsLineProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawItemsDensityProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
+    std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
 
-    float marginX, marginY;
-    float axisDistance;
-    float axisHeight;
-    GLuint numTicks;
-    float fontSize;
-    float backgroundColor[4];
-    core::BoundingBoxes_2 bounds;
-    core::view::Camera camera_cpy;                 //< local copy of last used camera
-    std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
-    glm::ivec2 viewRes;                            //< last used view resolution
-    unsigned int lastTimeStep;
+    std::array<GLint, 3> filterWorkgroupSize_;
+    std::array<GLint, 3> selectPickWorkgroupSize_;
+    std::array<GLint, 3> selectStrokeWorkgroupSize_;
+    std::array<GLint, 3> densityMinMaxWorkgroupSize_;
 
-    GLuint columnCount;
-    GLuint itemCount;
+    std::array<GLint, 3> maxWorkgroupCount_;
 
-    std::unique_ptr<glowl::GLSLProgram> drawAxesProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawScalesProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawFilterIndicatorsProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteTessProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawPickIndicatorProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawStrokeIndicatorProgram;
+    std::unique_ptr<glowl::FramebufferObject> densityFbo_;
 
-    std::unique_ptr<glowl::GLSLProgram> drawItemContinuousProgram;
-    std::unique_ptr<glowl::GLSLProgram> drawItemsHistogramProgram;
-    std::unique_ptr<glowl::GLSLProgram> traceItemsDiscreteProgram;
-
-    std::unique_ptr<glowl::GLSLProgram> filterProgram;
-    std::unique_ptr<glowl::GLSLProgram> minMaxProgram;
-
-    std::unique_ptr<glowl::GLSLProgram> pickProgram;
-    std::unique_ptr<glowl::GLSLProgram> strokeProgram;
-
-    GLuint dataBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
-    GLuint counterBuffer;
-
-    std::vector<GLuint> axisIndirection;
-    std::vector<GLfloat> minimums;
-    std::vector<GLfloat> maximums;
-    std::vector<DimensionFilter> filters;
-    std::vector<GLuint> fragmentMinMax;
-    std::vector<std::string> names;
-
-    float mouseX;
-    float mouseY;
-    bool ctrlDown = false, altDown = false, shiftDown = false;
-    InteractionState interactionState;
-    int pickedAxis;
-    int pickedIndicatorAxis;
-    int pickedIndicatorIndex;
-    float strokeStartX;
-    float strokeStartY;
-    float strokeEndX;
-    float strokeEndY;
-    bool needSelectionUpdate;
-    bool needFlagsUpdate;
-    std::map<std::string, uint32_t> columnIndex;
-
-    GLint maxAxes;
-    GLint isoLinesPerInvocation;
-
-    GLint filterWorkgroupSize[3];
-    GLint counterWorkgroupSize[3];
-    GLint pickWorkgroupSize[3];
-    GLint strokeWorkgroupSize[3];
-    GLint maxWorkgroupCount[3];
-
-    megamol::core::utility::SDFFont font;
+    // View and camera state
+    std::optional<core::view::Camera> cameraCopy_;
+    glm::ivec2 viewRes_;
 };
 
-} // namespace infovis_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED */
+} // namespace megamol::infovis_gl

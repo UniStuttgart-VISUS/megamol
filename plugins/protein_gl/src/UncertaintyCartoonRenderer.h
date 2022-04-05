@@ -300,13 +300,13 @@ private:
         sortedSecStructAssignment;
 
     // color table for chain id per amino acid
-    vislib::Array<vislib::math::Vector<float, 3>> chainColors;
+    std::vector<glm::vec3> chainColors;
     // color table for amino acid per amino acid
-    vislib::Array<vislib::math::Vector<float, 3>> aminoAcidColors;
+    std::vector<glm::vec3> aminoAcidColors;
     // secondary structure type colors as RGB(A)
     vislib::Array<vislib::math::Vector<float, 4>> secStructColor;
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> colorTable;
+    std::vector<glm::vec3> colorTable;
 
     // positions of C-alpha-atoms and O-atoms
     vislib::Array<vislib::Array<float>> positionsCa;

@@ -13,7 +13,6 @@
 
 #include "CUDAQuickSurf.h"
 #include "CenterLineGenerator.h"
-#include "Color.h"
 #include "MolecularAOShader.h"
 #include "VolumeMeshRenderer.cuh"
 #include "WKFUtils.h"
@@ -23,6 +22,7 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "vislib/math/Cuboid.h"
@@ -280,7 +280,7 @@ private:
 
     /** color table filename */
     megamol::core::param::ParamSlot colorTableFileParam;
-    vislib::Array<vislib::math::Vector<float, 3>> colorTable;
+    std::vector<glm::vec3> fileTable;
 
     /** parameter for minimum distance of center line node to molecular surface */
     megamol::core::param::ParamSlot minDistCenterLineParam;
@@ -412,9 +412,9 @@ private:
     double reptime;        ///< Internal timer for performance instrumentation
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
     /** parameter slot for coloring mode */
     megamol::core::param::ParamSlot coloringModeParam0;
     /** parameter slot for coloring mode */
@@ -431,8 +431,8 @@ private:
     megamol::core::param::ParamSlot areaThresholdParam;
 
     /** The current coloring mode */
-    int currentColoringMode0;
-    int currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     vislib::Array<bool> featureSelection;
     vislib::Array<bool> featureVisibility;

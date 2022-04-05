@@ -1,18 +1,16 @@
-#version 430
+#version 450
 
-out vec2 uv_coord;
+out vec2 uvCoords;
 
 void main() {
-    const vec4 vertices[6] = vec4[6](
-        vec4(-1.0, -1.0, 0.0, 0.0),
-        vec4(1.0, 1.0, 1.0, 1.0),
-        vec4(-1.0, 1.0, 0.0, 1.0),
-        vec4(1.0, 1.0, 1.0, 1.0),
-        vec4(-1.0, -1.0, 0.0, 0.0),
-        vec4(1.0, -1.0, 1.0, 0.0));
+    const vec2 coords[4] = vec2[4](
+        vec2(0.0f, 0.0f),
+        vec2(1.0f, 0.0f),
+        vec2(0.0f, 1.0f),
+        vec2(1.0f, 1.0f));
 
-    vec4 vertex = vertices[gl_VertexID];
+    const vec2 coord = coords[gl_VertexID];
 
-    uv_coord = vertex.zw;
-    gl_Position =  vec4(vertex.xy, -1.0, 1.0);
+    gl_Position =  vec4(2.0f * coord - 1.0f, 0.0f, 1.0f);
+    uvCoords = coord;
 }
