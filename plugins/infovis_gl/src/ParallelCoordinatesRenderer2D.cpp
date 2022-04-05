@@ -42,6 +42,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , triangleModeParam_("triangleMode", "Draw items with triangle lines")
         , lineWidthParam_("lineWidth", "Line width of data points")
         , dimensionNameParam_("dimensionName", "Dimension name of the attribute to use for TF lookup and item coloring")
+        , useLineWidthInPixelsParam_("ui::useLineWidthInPixels", "Line width is given in pixel size.")
         , drawItemsParam_("ui::drawItems", "Draw (non-selected) items")
         , drawSelectedItemsParam_("ui::drawSelectedItems", "Draw selected items")
         , ignoreTransferFunctionParam_("ui::ignoreTransferFunction", "Use static color instead of TF color lookup")
@@ -119,11 +120,14 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     triangleModeParam_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&triangleModeParam_);
 
-    lineWidthParam_ << new core::param::FloatParam(1.5f);
+    lineWidthParam_ << new core::param::FloatParam(1.5f, 0.0f);
     MakeSlotAvailable(&lineWidthParam_);
 
     dimensionNameParam_ << new core::param::FlexEnumParam("[none]");
     MakeSlotAvailable(&dimensionNameParam_);
+
+    useLineWidthInPixelsParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&useLineWidthInPixelsParam_);
 
     drawItemsParam_ << new core::param::BoolParam(true);
     MakeSlotAvailable(&drawItemsParam_);
@@ -732,17 +736,19 @@ void ParallelCoordinatesRenderer2D::drawItemLines(
         colorDimension = dimensionIndex_.at(dimensionNameParam_.Param<core::param::FlexEnumParam>()->Value());
     } catch (std::out_of_range& ex) {}
 
-    auto& prog1 = triangleMode ? drawItemsTriangleProgram_ : drawItemsLineProgram_;
+    auto& prog = triangleMode ? drawItemsTriangleProgram_ : drawItemsLineProgram_;
 
-    useProgramAndBindCommon(prog1);
-    tfCall->BindConvenience(prog1, GL_TEXTURE5, 5);
-    prog1->setUniform("useTransferFunction", static_cast<int>(useTf));
-    prog1->setUniform("itemColor", color);
-    prog1->setUniform("colorDimensionIdx", colorDimension);
-    prog1->setUniform("itemTestMask", testMask);
-    prog1->setUniform("itemPassMask", passMask);
-    prog1->setUniform("lineWidth", lineWidthParam_.Param<core::param::FloatParam>()->Value());
-    prog1->setUniform("viewSize", viewRes_);
+    useProgramAndBindCommon(prog);
+    tfCall->BindConvenience(prog, GL_TEXTURE5, 5);
+    prog->setUniform("useTransferFunction", static_cast<int>(useTf));
+    prog->setUniform("itemColor", color);
+    prog->setUniform("colorDimensionIdx", colorDimension);
+    prog->setUniform("itemTestMask", testMask);
+    prog->setUniform("itemPassMask", passMask);
+    prog->setUniform(
+        "useLineWidthInPixels", static_cast<int>(useLineWidthInPixelsParam_.Param<core::param::BoolParam>()->Value()));
+    prog->setUniform("lineWidth", lineWidthParam_.Param<core::param::FloatParam>()->Value());
+    prog->setUniform("viewSize", viewRes_);
 
     glEnable(GL_CLIP_DISTANCE0);
     if (triangleMode) {
