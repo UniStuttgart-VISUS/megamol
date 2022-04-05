@@ -70,7 +70,7 @@ def parsesources(sourcelist):
         if len(e) > 0:
             for sname in e[1]: #access all shader names
                 if sname in dictionary:
-                    dictionary[sname] = dictionary[sname] + e[0]
+                    dictionary[sname] = list(dictionary[sname]) + [e[0]]
                 else:
                     dictionary[sname] = [e[0]]
     return dictionary
