@@ -488,55 +488,62 @@ bool QuickSurf::calculateSurface(geocalls::MultiParticleDataCall& mdc, int quali
         auto type = curlist.GetVertexDataType();
         auto coltype = curlist.GetColourDataType();
         float globrad = curlist.GetGlobalRadius();
+        glm::vec2 intensity_bounds(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
         for (size_t i = 0; i < curlist.GetCount(); ++i) {
             float rad = globrad;
             glm::vec3 pos(0.0f);
+            auto posptr = reinterpret_cast<const uint8_t*>(curlist.GetVertexData());
             if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
-                pos = glm::make_vec3(&ptr[i * 4]);
-                rad = ptr[i * 4 + 3];
+                auto ptr = reinterpret_cast<const float*>(posptr + i * curlist.GetVertexDataStride());
+                pos = glm::make_vec3(ptr);
+                rad = ptr[3];
             } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
-                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
-                pos = glm::make_vec3(&ptr[i * 3]);
+                auto ptr = reinterpret_cast<const float*>(posptr + i * curlist.GetVertexDataStride());
+                pos = glm::make_vec3(ptr);
             } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
-                auto ptr = reinterpret_cast<const double*>(curlist.GetVertexData());
-                pos = glm::make_vec3(&ptr[i * 3]);
+                auto ptr = reinterpret_cast<const double*>(posptr + i * curlist.GetVertexDataStride());
+                pos = glm::make_vec3(ptr);
             } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
-                auto ptr = reinterpret_cast<const signed short*>(curlist.GetVertexData());
-                pos = glm::make_vec3(&ptr[i * 3]);
+                auto ptr = reinterpret_cast<const signed short*>(posptr + i * curlist.GetVertexDataStride());
+                pos = glm::make_vec3(ptr);
             }
 
+            auto colptr = reinterpret_cast<const uint8_t*>(curlist.GetColourData());
             glm::vec3 color = glm::make_vec3(curlist.GetGlobalColour());
-            float alpha = curlist.GetGlobalColour()[4];
+            float alpha = curlist.GetGlobalColour()[3];
             color /= 255.0f;
             alpha /= 255.0f;
             if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
-                auto ptr = reinterpret_cast<const double*>(curlist.GetColourData());
-                color = glm::vec3(ptr[i]);
+                auto ptr = reinterpret_cast<const double*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::vec3(ptr[0]);
+                intensity_bounds = glm::vec2(ptr[0] < intensity_bounds.x ? ptr[0] : intensity_bounds.x,
+                    ptr[0] > intensity_bounds.y ? ptr[0] : intensity_bounds.y);
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
-                color = glm::vec3(ptr[i]);
+                auto ptr = reinterpret_cast<const float*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::vec3(ptr[0]);
+                intensity_bounds = glm::vec2(ptr[0] < intensity_bounds.x ? ptr[0] : intensity_bounds.x,
+                    ptr[0] > intensity_bounds.y ? ptr[0] : intensity_bounds.y);
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
-                color = glm::make_vec3(&ptr[i * 3]);
+                auto ptr = reinterpret_cast<const float*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::make_vec3(ptr);
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
-                color = glm::make_vec3(&ptr[i * 4]);
-                alpha = ptr[i * 4 + 3];
+                auto ptr = reinterpret_cast<const float*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::make_vec3(ptr);
+                alpha = ptr[3];
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-                auto ptr = reinterpret_cast<const uint8_t*>(curlist.GetColourData());
-                color = glm::make_vec3(&ptr[i * 3]);
+                auto ptr = reinterpret_cast<const uint8_t*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::make_vec3(ptr);
                 color /= 255.0f;
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-                auto ptr = reinterpret_cast<const uint8_t*>(curlist.GetColourData());
-                color = glm::make_vec3(&ptr[i * 4]);
-                alpha = ptr[i * 4 + 3];
+                auto ptr = reinterpret_cast<const uint8_t*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::make_vec3(ptr);
+                alpha = ptr[3];
                 color /= 255.0f;
                 alpha /= 255.0f;
             } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA) {
-                auto ptr = reinterpret_cast<const unsigned short*>(curlist.GetColourData());
-                color = glm::make_vec3(&ptr[i * 4]);
-                alpha = ptr[i * 4 + 3];
+                auto ptr = reinterpret_cast<const unsigned short*>(colptr + i * curlist.GetColourDataStride());
+                color = glm::make_vec3(ptr);
+                alpha = ptr[3];
                 // Is the division by 255 for unsigned short correct?
                 color /= 255.0f;
                 alpha /= 255.0f;
@@ -556,6 +563,18 @@ bool QuickSurf::calculateSurface(geocalls::MultiParticleDataCall& mdc, int quali
 
             ++id;
         }
+
+        // adapt the range of intensity values to 0 - 1
+        if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I ||
+            coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
+
+            for (size_t i = id - curlist.GetCount(); i < id; ++i) {
+                colors[i].x = (colors[i].x - intensity_bounds.x) / (intensity_bounds.y - intensity_bounds.x);
+                colors[i].y = (colors[i].y - intensity_bounds.x) / (intensity_bounds.y - intensity_bounds.x);
+                colors[i].z = (colors[i].z - intensity_bounds.x) / (intensity_bounds.y - intensity_bounds.x);
+                colors[i].a = 1.0;
+            }
+        }
     }
 
     float gausslim = 2.0f; // low quality, value = 0
@@ -574,13 +593,15 @@ bool QuickSurf::calculateSurface(geocalls::MultiParticleDataCall& mdc, int quali
 }
 
 bool QuickSurf::processMolecularCall(protein_calls::MolecularDataCall& mdc) {
+    bool forceRecompute = false;
     // force color refresh when changing call types
     if (connectedCall_ != ConnectedCall::MOLECULE) {
         refreshColors_ = true;
         connectedCall_ = ConnectedCall::MOLECULE;
+        forceRecompute = true;
     }
 
-    if (HandleParameters(mdc)) {
+    if (HandleParameters(mdc) || forceRecompute) {
         if (refreshColors_) {
             std::vector<glm::vec3> smallColorTable = {
                 glm::make_vec3(minGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
@@ -644,11 +665,13 @@ bool QuickSurf::processMolecularCall(protein_calls::MolecularDataCall& mdc) {
 }
 
 bool QuickSurf::processMultiParticleCall(geocalls::MultiParticleDataCall& mdc) {
+    bool forceRecompute = false;
     // force color refresh when changing call types
     if (connectedCall_ != ConnectedCall::PARTICLE) {
         connectedCall_ = ConnectedCall::PARTICLE;
+        forceRecompute = true;
     }
-    if (HandleParameters(mdc)) {
+    if (HandleParameters(mdc) || forceRecompute) {
         if (refreshColors_) {
             core::utility::log::Log::DefaultLog.WriteWarn(
                 "When connected with a MultiParticleDataCall, changing the color options has no effect");

@@ -77,8 +77,7 @@ using namespace megamol::protein_cuda;
 #define CUERR
 #endif
 
-#define DEBUG_ERRORS
-
+//#define DEBUG_ERRORS
 
 //
 // general operator overload helper routines
@@ -1610,35 +1609,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n", gorigin.x+bbox.x, gorigin.y+bbox.y, gorigi
         // TODO Karsten sort triangles
 
 
-// Create a triangle mesh
-// TODO Karsten output the mesh better
-#if 0
-        if (chunknumverts > 0) {
-            DispCmdTriMesh cmdTriMesh;
-            if (colorperatom) {
-                // emit triangle mesh with per-vertex colors
-                if (gpuh->n3b_d) {
-                    cmdTriMesh.cuda_putdata((const float*)gpuh->v3f_d, (const char*)gpuh->n3b_d,
-                        (const unsigned char*)gpuh->c4u_d, chunknumverts / 3, cmdList);
-                } else if (gpuh->c4u_d) {
-                    cmdTriMesh.cuda_putdata((const float*)gpuh->v3f_d, (const float*)gpuh->n3f_d,
-                        (const unsigned char*)gpuh->c4u_d, chunknumverts / 3, cmdList);
-                } else {
-                    cmdTriMesh.cuda_putdata((const float*)gpuh->v3f_d, (const float*)gpuh->n3f_d,
-                        (const float*)gpuh->c3f_d, chunknumverts / 3, cmdList);
-                }
-            } else {
-                // emit triangle mesh with no colors, uses current rendering state
-                if (gpuh->n3b_d) {
-                    cmdTriMesh.cuda_putdata((const float*)gpuh->v3f_d, (const char*)gpuh->n3b_d,
-                        (const unsigned char*)NULL, chunknumverts / 3, cmdList);
-                } else {
-                    cmdTriMesh.cuda_putdata((const float*)gpuh->v3f_d, (const float*)gpuh->n3f_d, (const float*)NULL,
-                        chunknumverts / 3, cmdList);
-                }
-            }
-        }
-#endif
+        // Create a triangle mesh
         if (chunknumverts > 0) {
             size_t bufsize = 3ll * chunkmaxverts * 3 * sizeof(float);
             size_t buflen = 3ll * chunknumverts * sizeof(float);
@@ -1711,6 +1682,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n", gorigin.x+bbox.x, gorigin.y+bbox.y, gorigi
     // all of the memory deallocations have completed.
     if (err != cudaSuccess) {
         printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+        printf("Maybe your chosen parameters lead to a too huge workload for the GPU");
         return -1;
     }
 
