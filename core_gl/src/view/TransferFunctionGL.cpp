@@ -46,15 +46,23 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
     if (cgtf == nullptr)
         return false;
 
-    if ((this->texID == 0) || this->tfParam.IsDirty() || cgtf->UpdateRange()) {
-        this->tfParam.ResetDirty();
+    // update transfer function if still uninitialized
+    bool something_has_changed = (this->texID == 0);
 
+    // update transfer function if tf param is dirty
+    if (this->tfParam.IsDirty()) {
         // Check if range of initially loaded project value should be ignored
         auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
-        bool tmp_ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
+        this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
+        this->tfParam.ResetDirty();
+        something_has_changed = true;
+    }
 
+    // update transfer function if call ask for range update range from project file is ignored
+    if (cgtf->UpdateRange() && this->ignore_project_range) {
         // Update changed range propagated from the module via the call
-        if (tmp_ignore_project_range && cgtf->ConsumeRangeUpdate()) {
+        if (cgtf->ConsumeRangeUpdate()) {
+            auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
             auto tmp_range = this->range;
             auto tmp_interpol = this->interpolMode;
             auto tmp_tex_size = this->texSize;
@@ -69,8 +77,11 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
                     this->tfParam.Param<TransferFunctionParam>()->SetValue(tf_str);
                 }
             }
+            something_has_changed = true;
         }
+    }
 
+    if (something_has_changed) {
         // Get current values from parameter string (Values are checked, too).
         TransferFunctionParam::NodeVector_t tmp_nodes;
         if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(),
