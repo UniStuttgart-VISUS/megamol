@@ -20,7 +20,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
+class TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
 public:
     /**
      * Answer the name of this module.

@@ -15,8 +15,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "vislib/MultiSz.h"
 #include "vislib/RawStorage.h"
 #include "vislib/graphics/BitmapImage.h"
@@ -42,7 +40,7 @@ namespace graphics {
  * Add your new codec (derived class) to the list of built-in default
  * codecs in 'BitmapCodecCollection::BuildDefaultCollection'
  */
-class MEGAMOLCORE_API AbstractBitmapCodec {
+class AbstractBitmapCodec {
 public:
     /** Ctor. */
     AbstractBitmapCodec(void);

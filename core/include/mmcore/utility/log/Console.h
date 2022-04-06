@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
@@ -19,7 +17,7 @@ namespace megamol::core::utility::log {
 /**
  * Class wrapping text console functionality and features
  */
-class MEGAMOLCORE_API Console {
+class Console {
 
 public:
     /** valid color values for console colors */

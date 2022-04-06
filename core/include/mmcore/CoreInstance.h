@@ -24,7 +24,6 @@
 #include "mmcore/ViewInstance.h"
 #include "mmcore/ViewInstanceRequest.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
@@ -78,7 +77,7 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
+class CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
@@ -184,18 +183,6 @@ public:
      *         not found.
      */
     std::shared_ptr<const ViewDescription> FindViewDescription(const char* name);
-
-    /**
-     * Enumerates all view descriptions. The callback function is called for each
-     * view description.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     * @param getBuiltinToo true to also retreive the builtin view descriptions
-     *                      else false
-     */
-    void EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo = false);
 
     /**
      * Searches for an view description object with the given name.
@@ -424,16 +411,6 @@ public:
     std::string SerializeGraph();
 
     /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter slot.
-     *
-     * @param cb The callback function.
-     */
-    inline void GOES_INTO_GRAPH EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const {
-        this->enumParameters(this->namespaceRoot, cb);
-    }
-
-    /**
      * Enumerates all modules of the graph, calling cb for each encountered module.
      * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
@@ -571,23 +548,6 @@ public:
         return found;
     }
 
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    inline void EnumParameters(mmcEnumStringAFunction func, void* data) const {
-        auto toStringFunction = [func, data](const Module& mod, const param::ParamSlot& slot) {
-            vislib::StringA name(mod.FullName());
-            name.Append("::");
-            name.Append(slot.Name());
-            func(name.PeekBuffer(), data);
-        };
-        this->enumParameters(this->namespaceRoot, toStringFunction);
-    }
 
     /**
      * Updates global parameter hash and returns it.
@@ -1092,18 +1052,6 @@ private:
      *             and parameter hash
      */
     void GOES_INTO_GRAPH getGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
-
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param path The current module namespace
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    void GOES_INTO_TRASH enumParameters(
-        ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
     /**
      * Answer the full name of the paramter 'param' if it is bound to a

@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
@@ -27,7 +26,7 @@ namespace view {
  * Call transporting a clipping plane. Only data in the positive
  * halfspace should be visible.
  */
-class MEGAMOLCORE_API CallClipPlane : public Call {
+class CallClipPlane : public Call {
 public:
     /**
      * Answer the name of the objects of this description.

@@ -14,7 +14,6 @@
 #include "mmcore/LuaState.h"
 #include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "vislib/Map.h"
@@ -42,7 +41,7 @@ class ConfigurationParser;
 /**
  * Class hold the data of the MegaMol xml configuration file
  */
-class MEGAMOLCORE_API Configuration {
+class Configuration {
 public:
     /** only Entry may create Configuration objects */
     friend class megamol::core::CoreInstance;

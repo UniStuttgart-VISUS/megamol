@@ -14,7 +14,6 @@
 #include "AbstractParam.h"
 #include "mmcore/ApiHandle.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/SmartPtr.h"
 
 
@@ -26,7 +25,7 @@ namespace param {
 /**
  * Wrapper class for parameter handles.
  */
-class MEGAMOLCORE_API ParamHandle : public ApiHandle {
+class ParamHandle : public ApiHandle {
 public:
     /**
      * Ctor.

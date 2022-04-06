@@ -16,7 +16,7 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API CallEvent
+class CallEvent
         : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
 public:
     CallEvent() = default;

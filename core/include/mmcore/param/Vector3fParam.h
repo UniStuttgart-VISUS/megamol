@@ -11,7 +11,6 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/Array.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/Vector.h"
@@ -19,7 +18,7 @@
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API Vector3fParam
+class Vector3fParam
         : public GenericParam<vislib::math::Vector<float, 3>, AbstractParamPresentation::ParamType::VECTOR3F> {
 public:
     Vector3fParam(vislib::math::Vector<float, 3> const& initVal) : Super(initVal) {}

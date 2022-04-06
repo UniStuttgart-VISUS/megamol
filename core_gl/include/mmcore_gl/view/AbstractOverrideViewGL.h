@@ -25,7 +25,7 @@ namespace view {
 /**
  * Abstract base class of override rendering views
  */
-class MEGAMOLCORE_API AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
+class AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
 public:
     /** Ctor. */
     AbstractOverrideViewGL(void);

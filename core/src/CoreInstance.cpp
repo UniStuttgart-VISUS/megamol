@@ -651,22 +651,6 @@ std::shared_ptr<const megamol::core::ViewDescription> megamol::core::CoreInstanc
 
 
 /*
- * megamol::core::CoreInstance::EnumViewDescriptions
- */
-void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo) {
-    assert(func);
-    for (auto vd : this->projViewDescs) {
-        func(vd->ClassName(), data);
-    }
-    if (getBuiltinToo) {
-        for (auto vd : this->builtinViewDescs) {
-            func(vd->ClassName(), data);
-        }
-    }
-}
-
-
-/*
  * megamol::core::CoreInstance::FindJobDescription
  */
 std::shared_ptr<const megamol::core::JobDescription> megamol::core::CoreInstance::FindJobDescription(const char* name) {
@@ -3002,39 +2986,6 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
         fromPath.PeekBuffer(), toPath.PeekBuffer());
 
     return call;
-}
-
-
-/*
- * megamol::core::CoreInstance::enumParameters
- */
-void megamol::core::CoreInstance::enumParameters(megamol::core::ModuleNamespace::const_ptr_type path,
-    std::function<void(const Module&, param::ParamSlot&)> cb) const {
-    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
-
-    // TODO use EnumModulesNoLock?!
-
-    AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
-    e = path->ChildList_End();
-    for (i = path->ChildList_Begin(); i != e; ++i) {
-        AbstractNamedObject::const_ptr_type child = *i;
-        Module::const_ptr_type mod = Module::dynamic_pointer_cast(child);
-        ModuleNamespace::const_ptr_type ns = ModuleNamespace::dynamic_pointer_cast(child);
-
-        if (mod) {
-            AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
-            se = mod->ChildList_End();
-            for (si = mod->ChildList_Begin(); si != se; ++si) {
-                param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
-                if (slot) {
-                    cb(*mod, *slot);
-                }
-            }
-
-        } else if (ns) {
-            this->enumParameters(ns, cb);
-        }
-    }
 }
 
 

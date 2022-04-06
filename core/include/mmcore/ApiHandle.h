@@ -11,16 +11,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
-
 namespace megamol {
 namespace core {
 
 /**
  * Base class for core handles
  */
-class MEGAMOLCORE_API ApiHandle {
+class ApiHandle {
 public:
     /**
      * Type of deallocator functions

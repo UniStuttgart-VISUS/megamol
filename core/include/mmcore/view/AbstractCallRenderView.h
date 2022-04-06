@@ -22,7 +22,7 @@ namespace view {
  * FBO-based compositing and cluster display.
  */
 template<typename FBO, const char* NAME, const char* DESC>
-class MEGAMOLCORE_API AbstractCallRenderView : public AbstractCallRender {
+class AbstractCallRenderView : public AbstractCallRender {
 public:
     using FBO_TYPE = FBO;
 

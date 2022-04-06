@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include <string>
 #include <vector>
 
@@ -29,25 +28,11 @@ class AbstractSlot;
 namespace factories {
 class ModuleDescription;
 }
-class Module;
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-// dll-export of std-type instantiations
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<::megamol::core::Module>;
-
-} // namespace std
-
-namespace megamol {
-namespace core {
 
 /**
  * Base class of all graph modules
  */
-class MEGAMOLCORE_API Module : public AbstractNamedObjectContainer {
+class Module : public AbstractNamedObjectContainer {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() {
         return {"GlobalValueStore"};

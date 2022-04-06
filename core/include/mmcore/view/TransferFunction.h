@@ -19,7 +19,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API TransferFunction : public Module, public AbstractTransferFunction {
+class TransferFunction : public Module, public AbstractTransferFunction {
 public:
     /**
      * Answer the name of this module.

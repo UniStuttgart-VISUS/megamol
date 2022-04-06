@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
@@ -28,7 +27,7 @@ namespace job {
 /**
  * Abstract base class of processing jobs
  */
-class MEGAMOLCORE_API AbstractJob {
+class AbstractJob {
 public:
     /** Ctor. */
     AbstractJob(void);

@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParamPresentation.h"
 
 #include "vislib/RawStorage.h"
@@ -31,7 +30,7 @@ class AbstractParamSlot;
 /**
  * Abstract base class for all parameter objects
  */
-class MEGAMOLCORE_API AbstractParam : public AbstractParamPresentation {
+class AbstractParam : public AbstractParamPresentation {
 public:
     friend class AbstractParamSlot;
 

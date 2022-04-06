@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include <cstdio>
 #include <ctime>
 #include <iostream>
@@ -31,7 +29,7 @@ namespace log {
 /**
  * This is a utility class for managing a log file.
  */
-class MEGAMOLCORE_API Log {
+class Log {
 public:
     /** Default log message pattern for spdlog */
     static const char std_pattern[7];
@@ -102,7 +100,7 @@ public:
     /**
      * Abstract base class for log targets
      */
-    class MEGAMOLCORE_API Target {
+    class Target {
     public:
         /** Dtor */
         virtual ~Target(void);

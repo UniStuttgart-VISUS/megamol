@@ -10,7 +10,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
@@ -41,14 +40,14 @@ using megamol::frontend_resources::MouseButtonAction;
 /**
  * Abstract base class of rendering views
  */
-class MEGAMOLCORE_API AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
+class AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
 
 
 public:
     /**
      * Interfaces class for hooking into view processes
      */
-    class MEGAMOLCORE_API Hooks {
+    class Hooks {
     public:
         /**
          * Empty ctor.
