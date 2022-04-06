@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -85,7 +86,11 @@ private:
      * @param mdc The already filled input data call
      * @return True, if at least one parameter has been changed, false otherwise.
      */
-    bool HandleParameters(protein_calls::MolecularDataCall& mdc);
+    bool HandleParameters(core::AbstractGetData3DCall& call);
+
+    bool processMolecularCall(protein_calls::MolecularDataCall& mdc);
+
+    bool processMultiParticleCall(geocalls::MultiParticleDataCall& mdc);
 
     /**
      * Calculates the QuickSurf surface for given molecular data
@@ -100,6 +105,21 @@ private:
      * @return True on success, false otherwise
      */
     bool calculateSurface(protein_calls::MolecularDataCall& mdc, int quality, float radscale, float gridspacing,
+        float isoval, bool sortTriangles);
+
+    /**
+     * Calculates the QuickSurf surface for given particle data
+     *
+     * @param mdc The call containing the molecular data
+     * @param quality The quality identifier. 0 means minimum quality, 3 maximum quality.
+     * @param radscale Scaling factor for the radial influence of each particle
+     * @param gridspacing Spacing factor for the
+     * @param isoval The isovalue of the calculated surface
+     * @param sortTriangles If true, the resulting triangles will be sorted according to their view space depth
+     *
+     * @return True on success, false otherwise
+     */
+    bool calculateSurface(geocalls::MultiParticleDataCall& mdc, int quality, float radscale, float gridspacing,
         float isoval, bool sortTriangles);
 
     /**
@@ -202,5 +222,8 @@ private:
 
     /** Last frame ID of the source module that was calculated */
     size_t lastFrame_;
+
+    /** The current type of call that is connected */
+    enum class ConnectedCall { MOLECULE = 0, PARTICLE = 1, VOLUME = 2, NONE = 3 } connectedCall_;
 };
 } // namespace megamol::protein_cuda

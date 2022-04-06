@@ -1,5 +1,6 @@
 #include "QuickSurf.h"
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -45,9 +46,11 @@ QuickSurf::QuickSurf()
         , currentColoringMode1_(ProteinColor::ColoringMode::ELEMENT)
         , refreshColors_(true)
         , lastHash_(0)
-        , lastFrame_(0) {
+        , lastFrame_(0)
+        , connectedCall_(ConnectedCall::NONE) {
 
     dataInSlot_.SetCompatibleCall<MolecularDataCallDescription>();
+    dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     dataInSlot_.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->dataInSlot_);
 
@@ -142,19 +145,29 @@ void QuickSurf::release(void) {
 }
 
 bool QuickSurf::GetExtents(core_gl::view::CallRender3DGL& call) {
-    // TODO multiple possible input calls
     MolecularDataCall* mol = dataInSlot_.CallAs<MolecularDataCall>();
-    if (mol == nullptr) {
-        return false;
-    }
-    mol->SetCalltime(call.Time());
-    mol->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*mol)(MolecularDataCall::CallForGetExtent)) {
+    geocalls::MultiParticleDataCall* mpdc = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (mol == nullptr && mpdc == nullptr) {
         return false;
     }
 
-    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    call.SetTimeFramesCount(mol->FrameCount());
+    if (mol != nullptr) {
+        mol->SetCalltime(call.Time());
+        mol->SetFrameID(static_cast<int>(call.Time()));
+        if (!(*mol)(MolecularDataCall::CallForGetExtent)) {
+            return false;
+        }
+        call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+        call.SetTimeFramesCount(mol->FrameCount());
+    } else if (mpdc != nullptr) {
+        // mpdc->SetTimeStamp(call.Time()); // TODO do we have to do this?
+        mpdc->SetFrameID(static_cast<int>(call.Time()));
+        if (!(*mpdc)(1)) { // is there no index variable for the getextent function?
+            return false;
+        }
+        call.AccessBoundingBoxes() = mpdc->AccessBoundingBoxes();
+        call.SetTimeFramesCount(mpdc->FrameCount());
+    }
 
     return true;
 }
@@ -174,14 +187,8 @@ bool QuickSurf::Render(core_gl::view::CallRender3DGL& call) {
 
     // TODO multiple possible input calls
     MolecularDataCall* mol = dataInSlot_.CallAs<MolecularDataCall>();
-    if (mol == nullptr) {
-        return false;
-    }
-
-    mol->SetCalltime(call.Time());
-    mol->SetFrameID(static_cast<int>(call.Time()));
-
-    if (!(*mol)(MolecularDataCall::CallForGetData)) {
+    geocalls::MultiParticleDataCall* mpdc = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (mol == nullptr && mpdc == nullptr) {
         return false;
     }
 
@@ -189,68 +196,24 @@ bool QuickSurf::Render(core_gl::view::CallRender3DGL& call) {
         cudaqsurf_ = std::make_unique<CUDAQuickSurf>();
     }
 
-    if (HandleParameters(*mol)) {
-        if (refreshColors_) {
-            std::vector<glm::vec3> smallColorTable = {
-                glm::make_vec3(minGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
-                glm::make_vec3(midGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
-                glm::make_vec3(maxGradColorParam_.Param<core::param::ColorParam>()->Value().data())};
-            float weight = coloringModeWeightParam_.Param<core::param::FloatParam>()->Value();
-            ProteinColor::MakeWeightedColorTable(*mol, currentColoringMode0_, currentColoringMode1_, weight,
-                1.0 - weight, atomColorTable_, smallColorTable, fileColorTable_, rainbowColorTable_, nullptr, nullptr,
-                true);
-            refreshColors_ = false;
-        }
-
-        // TODO transparency
-        auto ret = this->calculateSurface(*mol, qs_qualityParam_.Param<core::param::IntParam>()->Value(),
-            qs_radScaleParam_.Param<core::param::FloatParam>()->Value(),
-            qs_gridSpacingParam_.Param<core::param::FloatParam>()->Value(),
-            qs_isovalueParam_.Param<core::param::FloatParam>()->Value(), false);
-        if (!ret) {
-            core::utility::log::Log::DefaultLog.WriteError("The QuickSurf gaussian surface could not be calculated");
+    bool processret = false;
+    if (mol != nullptr) {
+        mol->SetCalltime(call.Time());
+        mol->SetFrameID(static_cast<int>(call.Time()));
+        if (!(*mol)(MolecularDataCall::CallForGetData)) {
             return false;
         }
-        // clear all vaos
-        if (vaoHandles_.size() > 0) {
-            glDeleteVertexArrays(vaoHandles_.size(), vaoHandles_.data());
-            vaoHandles_.clear();
+        processret = this->processMolecularCall(*mol);
+    } else if (mpdc != nullptr) {
+        mpdc->SetFrameID(static_cast<int>(call.Time()));
+        if (!(*mpdc)(0)) {
+            return false;
         }
+        processret = this->processMultiParticleCall(*mpdc);
+    }
 
-        /** Creating new vaos each time is very ugly, but we have to do it like that unless Quicksurf
-         *  stops to create new buffers every frame. This cannot really be avoided as it is not clear
-         *  beforehand how many chunks will be produced. */
-        for (auto& buf : vertBuffers_) {
-            GLuint vaoHandle = 0;
-
-            // generate new vao with all buffers bound
-            glGenVertexArrays(1, &vaoHandle);
-            glBindVertexArray(vaoHandle);
-
-            buf.positionBuffer_->bind();
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-            buf.normalBuffer_->bind();
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-            buf.colorBuffer_->bind();
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-            glBindVertexArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glDisableVertexAttribArray(2);
-
-            std::vector<glm::vec3> data(buf.vertCount_ / 3, glm::vec3(0.0));
-            glGetNamedBufferSubData(buf.colorBuffer_->getName(), 0, buf.vertCount_, data.data());
-
-            vaoHandles_.push_back(vaoHandle);
-        }
+    if (!processret) {
+        return false;
     }
 
     auto& cam = call.GetCamera();
@@ -289,7 +252,7 @@ bool QuickSurf::Render(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool QuickSurf::HandleParameters(protein_calls::MolecularDataCall& mdc) {
+bool QuickSurf::HandleParameters(core::AbstractGetData3DCall& mdc) {
     bool retval = false;
     if (lastHash_ != mdc.DataHash()) {
         lastHash_ = mdc.DataHash();
@@ -382,8 +345,6 @@ bool QuickSurf::calculateSurface(
         bounds_r.y = (rad > bounds_r.y) ? rad : bounds_r.y;
     }
 
-    
-
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
     float gridpadding = radscale * bounds_r.y * 1.5f;
@@ -439,5 +400,307 @@ bool QuickSurf::calculateSurface(
         cudaqsurf_->calc_surf(mdc.AtomCount(), &xyzr[0].x, &colors[0].x, true, CUDAQuickSurf::VolTexFormat::RGB3F,
             &gridOrigin_.x, &numVoxels_.x, bounds_r.y, radscale, gridspacing, isoval, gausslim, vertBuffers_);
 
+    return true;
+}
+
+bool QuickSurf::calculateSurface(geocalls::MultiParticleDataCall& mdc, int quality, float radscale, float gridspacing,
+    float isoval, bool sortTriangles) {
+    if (mdc.GetParticleListCount() == 0) {
+        return false;
+    }
+    size_t particleCnt = 0;
+    for (int i = 0; i < mdc.GetParticleListCount(); ++i) {
+        particleCnt += mdc.AccessParticles(i).GetCount();
+    }
+    if (particleCnt == 0) {
+        return false;
+    }
+
+    /** Calculate positional and radial bounds */
+    glm::vec3 firstpos(0.0f);
+    float firstrad = 0.0f;
+    glm::vec2 bounds_r(0.0f);
+    bool firstfound = false;
+    for (size_t list = 0; list < mdc.GetParticleListCount(); ++list) {
+        auto& curlist = mdc.AccessParticles(list);
+        auto type = curlist.GetVertexDataType();
+        float globrad = curlist.GetGlobalRadius();
+        for (size_t i = 0; i < curlist.GetCount(); ++i) {
+            float rad = globrad;
+            glm::vec3 pos(0.0f);
+            if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 4]);
+                rad = ptr[i * 4 + 3];
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
+                auto ptr = reinterpret_cast<const double*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+                auto ptr = reinterpret_cast<const signed short*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            }
+            if (!firstfound) {
+                bounds_r = glm::vec2(rad);
+                firstpos = pos;
+                firstfound = true;
+            } else {
+                bounds_r.x = (rad < bounds_r.x) ? rad : bounds_r.x;
+                bounds_r.y = (rad > bounds_r.y) ? rad : bounds_r.y;
+            }
+        }
+    }
+
+    // crude estimate of the grid padding we require to prevent the
+    // resulting isosurface from being clipped
+    float gridpadding = radscale * bounds_r.y * 1.5f;
+    float padrad = gridpadding;
+    float pi = std::acos(-1); // simple trick to get an accurate pi value without c++ 20
+    padrad = static_cast<float>(0.4 * sqrt(4.0 / 3.0 * pi * padrad * padrad * padrad));
+    gridpadding = std::max(gridpadding, padrad);
+
+    // we ignore the padding and the radscale. For us, the following is enough
+    auto& bbox = mdc.AccessBoundingBoxes().ObjectSpaceBBox();
+    glm::vec3 mincoord(bbox.Left(), bbox.Bottom(), bbox.Back());
+    glm::vec3 maxcoord(bbox.Right(), bbox.Top(), bbox.Front());
+
+    mincoord -= glm::vec3(gridpadding);
+    maxcoord += glm::vec3(gridpadding);
+
+    xAxis_.x = maxcoord.x - mincoord.x;
+    yAxis_.y = maxcoord.y - mincoord.y;
+    zAxis_.z = maxcoord.z - mincoord.z;
+
+    numVoxels_.x = static_cast<int32_t>(std::ceil(xAxis_.x / gridspacing));
+    numVoxels_.y = static_cast<int32_t>(std::ceil(yAxis_.y / gridspacing));
+    numVoxels_.z = static_cast<int32_t>(std::ceil(zAxis_.z / gridspacing));
+
+    gridOrigin_ = mincoord;
+
+    std::vector<glm::vec4> xyzr(particleCnt); // positions
+    std::vector<glm::vec4> colors(particleCnt);
+
+    size_t id = 0;
+    for (size_t list = 0; list < mdc.GetParticleListCount(); ++list) {
+        auto& curlist = mdc.AccessParticles(list);
+        auto type = curlist.GetVertexDataType();
+        auto coltype = curlist.GetColourDataType();
+        float globrad = curlist.GetGlobalRadius();
+        for (size_t i = 0; i < curlist.GetCount(); ++i) {
+            float rad = globrad;
+            glm::vec3 pos(0.0f);
+            if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 4]);
+                rad = ptr[i * 4 + 3];
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
+                auto ptr = reinterpret_cast<const double*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            } else if (type == geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+                auto ptr = reinterpret_cast<const signed short*>(curlist.GetVertexData());
+                pos = glm::make_vec3(&ptr[i * 3]);
+            }
+
+            glm::vec3 color = glm::make_vec3(curlist.GetGlobalColour());
+            float alpha = curlist.GetGlobalColour()[4];
+            color /= 255.0f;
+            alpha /= 255.0f;
+            if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
+                auto ptr = reinterpret_cast<const double*>(curlist.GetColourData());
+                color = glm::vec3(ptr[i]);
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
+                color = glm::vec3(ptr[i]);
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
+                color = glm::make_vec3(&ptr[i * 3]);
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+                auto ptr = reinterpret_cast<const float*>(curlist.GetColourData());
+                color = glm::make_vec3(&ptr[i * 4]);
+                alpha = ptr[i * 4 + 3];
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+                auto ptr = reinterpret_cast<const uint8_t*>(curlist.GetColourData());
+                color = glm::make_vec3(&ptr[i * 3]);
+                color /= 255.0f;
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+                auto ptr = reinterpret_cast<const uint8_t*>(curlist.GetColourData());
+                color = glm::make_vec3(&ptr[i * 4]);
+                alpha = ptr[i * 4 + 3];
+                color /= 255.0f;
+                alpha /= 255.0f;
+            } else if (coltype == geocalls::MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA) {
+                auto ptr = reinterpret_cast<const unsigned short*>(curlist.GetColourData());
+                color = glm::make_vec3(&ptr[i * 4]);
+                alpha = ptr[i * 4 + 3];
+                // Is the division by 255 for unsigned short correct?
+                color /= 255.0f;
+                alpha /= 255.0f;
+            }
+
+            // position
+            xyzr[id].x = pos.x - gridOrigin_.x;
+            xyzr[id].y = pos.y - gridOrigin_.y;
+            xyzr[id].z = pos.z - gridOrigin_.z;
+            xyzr[id].w = rad;
+
+            // color
+            colors[id].r = color.r;
+            colors[id].g = color.g;
+            colors[id].b = color.b;
+            colors[id].a = 1.0; // TODO do transparency stuff
+
+            ++id;
+        }
+    }
+
+    float gausslim = 2.0f; // low quality, value = 0
+    if (quality == 1) {
+        gausslim = 2.5f; // medium quality, value = 1
+    } else if (quality == 2) {
+        gausslim = 3.0f; // high quality, value = 2
+    } else if (quality == 3) {
+        gausslim = 4.0f; //ultra quality, value = 3
+    }
+
+    int retval = cudaqsurf_->calc_surf(particleCnt, &xyzr[0].x, &colors[0].x, true, CUDAQuickSurf::VolTexFormat::RGB3F,
+        &gridOrigin_.x, &numVoxels_.x, bounds_r.y, radscale, gridspacing, isoval, gausslim, vertBuffers_);
+
+    return true;
+}
+
+bool QuickSurf::processMolecularCall(protein_calls::MolecularDataCall& mdc) {
+    // force color refresh when changing call types
+    if (connectedCall_ != ConnectedCall::MOLECULE) {
+        refreshColors_ = true;
+        connectedCall_ = ConnectedCall::MOLECULE;
+    }
+
+    if (HandleParameters(mdc)) {
+        if (refreshColors_) {
+            std::vector<glm::vec3> smallColorTable = {
+                glm::make_vec3(minGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
+                glm::make_vec3(midGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
+                glm::make_vec3(maxGradColorParam_.Param<core::param::ColorParam>()->Value().data())};
+            float weight = coloringModeWeightParam_.Param<core::param::FloatParam>()->Value();
+            ProteinColor::MakeWeightedColorTable(mdc, currentColoringMode0_, currentColoringMode1_, weight,
+                1.0 - weight, atomColorTable_, smallColorTable, fileColorTable_, rainbowColorTable_, nullptr, nullptr,
+                true);
+            refreshColors_ = false;
+        }
+
+        // TODO transparency
+        auto ret = this->calculateSurface(mdc, qs_qualityParam_.Param<core::param::IntParam>()->Value(),
+            qs_radScaleParam_.Param<core::param::FloatParam>()->Value(),
+            qs_gridSpacingParam_.Param<core::param::FloatParam>()->Value(),
+            qs_isovalueParam_.Param<core::param::FloatParam>()->Value(), false);
+        if (!ret) {
+            core::utility::log::Log::DefaultLog.WriteError("The QuickSurf gaussian surface could not be calculated");
+            return false;
+        }
+        // clear all vaos
+        if (vaoHandles_.size() > 0) {
+            glDeleteVertexArrays(vaoHandles_.size(), vaoHandles_.data());
+            vaoHandles_.clear();
+        }
+
+        /** Creating new vaos each time is very ugly, but we have to do it like that unless Quicksurf
+         *  stops to create new buffers every frame. This cannot really be avoided as it is not clear
+         *  beforehand how many chunks will be produced. */
+        for (auto& buf : vertBuffers_) {
+            GLuint vaoHandle = 0;
+
+            // generate new vao with all buffers bound
+            glGenVertexArrays(1, &vaoHandle);
+            glBindVertexArray(vaoHandle);
+
+            buf.positionBuffer_->bind();
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            buf.normalBuffer_->bind();
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            buf.colorBuffer_->bind();
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            glBindVertexArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+
+            vaoHandles_.push_back(vaoHandle);
+        }
+    }
+    return true;
+}
+
+bool QuickSurf::processMultiParticleCall(geocalls::MultiParticleDataCall& mdc) {
+    // force color refresh when changing call types
+    if (connectedCall_ != ConnectedCall::PARTICLE) {
+        connectedCall_ = ConnectedCall::PARTICLE;
+    }
+    if (HandleParameters(mdc)) {
+        if (refreshColors_) {
+            core::utility::log::Log::DefaultLog.WriteWarn(
+                "When connected with a MultiParticleDataCall, changing the color options has no effect");
+            refreshColors_ = false;
+        }
+
+        // TODO transparency
+        auto ret = this->calculateSurface(mdc, qs_qualityParam_.Param<core::param::IntParam>()->Value(),
+            qs_radScaleParam_.Param<core::param::FloatParam>()->Value(),
+            qs_gridSpacingParam_.Param<core::param::FloatParam>()->Value(),
+            qs_isovalueParam_.Param<core::param::FloatParam>()->Value(), false);
+        if (!ret) {
+            core::utility::log::Log::DefaultLog.WriteError("The QuickSurf gaussian surface could not be calculated");
+            return false;
+        }
+        // clear all vaos
+        if (vaoHandles_.size() > 0) {
+            glDeleteVertexArrays(vaoHandles_.size(), vaoHandles_.data());
+            vaoHandles_.clear();
+        }
+
+        /** Creating new vaos each time is very ugly, but we have to do it like that unless Quicksurf
+         *  stops to create new buffers every frame. This cannot really be avoided as it is not clear
+         *  beforehand how many chunks will be produced. */
+        for (auto& buf : vertBuffers_) {
+            GLuint vaoHandle = 0;
+
+            // generate new vao with all buffers bound
+            glGenVertexArrays(1, &vaoHandle);
+            glBindVertexArray(vaoHandle);
+
+            buf.positionBuffer_->bind();
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            buf.normalBuffer_->bind();
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            buf.colorBuffer_->bind();
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            glBindVertexArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+
+            vaoHandles_.push_back(vaoHandle);
+        }
+    }
     return true;
 }
