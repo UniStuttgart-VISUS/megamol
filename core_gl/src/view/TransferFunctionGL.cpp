@@ -58,7 +58,7 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         something_has_changed = true;
     }
 
-    // update transfer function if call ask for range update range from project file is ignored
+    // update transfer function if call asks for range update and range from project file is ignored
     if (cgtf->UpdateRange() && this->ignore_project_range) {
         // Update changed range propagated from the module via the call
         if (cgtf->ConsumeRangeUpdate()) {
