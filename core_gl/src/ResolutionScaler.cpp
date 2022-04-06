@@ -8,6 +8,7 @@
 #include "mmcore/CoreInstance.h"
 
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 #include "glowl/Texture2D.hpp"
@@ -16,21 +17,29 @@
 using namespace megamol;
 using namespace megamol::core_gl;
 
+// TODO: values must be in [0, 1], see line 84 following in ffx_fsr1.h
+
 
 ResolutionScaler::ResolutionScaler(void)
         : core::view::RendererModule<core_gl::view::CallRender3DGL, ModuleGL>()
-        , scale_mode_("Scale Mode", "Sets the scale mode for the input fbo, e.g. no scale, bilinear, FSR")
-{
+        , scale_mode_("Scale Mode", "Sets the scale mode for the input fbo, e.g. no scale, bilinear, FSR.")
+        , rcas_sharpness_attenuation_(
+              "Sharpness", "Sets the sharpness attenuation parameter used in RCAS.") {
+    // TODO: add inputsampler to all fsr shaders
     auto scale_modes = new core::param::EnumParam(1);
     scale_modes->SetTypePair(0, "None");
     scale_modes->SetTypePair(1, "Naive");
     scale_modes->SetTypePair(2, "Bilinear");
-    scale_modes->SetTypePair(3, "FSR");
+    scale_modes->SetTypePair(3, "FSR (EASU)");
+    scale_modes->SetTypePair(4, "FSR (EASU + RCAS)");
     this->scale_mode_.SetParameter(scale_modes);
-    // TODO: set callback function here for defines
-    // --> re-compile shader based on new defines (iff there are new ones set)
-    // same TODO: what about RCAS (sharpening)
     this->MakeSlotAvailable(&scale_mode_);
+
+    auto sharpness = new core::param::FloatParam(0.25f, 0.f, 2.f);
+    sharpness->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Slider);
+    sharpness->SetGUIVisible(false);
+    this->rcas_sharpness_attenuation_.SetParameter(sharpness);
+    this->MakeSlotAvailable(&rcas_sharpness_attenuation_);
 
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
@@ -46,17 +55,17 @@ bool ResolutionScaler::create(void) {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        naive_downsample_prgm_ =
-            core::utility::make_glowl_shader("naive_downscale", shader_options, "ResolutionScaler/naive_downscale.comp.glsl");
-
         naive_upsample_prgm_ =
             core::utility::make_glowl_shader("naive_upscale", shader_options, "ResolutionScaler/naive_upscale.comp.glsl");
 
-        fsr_downsample_prgm_ =
-            core::utility::make_glowl_shader("fsr_downscale", shader_options, "ResolutionScaler/fsr_downscale.comp.glsl");
+        fsr_bilinear_upsample_prgm_ = core::utility::make_glowl_shader(
+            "fsr_upscale_bilinear", shader_options, "ResolutionScaler/fsr_upscale_bilinear.comp.glsl");
 
-        fsr_upsample_prgm_ =
-            core::utility::make_glowl_shader("fsr_upscale", shader_options, "ResolutionScaler/fsr_upscale.comp.glsl");
+        fsr_easu_upsample_prgm_ =
+            core::utility::make_glowl_shader("fsr_upscale_easu", shader_options, "ResolutionScaler/fsr_upscale_easu.comp.glsl");
+
+        fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader(
+            "fsr_upscale_rcas", shader_options, "ResolutionScaler/fsr_upscale_rcas.comp.glsl");
     }
     catch (std::exception& e){
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -64,6 +73,16 @@ bool ResolutionScaler::create(void) {
     }
 
     scaled_fbo_ = std::make_shared<glowl::FramebufferObject>(1,1);
+
+    inter_tl_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
+    intermediary_rcas_tx2D_ = std::make_unique<glowl::Texture2D>("intermediary_rcas_tx2D", inter_tl_, nullptr);
+
+    // params according to AMD, see FSR_Filter.cpp line 48 onwards
+    std::vector<std::pair<GLenum, GLint>> fsr_int_params = {{GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE}};
+
+    fsr_input_sampler_ = std::make_unique<glowl::Sampler>("fsr_input_sampler", fsr_int_params);
 
     fsr_consts_ssbo_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
@@ -114,6 +133,17 @@ void ResolutionScaler::calcConstants(
     con3[2] = con3[3] = 0;
 }
 
+void ResolutionScaler::FsrRcasCon(glm::uvec4& con,
+    float sharpness) {
+    // Transform from stops to linear value.
+    sharpness = exp2f(-sharpness);
+    float hSharp[2] = {sharpness, sharpness};
+    con[0] = AU1_AF1(sharpness);
+    con[1] = AU1_AH2_AF2(hSharp);
+    con[2] = 0;
+    con[3] = 0;
+}
+
 bool ResolutionScaler::GetExtents(core_gl::view::CallRender3DGL& call) {
     core_gl::view::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
     if (chainedCall != nullptr) {
@@ -140,108 +170,171 @@ bool ResolutionScaler::Render(view::CallRender3DGL& call) {
 
     int mode = this->scale_mode_.Param<core::param::EnumParam>()->Value();
 
-    // TODO: what about mipmap down- and upscaling?
-    // TODO: need a new way of downscaling
-    // currently it is only possible to downscale by factor 2 in each direction
-    // but what about 1.3, 1.5, or 1.7?
-    // AMD launches vertex/fragment shader to do that
-    // TODO: do we actually need downsampling anyway?
+    if (mode == 4)
+        rcas_sharpness_attenuation_.Parameter()->SetGUIVisible(true);
+    else
+        rcas_sharpness_attenuation_.Parameter()->SetGUIVisible(false);
 
-    // prepare fbo
+    // prepare fbo and intermediary texture
     if (mode != 0) {
         // bind the newly scaled fbo that should be used by the rhs renderers
         scaled_fbo_->bind();
 
-        scaled_fbo_->resize(downsampled_width, downsampled_height);
-        
-        // scale down fbo here
-        // the downscaled version is the current fbo that the rhs modules automatically use
-        // so: downscale --> call rhs with (1) so it uses the downscaled version
-        // and after the (1) call, re-scale the fbo and set with call.SetFramebuffer(scaled_fbo_);
-
-        // create color attachments for new scaled fbo
-        if (scaled_fbo_->getNumColorAttachments() == 0) {
-            for (int i = 0; i < lhs_input_fbo->getNumColorAttachments(); ++i) {
-                // use temporary Texture2D as the downsampled color attachment
-                auto col_tl = lhs_input_fbo->getColorAttachment(i)->getTextureLayout();
-                // TODO: adjust int_params (e.g. fsr gaussian like downscaling requires linear mirror --> see 
-                scaled_fbo_->createColorAttachment(col_tl.internal_format, col_tl.format, col_tl.type);
-            }
+        if (scaled_fbo_->getWidth() != downsampled_width || scaled_fbo_->getHeight() != downsampled_height) {
+            scaled_fbo_->resize(downsampled_width, downsampled_height);
         }
 
+        auto input_fbo_tl = lhs_input_fbo->getColorAttachment(0)->getTextureLayout();
+
+        bool fbo_update = input_fbo_tl.internal_format != inter_tl_.internal_format ||
+                          input_fbo_tl.format != inter_tl_.format || input_fbo_tl.type != inter_tl_.type ||
+                          scaled_fbo_->getNumColorAttachments() == 0;
+        bool tx2D_update =
+            fbo_update || input_fbo_tl.width != inter_tl_.width || input_fbo_tl.height != inter_tl_.height;
+
+        // prepare color attachment of fbo and intermediate texture for rcas
+        if (fbo_update)
+        {
+            scaled_fbo_->createColorAttachment(input_fbo_tl.internal_format, input_fbo_tl.format, input_fbo_tl.type);
+
+            // prepare intermediate texture used in rcas pass
+            if (tx2D_update) {
+                intermediary_rcas_tx2D_->reload(input_fbo_tl, nullptr);
+            }
+
+            inter_tl_ = input_fbo_tl;
+        }
+
+        // TODO: adjust int_params (e.g. fsr gaussian like downscaling requires linear mirror --> see
+
+        // TODO: !
         if (!scaled_fbo_->checkStatus(0)) {
             std::cout << "scaled_fbo_ is broken\n";
+            return false;
         }
     }
 
-    scaled_fbo_->bind();
-    glm::vec4 bgc = call.BackgroundColor();
-    glClearColor(bgc.r, bgc.g, bgc.b, bgc.a);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    {
+        scaled_fbo_->bind();
+        glm::vec4 bgc = call.BackgroundColor();
+        glClearColor(bgc.r, bgc.g, bgc.b, bgc.a);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     *rhs_chained_call = call;
-    if(mode != 0) rhs_chained_call->SetFramebuffer(scaled_fbo_);
-    
+    if (mode != 0) rhs_chained_call->SetFramebuffer(scaled_fbo_);
+
     // call rhs
     if (!(*rhs_chained_call)(core::view::AbstractCallRender::FnRender)) {
         return false;
     }
+
     
+    // we assume only one color attachment in the fbo
     // naive upsample
     if (mode == 1) {
         naive_upsample_prgm_->use();
 
-        // downsample color buffers
-        for (int i = 0; i < lhs_input_fbo->getNumColorAttachments(); ++i) {
-            glActiveTexture(GL_TEXTURE0);
-            scaled_fbo_->getColorAttachment(i)->bindTexture();
-            glUniform1i(naive_upsample_prgm_->getUniformLocation("g_input_tx2D"), 0);
+        // downsample color buffer
+        glActiveTexture(GL_TEXTURE0);
+        scaled_fbo_->getColorAttachment(0)->bindTexture();
+        glUniform1i(naive_upsample_prgm_->getUniformLocation("g_input_tx2D"), 0);
 
-            lhs_input_fbo->getColorAttachment(i)->bindImage(0, GL_WRITE_ONLY);
+        lhs_input_fbo->getColorAttachment(0)->bindImage(0, GL_WRITE_ONLY);
 
-            // TODO: calc group sizes better (see parallelcoordinatesrenderer2d)
-            glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
-                static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
-            ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        }
+        glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
+        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        // TODO: depth buffer
-
-        glUseProgram(0);
+        resetGLStates();
     }
 
-    // fsr upsample
-    if (mode == 3) {
-        FSRConstants fsr;
-        calcConstants(fsr.const0, fsr.const1, fsr.const2, fsr.const3,
-            downsampled_width, downsampled_height, fbo_width, fbo_height);
+    FSRConstants fsr;
+    if (mode > 1) {
+        // TODO: dynamic resolution
+        // TODO: are the const values actually correct in shaders?
+        calcConstants(fsr.const0, fsr.const1, fsr.const2, fsr.const3, downsampled_width, downsampled_height, fbo_width,
+            fbo_height);
+        // TODO: kick this part in shaders out, since we dont do hdr
+        fsr.Sample = glm::uvec4(0, 0, 0, 0); // always 0 because no hdr is used
         fsr_consts_ssbo_->rebuffer(&fsr, sizeof(fsr));
+    }
 
-        fsr_upsample_prgm_->use();
+    // bilinear upsample
+    if (mode == 2) {
+        fsr_bilinear_upsample_prgm_->use();
+
+        // downsample color buffer
+        fsr_consts_ssbo_->bind(0);
+
+        glActiveTexture(GL_TEXTURE0);
+        scaled_fbo_->getColorAttachment(0)->bindTexture();
+        fsr_input_sampler_->bindSampler(0);
+        glUniform1i(fsr_bilinear_upsample_prgm_->getUniformLocation("InputTexture"), 0);
+
+        lhs_input_fbo->getColorAttachment(0)->bindImage(1, GL_WRITE_ONLY);
+
+        glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
+        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        resetGLStates();
+    }
+
+    // fsr upsample easu
+    if (mode > 2) {
+        fsr_easu_upsample_prgm_->use();
 
         // upsample color buffers
-        for (int i = 0; i < lhs_input_fbo->getNumColorAttachments(); ++i) {
-            fsr_consts_ssbo_->bind(0);
+        fsr_consts_ssbo_->bind(0);
 
-            glActiveTexture(GL_TEXTURE0);
-            scaled_fbo_->getColorAttachment(i)->bindTexture();
-            glUniform1i(fsr_upsample_prgm_->getUniformLocation("InputTexture"), 0);
+        glActiveTexture(GL_TEXTURE0);
+        scaled_fbo_->getColorAttachment(0)->bindTexture();
+        fsr_input_sampler_->bindSampler(0);
+        glUniform1i(fsr_easu_upsample_prgm_->getUniformLocation("InputTexture"), 0);
 
-            lhs_input_fbo->getColorAttachment(i)->bindImage(1, GL_WRITE_ONLY);
+        if (mode == 3) lhs_input_fbo->getColorAttachment(0)->bindImage(1, GL_WRITE_ONLY);
+        if (mode == 4) intermediary_rcas_tx2D_->bindImage(1, GL_WRITE_ONLY);
 
-            // TODO: calc group sizes better (see parallelcoordinatesrenderer2d)
-            /*glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
-                static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);*/
-            glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
-                static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
-            ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        }
+        /*glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);*/
+        glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
+        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        // TODO: different shaders for signle easu and easu + rcas
+        resetGLStates();
+    }
 
-        glUseProgram(0);
+    // fsr upsample rcas
+    if (mode == 4) {
+        // re-calculate constants for rcas
+        FsrRcasCon(fsr.const0, rcas_sharpness_attenuation_.Param<core::param::FloatParam>()->Value());
+        fsr.Sample = glm::uvec4(0, 0, 0, 0); // always 0 because no hdr is used
+        fsr_consts_ssbo_->rebuffer(&fsr, sizeof(fsr));
+
+
+        fsr_rcas_upsample_prgm_->use();
+
+        // upsample color buffers
+        fsr_consts_ssbo_->bind(0);
+
+        glActiveTexture(GL_TEXTURE0);
+        intermediary_rcas_tx2D_->bindTexture();
+        fsr_input_sampler_->bindSampler(0);
+        glUniform1i(fsr_rcas_upsample_prgm_->getUniformLocation("InputTexture"), 0);
+
+        lhs_input_fbo->getColorAttachment(0)->bindImage(1, GL_WRITE_ONLY);
+
+        // TODO: calc group sizes better (see FSR_Filter.cpp in amd)
+        /*glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);*/
+        glDispatchCompute(static_cast<int>(std::ceil(downsampled_width / 8.0f)),
+            static_cast<int>(std::ceil(downsampled_height / 8.0f)), 1);
+        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        resetGLStates();
     }
 
     call.SetFramebuffer(lhs_input_fbo);
