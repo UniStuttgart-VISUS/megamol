@@ -9,7 +9,6 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"

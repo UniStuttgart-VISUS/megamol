@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/ApiHandle.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
@@ -23,7 +22,6 @@
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/ViewInstanceRequest.h"
-#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
@@ -34,7 +32,6 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/LogEchoTarget.h"
 #include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -77,19 +74,11 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
+class CoreInstance : public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
     typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
-
-    /**
-     * Deallocator for view handles.
-     *
-     * @param data Must point to the CoreInstance which created this object.
-     * @param obj A view object.
-     */
-    static void ViewJobHandleDalloc(void* data, ApiHandle* obj);
 
     /** ctor */
     CoreInstance(void);
@@ -147,23 +136,7 @@ public:
      * @throws vislib::IllegalStateException if the instance already is
      *         initialised.
      */
-    void Initialise(bool mmconsole_frontend_compatible = true);
-
-    /**
-     * Sets an initialisation value.
-     *
-     * @param key Specifies which value to set.
-     * @param type Specifies the value type of 'value'.
-     * @param value The value to set the initialisation value to. The type
-     *              of the variable specified depends on 'type'.
-     *
-     * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if
-     *         the function fails.
-     *
-     * @throw vislib::IllegalStateException if the instance already is
-     *        initialised.
-     */
-    mmcErrorCode SetInitValue(mmcInitValue key, mmcValueType type, const void* value);
+    void Initialise();
 
     /**
      * Returns the configuration object of this instance.
@@ -785,13 +758,6 @@ public:
     }
 
     /**
-     * Return flag indicating if current usage of core instance is compatible with mmconsole fronted.
-     */
-    inline bool IsmmconsoleFrontendCompatible(void) const {
-        return this->mmconsoleFrontendCompatible;
-    }
-
-    /**
      * Getter for shader paths
      */
     std::vector<std::filesystem::path> GetShaderPaths() const;
@@ -1302,9 +1268,6 @@ private:
     /** Global hash of all parameters (is increased if any parameter defintion changes) */
     size_t GOES_INTO_GRAPH parameterHash;
 #endif
-
-    /** Flag indicates if usage of core instance is compatible with mmconsole frontend. */
-    bool mmconsoleFrontendCompatible;
 
 #ifdef _WIN32
 #pragma warning(default : 4251)

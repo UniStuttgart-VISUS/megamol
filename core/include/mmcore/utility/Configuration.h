@@ -13,7 +13,6 @@
 
 #include "mmcore/LuaState.h"
 #include "mmcore/ParamValueSetRequest.h"
-#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "vislib/Map.h"
@@ -23,6 +22,35 @@
 #include "vislib/StringConverter.h"
 
 #include <string>
+
+/** Possible values for CONFIGURATION ID */
+// TODO Moved here from deleted mmcore/api/MegaMolCore.h
+typedef enum _mmcConfigID : int {
+    MMC_CFGID_INVALID, // an invalid object!
+    MMC_CFGID_APPLICATION_DIR,
+    MMC_CFGID_CONFIG_FILE,
+    MMC_CFGID_VARIABLE // a configured variable set-tag
+} mmcConfigID;
+
+/** Possible value types. */
+// TODO Moved here from deleted mmcore/api/MegaMolCore.h
+typedef enum _mmcValueTypeEnum : int {
+    MMC_TYPE_INT32,  // 32 bit signed integer.(Pointer to!)
+    MMC_TYPE_UINT32, // 32 bit unsigned integer.(Pointer to!)
+    MMC_TYPE_INT64,  // 64 bit signed integer.(Pointer to!)
+    MMC_TYPE_UINT64, // 64 bit unsigned integer.(Pointer to!)
+    MMC_TYPE_BYTE,   // 8 bit unsigned integer.(Pointer to!)
+    MMC_TYPE_BOOL,   // bool (platform specific integer size) (Pointer to!)
+    MMC_TYPE_FLOAT,  // 32 bit float (Pointer to!)
+    MMC_TYPE_CSTR,   // Ansi string (Pointer or Array of ansi characters).
+    MMC_TYPE_WSTR,   // Unicode string (Pointer or Array of wide characters).
+#if defined(UNICODE) || defined(_UNICODE)
+#define MMC_TYPE_TSTR MMC_TYPE_WSTR
+#else /* defined(UNICODE) || defined(_UNICODE) */
+#define MMC_TYPE_TSTR MMC_TYPE_CSTR
+#endif             /* defined(UNICODE) || defined(_UNICODE) */
+    MMC_TYPE_VOIDP // Manuel type convertion. Use with care!
+} mmcValueType;
 
 namespace megamol {
 namespace core {

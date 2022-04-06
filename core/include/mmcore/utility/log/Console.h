@@ -81,9 +81,6 @@ public:
             megamol::core::utility::log::Log::SourceID sid, std::string const& msg) override;
     };
 
-    /** The log echo output target of the console. */
-    static const ConsoleLogTarget LogEchoTarget;
-
     /**
      * Runs a console command in a common system command interpreter. On
      * windows 'cmd.exe' is used, on linux '/bin/sh' is used. The output

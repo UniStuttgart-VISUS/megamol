@@ -64,8 +64,7 @@ int main(const int argc, const char** argv) {
     megamol::core::CoreInstance core;
     core.SetConfigurationPaths_Frontend3000Compatibility(
         config.application_directory, config.shader_directories, config.resource_directories);
-    core.Initialise(
-        false); // false means the core ignores some mmconsole legacy features, e.g. we don't collide on Lua host ports
+    core.Initialise();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
