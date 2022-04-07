@@ -47,12 +47,14 @@ bool BaseAmortizedRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
         return false;
     }
 
+    cr2d->SetCamera(call.GetCamera());
+
     if (!(*cr2d)(core_gl::view::CallRender2DGL::FnGetExtents)) {
         return false;
     }
 
-    cr2d->SetTimeFramesCount(call.TimeFramesCount());
-    cr2d->SetIsInSituTime(call.IsInSituTime());
+    call.SetTimeFramesCount(cr2d->TimeFramesCount());
+    call.SetIsInSituTime(cr2d->IsInSituTime());
 
     call.AccessBoundingBoxes() = cr2d->GetBoundingBoxes();
 
