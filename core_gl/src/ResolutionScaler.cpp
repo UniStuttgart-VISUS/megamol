@@ -33,7 +33,7 @@ ResolutionScaler::ResolutionScaler(void)
     
     auto scale_modes = new core::param::EnumParam(1);
     scale_modes->SetTypePair(0, "None");
-    scale_modes->SetTypePair(1, "Naive");
+    scale_modes->SetTypePair(1, "Naive (2x)");
     scale_modes->SetTypePair(2, "Bilinear");
     scale_modes->SetTypePair(3, "FSR (EASU)");
     scale_modes->SetTypePair(4, "FSR (EASU + RCAS)");
