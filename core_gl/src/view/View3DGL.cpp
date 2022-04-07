@@ -60,22 +60,22 @@ View3DGL::~View3DGL() {
 }
 
 megamol::frontend_resources::ImageWrapper View3DGL::Render(double time, double instanceTime) {
+
+    BaseView::beforeRender(time, instanceTime);
+
+    // clear fbo before sending it down the rendering call
+    // the view is the owner of this fbo and therefore responsible
+    // for clearing it at the beginning of a render frame
+    _fbo->bind();
+    auto bgcol = this->BackgroundColor();
+    glClearColor(bgcol.r * bgcol.a, bgcol.g * bgcol.a, bgcol.b * bgcol.a, bgcol.a); // Premultiply alpha
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
 
     if (cr3d != NULL) {
-
-        BaseView::beforeRender(time, instanceTime);
-
-        // clear fbo before sending it down the rendering call
-        // the view is the owner of this fbo and therefore responsible
-        // for clearing it at the beginning of a render frame
-        _fbo->bind();
-        auto bgcol = this->BackgroundColor();
-        glClearColor(bgcol.r * bgcol.a, bgcol.g * bgcol.a, bgcol.b * bgcol.a, bgcol.a); // Premultiply alpha
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         // set camera and fbo in rendering call
         cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr3d->SetFramebuffer(_fbo);
@@ -83,9 +83,9 @@ megamol::frontend_resources::ImageWrapper View3DGL::Render(double time, double i
 
         // call the rendering call
         (*cr3d)(core_gl::view::CallRender3DGL::FnRender);
-
-        BaseView::afterRender();
     }
+
+    BaseView::afterRender();
 
     return GetRenderingResult();
 }
