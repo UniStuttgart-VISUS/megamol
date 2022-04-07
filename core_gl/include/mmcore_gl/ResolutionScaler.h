@@ -144,6 +144,10 @@ private:
         glUseProgram(0);
     }
 
+    // Callback function for GUI visibility
+    bool scaleModeCallback(core::param::ParamSlot& slot);
+    bool presetCallback(core::param::ParamSlot& slot);
+
     std::shared_ptr<glowl::FramebufferObject> scaled_fbo_;
 
     std::shared_ptr<glowl::GLSLProgram> naive_downsample_prgm_;
@@ -163,6 +167,9 @@ private:
 
     core::param::ParamSlot scale_mode_;
     core::param::ParamSlot rcas_sharpness_attenuation_;
+    core::param::ParamSlot fsr_resolution_presets_;
+
+    float scale_factor_;
 
 
 }; /* end class StubModule */

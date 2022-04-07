@@ -26,7 +26,8 @@
  * All rights reserved.
  */
 
-layout(local_size_x = 8, local_size_y = 8) in;
+//layout(local_size_x = 8, local_size_y = 8) in;
+layout(local_size_x=64) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
@@ -86,37 +87,13 @@ void CurrFilter(AU2 pos)
 }
 
 void main() {
-    vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
-    vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
-    vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
-    vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
-
-    uvec2 in_pos = uvec2(gl_GlobalInvocationID.xy);
-
-    CurrFilter(2 * in_pos);
-	CurrFilter(2 * in_pos + uvec2(1, 0));
-	CurrFilter(2 * in_pos + uvec2(0, 1));
-	CurrFilter(2 * in_pos + uvec2(1, 1));
-
-    //imageStore(OutputTexture, 2 * in_pos + ivec2(0, 0), red);
-    //imageStore(OutputTexture, 2 * in_pos + ivec2(1, 0), green);
-    //imageStore(OutputTexture, 2 * in_pos + ivec2(0, 1), blue);
-    //imageStore(OutputTexture, 2 * in_pos + ivec2(1, 1), yellow);
-
-    // // Do remapping of local xy in workgroup for a more PS-like swizzle pattern.
-	// AU2 gxy = ARmp8x8(gl_LocalInvocationID.x) + AU2(gl_WorkGroupID.x << 4u, gl_WorkGroupID.y << 4u);
-	// CurrFilter(gxy);
-    // imageStore(OutputTexture, ivec2(gxy), red);
-	// gxy.x += 8u;
-	// CurrFilter(gxy);
-    // imageStore(OutputTexture, ivec2(gxy), green);
-	// gxy.y += 8u;
-	// CurrFilter(gxy);
-    // imageStore(OutputTexture, ivec2(gxy), blue);
-	// gxy.x -= 8u;
-	// CurrFilter(gxy);
-    // imageStore(OutputTexture, ivec2(gxy), yellow);
-
-
-
+    // Do remapping of local xy in workgroup for a more PS-like swizzle pattern.
+	AU2 gxy = ARmp8x8(gl_LocalInvocationID.x) + AU2(gl_WorkGroupID.x << 4u, gl_WorkGroupID.y << 4u);
+	CurrFilter(gxy);
+	gxy.x += 8u;
+	CurrFilter(gxy);
+	gxy.y += 8u;
+	CurrFilter(gxy);
+	gxy.x -= 8u;
+	CurrFilter(gxy);
 }
