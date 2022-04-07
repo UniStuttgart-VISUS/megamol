@@ -92,7 +92,6 @@ megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double ins
         cr2d->SetCamera(_camera);
 
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-
     }
 
     BaseView::afterRender();
