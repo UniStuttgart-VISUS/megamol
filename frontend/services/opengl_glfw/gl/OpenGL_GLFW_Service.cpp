@@ -402,9 +402,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // init glfw window and OpenGL Context
     ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
     ::glfwWindowHint(GLFW_DECORATED, (m_pimpl->config.windowPlacement.fullScreen)
-                                         ? (GL_FALSE)
-                                         : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
-    ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
+                                         ? (GLFW_FALSE)
+                                         : (m_pimpl->config.windowPlacement.noDec ? GLFW_FALSE : GLFW_TRUE));
+    ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // initially invisible
 
     // Hack for window size larger than screen:
     // The width and height for glfwCreateWindow is just a hint for the underlying window manager. Most window
@@ -418,7 +418,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // The async task problem holds (of course) also for querying the window size with glfwGetWindowSize.
     // Calling this right after glfwCreateWindow will just return our values, not the actual window size.
     // Therefore here we cannot test for correct window size.
-    ::glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, m_pimpl->config.forceWindowSize ? GLFW_FALSE : GLFW_TRUE);
 
     int monCnt = 0;
     GLFWmonitor** monitors = ::glfwGetMonitors(&monCnt); // primary monitor is first in list

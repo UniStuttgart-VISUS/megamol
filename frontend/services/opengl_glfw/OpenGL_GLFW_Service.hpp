@@ -47,6 +47,7 @@ public:
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
         bool glContextCoreProfile = false;
+        bool forceWindowSize = false;
     };
 
     std::string serviceName() const override {
