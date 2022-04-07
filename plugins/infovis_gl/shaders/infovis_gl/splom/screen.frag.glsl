@@ -3,7 +3,7 @@
 #include "core/tflookup.inc.glsl"
 #include "core/tfconvenience.inc.glsl"
 #include "core/bitflags.inc.glsl"
-#include "splom_common/splom_mapping.inc.glsl"
+#include "common/mapping.inc.glsl"
 
 uniform vec4 contourColor;
 uniform float contourSize;

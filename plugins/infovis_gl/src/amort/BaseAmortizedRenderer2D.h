@@ -48,8 +48,7 @@ protected:
 
     virtual void releaseImpl() = 0;
 
-    virtual bool renderImpl(core_gl::view::CallRender2DGL& nextRendererCall,
-        std::shared_ptr<core_gl::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) = 0;
+    virtual bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) = 0;
 
 private:
     megamol::core::CallerSlot nextRendererSlot;
