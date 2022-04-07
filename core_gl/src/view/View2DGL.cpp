@@ -72,7 +72,7 @@ view::View2DGL::~View2DGL(void) {
  */
 megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double instanceTime) {
 
-    BaseView::beforeRender(time, instanceTime);
+    AbstractView::beforeRender(time, instanceTime);
 
     // clear fbo before sending it down the rendering call
     // the view is the owner of this fbo and therefore responsible
@@ -94,7 +94,7 @@ megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double ins
         (*cr2d)(core::view::AbstractCallRender::FnRender);
     }
 
-    BaseView::afterRender();
+    AbstractView::afterRender();
 
     return GetRenderingResult();
 }
