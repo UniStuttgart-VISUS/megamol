@@ -95,6 +95,7 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.topMost = config.window_mode & RuntimeConfig::WindowMode::topmost;
     openglConfig.windowPlacement.noCursor = config.window_mode & RuntimeConfig::WindowMode::nocursor;
     openglConfig.windowPlacement.hidden = config.window_mode & RuntimeConfig::WindowMode::hidden;
+    openglConfig.forceWindowSize = config.force_window_size;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;

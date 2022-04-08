@@ -304,19 +304,21 @@ void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(
     int fbo_width = 0, fbo_height = 0;
     int window_width = 0, window_height = 0;
 
-    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowSizeLimits(window, width, height, width, height);
     glfwSetWindowSize(window, width, height);
     glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
     glfwGetWindowSize(window, &window_width, &window_height);
 
-    if (fbo_width != width || fbo_height != height) {
-        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" +
-            std::to_string(height) + ". You wont be able to resize the window manually after this.");
-        glfwSetWindowSizeLimits(window, width, height, width, height);
-        glfwSetWindowSize(window, width, height);
+    int i = 0;
+    while ((fbo_width != width || fbo_height != height) && i < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        glfwPollEvents();
         glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
         glfwGetWindowSize(window, &window_width, &window_height);
+        i++;
     }
+
+    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     if (fbo_width != width || fbo_height != height) {
         log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested "
@@ -354,9 +356,7 @@ void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fulls
     }
 }
 
-namespace megamol {
-namespace frontend {
-
+namespace megamol::frontend {
 
 struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
@@ -364,12 +364,12 @@ struct OpenGL_GLFW_Service::PimplData {
     std::string fullWindowTitle;
     std::chrono::system_clock::time_point last_time;
     megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
-    std::array<GLFWcursor*, 9> mouse_cursors;
+    std::array<GLFWcursor*, 9> mouse_cursors{};
 };
 
-OpenGL_GLFW_Service::OpenGL_GLFW_Service() {}
+OpenGL_GLFW_Service::OpenGL_GLFW_Service() = default;
 
-OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {}
+OpenGL_GLFW_Service::~OpenGL_GLFW_Service() = default;
 
 bool OpenGL_GLFW_Service::init(void* configPtr) {
     if (configPtr == nullptr)
@@ -402,9 +402,23 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     // init glfw window and OpenGL Context
     ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
     ::glfwWindowHint(GLFW_DECORATED, (m_pimpl->config.windowPlacement.fullScreen)
-                                         ? (GL_FALSE)
-                                         : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
-    ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
+                                         ? (GLFW_FALSE)
+                                         : (m_pimpl->config.windowPlacement.noDec ? GLFW_FALSE : GLFW_TRUE));
+    ::glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // initially invisible
+
+    // Hack for window size larger than screen:
+    // The width and height for glfwCreateWindow is just a hint for the underlying window manager. Most window
+    // managers (Windows + Linux/X11) will just resize and maximise the window on the screen, when a size
+    // larger than the screen is requested. When we do not allow resizing, the window managers seems to use the
+    // wanted size.
+    // But we want a resizable window, therefore we need to set the window resizable again. But the second
+    // problem with window managers is, that window creation is an async task (at least with X11). When we
+    // immediately after window creation set the window to be resizable again, the automatic resize will happen
+    // again. We need to delay this to a later point in time (i.e. rendering of first frame).
+    // The async task problem holds (of course) also for querying the window size with glfwGetWindowSize.
+    // Calling this right after glfwCreateWindow will just return our values, not the actual window size.
+    // Therefore here we cannot test for correct window size.
+    glfwWindowHint(GLFW_RESIZABLE, m_pimpl->config.forceWindowSize ? GLFW_FALSE : GLFW_TRUE);
 
     int monCnt = 0;
     GLFWmonitor** monitors = ::glfwGetMonitors(&monCnt); // primary monitor is first in list
@@ -482,7 +496,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
     // context profiles available since 3.2
     bool has_profiles =
-        m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+        m_pimpl->config.versionMajor > 3 || (m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2);
     if (has_profiles)
         glfwWindowHint(GLFW_OPENGL_PROFILE,
             m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
@@ -525,7 +539,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         return false;
     }
 #else
-    Display* display = XOpenDisplay(NULL);
+    Display* display = XOpenDisplay(nullptr);
     gladLoaderLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
@@ -628,6 +642,9 @@ void OpenGL_GLFW_Service::do_every_second() {
         std::string title = m_pimpl->config.windowTitlePrefix + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
         glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
 
+        // set window resizable according to the asnyc nature of the initial window size stated in init()
+        glfwSetWindowAttrib(m_pimpl->glfwContextWindowPtr, GLFW_RESIZABLE, GLFW_TRUE);
+
 #ifdef _WIN32
         // TODO fix this for EGL + Win
         //log("Periodic reordering of windows.");
@@ -639,7 +656,7 @@ void OpenGL_GLFW_Service::do_every_second() {
     }
 }
 
-#define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
+#define that (static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd)))
 void OpenGL_GLFW_Service::register_glfw_callbacks() {
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
 
@@ -758,7 +775,7 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     // which in turn causes callbacks to be called outside of regular event processing.
 
     auto& should_close_events = this->m_windowEvents.should_close_events;
-    if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
+    if (!should_close_events.empty() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
 
     auto& global_framebuffer_events =
@@ -901,7 +918,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
-void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
+void OpenGL_GLFW_Service::create_glfw_mouse_cursors() {
     // See imgui_impl_glfw.cpp for reference
     for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
         mouse_cursor_ptr = nullptr;
@@ -956,5 +973,4 @@ void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
 // }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
