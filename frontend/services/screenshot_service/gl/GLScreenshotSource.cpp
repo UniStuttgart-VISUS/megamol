@@ -12,30 +12,6 @@
 
 void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
     m_read_buffer = buffer;
-    GLenum read_buffer;
-
-    switch (buffer) {
-    default:
-        [[fallthrough]];
-    case ReadBuffer::FRONT:
-        read_buffer = GL_FRONT;
-        break;
-    case ReadBuffer::BACK:
-        read_buffer = GL_BACK;
-        break;
-    case ReadBuffer::COLOR_ATT0:
-        read_buffer = GL_COLOR_ATTACHMENT0;
-        break;
-    case ReadBuffer::COLOR_ATT1:
-        read_buffer = GL_COLOR_ATTACHMENT0 + 1;
-        break;
-    case ReadBuffer::COLOR_ATT2:
-        read_buffer = GL_COLOR_ATTACHMENT0 + 2;
-        break;
-    case ReadBuffer::COLOR_ATT3:
-        read_buffer = GL_COLOR_ATTACHMENT0 + 3;
-        break;
-    }
 }
 
 megamol::frontend_resources::ScreenshotImageData const&
