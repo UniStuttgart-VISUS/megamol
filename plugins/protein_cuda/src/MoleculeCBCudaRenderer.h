@@ -17,10 +17,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/FpsCounter.h"
-#include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <algorithm>
 #include <list>
 #include <memory>
@@ -30,7 +27,6 @@
 #include "cuda_runtime_api.h"
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
-//#include "cudpp/cudpp.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -177,14 +173,6 @@ private:
     void ContourBuildupCuda(megamol::protein_calls::MolecularDataCall* mol);
 
     /**
-     * CPU version of contour buildup algorithm
-     *
-     * TODO
-     *
-     */
-    void ContourBuildupCPU(megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
      * Update all parameter slots.
      *
      * @param mol   Pointer to the data call.
@@ -216,6 +204,10 @@ private:
     std::shared_ptr<glowl::GLSLProgram> torusShader_;
     std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
 
+    GLuint sphereVAO_;
+    GLuint torusVAO_;
+    GLuint sphericalTriangleVAO_;
+
     // the bounding box of the protein
     vislib::math::Cuboid<float> bBox;
 
@@ -225,13 +217,6 @@ private:
     // max number of neighbors per atom
     const unsigned int atomNeighborCount;
 
-    // CUDA Radix sort
-    //CUDPPHandle sortHandle;
-    // CUDA Scan
-    //CUDPPHandle scanHandle;
-    // CUDA Radix sort
-    //CUDPPHandle probeSortHandle;
-
     // params
     bool cudaInitalized;
     uint numAtoms;
@@ -240,17 +225,7 @@ private:
     uint numGridCells;
 
     // CPU data
-    float* m_hPos;          // particle positions
-    uint* m_hNeighborCount; // atom neighbor count
-    uint* m_hNeighbors;     // atom neighbor count
-    float* m_hSmallCircles; // small circles
-    uint* m_hParticleHash;
-    uint* m_hParticleIndex;
-    uint* m_hCellStart;
-    uint* m_hCellEnd;
-    float* m_hArcs;
-    uint* m_hArcCount;
-    uint* m_hArcCountScan;
+    std::vector<glm::vec4> hPos_;
 
     // GPU data
     float* m_dPos;
@@ -275,32 +250,11 @@ private:
     uint* m_dCellEnd;           // index of end of cell
     uint gridSortBits;
 
-    vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
-    vislib::Array<vislib::Array<float>> smallCircleRadii;
-    vislib::Array<vislib::Array<unsigned int>> neighbors;
-
-    // VBO for all atoms
-    GLuint atomPosVBO;
-    // VBO for probe positions
-    GLuint probePosVBO;
-    // VBO for spherical triangle vector 1
-    GLuint sphereTriaVec1VBO;
-    // VBO for spherical triangle vector 2
-    GLuint sphereTriaVec2VBO;
-    // VBO for spherical triangle vector 3
-    GLuint sphereTriaVec3VBO;
-    // VBO for torus center
-    GLuint torusPosVBO;
-    // VBO for torus visibility sphere
-    GLuint torusVSVBO;
-    // VBO for torus axis
-    GLuint torusAxisVBO;
-
     enum class Buffers : GLuint {
         PROBE_POS = 0,
         SPHERE_TRIA_VEC_1 = 1,
-        SPHERE_TRIA_VEC2 = 2,
-        SPHERE_TRIA_VEC3 = 3,
+        SPHERE_TRIA_VEC_2 = 2,
+        SPHERE_TRIA_VEC_3 = 3,
         TORUS_POS = 4,
         TORUS_VS = 5,
         TORUS_AXIS = 6,
@@ -313,10 +267,6 @@ private:
 
     // singularity texture
     GLuint singTex;
-    // singularity texture pixel buffer object
-    GLuint singTexPBO;
-    // texture coordinates
-    GLuint texCoordVBO;
     // maximum number of probe neighbors
     uint probeNeighborCount;
     unsigned int texHeight;
