@@ -82,7 +82,14 @@ private:
 
 class GLScreenshotSource : public IScreenshotSource {
 public:
-    enum ReadBuffer { FRONT, BACK, COLOR_ATT0, COLOR_ATT1, COLOR_ATT2, COLOR_ATT3 };
+    enum ReadBuffer {
+        FRONT = 0x0404,                              // GL_FRONT
+        BACK = 0x0405,                               // GL_BACK
+        COLOR_ATTACHMENT0 = 0x8CE0,                  // GL_COLOR_ATTACHMENT0
+        COLOR_ATTACHMENT1 = (COLOR_ATTACHMENT0 + 1), // GL_COLOR_ATTACHMENT1
+        COLOR_ATTACHMENT2 = (COLOR_ATTACHMENT0 + 2), // GL_COLOR_ATTACHMENT2
+        COLOR_ATTACHMENT3 = (COLOR_ATTACHMENT0 + 3), // GL_COLOR_ATTACHMENT3
+    };
 
     void set_read_buffer(ReadBuffer buffer) GL_STUB();
 
