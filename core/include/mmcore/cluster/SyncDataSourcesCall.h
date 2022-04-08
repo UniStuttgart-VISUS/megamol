@@ -14,7 +14,7 @@ namespace megamol {
 namespace core {
 namespace cluster {
 
-class MEGAMOLCORE_API SyncDataSourcesCall : public core::Call {
+class SyncDataSourcesCall : public core::Call {
 public:
     /**
      * Answer the name of the objects of this description.

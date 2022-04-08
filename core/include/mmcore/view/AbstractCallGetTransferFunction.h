@@ -23,7 +23,7 @@ namespace view {
 /**
  * Call for accessing a transfer function.
  */
-class MEGAMOLCORE_API AbstractCallGetTransferFunction : public core::Call {
+class AbstractCallGetTransferFunction : public core::Call {
 public:
     /** possible texture formats */
     enum TextureFormat { TEXTURE_FORMAT_RGB, TEXTURE_FORMAT_RGBA };

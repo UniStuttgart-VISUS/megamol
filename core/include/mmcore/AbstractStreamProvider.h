@@ -19,7 +19,7 @@ namespace core {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API AbstractStreamProvider : public job::AbstractTickJob {
+class AbstractStreamProvider : public job::AbstractTickJob {
 
 public:
     /**

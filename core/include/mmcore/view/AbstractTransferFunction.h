@@ -21,7 +21,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API AbstractTransferFunction {
+class AbstractTransferFunction {
 public:
     AbstractTransferFunction(void)
             : getTFSlot("gettransferfunction", "Provides the transfer function")

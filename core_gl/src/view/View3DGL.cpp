@@ -134,37 +134,10 @@ bool View3DGL::create() {
 
     const auto arcball_key = "arcball";
 
-    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-        // new frontend has global key-value resource
-        auto maybe =
-            this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
-        if (maybe.has_value()) {
-            this->_camera_controller.setArcballDefault(vislib::CharTraitsA::ParseBool(maybe.value().c_str()));
-        }
-
-    } else {
-        mmcValueType wpType;
-        this->_camera_controller.setArcballDefault(false);
-        auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T(arcball_key), &wpType);
-        if (value != nullptr) {
-            try {
-                switch (wpType) {
-                case MMC_TYPE_BOOL:
-                    this->_camera_controller.setArcballDefault(*static_cast<const bool*>(value));
-                    break;
-
-                case MMC_TYPE_CSTR:
-                    this->_camera_controller.setArcballDefault(
-                        vislib::CharTraitsA::ParseBool(static_cast<const char*>(value)));
-                    break;
-
-                case MMC_TYPE_WSTR:
-                    this->_camera_controller.setArcballDefault(
-                        vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(value)));
-                    break;
-                }
-            } catch (...) {}
-        }
+    // new frontend has global key-value resource
+    auto maybe = this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+    if (maybe.has_value()) {
+        this->_camera_controller.setArcballDefault(vislib::CharTraitsA::ParseBool(maybe.value().c_str()));
     }
 
     this->_firstImg = true;

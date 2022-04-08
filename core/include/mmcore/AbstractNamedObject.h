@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
@@ -25,29 +24,13 @@ namespace megamol {
 namespace core {
 
 // forward declarations of types
-class AbstractNamedObject;
 class CoreInstance;
 class AbstractNamedObjectContainer;
-
-} // namespace core
-} // namespace megamol
-
-namespace std {
-
-// dll-export of std-type instantiations
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API weak_ptr<::megamol::core::AbstractNamedObject>;
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<::megamol::core::AbstractNamedObject>;
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API enable_shared_from_this<::megamol::core::AbstractNamedObject>;
-
-} // namespace std
-
-namespace megamol {
-namespace core {
 
 /**
  * Abstract base class for object placed in the module network namespaces
  */
-class MEGAMOLCORE_API AbstractNamedObject : public std::enable_shared_from_this<AbstractNamedObject> {
+class AbstractNamedObject : public std::enable_shared_from_this<AbstractNamedObject> {
 public:
     friend class ::megamol::core::AbstractNamedObjectContainer;
 

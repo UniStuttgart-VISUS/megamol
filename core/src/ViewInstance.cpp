@@ -18,12 +18,7 @@ using namespace megamol::core;
 /*
  * ViewInstance::ViewInstance
  */
-ViewInstance::ViewInstance(void)
-        : ModuleNamespace("")
-        , ApiHandle()
-        , view(NULL)
-        , closeRequestCallback(NULL)
-        , closeRequestData(NULL) {
+ViewInstance::ViewInstance(void) : ModuleNamespace(""), view(NULL), closeRequestCallback(NULL), closeRequestData(NULL) {
     // intentionally empty
 }
 

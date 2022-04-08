@@ -18,7 +18,7 @@ struct QuadLightType : public BaseLightType {
     std::array<float, 3> edgeTwo;
 };
 
-class MEGAMOLCORE_API QuadLight : public AbstractLight {
+class QuadLight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.

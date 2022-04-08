@@ -23,7 +23,7 @@ namespace core {
 /**
  * Abstract base class for data writer modules
  */
-class MEGAMOLCORE_API AbstractDataWriter : public Module {
+class AbstractDataWriter : public Module {
 public:
     /** Ctor. */
     AbstractDataWriter(void);

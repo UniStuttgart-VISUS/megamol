@@ -19,7 +19,7 @@ namespace job {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API AbstractTickJob : public core::Module {
+class AbstractTickJob : public core::Module {
 
 public:
     /**
