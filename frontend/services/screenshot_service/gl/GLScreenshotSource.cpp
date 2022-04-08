@@ -27,8 +27,14 @@ megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     static ScreenshotImageData result;
     result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
 
+    GLint previous_read_fbo;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previous_read_fbo);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
     glReadBuffer(m_read_buffer);
     glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, previous_read_fbo);
 
     for (auto& pixel : result.image)
         pixel.a = megamol::frontend::Screenshot_Service::default_alpha_value;
