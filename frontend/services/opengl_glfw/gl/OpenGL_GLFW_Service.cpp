@@ -304,6 +304,7 @@ void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(
     int fbo_width = 0, fbo_height = 0;
     int window_width = 0, window_height = 0;
 
+    glfwRestoreWindow(window); // Maximized windows do not allow resize (at least with X11).
     glfwSetWindowSizeLimits(window, width, height, width, height);
     glfwSetWindowSize(window, width, height);
     glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
