@@ -106,6 +106,7 @@ static std::string force_window_size_option = "force-window-size";
 static std::string nodecoration_option = "nodecoration";
 static std::string topmost_option = "topmost";
 static std::string nocursor_option = "nocursor";
+static std::string hidden_option = "hidden";
 static std::string interactive_option = "i,interactive";
 static std::string guishow_option = "guishow";
 static std::string nogui_option = "nogui";
@@ -407,6 +408,11 @@ static void nocursor_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
+static void hidden_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::hidden;
+};
+
 
 static void interactive_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
@@ -541,6 +547,7 @@ std::vector<OptionsListEntry> cli_options_list =
         {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
         {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
         {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
+        {hidden_option, "Do not show the window", cxxopts::value<bool>(), hidden_handler},
         {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
             interactive_handler},
         {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),

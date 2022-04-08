@@ -65,8 +65,10 @@ public:
      * outside of min/max are to be clamped.
      */
     inline void SetRange(std::array<float, 2> range) {
-        this->range_updated = true;
-        this->range = range;
+        if (this->range != range) {
+            this->range_updated = true;
+            this->range = range;
+        }
     }
 
     // GET --------------------------------------------------------------------

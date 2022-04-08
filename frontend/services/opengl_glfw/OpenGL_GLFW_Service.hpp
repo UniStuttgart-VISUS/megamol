@@ -29,6 +29,7 @@ struct WindowPlacement {
     bool fullScreen = false;
     bool topMost = false;
     bool noCursor = false;
+    bool hidden = false;
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {

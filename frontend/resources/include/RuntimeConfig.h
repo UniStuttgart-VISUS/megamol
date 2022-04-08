@@ -68,6 +68,7 @@ struct RuntimeConfig {
         nodecoration = 1 << 1,
         topmost = 1 << 2,
         nocursor = 1 << 3,
+        hidden = 1 << 4,
     };
     unsigned int window_mode = 0;
     unsigned int window_monitor = 0;
