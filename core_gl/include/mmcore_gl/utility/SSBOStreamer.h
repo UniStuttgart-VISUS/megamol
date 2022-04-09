@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <algorithm>
@@ -33,7 +32,7 @@ namespace utility {
 /// Note that the user must SignalCompletion after the rendering command if
 /// the buffer can be freed afterwards (or re-upload of data will be performed)
 /// See NG render mode of SphereRenderer for a usage example.
-class MEGAMOLCORE_API SSBOStreamer {
+class SSBOStreamer {
 public:
     SSBOStreamer(const std::string& debugLabel = std::string());
     ~SSBOStreamer();

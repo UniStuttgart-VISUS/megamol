@@ -2379,20 +2379,27 @@ bool SphereRenderer::makeVertexString(const MultiParticleDataCall::Particles& pa
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-        outDeclaration = "    double posX; double posY; double posZ;\n";
+        outDeclaration = "    uint posX1; uint posX2; uint posY1; uint posY2; uint posZ1; uint posZ2;\n";
         if (interleaved) {
-            outCode =
-                "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = constRad;";
+            outCode = "    uvec2 thex = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
+                      "    uvec2 they = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
+                      "    uvec2 thez = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
+                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
+                      "float(packDouble2x32(thez)), 1.0);\n"
+                      "    rad = constRad;";
         } else {
-            outCode =
-                "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                " + instanceOffset].posZ), 1.0); \n"
-                "    rad = constRad;";
+            outCode = "    uvec2 thex = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
+                      "    uvec2 they = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
+                      "    uvec2 thez = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
+                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
+                      "float(packDouble2x32(thez)), 1.0);\n"
+                      "    rad = constRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -2485,8 +2492,6 @@ std::shared_ptr<vislib_gl::graphics::gl::GLSLShader> SphereRenderer::generateSha
             decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBOvertexBindingPoint) +
                     ") buffer shader_data {\n"
                     "    SphereParams theBuffer[];\n"
-                    // flat float version
-                    //"    float theBuffer[];\n"
                     "};\n";
 
         } else {

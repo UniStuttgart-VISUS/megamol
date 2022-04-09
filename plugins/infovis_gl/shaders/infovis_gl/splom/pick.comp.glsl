@@ -1,8 +1,8 @@
 #version 430
 
 #include "core/bitflags.inc.glsl"
-#include "splom_common/splom_plots.inc.glsl"
-#include "splom_common/splom_data.inc.glsl"
+#include "common/plots.inc.glsl"
+#include "common/data.inc.glsl"
 
 uniform vec2 mouse;
 uniform int numPlots;

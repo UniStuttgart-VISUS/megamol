@@ -40,7 +40,7 @@ public:
     /**
      * Nested class of one list of curves
      */
-    class MEGAMOLCORE_API Curves {
+    class Curves {
     public:
         /**
          * Ctor

@@ -25,7 +25,7 @@ namespace megamol {
 namespace core {
 namespace utility {
 
-class MEGAMOLCORE_API KHR {
+class KHR {
 public:
     static void DebugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity,
         int length, const char* message, void* userParam);

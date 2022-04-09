@@ -12,33 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol {
 namespace core {
-
-class ModuleNamespace;
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-// dll-export of std-type instantiations
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<::megamol::core::ModuleNamespace>;
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<const ::megamol::core::ModuleNamespace>;
-
-} // namespace std
-
-namespace megamol {
-namespace core {
-
 
 /**
  * Class represents a normal module namespace.
  */
-class MEGAMOLCORE_API ModuleNamespace : public AbstractNamedObjectContainer {
+class ModuleNamespace : public AbstractNamedObjectContainer {
 public:
     /** Type alias for containers */
     typedef std::shared_ptr<ModuleNamespace> ptr_type;

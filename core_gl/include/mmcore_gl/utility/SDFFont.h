@@ -238,28 +238,28 @@ public:
 
         // mvp col x y size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y z size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, z, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y w h size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, w, h, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y w h z size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, z, w, h, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
@@ -460,9 +460,8 @@ public:
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        /// TODO XXX FIXME Currently not working ...
         inline void SetRotation(float a, glm::vec3 v) {
-            this->rotation = glm::quat(glm::radians(a), v.x, v.y, v.z);
+            this->rotation = glm::angleAxis(glm::radians(a), v);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {

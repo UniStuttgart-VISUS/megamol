@@ -17,7 +17,7 @@ namespace core {
 namespace view {
 
 template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
-class MEGAMOLCORE_API BaseView : public ABSTRACTVIEW_TYPE {
+class BaseView : public ABSTRACTVIEW_TYPE {
 public:
     BaseView();
     ~BaseView() = default;

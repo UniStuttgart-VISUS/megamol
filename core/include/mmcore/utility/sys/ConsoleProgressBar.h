@@ -14,8 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "vislib/String.h"
 
 
@@ -49,7 +47,7 @@ namespace sys {
  * impact on the applications performance, there will only be an output
  * at most four times a second.
  */
-class MEGAMOLCORE_API ConsoleProgressBar {
+class ConsoleProgressBar {
 public:
     /** typedef for the progress bar values */
     typedef unsigned int Size;

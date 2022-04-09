@@ -4,13 +4,10 @@ set -o pipefail
 
 EXIT_CODE=0
 
-file_list=$(find . -type f | sort)
-while read -r file; do
-  #ignore .git dir
-  if [[ $file == "./.git/"* ]]; then
-    continue
-  fi
+# Find all files, ignore .git dirs.
+file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
 
+while read -r file; do
   # ignore files ignored by git
   if git check-ignore -q "$file"; then
     continue
@@ -54,13 +51,15 @@ while read -r file; do
     if [[ $1 == "fix" ]]; then
       clang-format-12 -i "$file"
     else
-      output="$(clang-format-12 --dry-run --Werror "$file" 2>&1)"
-      if [[ $? -ne 0 ]]; then
+      # Workaround "set -e" and store exit code
+      format_exit_code=0
+      output="$(clang-format-12 --dry-run --Werror "$file" 2>&1)" || format_exit_code=$?
+      if [[ $format_exit_code -ne 0 ]]; then
         EXIT_CODE=1
         echo "::error::ClangFormat found issues in: $file"
         #echo "$output"
         # Show detailed diff. Requires ClangFormat to run again, but should mostly affect only a few files.
-        clang-format-12 "$file" | diff --color=always -u "$file" -
+        clang-format-12 "$file" | diff --color=always -u "$file" - || true
       fi
     fi
   fi

@@ -18,7 +18,7 @@ struct DistantLightType : public BaseLightType {
     bool eye_direction;
 };
 
-class MEGAMOLCORE_API DistantLight : public AbstractLight {
+class DistantLight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.

@@ -19,8 +19,7 @@
 
 #include <memory>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 struct WindowPlacement {
     int x = 100, y = 100, w = 800, h = 600, mon = 0;
@@ -30,6 +29,7 @@ struct WindowPlacement {
     bool fullScreen = false;
     bool topMost = false;
     bool noCursor = false;
+    bool hidden = false;
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
@@ -48,6 +48,7 @@ public:
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
         bool glContextCoreProfile = false;
+        bool forceWindowSize = false;
     };
 
     std::string serviceName() const override {
@@ -130,5 +131,4 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

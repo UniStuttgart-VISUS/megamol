@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
@@ -19,7 +17,7 @@ namespace megamol::core::utility::log {
 /**
  * Class wrapping text console functionality and features
  */
-class MEGAMOLCORE_API Console {
+class Console {
 
 public:
     /** valid color values for console colors */
@@ -82,9 +80,6 @@ public:
         void Msg(unsigned int level, megamol::core::utility::log::Log::TimeStamp time,
             megamol::core::utility::log::Log::SourceID sid, std::string const& msg) override;
     };
-
-    /** The log echo output target of the console. */
-    static const ConsoleLogTarget LogEchoTarget;
 
     /**
      * Runs a console command in a common system command interpreter. On

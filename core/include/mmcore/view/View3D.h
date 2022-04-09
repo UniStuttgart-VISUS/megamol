@@ -23,7 +23,7 @@ inline constexpr auto cpu_fbo_resize = [](std::shared_ptr<CPUFramebuffer>& fbo, 
     // TODO reallocate buffer?
 };
 
-class MEGAMOLCORE_API View3D : public view::BaseView<CallRenderView, Camera3DController, AbstractView> {
+class View3D : public view::BaseView<CallRenderView, Camera3DController, AbstractView> {
 
 public:
     /**

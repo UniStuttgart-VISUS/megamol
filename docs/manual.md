@@ -143,7 +143,6 @@ Providing additional command line arguments allow individual configuration of gl
 
 The following command line arguments are available:
 
-**Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
 
@@ -158,6 +157,7 @@ The following command line arguments are available:
       --nodecoration  open window without decorations
       --topmost       open window that stays on top of all others
       --nocursor      do not show mouse cursor inside window
+      --hidden        do not show the window
       --help          print help
 ```
 
