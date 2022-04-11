@@ -99,7 +99,7 @@ bool ResolutionScalingRenderer2D::renderImpl(
     }
 
     lowResFBO_->bind();
-    glClearColor(bg.r, bg.g, bg.b, bg.a);
+    glClearColor(bg.r * bg.a, bg.g * bg.a, bg.b * bg.a, bg.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     lastViewProjMx_ = viewProjMx_;
