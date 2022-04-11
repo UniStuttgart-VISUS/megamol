@@ -29,13 +29,12 @@ namespace param {
 class MEGAMOLCORE_API FilePathParam : public AbstractParam {
 public:
     enum FilePathFlags_ : uint32_t {
-        Flag_Any = 1 << 0,
-        Flag_File = 1 << 1,
-        Flag_Directory = 1 << 2,
-        Flag_NoExistenceCheck = 1 << 3,
-        Flag_RestrictExtension = 1 << 4,
+        Flag_File = 1 << 0,
+        Flag_Directory = 1 << 1,
+        Flag_NoExistenceCheck = 1 << 2,
+        Flag_RestrictExtension = 1 << 3,
         /// Convenience flags:
-        Flag_Any_RestrictExtension = Flag_Any | Flag_RestrictExtension,
+        Flag_Any = Flag_File | Flag_Directory,
         Flag_Any_ToBeCreated = Flag_Any | Flag_NoExistenceCheck,
         Flag_File_RestrictExtension = Flag_File | Flag_RestrictExtension,
         Flag_File_ToBeCreated = Flag_File | Flag_NoExistenceCheck,
