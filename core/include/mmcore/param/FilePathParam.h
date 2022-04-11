@@ -13,7 +13,6 @@
 
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include <filesystem>
 
 
@@ -26,7 +25,7 @@ namespace param {
 /**
  * class for file path parameter objects
  */
-class MEGAMOLCORE_API FilePathParam : public AbstractParam {
+class FilePathParam : public AbstractParam {
 public:
     enum FilePathFlags_ : uint32_t {
         Flag_File = 1 << 0,

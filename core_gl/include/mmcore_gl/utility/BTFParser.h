@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/Map.h"
@@ -38,7 +37,7 @@ public:
     /**
      * Nested base class for btf elements
      */
-    class MEGAMOLCORE_API BTFElement {
+    class BTFElement {
     public:
         /**
          * Ctor.
@@ -106,7 +105,7 @@ public:
     /**
      * Nested class of a btf namespace
      */
-    class MEGAMOLCORE_API BTFNamespace : public BTFElement {
+    class BTFNamespace : public BTFElement {
     public:
         /**
          * Ctor.

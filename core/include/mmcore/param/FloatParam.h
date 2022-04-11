@@ -10,12 +10,11 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API FloatParam : public GenericParam<float, AbstractParamPresentation::ParamType::FLOAT> {
+class FloatParam : public GenericParam<float, AbstractParamPresentation::ParamType::FLOAT> {
 public:
     FloatParam(float initVal) : Super(initVal) {}
 

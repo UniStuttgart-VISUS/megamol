@@ -14,7 +14,6 @@
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallDescription.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
@@ -33,7 +32,7 @@ class CalleeSlot;
  * The caller slot connect one calling module with one called module
  * using a Call object.
  */
-class MEGAMOLCORE_API CallerSlot : public AbstractSlot, public AbstractCallSlotPresentation {
+class CallerSlot : public AbstractSlot, public AbstractCallSlotPresentation {
 public:
     /**
      * Ctor.

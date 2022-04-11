@@ -68,9 +68,11 @@ struct RuntimeConfig {
         nodecoration = 1 << 1,
         topmost = 1 << 2,
         nocursor = 1 << 3,
+        hidden = 1 << 4,
     };
     unsigned int window_mode = 0;
     unsigned int window_monitor = 0;
+    bool force_window_size = false;
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;

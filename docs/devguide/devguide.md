@@ -278,6 +278,16 @@ It causes the graph updater to stop at the indicated event and delay further gra
 
 <!-- ###################################################################### -->
 -----
+## Module Behavior
+
+A module should always try to do its work, even with missing resources.
+Examples:
+- All views should clear themselves to their internal background color, even if no other module is connected.
+
+TODO: Module behavior in case of missing resources or call connections.
+
+<!-- ###################################################################### -->
+-----
 ## Build System
 
 For building MegaMol, CMake is used. For developers, two aspects are of importance: [adding new plugins](#create-new-plugin), and [adding and using external dependencies](#external-dependencies).

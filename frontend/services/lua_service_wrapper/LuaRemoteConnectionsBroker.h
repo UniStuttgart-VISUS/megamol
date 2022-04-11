@@ -12,6 +12,8 @@
 
 #include "mmcore/utility/ZMQContextUser.h"
 
+//#define LRH_ANNOYING_DETAILS
+
 namespace megamol {
 namespace frontend_resources {
 
@@ -186,6 +188,10 @@ public:
                     std::promise<std::string> promise;
                     std::future<std::string> future = promise.get_future();
 
+#ifdef LRH_ANNOYING_DETAILS
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: got request %s", request_str.c_str());
+#endif
+
                     request_queue.push(LuaRequest{request_str, std::ref(promise)});
                     std::string reply{"no response from LuaAPI at main thread"};
 
@@ -199,6 +205,13 @@ public:
 
                     const auto num_sent = socket.send(reply.data(), reply.size());
 #ifdef LRH_ANNOYING_DETAILS
+                    const int limit = 150;
+                    std::string concisereply = reply;
+                    if (concisereply.length() > limit) {
+                        concisereply = concisereply.substr(0, limit) + "...";
+                    }
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "LRH: sending reply %s", concisereply.c_str());
                     if (num_sent == reply.size()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
                     } else {
