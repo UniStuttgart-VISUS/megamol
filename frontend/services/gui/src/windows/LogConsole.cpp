@@ -48,7 +48,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             if (bracket_pos != std::string::npos) {
                 auto cmd = input_str.substr(0, bracket_pos);
                 for (int i = 0; i < user_data->commands.size(); i++) {
-                    if (gui_utils::CaseInsensitiveStringCompare(user_data->commands[i].first, cmd)) {
+                    if (gui_utils::CaseInsensitiveStringEqual(user_data->commands[i].first, cmd)) {
                         user_data->param_hint = user_data->commands[i].second;
                     }
                 }
@@ -74,7 +74,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         const std::string input = std::string(word_start, (int)(word_end - word_start));
         user_data->autocomplete_candidates.clear();
         for (int i = 0; i < user_data->commands.size(); i++) {
-            if (gui_utils::CaseInsensitiveStringCompare(user_data->commands[i].first, input)) {
+            if (gui_utils::CaseInsensitiveStringContain(user_data->commands[i].first, input)) {
                 user_data->autocomplete_candidates.push_back(user_data->commands[i]);
             }
         }
