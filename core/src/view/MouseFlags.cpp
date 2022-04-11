@@ -84,7 +84,7 @@ const megamol::core::view::MouseFlags megamol::core::view::MOUSEFLAG_MODKEY_ALT_
 /*
  * megamol::core::view::MouseFlagsResetAllChanged
  */
-void MEGAMOLCORE_API megamol::core::view::MouseFlagsResetAllChanged(MouseFlags& flags) {
+void megamol::core::view::MouseFlagsResetAllChanged(MouseFlags& flags) {
     flags = flags & (MOUSEFLAG_BUTTON_LEFT_DOWN | MOUSEFLAG_BUTTON_RIGHT_DOWN | MOUSEFLAG_BUTTON_MIDDLE_DOWN |
                         MOUSEFLAG_MODKEY_SHIFT_DOWN | MOUSEFLAG_MODKEY_CTRL_DOWN | MOUSEFLAG_MODKEY_ALT_DOWN);
 }
@@ -93,7 +93,7 @@ void MEGAMOLCORE_API megamol::core::view::MouseFlagsResetAllChanged(MouseFlags& 
 /*
  * megamol::core::view::MouseFlagsSetFlag
  */
-void MEGAMOLCORE_API megamol::core::view::MouseFlagsSetFlag(MouseFlags& flags, MouseFlags flag, bool set) {
+void megamol::core::view::MouseFlagsSetFlag(MouseFlags& flags, MouseFlags flag, bool set) {
     bool changed = false;
     switch (flag) {
     case MOUSEFLAG_BUTTON_LEFT_DOWN:

@@ -24,7 +24,7 @@ namespace view {
 /**
  * Abstract base class of override rendering views
  */
-class MEGAMOLCORE_API AbstractTileViewGL : public AbstractOverrideViewGL {
+class AbstractTileViewGL : public AbstractOverrideViewGL {
 public:
     /** Ctor. */
     AbstractTileViewGL(void);

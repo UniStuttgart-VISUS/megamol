@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParamSlot.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/assert.h"
@@ -33,7 +32,7 @@ namespace param {
  * Use the update callback or the dirty flag mechanism to receive the
  * information when the value of the parameter changes.
  */
-class MEGAMOLCORE_API ParamSlot : public AbstractSlot, public AbstractParamSlot {
+class ParamSlot : public AbstractSlot, public AbstractParamSlot {
 public:
     /**
      * Ctor.

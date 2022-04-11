@@ -13,7 +13,7 @@ namespace core {
 namespace utility {
 namespace graphics {
 
-class MEGAMOLCORE_API ScreenShotComments {
+class ScreenShotComments {
 public:
     typedef std::map<std::string, std::string> comments_storage_map;
     typedef std::vector<png_text> png_comments;

@@ -26,7 +26,7 @@ namespace special {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API CallbackScreenShooterCall : public core::AbstractCallbackCall<std::function<void()>> {
+class CallbackScreenShooterCall : public core::AbstractCallbackCall<std::function<void()>> {
 
 public:
     typedef core::factories::CallAutoDescription<CallbackScreenShooterCall> CallbackScreenShooterDescription;
@@ -71,7 +71,7 @@ public:
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API CallbackScreenShooter : public ScreenShooter, protected core::AbstractWriterParams {
+class CallbackScreenShooter : public ScreenShooter, protected core::AbstractWriterParams {
 
 public:
     using FunctionT = std::function<void()>;

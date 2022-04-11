@@ -14,7 +14,6 @@
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/profiler/Connection.h"
@@ -33,7 +32,7 @@ class Module;
 /**
  * A slot connection a Call to member pointers of a module.
  */
-class MEGAMOLCORE_API CalleeSlot : public AbstractSlot, public AbstractCallSlotPresentation {
+class CalleeSlot : public AbstractSlot, public AbstractCallSlotPresentation {
 public:
     /**
      * Ctor.

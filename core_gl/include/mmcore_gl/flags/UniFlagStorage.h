@@ -27,7 +27,7 @@ namespace megamol::core_gl {
  * Can be used for storing selection etc. Should be kept in sync with the normal
  * FlagStorage, which resides on CPU.
  */
-class MEGAMOLCORE_API UniFlagStorage : public core::FlagStorage {
+class UniFlagStorage : public core::FlagStorage {
 public:
     /**
      * Answer the name of this module.

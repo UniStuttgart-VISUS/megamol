@@ -14,7 +14,7 @@ namespace megamol::core::utility::log {
 /**
  * Target class storing message as long as the file is offline
  */
-class MEGAMOLCORE_API OfflineTarget : public Log::Target {
+class OfflineTarget : public Log::Target {
 public:
     /**
      * Ctor

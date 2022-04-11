@@ -19,7 +19,7 @@ struct TriDirectionalLightType : public BaseLightType {
     bool in_view_space;
 };
 
-class MEGAMOLCORE_API TriDirectionalLighting : public AbstractLight {
+class TriDirectionalLighting : public AbstractLight {
 public:
     /**
      * Answer the name of this module.

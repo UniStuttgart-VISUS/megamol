@@ -21,7 +21,7 @@ namespace core {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API AbstractWriterParams {
+class AbstractWriterParams {
 
 protected:
     /**

@@ -78,12 +78,6 @@ void Console::ConsoleLogTarget::Msg(unsigned int level, megamol::core::utility::
 
 
 /*
- * Console::LogEchoTarget
- */
-const Console::ConsoleLogTarget Console::LogEchoTarget;
-
-
-/*
  * __vl_console_useColors
  */
 static bool __vl_console_useColors

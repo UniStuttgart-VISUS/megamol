@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/graphics/AbstractFont.h"
 #include "vislib/types.h"
 
@@ -24,7 +23,7 @@ namespace view {
 /**
  * Possible font purposes
  */
-/*MEGAMOLCORE_API*/ enum FontPurpose { FONTPURPOSE_OPENGL_DEFAULT, FONTPURPISE_OPENGL_INFO_HQ };
+enum FontPurpose { FONTPURPOSE_OPENGL_DEFAULT, FONTPURPISE_OPENGL_INFO_HQ };
 
 
 /**
@@ -32,7 +31,7 @@ namespace view {
  *
  * @param purpose The purpose to font will be used for
  */
-MEGAMOLCORE_API const vislib::graphics::AbstractFont& GetGlobalFont(FontPurpose purpose);
+const vislib::graphics::AbstractFont& GetGlobalFont(FontPurpose purpose);
 
 
 } /* end namespace view */

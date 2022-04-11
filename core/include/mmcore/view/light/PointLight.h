@@ -17,7 +17,7 @@ struct PointLightType : public BaseLightType {
     float radius;
 };
 
-class MEGAMOLCORE_API PointLight : public AbstractLight {
+class PointLight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.
