@@ -12,6 +12,7 @@
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
+#include "glowl/Texture2D.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
@@ -266,7 +267,8 @@ private:
     std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
     // singularity texture
-    GLuint singTex;
+    std::unique_ptr<glowl::Texture2D> singTex_;
+
     // maximum number of probe neighbors
     uint probeNeighborCount;
     unsigned int texHeight;

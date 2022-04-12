@@ -1,6 +1,15 @@
-#version 130
+#version 460
 
 #include "protein_cuda/molecule_cb/mcbc_common.glsl"
+
+layout(location = 0) in vec4 in_pos;
+layout(location = 1) in vec4 in_vec_1;
+layout(location = 2) in vec4 in_vec_2;
+layout(location = 3) in vec4 in_vec_3;
+layout(location = 4) in vec3 in_texcoord_1;
+layout(location = 5) in vec3 in_texcoord_2;
+layout(location = 6) in vec3 in_texcoord_3;
+layout(location = 7) in vec3 in_color;
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 uniform vec3 zValues;
@@ -15,44 +24,32 @@ uniform vec3 camRight;
 uniform mat4 mvp;
 uniform mat4 invview;
 
-attribute vec4 attribVec1;
-attribute vec4 attribVec2;
-attribute vec4 attribVec3;
-attribute vec3 attribColors;
-attribute vec3 attribTexCoord1;
-attribute vec3 attribTexCoord2;
-attribute vec3 attribTexCoord3;
+out vec4 objPos;
+out vec4 camPos;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-
-varying vec4 inVec1;
-varying vec4 inVec2;
-varying vec4 inVec3;
-varying vec3 inColors;
-varying vec3 texCoord1;
-varying vec3 texCoord2;
-varying vec3 texCoord3;
+out vec4 inVec1;
+out vec4 inVec2;
+out vec4 inVec3;
+out vec3 inColors;
+out vec3 texCoord1;
+out vec3 texCoord2;
+out vec3 texCoord3;
 
 void main(void) {
-    inVec1 = attribVec1;
-    inVec2 = attribVec2;
-    inVec3 = attribVec3;
-    inColors = attribColors;
+    inVec1 = in_vec_1;
+    inVec2 = in_vec_2;
+    inVec3 = in_vec_3;
+    inColors = in_color;
     
-    texCoord1 = attribTexCoord1;
-    texCoord2 = attribTexCoord2;
-    texCoord3 = attribTexCoord3;
+    texCoord1 = in_texcoord_1;
+    texCoord2 = in_texcoord_2;
+    texCoord3 = in_texcoord_3;
     
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = in_pos;
     inVec1.w = inPos.w;
     inVec2.w = inPos.w * inPos.w;
     inPos.w = 1.0;
-    
-    // DEBUG
-    //texCoord2.xy = vec2( attribVec1.w, attribVec2.w);
     
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
@@ -60,12 +57,6 @@ void main(void) {
     // calculate cam position
     camPos = invview[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
-    
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = invview * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = invview * normalize( gl_LightSource[0].position);
     
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -143,10 +134,4 @@ void main(void) {
     
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
-    
-    #ifdef SMALL_SPRITE_LIGHTING
-    // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
-    #endif // SMALL_SPRITE_LIGHTING
-    
 }

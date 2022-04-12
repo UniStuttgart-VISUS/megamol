@@ -1,6 +1,8 @@
-#version 110
+#version 460
 
 #include "protein_cuda/molecule_cb/mcbc_common.glsl"
+
+layout(location = 0) in vec4 particle_pos;
 
 #undef HALO
 //#define HALO
@@ -17,20 +19,20 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+out vec4 objPos;
+out vec4 camPos;
+out float squarRad;
+out float rad;
+out vec4 transcolor;
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
 
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = particle_pos;
     rad = inPos.w;
     squarRad = rad * rad;
     inPos.w = 1.0;
@@ -43,19 +45,9 @@ void main(void) {
     // calculate cam position
     camPos = invview[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
-    
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = invview * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = invview * normalize( gl_LightSource[0].position);
-    
-    
 
     // send color to fragment shader
-    gl_FrontColor = gl_Color;
-
+    transcolor = vec4(1, 0, 0, 1);
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -138,11 +130,6 @@ void main(void) {
 
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
     gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
-
-#ifdef SMALL_SPRITE_LIGHTING
-    // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
-#endif // SMALL_SPRITE_LIGHTING
     
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;

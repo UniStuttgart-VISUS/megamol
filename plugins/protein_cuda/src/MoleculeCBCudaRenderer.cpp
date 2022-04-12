@@ -59,7 +59,8 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer(void)
         , setCUDAGLDevice(true)
         , sphereShader_(nullptr)
         , torusShader_(nullptr)
-        , sphericalTriangleShader_(nullptr) {
+        , sphericalTriangleShader_(nullptr)
+        , singTex_(nullptr) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
 
@@ -117,12 +118,6 @@ void protein_cuda::MoleculeCBCudaRenderer::release(void) {
  * MoleculeCBCudaRenderer::create
  */
 bool MoleculeCBCudaRenderer::create(void) {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
     try {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
@@ -141,12 +136,15 @@ bool MoleculeCBCudaRenderer::create(void) {
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeCBCudaRenderer] %s", ex.what());
+        return false;
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception.");
+        return false;
     }
 
     return true;
@@ -405,7 +403,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     // copy PBO to texture
     buffers_[static_cast<int>(Buffers::SING_TEX)]->bind();
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, this->singTex);
+    singTex_->bindTexture();
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (numProbes / params.texSize + 1) * this->probeNeighborCount,
         numProbes % params.texSize, GL_RGB, GL_FLOAT, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -448,13 +446,9 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 
     // render atoms VBO
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    buffers_[static_cast<int>(Buffers::ATOM_POS)]->bind();
-    //glBindBuffer(GL_ARRAY_BUFFER, buffers_[static_cast<int>(Buffers::ATOM_POS)]->);
-    glVertexPointer(4, GL_FLOAT, 0, 0);
+    glBindVertexArray(sphereVAO_);
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindVertexArray(0);
 
     glDisable(GL_BLEND);
 
@@ -473,7 +467,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     // ray cast the spherical triangles on the GPU //
     /////////////////////////////////////////////////
     // bind texture
-    glBindTexture(GL_TEXTURE_2D, this->singTex);
+    singTex_->bindTexture();
+    glBindVertexArray(sphericalTriangleVAO_);
     // enable spherical triangle shader
     sphericalTriangleShader_->use();
     // set shader variables
@@ -483,65 +478,15 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     sphericalTriangleShader_->setUniform("camUp", cp.up);
     sphericalTriangleShader_->setUniform("zValues", 0.5f, cv.near_plane, cv.far_plane);
     sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-    //sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
     sphericalTriangleShader_->setUniform("alpha", 1.0f);
     sphericalTriangleShader_->setUniform("mvp", mvp);
     sphericalTriangleShader_->setUniform("invview", invview);
     sphericalTriangleShader_->setUniform("mvpinv", mvpinv);
     sphericalTriangleShader_->setUniform("mvptrans", mvptrans);
 
-    // get attribute locations
-    GLuint attribVec1 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec1");
-    GLuint attribVec2 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec2");
-    GLuint attribVec3 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribVec3");
-    GLuint attribTexCoord1 = glGetAttribLocationARB(sphericalTriangleShader_->getHandle(), "attribTexCoord1");
-    //GLuint attribTexCoord2 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord2");
-    //GLuint attribTexCoord3 = glGetAttribLocationARB( this->sphericalTriangleShader, "attribTexCoord3");
-    //GLuint attribColors = glGetAttribLocationARB( this->sphericalTriangleShader, "attribColors");
-    // set color to turquoise
-    glColor3f(0.0f, 0.75f, 1.0f);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    // enable vertex attribute arrays for the attribute locations
-    glEnableVertexAttribArrayARB(attribVec1);
-    glEnableVertexAttribArrayARB(attribVec2);
-    glEnableVertexAttribArrayARB(attribVec3);
-    glEnableVertexAttribArrayARB(attribTexCoord1);
-    //glEnableVertexAttribArrayARB( attribTexCoord2);
-    //glEnableVertexAttribArrayARB( attribTexCoord3);
-    //glEnableVertexAttribArrayARB( attribColors);
-    // set vertex and attribute pointers and draw them
-    //glVertexAttribPointerARB( attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribVec3, 4, GL_FLOAT, 0, 0, this->sphericTriaVec3[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribTexCoord1, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord1[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribTexCoord2, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord2[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribTexCoord3, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord3[cntRS].PeekElements());
-    //glVertexAttribPointerARB( attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
-    //glVertexPointer( 4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
-    //glDrawArrays( GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count())/4);
-    buffers_[static_cast<int>(Buffers::TEX_COORD)]->bind();
-    glVertexAttribPointer(attribTexCoord1, 3, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_1)]->bind();
-    glVertexAttribPointer(attribVec1, 4, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_2)]->bind();
-    glVertexAttribPointer(attribVec2, 4, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_3)]->bind();
-    glVertexAttribPointer(attribVec3, 4, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::PROBE_POS)]->bind();
-    glVertexPointer(4, GL_FLOAT, 0, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDrawArrays(GL_POINTS, 0, numProbes);
-    // disable vertex attribute arrays for the attribute locations
-    glDisableVertexAttribArrayARB(attribVec1);
-    glDisableVertexAttribArrayARB(attribVec2);
-    glDisableVertexAttribArrayARB(attribVec3);
-    glDisableVertexAttribArrayARB(attribTexCoord1);
-    //glDisableVertexAttribArrayARB( attribTexCoord2);
-    //glDisableVertexAttribArrayARB( attribTexCoord3);
-    //glDisableVertexAttribArrayARB( attribColors);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    // disable spherical triangle shader
-    //this->sphericalTriangleShader.Disable();
+
+    glBindVertexArray(0);
     glUseProgram(0);
     // unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -549,9 +494,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     //////////////////////////////////
     // ray cast the tori on the GPU //
     //////////////////////////////////
-    // enable torus shader
+
     torusShader_->use();
-    // set shader variables
+    glBindVertexArray(torusVAO_);
+
     torusShader_->setUniform("viewAttr", viewportStuff);
     torusShader_->setUniform("camIn", cp.direction);
     torusShader_->setUniform("camRight", cp.right);
@@ -563,30 +509,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     torusShader_->setUniform("invview", invview);
     torusShader_->setUniform("mvpinv", mvpinv);
     torusShader_->setUniform("mvptrans", mvptrans);
-    // get attribute locations
-    GLuint attribInTorusAxis = glGetAttribLocationARB(torusShader_->getHandle(), "inTorusAxis");
-    GLuint attribInSphere = glGetAttribLocationARB(torusShader_->getHandle(), "inSphere");
-    GLuint attribInColors = glGetAttribLocationARB(torusShader_->getHandle(), "inColors");
-    glEnableClientState(GL_VERTEX_ARRAY);
-    // enable vertex attribute arrays for the attribute locations
-    glEnableVertexAttribArrayARB(attribInTorusAxis);
-    glEnableVertexAttribArrayARB(attribInSphere);
-    glEnableVertexAttribArrayARB(attribInColors);
-    // set vertex and attribute pointers and draw them
-    buffers_[static_cast<int>(Buffers::TORUS_AXIS)]->bind();
-    glVertexAttribPointer(attribInTorusAxis, 4, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::TORUS_VS)]->bind();
-    glVertexAttribPointer(attribInSphere, 4, GL_FLOAT, 0, 0, 0);
-    buffers_[static_cast<int>(Buffers::TORUS_POS)]->bind();
-    glVertexPointer(4, GL_FLOAT, 0, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     glDrawArrays(GL_POINTS, 0, numSC);
-    // disable vertex attribute arrays for the attribute locations
-    glDisableVertexAttribArrayARB(attribInTorusAxis);
-    glDisableVertexAttribArrayARB(attribInSphere);
-    glDisableVertexAttribArrayARB(attribInColors);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    // disable torus shader
+
+    glBindVertexArray(0);
     glUseProgram(0);
 }
 
@@ -731,17 +657,15 @@ bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core
     texHeight = vislib::math::Min<int>(this->numAtoms * 3, texSize);
     texWidth = this->probeNeighborCount * ((this->numAtoms * 3) / texSize + 1);
     this->params.texSize = texSize;
+
     // create singularity texture
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &this->singTex);
-    glBindTexture(GL_TEXTURE_2D, this->singTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, texWidth, texHeight, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    std::vector<std::pair<GLenum, GLint>> int_parameters = {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}};
+    std::vector<std::pair<GLenum, GLfloat>> float_parameters;
+    glowl::TextureLayout tx_layout{GL_RGB32F, static_cast<int>(texWidth), static_cast<int>(texHeight), 1, GL_RGB,
+        GL_FLOAT, 1, int_parameters, float_parameters};
+    singTex_ = std::make_unique<glowl::Texture2D>("molecule_cbc_singTex", tx_layout, nullptr);
 
     // create PBO
     buffers_[static_cast<int>(Buffers::SING_TEX)] = std::make_unique<glowl::BufferObject>(
@@ -755,6 +679,63 @@ bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core
 
     // set parameters
     setParameters(&this->params);
+
+    // create VAOs
+    if (sphericalTriangleVAO_ == 0) {
+        glGenVertexArrays(1, &sphericalTriangleVAO_);
+    }
+    glBindVertexArray(sphericalTriangleVAO_);
+
+    buffers_[static_cast<int>(Buffers::PROBE_POS)]->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_1)]->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_2)]->bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_3)]->bind();
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::TEX_COORD)]->bind();
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
+    glDisableVertexAttribArray(4);
+
+    if (torusVAO_ == 0) {
+        glGenVertexArrays(1, &torusVAO_);
+    }
+    glBindVertexArray(torusVAO_);
+
+    buffers_[static_cast<int>(Buffers::TORUS_POS)]->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::TORUS_AXIS)]->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[static_cast<int>(Buffers::TORUS_VS)]->bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
 
     return true;
 }
@@ -787,15 +768,24 @@ void MoleculeCBCudaRenderer::writeAtomPositionsVBO(MolecularDataCall* mol) {
             glm::make_vec3(&mol->AtomPositions()[cnt * 3]), mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius());
     }
 
-    bool newlyGenerated = false;
     if (buffers_[static_cast<int>(Buffers::ATOM_POS)] == nullptr) {
         buffers_[static_cast<int>(Buffers::ATOM_POS)] = std::make_unique<glowl::BufferObject>(
             GL_ARRAY_BUFFER, hPos_.data(), mol->AtomCount() * 4 * sizeof(float), GL_DYNAMIC_DRAW);
-        newlyGenerated = true;
+        cudaGLRegisterBufferObject(buffers_[static_cast<int>(Buffers::ATOM_POS)]->getName());
     } else {
         buffers_[static_cast<int>(Buffers::ATOM_POS)]->rebuffer(hPos_.data(), mol->AtomCount() * 4 * sizeof(float));
     }
-    // register this buffer object with CUDA
-    if (newlyGenerated)
-        cudaGLRegisterBufferObject(buffers_[static_cast<int>(Buffers::ATOM_POS)]->getName());
+
+    if (sphereVAO_ == 0) {
+        glGenVertexArrays(1, &sphereVAO_);
+        glBindVertexArray(sphereVAO_);
+
+        buffers_[static_cast<int>(Buffers::ATOM_POS)]->bind();
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableVertexAttribArray(0);
+    }
 }

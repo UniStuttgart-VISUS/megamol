@@ -1,5 +1,6 @@
-#version 120
+#version 460
 
+#include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_cuda/molecule_cb/mcbc_common.glsl"
 #include "lightdirectional.glsl"
 #include "protein_cuda/molecule_cb/mcbc_rootsolver.glsl"
@@ -11,17 +12,16 @@ uniform float alpha = 0.5;
 uniform mat4 mvpinv;
 uniform mat4 mvptrans;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying vec4 radii;
-varying vec4 visibilitySphere;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 radii;
+in vec4 visibilitySphere;
 
-varying vec3 rotMatT0;
-varying vec3 rotMatT1; // rotation matrix from the quaternion
-varying vec3 rotMatT2;
+in vec3 rotMatT0;
+in vec3 rotMatT1; // rotation matrix from the quaternion
+in vec3 rotMatT2;
 
-varying vec4 colors;
+in vec4 colors;
 
 #include "protein_cuda/molecule_cb/mcbc_decodecolor.glsl"
 
@@ -142,7 +142,7 @@ void main(void) {
 #endif
 
     // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    //albedo_out = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
     
     // calculate depth
 #ifdef DEPTH
@@ -166,8 +166,10 @@ void main(void) {
 
 #ifdef FOGGING_SES
     float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
+    albedo_out.rgb = mix( fogCol, albedo_out.rgb, f);
 #endif // FOGGING_SES
-    gl_FragColor.a = alpha;
-    gl_FragColor.rgb = color;
+    albedo_out.a = alpha;
+    albedo_out.rgb = color;
+    depth_out = gl_FragDepth;
+    normal_out = normal;
 }

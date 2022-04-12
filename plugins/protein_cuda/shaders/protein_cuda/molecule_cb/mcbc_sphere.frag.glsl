@@ -1,5 +1,6 @@
-#version 110
+#version 460
 
+#include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_cuda/molecule_cb/mcbc_common.glsl"
 #include "lightdirectional.glsl"
 
@@ -12,14 +13,14 @@ uniform vec4 viewAttr;
 uniform mat4 mvpinv;
 uniform mat4 mvptrans;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+in vec4 objPos;
+in vec4 camPos;
+in float squarRad;
+in float rad;
+in vec4 transcolor;
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+in vec2 centerFragment;
 #endif // RETICLE
 
 void main(void) {
@@ -80,10 +81,6 @@ void main(void) {
     
 #endif // CLIP
 
-#ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
-#endif // SMALL_SPRITE_LIGHTING
-
 #ifdef AXISHINTS
     // debug-axis-hints
     float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
@@ -97,9 +94,10 @@ void main(void) {
 #endif // AXISHINTS
 
     // phong lighting with directional light
-    //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
+    //albedo_out = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //albedo_out = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
     gl_FragDepth = gl_FragCoord.z;
+
 
     // calculate depth
 #ifdef DEPTH
@@ -110,7 +108,7 @@ void main(void) {
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
+    albedo_out.rgb = (radicand < 0.0) ? transcolor.rgb : albedo_out.rgb;
 #endif // CLIP
 
 #endif // DEPTH
@@ -122,16 +120,14 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
     if (min(abs(coord.x - centerFragment.x), abs(coord.y - centerFragment.y)) < 0.002) {
         //gl_FragColor.rgb = vec3(1.0, 1.0, 0.5);
-        gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
+        albedo_out.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
 
-#ifdef PUXELS
-if(puxels_use != 0)
-    puxels_store(makePuxel(packUnorm4x8(gl_FragColor), normal, gl_FragDepth));
-#endif
-
     //gl_FragColor.rgb = normal;
     //gl_FragColor.rgb = lightPos.xyz;
-    gl_FragColor.rgb = color;
+
+    albedo_out = vec4(color, 1);
+    normal_out = normal;
+    depth_out = gl_FragDepth;
 }

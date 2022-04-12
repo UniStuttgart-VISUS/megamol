@@ -1,5 +1,6 @@
-#version 130
+#version 460
 
+#include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_cuda/molecule_cb/mcbc_common.glsl"
 #include "lightdirectional.glsl"
 
@@ -13,18 +14,17 @@ uniform float alpha = 0.5;
 uniform mat4 mvpinv;
 uniform mat4 mvptrans;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
+in vec4 objPos;
+in vec4 camPos;
 
-varying vec4 inVec1;
-varying vec4 inVec2;
-varying vec4 inVec3;
-varying vec3 inColors;
+in vec4 inVec1;
+in vec4 inVec2;
+in vec4 inVec3;
+in vec3 inColors;
 
-varying vec3 texCoord1;
-varying vec3 texCoord2;
-varying vec3 texCoord3;
+in vec3 texCoord1;
+in vec3 texCoord2;
+in vec3 texCoord3;
 
 #include "protein_cuda/molecule_cb/mcbc_decodecolor.glsl"
 #include "protein_cuda/molecule_cb/mcbc_dot1.glsl"
@@ -118,9 +118,6 @@ void main(void) {
     }
     // "calc" normal at intersection point
     vec3 normal = -sphereintersection / rad;
-#ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, lightPos.w);
-#endif // SMALL_SPRITE_LIGHTING
 
     // ========== START compute color ==========
     // compute auxiliary direction vectors
@@ -168,7 +165,7 @@ void main(void) {
 #endif
 
     // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //albedo_out = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
@@ -186,28 +183,11 @@ void main(void) {
 
 #ifdef FOGGING_SES
     float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
+    albedo_out.rgb = mix( fogCol, albedo_out.rgb, f);
 #endif // FOGGING_SES
-    gl_FragColor.a = alpha;
-    
-#ifdef AXISHINTS
-    // debug-axis-hints
-    vec3 colorX = vec3( 1.0, 1.0, 0.0);
-    float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-    if( abs(normal.x) - 0.05 < abs(normal.z) && abs(normal.x) + 0.05 > abs(normal.z) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.x) - 0.05 < abs(normal.y) && abs(normal.x) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if( abs(normal.z) - 0.05 < abs(normal.y) && abs(normal.z) + 0.05 > abs(normal.y) )
-    { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-    if (mc < 0.05) { gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, colorX), 1.0); }
-#endif // AXISHINTS
+    albedo_out.a = alpha;
 
-#ifdef PUXELS
-if(puxels_use != 0)
-    puxels_store(makePuxel(packUnorm4x8(gl_FragColor), normal, gl_FragDepth));
-#endif
-
-    gl_FragColor.rgb = vec3(1,0,0);
-
+    albedo_out.rgb = vec3(1,0,0);
+    depth_out = gl_FragDepth;
+    normal_out = normal;
 }
