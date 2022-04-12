@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "glowl/glowl.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/Sampler.hpp"
+#include "glowl/glowl.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -16,9 +16,9 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
 

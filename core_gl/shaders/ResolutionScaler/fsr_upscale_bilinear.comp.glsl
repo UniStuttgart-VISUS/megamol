@@ -33,11 +33,11 @@ layout(local_size_x=64) in;
 // UNIFORMS
 layout(std430, binding = 0) readonly buffer easu_const_buffer
 {
-	uvec4 Const0;
-	uvec4 Const1;
-	uvec4 Const2;
-	uvec4 Const3;
-	uvec4 Sample;
+    uvec4 Const0;
+    uvec4 Const1;
+    uvec4 Const2;
+    uvec4 Const3;
+    uvec4 Sample;
 };
 
 #define A_GPU 1
@@ -67,8 +67,8 @@ layout(rgba8, binding = 1) uniform writeonly image2D OutputTexture;
 void CurrFilter(AU2 pos)
 {
 #if SAMPLE_BILINEAR
-	AF2 pp = (AF2(pos) * AF2_AU2(Const0.xy) + AF2_AU2(Const0.zw)) * AF2_AU2(Const1.xy) + AF2(0.5, -0.5) * AF2_AU2(Const1.zw);
-	imageStore(OutputTexture, ASU2(pos), textureLod(InputTexture, pp, 0.0));
+    AF2 pp = (AF2(pos) * AF2_AU2(Const0.xy) + AF2_AU2(Const0.zw)) * AF2_AU2(Const1.xy) + AF2(0.5, -0.5) * AF2_AU2(Const1.zw);
+    imageStore(OutputTexture, ASU2(pos), textureLod(InputTexture, pp, 0.0));
 #endif
 #if SAMPLE_EASU
     AF3 c;
@@ -88,12 +88,12 @@ void CurrFilter(AU2 pos)
 
 void main() {
     // Do remapping of local xy in workgroup for a more PS-like swizzle pattern.
-	AU2 gxy = ARmp8x8(gl_LocalInvocationID.x) + AU2(gl_WorkGroupID.x << 4u, gl_WorkGroupID.y << 4u);
-	CurrFilter(gxy);
-	gxy.x += 8u;
-	CurrFilter(gxy);
-	gxy.y += 8u;
-	CurrFilter(gxy);
-	gxy.x -= 8u;
-	CurrFilter(gxy);
+    AU2 gxy = ARmp8x8(gl_LocalInvocationID.x) + AU2(gl_WorkGroupID.x << 4u, gl_WorkGroupID.y << 4u);
+    CurrFilter(gxy);
+    gxy.x += 8u;
+    CurrFilter(gxy);
+    gxy.y += 8u;
+    CurrFilter(gxy);
+    gxy.x -= 8u;
+    CurrFilter(gxy);
 }
