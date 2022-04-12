@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/TimeControl.h"
 
@@ -25,7 +24,7 @@ namespace view {
 /**
  * Call connecting time control objects
  */
-class MEGAMOLCORE_API CallTimeControl : public Call {
+class CallTimeControl : public Call {
 public:
     /**
      * Answer the name of the objects of this description.

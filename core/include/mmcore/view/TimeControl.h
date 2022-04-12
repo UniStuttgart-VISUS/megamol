@@ -14,7 +14,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 
 
@@ -26,7 +25,7 @@ namespace view {
 /**
  * Class implementing time control
  */
-class MEGAMOLCORE_API TimeControl {
+class TimeControl {
 public:
     /** Ctor. */
     TimeControl(void);

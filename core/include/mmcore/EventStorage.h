@@ -15,7 +15,7 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API EventStorage : public core::Module {
+class EventStorage : public core::Module {
 public:
     /**
      * Answer the name of this module.

@@ -24,7 +24,7 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API MegaMolGraph {
+class MegaMolGraph {
 public:
     MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
         factories::CallDescriptionManager const& callProvider);

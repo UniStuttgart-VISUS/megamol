@@ -8,12 +8,11 @@
 #pragma once
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API BoolParam : public GenericParam<bool, AbstractParamPresentation::ParamType::BOOL> {
+class BoolParam : public GenericParam<bool, AbstractParamPresentation::ParamType::BOOL> {
 public:
     BoolParam(float initVal) : Super(initVal) {}
 

@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/Configuration.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
@@ -27,7 +26,7 @@ namespace utility {
  * Same as shaders, resources can be placed in configurable directories
  * which can then be automatically searched for the required files.
  */
-class MEGAMOLCORE_API ResourceWrapper {
+class ResourceWrapper {
 public:
     /**
      * Loads a file called name from the first resource directory it

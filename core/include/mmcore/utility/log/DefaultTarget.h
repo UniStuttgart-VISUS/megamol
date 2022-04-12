@@ -8,7 +8,7 @@
 
 namespace megamol::core::utility::log {
 
-class MEGAMOLCORE_API DefaultTarget : public Log::Target {
+class DefaultTarget : public Log::Target {
 public:
     DefaultTarget(Log::UINT level = Log::LEVEL_ERROR);
 

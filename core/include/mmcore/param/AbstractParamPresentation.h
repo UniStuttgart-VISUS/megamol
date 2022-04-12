@@ -12,7 +12,6 @@
 #include <map>
 #include <string>
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -24,7 +23,7 @@ namespace megamol {
 namespace core {
 namespace param {
 
-class MEGAMOLCORE_API AbstractParamPresentation {
+class AbstractParamPresentation {
 public:
     // Available parameter types
     /// ! Add new type to name function.
