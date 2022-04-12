@@ -1694,19 +1694,6 @@ bool megamol::gui::Parameter::widget_int(
             this->gui_widget_value = val;
         }
 
-        // If no step size is set, set relative default step size depending on given min-max value range
-        if (step == INT_MAX) {
-            step = 1;
-            if ((minv > INT_MIN) && (maxv < INT_MAX)) {
-                step = std::max(1, static_cast<int>(static_cast<float>(maxv - minv) * 0.01f));
-            } else if ((minv == INT_MIN) && (maxv < INT_MAX)) {
-                step = std::max(1, static_cast<int>(std::abs(static_cast<float>(maxv - val)) * 0.01f));
-            } else if ((minv > INT_MIN) && (maxv == INT_MAX)) {
-                step = std::max(1, static_cast<int>(std::abs(static_cast<float>(val - minv)) * 0.01f));
-            }
-            this->gui_widget_stepsize = step;
-            retval = true;
-        }
         int min_step_size = step;
         int max_step_size = 10 * step;
         if (!std::holds_alternative<int>(this->gui_widget_stepsize)) {
@@ -1784,19 +1771,6 @@ bool megamol::gui::Parameter::widget_float(megamol::gui::Parameter::WidgetScope 
             this->gui_widget_value = val;
         }
 
-        // If no step size is set, set relative default step size depending on given min-max value range
-        if (step == FLT_MAX) {
-            step = 1.0f;
-            if ((minv > -FLT_MAX) && (maxv < FLT_MAX)) {
-                step = std::max(0.000001f, (maxv - minv) * 0.01f);
-            } else if ((minv == -FLT_MAX) && (maxv < FLT_MAX)) {
-                step = std::max(0.000001f, std::abs(maxv - val) * 0.01f);
-            } else if ((minv > -FLT_MAX) && (maxv == FLT_MAX)) {
-                step = std::max(0.000001f, std::abs(val - minv) * 0.01f);
-            }
-            this->gui_widget_stepsize = step;
-            retval = true;
-        }
         float min_step_size = step;
         float max_step_size = 10.f * min_step_size;
         if (!std::holds_alternative<float>(this->gui_widget_stepsize)) {

@@ -3,9 +3,9 @@
 #include "core/tflookup.inc.glsl"
 #include "core/tfconvenience.inc.glsl"
 #include "core/bitflags.inc.glsl"
-#include "splom_common/splom_mapping.inc.glsl"
-#include "splom_common/splom_plots.inc.glsl"
-#include "splom_common/splom_data.inc.glsl"
+#include "common/mapping.inc.glsl"
+#include "common/plots.inc.glsl"
+#include "common/data.inc.glsl"
 
 //#define DEBUG_MINMAX 1
 
