@@ -38,19 +38,18 @@ View3D::~View3D(void) {
  */
 ImageWrapper View3D::Render(double time, double instanceTime) {
 
+    BaseView::beforeRender(time, instanceTime);
+
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
 
     if (cr3d != NULL) {
-
-        BaseView::beforeRender(time, instanceTime);
-
         cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr3d->SetFramebuffer(_fbo);
         cr3d->SetCamera(this->_camera);
         (*cr3d)(view::CallRender3D::FnRender);
-
-        BaseView::afterRender();
     }
+
+    BaseView::afterRender();
 
     return GetRenderingResult();
 }

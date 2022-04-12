@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/RendererModule.h"
 
@@ -18,7 +17,7 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModule : public view::RendererModule<CallRender3D, Module> {
+class Renderer3DModule : public view::RendererModule<CallRender3D, Module> {
 public:
     /** Ctor. */
     Renderer3DModule(void);

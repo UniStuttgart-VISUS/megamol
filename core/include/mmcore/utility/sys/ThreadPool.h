@@ -14,8 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/sys/CriticalSection.h"
@@ -45,7 +43,7 @@ namespace sys {
  * Runnable and to the input data in both cases. Release the memory in the
  * event handling methods.
  */
-class MEGAMOLCORE_API ThreadPool {
+class ThreadPool {
 
 public:
     /** Ctor. */

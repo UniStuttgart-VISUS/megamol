@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/Input.h"
 #include "vislib/types.h"
 
@@ -27,7 +26,7 @@ namespace param {
  * objects have no value at all, but trigger the update callback of the
  * slot whenever the button in the gui is pressed.
  */
-class MEGAMOLCORE_API ButtonParam : public AbstractParam {
+class ButtonParam : public AbstractParam {
 public:
     /**
      * Ctor.

@@ -16,8 +16,8 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
@@ -170,6 +170,7 @@ protected:
     core::param::ParamSlot triangleModeParam_;
     core::param::ParamSlot lineWidthParam_;
     core::param::ParamSlot dimensionNameParam_;
+    core::param::ParamSlot useLineWidthInPixelsParam_;
     core::param::ParamSlot drawItemsParam_;
     core::param::ParamSlot drawSelectedItemsParam_;
     core::param::ParamSlot ignoreTransferFunctionParam_;

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "misc/MDAOVolumeGenerator.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"

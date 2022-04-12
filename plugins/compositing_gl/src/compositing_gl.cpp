@@ -8,6 +8,8 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "AntiAliasing.h"
+#include "ASSAO.h"
+#include "DepthDarkening.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
@@ -34,6 +36,7 @@ public:
     void registerClasses() override {
 
         // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing::DepthDarkening>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::InteractionRenderTarget>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();

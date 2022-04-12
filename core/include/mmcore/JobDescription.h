@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/InstanceDescription.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol {
@@ -21,7 +20,7 @@ namespace core {
 /**
  * Class of job descriptions.
  */
-class MEGAMOLCORE_API JobDescription : public InstanceDescription {
+class JobDescription : public InstanceDescription {
 public:
     /**
      * Ctor.

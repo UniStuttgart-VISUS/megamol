@@ -14,8 +14,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "vislib/sys/File.h"
 
 
@@ -36,7 +34,7 @@ namespace sys {
  *
  * @author Guido Reina (guido.reina@vis.uni-stuttgart.de)
  */
-class MEGAMOLCORE_API MemmappedFile : public File {
+class MemmappedFile : public File {
 public:
     /** Ctor. */
     MemmappedFile(void);

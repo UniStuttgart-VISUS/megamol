@@ -18,7 +18,7 @@ using namespace megamol::core;
 /*
  * JobInstance::JobInstance
  */
-JobInstance::JobInstance(void) : ModuleNamespace(""), ApiHandle(), job(NULL) {
+JobInstance::JobInstance(void) : ModuleNamespace(""), job(NULL) {
     // intentionally empty
 }
 

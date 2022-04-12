@@ -13,8 +13,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Rectangle.h"
@@ -28,7 +26,7 @@ namespace sys {
 /**
  * Utility class for informations about the local system.
  */
-class MEGAMOLCORE_API SystemInformation {
+class SystemInformation {
 public:
     /** possible values of operating system types */
     enum OSType { OSTYPE_UNKNOWN, OSTYPE_WINDOWS, OSTYPE_LINUX };

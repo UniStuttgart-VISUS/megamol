@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"
@@ -23,7 +22,7 @@ namespace core {
 /**
  * Class managing parameter value set requests
  */
-class MEGAMOLCORE_API ParamValueSetRequest {
+class ParamValueSetRequest {
 public:
     /** Type for changing values for parameters */
     typedef vislib::Pair<vislib::StringA, vislib::TString> ParamValueRequest;

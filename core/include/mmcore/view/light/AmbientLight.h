@@ -14,7 +14,7 @@ namespace light {
 
 struct AmbientLightType : public BaseLightType {};
 
-class MEGAMOLCORE_API AmbientLight : public AbstractLight {
+class AmbientLight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.

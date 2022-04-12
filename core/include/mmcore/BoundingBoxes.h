@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/math/Cuboid.h"
 
 
@@ -41,7 +40,7 @@ namespace core {
  * visual representatives of the data must be inside this clipping box to
  * avoid visual artifacts.
  */
-class MEGAMOLCORE_API BoundingBoxes {
+class BoundingBoxes {
 public:
     /**
      * Ctor

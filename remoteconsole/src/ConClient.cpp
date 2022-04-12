@@ -64,8 +64,7 @@ int main(int argc, char* argv[]) {
             keepOpen = parseRes["keep-open"].as<bool>();
         if (parseRes.count("hammer"))
             hammerFactor = parseRes["hammer"].as<int>();
-        if (parseRes.count("timeout"))
-            timeOutSeconds = parseRes["timeout"].as<int>();
+        timeOutSeconds = parseRes["timeout"].as<int>();
         if (parseRes.count("single"))
             singleSend = parseRes["single"].as<bool>();
 
