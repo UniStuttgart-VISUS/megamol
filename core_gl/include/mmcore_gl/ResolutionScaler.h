@@ -6,19 +6,9 @@
 
 #pragma once
 
-#include "glowl/glowl.h"
-#include "glowl/BufferObject.hpp"
-#include "glowl/Sampler.hpp"
-
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/ResolutionScalerBase.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-
-#include "glm/glm.hpp"
-
-#include "mmcore_gl/3rd/au1_ah1_af1.h"
 
 
 namespace megamol {
@@ -30,15 +20,19 @@ namespace core_gl {
  * passes the scaled framebuffer to the callee, re-scales the returned scaled framebuffer from the callee
  * and returns the re-scaled framebuffer to the initial caller.
  */
-class ResolutionScaler : public core::view::RendererModule<view::CallRender3DGL, ModuleGL> {
+
+/////////////////////////////////////
+/// RESOLUTIONSCALER2D
+/////////////////////////////////////
+class ResolutionScaler3D : public ResolutionScalerBase<core_gl::view::CallRender3DGL> {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
-        return "ResolutionScaler";
+    static inline const char* ClassName(void) {
+        return "ResolutionScaler3D";
     }
 
     /**
@@ -46,8 +40,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
-        return "Scale module that scales and re-scales a framebuffer. The upscale should occur after proper AntiAliasing!";
+    static inline const char* Description(void) {
+        return "Scale module that scales an incoming fbo, calls the rhs renderers with the reduced resolution fbo and "
+               "re-scales the fbo to full resolution. The upscale should occur after proper AntiAliasing!";
     }
 
     /**
@@ -55,124 +50,75 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static inline bool IsAvailable(void) {
         return true;
     }
 
     /** ctor */
-    ResolutionScaler(void);
+    ResolutionScaler3D() {}
 
     /** dtor */
-    virtual ~ResolutionScaler(void);
-
-protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create(void);
-
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release(void);
-
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
-
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool Render(core_gl::view::CallRender3DGL& call);
-
-private:
-    struct FSRConstants {
-        glm::uvec4 const0;
-        glm::uvec4 const1;
-        glm::uvec4 const2;
-        glm::uvec4 const3;
-        glm::uvec4 Sample;
+    ~ResolutionScaler3D() {
+        this->Release();
     };
 
-    // AMD FUNCTION
-    inline unsigned int AU1_AF1(float a) {
-        union {
-            float f;
-            unsigned int u;
-        } bits;
-        bits.f = a;
-        return bits.u;
+protected:
+    void releaseImpl() override {
+        //this->Release();
     }
 
-    // AMD FUNCTION
-    inline unsigned int AU1_AH2_AF2(float* a) {
-        return AU1_AH1_AF1(a[0]) + (AU1_AH1_AF1(a[1]) << 16);
-    }
-    
-    // AMD FUNCTION
-    void calcConstants(
-        glm::uvec4& con0, glm::uvec4& con1,
-        glm::uvec4& con2, glm::uvec4& con3,
-        float inputSizeX, float inputSizeY,     // rendered image resolution
-        float outputSizeX, float outputSizeY);  // display resolution after being upscaled
+private:
+}; /* end class ResolutionScaler3D */
 
-    /*
-    * AMD FUNCTION
-    * Sharpness:
-    * The scale is {0.0 := maximum, to N>0, where N is the number of stops (halving) of the reduction of sharpness}.
-    */
-    void FsrRcasCon(glm::uvec4& con, float sharpness);
 
-    inline void resetGLStates() {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindSampler(0, 0);
-        glUseProgram(0);
+/////////////////////////////////////
+/// RESOLUTIONSCALER2D
+/////////////////////////////////////
+class ResolutionScaler2D : public ResolutionScalerBase<core_gl::view::CallRender2DGL> {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static inline const char* ClassName(void) {
+        return "ResolutionScaler2D";
     }
 
-    // Callback function for GUI visibility
-    bool scaleModeCallback(core::param::ParamSlot& slot);
-    bool presetCallback(core::param::ParamSlot& slot);
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description(void) {
+        return "Scale module that scales an incoming fbo, calls the rhs renderers with the reduced resolution fbo and "
+               "re-scales the fbo to full resolution. The upscale should occur after proper AntiAliasing!";
+    }
 
-    std::shared_ptr<glowl::FramebufferObject> scaled_fbo_;
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable(void) {
+        return true;
+    }
 
-    std::shared_ptr<glowl::GLSLProgram> naive_downsample_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> naive_upsample_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> fsr_downsample_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> fsr_bilinear_upsample_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> fsr_easu_upsample_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> fsr_rcas_upsample_prgm_;
+    /** ctor */
+    ResolutionScaler2D() {}
 
-    std::unique_ptr<glowl::BufferObject> fsr_consts_ssbo_;
+    /** dtor */
+    ~ResolutionScaler2D() {
+        this->Release();
+    };
 
-    // intermediary texture for fsr easu + rcas pass
-    glowl::TextureLayout inter_tl_;
-    std::unique_ptr<glowl::Texture2D> intermediary_rcas_tx2D_;
+protected:
+    void releaseImpl() override {
+        //this->Release();
+    }
 
-    std::unique_ptr<glowl::Sampler> fsr_input_sampler_;
+private:
+}; /* end class ResolutionScaler2D */
 
-    core::param::ParamSlot scale_mode_;
-    core::param::ParamSlot rcas_sharpness_attenuation_;
-    core::param::ParamSlot fsr_resolution_presets_;
-
-    float scale_factor_;
-
-
-}; /* end class StubModule */
-
-} /* end namespace core */
+} // namespace core_gl
 } /* end namespace megamol */

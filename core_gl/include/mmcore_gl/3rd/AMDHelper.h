@@ -99,3 +99,70 @@ static unsigned int AU1_AH1_AF1(float f){
 
   return (unsigned int)(base[i]) + ((u&0x7fffff) >> shift[i]);
 }
+
+// AMD FUNCTION
+static inline unsigned int AU1_AH2_AF2(float* a) {
+    return AU1_AH1_AF1(a[0]) + (AU1_AH1_AF1(a[1]) << 16);
+}
+
+// AMD FUNCTION
+static inline unsigned int AU1_AF1(float a) {
+    union {
+        float f;
+        unsigned int u;
+    } bits;
+    bits.f = a;
+    return bits.u;
+}
+
+static void easuCalcConstants(
+    glm::uvec4& con0, glm::uvec4& con1,
+    glm::uvec4& con2, glm::uvec4& con3,
+    float inputSizeX, float inputSizeY,
+    float outputSizeX, float outputSizeY)
+{
+    // Output integer position to a pixel position in viewport.
+    con0[0] = AU1_AF1(inputSizeX * (1.f /  outputSizeX));
+    con0[1] = AU1_AF1(inputSizeY * (1.f /  outputSizeY));
+    con0[2] = AU1_AF1(0.5f * inputSizeX * (1.f / outputSizeX) - 0.5f);
+    con0[3] = AU1_AF1(0.5f * inputSizeY * (1.f / outputSizeY) - 0.5f);
+    // Viewport pixel position to normalized image space.
+    // This is used to get upper-left of 'F' tap.
+    con1[0] = AU1_AF1(1.f / inputSizeX);
+    con1[1] = AU1_AF1(1.f / inputSizeY);
+    // Centers of gather4, first offset from upper-left of 'F'.
+    //      +---+---+
+    //      |   |   |
+    //      +--(0)--+
+    //      | b | c |
+    //  +---F---+---+---+
+    //  | e | f | g | h |
+    //  +--(1)--+--(2)--+
+    //  | i | j | k | l |
+    //  +---+---+---+---+
+    //      | n | o |
+    //      +--(3)--+
+    //      |   |   |
+    //      +---+---+
+    // These are from (0) instead of 'F'.
+    con1[2] = AU1_AF1(1.f  * (1.f / inputSizeX));
+    con1[3] = AU1_AF1(-1.f * (1.f / inputSizeY));
+    con2[0] = AU1_AF1(-1.f * (1.f / inputSizeX));
+    con2[1] = AU1_AF1(2.f  * (1.f / inputSizeY));
+    con2[2] = AU1_AF1(1.f  * (1.f / inputSizeX));
+    con2[3] = AU1_AF1(2.f  * (1.f / inputSizeY));
+    con3[0] = AU1_AF1(0.f  * (1.f / inputSizeX));
+    con3[1] = AU1_AF1(4.f  * (1.f / inputSizeY));
+    con3[2] = con3[3] = 0;
+}
+
+static void FsrRcasCon(glm::uvec4& con,
+    float sharpness) {
+    // Transform from stops to linear value.
+    sharpness = exp2f(-sharpness);
+    float hSharp[2] = {sharpness, sharpness};
+    con[0] = AU1_AF1(sharpness);
+    con[1] = AU1_AH2_AF2(hSharp);
+    con[2] = 0;
+    con[3] = 0;
+}
