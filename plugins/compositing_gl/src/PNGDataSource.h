@@ -1,12 +1,9 @@
-/*
- * PNGDataSource.h
- *
- * Copyright (C) 2015-2015 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_DATATOOLS_PNGDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_PNGDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -17,7 +14,7 @@
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
-namespace compositing {
+namespace compositing_gl {
 
 class PNGDataSource : public core::Module {
 public:
@@ -64,5 +61,3 @@ private:
 
 } /* end namespace compositing */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_PNGDATASOURCE_H_INCLUDED */

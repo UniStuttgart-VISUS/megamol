@@ -1,3 +1,11 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#version 450
+
 uniform sampler2D src_tx2D;
 
 layout(rgba16) writeonly uniform image2D tgt_tx2D;

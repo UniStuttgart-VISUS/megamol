@@ -1,7 +1,6 @@
-/*
- * TimeMeasure.cpp
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 

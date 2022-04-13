@@ -1,12 +1,10 @@
-/*
- * TimeMeasure.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef TIME_MEASURE_H_INCLUDED
-#define TIME_MEASURE_H_INCLUDED
+#pragma once
 
 #include <chrono>
 
@@ -30,5 +28,3 @@ private:
 } // namespace profiler
 } // namespace core
 } // namespace megamol
-
-#endif // TIME_MEASURE_H_INCLUDED

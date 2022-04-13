@@ -1,3 +1,11 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#version 450
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 uniform sampler2D src_tx2D;

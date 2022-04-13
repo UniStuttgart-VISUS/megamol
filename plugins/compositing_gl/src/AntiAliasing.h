@@ -1,28 +1,28 @@
-/*
- * AntiAliasing.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef ANTI_ALIASING_H_INCLUDED
-#define ANTI_ALIASING_H_INCLUDED
+#pragma once
+
+#include "glowl/glowl.h"
+#include "glowl/Texture2D.hpp"
+#include "glowl/BufferObject.hpp"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
 
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
 
 namespace megamol {
-namespace compositing {
+namespace compositing_gl {
 
 /**
  * Struct for all the SMAA configurable settings.
@@ -130,7 +130,16 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
+
+    /**
+    * Resets previously set GL states
+    */
+    inline void resetGLStates() {
+        glUseProgram(0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindBuffer(ssbo_constants_->getTarget(), 0);
+    }
 
     /**
      * \brief Sets GUI parameter slot visibility depending on antialiasing technique.
@@ -201,54 +210,54 @@ private:
 
     // profiling
 #ifdef PROFILING
-    frontend_resources::PerformanceManager::handle_vector m_timers;
-    frontend_resources::PerformanceManager* m_perf_manager = nullptr;
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif
 
-    std::vector<unsigned char> m_area;
-    std::vector<unsigned char> m_search;
+    std::vector<unsigned char> area_;
+    std::vector<unsigned char> search_;
 
-    uint32_t m_version;
+    uint32_t version_;
 
     /** Shader program to copy a texture to another */
-    std::unique_ptr<GLSLComputeShader> m_copy_prgm;
+    std::unique_ptr<glowl::GLSLProgram> copy_prgm_;
 
     /** Shader program for fxaa */
-    std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
+    std::unique_ptr<glowl::GLSLProgram> fxaa_prgm_;
 
     /** Shader programs for smaa */
-    std::unique_ptr<GLSLComputeShader> m_smaa_edge_detection_prgm;
-    std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
-    std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
+    std::unique_ptr<glowl::GLSLProgram> smaa_edge_detection_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> smaa_blending_weight_calculation_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> smaa_neighborhood_blending_prgm_;
 
     /** Configurable settings for smaa */
-    SMAAConstants m_smaa_constants;
-    SMAAConstants m_smaa_custom_constants;
-    std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
+    SMAAConstants smaa_constants_;
+    SMAAConstants constants_;
+    std::shared_ptr<glowl::BufferObject> ssbo_constants_;
 
     /** SMAA depth texture for depth based edge detection */
-    std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
+    std::shared_ptr<glowl::Texture2D> depth_tx2D_;
 
     /** SMAA intermediate texture layout */
-    glowl::TextureLayout m_smaa_layout;
+    glowl::TextureLayout smaa_layout_;
 
     /** Texture that the combination result will be written to */
-    std::shared_ptr<glowl::Texture2D> m_output_tx2D;
+    std::shared_ptr<glowl::Texture2D> output_tx2D_;
 
     /** Texture to store edges from edges detection */
-    std::shared_ptr<glowl::Texture2D> m_edges_tx2D;
+    std::shared_ptr<glowl::Texture2D> edges_tx2D_;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_blending_weights_tx2D;
+    std::shared_ptr<glowl::Texture2D> blending_weights_tx2D_;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_area_tx2D;
+    std::shared_ptr<glowl::Texture2D> area_tx2D_;
 
     /** Texture holding the blending factors for the coverage areas */
-    std::shared_ptr<glowl::Texture2D> m_search_tx2D;
+    std::shared_ptr<glowl::Texture2D> search_tx2D_;
 
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
-    megamol::core::param::ParamSlot m_mode;
+    megamol::core::param::ParamSlot mode_;
 
     /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
      * SMAA 1x:  basic version of SMAA
@@ -256,10 +265,10 @@ private:
      * SMAA T2x: includes all SMAA 1x features plus temporal multisampling (not implemented yet)
      * SMAA 4x:  includes all SMAA 1x features plus spatial and temporal multi/supersampling (not implemented yet)
      */
-    megamol::core::param::ParamSlot m_smaa_mode;
+    megamol::core::param::ParamSlot smaa_mode_;
 
     /** Parameter for selecting which texture to show, e.g. final output, edges, or weights */
-    megamol::core::param::ParamSlot m_smaa_view;
+    megamol::core::param::ParamSlot smaa_view_;
 
     /** Parameter for selecting the smaa quality level
      * as stated in the original work http://www.iryoku.com/smaa/
@@ -268,43 +277,41 @@ private:
      * HIGH   (95% of the quality)
      * ULTRA  (99% of the quality)
      */
-    megamol::core::param::ParamSlot m_smaa_quality;
+    megamol::core::param::ParamSlot smaa_quality_;
 
     /** Slot for smaa threshold parameter */
-    megamol::core::param::ParamSlot m_smaa_threshold;
+    megamol::core::param::ParamSlot smaa_threshold_;
 
     /** Slot for smaa maximum search steps parameter */
-    megamol::core::param::ParamSlot m_smaa_max_search_steps;
+    megamol::core::param::ParamSlot smaa_max_search_steps_;
 
     /** Slot for smaa maximum diag search steps parameter */
-    megamol::core::param::ParamSlot m_smaa_max_search_steps_diag;
+    megamol::core::param::ParamSlot smaa_max_search_steps_diag_;
 
     /** Slot for smaa diag detection disable parameter */
-    megamol::core::param::ParamSlot m_smaa_disable_diag_detection;
+    megamol::core::param::ParamSlot smaa_disable_diag_detection_;
 
     /** Slot for smaa corner detection disable parameter */
-    megamol::core::param::ParamSlot m_smaa_disable_corner_detection;
+    megamol::core::param::ParamSlot smaa_disable_corner_detection_;
 
     /** Slot for smaa corner rounding parameter */
-    megamol::core::param::ParamSlot m_smaa_corner_rounding;
+    megamol::core::param::ParamSlot smaa_corner_rounding_;
 
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
-    megamol::core::param::ParamSlot m_smaa_detection_technique;
+    megamol::core::param::ParamSlot smaa_detection_technique_;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_output_tex_slot;
+    megamol::core::CalleeSlot output_tex_slot_;
 
     /** Slot for optionally querying an input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_input_tex_slot;
+    megamol::core::CallerSlot input_tex_slot_;
 
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_depth_tex_slot;
+    megamol::core::CallerSlot depth_tex_slot_;
 
 
-    bool m_settings_have_changed;
+    bool settings_have_changed_;
 };
 
 } // namespace compositing
 } // namespace megamol
-
-#endif // !ANTI_ALIASING_H_INCLUDED

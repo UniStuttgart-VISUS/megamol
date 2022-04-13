@@ -1,7 +1,6 @@
-/*
- * PNGDataSource.cpp
- *
- * Copyright (C) 2021 Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -17,7 +16,7 @@
 #include "png.h"
 
 using namespace megamol;
-using namespace megamol::compositing;
+using namespace megamol::compositing_gl;
 
 PNGDataSource::PNGDataSource(void)
         : core::Module()
@@ -37,8 +36,9 @@ PNGDataSource::PNGDataSource(void)
     this->m_image_height_slot.Param<megamol::core::param::IntParam>()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->m_image_height_slot);
 
-    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
-    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
+    this->m_output_tex_slot.SetCallback(compositing::CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
+    this->m_output_tex_slot.SetCallback(
+        compositing::CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 }
 
@@ -56,7 +56,7 @@ bool PNGDataSource::create(void) {
 void PNGDataSource::release(void) {}
 
 bool PNGDataSource::getDataCallback(core::Call& caller) {
-    auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
+    auto lhs_tc = dynamic_cast<compositing::CallTexture2D*>(&caller);
 
     if (lhs_tc == NULL)
         return false;

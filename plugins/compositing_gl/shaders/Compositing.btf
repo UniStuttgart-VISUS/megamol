@@ -2,11 +2,6 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="Compositing">
     <include file="common"/>
 
-    <shader name="copy">
-        <snippet type="version">430></snippet>
-        <snippet name="Main" type="file">comp/copy_c.glsl</snippet>
-    </shader>
-
     <shader name="textureAdd">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureAdd_c.glsl</snippet>
@@ -42,31 +37,6 @@
         <snippet name="Main"             type="file">comp/AntiAliasing/fxaa_c.glsl</snippet>
     </shader>
 
-    <namespace name="smaa">
-        <snippet name="defines" type="file">comp/AntiAliasing/preset_uniforms_c.glsl</snippet>
-        <snippet name="edgeDetection" type="file">comp/AntiAliasing/smaa_edge_detection_c.glsl</snippet>
-        <snippet name="blendingWeights" type="file">comp/AntiAliasing/smaa_blending_weights_calculation_c.glsl</snippet>
-        <snippet name="neighborhoodBlending" type="file">comp/AntiAliasing/smaa_neighborhood_blending_c.glsl</snippet>
-
-        <shader name="edgeDetectionCS">
-            <snippet type="version">430</snippet>
-            <snippet name="smaa::defines" />
-            <snippet name="smaa::edgeDetection" />
-        </shader>
-
-        <shader name="blendingWeightsCalculationCS">
-            <snippet type="version">430</snippet>
-            <snippet name="smaa::defines" />
-            <snippet name="smaa::blendingWeights" />
-        </shader>
-
-        <shader name="neighborhoodBlendingCS">
-            <snippet type="version">430</snippet>
-            <snippet name="smaa::defines" />
-            <snippet name="smaa::neighborhoodBlending" />
-        </shader>
-    </namespace> <!--smaa namesapce-->
-
     <shader name="lambert">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/lambert_c.glsl</snippet>
@@ -81,6 +51,7 @@
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/normalFromDepth_c.glsl</snippet>
     </shader>
+
     <!-- Adaptive Screen Space Ambient Occlusion shaders -->
     <!-- Rename PS to CS -->
     <namespace name="assao">

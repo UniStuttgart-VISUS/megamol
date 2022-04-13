@@ -8,7 +8,6 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "AntiAliasing.h"
-#include "ASSAO.h"
 #include "DepthDarkening.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
@@ -45,9 +44,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::NormalFromDepth>();
-        this->module_descriptions.RegisterAutoDescription<megamol::compositing::AntiAliasing>();
-        this->module_descriptions.RegisterAutoDescription<megamol::compositing::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::SSAO>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();
