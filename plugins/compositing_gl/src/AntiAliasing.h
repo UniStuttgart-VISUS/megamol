@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "glowl/glowl.h"
-#include "glowl/Texture2D.hpp"
 #include "glowl/BufferObject.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/glowl.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -130,10 +130,9 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-
     /**
-    * Resets previously set GL states
-    */
+     * Resets previously set GL states
+     */
     inline void resetGLStates() {
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
@@ -313,5 +312,5 @@ private:
     bool settings_have_changed_;
 };
 
-} // namespace compositing
+} // namespace compositing_gl
 } // namespace megamol

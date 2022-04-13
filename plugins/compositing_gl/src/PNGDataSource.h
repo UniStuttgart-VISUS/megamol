@@ -59,5 +59,5 @@ private:
     uint32_t m_version;
 };
 
-} /* end namespace compositing */
+} // namespace compositing_gl
 } /* end namespace megamol */
