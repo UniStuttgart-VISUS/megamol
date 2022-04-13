@@ -103,12 +103,10 @@ static unsigned int AU1_AH1_AF1(float f) {
     return (unsigned int)(base[i]) + ((u & 0x7fffff) >> shift[i]);
 }
 
-// AMD FUNCTION
 static inline unsigned int AU1_AH2_AF2(float* a) {
     return AU1_AH1_AF1(a[0]) + (AU1_AH1_AF1(a[1]) << 16);
 }
 
-// AMD FUNCTION
 static inline unsigned int AU1_AF1(float a) {
     union {
         float f;
@@ -118,13 +116,15 @@ static inline unsigned int AU1_AF1(float a) {
     return bits.u;
 }
 
-static void easuCalcConstants(glm::uvec4& con0, glm::uvec4& con1, glm::uvec4& con2, glm::uvec4& con3, float inputSizeX,
-    float inputSizeY, float outputSizeX, float outputSizeY) {
+static void easuCalcConstants(glm::uvec4& con0, glm::uvec4& con1, glm::uvec4& con2, glm::uvec4& con3,
+float inputViewportX, float inputViewportY, // rendered image resolution being upscaled
+float inputSizeX, float inputSizeY,         // This is the resolution of the resource containing the input image (useful for dynamic resolution)
+float outputSizeX, float outputSizeY) {     // This is the display resolution which the input image gets upscaled to
     // Output integer position to a pixel position in viewport.
-    con0[0] = AU1_AF1(inputSizeX * (1.f / outputSizeX));
-    con0[1] = AU1_AF1(inputSizeY * (1.f / outputSizeY));
-    con0[2] = AU1_AF1(0.5f * inputSizeX * (1.f / outputSizeX) - 0.5f);
-    con0[3] = AU1_AF1(0.5f * inputSizeY * (1.f / outputSizeY) - 0.5f);
+    con0[0] = AU1_AF1(inputViewportX * (1.f / outputSizeX));
+    con0[1] = AU1_AF1(inputViewportY * (1.f / outputSizeY));
+    con0[2] = AU1_AF1(0.5f * inputViewportX * (1.f / outputSizeX) - 0.5f);
+    con0[3] = AU1_AF1(0.5f * inputViewportY * (1.f / outputSizeY) - 0.5f);
     // Viewport pixel position to normalized image space.
     // This is used to get upper-left of 'F' tap.
     con1[0] = AU1_AF1(1.f / inputSizeX);

@@ -24,7 +24,7 @@
 
 #include "glm/glm.hpp"
 
-#include "mmcore_gl/3rd/AMDHelper.h"
+#include "mmcore_gl/3rd/FSRAMDHelper.h"
 
 
 namespace megamol {
@@ -94,14 +94,18 @@ protected:
             naive_upsample_prgm_ = core::utility::make_glowl_shader(
                 "naive_upscale", shader_options, "ResolutionScaler/naive_upscale.comp.glsl");
 
+            auto so_bilinear = shader_options;
+            so_bilinear.addDefinition("SAMPLE_BILINEAR");
             fsr_bilinear_upsample_prgm_ = core::utility::make_glowl_shader(
-                "fsr_upscale_bilinear", shader_options, "ResolutionScaler/fsr_upscale_bilinear.comp.glsl");
+                "fsr_upscale_bilinear", so_bilinear, "ResolutionScaler/fsr_upscale.comp.glsl");
 
-            fsr_easu_upsample_prgm_ = core::utility::make_glowl_shader(
-                "fsr_upscale_easu", shader_options, "ResolutionScaler/fsr_upscale_easu.comp.glsl");
+            auto so_easu = shader_options;
+            so_easu.addDefinition("SAMPLE_EASU");
+            fsr_easu_upsample_prgm_ = core::utility::make_glowl_shader("fsr_upscale_easu", so_easu, "ResolutionScaler/fsr_upscale.comp.glsl");
 
-            fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader(
-                "fsr_upscale_rcas", shader_options, "ResolutionScaler/fsr_upscale_rcas.comp.glsl");
+            auto so_rcas = shader_options;
+            so_rcas.addDefinition("SAMPLE_RCAS");
+            fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader("fsr_upscale_rcas", so_rcas, "ResolutionScaler/fsr_upscale.comp.glsl");
         } catch (std::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 ("ResolutionScalerBase: " + std::string(e.what())).c_str());
@@ -252,8 +256,10 @@ protected:
         if (mode > 1) {
             // TODO: dynamic resolution
             // TODO: are the const values actually correct in shaders?
-            easuCalcConstants(fsr.const0, fsr.const1, fsr.const2, fsr.const3, downsampled_width, downsampled_height,
-                fbo_width, fbo_height);
+            easuCalcConstants(fsr.const0, fsr.const1, fsr.const2, fsr.const3,
+                downsampled_width, downsampled_height, // viewport size
+                downsampled_width, downsampled_height, // input size (useful for dynamic resolution)
+                fbo_width, fbo_height);                // output size
             // TODO: kick this part in shaders out, since we dont do hdr
             fsr.Sample = glm::uvec4(0, 0, 0, 0); // always 0 because no hdr is used
             fsr_consts_ssbo_->rebuffer(&fsr, sizeof(fsr));

@@ -42,21 +42,18 @@ layout(std430, binding = 0) readonly buffer easu_const_buffer
 
 #define A_GPU 1
 #define A_GLSL 1
-#define SAMPLE_EASU 1
-#define SAMPLE_RCAS 0
-#define SAMPLE_BILINEAR 0
 
 uniform sampler2D InputTexture;
 layout(rgba8, binding = 1) uniform writeonly image2D OutputTexture;
 
 #include "3rd/ffx_a.h"
-#if SAMPLE_EASU
+#ifdef SAMPLE_EASU
     #define FSR_EASU_F 1
     AF4 FsrEasuRF(AF2 p) { AF4 res = textureGather(InputTexture, p, 0); return res; }
     AF4 FsrEasuGF(AF2 p) { AF4 res = textureGather(InputTexture, p, 1); return res; }
     AF4 FsrEasuBF(AF2 p) { AF4 res = textureGather(InputTexture, p, 2); return res; }
 #endif
-#if SAMPLE_RCAS
+#ifdef SAMPLE_RCAS
     #define FSR_RCAS_F
     AF4 FsrRcasLoadF(ASU2 p) { return texelFetch(InputTexture, ASU2(p), 0); }
     void FsrRcasInputF(inout AF1 r, inout AF1 g, inout AF1 b) {}
@@ -66,18 +63,18 @@ layout(rgba8, binding = 1) uniform writeonly image2D OutputTexture;
 
 void CurrFilter(AU2 pos)
 {
-#if SAMPLE_BILINEAR
+#ifdef SAMPLE_BILINEAR
     AF2 pp = (AF2(pos) * AF2_AU2(Const0.xy) + AF2_AU2(Const0.zw)) * AF2_AU2(Const1.xy) + AF2(0.5, -0.5) * AF2_AU2(Const1.zw);
     imageStore(OutputTexture, ASU2(pos), textureLod(InputTexture, pp, 0.0));
 #endif
-#if SAMPLE_EASU
+#ifdef SAMPLE_EASU
     AF3 c;
     FsrEasuF(c, pos, Const0, Const1, Const2, Const3);
     if( Sample.x == 1 )
         c *= c;
     imageStore(OutputTexture, ASU2(pos), AF4(c, 1));
 #endif
-#if SAMPLE_RCAS
+#ifdef SAMPLE_RCAS
     AF3 c;
     FsrRcasF(c.r, c.g, c.b, pos, Const0);
     if( Sample.x == 1 )
