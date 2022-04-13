@@ -1,7 +1,7 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "../common/quad_vertices.inc.glsl"
+#include "mmstd_gl/common/quad_vertices.inc.glsl"
 
 uniform vec2 strokeStart = vec2(0.0f, 0.0f);
 uniform vec2 strokeEnd = vec2(0.0f, 0.0f);

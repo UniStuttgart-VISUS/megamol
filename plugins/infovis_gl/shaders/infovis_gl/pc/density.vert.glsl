@@ -1,7 +1,7 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "../common/quad_vertices.inc.glsl"
+#include "mmstd_gl/common/quad_vertices.inc.glsl"
 
 smooth out vec2 texCoord;
 
