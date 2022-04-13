@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "ResolutionScalingRenderer2D.h"
+#include "ImageSpaceAmortization2D.h"
 
 #include <vector>
 
@@ -12,11 +12,11 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
-using namespace megamol::infovis_gl;
+using namespace megamol::mmstd_gl;
 using megamol::core::utility::log::Log;
 
-ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
-        : BaseAmortizedRenderer2D()
+ImageSpaceAmortization2D::ImageSpaceAmortization2D()
+        : BaseAmortization2D()
         , amortLevelParam("AmortLevel", "Level of Amortization")
         , skipInterpolationParam("SkipInterpolation", "Do not interpolate missing pixels.") {
 
@@ -27,16 +27,17 @@ ResolutionScalingRenderer2D::ResolutionScalingRenderer2D()
     MakeSlotAvailable(&skipInterpolationParam);
 }
 
-ResolutionScalingRenderer2D::~ResolutionScalingRenderer2D() {
+ImageSpaceAmortization2D::~ImageSpaceAmortization2D() {
     Release();
 }
 
-bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
+bool ImageSpaceAmortization2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         shader_ = core::utility::make_glowl_shader("amort_resolutionscaling", shaderOptions,
-            "infovis_gl/amort/amort_quad.vert.glsl", "infovis_gl/amort/amort_resolutionscaling.frag.glsl");
+            "mmstd_gl/upscaling/image_space_amortization.vert.glsl",
+            "mmstd_gl/upscaling/image_space_amortization.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ResolutionScalingRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageSpaceAmortization2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -70,17 +71,17 @@ bool ResolutionScalingRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpen
 
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteError("GL_ERROR in ResolutionScalingRenderer2D: %i", err);
+        Log::DefaultLog.WriteError("GL_ERROR in ImageSpaceAmortization2D: %i", err);
     }
 
     return true;
 }
 
-void ResolutionScalingRenderer2D::releaseImpl() {
+void ImageSpaceAmortization2D::releaseImpl() {
     // nothing to do
 }
 
-bool ResolutionScalingRenderer2D::renderImpl(
+bool ImageSpaceAmortization2D::renderImpl(
     core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) {
 
     auto const& fbo = call.GetFramebuffer();
@@ -117,7 +118,7 @@ bool ResolutionScalingRenderer2D::renderImpl(
     return true;
 }
 
-void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
+void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
     viewProjMx_ = glm::mat4(1.0f);
     lastViewProjMx_ = glm::mat4(1.0f);
     camOffsets_.resize(a * a);
@@ -171,7 +172,7 @@ void ResolutionScalingRenderer2D::updateSize(int a, int w, int h) {
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
 }
 
-void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
+void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     auto pose = cam.get<core::view::Camera::Pose>();
 
@@ -199,7 +200,7 @@ void ResolutionScalingRenderer2D::setupCamera(core::view::Camera& cam, int width
     cam.setPose(pose);
 }
 
-void ResolutionScalingRenderer2D::reconstruct(
+void ImageSpaceAmortization2D::reconstruct(
     std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
     int w = fbo->getWidth();
     int h = fbo->getHeight();
