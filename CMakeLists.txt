@@ -113,3 +113,26 @@ if (EXAMPLES)
     install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
   endif ()
 endif ()
+
+# Tests
+option(TESTS "Get the MegaMol tests repository" OFF)
+if (TESTS)
+  set(TESTS_DIR "${CMAKE_BINARY_DIR}/tests" CACHE PATH "Download directory of the tests")
+  option(TESTS_UPDATE "Pull updates from the tests repo" ON)
+  if (NOT EXISTS "${TESTS_DIR}")
+    message(STATUS "Downloading tests")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-tests.git "${TESTS_DIR}" --depth 1
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  elseif (TESTS_UPDATE)
+    message(STATUS "Pull tests updates")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} pull
+      WORKING_DIRECTORY "${TESTS_DIR}"
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endif ()
+  install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
+endif ()

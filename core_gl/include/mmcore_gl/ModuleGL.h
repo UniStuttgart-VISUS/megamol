@@ -15,7 +15,7 @@ namespace core_gl {
 /**
  * Base class of all graph modules
  */
-class MEGAMOLCORE_API ModuleGL : public core::Module {
+class ModuleGL : public core::Module {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();

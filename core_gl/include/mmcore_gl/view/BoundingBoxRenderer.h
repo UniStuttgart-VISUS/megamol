@@ -10,7 +10,6 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
@@ -26,7 +25,7 @@ namespace view {
  * This is a special renderer without the typical structure of other renderers, since it does not inherit from
  * core_gl::view::Renderer3DModuleGL.
  */
-class MEGAMOLCORE_API BoundingBoxRenderer : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
+class BoundingBoxRenderer : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
     /**
      * Answer the name of this module.

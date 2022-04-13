@@ -11,7 +11,6 @@
 #include <string>
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -28,7 +27,7 @@ namespace param {
 /**
  * Class for parameter holding transfer function as JSON string.
  */
-class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
+class TransferFunctionParam : public AbstractParam {
 public:
     enum InterpolationMode { LINEAR = 0, GAUSS = 1 };
 

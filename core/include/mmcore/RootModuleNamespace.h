@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/ModuleNamespace.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
 //#include "vislib/sys/FatReaderWriterLock.h"
@@ -26,27 +25,10 @@
 namespace megamol {
 namespace core {
 
-class RootModuleNamespace;
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-// dll-export of std-type instantiations
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<::megamol::core::RootModuleNamespace>;
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<const ::megamol::core::RootModuleNamespace>;
-
-} // namespace std
-
-namespace megamol {
-namespace core {
-
-
 /**
  * Class represents the root namespace for the module namespace
  */
-class MEGAMOLCORE_API RootModuleNamespace : public ModuleNamespace {
+class RootModuleNamespace : public ModuleNamespace {
 public:
     /** Type alias for containers */
     typedef std::shared_ptr<RootModuleNamespace> ptr_type;

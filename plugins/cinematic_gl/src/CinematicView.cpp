@@ -682,12 +682,8 @@ bool CinematicView::render_to_file_write() {
             this->png_data.structptr, static_cast<void*>(&this->png_data.file), &this->pngWrite, &this->pngFlush);
 
         std::string project;
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            project = this->GetCoreInstance()->SerializeGraph();
-        } else {
-            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-            project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);
         png_set_text(

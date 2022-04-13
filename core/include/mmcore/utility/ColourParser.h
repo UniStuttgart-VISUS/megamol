@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/String.h"
 
 
@@ -22,7 +21,7 @@ namespace utility {
 /**
  * Utility class for converting colour data to and from strings
  */
-class MEGAMOLCORE_API ColourParser {
+class ColourParser {
 public:
     /**
      * Converts an rgb colour to a string representation

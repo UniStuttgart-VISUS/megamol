@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/Map.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
@@ -26,7 +25,7 @@ namespace param {
 /**
  * class for enumeration parameter objects
  */
-class MEGAMOLCORE_API EnumParam : public AbstractParam {
+class EnumParam : public AbstractParam {
 public:
     /**
      * Ctor.

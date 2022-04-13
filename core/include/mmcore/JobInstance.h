@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/ApiHandle.h"
 #include "mmcore/ModuleNamespace.h"
 #include "mmcore/job/AbstractJob.h"
 #include "vislib/forceinline.h"
@@ -24,7 +23,7 @@ namespace core {
 /**
  * class of job instances
  */
-class JobInstance : public ModuleNamespace, public ApiHandle {
+class JobInstance : public ModuleNamespace {
 public:
     /**
      * Ctor.

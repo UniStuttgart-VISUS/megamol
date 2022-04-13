@@ -8,7 +8,6 @@
 #ifndef MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -18,7 +17,7 @@ namespace core {
 /**
  * Provide flag to present caller/callee slot in GUI depending on necessity
  */
-class MEGAMOLCORE_API AbstractCallSlotPresentation {
+class AbstractCallSlotPresentation {
 public:
     enum Necessity { SLOT_OPTIONAL, SLOT_REQUIRED };
 

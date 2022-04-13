@@ -1,0 +1,33 @@
+UNINITIALIZED READ
+name=IPHLPAPI stuff
+IPHLPAPI.DLL!*
+
+UNINITIALIZED READ
+name=FindFirstFile stuff
+...
+KERNELBASE.dll!FindFirstFileExW
+
+UNINITIALIZED READ
+name=VerNtUserCreateWindowEx stuff
+...
+USER32.dll!VerNtUserCreateWindowEx
+
+UNINITIALIZED READ
+name=DeviceIoControl stuff
+...
+KERNELBASE.dll!DeviceIoControl
+
+UNINITIALIZED READ
+name=hdcCreateDCW stuff
+...
+gdi32full.dll!hdcCreateDCW
+
+UNINITIALIZED READ
+name=FindNextFileW stuff
+...
+KERNELBASE.dll!FindNextFileW
+
+UNINITIALIZED READ
+name=dir iterator crap
+...
+megamol.exe!std::filesystem::recursive_directory_iterator::operator++

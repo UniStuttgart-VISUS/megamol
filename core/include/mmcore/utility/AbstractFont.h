@@ -61,7 +61,7 @@ namespace utility {
  * on both axis (regardless 'flipY' flag) and the size (w, h) should always
  * be positive.
  */
-class MEGAMOLCORE_API AbstractFont {
+class AbstractFont {
 public:
     /** Possible values for the text alignment */
     enum Alignment {

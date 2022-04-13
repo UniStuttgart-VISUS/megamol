@@ -8,8 +8,6 @@
 #define MEGAMOLCORE_ABSTRACTSERVICE_H_INCLUDED
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 namespace megamol {
 namespace core {
 
@@ -19,7 +17,7 @@ class CoreInstance;
 /**
  * Abstract base class for service objects
  */
-class MEGAMOLCORE_API AbstractService {
+class AbstractService {
 public:
     /**
      * dtor

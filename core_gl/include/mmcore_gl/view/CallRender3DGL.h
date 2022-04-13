@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/CallRender3D.h"
 #include <glm/glm.hpp>

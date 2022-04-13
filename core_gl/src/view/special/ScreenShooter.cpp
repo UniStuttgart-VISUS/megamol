@@ -941,12 +941,9 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
     if (closeAfter) {
         this->running = false;
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            this->GetCoreInstance()->Shutdown();
-        } else {
-            /// XXX TODO Tell any frontend service to shutdown
-            Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
-        }
+
+        /// XXX TODO Tell any frontend service to shutdown
+        Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
     }
 }
 
@@ -977,18 +974,10 @@ bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& 
         core::ViewInstance* vi = nullptr;
         core::view::AbstractView* av = nullptr;
 
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            AbstractNamedObjectContainer::ptr_type anoc =
-                AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-            AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
-            vi = dynamic_cast<core::ViewInstance*>(ano.get());
-            av = dynamic_cast<core::view::AbstractView*>(ano.get());
-        } else {
-            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-            auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
-            vi = dynamic_cast<core::ViewInstance*>(module_ptr.get());
-            av = dynamic_cast<core::view::AbstractView*>(module_ptr.get());
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
+        vi = dynamic_cast<core::ViewInstance*>(module_ptr.get());
+        av = dynamic_cast<core::view::AbstractView*>(module_ptr.get());
 
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
@@ -1051,14 +1040,9 @@ megamol::core::param::ParamSlot* view::special::ScreenShooter::findTimeParam(cor
     if (name.IsEmpty()) {
         timeSlot = dynamic_cast<core::param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
-            timeSlot = dynamic_cast<core::param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
-        } else {
-            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-            std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
-            timeSlot = megamolgraph.FindParameterSlot(fullname);
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
+        timeSlot = megamolgraph.FindParameterSlot(fullname);
     }
 
     return timeSlot;
