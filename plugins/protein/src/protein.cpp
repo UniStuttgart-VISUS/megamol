@@ -11,15 +11,12 @@
 #include "PDBWriter.h"
 #include "VTIWriter.h"
 
-
 // data sources
 #include "AggregatedDensity.h"
 #include "BindingSiteDataSource.h"
 #include "CaverTunnelResidueLoader.h"
 #include "CrystalStructureDataSource.h"
-#include "FrodockLoader.h"
 #include "GROLoader.h"
-#include "OpenBabelLoader.h"
 #include "PDBLoader.h"
 #include "SolPathDataSource.h"
 #include "SolventHydroBondGenerator.h"
@@ -30,7 +27,6 @@
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 
 // data interfaces (calls)
-#include "protein/ForceDataCall.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 
@@ -66,14 +62,9 @@ public:
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::protein::BindingSiteDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataSource>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
-
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::FrodockLoader>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::IntSelection>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CrystalStructureDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTILoader>();
@@ -81,14 +72,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTIWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VMDDXLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TrajectorySmoothFilter>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeBallifier>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::AggregatedDensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataLoaderUnstructuredGrid>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
@@ -97,12 +84,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToBFactor>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToParticles>();
-
         this->module_descriptions.RegisterAutoDescription<megamol::protein::UncertaintyDataLoader>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
     }
 };

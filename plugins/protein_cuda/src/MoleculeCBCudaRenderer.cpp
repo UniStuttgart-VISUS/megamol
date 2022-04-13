@@ -14,7 +14,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/sysfunctions.h"
 #include <iostream>

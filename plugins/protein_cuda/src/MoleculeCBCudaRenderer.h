@@ -19,10 +19,7 @@
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include <algorithm>
-#include <list>
 #include <memory>
-#include <set>
 #include <vector>
 
 #include "cuda_runtime_api.h"
