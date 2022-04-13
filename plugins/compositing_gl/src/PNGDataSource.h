@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -13,27 +13,26 @@
 
 #include "glowl/Texture2D.hpp"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 class PNGDataSource : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PNGDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for loading .png files";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    PNGDataSource(void);
-    virtual ~PNGDataSource(void);
+    PNGDataSource();
+    virtual ~PNGDataSource();
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    virtual bool create();
+    virtual void release();
 
 private:
     bool getDataCallback(core::Call& caller);
@@ -59,5 +58,4 @@ private:
     uint32_t m_version;
 };
 
-} // namespace compositing_gl
-} /* end namespace megamol */
+} // namespace megamol::compositing_gl

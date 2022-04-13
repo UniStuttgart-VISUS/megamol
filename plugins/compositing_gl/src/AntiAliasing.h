@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -21,8 +21,7 @@
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 /**
  * Struct for all the SMAA configurable settings.
@@ -312,5 +311,4 @@ private:
     bool settings_have_changed_;
 };
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl
