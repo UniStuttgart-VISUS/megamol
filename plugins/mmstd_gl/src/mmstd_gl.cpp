@@ -7,6 +7,8 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "upscaling/ImageSpaceAmortization2D.h"
+
 namespace megamol::mmstd_gl {
 class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
@@ -20,21 +22,9 @@ public:
     void registerClasses() override {
 
         // register modules
-
-        //
-        // TODO: Register your plugin's modules here:
-        // this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule1>();
-        // this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule2>();
-        // ...
-        //
+        this->module_descriptions.RegisterAutoDescription<megamol::mmstd_gl::ImageSpaceAmortization2D>();
 
         // register calls
-
-        // TODO: Register your plugin's calls here:
-        // this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall1>();
-        // this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall2>();
-        // ...
-        //
     }
 };
 } // namespace megamol::mmstd_gl

@@ -9,11 +9,11 @@
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
-#include "BaseAmortizedRenderer2D.h"
+#include "BaseAmortization2D.h"
 
-namespace megamol::infovis_gl {
+namespace megamol::mmstd_gl {
 
-class ResolutionScalingRenderer2D : public BaseAmortizedRenderer2D {
+class ImageSpaceAmortization2D : public BaseAmortization2D {
 public:
     /**
      * Answer the name of this module.
@@ -21,7 +21,7 @@ public:
      * @return The name of this module.
      */
     static inline const char* ClassName() {
-        return "ResolutionScalingRenderer2D";
+        return "ImageSpaceAmortization2D";
     }
 
     /**
@@ -30,7 +30,7 @@ public:
      * @return A human readable description of this module.
      */
     static inline const char* Description() {
-        return "Amortizes chained InfoVis renderers to improve response time\n";
+        return "Amortizes chained 2D renderers to improve response time\n";
     }
 
     /**
@@ -43,10 +43,10 @@ public:
     }
 
     /** Constructor. */
-    ResolutionScalingRenderer2D();
+    ImageSpaceAmortization2D();
 
     /** Destructor. */
-    ~ResolutionScalingRenderer2D() override;
+    ~ImageSpaceAmortization2D() override;
 
 protected:
     bool createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
@@ -85,4 +85,4 @@ private:
     glm::mat4 viewProjMx_;
     glm::mat4 lastViewProjMx_;
 };
-} // namespace megamol::infovis_gl
+} // namespace megamol::mmstd_gl
