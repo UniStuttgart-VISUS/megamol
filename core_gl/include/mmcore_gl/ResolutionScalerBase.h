@@ -27,8 +27,7 @@
 #include "mmcore_gl/3rd/FSRAMDHelper.h"
 
 
-namespace megamol {
-namespace core_gl {
+namespace megamol::core_gl {
 
 
 /**
@@ -439,5 +438,4 @@ private:
 
 }; /* end class ResolutionScalerBase */
 
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl

@@ -28,7 +28,8 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 
-#include "mmcore_gl/ResolutionScaler.h"
+#include "mmcore_gl/ResolutionScaler2D.h"
+#include "mmcore_gl/ResolutionScaler3D.h"
 
 
 namespace megamol::core_gl {
