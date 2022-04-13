@@ -117,9 +117,11 @@ static inline unsigned int AU1_AF1(float a) {
 }
 
 static void easuCalcConstants(glm::uvec4& con0, glm::uvec4& con1, glm::uvec4& con2, glm::uvec4& con3,
-float inputViewportX, float inputViewportY, // rendered image resolution being upscaled
-float inputSizeX, float inputSizeY,         // This is the resolution of the resource containing the input image (useful for dynamic resolution)
-float outputSizeX, float outputSizeY) {     // This is the display resolution which the input image gets upscaled to
+    float inputViewportX, float inputViewportY, // rendered image resolution being upscaled
+    float inputSizeX,
+    float
+        inputSizeY, // This is the resolution of the resource containing the input image (useful for dynamic resolution)
+    float outputSizeX, float outputSizeY) { // This is the display resolution which the input image gets upscaled to
     // Output integer position to a pixel position in viewport.
     con0[0] = AU1_AF1(inputViewportX * (1.f / outputSizeX));
     con0[1] = AU1_AF1(inputViewportY * (1.f / outputSizeY));
