@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "mmcore_gl/ResolutionScalerBase.h"
+#include "ResolutionScalerBase.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 /**
  * Module to interconnect between two modules that scales the incomming framebuffer from the caller,
@@ -63,4 +63,4 @@ protected:
 private:
 }; /* end class ResolutionScaler2D */
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

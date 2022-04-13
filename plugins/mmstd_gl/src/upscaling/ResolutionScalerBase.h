@@ -6,29 +6,25 @@
 
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Sampler.hpp"
-#include "glowl/glowl.h"
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
+#include <glm/glm.hpp>
+#include <glowl/BufferObject.hpp>
+#include <glowl/Sampler.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
-#include "glm/glm.hpp"
+#include "FSRAMDHelper.h"
 
-#include "mmcore_gl/3rd/FSRAMDHelper.h"
-
-
-namespace megamol::core_gl {
-
+namespace megamol::mmstd_gl {
 
 /**
  * Module to interconnect between two modules that scales the incomming framebuffer from the caller,
@@ -36,11 +32,11 @@ namespace megamol::core_gl {
  * and returns the re-scaled framebuffer to the initial caller.
  */
 template<typename CALL>
-class ResolutionScalerBase : public core::view::RendererModule<CALL, ModuleGL> {
+class ResolutionScalerBase : public core::view::RendererModule<CALL, core_gl::ModuleGL> {
 public:
     /** ctor */
-    ResolutionScalerBase(void)
-            : core::view::RendererModule<CALL, ModuleGL>()
+    ResolutionScalerBase()
+            : core::view::RendererModule<CALL, core_gl::ModuleGL>()
             , scale_mode_("Scale Mode", "Sets the scale mode for the input fbo, e.g. no scale, bilinear, FSR.")
             , rcas_sharpness_attenuation_("Sharpness", "Sets the sharpness attenuation parameter used in RCAS.")
             , fsr_resolution_presets_("Scale Factor", "Sets the scale factor for the resolution (i.e. 2x means the "
@@ -91,22 +87,22 @@ protected:
 
         try {
             naive_upsample_prgm_ = core::utility::make_glowl_shader(
-                "naive_upscale", shader_options, "ResolutionScaler/naive_upscale.comp.glsl");
+                "naive_upscale", shader_options, "mmstd_gl/upscaling/resolution_scaler_naive.comp.glsl");
 
             auto so_bilinear = shader_options;
             so_bilinear.addDefinition("SAMPLE_BILINEAR");
             fsr_bilinear_upsample_prgm_ = core::utility::make_glowl_shader(
-                "fsr_upscale_bilinear", so_bilinear, "ResolutionScaler/fsr_upscale.comp.glsl");
+                "fsr_upscale_bilinear", so_bilinear, "mmstd_gl/upscaling/resolution_scaler_fsr.comp.glsl");
 
             auto so_easu = shader_options;
             so_easu.addDefinition("SAMPLE_EASU");
-            fsr_easu_upsample_prgm_ =
-                core::utility::make_glowl_shader("fsr_upscale_easu", so_easu, "ResolutionScaler/fsr_upscale.comp.glsl");
+            fsr_easu_upsample_prgm_ = core::utility::make_glowl_shader(
+                "fsr_upscale_easu", so_easu, "mmstd_gl/upscaling/resolution_scaler_fsr.comp.glsl");
 
             auto so_rcas = shader_options;
             so_rcas.addDefinition("SAMPLE_RCAS");
-            fsr_rcas_upsample_prgm_ =
-                core::utility::make_glowl_shader("fsr_upscale_rcas", so_rcas, "ResolutionScaler/fsr_upscale.comp.glsl");
+            fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader(
+                "fsr_upscale_rcas", so_rcas, "mmstd_gl/upscaling/resolution_scaler_fsr.comp.glsl");
         } catch (std::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 ("ResolutionScalerBase: " + std::string(e.what())).c_str());
@@ -438,4 +434,4 @@ private:
 
 }; /* end class ResolutionScalerBase */
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

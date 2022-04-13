@@ -28,9 +28,6 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 
-#include "mmcore_gl/ResolutionScaler2D.h"
-#include "mmcore_gl/ResolutionScaler3D.h"
-
 
 namespace megamol::core_gl {
 class CoreGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -61,8 +58,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<core_gl::view::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<core_gl::DeferredShading>();
         this->module_descriptions.RegisterAutoDescription<core_gl::UniFlagStorage>();
-        this->module_descriptions.RegisterAutoDescription<core_gl::ResolutionScaler2D>();
-        this->module_descriptions.RegisterAutoDescription<core_gl::ResolutionScaler3D>();
 
         //////////////////////////////////////////////////////////////////////
         // Register all call descriptions here
