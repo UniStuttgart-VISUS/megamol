@@ -1,7 +1,7 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "../common/quad_vertices.inc.glsl"
+#include "mmstd_gl/common/quad_vertices.inc.glsl"
 
 uniform vec2 mouse = vec2(0.0f, 0.0f);
 uniform float pickRadius = 0.1f;

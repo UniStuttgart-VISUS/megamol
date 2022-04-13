@@ -1,7 +1,7 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "../common/quad_vertices.inc.glsl"
+#include "mmstd_gl/common/quad_vertices.inc.glsl"
 
 uniform float lineWidth = 1.0f;
 uniform ivec2 viewSize = ivec2(1, 1);

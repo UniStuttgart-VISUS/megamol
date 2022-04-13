@@ -13,15 +13,15 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 
-#include "Renderer2D.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-namespace megamol::infovis_gl {
+namespace megamol::mmstd_gl {
 
-class BaseAmortizedRenderer2D : public Renderer2D {
+class BaseAmortization2D : public core_gl::view::Renderer2DModuleGL {
 public:
-    BaseAmortizedRenderer2D();
+    BaseAmortization2D();
 
-    ~BaseAmortizedRenderer2D() override = default;
+    ~BaseAmortization2D() override = default;
 
 protected:
     bool create() override;
@@ -54,4 +54,4 @@ private:
     megamol::core::CallerSlot nextRendererSlot;
     core::param::ParamSlot enabledParam;
 };
-} // namespace megamol::infovis_gl
+} // namespace megamol::mmstd_gl
