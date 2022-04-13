@@ -176,7 +176,7 @@ protected:
         int downsampled_width = static_cast<int>(fbo_width / scale_factor_);
         int downsampled_height = static_cast<int>(fbo_height / scale_factor_);
 
-        int mode = this->scale_mode_.Param<core::param::EnumParam>()->Value();
+        int mode = this->scale_mode_.template Param<core::param::EnumParam>()->Value();
 
         // prepare fbo and intermediary texture
         if (mode != 0) {
