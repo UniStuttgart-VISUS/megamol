@@ -147,7 +147,7 @@ protected:
      * @return The return value of the function.
      */
     bool GetExtents(CALL& call) final {
-        CALL* chainedCall = this->chainRenderSlot.CallAs<CALL>();
+        CALL* chainedCall = this->chainRenderSlot.template CallAs<CALL>();
         if (chainedCall != nullptr) {
             *chainedCall = call;
             bool retVal = (*chainedCall)(core::view::AbstractCallRender::FnGetExtents);
@@ -164,7 +164,7 @@ protected:
      * @return The return value of the function.
      */
     bool Render(CALL& call) final {
-        CALL* rhs_chained_call = this->chainRenderSlot.CallAs<CALL>();
+        CALL* rhs_chained_call = this->chainRenderSlot.template CallAs<CALL>();
         if (rhs_chained_call == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "The ResolutionScalerBase does not work without a renderer attached to its right");
