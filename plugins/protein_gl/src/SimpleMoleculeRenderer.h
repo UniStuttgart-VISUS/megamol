@@ -275,25 +275,25 @@ private:
     RenderMode currentRenderMode;
 
     /** vertex array for spheres */
-    vislib::Array<float> vertSpheres;
+    std::vector<glm::vec4> vertSpheres_;
     /** vertex array for cylinders */
-    vislib::Array<float> vertCylinders;
+    std::vector<glm::vec4> vertCylinders_;
     /** attribute array for quaterinons of the cylinders */
-    vislib::Array<float> quatCylinders;
+    std::vector<glm::vec4> quatCylinders_;
     /** attribute array for inParam of the cylinders (radius and length) */
-    vislib::Array<float> inParaCylinders;
+    std::vector<glm::vec2> inParaCylinders_;
     /** first color array for cylinder */
-    vislib::Array<float> color1Cylinders;
+    std::vector<glm::vec3> color1Cylinders_;
     /** second color array for cylinder */
-    vislib::Array<float> color2Cylinders;
+    std::vector<glm::vec3> color2Cylinders_;
     /** Connections filter */
-    vislib::Array<int> conFilter;
+    std::vector<int> conFilter_;
     /** vertex array for points */
-    vislib::Array<float> vertPoints;
+    std::vector<glm::vec4> vertPoints_;
     /** vertex array for lines */
-    vislib::Array<float> vertLines;
+    std::vector<glm::vec4> vertLines_;
     /** color array for the lines */
-    vislib::Array<float> colorLines;
+    std::vector<glm::vec3> colorLines_;
 
     // the list of molecular indices
     vislib::Array<vislib::StringA> molIdxList;
