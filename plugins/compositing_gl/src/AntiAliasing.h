@@ -103,6 +103,14 @@ public:
         return true;
     }
 
+    #ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
+
     AntiAliasing();
     ~AntiAliasing();
 
