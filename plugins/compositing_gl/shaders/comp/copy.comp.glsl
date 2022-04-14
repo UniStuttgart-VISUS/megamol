@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 

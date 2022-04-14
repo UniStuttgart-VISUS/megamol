@@ -1,14 +1,14 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
 #pragma once
 
-#include "glowl/glowl.h"
-#include "glowl/Texture2D.hpp"
 #include "glowl/BufferObject.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/glowl.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -21,8 +21,7 @@
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 /**
  * Struct for all the SMAA configurable settings.
@@ -138,10 +137,9 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-
     /**
-    * Resets previously set GL states
-    */
+     * Resets previously set GL states
+     */
     inline void resetGLStates() {
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
@@ -321,5 +319,4 @@ private:
     bool settings_have_changed_;
 };
 
-} // namespace compositing
-} // namespace megamol
+} // namespace megamol::compositing_gl

@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -47,12 +47,11 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
               "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
               "texture can be provided as it is mandatory to have one")
         , smaa_view_("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
-                                "only be used when directly connected to the screen for debug purposes")
+                               "only be used when directly connected to the screen for debug purposes")
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
-        , settings_have_changed_(false)
-{
+        , settings_have_changed_(false) {
     auto aa_modes = new core::param::EnumParam(0);
     aa_modes->SetTypePair(0, "SMAA");
     aa_modes->SetTypePair(1, "FXAA");
@@ -86,8 +85,7 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
 
     auto max_search_step = new megamol::core::param::IntParam(16, 0, 112);
     max_search_step->SetGUIVisible(false);
-    max_search_step->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Drag);
+    max_search_step->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
     this->smaa_max_search_steps_.SetParameter(max_search_step);
     this->smaa_max_search_steps_.SetUpdateCallback(&megamol::compositing_gl::AntiAliasing::setCustomSettingsCallback);
     this->MakeSlotAvailable(&this->smaa_max_search_steps_);
@@ -162,13 +160,13 @@ megamol::compositing_gl::AntiAliasing::~AntiAliasing() {
 bool megamol::compositing_gl::AntiAliasing::create() {
 // profiling
 #ifdef PROFILING
-        perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
-            &frontend_resources.get<frontend_resources::PerformanceManager>());
+    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
 
-        frontend_resources::PerformanceManager::basic_timer_config render_timer;
-        render_timer.name = "render";
-        render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
-        timers_ = perf_manager_->add_timers(this, {render_timer});
+    frontend_resources::PerformanceManager::basic_timer_config render_timer;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timers_ = perf_manager_->add_timers(this, {render_timer});
 #endif
 
     // create shader programs
@@ -181,15 +179,14 @@ bool megamol::compositing_gl::AntiAliasing::create() {
         smaa_edge_detection_prgm_ = core::utility::make_glowl_shader(
             "smaa_edge_detection", shader_options, "comp/AntiAliasing/smaa_edge_detection.comp.glsl");
 
-        smaa_blending_weight_calculation_prgm_ =
-            core::utility::make_glowl_shader("smaa_blending_weight_calculation", shader_options,
-                "comp/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
+        smaa_blending_weight_calculation_prgm_ = core::utility::make_glowl_shader("smaa_blending_weight_calculation",
+            shader_options, "comp/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
 
         smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader(
             "smaa_neighborhood_blending", shader_options, "comp/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            ("AntiAliasing: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("AntiAliasing: " + std::string(e.what())).c_str());
     }
 
     // init all textures
@@ -307,12 +304,9 @@ bool megamol::compositing_gl::AntiAliasing::setSettingsCallback(core::param::Par
     // custom
     if (slot.Param<core::param::EnumParam>()->Value() == 4) {
         this->smaa_threshold_.Param<core::param::FloatParam>()->SetValue(constants_.Smaa_threshold);
-        this->smaa_max_search_steps_.Param<core::param::IntParam>()->SetValue(
-            constants_.Max_search_steps);
-        this->smaa_max_search_steps_diag_.Param<core::param::IntParam>()->SetValue(
-            constants_.Max_search_steps_diag);
-        this->smaa_disable_diag_detection_.Param<core::param::BoolParam>()->SetValue(
-            constants_.Disable_diag_detection);
+        this->smaa_max_search_steps_.Param<core::param::IntParam>()->SetValue(constants_.Max_search_steps);
+        this->smaa_max_search_steps_diag_.Param<core::param::IntParam>()->SetValue(constants_.Max_search_steps_diag);
+        this->smaa_disable_diag_detection_.Param<core::param::BoolParam>()->SetValue(constants_.Disable_diag_detection);
         this->smaa_disable_corner_detection_.Param<core::param::BoolParam>()->SetValue(
             constants_.Disable_corner_detection);
         this->smaa_corner_rounding_.Param<core::param::IntParam>()->SetValue(constants_.Corner_rounding);

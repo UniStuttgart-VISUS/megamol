@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -8,9 +8,7 @@
 
 #include <chrono>
 
-namespace megamol {
-namespace core {
-namespace profiler {
+namespace megamol::core::profiler {
 
 class Timer {
 public:
@@ -25,6 +23,4 @@ private:
     std::chrono::steady_clock::time_point m_end;
 };
 
-} // namespace profiler
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::profiler

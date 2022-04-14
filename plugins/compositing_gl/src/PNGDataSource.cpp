@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -36,7 +36,8 @@ PNGDataSource::PNGDataSource(void)
     this->m_image_height_slot.Param<megamol::core::param::IntParam>()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->m_image_height_slot);
 
-    this->m_output_tex_slot.SetCallback(compositing::CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
+    this->m_output_tex_slot.SetCallback(
+        compositing::CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
     this->m_output_tex_slot.SetCallback(
         compositing::CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
