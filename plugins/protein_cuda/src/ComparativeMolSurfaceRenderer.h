@@ -699,15 +699,15 @@ private:
 
     /* RMSD fitting */
 
-    std::vector<glm::vec3> rmsPosVec1;    ///> Position vector #0 for rms fitting
-    std::vector<glm::vec3> rmsPosVec2;    ///> Position vector #1 for rms fitting
-    float rmsValue;               ///> The calculated RMS value
-    Mat3f rmsRotation;            ///> Rotation matrix for the fitting
-    Mat4f rmsRotationMatrix;      ///> Rotation matrix for the fitting
-    Vec3f rmsTranslation;         ///> Translation vector for the fitting
-    Vec3f rmsCentroid;            ///> Centroid of the second data set
-    static const float maxRMSVal; ///> Maximum RMS value to enable fitting
-    HostArr<float> atomPosFitted; ///> The rotated/translated atom positions
+    std::vector<glm::vec3> rmsPosVec1; ///> Position vector #0 for rms fitting
+    std::vector<glm::vec3> rmsPosVec2; ///> Position vector #1 for rms fitting
+    float rmsValue;                    ///> The calculated RMS value
+    Mat3f rmsRotation;                 ///> Rotation matrix for the fitting
+    Mat4f rmsRotationMatrix;           ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation;              ///> Translation vector for the fitting
+    Vec3f rmsCentroid;                 ///> Centroid of the second data set
+    static const float maxRMSVal;      ///> Maximum RMS value to enable fitting
+    HostArr<float> atomPosFitted;      ///> The rotated/translated atom positions
 
 
     /* Boolean flags */
