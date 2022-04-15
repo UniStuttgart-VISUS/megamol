@@ -14,11 +14,10 @@
 //#define USE_TIMER
 //#define VERBOSE
 
-#include "DiffusionSolver.h"
-#include "RMS.h"
 #include "VBODataCall.h"
 #include "ogl_error_check.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/RMSD.h"
 #include "protein_calls/VTIDataCall.h"
 
 #include "mmcore/CoreInstance.h"
@@ -863,8 +862,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
             uint posCnt1 = 0, posCnt2 = 0;
 
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             // Extracting protein atoms from mol 1
             for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
@@ -879,12 +878,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                         return false;
                     }
                     for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 0] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0];
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 1] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 1];
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 2] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 2];
+                        this->rmsPosVec1[posCnt1] =
+                            glm::make_vec3(&mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0]);
                         posCnt1++;
                     }
                 }
@@ -903,12 +898,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                         return false;
                     }
                     for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 0] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0];
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 1] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 1];
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 2] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 2];
+                        this->rmsPosVec2[posCnt2] =
+                            glm::make_vec3(&mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0]);
                         posCnt2++;
                     }
                 }
@@ -925,8 +916,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
 
         } else if (this->fittingMode == RMS_BACKBONE) { // Use backbone atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             uint posCnt1 = 0, posCnt2 = 0;
 
@@ -956,21 +947,13 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
 
                     //                    printf("c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n",
                     //                            cAlphaIdx, cCarbIdx, oIdx, nIdx); // DEBUG
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cAlphaIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cCarbIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cCarbIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cCarbIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cCarbIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * oIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * oIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * oIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * oIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * nIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * nIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * nIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * nIdx]);
                     posCnt1++;
                 }
             }
@@ -999,21 +982,13 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                             ->OIndex();
                     //                    printf("amino acid idx %u, c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n", secStructure.
                     //                            FirstAminoAcidIndex()+acid, cAlphaIdx, cCarbIdx, oIdx, nIdx);
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cAlphaIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cCarbIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cCarbIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cCarbIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cCarbIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * oIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * oIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * oIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * oIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * nIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * nIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * nIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * nIdx]);
                     posCnt2++;
                 }
             }
@@ -1042,8 +1017,8 @@ atoms instead.",
             posCnt = posCnt1;
         } else if (this->fittingMode == RMS_C_ALPHA) { // Use C alpha atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             uint posCnt1 = 0, posCnt2 = 0;
 
@@ -1080,9 +1055,7 @@ atoms instead.",
                 const MolecularDataCall::Residue* residue = mol1->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
                     uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 1 %f %f %f\n",
                     //                            this->rmsPosVec1.Peek()[3*posCnt1+0],
                     //                            this->rmsPosVec1.Peek()[3*posCnt1+1],
@@ -1118,9 +1091,7 @@ atoms instead.",
                 const MolecularDataCall::Residue* residue = mol2->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
                     uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 2 %f %f %f\n",
                     //                            this->rmsPosVec2.Peek()[3*posCnt2+0],
                     //                            this->rmsPosVec2.Peek()[3*posCnt2+1],
@@ -1161,8 +1132,7 @@ atoms instead.",
 
         // Compute centroid
         for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
-            this->rmsCentroid += Vec3f(this->rmsPosVec2.Peek()[cnt * 3 + 0], this->rmsPosVec2.Peek()[cnt * 3 + 1],
-                this->rmsPosVec2.Peek()[cnt * 3 + 2]);
+            this->rmsCentroid += Vec3f(this->rmsPosVec2[cnt].x, this->rmsPosVec2[cnt].y, this->rmsPosVec2[cnt].z);
         }
         this->rmsCentroid /= static_cast<float>(posCnt);
         //        printf("posCnt %u\n", posCnt);
@@ -1181,37 +1151,19 @@ atoms instead.",
         //                this->rmsCentroid.PeekComponents()[2]);
 
         // Do actual RMSD calculations
-        this->rmsMask.Validate(posCnt);
-        this->rmsWeights.Validate(posCnt);
-#pragma omp parallel for
-        for (int a = 0; a < static_cast<int>(posCnt); ++a) {
-            this->rmsMask.Peek()[a] = 1;
-            this->rmsWeights.Peek()[a] = 1.0f;
-        }
+        auto rmsres = protein_calls::CalculateRMSD(this->rmsPosVec2, this->rmsPosVec1, RMSDMode::RMSD_CALC_MATRICES);
+        this->rmsValue = rmsres.rmsdValue;
 
-        float rotation[3][3], translation[3];
-
-        this->rmsValue = CalculateRMS(posCnt, // Number of positions in each vector
-            true,                             // Do fit positions
-            2,                                // Save rotation/translation
-            this->rmsWeights.Peek(),          // Weights for the particles
-            this->rmsMask.Peek(),             // Which particles should be considered
-            this->rmsPosVec2.Peek(),          // Vector to be fitted
-            this->rmsPosVec1.Peek(),          // Vector
-            rotation,                         // Saves the rotation matrix
-            translation                       // Saves the translation vector
-        );
-
-        this->rmsTranslation.Set(translation[0], translation[1], translation[2]);
-        this->rmsRotation.SetAt(0, 0, rotation[0][0]);
-        this->rmsRotation.SetAt(0, 1, rotation[0][1]);
-        this->rmsRotation.SetAt(0, 2, rotation[0][2]);
-        this->rmsRotation.SetAt(1, 0, rotation[1][0]);
-        this->rmsRotation.SetAt(1, 1, rotation[1][1]);
-        this->rmsRotation.SetAt(1, 2, rotation[1][2]);
-        this->rmsRotation.SetAt(2, 0, rotation[2][0]);
-        this->rmsRotation.SetAt(2, 1, rotation[2][1]);
-        this->rmsRotation.SetAt(2, 2, rotation[2][2]);
+        this->rmsTranslation.Set(rmsres.translationVector.x, rmsres.translationVector.y, rmsres.translationVector.z);
+        this->rmsRotation.SetAt(0, 0, rmsres.rotationMatrix[0][0]);
+        this->rmsRotation.SetAt(0, 1, rmsres.rotationMatrix[0][1]);
+        this->rmsRotation.SetAt(0, 2, rmsres.rotationMatrix[0][2]);
+        this->rmsRotation.SetAt(1, 0, rmsres.rotationMatrix[1][0]);
+        this->rmsRotation.SetAt(1, 1, rmsres.rotationMatrix[1][1]);
+        this->rmsRotation.SetAt(1, 2, rmsres.rotationMatrix[1][2]);
+        this->rmsRotation.SetAt(2, 0, rmsres.rotationMatrix[2][0]);
+        this->rmsRotation.SetAt(2, 1, rmsres.rotationMatrix[2][1]);
+        this->rmsRotation.SetAt(2, 2, rmsres.rotationMatrix[2][2]);
 
         //        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
         //        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
@@ -1219,17 +1171,17 @@ atoms instead.",
         //                rotation[1][0], rotation[1][1], rotation[1][2],
         //                rotation[2][0], rotation[2][1], rotation[2][2]);
 
-        this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
-        this->rmsRotationMatrix.SetAt(0, 1, rotation[0][1]);
-        this->rmsRotationMatrix.SetAt(0, 2, rotation[0][2]);
+        this->rmsRotationMatrix.SetAt(0, 0, rmsRotation.GetAt(0, 0));
+        this->rmsRotationMatrix.SetAt(0, 1, rmsRotation.GetAt(0, 1));
+        this->rmsRotationMatrix.SetAt(0, 2, rmsRotation.GetAt(0, 2));
         this->rmsRotationMatrix.SetAt(0, 3, 0.0f);
-        this->rmsRotationMatrix.SetAt(1, 0, rotation[1][0]);
-        this->rmsRotationMatrix.SetAt(1, 1, rotation[1][1]);
-        this->rmsRotationMatrix.SetAt(1, 2, rotation[1][2]);
+        this->rmsRotationMatrix.SetAt(1, 0, rmsRotation.GetAt(1, 0));
+        this->rmsRotationMatrix.SetAt(1, 1, rmsRotation.GetAt(1, 1));
+        this->rmsRotationMatrix.SetAt(1, 2, rmsRotation.GetAt(1, 2));
         this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
-        this->rmsRotationMatrix.SetAt(2, 0, rotation[2][0]);
-        this->rmsRotationMatrix.SetAt(2, 1, rotation[2][1]);
-        this->rmsRotationMatrix.SetAt(2, 2, rotation[2][2]);
+        this->rmsRotationMatrix.SetAt(2, 0, rmsRotation.GetAt(2, 0));
+        this->rmsRotationMatrix.SetAt(2, 1, rmsRotation.GetAt(2, 1));
+        this->rmsRotationMatrix.SetAt(2, 2, rmsRotation.GetAt(2, 2));
         this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
         this->rmsRotationMatrix.SetAt(3, 3, 1.0f);
     }
@@ -1679,11 +1631,6 @@ void ComparativeMolSurfaceRenderer::release(void) {
 
     CudaSafeCall(this->surfAttribTex1_D.Release());
     CudaSafeCall(this->surfAttribTex2_D.Release());
-
-    this->rmsPosVec1.Release();
-    this->rmsPosVec2.Release();
-    this->rmsWeights.Release();
-    this->rmsMask.Release();
 
     this->atomPosFitted.Release();
 

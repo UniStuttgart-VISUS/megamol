@@ -699,10 +699,8 @@ private:
 
     /* RMSD fitting */
 
-    HostArr<float> rmsPosVec1;    ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec2;    ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;    ///> Particle weights
-    HostArr<int> rmsMask;         ///> Mask for particles
+    std::vector<glm::vec3> rmsPosVec1;    ///> Position vector #0 for rms fitting
+    std::vector<glm::vec3> rmsPosVec2;    ///> Position vector #1 for rms fitting
     float rmsValue;               ///> The calculated RMS value
     Mat3f rmsRotation;            ///> Rotation matrix for the fitting
     Mat4f rmsRotationMatrix;      ///> Rotation matrix for the fitting
