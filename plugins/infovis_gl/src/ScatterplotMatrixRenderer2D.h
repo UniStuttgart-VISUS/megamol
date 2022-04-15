@@ -336,7 +336,7 @@ private:
     GLsizei triangleVertexCount;
     bool trianglesValid;
 
-    core::view::Camera currentCamera;
+    std::optional<core::view::Camera> currentCamera;
     glm::ivec2 currentViewRes;
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;

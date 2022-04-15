@@ -11,7 +11,6 @@
 // does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
-#include "amort/ResolutionScalingRenderer2D.h"
 #include "histo/TableHistogramRenderer2D.h"
 #include "histo/TextureHistogramRenderer2D.h"
 
@@ -33,7 +32,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::ScatterplotMatrixRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::TableHistogramRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::TextureHistogramRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::ResolutionScalingRenderer2D>();
 
         // register calls
     }
