@@ -1,3 +1,8 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 #include "protein_calls/RMSD.h"
 
 #include "Eigen/Eigen"
