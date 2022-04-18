@@ -30,8 +30,8 @@ public:
         int valueSum = 0;
         float valueMean = 0.f;
         Rect boundingBox;
-        glm::vec2 centerOfMass;
-        glm::vec2 weightedCenterOfMass;
+        glm::vec2 centerOfMass = {};
+        glm::vec2 weightedCenterOfMass = {};
     };
 
     struct Input {

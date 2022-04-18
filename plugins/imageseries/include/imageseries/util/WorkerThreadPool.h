@@ -66,6 +66,8 @@ public:
     WorkerThreadPool();
     ~WorkerThreadPool();
 
+    static WorkerThreadPool& getSharedInstance();
+
     Job submit(Job::Func func);
 
     void setThreadCount(std::size_t count);

@@ -28,7 +28,7 @@ public:
     using ImageProvider = std::function<std::shared_ptr<const BitmapImage>()>;
 
     AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize);
-    AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData);
+    AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData = nullptr);
     ~AsyncImageData2D();
 
     bool isWaiting() const;

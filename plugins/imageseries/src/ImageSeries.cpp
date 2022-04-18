@@ -9,8 +9,10 @@
 
 #include "imageseries/AffineTransform2DCall.h"
 #include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/graph/GraphData2DCall.h"
 
 #include "module/ImageSeriesFlowPreprocessor.h"
+#include "module/ImageSeriesGraphGenerator.h"
 #include "module/ImageSeriesLabeler.h"
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
@@ -37,6 +39,7 @@ public:
         // Register calls
         this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeries2DCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::AffineTransform2DCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::ImageSeries::GraphData2DCall>();
 
         // Register modules
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLoader>();
@@ -44,6 +47,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowPreprocessor>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimeDiffFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLabeler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesGraphGenerator>();
     }
 };
 

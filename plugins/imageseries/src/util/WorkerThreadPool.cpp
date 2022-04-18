@@ -116,6 +116,11 @@ WorkerThreadPool::~WorkerThreadPool() {
     }
 }
 
+WorkerThreadPool& WorkerThreadPool::getSharedInstance() {
+    static WorkerThreadPool pool;
+    return pool;
+}
+
 Job WorkerThreadPool::submit(Job::Func func) {
     auto jobData = std::make_shared<Job::JobData>();
     jobData->func = std::move(func);

@@ -1,5 +1,7 @@
 #include "ImageSeriesRenderer.h"
 
+#include "imageseries/graph/GraphData2DCall.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 
@@ -9,9 +11,13 @@ namespace megamol::ImageSeries::GL {
 
 ImageSeriesRenderer::ImageSeriesRenderer()
         : getDataCaller("requestImageSeries", "Requests image data from a series.")
+        , getGraphCaller("requestGraph", "Requests graph data to render on top of the image series.")
         , displayModeParam("Display Mode", "Controls how the image should be presented.") {
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
+
+    getGraphCaller.SetCompatibleCall<typename ImageSeries::GraphData2DCall::CallDescription>();
+    MakeSlotAvailable(&getGraphCaller);
 
     auto* displayMode = new core::param::EnumParam(static_cast<int>(ImageDisplay2D::Mode::Auto));
     displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Auto), "Automatic");

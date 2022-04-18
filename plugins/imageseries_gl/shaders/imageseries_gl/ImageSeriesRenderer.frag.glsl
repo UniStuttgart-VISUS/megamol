@@ -47,7 +47,7 @@ vec4 getColor(vec4 color) {
 	default:
 		return color;
 	case 2: // Grayscale
-		return vec4(vec3((color.r + color.g + color.b) / 3.0), color.a);
+		return color.rrra;
 	case 3: // Labels
 		return labelColor(color);
 	case 4: // Time diff

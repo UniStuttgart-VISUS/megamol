@@ -98,6 +98,8 @@ private:
 
     core::CallerSlot getDataCaller;
 
+    core::CallerSlot getGraphCaller;
+
     core::param::ParamSlot displayModeParam;
 
     ImageSeries2DCall::Output metadata;

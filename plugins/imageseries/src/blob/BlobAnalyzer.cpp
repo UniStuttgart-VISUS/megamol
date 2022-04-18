@@ -32,11 +32,7 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
         return out;
     }
 
-    for (std::size_t i = 0; i < filter::BlobLabelFilter::LabelCount; ++i) {
-        Blob blob;
-        blob.label = i;
-        out.blobs.push_back(std::move(blob));
-    }
+    std::array<Blob, filter::BlobLabelFilter::LabelCount> blobArray;
 
     const auto* imgIn = image->PeekDataAs<std::uint8_t>();
     const auto* labIn = label->PeekDataAs<std::uint8_t>();
@@ -50,7 +46,7 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
         Label label = labIn[i];
         int value = imgIn[i];
 
-        Blob& blob = out.blobs[label];
+        Blob& blob = blobArray[label];
 
         if (blob.pixelCount == 0) {
             blob.boundingBox.x1 = x;
@@ -72,22 +68,20 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
         blob.weightedCenterOfMass.y += y * value;
     }
 
-    out.blobs.erase(std::remove_if(out.blobs.begin(), out.blobs.end(),
-                        [](Blob& blob) {
-                            if (blob.pixelCount == 0) {
-                                return true;
-                            } else {
-                                blob.valueMean = static_cast<double>(blob.valueSum) / (blob.pixelCount);
-                                blob.centerOfMass /= static_cast<float>(blob.pixelCount);
-                                if (blob.valueSum > 0) {
-                                    blob.weightedCenterOfMass /= static_cast<float>(blob.valueSum);
-                                } else {
-                                    blob.weightedCenterOfMass = blob.centerOfMass;
-                                }
-                                return false;
-                            }
-                        }),
-        out.blobs.end());
+    for (std::size_t i = 0; i < filter::BlobLabelFilter::LabelCount; ++i) {
+        auto& blob = blobArray[i];
+        if (blob.pixelCount > 0) {
+            blob.label = i;
+            blob.valueMean = static_cast<double>(blob.valueSum) / (blob.pixelCount);
+            blob.centerOfMass /= static_cast<float>(blob.pixelCount);
+            if (blob.valueSum > 0) {
+                blob.weightedCenterOfMass /= static_cast<float>(blob.valueSum);
+            } else {
+                blob.weightedCenterOfMass = blob.centerOfMass;
+            }
+            out.blobs.push_back(blob);
+        }
+    }
 
     return out;
 }

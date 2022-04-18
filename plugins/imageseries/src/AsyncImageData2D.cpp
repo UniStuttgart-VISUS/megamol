@@ -63,8 +63,7 @@ std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::getImageD
 }
 
 util::WorkerThreadPool& AsyncImageData2D::getThreadPool() {
-    static util::WorkerThreadPool pool;
-    return pool;
+    return util::WorkerThreadPool::getSharedInstance();
 }
 
 } // namespace megamol::ImageSeries
