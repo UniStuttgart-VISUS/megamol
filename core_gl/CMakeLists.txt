@@ -26,11 +26,6 @@ if(BUILD_CORE)
     PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources  
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
 
-  if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-      LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
-  endif()
-
   # Install shaders
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
 

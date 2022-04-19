@@ -7,7 +7,6 @@ option(BUILD_CORE "Build core" ON)
 
 if (BUILD_CORE)
   project(core)
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # Add externals.
   require_external(expat)
@@ -45,11 +44,6 @@ if (BUILD_CORE)
   endif ()
   if (ENABLE_CUESDK)
     target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
-  endif ()
-
-  if (WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-      LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif ()
 
   if (MPI_C_FOUND)
