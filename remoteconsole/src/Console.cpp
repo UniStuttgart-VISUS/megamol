@@ -1,5 +1,5 @@
 #include "Console.h"
-#include "stdafx.h"
+
 #include <cctype>
 #include <fstream>
 #include <iostream>
