@@ -101,7 +101,7 @@ endif()
 
 # OpenMP
 if(UNIX)
-  find_package(OpenMP)
+  find_package(OpenMP REQUIRED)
 endif()
 if(OPENMP_FOUND OR WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
