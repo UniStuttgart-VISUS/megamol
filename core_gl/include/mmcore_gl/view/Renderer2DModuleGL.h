@@ -26,14 +26,31 @@ namespace view {
 class Renderer2DModuleGL : public core::view::RendererModule<CallRender2DGL, ModuleGL> {
 public:
     /** Ctor. */
-    Renderer2DModuleGL() : core::view::RendererModule<CallRender2DGL, ModuleGL>() {
-        this->MakeSlotAvailable(&this->renderSlot);
-    }
+    Renderer2DModuleGL();
 
     /** Dtor. */
-    virtual ~Renderer2DModuleGL(void) = default;
+    virtual ~Renderer2DModuleGL();
+
+protected:
+    /**
+     * Method that gets called before the rendering is started for all changed modules
+     *
+     * @param call The rendering call that contains the camera
+     */
+    virtual void PreRender(CallRender2DGL& call);
 
 private:
+    /**
+     * The chained get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times). This version of the method calls the respective method of all chained renderers
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtentsChain(CallRender2DGL& call) override final;
+
     /**
      * The callback that triggers the own rendering and in theory would trigger
      * the rendering of all chained render modules
@@ -44,23 +61,6 @@ private:
      */
     virtual bool RenderChain(CallRender2DGL& call) override final;
 };
-
-inline bool Renderer2DModuleGL::RenderChain(CallRender2DGL& call) {
-
-    // INSERT CHAINING HERE (IF EVER NEEDED)
-
-    // bind fbo and set viewport before rendering your own stuff
-    auto fbo = call.GetFramebuffer();
-    fbo->bind();
-    glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
-
-    // render our own stuff
-    this->Render(call);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    return true;
-}
 
 } /* end namespace view */
 } // namespace core_gl
