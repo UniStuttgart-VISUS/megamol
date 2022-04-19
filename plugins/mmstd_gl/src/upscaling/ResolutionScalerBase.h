@@ -192,9 +192,11 @@ protected:
                 fbo_update || input_fbo_tl.width != inter_tl_.width || input_fbo_tl.height != inter_tl_.height;
 
             // prepare color attachment of fbo and intermediate texture for rcas
-            if (fbo_update) {
-                scaled_fbo_->createColorAttachment(
-                    input_fbo_tl.internal_format, input_fbo_tl.format, input_fbo_tl.type);
+            if (tx2D_update) {
+                if (fbo_update) {
+                    scaled_fbo_->createColorAttachment(
+                        input_fbo_tl.internal_format, input_fbo_tl.format, input_fbo_tl.type);
+                }
 
                 // prepare intermediate texture used in rcas pass
                 if (tx2D_update) {
