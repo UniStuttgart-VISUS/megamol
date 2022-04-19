@@ -79,12 +79,24 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
 }
 
 bool ImageDisplay2D::render(megamol::core_gl::view::CallRender2DGL& call) {
-    return renderImpl(call.GetFramebuffer(), call.GetCamera().getViewMatrix());
+    auto camera = call.GetCamera();
+    return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix());
 }
 
 bool ImageDisplay2D::render(megamol::core_gl::view::CallRender3DGL& call) {
     auto camera = call.GetCamera();
     return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix());
+}
+
+glm::vec2 ImageDisplay2D::getImageSize() const {
+    if (texture) {
+        // Fit to height of 100 by default (TODO: make this configurable)
+        float height = 100.f;
+        float width = std::max<float>(texture->getWidth(), 1) / std::max<float>(texture->getHeight(), 1) * height;
+        return glm::vec2(width, height);
+    } else {
+        return glm::vec2(1.f, 1.f);
+    }
 }
 
 void ImageDisplay2D::setDisplayMode(Mode mode) {
@@ -114,7 +126,7 @@ bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> frameb
     texture->bindTexture();
 
     shader->use();
-    shader->setUniform("matrix", matrix);
+    shader->setUniform("matrix", glm::scale(matrix, glm::vec3(getImageSize(), 1.f)));
     shader->setUniform("image", 0);
     shader->setUniform("displayMode", static_cast<GLint>(getEffectiveDisplayMode()));
 

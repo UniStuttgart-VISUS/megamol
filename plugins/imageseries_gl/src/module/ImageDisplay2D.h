@@ -33,6 +33,8 @@ public:
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
 
+    glm::vec2 getImageSize() const;
+
     bool render(megamol::core_gl::view::CallRender2DGL& call);
     bool render(megamol::core_gl::view::CallRender3DGL& call);
 

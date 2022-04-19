@@ -48,11 +48,8 @@ bool ImageSeriesRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     call.SetTimeFramesCount(std::max<unsigned int>(1, metadata.imageCount));
 
     call.AccessBoundingBoxes().Clear();
-    // Fit to height of 10 by default (TODO: make this configurable)
-    float height = 10.f;
-    float width = std::max<float>(metadata.width, 1) / std::max<float>(metadata.height, 1) * height;
-    call.AccessBoundingBoxes().SetBoundingBox(-width * 0.5f, -height * 0.5f, -0.5f, width * 0.5f, height * 0.5f, 0.5f);
-    call.AccessBoundingBoxes().SetClipBox(call.AccessBoundingBoxes().BoundingBox());
+    auto size = display ? display->getImageSize() : glm::vec2(1.f, 1.f);
+    call.AccessBoundingBoxes().SetBoundingBox(-size.x * .5f, -size.y * .5f, -.5f, size.x * .5f, size.y * .5f, .5f);
 
     return true;
 }
