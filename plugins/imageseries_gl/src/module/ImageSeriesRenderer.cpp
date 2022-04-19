@@ -48,8 +48,10 @@ bool ImageSeriesRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     call.SetTimeFramesCount(std::max<unsigned int>(1, metadata.imageCount));
 
     call.AccessBoundingBoxes().Clear();
-    // TODO actual bounds
-    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, -0.5f, metadata.width, metadata.height, 0.5f);
+    // Fit to height of 10 by default (TODO: make this configurable)
+    float height = 10.f;
+    float width = std::max<float>(metadata.width, 1) / std::max<float>(metadata.height, 1) * height;
+    call.AccessBoundingBoxes().SetBoundingBox(-width * 0.5f, -height * 0.5f, -0.5f, width * 0.5f, height * 0.5f, 0.5f);
     call.AccessBoundingBoxes().SetClipBox(call.AccessBoundingBoxes().BoundingBox());
 
     return true;
@@ -69,6 +71,7 @@ bool ImageSeriesRenderer::Render(core_gl::view::CallRender2DGL& call) {
         (*getData)(ImageSeries::ImageSeries2DCall::CallGetData);
         const auto& output = getData->GetOutput();
         currentImage = output.imageData;
+        metadata = output;
 
         // Perform read-ahead
         // TODO add option to disable read-ahead
