@@ -8,13 +8,6 @@ else()
   set(BITS 32)
 endif()
 
-# Build types
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
-endif()
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
-
 # Compiler flags (inspired by OSPRay build)
 option(DISABLE_WARNINGS "Disables all compiler warnings" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -34,12 +27,8 @@ else()
     "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif()
 
-# Install
-option(MEGAMOL_INSTALL_DEPENDENCIES "MegaMol dependencies in install" ON)
-mark_as_advanced(MEGAMOL_INSTALL_DEPENDENCIES)
-
 # CUDA
-option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
+option(ENABLE_CUDA "Enable CUDA support" OFF)
 if(ENABLE_CUDA)
   enable_language(CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)

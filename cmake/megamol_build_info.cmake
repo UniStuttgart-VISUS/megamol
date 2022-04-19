@@ -1,6 +1,5 @@
 # megamol_build_info
-# This script will provide several build information as C++ library.
-# Usage: link to the megamol_build_info library as normal library and `#include "megamol_build_info.h"`.
+# This script will provide several build information as compiled resources.
 
 # Dependency
 include(cmrc/CMakeRC)
