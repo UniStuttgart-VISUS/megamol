@@ -25,7 +25,7 @@ namespace view {
 /**
  * Abstract base class for data sources for time-dependent data sets.
  */
-class MEGAMOLCORE_API AnimDataModule : public Module {
+class AnimDataModule : public Module {
 public:
     /** Dtor. */
     virtual ~AnimDataModule(void);
@@ -44,7 +44,7 @@ protected:
      * Base class for holding all variable data of one time frame of the
      * dataset.
      */
-    class MEGAMOLCORE_API Frame {
+    class Frame {
     public:
         friend class ::megamol::core::view::AnimDataModule;
 

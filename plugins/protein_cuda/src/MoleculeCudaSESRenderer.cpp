@@ -24,9 +24,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <algorithm>
 #include <iostream>
 
@@ -34,7 +35,7 @@
 #include "particles_kernel.cuh"
 
 #include "cuda_error_check.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 
 
@@ -52,7 +53,7 @@ using namespace megamol::core::utility::log;
  * MoleculeCudaSESRenderer::MoleculeCudaSESRenderer
  */
 MoleculeCudaSESRenderer::MoleculeCudaSESRenderer(void)
-        : Renderer3DModule()
+        : Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the CUDA SES rendering with molecular data")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
         , debugParam("debugParam", "Debugging parameter")
@@ -191,16 +192,13 @@ void protein_cuda::MoleculeCudaSESRenderer::release(void) {
  * MoleculeCudaSESRenderer::create
  */
 bool MoleculeCudaSESRenderer::create(void) {
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 "
+    /*if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 "
                           "GL_EXT_bindable_uniform") ||
         !ogl_IsVersionGEQ(2, 0))
         return false;
 
     if (!isExtAvailable("GL_NV_transform_feedback"))
-        return false;
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
+        return false;*/
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -212,25 +210,23 @@ bool MoleculeCudaSESRenderer::create(void) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource geomSrc;
     ShaderSource fragSrc;
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     ///////////////////////////////////////////////////////////////
     // load the shader source for the sphere Id writing renderer //
     ///////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::writeSphereIdVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::writeSphereIdVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for sphere id writing shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::writeSphereIdFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::writeSphereIdFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for sphere id writing shader", this->ClassName());
         return false;
@@ -247,12 +243,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // load the shader source for point drawing renderer (fetch vertex position from texture //
     ///////////////////////////////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawPointVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawPointVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for point drawing shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawPointFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawPointFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for point drawing shader", this->ClassName());
         return false;
@@ -269,12 +265,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphereVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphereFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -291,12 +287,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for the reduced surface computation //
     ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::reducedSurface2Vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::reducedSurface2Vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for reduced surface computation shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::reducedSurface2Fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::reducedSurface2Fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for reduced surface computation shader", this->ClassName());
         return false;
@@ -313,12 +309,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     /////////////////////////////////////////////////////////////////
     // load the shader source for reduced surface triangle drawing //
     /////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawTriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawTriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for RS triangle drawing shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawTriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawTriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for RS triangle drawing shader", this->ClassName());
         return false;
@@ -338,17 +334,17 @@ bool MoleculeCudaSESRenderer::create(void) {
     /////////////////////////////////////////////////////////
     // load the shader source for visible triangle drawing //
     /////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawVisibleTriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawVisibleTriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for visible triangle drawing", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawVisibleTriangleGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawVisibleTriangleGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load geometry shader source for visible triangle drawing", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawVisibleTriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawVisibleTriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for visible triangle drawing", this->ClassName());
         return false;
@@ -382,12 +378,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     ///////////////////////////////////////////////////
     // load the shader source for the torus renderer //
     ///////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::torusVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::torusVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::torusFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::torusFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
         return false;
@@ -405,12 +401,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for the spherical triangle renderer //
     ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphericaltriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphericaltriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
         return false;
@@ -428,12 +424,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     //////////////////////////////////////////////////////////
     // load the shader source for adjacent triangle finding //
     //////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::adjacentTriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::adjacentTriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for adjacent triangle finding shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::adjacentTriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::adjacentTriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for adjacent triangle finding shader", this->ClassName());
         return false;
@@ -453,12 +449,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     //////////////////////////////////////////////////////
     // load the shader source for adjacent atom finding //
     //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::adjacentAtomVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::adjacentAtomVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for adjacent atom marking shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::adjacentAtomFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::adjacentAtomFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for adjacent atom marking shader", this->ClassName());
         return false;
@@ -478,12 +474,12 @@ bool MoleculeCudaSESRenderer::create(void) {
     /////////////////////////////////////////////////////////////////
     // load the shader source for reduced surface triangle drawing //
     /////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawCUDATriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawCUDATriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for CUDA triangle drawing shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::drawCUDATriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::drawCUDATriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for CUDA triangle drawing shader", this->ClassName());
         return false;
@@ -503,17 +499,17 @@ bool MoleculeCudaSESRenderer::create(void) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for visible triangle index emission //
     ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::visibleTriangleIdxVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::visibleTriangleIdxVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for visible triangle index emission", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::visibleTriangleIdxGeometry", geomSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::visibleTriangleIdxGeometry", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load geometry shader source for visible triangle index emission", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("reducedsurface::ses::visibleTriangleIdxFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("reducedsurface::ses::visibleTriangleIdxFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for visible triangle index emission", this->ClassName());
         return false;
@@ -549,7 +545,7 @@ bool MoleculeCudaSESRenderer::create(void) {
 /*
  * Initialize CUDA
  */
-bool MoleculeCudaSESRenderer::initCuda(MolecularDataCall* protein, uint gridDim, view::CallRender3D* cr3d) {
+bool MoleculeCudaSESRenderer::initCuda(MolecularDataCall* protein, uint gridDim, core_gl::view::CallRender3DGL* cr3d) {
     // do not initialize twice!
     // TODO: make this better...
     if (this->cudaInitalized)
@@ -558,20 +554,8 @@ bool MoleculeCudaSESRenderer::initCuda(MolecularDataCall* protein, uint gridDim,
     this->numAtoms = protein->AtomCount();
 
     // use CUDA device with highest Gflops/s
-    //cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
-
-#ifdef _WIN32
-    if (cr3d->IsGpuAffinity()) {
-        HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-        int devId;
-        cudaWGLGetDevice(&devId, gpuId);
-        cudaGLSetGLDevice(devId);
-    } else {
-        cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
-    }
-#else
     cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
-#endif
+
     printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
 
     // set grid dimensions
@@ -648,27 +632,15 @@ bool MoleculeCudaSESRenderer::initCuda(MolecularDataCall* protein, uint gridDim,
 /*
  * MoleculeCudaSESRenderer::GetExtents
  */
-bool MoleculeCudaSESRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool MoleculeCudaSESRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* protein = this->protDataCallerSlot.CallAs<MolecularDataCall>();
     if (protein == NULL)
         return false;
     if (!(*protein)(MolecularDataCall::CallForGetExtent))
         return false;
 
-    float scale;
-    if (!vislib::math::IsEqual(protein->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / protein->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = protein->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(protein->FrameCount());
+    call.AccessBoundingBoxes() = protein->AccessBoundingBoxes();
+    call.SetTimeFramesCount(protein->FrameCount());
 
     return true;
 }
@@ -677,7 +649,7 @@ bool MoleculeCudaSESRenderer::GetExtents(Call& call) {
 /*
  * MoleculeCudaSESRenderer::Render
  */
-bool MoleculeCudaSESRenderer::Render(Call& call) {
+bool MoleculeCudaSESRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
     // update probe radius
     this->probeRadius = this->probeRadiusParam.Param<param::FloatParam>()->Value();
@@ -691,15 +663,10 @@ bool MoleculeCudaSESRenderer::Render(Call& call) {
     */
     this->params.probeRadius = this->probeRadius;
 
-    // cast the call to Render3D
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
     // get the call time
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
 
     // get pointer to MolecularDataCall
     MolecularDataCall* protein = this->protDataCallerSlot.CallAs<MolecularDataCall>();
@@ -764,7 +731,7 @@ bool MoleculeCudaSESRenderer::Render(Call& call) {
 
     // try to initialize CUDA
     if (!this->cudaInitalized) {
-        cudaInitalized = this->initCuda(protein, 16, cr3d);
+        cudaInitalized = this->initCuda(protein, 16, &call);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "%s: CUDA initialization: %i", this->ClassName(), cudaInitalized);
     }
@@ -777,20 +744,12 @@ bool MoleculeCudaSESRenderer::Render(Call& call) {
 
     // ==================== Scale & Translate ====================
     glPushMatrix();
-    // compute scale factor and scale world
-    float scale;
-    if (!vislib::math::IsEqual(protein->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / protein->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
 
     // =============== Query Camera View Dimensions ===============
-    if (static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height) {
-        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+    if (static_cast<unsigned int>(call.GetViewResolution().x) != this->width ||
+        static_cast<unsigned int>(call.GetViewResolution().y) != this->height) {
+        this->width = static_cast<unsigned int>(call.GetViewResolution().x);
+        this->height = static_cast<unsigned int>(call.GetViewResolution().y);
         this->CreateVisibilityFBO(VISIBILITY_FBO_DIM);
     }
 
@@ -970,8 +929,7 @@ void MoleculeCudaSESRenderer::RenderAtomIdGPU(MolecularDataCall* protein) {
     // -----------
     // -- draw  --
     // -----------
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -985,13 +943,15 @@ void MoleculeCudaSESRenderer::RenderAtomIdGPU(MolecularDataCall* protein) {
     // enable sphere shader
     this->writeSphereIdShader.Enable();
 
+    auto cp = cameraInfo.getPose();
+    auto cv = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // set shader variables
     glUniform4fv(this->writeSphereIdShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    glUniform3f(
-        this->writeSphereIdShader.ParameterLocation("zValues"), 1.0f, cameraInfo->NearClip(), cameraInfo->FarClip());
+    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fv(this->writeSphereIdShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3f(this->writeSphereIdShader.ParameterLocation("zValues"), 1.0f, cv.near_plane, cv.far_plane);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -1274,7 +1234,8 @@ void MoleculeCudaSESRenderer::FindVisibleAtoms(MolecularDataCall* protein) {
     // set viewport
     glViewport(0, 0, this->visibilityTexWidth, this->visibilityTexHeight);
     // set camera information
-    this->cameraInfo->SetVirtualViewSize((float)this->visibilityTexWidth, (float)this->visibilityTexHeight);
+    // TODO Karsten add this correctly
+    //this->cameraInfo->SetVirtualViewSize((float)this->visibilityTexWidth, (float)this->visibilityTexHeight);
     // start rendering to visibility FBO
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->visibilityFBO);
     // set clear color & clear
@@ -1291,7 +1252,8 @@ void MoleculeCudaSESRenderer::FindVisibleAtoms(MolecularDataCall* protein) {
     // reset viewport to normal view
     glViewport(0, 0, this->width, this->height);
     // set camera information
-    this->cameraInfo->SetVirtualViewSize((float)this->width, (float)this->height);
+    // TODO Karsten add this correctly
+    //this->cameraInfo->SetVirtualViewSize((float)this->width, (float)this->height);
 
     //glDisable( GL_DEPTH_TEST );
 
@@ -2353,8 +2315,7 @@ void MoleculeCudaSESRenderer::RenderVisibleAtomsGPU(MolecularDataCall* protein) 
         positions = posInter;
 
     // set viewport
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2365,15 +2326,17 @@ void MoleculeCudaSESRenderer::RenderVisibleAtomsGPU(MolecularDataCall* protein) 
     // get clear color (i.e. background color) for fogging
     vislib::math::Vector<float, 3> fogCol(this->clearCol[0], this->clearCol[1], this->clearCol[2]);
 
+    auto cp = cameraInfo.getPose();
+    auto cv = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // enable sphere shader
     this->sphereShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    glUniform3f(
-        this->sphereShader.ParameterLocation("zValues"), this->fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3f(this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->sphereShader.ParameterLocation("alpha"), this->transparency);
     // draw visible atoms
@@ -2401,8 +2364,7 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
         positions = posInter;
 
     // set viewport
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2412,6 +2374,9 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     // get clear color (i.e. background color) for fogging
     vislib::math::Vector<float, 3> fogCol(this->clearCol[0], this->clearCol[1], clearCol[2]);
 
+    auto cp = cameraInfo.getPose();
+    auto cv = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     ///////////////////////////////////////////////////////////////////////////
     // render the atoms as spheres
     ///////////////////////////////////////////////////////////////////////////
@@ -2420,11 +2385,10 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     this->sphereShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    glUniform3f(
-        this->sphereShader.ParameterLocation("zValues"), this->fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3f(this->sphereShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->sphereShader.ParameterLocation("alpha"), this->transparency);
     // draw visible atoms
@@ -2449,11 +2413,11 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     this->sphericalTriangleShader.Enable();
     // set shader variables
     glUniform4fv(this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    glUniform3f(this->sphericalTriangleShader.ParameterLocation("zValues"), this->fogStart, cameraInfo->NearClip(),
-        cameraInfo->FarClip());
+    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fv(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3f(
+        this->sphericalTriangleShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform2f(this->sphericalTriangleShader.ParameterLocation("texOffset"), 1.0f, 1.0f);
     // get attribute locations
@@ -2501,11 +2465,10 @@ void MoleculeCudaSESRenderer::RenderSESCuda(MolecularDataCall* mol, unsigned int
     this->torusShader.Enable();
     // set shader variables
     glUniform4fv(this->torusShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->torusShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fv(this->torusShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fv(this->torusShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    glUniform3f(
-        this->torusShader.ParameterLocation("zValues"), this->fogStart, cameraInfo->NearClip(), cameraInfo->FarClip());
+    glUniform3fv(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fv(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fv(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3f(this->torusShader.ParameterLocation("zValues"), this->fogStart, cv.near_plane, cv.far_plane);
     glUniform3f(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1f(this->torusShader.ParameterLocation("alpha"), this->transparency);
     // get attribute locations

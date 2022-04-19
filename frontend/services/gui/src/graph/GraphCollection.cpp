@@ -334,14 +334,18 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                 graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
 #ifdef PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
-                auto gui_module_ptr = graph_ptr->GetModule(data.name_id);
+                // ! Search Queue for following module renaming action to get current name of gui graph module
+                auto module_rename_data =
+                    graph_ptr->FindQueueEntryByActionName(Graph::QueueAction::RENAME_MODULE, data.name_id);
+                auto gui_module_ptr = graph_ptr->GetModule(
+                    (module_rename_data.name_id.empty()) ? (data.name_id) : (module_rename_data.rename_id));
                 if (gui_module_ptr != nullptr) {
                     gui_module_ptr->SetProfilingData(core_module_ptr.get(), perf_manager);
                     module_to_module[core_module_ptr.get()] = gui_module_ptr;
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui module pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                        __LINE__);
+                        "[GUI] Failed to get gui module pointer for profiling. [%s, %s, line %d]\n", __FILE__,
+                        __FUNCTION__, __LINE__);
                 }
 #endif
             } break;
@@ -368,7 +372,8 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                     call_to_call[core_call_ptr.get()] = gui_call_ptr;
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui call pointer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        "[GUI] Failed to get gui call pointer for profiling. [%s, %s, line %d]\n", __FILE__,
+                        __FUNCTION__, __LINE__);
                 }
 #endif
             } break;

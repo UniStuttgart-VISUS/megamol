@@ -25,8 +25,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/FlagCallsGL.h"
-#include "mmcore_gl/UniFlagStorage.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
+#include "mmcore_gl/flags/UniFlagStorage.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
@@ -263,7 +263,6 @@ private:
     glm::vec4 curClipCol;
     glm::vec4 curlightDir;
     glm::vec4 curCamUp;
-    float curCamNearClip;
     glm::vec4 curCamView;
     glm::vec4 curCamRight;
     glm::vec4 curCamPos;

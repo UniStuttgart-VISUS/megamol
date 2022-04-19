@@ -9,31 +9,32 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "Color.h"
 #include "MoleculeVolumeCudaRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/glverify.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/sys/File.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/glverify.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <math.h>
@@ -41,6 +42,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::utility::log;
@@ -50,7 +52,7 @@ using namespace megamol::core::utility::log;
  * protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer (CTOR)
  */
 protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
-        : Renderer3DModule()
+        : Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
         , coloringModeParam("coloringMode", "Coloring Mode")
@@ -92,20 +94,18 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->protDataCallerSlot);
 
     // set renderer caller slot
-    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->protRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    this->SetColoringMode(Color::ELEMENT);
+    this->SetColoringMode(ProteinColor::ColoringMode::ELEMENT);
     param::EnumParam* cm = new param::EnumParam(int(this->currentColoringMode));
-    MolecularDataCall* mol = new MolecularDataCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, cCnt);
-        cm->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm->SetTypePair(cCnt, ProteinColor::GetName(cMode).c_str());
     }
-    delete mol;
     this->coloringModeParam << cm;
     this->MakeSlotAvailable(&this->coloringModeParam);
 
@@ -144,21 +144,21 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->volClipPlaneOpacityParam);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // --- set up parameter for volume rendering ---
@@ -170,7 +170,7 @@ protein_cuda::MoleculeVolumeCudaRenderer::MoleculeVolumeCudaRenderer(void)
     this->MakeSlotAvailable(&this->renderProteinParam);
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // initialize vertex and color array for tests
     c = new float[3 * NUM];
@@ -205,15 +205,11 @@ void protein_cuda::MoleculeVolumeCudaRenderer::release(void) {}
  * protein_cuda::MoleculeVolumeCudaRenderer::create
  */
 bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0) ||
+    /*if (!ogl_IsVersionGEQ(2, 0) ||
         !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform"))
         return false;
     if (!isExtAvailable("GL_ARB_vertex_program"))
-        return false;
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions())
-        return false;
+        return false;*/
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -221,19 +217,19 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::sphereFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -249,14 +245,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load clipped sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::sphereClipPlaneVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereClipPlaneVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::sphereClipPlaneFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereClipPlaneFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
         return false;
@@ -272,14 +266,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein_cuda::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
         return false;
@@ -295,13 +287,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load volume texture generation shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "volume::std::updateVolumeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::updateVolumeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
@@ -317,12 +308,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load ray start shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start shader", this->ClassName());
         return false;
@@ -338,12 +329,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load ray start eye shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start eye shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName());
         return false;
@@ -359,12 +350,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load ray length shader (uses same vertex shader as ray start shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray length shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray length shader", this->ClassName());
         return false;
@@ -380,12 +371,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Load volume rendering shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
@@ -401,12 +392,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
     }
 
     // Write a uniform color to all fragments
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
@@ -432,11 +423,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::create(void) {
 /*
  * protein_cuda::ProteinRenderer::GetExtents
  */
-bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     float scale, xoff, yoff, zoff;
@@ -451,7 +438,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents(Call& call) {
         // get the bounding box
         boundingBox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
         // set the frame count
-        cr3d->SetTimeFramesCount(mol->FrameCount());
+        call.SetTimeFramesCount(mol->FrameCount());
 
     } else {
         return false;
@@ -467,27 +454,23 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents(Call& call) {
         scale = 1.0f;
     }
 
-    BoundingBoxes& bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox(boundingBox);
-    bbox.SetWorldSpaceBBox((boundingBox.Left() + xoff) * scale, (boundingBox.Bottom() + yoff) * scale,
-        (boundingBox.Back() + zoff) * scale, (boundingBox.Right() + xoff) * scale, (boundingBox.Top() + yoff) * scale,
-        (boundingBox.Front() + zoff) * scale);
-    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
-    bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
+    auto& bbox = call.AccessBoundingBoxes();
+    bbox.SetBoundingBox(boundingBox);
+    bbox.SetClipBox(bbox.BoundingBox());
 
     // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D* protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+    auto* protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
     vislib::math::Point<float, 3> protrenbbc;
     if (protrencr3d) {
         (*protrencr3d)(1); // GetExtents
-        BoundingBoxes& protrenbb = protrencr3d->AccessBoundingBoxes();
-        this->protrenScale = protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        auto& protrenbb = protrencr3d->AccessBoundingBoxes();
+        this->protrenScale = protrenbb.BoundingBox().Width() / boundingBox.Width();
         //this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
         if (mol) {
             this->protrenTranslate.Set(xoff, yoff, zoff);
             this->protrenTranslate *= scale;
         } else {
-            this->protrenTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+            this->protrenTranslate = (protrenbb.BoundingBox().CalcCenter() - bbc) * scale;
         }
     }
     return true;
@@ -496,38 +479,35 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::GetExtents(Call& call) {
 /*
  * protein_cuda::MoleculeVolumeCudaRenderer::Render
  */
-bool protein_cuda::MoleculeVolumeCudaRenderer::Render(Call& call) {
-    // cast the call to Render3D
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (!cr3d)
-        return false;
+bool protein_cuda::MoleculeVolumeCudaRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D* protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+    core_gl::view::CallRender3DGL* protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
     // =============== Query Camera View Dimensions ===============
-    if (static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height) {
-        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+    if (static_cast<unsigned int>(call.GetFramebuffer()->getWidth()) != this->width ||
+        static_cast<unsigned int>(call.GetFramebuffer()->getHeight()) != this->height) {
+        this->width = static_cast<unsigned int>(call.GetFramebuffer()->getWidth());
+        this->height = static_cast<unsigned int>(call.GetFramebuffer()->getHeight());
     }
 
     // create the fbo, if necessary
     if (!this->proteinFBO.IsValid()) {
         this->proteinFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+            vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
     // resize the fbo, if necessary
     if (this->proteinFBO.GetWidth() != this->width || this->proteinFBO.GetHeight() != this->height) {
         this->proteinFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT,
-            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+            vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
 
-
+// TODO what does this do?
+#if 0
     if (this->renderProteinParam.Param<param::BoolParam>()->Value()) {
         // =============== Protein Rendering ===============
         // disable the output buffer
@@ -551,12 +531,13 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(Call& call) {
         // re-enable the output buffer
         cr3d->EnableOutputBuffer();
     }
+#endif
 
     // =============== Refresh all parameters ===============
-    this->ParameterRefresh(cr3d);
+    this->ParameterRefresh(&call);
 
     // get the call time
-    this->callTime = cr3d->Time();
+    this->callTime = call.Time();
 
     if (mol) {
         // set frame ID and call data
@@ -567,10 +548,13 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(Call& call) {
         if (mol->AtomCount() == 0)
             return true;
 
-        Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+        this->colorLookupTable = {
+            glm::make_vec3(this->minGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<core::param::ColorParam>()->Value().data())};
+
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
     }
 
 
@@ -583,7 +567,7 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(Call& call) {
     bool retval = false;
     // try to start volume rendering using protein data
     if (mol) {
-        retval = this->RenderMolecularData(cr3d, mol);
+        retval = this->RenderMolecularData(&call, mol);
     }
 
     // unlock the current frame
@@ -597,7 +581,8 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::Render(Call& call) {
 /*
  * Volume rendering using molecular data.
  */
-bool protein_cuda::MoleculeVolumeCudaRenderer::RenderMolecularData(view::CallRender3D* call, MolecularDataCall* mol) {
+bool protein_cuda::MoleculeVolumeCudaRenderer::RenderMolecularData(
+    core_gl::view::CallRender3DGL* call, MolecularDataCall* mol) {
 
     // check last atom count with current atom count
     if (this->atomCount != mol->AtomCount()) {
@@ -670,12 +655,12 @@ bool protein_cuda::MoleculeVolumeCudaRenderer::RenderMolecularData(view::CallRen
 /*
  * refresh parameters
  */
-void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(view::CallRender3D* call) {
+void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(core_gl::view::CallRender3DGL* call) {
 
     // parameter refresh
     if (this->coloringModeParam.IsDirty()) {
         this->SetColoringMode(
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
         this->coloringModeParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -721,7 +706,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(view::CallRender
         this->volClipPlane0NormParam.ResetDirty();
     }
     // compute maximum extent
-    vislib::math::Cuboid<float> bbox(call->AccessBoundingBoxes().WorldSpaceBBox());
+    vislib::math::Cuboid<float> bbox(call->AccessBoundingBoxes().BoundingBox());
     vislib::math::Vector<float, 3> tmpVec;
     float d, maxD, minD;
     // 1
@@ -794,8 +779,8 @@ void protein_cuda::MoleculeVolumeCudaRenderer::ParameterRefresh(view::CallRender
 
     // update color table
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -913,7 +898,7 @@ void protein_cuda::MoleculeVolumeCudaRenderer::UpdateVolumeTexture(MolecularData
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(4, GL_FLOAT, 0, atoms);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.data());
     for (z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
@@ -1118,17 +1103,17 @@ void protein_cuda::MoleculeVolumeCudaRenderer::RayParamTextures(vislib::math::Cu
 
     // the shader transforms camera coords back to object space
     this->volRayStartEyeShader.Enable();
+    auto cam_intrinsics = cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
-    float u =
-        this->cameraInfo->NearClip() * tan(this->cameraInfo->ApertureAngle() * float(vislib::math::PI_DOUBLE) / 360.0f);
+    float u = cam_intrinsics.near_plane * tan(cam_intrinsics.fovy * float(vislib::math::PI_DOUBLE) / 360.0f);
     float r = (this->width / this->height) * u;
 
     glBegin(GL_QUADS);
     //glVertex3f(-r, -u, -_nearClip);
-    glVertex3f(-r, -u, -this->cameraInfo->NearClip());
-    glVertex3f(r, -u, -this->cameraInfo->NearClip());
-    glVertex3f(r, u, -this->cameraInfo->NearClip());
-    glVertex3f(-r, u, -this->cameraInfo->NearClip());
+    glVertex3f(-r, -u, -cam_intrinsics.near_plane);
+    glVertex3f(r, -u, -cam_intrinsics.near_plane);
+    glVertex3f(r, u, -cam_intrinsics.near_plane);
+    glVertex3f(-r, u, -cam_intrinsics.near_plane);
     glEnd();
     CHECK_FOR_OGL_ERROR();
 
@@ -1198,8 +1183,8 @@ void protein_cuda::MoleculeVolumeCudaRenderer::RayParamTextures(vislib::math::Cu
     glUniform1i(this->volRayLengthShader.ParameterLocation("depthTex"), 1);
     glUniform2f(this->volRayLengthShader.ParameterLocation("screenResInv"), 1.0f / float(this->width),
         1.0f / float(this->height));
-    glUniform2f(this->volRayLengthShader.ParameterLocation("zNearFar"), this->cameraInfo->NearClip(),
-        this->cameraInfo->FarClip());
+    glUniform2f(
+        this->volRayLengthShader.ParameterLocation("zNearFar"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
 
     if (this->renderIsometric) {
         glUniform3f(this->volRayLengthShader.ParameterLocation("translate"), 0.0f, 0.0f, 0.0f);

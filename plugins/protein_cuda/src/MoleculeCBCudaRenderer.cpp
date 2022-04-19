@@ -16,18 +16,19 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/ColourRGBAu8.h"
-#include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
+#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <ctime>
 #include <fstream>
@@ -45,6 +46,7 @@ extern "C" void copyArrayFromDevice(void* host, const void* device, unsigned int
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::utility::log;
@@ -53,7 +55,7 @@ using namespace megamol::core::utility::log;
  * MoleculeCBCudaRenderer::MoleculeCBCudaRenderer
  */
 MoleculeCBCudaRenderer::MoleculeCBCudaRenderer(void)
-        : Renderer3DModule()
+        : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with PDB data source")
         , probeRadiusParam("probeRadius", "Probe Radius")
         , opacityParam("opacity", "Atom opacity")
@@ -66,6 +68,8 @@ MoleculeCBCudaRenderer::MoleculeCBCudaRenderer(void)
         , probeNeighborCount(32)
         , texHeight(0)
         , texWidth(0)
+        , width(0)
+        , height(0)
         , setCUDAGLDevice(true) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -142,13 +146,10 @@ void protein_cuda::MoleculeCBCudaRenderer::release(void) {
  * MoleculeCBCudaRenderer::create
  */
 bool MoleculeCBCudaRenderer::create(void) {
-    using namespace vislib::graphics::gl;
-    // try to initialize the necessary extensions for GLSL shader support
-    if (!GLSLShader::InitialiseExtensions())
+    using namespace vislib_gl::graphics::gl;
+    /*if (!areExtsAvailable("GL_ARB_multitexture GL_EXT_framebuffer_object") || !ogl_IsVersionGEQ(2, 0)) {
         return false;
-    if (!areExtsAvailable("GL_ARB_multitexture GL_EXT_framebuffer_object") || !ogl_IsVersionGEQ(2, 0)) {
-        return false;
-    }
+    }*/
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -163,19 +164,17 @@ bool MoleculeCBCudaRenderer::create(void) {
     ShaderSource vertSrc;
     ShaderSource fragSrc;
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
 
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragmentCB", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereFragmentCB", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
@@ -193,12 +192,12 @@ bool MoleculeCBCudaRenderer::create(void) {
     ///////////////////////////////////////////////////
     // load the shader source for the torus renderer //
     ///////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::torusVertex2", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::torusVertex2", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::torusFragment2", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::torusFragment2", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
         return false;
@@ -216,12 +215,12 @@ bool MoleculeCBCudaRenderer::create(void) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for the spherical triangle renderer //
     ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphericaltriangleVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::ses::sphericaltriangleFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::ses::sphericaltriangleFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
         return false;
@@ -242,27 +241,15 @@ bool MoleculeCBCudaRenderer::create(void) {
 /*
  * MoleculeCBCudaRenderer::GetExtents
  */
-bool MoleculeCBCudaRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool MoleculeCBCudaRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
     if (!(*mol)(MolecularDataCall::CallForGetExtent))
         return false;
 
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
 }
@@ -271,16 +258,13 @@ bool MoleculeCBCudaRenderer::GetExtents(Call& call) {
 /*
  * MoleculeCBCudaRenderer::Render
  */
-bool MoleculeCBCudaRenderer::Render(Call& call) {
-    // cast the call to Render3D
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
-
+bool MoleculeCBCudaRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
+    this->width = call.GetViewResolution().x;
+    this->height = call.GetViewResolution().y;
 
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
 
     // get pointer to call
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -301,7 +285,7 @@ bool MoleculeCBCudaRenderer::Render(Call& call) {
 
     // try to initialize CUDA
     if (!this->cudaInitalized) {
-        cudaInitalized = this->initCuda(mol, 16, cr3d);
+        cudaInitalized = this->initCuda(mol, 16, &call);
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
             "%s: CUDA initialization: %i", this->ClassName(), cudaInitalized);
     }
@@ -563,8 +547,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     ///////////////////////////////////////////////////////////////////////////
 
     // do actual rendering
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -574,12 +557,14 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+    auto cp = this->cameraInfo.getPose();
+
     // enable and set up sphere shader
     this->sphereShader.Enable();
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
 
     // render atoms VBO
 #ifndef SFB_DEMO
@@ -614,6 +599,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     vislib::math::Vector<float, 3> fogCol(clearColor[0], clearColor[1], clearColor[2]);
     delete[] clearColor;
 
+    auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     /////////////////////////////////////////////////
     // ray cast the spherical triangles on the GPU //
     /////////////////////////////////////////////////
@@ -623,14 +610,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     this->sphericalTriangleShader.Enable();
     // set shader variables
     glUniform4fvARB(this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(
-        this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(
-        this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(
-        this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-    glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), 0.5f, this->cameraInfo->NearClip(),
-        this->cameraInfo->FarClip());
+    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
     glUniform3fARB(
         this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     //glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"), 1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
@@ -697,11 +680,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     this->torusShader.Enable();
     // set shader variables
     glUniform4fvARB(this->torusShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-    glUniform3fARB(this->torusShader.ParameterLocation("zValues"), 0.5f, this->cameraInfo->NearClip(),
-        this->cameraInfo->FarClip());
+    glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform3fARB(this->torusShader.ParameterLocation("zValues"), 0.5f, cv.near_plane, cv.far_plane);
     glUniform3fARB(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
     glUniform1fARB(this->torusShader.ParameterLocation("alpha"), 1.0f);
     // get attribute locations
@@ -894,8 +876,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
         m_hSmallCircles, m_dSmallCircles, 0, sizeof(float) * 4 * this->numAtoms * this->atomNeighborCount);
 
     // do actual rendering
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -1015,11 +996,13 @@ void MoleculeCBCudaRenderer::ContourBuildupCPU(MolecularDataCall* mol) {
     }
     // ... END remove all unnecessary small circles
 
+    auto cp = this->cameraInfo.getPose();
+
     this->sphereShader.Enable();
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
 #define DRAW_SMALL_ALL_CIRCLES 1
 #if DRAW_SMALL_ALL_CIRCLES
     // draw small circles
@@ -1524,23 +1507,12 @@ void MoleculeCBCudaRenderer::deinitialise(void) {}
 /*
  * Initialize CUDA
  */
-bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core::view::CallRender3D* cr3d) {
+bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d) {
     // set number of atoms
     this->numAtoms = mol->AtomCount();
 
     if (setCUDAGLDevice) {
-#ifdef _WIN32
-        if (cr3d->IsGpuAffinity()) {
-            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice(&devId, gpuId);
-            cudaGLSetGLDevice(devId);
-        } else {
-            cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-        }
-#else
         cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
-#endif
         printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
         setCUDAGLDevice = false;
     }

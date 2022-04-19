@@ -22,7 +22,7 @@ namespace profiler {
 /**
  * Connection of a call to the profiling manager
  */
-class MEGAMOLCORE_API Connection {
+class Connection {
 public:
     /** smart pointer type */
     typedef std::shared_ptr<Connection> ptr_type;

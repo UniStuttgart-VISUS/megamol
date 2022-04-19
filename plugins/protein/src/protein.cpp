@@ -29,16 +29,14 @@
 #include "SolPathDataSource.h"
 #include "SolventHydroBondGenerator.h"
 #include "TrajectorySmoothFilter.h"
+#include "UncertaintyDataLoader.h"
 #include "VMDDXLoader.h"
 #include "VTILoader.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 
 // data interfaces (calls)
-#include "protein/CallColor.h"
 #include "protein/Diagram2DCall.h"
 #include "protein/ForceDataCall.h"
-#include "protein/ParticleDataCall.h"
-#include "protein/RMSF.h"
 #include "protein/SolPathDataCall.h"
 #include "protein/SphereDataCall.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
@@ -47,19 +45,16 @@
 #include "MoleculeBallifier.h"
 
 // other modules (filter etc)
-#include "ColorModule.h"
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
-#include "MSMSCavityFinder.h"
-#include "MSMSGenus0Generator.h"
-#include "MSMSMeshLoader.h"
 #include "MolecularNeighborhood.h"
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 #include "ProteinAligner.h"
 #include "ProteinExploder.h"
 #include "SolventCounter.h"
-#include "TunnelCutter.h"
+#include "TunnelToBFactor.h"
+#include "TunnelToParticles.h"
 
 #include "vislib/Trace.h"
 
@@ -115,19 +110,18 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularBezierData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventCounter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSGenus0Generator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinAligner>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToBFactor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelToParticles>();
+
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::UncertaintyDataLoader>();
 
 
         // register calls
@@ -136,10 +130,8 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SphereDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::ParticleDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
     }
 };
 } // namespace megamol::protein

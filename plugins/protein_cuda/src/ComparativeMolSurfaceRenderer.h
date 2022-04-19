@@ -21,7 +21,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
@@ -38,12 +38,12 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "gridParams.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeMolSurfaceRenderer : public core::view::Renderer3DModuleDS {
+class ComparativeMolSurfaceRenderer : public core_gl::view::Renderer3DModuleGL {
 
 public:
     /// Render modes for the surfaces
@@ -105,9 +105,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
-            return false;
-        }
         return true;
     }
 
@@ -177,7 +174,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The get extent callback for vbo data.
@@ -224,7 +221,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * TODO
@@ -679,19 +676,19 @@ private:
     /* Surface rendering */
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplMappedSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader pplMappedSurfaceShader;
 
     /// The textures holding surface attributes (e.g. surface potential)
     GLuint surfAttribTex1, surfAttribTex2;

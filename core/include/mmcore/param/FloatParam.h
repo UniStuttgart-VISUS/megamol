@@ -10,18 +10,19 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API FloatParam : public GenericParam<float, AbstractParamPresentation::ParamType::FLOAT> {
+class FloatParam : public GenericParam<float, AbstractParamPresentation::ParamType::FLOAT> {
 public:
     FloatParam(float initVal) : Super(initVal) {}
 
     FloatParam(float initVal, float minVal) : Super(initVal, minVal) {}
 
     FloatParam(float initVal, float minVal, float maxVal) : Super(initVal, minVal, maxVal) {}
+
+    FloatParam(float initVal, float minVal, float maxVal, float stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
 
     virtual ~FloatParam() = default;
 
@@ -30,6 +31,7 @@ public:
         outDef << "MMFLOT";
         outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
         outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
+        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
 
         return outDef.str();
     }

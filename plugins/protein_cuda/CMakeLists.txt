@@ -8,6 +8,7 @@ megamol_plugin(protein_cuda
   DEPENDS_CUDA
   DEPENDS_PLUGINS
     geometry_calls
+    geometry_calls_gl
     protein_calls)
 
 if (protein_cuda_PLUGIN_ENABLED)

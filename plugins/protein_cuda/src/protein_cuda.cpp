@@ -36,7 +36,6 @@
 // data interfaces (calls)
 #include "PlaneDataCall.h"
 #include "VBODataCall.h"
-#include "mmcore/CallVolumeData.h"
 
 // other modules (filter etc)
 #include "ParticlesToMeshConverter.h"

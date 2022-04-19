@@ -55,7 +55,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        return isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 3);
+        return true;
     }
 
     /** Ctor. */
@@ -161,6 +161,6 @@ private:
 };
 
 } // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol
 
 #endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */

@@ -221,7 +221,7 @@ double HD_Rec(double* z, double** xx, int n, int d) {
     for (int i = 0; i < m; i++)
         delete[] x[i];
     delete[] x;
-    return result / (double) n;
+    return result / (double)n;
 }
 
 /****************************************************************************/
@@ -562,7 +562,7 @@ double HD_Comb(double* z, double** xx, int n, int d) {
         delete[] x[i];
     delete[] x;
     delete[] indices;
-    return result / (double) n;
+    return result / (double)n;
 }
 
 /****************************************************************************/
@@ -829,7 +829,7 @@ double HD_Comb2(double* z, double** xx, int n, int d) {
     delete[] x;
     delete[] indices;
     return result;
-    return result / (double) n;
+    return result / (double)n;
 }
 
 } // namespace HalfspaceDepth

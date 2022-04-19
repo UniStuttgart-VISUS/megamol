@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/math/Ternary.h"
 
 
@@ -24,7 +23,7 @@ namespace param {
 /**
  * class for ternary parameter objects
  */
-class MEGAMOLCORE_API TernaryParam : public AbstractParam {
+class TernaryParam : public AbstractParam {
 public:
     /**
      * Ctor.

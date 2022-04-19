@@ -18,7 +18,7 @@ namespace core {
 namespace view {
 namespace light {
 
-class MEGAMOLCORE_API CallLight : public core::GenericVersionedCall<LightCollection, core::EmptyMetaData> {
+class CallLight : public core::GenericVersionedCall<LightCollection, core::EmptyMetaData> {
 public:
     CallLight() = default;
     ~CallLight() = default;

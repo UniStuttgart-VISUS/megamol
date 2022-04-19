@@ -28,7 +28,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/profiler/Manager.h"
-#include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
@@ -102,25 +101,10 @@ extern HMODULE mmCoreModuleHandle;
 #endif
 
 /*
- * megamol::core::CoreInstance::ViewJobHandleDalloc
- */
-void megamol::core::CoreInstance::ViewJobHandleDalloc(void* data, megamol::core::ApiHandle* obj) {
-    CoreInstance* core = reinterpret_cast<CoreInstance*>(data);
-    if (core != NULL) {
-        ModuleNamespace* vj = dynamic_cast<ModuleNamespace*>(obj);
-        if (vj != NULL) {
-            core->closeViewJob(ModuleNamespace::dynamic_pointer_cast(vj->shared_from_this()));
-        }
-    }
-}
-
-
-/*
  * megamol::core::CoreInstance::CoreInstance
  */
 megamol::core::CoreInstance::CoreInstance(void)
-        : ApiHandle()
-        , factories::AbstractObjectFactoryInstance()
+        : factories::AbstractObjectFactoryInstance()
         , preInit(new PreInit)
         , config()
         , lua(nullptr)
@@ -264,48 +248,9 @@ const megamol::core::factories::ModuleDescriptionManager& megamol::core::CoreIns
 /*
  * megamol::core::CoreInstance::Initialise
  */
-void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible) {
+void megamol::core::CoreInstance::Initialise() {
     if (this->preInit == NULL) {
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
-    }
-
-    this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
-
-    // logging mechanism
-    if (mmconsole_frontend_compatible) {
-
-        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-        megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#ifdef _DEBUG
-        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#else
-        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
-#endif
-
-        if (this->preInit->IsLogEchoLevelSet()) {
-            megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
-            this->config.logEchoLevelLocked = true;
-            if (this->preInit->GetLogEchoLevel() != 0) {
-                megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
-            }
-        }
-        if (this->preInit->IsLogLevelSet()) {
-            megamol::core::utility::log::Log::DefaultLog.SetLevel(this->preInit->GetLogLevel());
-            this->config.logLevelLocked = true;
-            if (this->preInit->GetLogLevel() == 0) {
-                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
-                this->config.logFilenameLocked = true;
-            } else {
-                if (this->preInit->IsLogFileSet()) {
-                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(
-                        this->preInit->GetLogFile().c_str(), false);
-                    this->config.logFilenameLocked = true;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
-                }
-            }
-        }
-        megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
     }
 
     this->lua = new LuaState(this);
@@ -324,39 +269,6 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
             "Lua execution is NOT OK and returned '%s'", result.c_str());
     }
     // lua->RunString("mmLogInfo('Lua loaded Ok.')");
-
-    // configuration file
-    if (mmconsole_frontend_compatible) {
-        if (this->preInit->IsConfigFileSet()) {
-            this->config.LoadConfig(this->preInit->GetConfigFile());
-        } else {
-            this->config.LoadConfig();
-        }
-
-        // config overrides from command line
-        if (this->preInit->IsConfigOverrideSet()) {
-            const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
-            int pos = 0;
-            int next = overrides.Find('\b', pos);
-            do {
-                if (next == vislib::StringW::INVALID_POS)
-                    next = overrides.Length();
-                auto sub = overrides.Substring(pos, next - pos);
-                int split = sub.Find('\a');
-                if (split != vislib::StringW::INVALID_POS) {
-                    auto name = sub.Substring(0, split);
-                    auto val = sub.Substring(split + 1, sub.Length() - split);
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Overriding from command line:");
-                    this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
-                }
-                pos = next + 1;
-            } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS || pos < overrides.Length());
-        }
-    }
-
-    // register services? TODO: right place?
-    if (mmconsole_frontend_compatible)
-        megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins
     for (const auto& plugin : utility::plugins::PluginRegister::getAll()) {
@@ -556,85 +468,6 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
 
 
 /*
- * megamol::core::CoreInstance::SetInitValue
- */
-mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValueType type, const void* value) {
-    if (this->preInit == NULL) {
-        throw vislib::IllegalStateException("Core instance already initialised.", __FILE__, __LINE__);
-    }
-
-    try {
-        switch (key) {
-        case MMC_INITVAL_CFGFILE:
-            if (!utility::APIValueUtil::IsStringType(type)) {
-                return MMC_ERR_TYPE;
-            }
-            this->preInit->SetConfigFile(utility::APIValueUtil::AsStringW(type, value));
-            break;
-        case MMC_INITVAL_LOGFILE:
-            if (!utility::APIValueUtil::IsStringType(type)) {
-                return MMC_ERR_TYPE;
-            }
-            this->preInit->SetLogFile(utility::APIValueUtil::AsStringA(type, value).PeekBuffer());
-            break;
-        case MMC_INITVAL_LOGLEVEL:
-            if (!utility::APIValueUtil::IsIntType(type)) {
-                return MMC_ERR_TYPE;
-            }
-            this->preInit->SetLogLevel(utility::APIValueUtil::AsUint32(type, value));
-            break;
-        case MMC_INITVAL_LOGECHOLEVEL:
-            if (!utility::APIValueUtil::IsIntType(type)) {
-                return MMC_ERR_TYPE;
-            }
-            this->preInit->SetLogEchoLevel(utility::APIValueUtil::AsUint32(type, value));
-            break;
-        case MMC_INITVAL_INCOMINGLOG: {
-            // if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
-            // megamol::core::utility::log::Log *log = static_cast<megamol::core::utility::log::Log*>(
-            //    const_cast<void*>(value));
-            // log->SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-            // log->SetEchoTarget(&megamol::core::utility::log::Log::DefaultLogRedirection);
-            // log->EchoOfflineMessages(true);
-            // log->SetLogFileName(static_cast<const char*>(NULL), false);
-            // log->SetLevel(megamol::core::utility::log::Log::LEVEL_NONE);
-            return MMC_ERR_NOT_IMPLEMENTED; // use MMC_INITVAL_CORELOG instead
-        } break;
-        case MMC_INITVAL_CORELOG: {
-            if (type != MMC_TYPE_VOIDP) {
-                return MMC_ERR_TYPE;
-            }
-            megamol::core::utility::log::Log** log =
-                static_cast<megamol::core::utility::log::Log**>(const_cast<void*>(value));
-            *log = &megamol::core::utility::log::Log::DefaultLog;
-        } break;
-        case MMC_INITVAL_LOGECHOFUNC:
-            if (type != MMC_TYPE_VOIDP) {
-                return MMC_ERR_TYPE;
-            }
-            megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
-                std::make_shared<utility::LogEchoTarget>(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
-            break;
-        case MMC_INITVAL_CFGOVERRIDE:
-            if (!utility::APIValueUtil::IsStringType(type)) {
-                return MMC_ERR_TYPE;
-            }
-            this->preInit->SetConfigFileOverrides(utility::APIValueUtil::AsStringW(type, value));
-            break;
-        default:
-            megamol::core::utility::log::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: unknown initval");
-            return MMC_ERR_UNKNOWN;
-        }
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "CoreInstance::SetInitValue: exception during evaluation of initval");
-        return MMC_ERR_UNKNOWN;
-    }
-    return MMC_ERR_NO_ERROR;
-}
-
-
-/*
  * megamol::core::CoreInstance::FindViewDescription
  */
 std::shared_ptr<const megamol::core::ViewDescription> megamol::core::CoreInstance::FindViewDescription(
@@ -647,22 +480,6 @@ std::shared_ptr<const megamol::core::ViewDescription> megamol::core::CoreInstanc
         d = this->builtinViewDescs.Find(name);
     }
     return d;
-}
-
-
-/*
- * megamol::core::CoreInstance::EnumViewDescriptions
- */
-void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo) {
-    assert(func);
-    for (auto vd : this->projViewDescs) {
-        func(vd->ClassName(), data);
-    }
-    if (getBuiltinToo) {
-        for (auto vd : this->builtinViewDescs) {
-            func(vd->ClassName(), data);
-        }
-    }
 }
 
 
@@ -3006,39 +2823,6 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
 
 
 /*
- * megamol::core::CoreInstance::enumParameters
- */
-void megamol::core::CoreInstance::enumParameters(megamol::core::ModuleNamespace::const_ptr_type path,
-    std::function<void(const Module&, param::ParamSlot&)> cb) const {
-    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
-
-    // TODO use EnumModulesNoLock?!
-
-    AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
-    e = path->ChildList_End();
-    for (i = path->ChildList_Begin(); i != e; ++i) {
-        AbstractNamedObject::const_ptr_type child = *i;
-        Module::const_ptr_type mod = Module::dynamic_pointer_cast(child);
-        ModuleNamespace::const_ptr_type ns = ModuleNamespace::dynamic_pointer_cast(child);
-
-        if (mod) {
-            AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
-            se = mod->ChildList_End();
-            for (si = mod->ChildList_Begin(); si != se; ++si) {
-                param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
-                if (slot) {
-                    cb(*mod, *slot);
-                }
-            }
-
-        } else if (ns) {
-            this->enumParameters(ns, cb);
-        }
-    }
-}
-
-
-/*
  * megamol::core::CoreInstance::findParameterName
  */
 vislib::StringA megamol::core::CoreInstance::findParameterName(megamol::core::ModuleNamespace::const_ptr_type path,
@@ -3236,6 +3020,8 @@ void megamol::core::CoreInstance::loadPlugin(
     } catch (const vislib::Exception& vex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             loadFailedLevel, "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s", ex.what());
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             loadFailedLevel, "Unable to load Plugin: unknown exception");

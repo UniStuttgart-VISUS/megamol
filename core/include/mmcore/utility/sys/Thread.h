@@ -12,8 +12,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #ifndef _WIN32
 #include <pthread.h>
 #endif /* !_WIN32 */
@@ -38,7 +36,7 @@ namespace sys {
  *
  * @author Christoph Mueller
  */
-class MEGAMOLCORE_API Thread {
+class Thread {
     // TODO: Exit code handling/IsRunning impl is at least hugly.
 
 public:

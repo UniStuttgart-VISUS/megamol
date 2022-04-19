@@ -31,7 +31,7 @@ namespace core {
  * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
  * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
  */
-class MEGAMOLCORE_API LuaAPI {
+class LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
 

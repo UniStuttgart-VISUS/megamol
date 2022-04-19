@@ -18,7 +18,7 @@ namespace view {
 /**
  * Call for accessing a transfer function.
  */
-class MEGAMOLCORE_API CallGetTransferFunction : public AbstractCallGetTransferFunction {
+class CallGetTransferFunction : public AbstractCallGetTransferFunction {
 public:
     /**
      * Answer the name of the objects of this description.

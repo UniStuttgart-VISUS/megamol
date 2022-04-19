@@ -20,7 +20,7 @@ namespace core {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API FileStreamProvider : public AbstractStreamProvider {
+class FileStreamProvider : public AbstractStreamProvider {
 public:
     /**
      * Answer the name of this module.

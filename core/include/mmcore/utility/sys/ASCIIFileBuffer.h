@@ -14,8 +14,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -33,7 +31,7 @@ namespace sys {
  * Buffer class loading a whole ASCII text file into memory and providing
  * a pointer array to access the lines.
  */
-class MEGAMOLCORE_API ASCIIFileBuffer {
+class ASCIIFileBuffer {
 public:
     /** Possible parsing elements */
     enum ParsingElement { PARSING_DEFAULT, PARSING_LINES, PARSING_WORDS };

@@ -32,11 +32,13 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
 #include <algorithm>
@@ -54,7 +56,7 @@ using namespace megamol::core::utility::log;
  * megamol::protein_cuda::PotentialVolumeRaycaster::PotentialVolumeRaycaster
  */
 PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         ,
         /* Caller slots */
         potentialDataCallerSlot("getVolData", "Connects the rendering with data storage")
@@ -143,19 +145,22 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
     // Parameter for minimum potential value for the color map
     this->colorMinPotential.Set(0.75f, 0.01f, 0.15f);
     this->colorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorMinPotential.X(), this->colorMinPotential.Y(), this->colorMinPotential.Z())));
+        this->colorMinPotential.X(), this->colorMinPotential.Y(), this->colorMinPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->colorZeroPotential.Set(1.0f, 1.0f, 1.0f);
     this->colorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorZeroPotential.X(), this->colorZeroPotential.Y(), this->colorZeroPotential.Z())));
+        this->colorZeroPotential.X(), this->colorZeroPotential.Y(), this->colorZeroPotential.Z())
+                                                                               .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->colorMaxPotential.Set(0.23f, 0.29f, 0.75f);
     this->colorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->colorMaxPotential.X(), this->colorMaxPotential.Y(), this->colorMaxPotential.Z())));
+        this->colorMaxPotential.X(), this->colorMaxPotential.Y(), this->colorMaxPotential.Z())
+                                                                              .PeekBuffer()));
     this->MakeSlotAvailable(&this->colorMaxPotentialSlot);
 
     // Parameter for iso value for volume rendering
@@ -270,19 +275,22 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void)
     // Parameter for minimum potential value for the color map
     this->sliceColorMinPotential.Set(0.75f, 0.01f, 0.15f);
     this->sliceColorMinPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorMinPotential.X(), this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z())));
+        this->sliceColorMinPotential.X(), this->sliceColorMinPotential.Y(), this->sliceColorMinPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMinPotentialSlot);
 
     // Parameter for zero potential for the color map
     this->sliceColorZeroPotential.Set(1.0f, 1.0f, 1.0f);
     this->sliceColorZeroPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorZeroPotential.X(), this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z())));
+        this->sliceColorZeroPotential.X(), this->sliceColorZeroPotential.Y(), this->sliceColorZeroPotential.Z())
+                                                                                    .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorZeroPotentialSlot);
 
     // Parameter for maximum potential value for the color map
     this->sliceColorMaxPotential.Set(0.23f, 0.29f, 0.75f);
     this->sliceColorMaxPotentialSlot.SetParameter(new core::param::StringParam(utility::ColourParser::ToString(
-        this->sliceColorMaxPotential.X(), this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z())));
+        this->sliceColorMaxPotential.X(), this->sliceColorMaxPotential.Y(), this->sliceColorMaxPotential.Z())
+                                                                                   .PeekBuffer()));
     this->MakeSlotAvailable(&this->sliceColorMaxPotentialSlot);
 
     // Minimum texture value
@@ -516,7 +524,7 @@ bool PotentialVolumeRaycaster::computeDensityMap(const MolecularDataCall* mol) {
  * megamol::protein_cuda::PotentialVolumeRaycaster::create
  */
 bool PotentialVolumeRaycaster::create() {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Create quicksurf objects
     if (!this->cudaqsurf) {
@@ -524,35 +532,27 @@ bool PotentialVolumeRaycaster::create() {
     }
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
+    /*if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
             GL_EXT_texture3D \
             GL_EXT_framebuffer_object \
             GL_ARB_multitexture \
             GL_ARB_draw_buffers \
             GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load raycasting vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::raycasting::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::raycasting::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
@@ -568,15 +568,13 @@ bool PotentialVolumeRaycaster::create() {
     }
 
     // Load raycasting vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::raycasting::vertexRay", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::vertexRay", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::raycasting::fragmentRay", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::raycasting::fragmentRay", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
@@ -593,12 +591,12 @@ bool PotentialVolumeRaycaster::create() {
 
 
     // Load slice shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::slice::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::slice::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;
@@ -621,7 +619,7 @@ bool PotentialVolumeRaycaster::create() {
 bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(
         megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating raycasting fbo.", this->ClassName());
@@ -675,13 +673,9 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::GetExtents
  */
-bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
+bool PotentialVolumeRaycaster::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     //    printf("PotentialVolumeRaycaster::GetExtents\n");
-
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL)
-        return false;
 
     // Get pointer to potential map data call
     protein_calls::VTIDataCall* cmd = this->potentialDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
@@ -707,41 +701,34 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
     this->bboxParticles = mol->AccessBoundingBoxes();
     this->bboxPotential = cmd->AccessBoundingBoxes();
 
-    core::BoundingBoxes bbox_external = ren->AccessBoundingBoxes();
+    auto bbox_external = ren->AccessBoundingBoxes();
 
     // Calc union of all bounding boxes
     vislib::math::Cuboid<float> bboxTmp;
 
     bboxTmp = cmd->AccessBoundingBoxes().ObjectSpaceBBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().ObjectSpaceBBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().BoundingBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().ObjectSpaceBBox());
-    bboxTmp.Union(bbox_external.ObjectSpaceBBox());
+    bboxTmp.Union(bbox_external.BoundingBox());
     this->bbox.SetObjectSpaceBBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().ObjectSpaceClipBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().ObjectSpaceClipBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().ClipBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().ObjectSpaceClipBox());
-    bboxTmp.Union(bbox_external.ObjectSpaceClipBox());
+    bboxTmp.Union(bbox_external.ClipBox());
     this->bbox.SetObjectSpaceClipBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().WorldSpaceBBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().WorldSpaceBBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().BoundingBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().WorldSpaceBBox());
-    bboxTmp.Union(bbox_external.WorldSpaceBBox());
+    bboxTmp.Union(bbox_external.BoundingBox());
     this->bbox.SetWorldSpaceBBox(bboxTmp);
 
     bboxTmp = cmd->AccessBoundingBoxes().WorldSpaceClipBox();
-    bboxTmp.Union(ren->AccessBoundingBoxes().WorldSpaceClipBox());
+    bboxTmp.Union(ren->AccessBoundingBoxes().ClipBox());
     bboxTmp.Union(mol->AccessBoundingBoxes().WorldSpaceClipBox());
-    bboxTmp.Union(bbox_external.WorldSpaceClipBox());
+    bboxTmp.Union(bbox_external.ClipBox());
     this->bbox.SetWorldSpaceClipBox(bboxTmp);
-
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
 
     //    // DEBUG
     //    printf("Raycaster scale %f       , org %f %f %f, maxCoord %f %f %f\n",
@@ -753,9 +740,8 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
     //            this->bbox.ObjectSpaceBBox().GetRightTopFront().Y(),
     //            this->bbox.ObjectSpaceBBox().GetRightTopFront().Z());
 
-    this->bbox.MakeScaledWorld(scale);
-    cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(std::min(cmd->FrameCount(), mol->FrameCount()));
+    call.AccessBoundingBoxes() = this->bbox;
+    call.SetTimeFramesCount(std::min(cmd->FrameCount(), mol->FrameCount()));
 
     return true;
 }
@@ -820,17 +806,11 @@ bool PotentialVolumeRaycaster::initPotential(VTIDataCall* cmd) {
 /*
  * megamol::protein_cuda::PotentialVolumeRaycaster::Render
  */
-bool PotentialVolumeRaycaster::Render(core::Call& call) {
+bool PotentialVolumeRaycaster::Render(core_gl::view::CallRender3DGL& call) {
 
     using namespace vislib::math;
 
-    // Get render call
-    core::view::AbstractCallRender3D* cr3d = dynamic_cast<core::view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    float calltime = cr3d->Time();
+    float calltime = call.Time();
     uint frameIdx = static_cast<int>(calltime);
 
     // Get a pointer to the outgoing render call
@@ -889,11 +869,11 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     }
 
     // Get camera information
-    this->cameraInfo = dynamic_cast<core::view::CallRender3D*>(&call)->GetCameraParameters();
-    ren->SetCameraParameters(this->cameraInfo);
+    this->cameraInfo = call.GetCamera();
+    ren->SetCamera(this->cameraInfo);
 
     // Set call time
-    ren->SetTime(cr3d->Time());
+    ren->SetTime(call.Time());
 
     // Get current viewport and recreate fbo if necessary
     float curVP[4];
@@ -932,8 +912,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glPushMatrix();
     // Revert scaling done by external renderer
     float scaleRevert;
-    if (!vislib::math::IsEqual(ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scaleRevert = 2.0f / ren->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    if (!vislib::math::IsEqual(ren->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+        scaleRevert = 2.0f / ren->AccessBoundingBoxes().BoundingBox().LongestEdge();
     } else {
         scaleRevert = 1.0f;
     }
@@ -990,6 +970,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
 
+    auto camera_intrinsics = cameraInfo.get<view::Camera::PerspectiveParameters>();
+
     this->rcShader.Enable();
     glUniform1iARB(this->rcShader.ParameterLocation("densityTex"), 0);
     glUniform1iARB(this->rcShader.ParameterLocation("srcColorBuff"), 1);
@@ -1009,7 +991,7 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glUniform3fvARB(this->rcShader.ParameterLocation("colorZero"), 1, this->colorZeroPotential.PeekComponents());
     glUniform3fvARB(this->rcShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
     glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()),
-        static_cast<float>(fboDim.Y()), this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+        static_cast<float>(fboDim.Y()), camera_intrinsics.near_plane, camera_intrinsics.far_plane);
     glUniform3fvARB(this->rcShader.ParameterLocation("potTexOrg"), 1, (float*)&gridPotentialMap.minC);
     glUniform3fARB(this->rcShader.ParameterLocation("potTexSize"),
         gridPotentialMap.delta[0] * (gridPotentialMap.size[0] - 1),
@@ -1416,7 +1398,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->colorMinPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->colorMinPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->colorMinPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorMinPotential.Set(r, g, b);
         this->colorMinPotentialSlot.ResetDirty();
     }
@@ -1425,7 +1407,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->colorZeroPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->colorZeroPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->colorZeroPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorZeroPotential.Set(r, g, b);
         this->colorZeroPotentialSlot.ResetDirty();
     }
@@ -1434,7 +1416,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->colorMaxPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->colorMaxPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->colorMaxPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->colorMaxPotential.Set(r, g, b);
         this->colorMaxPotentialSlot.ResetDirty();
     }
@@ -1574,7 +1556,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->sliceColorMinPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->sliceColorMinPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->sliceColorMinPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorMinPotential.Set(r, g, b);
         this->sliceColorMinPotentialSlot.ResetDirty();
     }
@@ -1583,7 +1565,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->sliceColorZeroPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->sliceColorZeroPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->sliceColorZeroPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorZeroPotential.Set(r, g, b);
         this->sliceColorZeroPotentialSlot.ResetDirty();
     }
@@ -1592,7 +1574,7 @@ bool PotentialVolumeRaycaster::updateParams() {
     if (this->sliceColorMaxPotentialSlot.IsDirty()) {
         float r, g, b;
         utility::ColourParser::FromString(
-            this->sliceColorMaxPotentialSlot.Param<core::param::StringParam>()->Value(), r, g, b);
+            this->sliceColorMaxPotentialSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b);
         this->sliceColorMaxPotential.Set(r, g, b);
         this->sliceColorMaxPotentialSlot.ResetDirty();
     }

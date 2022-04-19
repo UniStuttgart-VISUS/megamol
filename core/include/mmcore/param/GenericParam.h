@@ -38,9 +38,16 @@ public:
     template<typename U = T>
     GenericParam(
         T const& initVal, T const& minVal, T const& maxVal, std::enable_if_t<enable_cond_v<U>, void>* = nullptr)
-            : minVal(minVal)
-            , maxVal(maxVal) {
+            : GenericParam(initVal, minVal, maxVal, static_cast<T>(1)) {}
+
+    // stepSize has no effect on Slider
+    template<typename U = T>
+    GenericParam(T const& initVal, T const& minVal, T const& maxVal, T const& stepSize,
+        std::enable_if_t<enable_cond_v<U>, void>* = nullptr) {
         initParam(initVal);
+        this->minVal = minVal;
+        this->maxVal = maxVal;
+        this->stepSize = stepSize;
     }
 
     virtual ~GenericParam() = default;
@@ -66,6 +73,16 @@ public:
             if (setDirty)
                 this->setDirty();
         }
+    }
+
+    /**
+     * Sets the step size of the parameter.
+     *
+     * @param s the new step size for the parameter
+     */
+    template<typename U = T>
+    std::enable_if_t<std::is_arithmetic_v<U>, void> SetStepSize(T s) {
+        this->stepSize = s;
     }
 
     /**
@@ -99,17 +116,28 @@ public:
         return maxVal;
     }
 
+    /**
+     * Gets the step size of the parameter
+     *
+     * @return The step size of the parameter
+     */
+    template<typename U = T>
+    std::enable_if_t<enable_cond_v<U>, T const&> StepSize() const {
+        return stepSize;
+    }
+
 private:
     void initParam(T const& v) {
-        initMinMax();
+        initMinMaxStep();
         InitPresentation(TYPE);
         SetValue(v);
     }
 
-    void initMinMax() {
+    void initMinMaxStep() {
         if constexpr (std::is_arithmetic_v<T>) {
             minVal = std::numeric_limits<T>::lowest();
             maxVal = std::numeric_limits<T>::max();
+            stepSize = static_cast<T>(1);
         } else if constexpr (is_vislib_vector_f_v<T>) {
             minVal = T(std::numeric_limits<typename T::ValueT>::lowest());
             maxVal = T(std::numeric_limits<typename T::ValueT>::max());
@@ -121,5 +149,7 @@ private:
     T minVal;
 
     T maxVal;
+
+    T stepSize;
 };
 } // namespace megamol::core::param

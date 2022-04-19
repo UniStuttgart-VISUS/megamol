@@ -31,6 +31,7 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation/*.hpp"
     "remote_service/*.hpp"
     "profiling_service/*.hpp"
+    "vr_service/*.hpp"
 #   "service_template/*.hpp"
     )
 
@@ -46,6 +47,7 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation/*.cpp"
     "remote_service/*.cpp"
     "profiling_service/*.cpp"
+    "vr_service/*.cpp"
     # "service_template/*.cpp"
   )
 
@@ -105,6 +107,7 @@ if(BUILD_FRONTEND_SERVICES)
     "remote_service"
     "profiling_service"
     "gui/src"
+    "vr_service"
    # "service_template"
   )
 
@@ -131,6 +134,14 @@ if(BUILD_FRONTEND_SERVICES)
       require_external(glfw)
       target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
     endif()
+  endif()
+
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+  if(NOT ENABLE_GL)
+    message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
+  endif()
+    require_external(mwk-mint)
+    target_link_libraries(${PROJECT_NAME} PUBLIC interop Spout2)
   endif()
 
   # Linux Stacktrace

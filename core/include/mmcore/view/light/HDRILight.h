@@ -19,7 +19,7 @@ struct HDRILightType : public BaseLightType {
 };
 
 
-class MEGAMOLCORE_API HDRILight : public AbstractLight {
+class HDRILight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.

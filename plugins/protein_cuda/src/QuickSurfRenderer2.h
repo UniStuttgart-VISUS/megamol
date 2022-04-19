@@ -11,20 +11,19 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Color.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/DiagramCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "protein_calls/ProteinColor.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "CUDAQuickSurf.h"
 #include "WKFUtils.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cuda.h>
 #include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
@@ -36,7 +35,7 @@ namespace protein_cuda {
  * Simple Molecular Renderer class
  */
 
-class QuickSurfRenderer2 : public megamol::core::view::Renderer3DModuleDS {
+class QuickSurfRenderer2 : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -90,7 +89,7 @@ protected:
      *
      * @return
      */
-    int calcSurf(megamol::core::moldyn::MultiParticleDataCall* mol, float* posInter, int quality, float radscale,
+    int calcSurf(megamol::geocalls::MultiParticleDataCall* mol, float* posInter, int quality, float radscale,
         float gridspacing, float isoval, bool useCol);
 
 private:
@@ -134,7 +133,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -142,14 +141,14 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Update all parameter slots.
      *
      * @param mol   Pointer to the data call.
      */
-    void UpdateParameters(const megamol::core::moldyn::MultiParticleDataCall* mol);
+    void UpdateParameters(const megamol::geocalls::MultiParticleDataCall* mol);
 
     /**
      * The callback that returns the data for the area diagram.
@@ -173,7 +172,7 @@ private:
     megamol::core::CalleeSlot areaDiagramCalleeSlot;
 
     /** camera information */
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /** parameter slot for color table filename */
     megamol::core::param::ParamSlot colorTableFileParam;
@@ -196,21 +195,22 @@ private:
     //megamol::core::param::ParamSlot toggleOffscreenRenderingParam;
 
     /** shader for the spheres (raycasting view) */
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
     // shader for per pixel lighting (polygonal view)
-    vislib::graphics::gl::GLSLShader lightShader;
-    vislib::graphics::gl::GLSLShader lightShaderOR;
+    vislib_gl::graphics::gl::GLSLShader lightShader;
+    vislib_gl::graphics::gl::GLSLShader lightShaderOR;
 
     /** The current coloring mode */
-    Color::ColoringMode currentColoringMode;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
 
     float* volmap;       ///< Density map
     float* voltexmap;    ///< Volumetric texture map in RGB format

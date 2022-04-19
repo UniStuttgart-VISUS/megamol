@@ -27,7 +27,7 @@
 #include <windows.h>
 #endif
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 //#include "mmath.h"
 
 namespace megamol {

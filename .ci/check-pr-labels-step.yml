@@ -1,0 +1,14 @@
+steps:
+- powershell: |
+    if ($Env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
+      $label = "no ci build"
+      $url = "https://api.github.com/repos/UniStuttgart-VISUS/megamol/issues/$Env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
+      $response = Invoke-RestMethod -Uri $url
+      foreach($element in $response) {
+        if ($element.name -eq $label) {
+          echo "##[error]Cancel build! Was requested by setting the '$label' label on the pull request."
+          exit 1
+        }
+      }
+    }
+  displayName: 'Check PR label'

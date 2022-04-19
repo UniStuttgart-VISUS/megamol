@@ -9,7 +9,6 @@
 
 #include "AbstractSimpleParticleDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/math/Cuboid.h"
 
@@ -20,7 +19,7 @@ namespace megamol::datatools::io {
 /**
  * Abstract base class for simple particle loaders (single time step = no animation)
  */
-class MEGAMOLCORE_API AbstractSimpleStoringParticleDataSource : public AbstractSimpleParticleDataSource {
+class AbstractSimpleStoringParticleDataSource : public AbstractSimpleParticleDataSource {
 public:
 protected:
     /** Ctor. */

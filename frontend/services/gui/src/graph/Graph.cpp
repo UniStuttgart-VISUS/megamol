@@ -93,6 +93,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_show_label = true;
     this->gui_graph_state.interact.call_show_slots_label = false;
+    this->gui_graph_state.interact.call_coloring_map = 0;
+    this->gui_graph_state.interact.call_coloring_mode = 0;
 
     this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
 
@@ -167,7 +169,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 
                 for (auto& p : mod.parameters) {
                     Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
-                        p.param_name, p.description);
+                        p.stepsize, p.param_name, p.description);
                     parameter.SetParentModuleName(mod_ptr->FullName());
                     parameter.SetValueString(p.default_value, true, true);
                     parameter.SetGUIVisible(p.gui_visibility);
@@ -1109,7 +1111,7 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
     } break;
     }
 
-    this->sync_queue.push(SyncQueueData_t(action, queue_data));
+    this->sync_queue.emplace_back(SyncQueueData_t(action, queue_data));
     return true;
 }
 
@@ -1119,10 +1121,22 @@ bool megamol::gui::Graph::PopSyncQueue(QueueAction& out_action, QueueData& out_d
     if (!this->sync_queue.empty()) {
         out_action = std::get<0>(this->sync_queue.front());
         out_data = std::get<1>(this->sync_queue.front());
-        this->sync_queue.pop();
+        this->sync_queue.pop_front();
         return true;
     }
     return false;
+}
+
+
+megamol::gui::Graph::QueueData megamol::gui::Graph::FindQueueEntryByActionName(
+    QueueAction action, const std::string& name) {
+
+    for (auto& entry : this->sync_queue) {
+        if ((std::get<0>(entry) == action) && (std::get<1>(entry).name_id == name)) {
+            return std::get<1>(entry);
+        }
+    }
+    return megamol::gui::Graph::QueueData();
 }
 
 
@@ -1169,6 +1183,10 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
                             &this->gui_graph_state.interact.call_show_slots_label);
+                        megamol::core::utility::get_json_value<unsigned int>(
+                            graph_state, {"call_coloring_mode"}, &this->gui_graph_state.interact.call_coloring_mode);
+                        megamol::core::utility::get_json_value<unsigned int>(
+                            graph_state, {"call_coloring_map"}, &this->gui_graph_state.interact.call_coloring_map);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
                         megamol::core::utility::get_json_value<bool>(
@@ -1323,6 +1341,10 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
             this->gui_graph_state.interact.call_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
             this->gui_graph_state.interact.call_show_slots_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring_mode"] =
+            this->gui_graph_state.interact.call_coloring_mode;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["call_coloring_map"] =
+            this->gui_graph_state.interact.call_coloring_map;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] =
             this->gui_graph_state.interact.callslot_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] =
@@ -1998,8 +2020,8 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     ImGui::BeginMenuBar();
 
     // RUNNING
-    if (megamol::gui::ButtonWidgets::OptionButton(
-            "graph_running_button", ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
+    if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, "graph_running_button",
+            ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
         if (!this->running) {
             state.new_running_graph_uid = this->uid;
         }
@@ -2021,11 +2043,11 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         gui_utils::PushReadOnly();
         bool is_graph_entry = false;
         this->gui_current_graph_entry_name.clear();
-        megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry);
+        megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry);
         gui_utils::PopReadOnly();
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
-        if (megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry)) {
             Graph::QueueData queue_data;
             if (is_graph_entry) {
                 // Remove all graph entries
@@ -2047,16 +2069,31 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             }
         }
     }
+    this->gui_tooltip.ToolTip("Set graph entry state of selected view module", ImGui::GetItemID(), 0.5f, 5.0f);
     ImGui::Separator();
 
     // GRAPH LAYOUT
-    if (ImGui::Button("Layout Graph")) {
+    if (ImGui::Button("Layout")) {
         this->gui_graph_layout = 1;
+    }
+    this->gui_tooltip.ToolTip("Align modules of graph in regular layout", ImGui::GetItemID(), 0.5f, 5.0f);
+    ImGui::Separator();
+
+    // GRID
+    if (megamol::gui::ButtonWidgets::OptionButton(
+            ButtonWidgets::ButtonStyle::GRID, "grid_option_button", "Grid", this->gui_show_grid, false)) {
+        this->gui_show_grid = !this->gui_show_grid;
     }
     ImGui::Separator();
 
-    ImGui::Button("Labels");
-    if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+    // Module and Call LABELS
+    auto cursor_pos = ImGui::GetCursorScreenPos();
+    if (megamol::gui::ButtonWidgets::OptionButton(
+            ButtonWidgets::ButtonStyle::LINES, "labels_option_button", "Labels", false, false)) {
+        ImGui::OpenPopup("module_call_labels_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("module_call_labels_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         // MODULES
         if (ImGui::BeginMenu("Modules")) {
             if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
@@ -2081,9 +2118,38 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     ImGui::Separator();
 
-    // GRID
-    megamol::gui::ButtonWidgets::ToggleButton("Grid", this->gui_show_grid);
-
+    // Coloring
+    cursor_pos = ImGui::GetCursorScreenPos();
+    if (megamol::gui::ButtonWidgets::OptionButton(
+            ButtonWidgets::ButtonStyle::POINTS, "coloring_option_button", "Coloring", false, false)) {
+        ImGui::OpenPopup("coloring_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("coloring_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+        if (ImGui::BeginMenu("Calls")) {
+            ImGui::TextDisabled("Mode");
+            if (ImGui::RadioButton("Per module coloring", (this->gui_graph_state.interact.call_coloring_mode == 1))) {
+                this->gui_graph_state.interact.call_coloring_mode = 1;
+            }
+            if (ImGui::RadioButton(
+                    "Per call slot coloring", (this->gui_graph_state.interact.call_coloring_mode == 0))) {
+                this->gui_graph_state.interact.call_coloring_mode = 0;
+            }
+            ImGui::Separator();
+            ImGui::TextDisabled("Map");
+            if (ImGui::RadioButton("Monochrome", (this->gui_graph_state.interact.call_coloring_map == 0))) {
+                this->gui_graph_state.interact.call_coloring_map = 0;
+            }
+            if (ImGui::RadioButton("Set3Map(12)", (this->gui_graph_state.interact.call_coloring_map == 1))) {
+                this->gui_graph_state.interact.call_coloring_map = 1;
+            }
+            if (ImGui::RadioButton("PairedMap(12)", (this->gui_graph_state.interact.call_coloring_map == 2))) {
+                this->gui_graph_state.interact.call_coloring_map = 2;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndPopup();
+    }
     ImGui::Separator();
 
     // SCROLLING
@@ -2410,6 +2476,7 @@ void megamol::gui::Graph::draw_parameters(ImVec2 position, ImVec2 size) {
     ImGui::BeginChild("parameter_search_child", ImVec2(size.x, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
+    this->gui_tooltip.Marker("Show parameters of selected modules");
     ImGui::Separator();
 
     // Mode
@@ -3126,11 +3193,14 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+    // Clipping: Graph Canvas plus profiling bar size
+    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
 
     ImGui::SetNextWindowPos(position);
     ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
@@ -3149,44 +3219,42 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGui::Separator();
 
     // Sync profiling list
-    for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
-        if (iterp->first.lock() != nullptr) {
-            if (!iterp->first.lock()->ShowProfiling()) {
-                auto rm_iterp = iterp;
-                iterp--;
-                this->profiling_list.erase(rm_iterp);
-            }
-        } else if (iterp->second.lock() != nullptr) {
-            if (!iterp->second.lock()->ShowProfiling()) {
-                auto rm_iterp = iterp;
-                iterp--;
-                this->profiling_list.erase(rm_iterp);
-            }
+    auto iterp = this->profiling_list.begin();
+    while (iterp != this->profiling_list.end()) {
+        const auto m_ptr = iterp->first.lock();
+        const auto c_ptr = iterp->second.lock();
+        if ((m_ptr != nullptr && !m_ptr->ShowProfiling()) || (c_ptr != nullptr && !c_ptr->ShowProfiling()) ||
+            (c_ptr == nullptr && m_ptr == nullptr)) {
+            iterp = this->profiling_list.erase(iterp);
+        } else {
+            iterp++;
         }
     }
-    for (auto& m_ptr : this->modules) {
+    for (const auto& m_ptr : this->modules) {
         if (m_ptr->ShowProfiling()) {
             bool found = false;
-            for (auto p : this->profiling_list) {
+            for (const auto& p : this->profiling_list) {
                 if (p.first.lock() == m_ptr) {
                     found = true;
+                    break;
                 }
             }
             if (!found) {
-                this->profiling_list.push_back({m_ptr, std::weak_ptr<gui::Call>()});
+                this->profiling_list.emplace_back(m_ptr, std::weak_ptr<gui::Call>());
             }
         }
     }
     for (auto& c_ptr : this->calls) {
         if (c_ptr->ShowProfiling()) {
             bool found = false;
-            for (auto p : this->profiling_list) {
+            for (const auto& p : this->profiling_list) {
                 if (p.second.lock() == c_ptr) {
                     found = true;
+                    break;
                 }
             }
             if (!found) {
-                this->profiling_list.push_back({std::weak_ptr<gui::Module>(), c_ptr});
+                this->profiling_list.emplace_back(std::weak_ptr<gui::Module>(), c_ptr);
             }
         }
     }
@@ -3200,14 +3268,17 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     // Draw profiling data
     for (auto& p : this->profiling_list) {
 
+        const auto m_ptr = p.first.lock();
+        const auto c_ptr = p.second.lock();
+
         std::string uid_str;
         std::string label;
-        if (p.first.lock() != nullptr) {
-            uid_str = std::to_string(p.first.lock()->UID());
-            label = "Module: " + p.first.lock()->FullName();
-        } else if (p.second.lock() != nullptr) {
-            uid_str = std::to_string(p.second.lock()->UID());
-            label = "Call: " + p.second.lock()->ClassName();
+        if (m_ptr != nullptr) {
+            uid_str = std::to_string(m_ptr->UID());
+            label = "Module: " + m_ptr->FullName();
+        } else if (c_ptr != nullptr) {
+            uid_str = std::to_string(c_ptr->UID());
+            label = "Call: " + c_ptr->ClassName();
         }
         ImGui::BeginChild(("##profiling_tab_bar" + uid_str).c_str(), ImVec2(GRAPH_PROFILING_WINDOW_WIDTH, 0.0f), true,
             ImGuiWindowFlags_NoMove);
@@ -3219,10 +3290,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             start.y = window_position.y;
         }
         ImVec2 end;
-        if (p.first.lock() != nullptr) {
-            end = p.first.lock()->GetProfilingButtonPosition();
-        } else if (p.second.lock() != nullptr) {
-            end = p.second.lock()->GetProfilingButtonPosition();
+        if (m_ptr != nullptr) {
+            end = m_ptr->GetProfilingButtonPosition();
+        } else if (c_ptr != nullptr) {
+            end = c_ptr->GetProfilingButtonPosition();
         }
         if (window_position.y < end.y) {
             end.y = window_position.y;
@@ -3247,10 +3318,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         }
         ImGui::Separator();
         ImGui::TextUnformatted("Region Name:");
-        if (p.first.lock() != nullptr) {
-            p.first.lock()->DrawProfiling(this->gui_graph_state);
-        } else if (p.second.lock() != nullptr) {
-            p.second.lock()->DrawProfiling(this->gui_graph_state);
+        if (m_ptr != nullptr) {
+            m_ptr->DrawProfiling(this->gui_graph_state);
+        } else if (c_ptr != nullptr) {
+            c_ptr->DrawProfiling(this->gui_graph_state);
         }
         ImGui::EndChild();
 
@@ -3283,8 +3354,10 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     // Apply drop
     if (drop_uid != 0) {
         for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
-            if (((iterp->first.lock() != nullptr) && (iterp->first.lock()->UID() == drop_uid)) ||
-                ((iterp->second.lock() != nullptr) && (iterp->second.lock()->UID() == drop_uid))) {
+            const auto m_ptr = iterp->first.lock();
+            const auto c_ptr = iterp->second.lock();
+            if (((m_ptr != nullptr) && (m_ptr->UID() == drop_uid)) ||
+                ((c_ptr != nullptr) && (c_ptr->UID() == drop_uid))) {
                 auto tmp = (*iterp);
                 this->profiling_list.erase(iterp);
                 this->profiling_list.insert(this->profiling_list.begin() + drop_index, tmp);
@@ -3310,6 +3383,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     this->scroll_delta_time = std::chrono::system_clock::now();
 
     ImGui::EndChild();
+
+    ImGui::PopClipRect();
     ImGui::PopStyleVar(2);
 }
 

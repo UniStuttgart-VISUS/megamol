@@ -1,15 +1,10 @@
-/*
- * SplitViewGL.h
- *
- * Copyright (C) 2012 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SPLITVIEW_H_INCLUDED
-#define MEGAMOLCORE_SPLITVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
@@ -20,10 +15,7 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
-
+namespace megamol::core_gl::view {
 
 /**
  * Abstract base class of rendering views
@@ -152,7 +144,7 @@ private:
      * @return The renderer 1 call
      */
     inline CallRenderViewGL* render1() const {
-        return this->_render1Slot.CallAs<CallRenderViewGL>();
+        return _render1Slot.CallAs<CallRenderViewGL>();
     }
 
     /**
@@ -161,17 +153,17 @@ private:
      * @return The renderer 2 call
      */
     inline CallRenderViewGL* render2() const {
-        return this->_render2Slot.CallAs<CallRenderViewGL>();
+        return _render2Slot.CallAs<CallRenderViewGL>();
     }
 
     /**
      * Returns the focused (keyboard input) renderer.
      */
     inline CallRenderViewGL* renderFocused() const {
-        if (this->_focus == 1) {
-            return this->render1();
-        } else if (this->_focus == 2) {
-            return this->render2();
+        if (_focus == 1) {
+            return render1();
+        } else if (_focus == 2) {
+            return render2();
         } else {
             return nullptr;
         }
@@ -181,11 +173,11 @@ private:
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderViewGL* renderHovered() const {
-        auto mousePos = vislib::math::Point<float, 2>(this->_mouseX, this->_mouseY);
-        if (this->_clientArea1.Contains(mousePos)) {
-            return this->render1();
-        } else if (this->_clientArea2.Contains(mousePos)) {
-            return this->render2();
+        auto mousePos = vislib::math::Point<int, 2>(static_cast<int>(_mouseX), static_cast<int>(_mouseY));
+        if (_clientArea1.Contains(mousePos)) {
+            return render1();
+        } else if (_clientArea2.Contains(mousePos)) {
+            return render2();
         } else {
             return nullptr;
         }
@@ -222,11 +214,11 @@ private:
     /** Option for forwarding mouse and keyboard events to both child views */
     core::param::ParamSlot _inputToBothSlot;
 
-    vislib::math::Rectangle<float> _clientArea;
+    vislib::math::Rectangle<int> _clientArea;
 
-    vislib::math::Rectangle<float> _clientArea1;
+    vislib::math::Rectangle<int> _clientArea1;
 
-    vislib::math::Rectangle<float> _clientArea2;
+    vislib::math::Rectangle<int> _clientArea2;
 
     std::shared_ptr<glowl::FramebufferObject> _fboFull;
 
@@ -236,16 +228,12 @@ private:
 
     int _focus;
 
-    float _mouseX;
+    double _mouseX;
 
-    float _mouseY;
+    double _mouseY;
 
     bool _dragSplitter;
 };
 
 
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_SPLITVIEW_H_INCLUDED */
+} // namespace megamol::core_gl::view

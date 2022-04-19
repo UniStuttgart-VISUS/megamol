@@ -31,7 +31,9 @@ glfw_window_blit::~glfw_window_blit() {
 
 void glfw_window_blit::set_framebuffer_active() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+    glClearColor(0, 0, 0, 0);
+    glClearDepth(1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void glfw_window_blit::set_framebuffer_size(unsigned int width, unsigned int height) {
@@ -61,6 +63,7 @@ void glfw_window_blit::blit_texture(
     /**/
 
     static std::unique_ptr<glowl::GLSLProgram> blit_shader;
+    static GLuint vaEmpty = 0;
 
     if (blit_shader == nullptr) {
         std::string vertex_src = "#version 130 \n "
@@ -84,7 +87,6 @@ void glfw_window_blit::blit_texture(
                                    "layout(location = 0) out vec4 outFragColor; \n "
                                    "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
-                                   "    if (color.a == 0.0) discard; \n "
                                    "    outFragColor = color; \n "
                                    "} ";
 
@@ -106,18 +108,24 @@ void glfw_window_blit::blit_texture(
                 exc.what(), __FILE__, __FUNCTION__, __LINE__);
             return;
         }
+
+        glGenVertexArrays(1, &vaEmpty);
     }
 
     glViewport(0, 0, fbo_width, fbo_height);
     glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     blit_shader->use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gl_texture_handle);
     blit_shader->setUniform("col_tex", 0);
+    glBindVertexArray(vaEmpty);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
     glUseProgram(0);
     glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     /**/

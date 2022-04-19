@@ -11,16 +11,18 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Color.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "slicing.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \
@@ -39,7 +41,7 @@ namespace protein_cuda {
 /**
  * Protein Renderer class
  */
-class MoleculeVolumeCudaRenderer : public megamol::core::view::Renderer3DModule {
+class MoleculeVolumeCudaRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -75,20 +77,11 @@ public:
     virtual ~MoleculeVolumeCudaRenderer(void);
 
     /**********************************************************************
-     * 'get'-functions
-     **********************************************************************/
-
-    /** Get the color of a certain atom of the protein. */
-    const float* GetAtomColor(unsigned int idx) {
-        return &this->atomColorTable[idx * 3];
-    };
-
-    /**********************************************************************
      * 'set'-functions
      **********************************************************************/
 
     /** Set current coloring mode */
-    inline void SetColoringMode(Color::ColoringMode cm) {
+    inline void SetColoringMode(protein_calls::ProteinColor::ColoringMode cm) {
         currentColoringMode = cm;
     };
 
@@ -119,7 +112,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -127,17 +120,18 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Volume rendering using molecular data.
      */
-    bool RenderMolecularData(megamol::core::view::CallRender3D* call, megamol::protein_calls::MolecularDataCall* mol);
+    bool RenderMolecularData(
+        megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Refresh all parameters.
      */
-    void ParameterRefresh(megamol::core::view::CallRender3D* call);
+    void ParameterRefresh(megamol::core_gl::view::CallRender3DGL* call);
 
     /**
      * Create a volume containing all molecule atoms.
@@ -196,7 +190,7 @@ private:
     megamol::core::CallerSlot protRendererCallerSlot;
 
     // camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
     // scaling factor for the scene
     float scale;
     // translation of the scene
@@ -228,22 +222,22 @@ private:
     megamol::core::param::ParamSlot renderProteinParam;
 
     // shader for the spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
     // shader for the cylinders (raycasting view)
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
     // shader for the clipped spheres (raycasting view)
-    vislib::graphics::gl::GLSLShader clippedSphereShader;
+    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
-    vislib::graphics::gl::GLSLShader updateVolumeShader;
+    vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
     // shader for volume rendering
-    vislib::graphics::gl::GLSLShader volumeShader;
-    vislib::graphics::gl::GLSLShader volRayStartShader;
-    vislib::graphics::gl::GLSLShader volRayStartEyeShader;
-    vislib::graphics::gl::GLSLShader volRayLengthShader;
-    vislib::graphics::gl::GLSLShader colorWriterShader;
+    vislib_gl::graphics::gl::GLSLShader volumeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartShader;
+    vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
+    vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
+    vislib_gl::graphics::gl::GLSLShader colorWriterShader;
 
     // current coloring mode
-    Color::ColoringMode currentColoringMode;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode;
 
     // attribute locations for GLSL-Shader
     GLint attribLocInParams;
@@ -254,11 +248,12 @@ private:
     // color table for amino acids
     vislib::Array<vislib::math::Vector<float, 3>> aminoAcidColorTable;
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
     /** color table for protein atoms */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
 
     // the Id of the current frame (for dynamic data)
     unsigned int currentFrameId;
@@ -267,7 +262,7 @@ private:
     unsigned int atomCount;
 
     // FBO for rendering the protein
-    vislib::graphics::gl::FramebufferObject proteinFBO;
+    vislib_gl::graphics::gl::FramebufferObject proteinFBO;
 
     // volume texture
     GLuint volumeTex;

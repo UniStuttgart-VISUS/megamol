@@ -10,14 +10,13 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/misc/VolumetricDataCallTypes.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCallTypes.h"
 #include "protein_calls/MolecularDataCall.h"
 
 #include "CUDAMarchingCubes.h"
@@ -31,7 +30,7 @@
 #include <driver_functions.h>
 #include <helper_cuda.h>
 #include <vector_functions.h>
-#include <vislib/graphics/gl/IncludeAllGL.h>
+#include <vislib_gl/graphics/gl/IncludeAllGL.h>
 
 extern "C" void setTextureFilterMode(bool bLinearFilter);
 extern "C" void initCudaDevice(void* h_volume, cudaExtent volumeSize);
@@ -250,7 +249,7 @@ private:
     GLuint texHandle;
 
     /** The shader program for texture drawing */
-    vislib::graphics::gl::GLSLShader textureShader;
+    vislib_gl::graphics::gl::GLSLShader textureShader;
 
     /** The viewport dimensions of the last frame */
     vislib::math::Dimension<int, 2U> lastViewport;

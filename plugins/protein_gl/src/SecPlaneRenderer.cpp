@@ -20,8 +20,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "mmcore/utility/log/Log.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -144,16 +146,6 @@ SecPlaneRenderer::~SecPlaneRenderer(void) {
 bool SecPlaneRenderer::create(void) {
     using namespace vislib_gl::graphics::gl;
 
-    // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture "
-                                                     "GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
-        return false;
-    }
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
@@ -162,12 +154,13 @@ bool SecPlaneRenderer::create(void) {
         return false;
 
     // Load slice shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::vertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("protein::slice::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein::slice::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;

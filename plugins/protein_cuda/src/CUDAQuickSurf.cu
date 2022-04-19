@@ -26,7 +26,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2304,10 +2304,6 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   if (err != cudaSuccess)
       return -1;
 
-  // GL
-  if( ogl_IsVersionGEQ(2,0) != GL_TRUE ) {
-        return -1;
-  }
     glGenBuffers( 1, &gpuh->v3f_vbo);
     glGenBuffers( 1, &gpuh->n3f_vbo);
     glGenBuffers( 1, &gpuh->c3f_vbo);

@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
@@ -36,7 +35,7 @@ namespace utility {
 /// Note that the user must SignalCompletion after the rendering command if
 /// the buffer can be freed afterwards (or re-upload of data will be performed)
 /// See NG render mode of SphereRenderer for a usage example.
-class MEGAMOLCORE_API SSBOBufferArray {
+class SSBOBufferArray {
 public:
     SSBOBufferArray(const std::string& debugLabel = std::string());
     ~SSBOBufferArray();

@@ -11,8 +11,10 @@
 
 #include "VolumeSliceRenderer.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <math.h>
 
 using namespace megamol;
@@ -43,8 +45,6 @@ VolumeSliceRenderer::~VolumeSliceRenderer(void) {
  * VolumeSliceRenderer::create
  */
 bool VolumeSliceRenderer::create() {
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
 
     using namespace vislib_gl::graphics::gl;
 
@@ -52,13 +52,13 @@ bool VolumeSliceRenderer::create() {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("volume::std::textureSliceVertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("volume::std::textureSliceVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume slice rendering", this->ClassName());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "volume::std::textureSliceFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("volume::std::textureSliceFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "%s: Unable to load fragment shader source for volume slice rendering", this->ClassName());
         return false;
