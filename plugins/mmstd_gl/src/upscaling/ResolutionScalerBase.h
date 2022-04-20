@@ -41,9 +41,10 @@ public:
             , rcas_sharpness_attenuation_("Sharpness", "Sets the sharpness attenuation parameter used in RCAS.")
             , fsr_resolution_presets_("Scale Factor", "Sets the scale factor for the resolution (i.e. 2x means the "
                                                       "image is rendered with half the resolution)")
-            , scale_factor_(2.f) {
+            , scale_factor_(1.3f) 
+            , backup_scale_(1.3f) {
 
-        auto scale_modes = new core::param::EnumParam(1);
+        auto scale_modes = new core::param::EnumParam(4);
         scale_modes->SetTypePair(0, "None");
         scale_modes->SetTypePair(1, "Naive (2x)");
         scale_modes->SetTypePair(2, "Bilinear");
@@ -253,13 +254,11 @@ protected:
 
         FSRConstants fsr;
         if (mode > 1) {
-            // TODO: dynamic resolution
-            // TODO: are the const values actually correct in shaders?
             easuCalcConstants(fsr.const0, fsr.const1, fsr.const2, fsr.const3, downsampled_width,
                 downsampled_height,                    // viewport size
                 downsampled_width, downsampled_height, // input size (useful for dynamic resolution)
                 fbo_width, fbo_height);                // output size
-            // TODO: kick this part in shaders out, since we dont do hdr
+
             fsr.Sample = glm::uvec4(0, 0, 0, 0); // always 0 because no hdr is used
             fsr_consts_ssbo_->rebuffer(&fsr, sizeof(fsr));
         }
@@ -377,9 +376,12 @@ private:
             } else {
                 rcas_sharpness_attenuation_.Parameter()->SetGUIVisible(false);
             }
+
+            scale_factor_ = backup_scale_;
         } else {
             rcas_sharpness_attenuation_.Parameter()->SetGUIVisible(false);
             fsr_resolution_presets_.Parameter()->SetGUIVisible(false);
+
             // for now the default factor for naive scale mode is fix 2.f
             scale_factor_ = 2.f;
         }
@@ -407,6 +409,8 @@ private:
             scale_factor_ = 2.f;
         }
 
+        backup_scale_ = scale_factor_;
+
         return true;
     }
 
@@ -432,6 +436,7 @@ private:
     core::param::ParamSlot fsr_resolution_presets_;
 
     float scale_factor_;
+    float backup_scale_;
 
 
 }; /* end class ResolutionScalerBase */
