@@ -41,7 +41,7 @@ public:
             , rcas_sharpness_attenuation_("Sharpness", "Sets the sharpness attenuation parameter used in RCAS.")
             , fsr_resolution_presets_("Scale Factor", "Sets the scale factor for the resolution (i.e. 2x means the "
                                                       "image is rendered with half the resolution)")
-            , scale_factor_(1.3f) 
+            , scale_factor_(1.3f)
             , backup_scale_(1.3f) {
 
         auto scale_modes = new core::param::EnumParam(4);
