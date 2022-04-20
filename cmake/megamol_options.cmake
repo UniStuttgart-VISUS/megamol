@@ -27,6 +27,13 @@ else()
     "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif()
 
+# OpenGL
+option(ENABLE_GL "Enable GL support" ON)
+if (ENABLE_GL)
+  add_compile_definitions(WITH_GL)
+  find_package(OpenGL REQUIRED)
+endif()
+
 # CUDA
 option(ENABLE_CUDA "Enable CUDA support" OFF)
 if(ENABLE_CUDA)
@@ -34,6 +41,23 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
+# MPI
+option(ENABLE_MPI "Enable MPI support" OFF)
+set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
+if(ENABLE_MPI)
+  if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
+    message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
+  endif()
+  find_package(MPI REQUIRED)
+  if(MPI_C_FOUND)
+    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
+endif()
+
+# GLFW
+option(USE_GLFW "Use GLFW" ON)
+
+# Profiling
 if (ENABLE_GL)
   option(ENABLE_PROFILING "Enable profiling code" OFF)
   if (ENABLE_PROFILING)
@@ -55,29 +79,6 @@ if (WIN32)
   if (ENABLE_CUESDK)
     add_compile_definitions(CUESDK_ENABLED)
   endif()
-endif()
-
-# GLFW
-option(USE_GLFW "Use GLFW" ON)
-
-# MPI
-option(ENABLE_MPI "Enable MPI support" OFF)
-set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
-if(ENABLE_MPI)
-  if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
-    message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
-  endif()
-  find_package(MPI REQUIRED)
-  if(MPI_C_FOUND)
-    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
-  endif()
-endif()
-
-# OpenGL
-option(ENABLE_GL "Enable GL support" ON)
-if (ENABLE_GL)
-  add_compile_definitions(WITH_GL)
-  find_package(OpenGL REQUIRED)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
