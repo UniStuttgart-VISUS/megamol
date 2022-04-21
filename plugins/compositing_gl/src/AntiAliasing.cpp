@@ -560,6 +560,10 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
                                  (technique == 2 ? rhs_call_depth->hasUpdate() : false);
 
     if (something_has_changed) {
+#ifdef PROFILING
+        perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+#endif
+
         // get input
         auto input_tx2D = rhs_call_input->getData();
         int input_width = input_tx2D->getWidth();
@@ -604,18 +608,13 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
                 ssbo_constants_->rebuffer(&smaa_constants_, sizeof(smaa_constants_));
             }
 
-#ifdef PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
-#endif
+
 
             // perform smaa!
             edgeDetection(input_tx2D, depth_tx2D, edges_tx2D_, technique);
             blendingWeightCalculation(edges_tx2D_, area_tx2D_, search_tx2D_, blending_weights_tx2D_);
             neighborhoodBlending(input_tx2D, blending_weights_tx2D_, output_tx2D_);
 
-#ifdef PROFILING
-            perf_manager_->stop_timer(timers_[0]);
-#endif
         }
         // fxaa
         else if (mode == 1) {
@@ -625,6 +624,10 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
         else if (mode == 2) {
             copyTextureViaShader(input_tx2D, output_tx2D_);
         }
+
+#ifdef PROFILING
+        perf_manager_->stop_timer(timers_[0]);
+#endif
 
         ++version_;
         settings_have_changed_ = false;

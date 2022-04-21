@@ -211,6 +211,14 @@ public:
         return true;
     }
 
+#ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
+
     SSAO();
     ~SSAO();
 
@@ -353,6 +361,12 @@ private:
     // callback functions
     bool settingsCallback(core::param::ParamSlot& slot);
     bool ssaoModeCallback(core::param::ParamSlot& slot);
+
+    // profiling
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
+#endif
 
 
     uint32_t version_;

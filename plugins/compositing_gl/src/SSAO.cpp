@@ -31,6 +31,10 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
+#ifdef PROFILING
+#include "PerformanceManager.h"
+#endif
+
 #include "compositing_gl/CompositingCalls.h"
 
 /////////////////////////////////////////////////////////////////////////
@@ -300,6 +304,17 @@ megamol::compositing::SSAO::~SSAO() {
  * @megamol::compositing::SSAO::create
  */
 bool megamol::compositing::SSAO::create() {
+    // profiling
+#ifdef PROFILING
+    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+
+    frontend_resources::PerformanceManager::basic_timer_config render_timer;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timers_ = perf_manager_->add_timers(this, {render_timer});
+#endif
+
     typedef megamol::core::utility::log::Log Log;
 
     prepare_depth_mip_prgms_.resize(SSAODepth_MIP_LEVELS - 1);
@@ -469,7 +484,11 @@ bool megamol::compositing::SSAO::create() {
 /*
  * @megamol::compositing::SSAO::release
  */
-void megamol::compositing::SSAO::release() {}
+void megamol::compositing::SSAO::release() {
+#ifdef PROFILING
+    perf_manager_->remove_timers(timers_);
+#endif
+}
 
 
 /*
@@ -524,6 +543,9 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                                    update_caused_by_normal_slot_change_ || settings_have_changed_;
 
         if (somethingHasChanged) {
+#ifdef PROFILING
+            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+#endif
             ++version_;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
@@ -664,6 +686,10 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
                 glUseProgram(0);
             }
+
+#ifdef PROFILING
+            perf_manager_->stop_timer(timers_[0]);
+#endif
         }
     }
 
