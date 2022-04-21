@@ -1,7 +1,3 @@
-#version 450
-
-#include "comp/AntiAliasing/preset_uniforms.inc.glsl"
-
 /**
  * Copyright (C) 2013 Jorge Jimenez (jorge@iryoku.com)
  * Copyright (C) 2013 Jose I. Echevarria (joseignacioechevarria@gmail.com)
@@ -35,6 +31,10 @@
  * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
+
+#version 450
+
+#include "comp/AntiAliasing/preset_uniforms.inc.glsl"
 
 layout(local_size_x = 8, local_size_y = 8) in;
 

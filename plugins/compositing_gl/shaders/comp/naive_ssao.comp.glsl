@@ -1,3 +1,4 @@
+#version 450
 
 struct Samples
 {
@@ -50,7 +51,7 @@ void main()
 
     // tile noise texture over screen based on screen dimensions divided by noise size
     vec2 noise_scale = vec2(tgt_resolution.x/4.0, tgt_resolution.y/4.0);
-    
+
     vec3 normal    = texture(normal_tx2D, pixel_coords_norm).rgb;
     float depth    = texture(depth_tx2D, pixel_coords_norm).r;
     vec3 rand_vec  = texture(noise_tx2D, pixel_coords_norm * noise_scale).xyz;
@@ -61,7 +62,7 @@ void main()
     vec3 tangent    = normalize(rand_vec - normal * dot(rand_vec, normal));
     vec3 bitangent  = cross(normal, tangent);
     mat3 tangent_mx = mat3(tangent, bitangent, normal);
-    
+
     float bias = 0.0001;
 
     float occlusion = 0.0;
@@ -75,7 +76,7 @@ void main()
         {
             // get sample position
             sample_vs_pos = tangent_mx * vec3(samples[i].x,samples[i].y,samples[i].z); // From tangent to view-space
-            sample_vs_pos = view_pos + sample_vs_pos * radius; 
+            sample_vs_pos = view_pos + sample_vs_pos * radius;
 
             vec4 offset = vec4(sample_vs_pos, 1.0);
             offset      = proj_mx * offset;       // from view to clip-space
@@ -92,11 +93,11 @@ void main()
 
             frag_vs_pos = depthToViewPos(sample_depth,offset.xy);
 
-            float range_check = smoothstep(0.0, 1.0, radius / abs(length(view_pos) - length(frag_vs_pos))); 
-            occlusion += (length(frag_vs_pos) <= length(sample_vs_pos) - bias ? 1.0 : 0.0) * range_check; 
+            float range_check = smoothstep(0.0, 1.0, radius / abs(length(view_pos) - length(frag_vs_pos)));
+            occlusion += (length(frag_vs_pos) <= length(sample_vs_pos) - bias ? 1.0 : 0.0) * range_check;
         }
     }
-    
+
     occlusion = 1.0 - (occlusion / sample_cnt);
 
     imageStore(tgt_tx2D, pixel_coords, vec4(occlusion, occlusion, occlusion, 1.0));

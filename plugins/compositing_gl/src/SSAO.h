@@ -29,13 +29,11 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
-#include "glowl/BufferObject.hpp"
 #include "glowl/Sampler.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture2DArray.hpp"
 #include "glowl/Texture2DView.hpp"
+#include "glowl/glowl.h"
 
 #include <glm/glm.hpp>
 
@@ -240,8 +238,6 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     /**
      * De-interleaves the full resolution depth buffer into two or four depths buffers of
      * half or quarter size, respectively, depending on the chosen quality level.
@@ -280,7 +276,7 @@ private:
      *               Only used in the last pass of the ASSAO algorithm.
      */
     template<typename Tuple, typename Tex>
-    void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, const std::vector<Tuple>& inputTextures,
+    void fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, const std::vector<Tuple>& inputTextures,
         std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures, bool addConstants = true,
         const std::vector<TextureArraySamplerTuple>& finals = {});
 
@@ -359,158 +355,158 @@ private:
     bool ssaoModeCallback(core::param::ParamSlot& slot);
 
 
-    uint32_t m_version;
+    uint32_t version_;
 
     /////////////////////////////////////////////////////////////////////////
     // COMPUTE SHADER BATTERY
     /////////////////////////////////////////////////////////////////////////
-    std::unique_ptr<GLSLComputeShader> m_prepareDepthsPrgm;
-    std::unique_ptr<GLSLComputeShader> m_prepareDepthsHalfPrgm;
-    std::unique_ptr<GLSLComputeShader> m_prepareDepthsAndNormalsPrgm;
-    std::unique_ptr<GLSLComputeShader> m_prepareDepthsAndNormalsHalfPrgm;
-    std::vector<std::unique_ptr<GLSLComputeShader>> m_prepareDepthMipPrgms;
-    std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generatePrgms;
-    std::unique_ptr<GLSLComputeShader> m_smartBlurPrgm;
-    std::unique_ptr<GLSLComputeShader> m_smartBlurWidePrgm;
-    std::unique_ptr<GLSLComputeShader> m_applyPrgm;
-    std::unique_ptr<GLSLComputeShader> m_nonSmartBlurPrgm;
-    std::unique_ptr<GLSLComputeShader> m_nonSmartApplyPrgm;
-    std::unique_ptr<GLSLComputeShader> m_nonSmartHalfApplyPrgm;
+    std::unique_ptr<glowl::GLSLProgram> prepare_depths_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> prepare_depths_half_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> prepare_depths_and_normals_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> prepare_depths_and_normals_half_prgm_;
+    std::vector<std::unique_ptr<glowl::GLSLProgram>> prepare_depth_mip_prgms_;
+    std::array<std::unique_ptr<glowl::GLSLProgram>, 5> generate_prgms_;
+    std::unique_ptr<glowl::GLSLProgram> smart_blur_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> smart_blur_wide_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> apply_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> non_smart_blur_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> non_smart_apply_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> non_smart_half_apply_prgm_;
 
-    std::unique_ptr<GLSLComputeShader> m_naiveSSAOPrgm;
-    std::unique_ptr<GLSLComputeShader> m_naiveSSAOBlurPrgm;
+    std::unique_ptr<glowl::GLSLProgram> naive_ssao_prgm_;
+    std::unique_ptr<glowl::GLSLProgram>simple_blur_prgm_;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
     // TEXTURE BATTERY
     /////////////////////////////////////////////////////////////////////////
-    std::array<std::shared_ptr<glowl::Texture2D>, 4> m_halfDepths;
-    std::vector<std::vector<std::shared_ptr<glowl::Texture2DView>>> m_halfDepthsMipViews;
-    std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultA;
-    std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultB;
-    std::shared_ptr<glowl::Texture2DArray> m_finalResults;
-    std::array<std::shared_ptr<glowl::Texture2DView>, 4> m_finalResultsArrayViews;
-    std::shared_ptr<glowl::Texture2D> m_normals;
-    std::shared_ptr<glowl::Texture2D> m_finalOutput;
+    std::array<std::shared_ptr<glowl::Texture2D>, 4> half_depths_;
+    std::vector<std::vector<std::shared_ptr<glowl::Texture2DView>>> half_depths_mip_views_;
+    std::shared_ptr<glowl::Texture2D> ping_pong_half_result_a_;
+    std::shared_ptr<glowl::Texture2D> ping_pong_half_result_b_;
+    std::shared_ptr<glowl::Texture2DArray> final_results_;
+    std::array<std::shared_ptr<glowl::Texture2DView>, 4> final_results_array_views_;
+    std::shared_ptr<glowl::Texture2D> normals_;
+    std::shared_ptr<glowl::Texture2D> final_output_;
 
     // for naive ssao
-    std::shared_ptr<glowl::Texture2D> m_intermediateTx2D;
+    std::shared_ptr<glowl::Texture2D> intermediate_tx2d_;
     /** Texture with random ssao kernel rotation */
-    std::shared_ptr<glowl::Texture2D> m_SSAOKernelRotTx2D;
+    std::shared_ptr<glowl::Texture2D> ssao_kernel_rot_tx2d_;
 
     // samplers
-    std::shared_ptr<glowl::Sampler> m_samplerStatePointClamp;
-    std::shared_ptr<glowl::Sampler> m_samplerStatePointMirror;
-    std::shared_ptr<glowl::Sampler> m_samplerStateLinearClamp;
-    std::shared_ptr<glowl::Sampler> m_samplerStateViewspaceDepthTap;
+    std::shared_ptr<glowl::Sampler> sampler_state_point_clamp_;
+    std::shared_ptr<glowl::Sampler> sampler_state_point_mirror_;
+    std::shared_ptr<glowl::Sampler> sampler_state_linear_clamp_;
+    std::shared_ptr<glowl::Sampler> sampler_state_viewspace_depth_tap_;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
     // TEXTURE VARIABLES
     /////////////////////////////////////////////////////////////////////////
-    glowl::TextureLayout m_depthBufferViewspaceLinearLayout;
-    glowl::TextureLayout m_AOResultLayout;
-    glowl::TextureLayout m_normalLayout;
+    glowl::TextureLayout depth_buffer_viewspace_linear_layout_;
+    glowl::TextureLayout ao_result_layout_;
+    glowl::TextureLayout normal_layout_;
 
-    glm::ivec2 m_size;
-    glm::ivec2 m_halfSize;
-    glm::ivec2 m_quarterSize;
-    int m_depthMipLevels;
+    glm::ivec2 size_;
+    glm::ivec2 half_size_;
+    glm::ivec2 quarter_size_;
+    int depth_mip_levels_;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
     // other constants
-    int m_maxBlurPassCount;
-    ASSAO_Constants m_constants;
-    std::shared_ptr<glowl::BufferObject> m_ssboConstants;
+    int max_blur_pass_count_;
+    ASSAO_Constants constants_;
+    std::shared_ptr<glowl::BufferObject> ssbo_constants_;
     /** GPU buffer object for making active (point)lights available in during shading pass */
-    std::unique_ptr<glowl::BufferObject> m_SSAOSamples;
+    std::unique_ptr<glowl::BufferObject> ssao_samples_;
     /////////////////////////////////////////////////////////////////////////
 
     /** Pointer for assao inputs */
-    std::shared_ptr<ASSAO_Inputs> m_inputs;
+    std::shared_ptr<ASSAO_Inputs> inputs_;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_outputTexSlot;
+    megamol::core::CalleeSlot output_tex_slot_;
 
     /** Slot for querying normals render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_normalsTexSlot;
+    megamol::core::CallerSlot normals_tex_slot_;
 
     /** Slot for querying depth render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_depthTexSlot;
+    megamol::core::CallerSlot depth_tex_slot_;
 
     /** Slot for querying camera, i.e. a rhs connection */
-    megamol::core::CallerSlot m_cameraSlot;
+    megamol::core::CallerSlot camera_slot_;
 
 
     /////////////////////////////////////////////////////////////////////////
-    core::param::ParamSlot m_psSSAOMode;
+    core::param::ParamSlot ps_ssao_mode_;
 
     // paramslots for input settings
-    ASSAO_Settings m_settings;
+    ASSAO_Settings settings_;
 
     /** Paramslot for radius of occlusion sphere (world space size) */
-    core::param::ParamSlot m_psRadius;
+    core::param::ParamSlot ps_radius_;
 
     /** Paramslot for effect strength linear multiplier */
-    core::param::ParamSlot m_psShadowMultiplier;
+    core::param::ParamSlot ps_shadow_multiplier_;
 
     /** Paramslot for effect strength pow modifier */
-    core::param::ParamSlot m_psShadowPower;
+    core::param::ParamSlot ps_shadow_power_;
 
     /** Paramslot for effect max limit (applied after multiplier but before blur) */
-    core::param::ParamSlot m_psShadowClamp;
+    core::param::ParamSlot ps_shadow_clamp_;
 
     /** Paramslot for self-shadowing limit */
-    core::param::ParamSlot m_psHorizonAngleThreshold;
+    core::param::ParamSlot ps_horizon_angle_threshold_;
 
     /** Paramslot for distance to start fading out the effect */
-    core::param::ParamSlot m_psFadeOutFrom;
+    core::param::ParamSlot ps_fade_out_from_;
 
     /** Paramslot for distance at which the effect is faded out */
-    core::param::ParamSlot m_psFadeOutTo;
+    core::param::ParamSlot ps_fade_out_to_;
 
     /** Paramslot for the ssao effect quality level */
-    core::param::ParamSlot m_psQualityLevel;
+    core::param::ParamSlot ps_quality_level_;
 
     /** Paramslot for adaptive quality limit (only for quality level 3) */
-    core::param::ParamSlot m_psAdaptiveQualityLimit;
+    core::param::ParamSlot ps_adaptive_quality_limit_;
 
     /** Paramslot for number of edge-sensitive smart blur passes to apply */
-    core::param::ParamSlot m_psBlurPassCount;
+    core::param::ParamSlot ps_blur_pass_count_;
 
     /** Paramslot for how much to bleed over edges */
-    core::param::ParamSlot m_psSharpness;
+    core::param::ParamSlot ps_sharpness_;
 
     /** Paramslot for rotating sampling kernel if temporal AA / supersampling is used */
-    core::param::ParamSlot m_psTemporalSupersamplingAngleOffset;
+    core::param::ParamSlot ps_temporal_supersampling_angle_offset_;
 
     /** Paramslot for scaling sampling kernel if temporal AA / supersampling is used */
-    core::param::ParamSlot m_psTemporalSupersamplingRadiusOffset;
+    core::param::ParamSlot ps_temporal_supersampling_radius_offset_;
 
     /** Paramslot for high-res detail AO using neighboring depth pixels */
-    core::param::ParamSlot m_psDetailShadowStrength;
+    core::param::ParamSlot ps_detail_shadow_strength_;
 
     /** Parameter for selecting the ssao radius */
-    megamol::core::param::ParamSlot m_psSSAORadius;
+    megamol::core::param::ParamSlot ps_ssao_radius_;
 
     /** Parameter for selecting the ssao sample count */
-    megamol::core::param::ParamSlot m_psSSAOSampleCnt;
+    megamol::core::param::ParamSlot ps_ssao_sample_cnt_;
 
-    bool m_settingsHaveChanged;
-    bool m_slotIsActive;
-    bool m_updateCausedByNormalSlotChange;
+    bool settings_have_changed_;
+    bool slot_is_active_;
+    bool update_caused_by_normal_slot_change_;
     /////////////////////////////////////////////////////////////////////////
 };
 
 template<typename Tuple, typename Tex>
-void SSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, const std::vector<Tuple>& inputTextures,
+void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, const std::vector<Tuple>& inputTextures,
     std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures, bool addConstants,
     const std::vector<TextureArraySamplerTuple>& finals) {
-    prgm->Enable();
+    prgm->use();
 
     if (addConstants)
-        m_ssboConstants->bind(0);
+        ssbo_constants_->bind(0);
 
     int cnt = 0;
 
@@ -524,7 +520,7 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, co
                 std::get<2>(inputTextures[i])->bindSampler(cnt);
 
             std::string name = std::get<1>(inputTextures[i]);
-            GLint loc = prgm->ParameterLocation(name.c_str());
+            GLint loc = prgm->getUniformLocation(name.c_str());
             glUniform1i(loc, cnt);
 
             ++cnt;
@@ -537,7 +533,7 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, co
             std::get<0>(tex)->bindTexture();
             if (std::get<2>(tex) != nullptr)
                 std::get<2>(tex)->bindSampler(cnt);
-            glUniform1i(prgm->ParameterLocation(std::get<1>(tex).c_str()), cnt);
+            glUniform1i(prgm->getUniformLocation(std::get<1>(tex).c_str()), cnt);
         }
 
         ++cnt;
@@ -548,13 +544,11 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm, co
     }
 
     // all textures in output_textures should have the same size, so we just use the first
-    prgm->Dispatch(static_cast<int>(std::ceil(outputTextures[0].first->getWidth() / 8.f)),
+    glDispatchCompute(static_cast<int>(std::ceil(outputTextures[0].first->getWidth() / 8.f)),
         static_cast<int>(std::ceil(outputTextures[0].first->getHeight() / 8.f)), 1);
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    prgm->Disable();
-
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+    glUseProgram(0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);

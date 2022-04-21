@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
 #include "glowl/glowl.h"
 
 #include "mmcore/CalleeSlot.h"

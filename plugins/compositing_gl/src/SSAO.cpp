@@ -32,7 +32,6 @@
 #include "mmcore/param/IntParam.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 /////////////////////////////////////////////////////////////////////////
 // CONSTANTS
@@ -51,161 +50,163 @@
  */
 megamol::compositing::SSAO::SSAO()
         : core::Module()
-        , m_version(0)
-        , m_outputTexSlot("OutputTexture", "Gives access to resulting output texture")
-        , m_normalsTexSlot("NormalTexture", "Connects the normals render target texture")
-        , m_depthTexSlot("DepthTexture", "Connects the depth render target texture")
-        , m_cameraSlot("Camera", "Connects a (copy of) camera state")
-        , m_halfDepths{nullptr, nullptr, nullptr, nullptr}
-        , m_halfDepthsMipViews{}
-        , m_pingPongHalfResultA(nullptr)
-        , m_pingPongHalfResultB(nullptr)
-        , m_finalResults(nullptr)
-        , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
-        , m_normals(nullptr)
-        , m_finalOutput(nullptr)
-        , m_samplerStatePointClamp()
-        , m_samplerStatePointMirror()
-        , m_samplerStateLinearClamp()
-        , m_samplerStateViewspaceDepthTap()
-        , m_depthBufferViewspaceLinearLayout()
-        , m_AOResultLayout()
-        , m_size(0, 0)
-        , m_halfSize(0, 0)
-        , m_quarterSize(0, 0)
-        , m_depthMipLevels(0)
-        , m_inputs(nullptr)
-        , m_maxBlurPassCount(6)
-        , m_ssboConstants(nullptr)
-        , m_settings()
-        , m_psSSAOMode("SSAO", "Specifices which SSAO technqiue should be used: naive SSAO or ASSAO")
-        , m_psRadius("Radius", "Specifies world (view) space size of the occlusion sphere")
-        , m_psShadowMultiplier("ShadowMultiplier", "Specifies effect strength linear multiplier")
-        , m_psShadowPower("ShadowPower", "Specifies the effect strength pow modifier")
-        , m_psShadowClamp("ShadowClamp", "Specifies the effect max limit")
-        , m_psHorizonAngleThreshold("HorizonAngleThreshold", "Specifies the self-shadowing limit")
-        , m_psFadeOutFrom("FadeOutFrom", "Specifies the distance to start fading out the effect")
-        , m_psFadeOutTo("FadeOutTo", "Specifies the distance at which the effect is faded out")
-        , m_psQualityLevel("QualityLevel", "Specifies the ssao effect quality level")
-        , m_psAdaptiveQualityLimit(
+        , version_(0)
+        , output_tex_slot_("OutputTexture", "Gives access to resulting output texture")
+        , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")
+        , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
+        , camera_slot_("Camera", "Connects a (copy of) camera state")
+        , half_depths_{nullptr, nullptr, nullptr, nullptr}
+        , half_depths_mip_views_{}
+        , ping_pong_half_result_a_(nullptr)
+        , ping_pong_half_result_b_(nullptr)
+        , final_results_(nullptr)
+        , final_results_array_views_{nullptr, nullptr, nullptr, nullptr}
+        , normals_(nullptr)
+        , final_output_(nullptr)
+        , sampler_state_point_clamp_()
+        , sampler_state_point_mirror_()
+        , sampler_state_linear_clamp_()
+        , sampler_state_viewspace_depth_tap_()
+        , depth_buffer_viewspace_linear_layout_()
+        , ao_result_layout_()
+        , size_(0, 0)
+        , half_size_(0, 0)
+        , quarter_size_(0, 0)
+        , depth_mip_levels_(0)
+        , inputs_(nullptr)
+        , max_blur_pass_count_(6)
+        , ssbo_constants_(nullptr)
+        , settings_()
+        , ps_ssao_mode_("SSAO", "Specifices which SSAO technqiue should be used: naive SSAO or ASSAO")
+        , ps_radius_("Radius", "Specifies world (view) space size of the occlusion sphere")
+        , ps_shadow_multiplier_("ShadowMultiplier", "Specifies effect strength linear multiplier")
+        , ps_shadow_power_("ShadowPower", "Specifies the effect strength pow modifier")
+        , ps_shadow_clamp_("ShadowClamp", "Specifies the effect max limit")
+        , ps_horizon_angle_threshold_("HorizonAngleThreshold", "Specifies the self-shadowing limit")
+        , ps_fade_out_from_("FadeOutFrom", "Specifies the distance to start fading out the effect")
+        , ps_fade_out_to_("FadeOutTo", "Specifies the distance at which the effect is faded out")
+        , ps_quality_level_("QualityLevel", "Specifies the ssao effect quality level")
+        , ps_adaptive_quality_limit_(
               "AdaptiveQualityLimit", "Specifies the adaptive quality limit (only for quality level 3)")
-        , m_psBlurPassCount("BlurPassCount", "Specifies the number of edge-sensitive smart blur passes to apply")
-        , m_psSharpness("Sharpness", "Specifies how much to bleed over edges")
-        , m_psTemporalSupersamplingAngleOffset("TemporalSupersamplingAngleOffset",
+        , ps_blur_pass_count_("BlurPassCount", "Specifies the number of edge-sensitive smart blur passes to apply")
+        , ps_sharpness_("Sharpness", "Specifies how much to bleed over edges")
+        , ps_temporal_supersampling_angle_offset_("TemporalSupersamplingAngleOffset",
               "Specifies the rotating of the sampling kernel if temporal AA / supersampling is used")
-        , m_psTemporalSupersamplingRadiusOffset("TemporalSupersamplingRadiusOffset",
+        , ps_temporal_supersampling_radius_offset_("TemporalSupersamplingRadiusOffset",
               "Specifies the scaling of the sampling kernel if temporal AA / supersampling is used")
-        , m_psDetailShadowStrength(
+        , ps_detail_shadow_strength_(
               "DetailShadowStrength", "Specifies the high-res detail AO using neighboring depth pixels")
-        , m_psSSAORadius("SSAO Radius", "Sets radius for SSAO")
-        , m_psSSAOSampleCnt("SSAO Samples", "Sets the number of samples used SSAO")
-        , m_settingsHaveChanged(false)
-        , m_slotIsActive(false)
-        , m_updateCausedByNormalSlotChange(false) {
-    this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
-    this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
-    this->MakeSlotAvailable(&this->m_outputTexSlot);
+        , ps_ssao_radius_("SSAO Radius", "Sets radius for SSAO")
+        , ps_ssao_sample_cnt_("SSAO Samples", "Sets the number of samples used SSAO")
+        , settings_have_changed_(false)
+        , slot_is_active_(false)
+        , update_caused_by_normal_slot_change_(false) {
+    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
+    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
+    this->MakeSlotAvailable(&this->output_tex_slot_);
 
-    this->m_normalsTexSlot.SetCompatibleCall<CallTexture2DDescription>();
-    this->MakeSlotAvailable(&this->m_normalsTexSlot);
+    this->normals_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->normals_tex_slot_);
 
-    this->m_depthTexSlot.SetCompatibleCall<CallTexture2DDescription>();
-    this->MakeSlotAvailable(&this->m_depthTexSlot);
+    this->depth_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->depth_tex_slot_);
 
-    this->m_cameraSlot.SetCompatibleCall<CallCameraDescription>();
-    this->MakeSlotAvailable(&this->m_cameraSlot);
+    this->camera_slot_.SetCompatibleCall<CallCameraDescription>();
+    this->MakeSlotAvailable(&this->camera_slot_);
 
-    this->m_psSSAOMode << new core::param::EnumParam(0);
-    this->m_psSSAOMode.Param<core::param::EnumParam>()->SetTypePair(0, "ASSAO");
-    this->m_psSSAOMode.Param<core::param::EnumParam>()->SetTypePair(1, "Naive");
-    this->m_psSSAOMode.SetUpdateCallback(&SSAO::ssaoModeCallback);
-    this->MakeSlotAvailable(&this->m_psSSAOMode);
+    this->ps_ssao_mode_ << new core::param::EnumParam(0);
+    this->ps_ssao_mode_.Param<core::param::EnumParam>()->SetTypePair(0, "ASSAO");
+    this->ps_ssao_mode_.Param<core::param::EnumParam>()->SetTypePair(1, "Naive");
+    this->ps_ssao_mode_.SetUpdateCallback(&SSAO::ssaoModeCallback);
+    this->MakeSlotAvailable(&this->ps_ssao_mode_);
 
-    this->m_psSSAORadius << new megamol::core::param::FloatParam(0.5f, 0.0f);
-    this->MakeSlotAvailable(&this->m_psSSAORadius);
+    this->ps_ssao_radius_ << new megamol::core::param::FloatParam(0.5f, 0.0f);
+    this->ps_ssao_radius_.Parameter()->SetGUIVisible(false);
+    this->MakeSlotAvailable(&this->ps_ssao_radius_);
 
-    this->m_psSSAOSampleCnt << new megamol::core::param::IntParam(16, 0, 64);
-    this->MakeSlotAvailable(&this->m_psSSAOSampleCnt);
+    this->ps_ssao_sample_cnt_ << new megamol::core::param::IntParam(16, 0, 64);
+    this->ps_ssao_sample_cnt_.Parameter()->SetGUIVisible(false);
+    this->MakeSlotAvailable(&this->ps_ssao_sample_cnt_);
 
     // settings
-    this->m_psRadius << new core::param::FloatParam(1.2f, 0.f);
-    this->m_psRadius.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psRadius.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psRadius);
+    this->ps_radius_ << new core::param::FloatParam(1.2f, 0.f);
+    this->ps_radius_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_radius_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_radius_);
 
-    this->m_psShadowMultiplier << new core::param::FloatParam(1.f, 0.f, 5.f);
-    this->m_psShadowMultiplier.Parameter()->SetGUIPresentation(
+    this->ps_shadow_multiplier_ << new core::param::FloatParam(1.f, 0.f, 5.f);
+    this->ps_shadow_multiplier_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowMultiplier.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psShadowMultiplier);
+    this->ps_shadow_multiplier_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_shadow_multiplier_);
 
-    this->m_psShadowPower << new core::param::FloatParam(1.5f, 0.5f, 5.f);
-    this->m_psShadowPower.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowPower.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psShadowPower);
+    this->ps_shadow_power_ << new core::param::FloatParam(1.5f, 0.5f, 5.f);
+    this->ps_shadow_power_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_shadow_power_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_shadow_power_);
 
-    this->m_psShadowClamp << new core::param::FloatParam(0.98f, 0.f, 1.f);
-    this->m_psShadowClamp.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowClamp.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psShadowClamp);
+    this->ps_shadow_clamp_ << new core::param::FloatParam(0.98f, 0.f, 1.f);
+    this->ps_shadow_clamp_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_shadow_clamp_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_shadow_clamp_);
 
-    this->m_psHorizonAngleThreshold << new core::param::FloatParam(0.06f, 0.f, 0.2f);
-    this->m_psHorizonAngleThreshold.Parameter()->SetGUIPresentation(
+    this->ps_horizon_angle_threshold_ << new core::param::FloatParam(0.06f, 0.f, 0.2f);
+    this->ps_horizon_angle_threshold_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psHorizonAngleThreshold.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psHorizonAngleThreshold);
+    this->ps_horizon_angle_threshold_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_horizon_angle_threshold_);
 
-    this->m_psFadeOutFrom << new core::param::FloatParam(50.f, 0.f);
-    this->m_psFadeOutFrom.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psFadeOutFrom.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psFadeOutFrom);
+    this->ps_fade_out_from_ << new core::param::FloatParam(50.f, 0.f);
+    this->ps_fade_out_from_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_fade_out_from_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_fade_out_from_);
 
-    this->m_psFadeOutTo << new core::param::FloatParam(300.f, 0.f);
-    this->m_psFadeOutTo.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psFadeOutTo.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psFadeOutTo);
+    this->ps_fade_out_to_ << new core::param::FloatParam(300.f, 0.f);
+    this->ps_fade_out_to_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_fade_out_to_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_fade_out_to_);
 
     // generally there are quality levels from -1 (lowest) to 3 (highest, adaptive), but 3 (adaptive) is not implemented yet
-    this->m_psQualityLevel << new core::param::EnumParam(2);
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(-1, "Lowest");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(0, "Low");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(1, "Medium");
-    this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair(2, "High");
-    this->m_psQualityLevel.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psQualityLevel);
+    this->ps_quality_level_ << new core::param::EnumParam(2);
+    this->ps_quality_level_.Param<core::param::EnumParam>()->SetTypePair(-1, "Lowest");
+    this->ps_quality_level_.Param<core::param::EnumParam>()->SetTypePair(0, "Low");
+    this->ps_quality_level_.Param<core::param::EnumParam>()->SetTypePair(1, "Medium");
+    this->ps_quality_level_.Param<core::param::EnumParam>()->SetTypePair(2, "High");
+    this->ps_quality_level_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_quality_level_);
 
-    this->m_psAdaptiveQualityLimit << new core::param::FloatParam(0.45f, 0.f, 1.f);
-    this->m_psAdaptiveQualityLimit.Parameter()->SetGUIPresentation(
+    this->ps_adaptive_quality_limit_ << new core::param::FloatParam(0.45f, 0.f, 1.f);
+    this->ps_adaptive_quality_limit_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psAdaptiveQualityLimit.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psAdaptiveQualityLimit);
+    this->ps_adaptive_quality_limit_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_adaptive_quality_limit_);
 
-    this->m_psBlurPassCount << new core::param::IntParam(2, 0, 6);
-    this->m_psBlurPassCount.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psBlurPassCount);
+    this->ps_blur_pass_count_ << new core::param::IntParam(2, 0, 6);
+    this->ps_blur_pass_count_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_blur_pass_count_);
 
-    this->m_psSharpness << new core::param::FloatParam(0.98f, 0.f, 1.f);
-    this->m_psSharpness.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psSharpness.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psSharpness);
+    this->ps_sharpness_ << new core::param::FloatParam(0.98f, 0.f, 1.f);
+    this->ps_sharpness_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->ps_sharpness_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_sharpness_);
 
-    this->m_psTemporalSupersamplingAngleOffset << new core::param::FloatParam(0.f, 0.f, 3.141592653589f);
-    this->m_psTemporalSupersamplingAngleOffset.Parameter()->SetGUIPresentation(
+    this->ps_temporal_supersampling_angle_offset_ << new core::param::FloatParam(0.f, 0.f, 3.141592653589f);
+    this->ps_temporal_supersampling_angle_offset_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psTemporalSupersamplingAngleOffset.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psTemporalSupersamplingAngleOffset);
+    this->ps_temporal_supersampling_angle_offset_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_temporal_supersampling_angle_offset_);
 
-    this->m_psTemporalSupersamplingRadiusOffset << new core::param::FloatParam(1.f, 0.f, 2.f);
-    this->m_psTemporalSupersamplingRadiusOffset.Parameter()->SetGUIPresentation(
+    this->ps_temporal_supersampling_radius_offset_ << new core::param::FloatParam(1.f, 0.f, 2.f);
+    this->ps_temporal_supersampling_radius_offset_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psTemporalSupersamplingRadiusOffset.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psTemporalSupersamplingRadiusOffset);
+    this->ps_temporal_supersampling_radius_offset_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_temporal_supersampling_radius_offset_);
 
-    this->m_psDetailShadowStrength << new core::param::FloatParam(0.5f, 0.f, 5.f);
-    this->m_psDetailShadowStrength.Parameter()->SetGUIPresentation(
+    this->ps_detail_shadow_strength_ << new core::param::FloatParam(0.5f, 0.f, 5.f);
+    this->ps_detail_shadow_strength_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psDetailShadowStrength.SetUpdateCallback(&SSAO::settingsCallback);
-    this->MakeSlotAvailable(&this->m_psDetailShadowStrength);
+    this->ps_detail_shadow_strength_.SetUpdateCallback(&SSAO::settingsCallback);
+    this->MakeSlotAvailable(&this->ps_detail_shadow_strength_);
 }
 
 
@@ -213,47 +214,47 @@ megamol::compositing::SSAO::SSAO()
  * @megamol::compositing::SSAO::ssaoModeCallback
  */
 bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
-    int mode = m_psSSAOMode.Param<core::param::EnumParam>()->Value();
+    int mode = ps_ssao_mode_.Param<core::param::EnumParam>()->Value();
 
     // assao
     if (mode == 0) {
-        m_psSSAORadius.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psSSAOSampleCnt.Param<core::param::IntParam>()->SetGUIVisible(false);
+        ps_ssao_radius_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_ssao_sample_cnt_.Param<core::param::IntParam>()->SetGUIVisible(false);
 
-        m_psRadius.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psShadowMultiplier.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psShadowPower.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psShadowClamp.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psHorizonAngleThreshold.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psFadeOutFrom.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psFadeOutTo.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psQualityLevel.Param<core::param::EnumParam>()->SetGUIVisible(true);
-        m_psAdaptiveQualityLimit.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psBlurPassCount.Param<core::param::IntParam>()->SetGUIVisible(true);
-        m_psSharpness.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psTemporalSupersamplingAngleOffset.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psTemporalSupersamplingRadiusOffset.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psDetailShadowStrength.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_radius_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_shadow_multiplier_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_shadow_power_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_shadow_clamp_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_horizon_angle_threshold_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_fade_out_from_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_fade_out_to_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_quality_level_.Param<core::param::EnumParam>()->SetGUIVisible(true);
+        ps_adaptive_quality_limit_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_blur_pass_count_.Param<core::param::IntParam>()->SetGUIVisible(true);
+        ps_sharpness_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_temporal_supersampling_angle_offset_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_temporal_supersampling_radius_offset_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_detail_shadow_strength_.Param<core::param::FloatParam>()->SetGUIVisible(true);
     }
     // naive
     else {
-        m_psSSAORadius.Param<core::param::FloatParam>()->SetGUIVisible(true);
-        m_psSSAOSampleCnt.Param<core::param::IntParam>()->SetGUIVisible(true);
+        ps_ssao_radius_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        ps_ssao_sample_cnt_.Param<core::param::IntParam>()->SetGUIVisible(true);
 
-        m_psRadius.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psShadowMultiplier.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psShadowPower.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psShadowClamp.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psHorizonAngleThreshold.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psFadeOutFrom.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psFadeOutTo.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psQualityLevel.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_psAdaptiveQualityLimit.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psBlurPassCount.Param<core::param::IntParam>()->SetGUIVisible(false);
-        m_psSharpness.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psTemporalSupersamplingAngleOffset.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psTemporalSupersamplingRadiusOffset.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        m_psDetailShadowStrength.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_radius_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_shadow_multiplier_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_shadow_power_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_shadow_clamp_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_horizon_angle_threshold_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_fade_out_from_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_fade_out_to_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_quality_level_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        ps_adaptive_quality_limit_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_blur_pass_count_.Param<core::param::IntParam>()->SetGUIVisible(false);
+        ps_sharpness_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_temporal_supersampling_angle_offset_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_temporal_supersampling_radius_offset_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        ps_detail_shadow_strength_.Param<core::param::FloatParam>()->SetGUIVisible(false);
     }
 
     return true;
@@ -264,24 +265,24 @@ bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) 
  * @megamol::compositing::SSAO::settingsCallback
  */
 bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) {
-    m_settings.Radius = m_psRadius.Param<core::param::FloatParam>()->Value();
-    m_settings.ShadowMultiplier = m_psShadowMultiplier.Param<core::param::FloatParam>()->Value();
-    m_settings.ShadowPower = m_psShadowPower.Param<core::param::FloatParam>()->Value();
-    m_settings.ShadowClamp = m_psShadowClamp.Param<core::param::FloatParam>()->Value();
-    m_settings.HorizonAngleThreshold = m_psHorizonAngleThreshold.Param<core::param::FloatParam>()->Value();
-    m_settings.FadeOutFrom = m_psFadeOutFrom.Param<core::param::FloatParam>()->Value();
-    m_settings.FadeOutTo = m_psFadeOutTo.Param<core::param::FloatParam>()->Value();
-    m_settings.QualityLevel = m_psQualityLevel.Param<core::param::EnumParam>()->Value();
-    m_settings.AdaptiveQualityLimit = m_psAdaptiveQualityLimit.Param<core::param::FloatParam>()->Value();
-    m_settings.BlurPassCount = m_psBlurPassCount.Param<core::param::IntParam>()->Value();
-    m_settings.Sharpness = m_psSharpness.Param<core::param::FloatParam>()->Value();
-    m_settings.TemporalSupersamplingAngleOffset =
-        m_psTemporalSupersamplingAngleOffset.Param<core::param::FloatParam>()->Value();
-    m_settings.TemporalSupersamplingRadiusOffset =
-        m_psTemporalSupersamplingRadiusOffset.Param<core::param::FloatParam>()->Value();
-    m_settings.DetailShadowStrength = m_psDetailShadowStrength.Param<core::param::FloatParam>()->Value();
+    settings_.Radius = ps_radius_.Param<core::param::FloatParam>()->Value();
+    settings_.ShadowMultiplier = ps_shadow_multiplier_.Param<core::param::FloatParam>()->Value();
+    settings_.ShadowPower = ps_shadow_power_.Param<core::param::FloatParam>()->Value();
+    settings_.ShadowClamp = ps_shadow_clamp_.Param<core::param::FloatParam>()->Value();
+    settings_.HorizonAngleThreshold = ps_horizon_angle_threshold_.Param<core::param::FloatParam>()->Value();
+    settings_.FadeOutFrom = ps_fade_out_from_.Param<core::param::FloatParam>()->Value();
+    settings_.FadeOutTo = ps_fade_out_to_.Param<core::param::FloatParam>()->Value();
+    settings_.QualityLevel = ps_quality_level_.Param<core::param::EnumParam>()->Value();
+    settings_.AdaptiveQualityLimit = ps_adaptive_quality_limit_.Param<core::param::FloatParam>()->Value();
+    settings_.BlurPassCount = ps_blur_pass_count_.Param<core::param::IntParam>()->Value();
+    settings_.Sharpness = ps_sharpness_.Param<core::param::FloatParam>()->Value();
+    settings_.TemporalSupersamplingAngleOffset =
+        ps_temporal_supersampling_angle_offset_.Param<core::param::FloatParam>()->Value();
+    settings_.TemporalSupersamplingRadiusOffset =
+        ps_temporal_supersampling_radius_offset_.Param<core::param::FloatParam>()->Value();
+    settings_.DetailShadowStrength = ps_detail_shadow_strength_.Param<core::param::FloatParam>()->Value();
 
-    m_settingsHaveChanged = true;
+    settings_have_changed_ = true;
 
     return true;
 }
@@ -301,251 +302,138 @@ megamol::compositing::SSAO::~SSAO() {
 bool megamol::compositing::SSAO::create() {
     typedef megamol::core::utility::log::Log Log;
 
+    prepare_depth_mip_prgms_.resize(SSAODepth_MIP_LEVELS - 1);
+
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
     try {
-        {
-            // create shader program
-            m_prepareDepthsPrgm = std::make_unique<GLSLComputeShader>();
-            m_prepareDepthsHalfPrgm = std::make_unique<GLSLComputeShader>();
-            m_prepareDepthsAndNormalsPrgm = std::make_unique<GLSLComputeShader>();
-            m_prepareDepthsAndNormalsHalfPrgm = std::make_unique<GLSLComputeShader>();
-            m_prepareDepthMipPrgms.resize(SSAODepth_MIP_LEVELS - 1);
-            for (auto& cs : m_prepareDepthMipPrgms) {
-                cs = std::make_unique<GLSLComputeShader>();
-            }
-            for (auto& cs : m_generatePrgms) {
-                cs = std::make_unique<GLSLComputeShader>();
-            }
-            m_smartBlurPrgm = std::make_unique<GLSLComputeShader>();
-            m_smartBlurWidePrgm = std::make_unique<GLSLComputeShader>();
-            m_applyPrgm = std::make_unique<GLSLComputeShader>();
-            m_nonSmartBlurPrgm = std::make_unique<GLSLComputeShader>();
-            m_nonSmartApplyPrgm = std::make_unique<GLSLComputeShader>();
-            m_nonSmartHalfApplyPrgm = std::make_unique<GLSLComputeShader>();
-            m_naiveSSAOPrgm = std::make_unique<GLSLComputeShader>();
-            m_naiveSSAOBlurPrgm = std::make_unique<GLSLComputeShader>();
+        prepare_depths_prgm_ =
+            core::utility::make_glowl_shader("prepare_depths", shader_options, "comp/assao/prepare_depths.comp.glsl");
 
-            vislib_gl::graphics::gl::ShaderSource csPrepareDepths;
-            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsHalf;
-            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormals;
-            vislib_gl::graphics::gl::ShaderSource csPrepareDepthsAndNormalsHalf;
-            std::vector<vislib_gl::graphics::gl::ShaderSource> csPrepareDepthMip(SSAODepth_MIP_LEVELS - 1);
-            std::vector<vislib_gl::graphics::gl::ShaderSource> csGenerate(5);
-            vislib_gl::graphics::gl::ShaderSource csSmartBlur;
-            vislib_gl::graphics::gl::ShaderSource csSmartBlur_wide;
-            vislib_gl::graphics::gl::ShaderSource csApply;
-            vislib_gl::graphics::gl::ShaderSource csNonSmartBlur;
-            vislib_gl::graphics::gl::ShaderSource csNonSmartApply;
-            vislib_gl::graphics::gl::ShaderSource csNonSmartHalfApply;
-            vislib_gl::graphics::gl::ShaderSource csNaiveSSAO;
-            vislib_gl::graphics::gl::ShaderSource csNaiveSSAOBlur;
+        prepare_depths_half_prgm_ = core::utility::make_glowl_shader(
+            "prepare_depths_half", shader_options, "comp/assao/prepare_depths_half.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepths");
-            auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
-                instance()->Configuration().ShaderDirectories());
-            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepths", csPrepareDepths))
-                return false;
-            if (!m_prepareDepthsPrgm->Compile(csPrepareDepths.Code(), csPrepareDepths.Count()))
-                return false;
-            if (!m_prepareDepthsPrgm->Link())
-                return false;
+        prepare_depths_and_normals_prgm_ = core::utility::make_glowl_shader(
+            "prepare_depths_and_normals", shader_options, "comp/assao/prepare_depths_and_normals.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
-                return false;
-            if (!m_prepareDepthsHalfPrgm->Compile(csPrepareDepthsHalf.Code(), csPrepareDepthsHalf.Count()))
-                return false;
-            if (!m_prepareDepthsHalfPrgm->Link())
-                return false;
+        prepare_depths_and_normals_half_prgm_ = core::utility::make_glowl_shader(
+            "prepare_depths_and_normals_half", shader_options, "comp/assao/prepare_depths_and_normals_half.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormals");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
-                return false;
-            if (!m_prepareDepthsAndNormalsPrgm->Compile(
-                    csPrepareDepthsAndNormals.Code(), csPrepareDepthsAndNormals.Count()))
-                return false;
-            if (!m_prepareDepthsAndNormalsPrgm->Link())
-                return false;
+        prepare_depth_mip_prgms_[0] = core::utility::make_glowl_shader(
+            "prepare_depth_mip1", shader_options, "comp/assao/prepare_depth_mip1.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf");
-            if (!ssf->MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
-                return false;
-            if (!m_prepareDepthsAndNormalsHalfPrgm->Compile(
-                    csPrepareDepthsAndNormalsHalf.Code(), csPrepareDepthsAndNormalsHalf.Count()))
-                return false;
-            if (!m_prepareDepthsAndNormalsHalfPrgm->Link())
-                return false;
+        prepare_depth_mip_prgms_[1] = core::utility::make_glowl_shader(
+            "prepare_depth_mip2", shader_options, "comp/assao/prepare_depth_mip2.comp.glsl");
 
-            for (int i = 0; i < SSAODepth_MIP_LEVELS - 1; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i + 1);
-                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
-                if (!ssf->MakeShaderSource(identifier.c_str(), csPrepareDepthMip[i]))
-                    return false;
-                if (!m_prepareDepthMipPrgms[i]->Compile(csPrepareDepthMip[i].Code(), csPrepareDepthMip[i].Count()))
-                    return false;
-                if (!m_prepareDepthMipPrgms[i]->Link())
-                    return false;
-            }
+        prepare_depth_mip_prgms_[2] = core::utility::make_glowl_shader(
+            "prepare_depth_mip3", shader_options, "comp/assao/prepare_depth_mip3.comp.glsl");
 
-            // one less than cs_generate.size() because the adaptive quality level is not implemented (yet)
-            for (int i = 0; i < 4; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSGenerateQ%i", i);
-                std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
-                if (i >= 4)
-                    identifier = "Compositing::assao::CSGenerateQ3Base";
+        generate_prgms_[0] =
+            core::utility::make_glowl_shader("generate_q0", shader_options, "comp/assao/generate_q0.comp.glsl");
 
-                if (!ssf->MakeShaderSource(identifier.c_str(), csGenerate[i]))
-                    return false;
-                if (!m_generatePrgms[i]->Compile(csGenerate[i].Code(), csGenerate[i].Count()))
-                    return false;
-                if (!m_generatePrgms[i]->Link())
-                    return false;
-            }
+        generate_prgms_[1] =
+            core::utility::make_glowl_shader("generate_q1", shader_options, "comp/assao/generate_q1.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlur");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
-                return false;
-            if (!m_smartBlurPrgm->Compile(csSmartBlur.Code(), csSmartBlur.Count()))
-                return false;
-            if (!m_smartBlurPrgm->Link())
-                return false;
+        generate_prgms_[2] =
+            core::utility::make_glowl_shader("generate_q2", shader_options, "comp/assao/generate_q1.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlurWide");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
-                return false;
-            if (!m_smartBlurWidePrgm->Compile(csSmartBlur_wide.Code(), csSmartBlur_wide.Count()))
-                return false;
-            if (!m_smartBlurWidePrgm->Link())
-                return false;
+        generate_prgms_[3] =
+            core::utility::make_glowl_shader("generate_q3", shader_options, "comp/assao/generate_q1.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartBlur");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
-                return false;
-            if (!m_nonSmartBlurPrgm->Compile(csNonSmartBlur.Code(), csNonSmartBlur.Count()))
-                return false;
-            if (!m_nonSmartBlurPrgm->Link())
-                return false;
+        smart_blur_prgm_ =
+            core::utility::make_glowl_shader("smart_blur", shader_options, "comp/assao/smart_blur.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSApply");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSApply", csApply))
-                return false;
-            if (!m_applyPrgm->Compile(csApply.Code(), csApply.Count()))
-                return false;
-            if (!m_applyPrgm->Link())
-                return false;
+        smart_blur_wide_prgm_ =
+            core::utility::make_glowl_shader("smart_blur_wide", shader_options, "comp/assao/smart_blur_wide.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartApply");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartApply", csNonSmartApply))
-                return false;
-            if (!m_nonSmartApplyPrgm->Compile(csNonSmartApply.Code(), csNonSmartApply.Count()))
-                return false;
-            if (!m_nonSmartApplyPrgm->Link())
-                return false;
+        apply_prgm_ = core::utility::make_glowl_shader("apply", shader_options, "comp/assao/apply.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartHalfApply");
-            if (!ssf->MakeShaderSource("Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
-                return false;
-            if (!m_nonSmartHalfApplyPrgm->Compile(csNonSmartHalfApply.Code(), csNonSmartHalfApply.Count()))
-                return false;
-            if (!m_nonSmartHalfApplyPrgm->Link())
-                return false;
+        non_smart_blur_prgm_ =
+            core::utility::make_glowl_shader("non_smart_blur", shader_options, "comp/assao/non_smart_blur.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::ssao");
-            if (!ssf->MakeShaderSource("Compositing::ssao", csNaiveSSAO))
-                return false;
-            if (!m_naiveSSAOPrgm->Compile(csNaiveSSAO.Code(), csNaiveSSAO.Count()))
-                return false;
-            if (!m_naiveSSAOPrgm->Link())
-                return false;
+        non_smart_apply_prgm_ =
+            core::utility::make_glowl_shader("non_smart_apply", shader_options, "comp/assao/non_smart_apply.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::simpleBlur");
-            if (!ssf->MakeShaderSource("Compositing::blur", csNaiveSSAOBlur))
-                return false;
-            if (!m_naiveSSAOBlurPrgm->Compile(csNaiveSSAOBlur.Code(), csNaiveSSAOBlur.Count()))
-                return false;
-            if (!m_naiveSSAOBlurPrgm->Link())
-                return false;
+        non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_half_apply", shader_options, "comp/assao/non_smart_half_apply.comp.glsl");
 
-            Log::DefaultLog.WriteInfo("Done compiling (a)ssao shaders.");
-        }
+        naive_ssao_prgm_ = core::utility::make_glowl_shader("naive_ssao", shader_options, "comp/naive_ssao.comp.glsl");
 
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
+        simple_blur_prgm_ =
+            core::utility::make_glowl_shader("simple_blur", shader_options, "comp/simple_blur.comp.glsl");
+
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
-        return false;
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("SSAO: " + std::string(e.what())).c_str());
     }
 
-    m_depthBufferViewspaceLinearLayout = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
-    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
-    m_normalLayout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-    m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", m_depthBufferViewspaceLinearLayout, nullptr);
-    m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
-    m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
-    m_halfDepths[3] = std::make_shared<glowl::Texture2D>("m_halfDepths3", m_depthBufferViewspaceLinearLayout, nullptr);
-    m_halfDepthsMipViews.resize(4);
+    depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
+    ao_result_layout_ = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
+    normal_layout_ = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+    half_depths_[0] =
+        std::make_shared<glowl::Texture2D>("half_depths0", depth_buffer_viewspace_linear_layout_, nullptr);
+    half_depths_[1] =
+        std::make_shared<glowl::Texture2D>("half_depths1", depth_buffer_viewspace_linear_layout_, nullptr);
+    half_depths_[2] =
+        std::make_shared<glowl::Texture2D>("half_depths2", depth_buffer_viewspace_linear_layout_, nullptr);
+    half_depths_[3] =
+        std::make_shared<glowl::Texture2D>("half_depths3", depth_buffer_viewspace_linear_layout_, nullptr);
+    half_depths_mip_views_.resize(4);
     for (int j = 0; j < 4; ++j) {
-        m_halfDepthsMipViews[j].resize(SSAODepth_MIP_LEVELS);
-        for (int i = 0; i < m_halfDepthsMipViews[j].size(); ++i) {
-            m_halfDepthsMipViews[j][i] =
-                std::make_shared<glowl::Texture2DView>("m_halfDepthsMipViews" + std::to_string(i), *m_halfDepths[j],
-                    m_depthBufferViewspaceLinearLayout, 0, 1, 0, 1);
+        half_depths_mip_views_[j].resize(SSAODepth_MIP_LEVELS);
+        for (int i = 0; i < half_depths_mip_views_[j].size(); ++i) {
+            half_depths_mip_views_[j][i] =
+                std::make_shared<glowl::Texture2DView>("half_depths_mip_views" + std::to_string(i), *half_depths_[j],
+                    depth_buffer_viewspace_linear_layout_, 0, 1, 0, 1);
         }
     }
-    m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", m_depthBufferViewspaceLinearLayout, nullptr);
-    m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", m_AOResultLayout, nullptr);
-    m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", m_AOResultLayout, nullptr);
-    m_finalResults = std::make_shared<glowl::Texture2DArray>("m_finalResults", m_AOResultLayout, nullptr);
-    m_finalResultsArrayViews[0] = std::make_shared<glowl::Texture2DView>(
-        "m_finalResultsArrayViews0", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
-    m_finalResultsArrayViews[1] = std::make_shared<glowl::Texture2DView>(
-        "m_finalResultsArrayViews1", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
-    m_finalResultsArrayViews[2] = std::make_shared<glowl::Texture2DView>(
-        "m_finalResultsArrayViews2", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
-    m_finalResultsArrayViews[3] = std::make_shared<glowl::Texture2DView>(
-        "m_finalResultsArrayViews3", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
-    m_normals = std::make_shared<glowl::Texture2D>("m_normals", m_normalLayout, nullptr);
+    final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
+    ping_pong_half_result_a_ =
+        std::make_shared<glowl::Texture2D>("ping_pong_half_result_a", ao_result_layout_, nullptr);
+    ping_pong_half_result_b_ =
+        std::make_shared<glowl::Texture2D>("ping_pong_half_result_b", ao_result_layout_, nullptr);
+    final_results_ = std::make_shared<glowl::Texture2DArray>("final_results", ao_result_layout_, nullptr);
+    final_results_array_views_[0] = std::make_shared<glowl::Texture2DView>(
+        "final_results_array_views0", *final_results_, ao_result_layout_, 0, 1, 0, 1);
+    final_results_array_views_[1] = std::make_shared<glowl::Texture2DView>(
+        "final_results_array_views1", *final_results_, ao_result_layout_, 0, 1, 0, 1);
+    final_results_array_views_[2] = std::make_shared<glowl::Texture2DView>(
+        "final_results_array_views2", *final_results_, ao_result_layout_, 0, 1, 0, 1);
+    final_results_array_views_[3] = std::make_shared<glowl::Texture2DView>(
+        "final_results_array_views3", *final_results_, ao_result_layout_, 0, 1, 0, 1);
+    normals_ = std::make_shared<glowl::Texture2D>("normals", normal_layout_, nullptr);
 
-    m_inputs = std::make_shared<ASSAO_Inputs>();
+    inputs_ = std::make_shared<ASSAO_Inputs>();
 
-    m_ssboConstants = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    ssbo_constants_ = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     std::vector<std::pair<GLenum, GLint>> intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
         {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
         {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE}};
 
-    m_samplerStatePointClamp = std::make_shared<glowl::Sampler>("samplerStatePointClamp", intParams);
+    sampler_state_point_clamp_ = std::make_shared<glowl::Sampler>("sampler_state_point_clamp", intParams);
 
     intParams.clear();
     intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         {GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT}, {GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT}};
 
-    m_samplerStatePointMirror = std::make_shared<glowl::Sampler>("samplerStatePointMirror", intParams);
+    sampler_state_point_mirror_ = std::make_shared<glowl::Sampler>("sampler_state_point_mirror", intParams);
 
     intParams.clear();
     intParams = {{GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
         {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
 
-    m_samplerStateLinearClamp = std::make_shared<glowl::Sampler>("samplerStateLinearClamp", intParams);
+    sampler_state_linear_clamp_ = std::make_shared<glowl::Sampler>("sampler_state_linear_clamp", intParams);
 
     intParams.clear();
     intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
 
-    m_samplerStateViewspaceDepthTap = std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", intParams);
+    sampler_state_viewspace_depth_tap_ = std::make_shared<glowl::Sampler>("sampler_state_viewspace_depth_tap", intParams);
 
 
     // naive ssao stuff
-    m_intermediateTx2D = std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", m_normalLayout, nullptr);
+    intermediate_tx2d_ = std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", normal_layout_, nullptr);
 
     // quick 'n dirty from https://learnopengl.com/Advanced-Lighting/SSAO
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between 0.0 - 1.0
@@ -563,7 +451,7 @@ bool megamol::compositing::SSAO::create() {
         ssaoKernel.push_back(sample.z);
     }
 
-    m_SSAOSamples = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, ssaoKernel, GL_DYNAMIC_DRAW);
+    ssao_samples_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, ssaoKernel, GL_DYNAMIC_DRAW);
 
     std::vector<glm::vec3> ssaoNoise;
     for (unsigned int i = 0; i < 16; i++) {
@@ -572,7 +460,7 @@ bool megamol::compositing::SSAO::create() {
     }
 
     glowl::TextureLayout tx_layout2(GL_RGB32F, 4, 4, 1, GL_RGB, GL_FLOAT, 1);
-    m_SSAOKernelRotTx2D = std::make_shared<glowl::Texture2D>("ssao_kernel_rotation", tx_layout2, ssaoNoise.data());
+    ssao_kernel_rot_tx2d_ = std::make_shared<glowl::Texture2D>("ssao_kernel_rotation", tx_layout2, ssaoNoise.data());
 
     return true;
 }
@@ -589,9 +477,9 @@ void megamol::compositing::SSAO::release() {}
  */
 bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     auto lhsTc = dynamic_cast<CallTexture2D*>(&caller);
-    auto callNormal = m_normalsTexSlot.CallAs<CallTexture2D>();
-    auto callDepth = m_depthTexSlot.CallAs<CallTexture2D>();
-    auto callCamera = m_cameraSlot.CallAs<CallCamera>();
+    auto callNormal = normals_tex_slot_.CallAs<CallTexture2D>();
+    auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
+    auto callCamera = camera_slot_.CallAs<CallCamera>();
 
     if (lhsTc == NULL)
         return false;
@@ -600,15 +488,15 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
         bool generateNormals = false;
         if (callNormal == NULL) {
-            if (m_slotIsActive) {
-                m_slotIsActive = false;
-                m_updateCausedByNormalSlotChange = true;
+            if (slot_is_active_) {
+                slot_is_active_ = false;
+                update_caused_by_normal_slot_change_ = true;
             }
             generateNormals = true;
         } else {
-            if (!m_slotIsActive) {
-                m_slotIsActive = true;
-                m_updateCausedByNormalSlotChange = true;
+            if (!slot_is_active_) {
+                slot_is_active_ = true;
+                update_caused_by_normal_slot_change_ = true;
             }
         }
 
@@ -630,12 +518,13 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
         bool depthUpdate = callDepth->hasUpdate();
         bool cameraUpdate = callCamera->hasUpdate();
 
-        bool somethingHasChanged =
-            (callNormal != NULL ? normalUpdate : false) || (callDepth != NULL ? depthUpdate : false) ||
-            (callCamera != NULL ? cameraUpdate : false) || m_updateCausedByNormalSlotChange || m_settingsHaveChanged;
+        bool somethingHasChanged = (callNormal != NULL ? normalUpdate : false) ||
+                                   (callDepth != NULL ? depthUpdate : false) ||
+                                   (callCamera != NULL ? cameraUpdate : false) ||
+                                   update_caused_by_normal_slot_change_ || settings_have_changed_;
 
         if (somethingHasChanged) {
-            ++m_version;
+            ++version_;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
                 setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
@@ -650,7 +539,7 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                     }
                 };
 
-            if (callNormal == NULL && m_slotIsActive)
+            if (callNormal == NULL && slot_is_active_)
                 return false;
             if (callDepth == NULL)
                 return false;
@@ -659,131 +548,131 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
-                m_normals = callNormal->getData();
-                txResNormal = {(int)m_normals->getWidth(), (int)m_normals->getHeight()};
+                normals_ = callNormal->getData();
+                txResNormal = {(int)normals_->getWidth(), (int)normals_->getHeight()};
             }
 
             auto depthTx2D = callDepth->getData();
             std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
 
-            setupOutputTexture(depthTx2D, m_finalOutput);
+            setupOutputTexture(depthTx2D, final_output_);
 
             // obtain camera information
             core::view::Camera cam = callCamera->getData();
             glm::mat4 viewMx = cam.getViewMatrix();
             glm::mat4 projMx = cam.getProjectionMatrix();
 
-            int ssaoMode = m_psSSAOMode.Param<core::param::EnumParam>()->Value();
+            int ssaoMode = ps_ssao_mode_.Param<core::param::EnumParam>()->Value();
 
             // assao
             if (ssaoMode == 0) {
 
-                if (normalUpdate || depthUpdate || m_settingsHaveChanged || m_updateCausedByNormalSlotChange) {
+                if (normalUpdate || depthUpdate || settings_have_changed_ || update_caused_by_normal_slot_change_) {
 
                     // assuming a full resolution depth buffer!
-                    m_inputs->ViewportWidth = txResDepth[0];
-                    m_inputs->ViewportHeight = txResDepth[1];
-                    m_inputs->GenerateNormals = generateNormals;
-                    m_inputs->ProjectionMatrix = projMx;
-                    m_inputs->ViewMatrix = viewMx;
+                    inputs_->ViewportWidth = txResDepth[0];
+                    inputs_->ViewportHeight = txResDepth[1];
+                    inputs_->GenerateNormals = generateNormals;
+                    inputs_->ProjectionMatrix = projMx;
+                    inputs_->ViewMatrix = viewMx;
 
-                    updateTextures(m_inputs);
+                    updateTextures(inputs_);
 
-                    updateConstants(m_settings, m_inputs, 0);
+                    updateConstants(settings_, inputs_, 0);
                 }
 
                 {
-                    prepareDepths(m_settings, m_inputs, depthTx2D, m_normals);
+                    prepareDepths(settings_, inputs_, depthTx2D, normals_);
 
-                    generateSSAO(m_settings, m_inputs, false, m_normals);
+                    generateSSAO(settings_, inputs_, false, normals_);
 
                     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                        {m_finalOutput, 0}};
+                        {final_output_, 0}};
 
                     // Apply
                     {
                         std::vector<TextureArraySamplerTuple> inputFinals = {
-                            {m_finalResults, "g_FinalSSAOLinearClamp", m_samplerStateLinearClamp}};
+                            {final_results_, "g_FinalSSAOLinearClamp", sampler_state_linear_clamp_}};
 
-                        if (m_settings.QualityLevel < 0)
+                        if (settings_.QualityLevel < 0)
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_nonSmartHalfApplyPrgm, {}, outputTextures, true, inputFinals);
-                        else if (m_settings.QualityLevel == 0)
+                                non_smart_half_apply_prgm_, {}, outputTextures, true, inputFinals);
+                        else if (settings_.QualityLevel == 0)
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_nonSmartApplyPrgm, {}, outputTextures, true, inputFinals);
+                                non_smart_apply_prgm_, {}, outputTextures, true, inputFinals);
                         else {
-                            inputFinals.push_back({m_finalResults, "g_FinalSSAO", nullptr});
+                            inputFinals.push_back({final_results_, "g_FinalSSAO", nullptr});
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_applyPrgm, {}, outputTextures, true, inputFinals);
+                                apply_prgm_, {}, outputTextures, true, inputFinals);
                         }
                     }
                 }
             }
             // naive
             else {
-                setupOutputTexture(depthTx2D, m_intermediateTx2D);
+                setupOutputTexture(depthTx2D, intermediate_tx2d_);
 
-                m_naiveSSAOPrgm->Enable();
+                naive_ssao_prgm_->use();
 
-                m_SSAOSamples->bind(1);
+                ssao_samples_->bind(1);
 
-                glUniform1f(m_naiveSSAOPrgm->ParameterLocation("radius"),
-                    m_psSSAORadius.Param<core::param::FloatParam>()->Value());
-                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("sample_cnt"),
-                    m_psSSAOSampleCnt.Param<core::param::IntParam>()->Value());
+                glUniform1f(naive_ssao_prgm_->getUniformLocation("radius"),
+                    ps_ssao_radius_.Param<core::param::FloatParam>()->Value());
+                glUniform1i(naive_ssao_prgm_->getUniformLocation("sample_cnt"),
+                    ps_ssao_sample_cnt_.Param<core::param::IntParam>()->Value());
 
                 glActiveTexture(GL_TEXTURE0);
-                m_normals->bindTexture();
-                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("normal_tx2D"), 0);
+                normals_->bindTexture();
+                glUniform1i(naive_ssao_prgm_->getUniformLocation("normal_tx2D"), 0);
                 glActiveTexture(GL_TEXTURE1);
                 depthTx2D->bindTexture();
-                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("depth_tx2D"), 1);
+                glUniform1i(naive_ssao_prgm_->getUniformLocation("depth_tx2D"), 1);
                 glActiveTexture(GL_TEXTURE2);
-                m_SSAOKernelRotTx2D->bindTexture();
-                glUniform1i(m_naiveSSAOPrgm->ParameterLocation("noise_tx2D"), 2);
+                ssao_kernel_rot_tx2d_->bindTexture();
+                glUniform1i(naive_ssao_prgm_->getUniformLocation("noise_tx2D"), 2);
 
                 auto invViewMx = glm::inverse(viewMx);
                 auto invProjMx = glm::inverse(projMx);
                 glUniformMatrix4fv(
-                    m_naiveSSAOPrgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(invViewMx));
+                    naive_ssao_prgm_->getUniformLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(invViewMx));
                 glUniformMatrix4fv(
-                    m_naiveSSAOPrgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(invProjMx));
+                    naive_ssao_prgm_->getUniformLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(invProjMx));
 
-                glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(viewMx));
-                glUniformMatrix4fv(m_naiveSSAOPrgm->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(projMx));
+                glUniformMatrix4fv(naive_ssao_prgm_->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(viewMx));
+                glUniformMatrix4fv(naive_ssao_prgm_->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(projMx));
 
-                m_intermediateTx2D->bindImage(0, GL_WRITE_ONLY);
+                intermediate_tx2d_->bindImage(0, GL_WRITE_ONLY);
 
-                m_naiveSSAOPrgm->Dispatch(static_cast<int>(std::ceil(m_finalOutput->getWidth() / 8.0f)),
-                    static_cast<int>(std::ceil(m_finalOutput->getHeight() / 8.0f)), 1);
+                glDispatchCompute(static_cast<int>(std::ceil(final_output_->getWidth() / 8.0f)),
+                    static_cast<int>(std::ceil(final_output_->getHeight() / 8.0f)), 1);
+                ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                m_naiveSSAOPrgm->Disable();
+                glUseProgram(0);
 
-                glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
-
-                m_naiveSSAOBlurPrgm->Enable();
+                simple_blur_prgm_->use();
 
                 glActiveTexture(GL_TEXTURE0);
-                m_intermediateTx2D->bindTexture();
-                // test with m_NaiveSSAOPrgm, since it was (falsely) used the entire time
-                glUniform1i(m_naiveSSAOBlurPrgm->ParameterLocation("src_tx2D"), 0);
+                intermediate_tx2d_->bindTexture();
+                // test with naive_ssao_prgm_, since it was (falsely) used the entire time
+                glUniform1i(simple_blur_prgm_->getUniformLocation("src_tx2D"), 0);
 
-                m_finalOutput->bindImage(0, GL_WRITE_ONLY);
+                final_output_->bindImage(0, GL_WRITE_ONLY);
 
-                m_naiveSSAOBlurPrgm->Dispatch(static_cast<int>(std::ceil(m_finalOutput->getWidth() / 8.0f)),
-                    static_cast<int>(std::ceil(m_finalOutput->getHeight() / 8.0f)), 1);
+                glDispatchCompute(static_cast<int>(std::ceil(final_output_->getWidth() / 8.0f)),
+                    static_cast<int>(std::ceil(final_output_->getHeight() / 8.0f)), 1);
+                ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                m_naiveSSAOBlurPrgm->Disable();
+                glUseProgram(0);
             }
         }
     }
 
-    if (lhsTc->version() < m_version) {
-        m_settingsHaveChanged = false;
-        m_updateCausedByNormalSlotChange = false;
+    if (lhsTc->version() < version_) {
+        settings_have_changed_ = false;
+        update_caused_by_normal_slot_change_ = false;
     }
 
-    lhsTc->setData(m_finalOutput, m_version);
+    lhsTc->setData(final_output_, version_);
 
     return true;
 }
@@ -802,29 +691,29 @@ void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
 
 
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
-        {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
+        {half_depths_[0], 0}, {half_depths_[1], 1}, {half_depths_[2], 2}, {half_depths_[3], 3}};
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTwoDepths = {
-        {m_halfDepths[0], 0}, {m_halfDepths[3], 3}};
+        {half_depths_[0], 0}, {half_depths_[3], 3}};
 
     if (!generateNormals) {
         if (settings.QualityLevel < 0) {
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                m_prepareDepthsHalfPrgm, inputTextures, outputTwoDepths);
+                prepare_depths_half_prgm_, inputTextures, outputTwoDepths);
         } else {
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                m_prepareDepthsPrgm, inputTextures, outputFourDepths);
+                prepare_depths_prgm_, inputTextures, outputFourDepths);
         }
     } else {
-        inputTextures.push_back({depthTexture, (std::string) "g_DepthSourcePointClamp", m_samplerStatePointClamp});
+        inputTextures.push_back({depthTexture, (std::string) "g_DepthSourcePointClamp", sampler_state_point_clamp_});
 
         if (settings.QualityLevel < 0) {
             outputTwoDepths.push_back({normalTexture, 4});
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                m_prepareDepthsAndNormalsHalfPrgm, inputTextures, outputTwoDepths);
+                prepare_depths_and_normals_half_prgm_, inputTextures, outputTwoDepths);
         } else {
             outputFourDepths.push_back({normalTexture, 4});
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                m_prepareDepthsAndNormalsPrgm, inputTextures, outputFourDepths);
+                prepare_depths_and_normals_prgm_, inputTextures, outputFourDepths);
         }
     }
 
@@ -832,24 +721,24 @@ void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
     if (settings.QualityLevel > 1) {
 
 #ifdef MEGAMOL_ASSAO_MANUAL_MIPS
-        for (int i = 1; i < m_depthMipLevels; ++i) {
+        for (int i = 1; i < depth_mip_levels_; ++i) {
             std::vector<TextureViewSamplerTuple> inputFourDepthMipsM1 = {
-                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource", nullptr},
-                {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1", nullptr},
-                {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2", nullptr},
-                {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3", nullptr}};
+                {half_depths_mip_views_[0][i - 1LL], (std::string) "g_ViewspaceDepthSource", nullptr},
+                {half_depths_mip_views_[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1", nullptr},
+                {half_depths_mip_views_[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2", nullptr},
+                {half_depths_mip_views_[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3", nullptr}};
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputFourDepthMips = {
-                {m_halfDepthsMipViews[0][i], 0}, {m_halfDepthsMipViews[1][i], 1}, {m_halfDepthsMipViews[2][i], 2},
-                {m_halfDepthsMipViews[3][i], 3}};
+                {half_depths_mip_views_[0][i], 0}, {half_depths_mip_views_[1][i], 1}, {half_depths_mip_views_[2][i], 2},
+                {half_depths_mip_views_[3][i], 3}};
 
             fullscreenPassDraw<TextureViewSamplerTuple, glowl::Texture2DView>(
-                m_prepareDepthMipPrgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
+                prepare_depth_mip_prgms_[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
         }
 #else
         for (int i = 0; i < 4; ++i) {
-            m_halfDepths[i]->bindTexture();
-            m_halfDepths[i]->updateMipmaps();
+            half_depths_[i]->bindTexture();
+            half_depths_[i]->updateMipmaps();
         }
         glBindTexture(GL_TEXTURE_2D, 0);
 #endif
@@ -876,7 +765,7 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
         if ((settings.QualityLevel < 0) && ((pass == 1) || (pass == 2)))
             continue;
 
-        int blurPasses = std::min(settings.BlurPassCount, m_maxBlurPassCount);
+        int blurPasses = std::min(settings.BlurPassCount, max_blur_pass_count_);
 
         // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
@@ -900,17 +789,17 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
         // Generate
         {
             std::vector<TextureSamplerTuple> inputTextures(3);
-            inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
+            inputTextures[0] = {half_depths_[pass], "g_ViewSpaceDepthSource", sampler_state_point_mirror_};
             inputTextures[1] = {normalTexture, "g_NormalmapSource", nullptr};
             inputTextures[2] = {
-                m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
+                half_depths_[pass], "g_ViewSpaceDepthSourceDepthTapSampler", sampler_state_viewspace_depth_tap_};
 
             // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
             if (!adaptiveBasePass && (settings.QualityLevel == 3)) {
-                inputTextures[3] = {m_loadCounterSRV, "g_LoadCounter"};
-                inputTextures[4] = {m_importanceMap.SRV, "g_ImportanceMap"};
-                inputTextures[5] = {m_finalResults.SRV, "g_FinalSSAO"};
+                inputTextures[3] = {load_counter_srv_, "g_LoadCounter"};
+                inputTextures[4] = {importance_map_.SRV, "g_ImportanceMap"};
+                inputTextures[5] = {final_results_.SRV, "g_FinalSSAO"};
             }
 #endif
             GLuint binding = 0;
@@ -919,16 +808,16 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
             // no blur?
             if (blurPasses == 0) {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
-                    {m_finalResultsArrayViews[pass], binding}};
+                    {final_results_array_views_[pass], binding}};
 
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                    m_generatePrgms[shaderIndex], inputTextures, outputTextures);
+                    generate_prgms_[shaderIndex], inputTextures, outputTextures);
             } else {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                    {m_pingPongHalfResultA, binding}};
+                    {ping_pong_half_result_a_, binding}};
 
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                    m_generatePrgms[shaderIndex], inputTextures, outputTextures);
+                    generate_prgms_[shaderIndex], inputTextures, outputTextures);
             }
         }
 
@@ -940,47 +829,47 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
                 GLuint binding = 0;
 
                 std::vector<TextureSamplerTuple> inputTextures = {
-                    {m_pingPongHalfResultA, "g_BlurInput", m_samplerStatePointMirror}};
+                    {ping_pong_half_result_a_, "g_BlurInput", sampler_state_point_mirror_}};
 
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> intermediateOutputTexs = {
-                    {m_pingPongHalfResultB, binding}};
+                    {ping_pong_half_result_b_, binding}};
 
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> finalOutputTexs = {
-                    {m_finalResultsArrayViews[pass], binding}};
+                    {final_results_array_views_[pass], binding}};
 
                 if (settings.QualityLevel > 0) {
                     if (wideBlursRemaining > 0) {
                         if (i == blurPasses - 1) {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                                m_smartBlurWidePrgm, inputTextures, finalOutputTexs);
+                                smart_blur_wide_prgm_, inputTextures, finalOutputTexs);
                         } else {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_smartBlurWidePrgm, inputTextures, intermediateOutputTexs);
+                                smart_blur_wide_prgm_, inputTextures, intermediateOutputTexs);
                         }
 
                         wideBlursRemaining--;
                     } else {
                         if (i == blurPasses - 1) {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                                m_smartBlurPrgm, inputTextures, finalOutputTexs);
+                                smart_blur_prgm_, inputTextures, finalOutputTexs);
                         } else {
                             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                                m_smartBlurPrgm, inputTextures, intermediateOutputTexs);
+                                smart_blur_prgm_, inputTextures, intermediateOutputTexs);
                         }
                     }
                 } else {
-                    std::get<2>(inputTextures[0]) = m_samplerStateLinearClamp;
+                    std::get<2>(inputTextures[0]) = sampler_state_linear_clamp_;
 
                     if (i == blurPasses - 1) {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
-                            m_nonSmartBlurPrgm, inputTextures, finalOutputTexs);
+                            non_smart_blur_prgm_, inputTextures, finalOutputTexs);
                     } else {
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                            m_nonSmartBlurPrgm, inputTextures, intermediateOutputTexs);
+                            non_smart_blur_prgm_, inputTextures, intermediateOutputTexs);
                     }
                 }
 
-                std::swap(m_pingPongHalfResultA, m_pingPongHalfResultB);
+                std::swap(ping_pong_half_result_a_, ping_pong_half_result_b_);
             }
         }
     }
@@ -1002,46 +891,46 @@ void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inpu
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
-    bool needsUpdate = (m_size.x != width) || (m_size.y != height);
+    bool needsUpdate = (size_.x != width) || (size_.y != height);
 
-    m_size.x = width;
-    m_size.y = height;
-    m_halfSize.x = (width + 1) / 2;
-    m_halfSize.y = (height + 1) / 2;
-    m_quarterSize.x = (m_halfSize.x + 1) / 2;
-    m_quarterSize.y = (m_halfSize.y + 1) / 2;
+    size_.x = width;
+    size_.y = height;
+    half_size_.x = (width + 1) / 2;
+    half_size_.y = (height + 1) / 2;
+    quarter_size_.x = (half_size_.x + 1) / 2;
+    quarter_size_.y = (half_size_.y + 1) / 2;
 
     if (!needsUpdate)
         return;
 
     int blurEnlarge =
-        m_maxBlurPassCount + std::max(0, m_maxBlurPassCount - 2); // +1 for max normal blurs, +2 for wide blurs
+        max_blur_pass_count_ + std::max(0, max_blur_pass_count_ - 2); // +1 for max normal blurs, +2 for wide blurs
 
     float totalSizeInMB = 0.f;
 
-    m_depthMipLevels = SSAODepth_MIP_LEVELS;
+    depth_mip_levels_ = SSAODepth_MIP_LEVELS;
 
     for (int i = 0; i < 4; i++) {
-        if (reCreateIfNeeded(m_halfDepths[i], m_halfSize, m_depthBufferViewspaceLinearLayout, true)) {
+        if (reCreateIfNeeded(half_depths_[i], half_size_, depth_buffer_viewspace_linear_layout_, true)) {
 
 #ifdef MEGAMOL_ASSAO_MANUAL_MIPS
-            for (int j = 0; j < m_depthMipLevels; j++) {
-                reCreateMIPViewIfNeeded(m_halfDepthsMipViews[i][j], m_halfDepths[i], j);
+            for (int j = 0; j < depth_mip_levels_; j++) {
+                reCreateMIPViewIfNeeded(half_depths_mip_views_[i][j], half_depths_[i], j);
             }
 #endif
         }
     }
 
-    reCreateIfNeeded(m_pingPongHalfResultA, m_halfSize, m_AOResultLayout);
-    reCreateIfNeeded(m_pingPongHalfResultB, m_halfSize, m_AOResultLayout);
-    reCreateIfNeeded(m_finalResults, m_halfSize, m_AOResultLayout);
+    reCreateIfNeeded(ping_pong_half_result_a_, half_size_, ao_result_layout_);
+    reCreateIfNeeded(ping_pong_half_result_b_, half_size_, ao_result_layout_);
+    reCreateIfNeeded(final_results_, half_size_, ao_result_layout_);
 
     for (int i = 0; i < 4; ++i) {
-        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, i);
+        reCreateArrayIfNeeded(final_results_array_views_[i], final_results_, half_size_, i);
     }
 
     if (inputs->GenerateNormals) {
-        reCreateIfNeeded(m_normals, m_size, m_normalLayout);
+        reCreateIfNeeded(normals_, size_, normal_layout_);
     }
 }
 
@@ -1054,12 +943,12 @@ void megamol::compositing::SSAO::updateConstants(
     bool generateNormals = inputs->GenerateNormals;
 
     // update constants
-    ASSAO_Constants& consts = m_constants; // = *((ASSAOConstants*) mappedResource.pData);
+    ASSAO_Constants& consts = constants_; // = *((ASSAOConstants*) mappedResource.pData);
 
     const glm::mat4& proj = inputs->ProjectionMatrix;
 
-    consts.ViewportPixelSize = glm::vec2(1.0f / (float)m_size.x, 1.0f / (float)m_size.y);
-    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float)m_halfSize.x, 1.0f / (float)m_halfSize.y);
+    consts.ViewportPixelSize = glm::vec2(1.0f / (float)size_.x, 1.0f / (float)size_.y);
+    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float)half_size_.x, 1.0f / (float)half_size_.y);
 
     consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
     consts.Viewport2xPixelSize_x_025 =
@@ -1104,12 +993,12 @@ void megamol::compositing::SSAO::updateConstants(
     // consts.RadiusDistanceScalingFunctionPow     = 1.0f - Clamp( settings.RadiusDistanceScalingFunction,
     // 0.0f, 1.0f );
 
-    int lastHalfDepthMipX = m_halfDepthsMipViews[0][SSAODepth_MIP_LEVELS - 1]->getWidth();
-    int lastHalfDepthMipY = m_halfDepthsMipViews[0][SSAODepth_MIP_LEVELS - 1]->getHeight();
+    int lastHalfDepthMipX = half_depths_mip_views_[0][SSAODepth_MIP_LEVELS - 1]->getWidth();
+    int lastHalfDepthMipY = half_depths_mip_views_[0][SSAODepth_MIP_LEVELS - 1]->getHeight();
 
     // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
     // PSPostprocessImportanceMapB for performance reasons
-    consts.LoadCounterAvgDiv = 9.0f / (float)(m_quarterSize.x * m_quarterSize.y * 255.0);
+    consts.LoadCounterAvgDiv = 9.0f / (float)(quarter_size_.x * quarter_size_.y * 255.0);
 
     // Special settings for lowest quality level - just nerf the effect a tiny bit
     if (settings.QualityLevel <= 0) {
@@ -1128,11 +1017,11 @@ void megamol::compositing::SSAO::updateConstants(
     consts.NegRecEffectRadius = -1.0f / consts.EffectRadius;
 
     consts.PerPassFullResCoordOffset = glm::ivec2(pass % 2, pass / 2);
-    consts.PerPassFullResUVOffset = glm::vec2(((pass % 2) - 0.0f) / m_size.x, ((pass / 2) - 0.0f) / m_size.y);
+    consts.PerPassFullResUVOffset = glm::vec2(((pass % 2) - 0.0f) / size_.x, ((pass / 2) - 0.0f) / size_.y);
 
     consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
     consts.PassIndex = pass;
-    consts.QuarterResPixelSize = glm::vec2(1.0f / (float)m_quarterSize.x, 1.0f / (float)m_quarterSize.y);
+    consts.QuarterResPixelSize = glm::vec2(1.0f / (float)quarter_size_.x, 1.0f / (float)quarter_size_.y);
 
     float additionalAngleOffset =
         settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
@@ -1177,7 +1066,7 @@ void megamol::compositing::SSAO::updateConstants(
     consts.ViewMX = inputs->ViewMatrix;
 
     // probably do something with the ssbo? but could also just be done at this point
-    m_ssboConstants->rebuffer(&m_constants, sizeof(m_constants));
+    ssbo_constants_->rebuffer(&constants_, sizeof(constants_));
 }
 
 

@@ -15,7 +15,6 @@
 #include "NormalFromDepth.h"
 #include "PNGDataSource.h"
 #include "SSAO.h"
-#include "ScreenSpaceEffect.h"
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
@@ -39,7 +38,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::InteractionRenderTarget>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();
-        this->module_descriptions.RegisterAutoDescription<megamol::compositing::ScreenSpaceEffect>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
