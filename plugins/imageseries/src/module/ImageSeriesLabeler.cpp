@@ -21,9 +21,12 @@ ImageSeriesLabeler::ImageSeriesLabeler()
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
         , getMaskCaller("requestMaskImageSeries", "Requests mask data from an image series.")
         , maskFrameParam("Mask frame", "Image timestamp to use for applying a mask.")
+        , maskPriorityParam("Mask priority", "Prioritizes mask pixels over blob labels.")
+        , negateMaskParam("Negate mask", "Negates the value threshold for masking.")
         , minBlobSizeParam("Min blob size", "Blobs with fewer pixels than this threshold are discarded.")
         , thresholdParam("Value threshold", "Per-pixel value threshold for labeling.")
         , negateThresholdParam("Negate value threshold", "Negates the value threshold for labeling.")
+        , flowFrontParam("Split flow fronts", "Excludes pixels that are unchanged between frames.")
         , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
@@ -43,6 +46,16 @@ ImageSeriesLabeler::ImageSeriesLabeler()
     maskFrameParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&maskFrameParam);
 
+    maskPriorityParam << new core::param::BoolParam(0);
+    maskPriorityParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    maskPriorityParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&maskPriorityParam);
+
+    negateMaskParam << new core::param::BoolParam(0);
+    negateMaskParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    negateMaskParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&negateMaskParam);
+
     minBlobSizeParam << new core::param::IntParam(10, 0, 100);
     minBlobSizeParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     minBlobSizeParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
@@ -57,6 +70,11 @@ ImageSeriesLabeler::ImageSeriesLabeler()
     negateThresholdParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
     negateThresholdParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&negateThresholdParam);
+
+    flowFrontParam << new core::param::BoolParam(0);
+    flowFrontParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    flowFrontParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&flowFrontParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -101,6 +119,19 @@ bool ImageSeriesLabeler::getDataCallback(core::Call& caller) {
                     filter::BlobLabelFilter::Input filterInput;
                     filterInput.image = output.imageData;
                     filterInput.mask = mask.imageData;
+                    filterInput.maskPriority = maskPriorityParam.Param<core::param::BoolParam>()->Value();
+                    filterInput.negateMask = negateMaskParam.Param<core::param::BoolParam>()->Value();
+
+                    // If flow front mode is enabled, get predecessor image from sequence
+                    if (flowFrontParam.Param<core::param::BoolParam>()->Value() && output.framerate > 0.f) {
+                        auto prevInput = getInput->GetInput();
+                        prevInput.time -= 1.f / output.framerate;
+                        getInput->SetInput(prevInput);
+                        if ((*getInput)(ImageSeries::ImageSeries2DCall::CallGetData)) {
+                            filterInput.prevImage = getInput->GetOutput().imageData;
+                        }
+                    }
+
                     filterInput.minBlobSize = minBlobSizeParam.Param<core::param::IntParam>()->Value();
                     filterInput.threshold = thresholdParam.Param<core::param::FloatParam>()->Value();
                     filterInput.negateThreshold = negateThresholdParam.Param<core::param::BoolParam>()->Value();

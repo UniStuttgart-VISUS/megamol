@@ -16,6 +16,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     // Wait for image data to be ready
     auto image = input.image ? input.image->getImageData() : nullptr;
     auto mask = input.mask ? input.mask->getImageData() : nullptr;
+    auto prev = input.prevImage ? input.prevImage->getImageData() : nullptr;
 
     // Empty -> return nothing
     if (!image) {
@@ -33,6 +34,12 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         mask = nullptr;
     }
 
+    // Prev image must have matching size and channels, otherwise, it is ignored
+    if (prev && (image->Width() != prev->Width() || image->Height() != prev->Height() || prev->GetChannelCount() != 1 ||
+                    prev->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE)) {
+        prev = nullptr;
+    }
+
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_BYTE);
 
@@ -40,6 +47,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
 
     const auto* dataIn = image->PeekDataAs<std::uint8_t>();
     auto* dataOut = result->PeekDataAs<std::uint8_t>();
+    const auto* prevIn = prev ? prev->PeekDataAs<std::uint8_t>() : nullptr;
     Index width = result->Width();
     Index height = result->Height();
     Index size = width * height;
@@ -49,8 +57,19 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     if (mask) {
         // TODO separate mask threshold/negation option?
         const auto* maskIn = mask->PeekDataAs<std::uint8_t>();
-        for (Index i = 0; i < size; ++i) {
-            dataOut[i] = maskIn[i] > threshold ? LabelMask : LabelBackground;
+        if (input.maskPriority) {
+            // Mask has priority: override pixels unconditionally
+            for (Index i = 0; i < size; ++i) {
+                dataOut[i] = (maskIn[i] < threshold) != input.negateMask ? LabelMask : LabelBackground;
+            }
+        } else {
+            // Mask does not have priority: only override pixels that don't meet the threshold
+            for (Index i = 0; i < size; ++i) {
+                dataOut[i] =
+                    (maskIn[i] < threshold) != input.negateMask && (dataIn[i] < threshold) == input.negateThreshold
+                        ? LabelMask
+                        : LabelBackground;
+            }
         }
     }
 
@@ -62,6 +81,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     //blobSizes.fill(0);
 
     std::vector<Index> pendingPixels;
+    std::vector<Index> pendingFlow;
     std::deque<Index> queue;
 
     // Reserve enough space to perform first pass
@@ -71,15 +91,22 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         return dataOut[index] == LabelBackground && (dataIn[index] < threshold) != input.negateThreshold;
     };
 
+    auto testPrev = [&](Index index) { return prevIn && (prevIn[index] < threshold) != input.negateThreshold; };
+
     auto markMinimal = [&](Index index) {
         if (testPixel(index)) {
-            dataOut[index] = LabelMinimal;
-            pendingPixels.push_back(index);
+            if (testPrev(index)) {
+                pendingFlow.push_back(index);
+            } else {
+                dataOut[index] = LabelMinimal;
+                pendingPixels.push_back(index);
+            }
         }
     };
 
     auto fillMinimal = [&](Index startIndex) {
         pendingPixels.clear();
+        pendingFlow.clear();
         markMinimal(startIndex);
         Index queueIndex = 0;
 
@@ -111,8 +138,12 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
 
     auto mark = [&](Index index) {
         if (testPixel(index)) {
-            dataOut[index] = nextLabel;
-            queue.push_back(index);
+            if (testPrev(index)) {
+                dataOut[index] = LabelFlow;
+            } else {
+                dataOut[index] = nextLabel;
+                queue.push_back(index);
+            }
         }
     };
 
@@ -129,6 +160,10 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         for (auto& index : pendingPixels) {
             dataOut[index] = nextLabel;
             queue.push_back(index);
+        }
+
+        for (auto& index : pendingFlow) {
+            dataOut[index] = LabelFlow;
         }
 
         // Perform proper flood fill
@@ -167,7 +202,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     // Perform flood fill
     for (Index i = 0; i < size; ++i) {
         // Found a possible seed point: start flood filling!
-        if (testPixel(i)) {
+        if (testPixel(i) && !testPrev(i)) {
             fill(i);
         }
     }

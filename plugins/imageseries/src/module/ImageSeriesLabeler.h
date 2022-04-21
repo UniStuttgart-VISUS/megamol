@@ -83,9 +83,12 @@ private:
     core::CallerSlot getMaskCaller;
 
     core::param::ParamSlot maskFrameParam;
+    core::param::ParamSlot maskPriorityParam;
+    core::param::ParamSlot negateMaskParam;
     core::param::ParamSlot minBlobSizeParam;
     core::param::ParamSlot thresholdParam;
     core::param::ParamSlot negateThresholdParam;
+    core::param::ParamSlot flowFrontParam;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 

@@ -62,6 +62,9 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
         return false;
     }
 
+    textureLayout.int_parameters.emplace_back(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    textureLayout.int_parameters.emplace_back(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     textureLayout.width = image.Width();
     textureLayout.height = image.Height();
     textureLayout.levels = 1;
