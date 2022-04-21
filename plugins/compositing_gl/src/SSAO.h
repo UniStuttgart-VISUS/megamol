@@ -388,7 +388,7 @@ private:
     std::unique_ptr<glowl::GLSLProgram> non_smart_half_apply_prgm_;
 
     std::unique_ptr<glowl::GLSLProgram> naive_ssao_prgm_;
-    std::unique_ptr<glowl::GLSLProgram>simple_blur_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> simple_blur_prgm_;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////

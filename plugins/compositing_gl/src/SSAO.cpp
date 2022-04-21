@@ -444,7 +444,8 @@ bool megamol::compositing::SSAO::create() {
     intParams = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
         {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
 
-    sampler_state_viewspace_depth_tap_ = std::make_shared<glowl::Sampler>("sampler_state_viewspace_depth_tap", intParams);
+    sampler_state_viewspace_depth_tap_ =
+        std::make_shared<glowl::Sampler>("sampler_state_viewspace_depth_tap", intParams);
 
 
     // naive ssao stuff
@@ -660,8 +661,10 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                 glUniformMatrix4fv(
                     naive_ssao_prgm_->getUniformLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(invProjMx));
 
-                glUniformMatrix4fv(naive_ssao_prgm_->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(viewMx));
-                glUniformMatrix4fv(naive_ssao_prgm_->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(projMx));
+                glUniformMatrix4fv(
+                    naive_ssao_prgm_->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(viewMx));
+                glUniformMatrix4fv(
+                    naive_ssao_prgm_->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(projMx));
 
                 intermediate_tx2d_->bindImage(0, GL_WRITE_ONLY);
 
