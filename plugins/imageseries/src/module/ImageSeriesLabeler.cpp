@@ -56,7 +56,7 @@ ImageSeriesLabeler::ImageSeriesLabeler()
     negateMaskParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&negateMaskParam);
 
-    minBlobSizeParam << new core::param::IntParam(10, 0, 100);
+    minBlobSizeParam << new core::param::IntParam(100, 0, 1000);
     minBlobSizeParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     minBlobSizeParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&minBlobSizeParam);
