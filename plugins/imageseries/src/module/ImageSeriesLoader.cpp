@@ -159,7 +159,7 @@ void ImageSeriesLoader::updateMetadata() {
         if (auto image = loadImageFile(path)) {
             metadata.width = image->Width();
             metadata.height = image->Height();
-			break;
+            break;
         }
     }
 }
