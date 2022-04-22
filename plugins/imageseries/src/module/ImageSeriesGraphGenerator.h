@@ -81,6 +81,8 @@ private:
     core::CallerSlot getInputCaller;
     core::CallerSlot getLabelsCaller;
 
+    core::param::ParamSlot flowFrontParam;
+
     AsyncImageData2D::Hash labelHash = 0;
     AsyncImageData2D::Hash valueHash = 0;
 

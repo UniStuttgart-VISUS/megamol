@@ -19,13 +19,19 @@ namespace megamol::ImageSeries {
 ImageSeriesGraphGenerator::ImageSeriesGraphGenerator()
         : getDataCallee("getData", "Returns the resulting graph.")
         , getInputCaller("requestInputImageSeries", "Requests gray value data from an image series.")
-        , getLabelsCaller("requestLabelImageSeries", "Requests label data from an image series.") {
+        , getLabelsCaller("requestLabelImageSeries", "Requests label data from an image series.")
+        , flowFrontParam("Flow front mode", "Checks the flow front label type to establish connections.") {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
 
     getLabelsCaller.SetCompatibleCall<typename ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getLabelsCaller);
+
+    flowFrontParam << new core::param::BoolParam(0);
+    flowFrontParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
+    flowFrontParam.SetUpdateCallback(&ImageSeriesGraphGenerator::filterParametersChangedCallback);
+    MakeSlotAvailable(&flowFrontParam);
 
     getDataCallee.SetCallback(GraphData2DCall::ClassName(), GraphData2DCall::FunctionName(GraphData2DCall::CallGetData),
         &ImageSeriesGraphGenerator::getDataCallback);
@@ -61,6 +67,7 @@ bool ImageSeriesGraphGenerator::getDataCallback(core::Call& caller) {
         // Init graph builder if necessary
         if (asyncGraph == nullptr && initInput.imageData && initLabel.imageData) {
             graphBuilder = std::make_shared<blob::BlobGraphBuilder>();
+            graphBuilder->setFlowFrontMode(flowFrontParam.Param<core::param::BoolParam>()->Value());
 
             // TODO don't push frames all at once to avoid overloading work queue
             for (std::size_t i = 0; i < initInput.imageCount; ++i) {

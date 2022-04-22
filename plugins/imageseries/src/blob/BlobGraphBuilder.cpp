@@ -4,6 +4,10 @@ namespace megamol::ImageSeries::blob {
 
 BlobGraphBuilder::BlobGraphBuilder() {}
 
+void BlobGraphBuilder::setFlowFrontMode(bool flowFrontMode) {
+    this->flowFrontMode = flowFrontMode;
+}
+
 void BlobGraphBuilder::addFrame(AsyncImagePtr labels, AsyncImagePtr values) {
     auto pending = std::make_shared<PendingFrame>();
     pending->index = index++;
@@ -19,10 +23,11 @@ void BlobGraphBuilder::addFrame(AsyncImagePtr labels, AsyncImagePtr values) {
 
     if (previousLabels) {
         pending->registratorResult = std::make_shared<util::AsyncData<BlobRegistrator::Output>>(
-            [labels, prev = previousLabels]() {
+            [labels, prev = previousLabels, flowFrontMode = this->flowFrontMode]() {
                 BlobRegistrator::Input input;
                 input.image = labels;
                 input.predecessor = prev;
+                input.flowFrontMode = flowFrontMode;
                 return std::make_shared<BlobRegistrator::Output>(BlobRegistrator().apply(input));
             },
             0);

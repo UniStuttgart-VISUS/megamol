@@ -68,6 +68,9 @@ public:
         // If false, applies the mask after labeling (labels take priority).
         // If true, applies the mask before labeling (mask takes priority).
         bool maskPriority = false;
+
+        // If true, marks active pixels from the predecessor + current frames with the "small blob" label.
+        bool markPrevious = true;
     };
 
     BlobLabelFilter(Input input);

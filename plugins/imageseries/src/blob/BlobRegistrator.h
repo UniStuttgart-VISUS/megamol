@@ -18,6 +18,7 @@ public:
     struct Input {
         AsyncImagePtr image;
         AsyncImagePtr predecessor;
+        bool flowFrontMode = false;
     };
 
     struct Output {

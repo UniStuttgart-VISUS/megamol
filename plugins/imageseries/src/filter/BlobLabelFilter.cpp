@@ -54,22 +54,13 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     std::int32_t threshold = input.threshold * 255;
 
     // Apply mask, if available
-    if (mask) {
-        // TODO separate mask threshold/negation option?
+    if (mask && input.maskPriority) {
+        // Mask has priority: override pixels unconditionally
         const auto* maskIn = mask->PeekDataAs<std::uint8_t>();
-        if (input.maskPriority) {
-            // Mask has priority: override pixels unconditionally
-            for (Index i = 0; i < size; ++i) {
-                dataOut[i] = (maskIn[i] < threshold) != input.negateMask ? LabelMask : LabelBackground;
-            }
-        } else {
-            // Mask does not have priority: only override pixels that don't meet the threshold
-            for (Index i = 0; i < size; ++i) {
-                dataOut[i] =
-                    (maskIn[i] < threshold) != input.negateMask && (dataIn[i] < threshold) == input.negateThreshold
-                        ? LabelMask
-                        : LabelBackground;
-            }
+
+        // TODO separate mask threshold/negation option?
+        for (Index i = 0; i < size; ++i) {
+            dataOut[i] = (maskIn[i] < threshold) != input.negateMask ? LabelMask : LabelBackground;
         }
     }
 
@@ -111,7 +102,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         Index queueIndex = 0;
 
         // Try to collect at least MinBlobSize connected pixels
-        while (queueIndex < pendingPixels.size() && pendingPixels.size() < input.minBlobSize) {
+        while (queueIndex < pendingPixels.size()) {
             Index index = pendingPixels[queueIndex++];
 
             // Pixel is not on the right boundary
@@ -130,10 +121,15 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
             if (index >= width) {
                 markMinimal(index - width);
             }
+
+            // Pixel threshold met
+            if ((pendingPixels.size() + pendingFlow.size()) >= input.minBlobSize) {
+                return true;
+            }
         }
 
-        // Minimal stage complete: return true if minimum blob size condition was met
-        return pendingPixels.size() >= input.minBlobSize;
+        // Not enough pixels
+        return false;
     };
 
     auto mark = [&](Index index) {
@@ -204,6 +200,27 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         // Found a possible seed point: start flood filling!
         if (testPixel(i) && !testPrev(i)) {
             fill(i);
+        }
+    }
+
+    // Mask does not have priority: override pixels only if they haven't been otherwise colored yet
+    if (mask && !input.maskPriority) {
+        const auto* maskIn = mask->PeekDataAs<std::uint8_t>();
+
+        // TODO separate mask threshold/negation option?
+        for (Index i = 0; i < size; ++i) {
+            if (dataOut[i] == LabelBackground && (maskIn[i] < threshold) != input.negateMask) {
+                dataOut[i] = LabelMask;
+            }
+        }
+    }
+
+    // Mark pixels from previous frames
+    if (input.markPrevious && prev) {
+        for (Index i = 0; i < size; ++i) {
+            if (testPixel(i) && testPrev(i)) {
+                dataOut[i] = LabelMinimal;
+            }
         }
     }
 

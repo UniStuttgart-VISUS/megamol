@@ -19,6 +19,7 @@ public:
     BlobGraphBuilder();
 
     // TODO add timestamp
+    void setFlowFrontMode(bool flowFrontMode);
     void addFrame(AsyncImagePtr labels, AsyncImagePtr values);
     std::shared_ptr<const graph::AsyncGraphData2D> finalize();
 
@@ -40,6 +41,8 @@ private:
     std::size_t index = 0;
     bool finalized = false;
     std::atomic_int pendingFrameCount = ATOMIC_VAR_INIT(0);
+
+    bool flowFrontMode = false;
 
     AsyncImagePtr previousLabels;
     std::shared_ptr<util::AsyncData<PartialResult>> partialResult;

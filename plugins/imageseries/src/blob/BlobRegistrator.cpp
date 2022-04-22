@@ -52,8 +52,32 @@ BlobRegistrator::Output BlobRegistrator::apply(Input input) {
     const auto* curIn = image->PeekDataAs<std::uint8_t>();
     std::size_t size = image->Width() * image->Height();
 
-    for (std::size_t i = 0; i < size; ++i) {
-        addLink(preIn[i], curIn[i]);
+    if (input.flowFrontMode) {
+        std::size_t width = image->Width();
+
+        // Flow front mode: look for adjacent overlap around flow labels
+        for (std::size_t i = 0; i < size; ++i) {
+            if (curIn[i] == filter::BlobLabelFilter::LabelFlow) {
+                auto preLabel = preIn[i];
+                if (i % width < width - 1) {
+                    addLink(preLabel, curIn[i + 1]);
+                }
+                if (i % width > 0) {
+                    addLink(preLabel, curIn[i - 1]);
+                }
+                if (i < size - width) {
+                    addLink(preLabel, curIn[i + width]);
+                }
+                if (i >= width) {
+                    addLink(preLabel, curIn[i - width]);
+                }
+            }
+        }
+    } else {
+        // Basic label mode: look for direct overlap
+        for (std::size_t i = 0; i < size; ++i) {
+            addLink(preIn[i], curIn[i]);
+        }
     }
 
     return out;
