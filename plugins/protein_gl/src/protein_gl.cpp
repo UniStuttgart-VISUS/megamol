@@ -20,6 +20,7 @@
 
 // 2D renderers
 #include "DiagramRenderer.h"
+#include "RamachandranPlot.h"
 #include "SequenceRenderer.h"
 #include "SplitMergeRenderer.h"
 
@@ -53,6 +54,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::GLSLVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::DiagramRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SplitMergeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::RamachandranPlot>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VariantMatchRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
