@@ -32,7 +32,7 @@ OverlayRenderer::OverlayRenderer()
         : view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
         , megamol::core_gl::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
-        , paramAnchor("anchor", "Anchor of overlay.")
+        , paramAnchor("anchor", "Anchor of overlay. NOTE: Hide GUI menu to see overlay anchored on the top.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
         , paramFileName("texture::file_name", "The file name of the texture.")
         , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
@@ -629,7 +629,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
 
     switch (anchor) {
     case (Anchor::ALIGN_LEFT_TOP): {
-        y -= size;
+        // y -= size;
     } break;
     case (Anchor::ALIGN_LEFT_MIDDLE): {
         y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
