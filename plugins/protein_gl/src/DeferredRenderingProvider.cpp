@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "DeferredRenderingProvider.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"

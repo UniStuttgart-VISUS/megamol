@@ -10,7 +10,6 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "DeferredRenderingProvider.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
@@ -22,6 +21,7 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"

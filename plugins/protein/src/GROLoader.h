@@ -18,7 +18,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/sys/RunnableThread.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "protein/ForceDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
