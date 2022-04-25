@@ -32,3 +32,6 @@ utils/MMPLD/SphereTest.bat
 # Individual developer settings for local machines
 mmprjs/**/*
 *.orig
+
+# Intermediate python files
+**/__pycache__/
