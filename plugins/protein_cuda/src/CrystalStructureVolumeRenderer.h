@@ -11,9 +11,9 @@
 #define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 
 #include "CUDACurl.cuh"
-#include "CUDAMarchingCubes.h"
 #include "UniGrid3D.h"
 #include "protein_calls/CrystalStructureDataCall.h"
+#include "quicksurf/CUDAMarchingCubes.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"

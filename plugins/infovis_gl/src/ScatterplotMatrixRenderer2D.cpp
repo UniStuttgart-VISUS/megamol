@@ -377,8 +377,14 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 }
 
 bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
+    // mouseCoordsToWorld requires a valid camera and currentCamera is initialized on first render. Before anything is
+    // draw, interaction probably is not needed anyway, but this event could be triggered independently.
+    if (!currentCamera.has_value()) {
+        return false;
+    }
 
-    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, currentCamera, currentViewRes.x, currentViewRes.y);
+    auto const& [world_x, world_y] =
+        mouseCoordsToWorld(x, y, currentCamera.value(), currentViewRes.x, currentViewRes.y);
     this->mouse.x = world_x;
     this->mouse.y = world_y;
 
@@ -395,8 +401,8 @@ bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
         // get camera
         currentCamera = call.GetCamera();
-        auto view = currentCamera.getViewMatrix();
-        auto proj = currentCamera.getProjectionMatrix();
+        auto view = currentCamera.value().getViewMatrix();
+        auto proj = currentCamera.value().getProjectionMatrix();
         glm::mat4 ortho = proj * view;
         currentViewRes = call.GetViewResolution();
 
@@ -943,7 +949,7 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
 }
 
 void ScatterplotMatrixRenderer2D::drawPointTriangleSprites() {
-    if (this->screenValid) {
+    if (this->screenValid || !currentCamera.has_value()) {
         return;
     }
 
@@ -955,7 +961,7 @@ void ScatterplotMatrixRenderer2D::drawPointTriangleSprites() {
     this->bindMappingUniforms(this->pointTriangleSpriteShader);
 
     // Transformation uniforms.
-    auto ortho_params = currentCamera.get<core::view::Camera::OrthographicParameters>();
+    auto ortho_params = currentCamera.value().get<core::view::Camera::OrthographicParameters>();
     glm::vec2 frustrumSize =
         glm::vec2(ortho_params.frustrum_height * ortho_params.aspect, ortho_params.frustrum_height);
     glUniform2fv(this->pointTriangleSpriteShader->getUniformLocation("frustrumSize"), 1, glm::value_ptr(frustrumSize));
