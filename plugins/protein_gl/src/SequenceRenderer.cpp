@@ -181,6 +181,20 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
     if (!(*mol)(MolecularDataCall::CallForGetData))
         return false;
 
+    auto proj = call.GetCamera().getProjectionMatrix();
+    auto view = call.GetCamera().getViewMatrix();
+
+    glDisable(GL_DEPTH_TEST);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(proj));
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(view));
+
 
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
     if (this->resSelectionCall != NULL) {
@@ -439,6 +453,11 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnable(GL_DEPTH_TEST);
 
     } // dataPrepared
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 
     return true;
 }
