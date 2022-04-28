@@ -105,6 +105,8 @@ private:
         ELLIPSOID = 1,
         ARROW = 2,
         SUPERQUADRIC = 3,
+        GIZMO_ARROWGLYPH = 4,
+        GIZMO_LINE = 5,
     };
 
     enum GlyphOptions {
@@ -120,6 +122,8 @@ private:
     vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
     vislib_gl::graphics::gl::GLSLShader m_arrow_shader;
     vislib_gl::graphics::gl::GLSLShader m_superquadric_shader;
+    vislib_gl::graphics::gl::GLSLShader m_gizmo_arrowglyph_shader;
+    vislib_gl::graphics::gl::GLSLShader m_gizmo_line_shader;
 
     std::vector<core::utility::SSBOBufferArray> m_position_buffers;
     std::vector<core::utility::SSBOBufferArray> m_radius_buffers;

@@ -69,6 +69,8 @@ GlyphRenderer::GlyphRenderer(void)
     gp->SetTypePair(Glyph::ELLIPSOID, "Ellipsoid");
     gp->SetTypePair(Glyph::ARROW, "Arrow");
     gp->SetTypePair(Glyph::SUPERQUADRIC, "Superquadric");
+    gp->SetTypePair(Glyph::GIZMO_ARROWGLYPH, "Gizmo");
+    gp->SetTypePair(Glyph::GIZMO_LINE, "Line");
     this->m_glyph_param << gp;
     this->MakeSlotAvailable(&this->m_glyph_param);
 
@@ -122,6 +124,8 @@ bool GlyphRenderer::create(void) {
     ret_val = ret_val && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->m_ellipsoid_shader);
     ret_val = ret_val && this->makeShader("glyph::arrow_vertex", "glyph::arrow_fragment", this->m_arrow_shader);
     ret_val = ret_val && this->makeShader("glyph::superquadric_vertex", "glyph::superquadric_fragment", this->m_superquadric_shader);
+    ret_val = ret_val && this->makeShader("glyph::gizmo_arrowglyph_vertex", "glyph::gizmo_arrowglyph_fragment", this->m_gizmo_arrowglyph_shader);
+    ret_val = ret_val && this->makeShader("glyph::gizmo_line_vertex", "glyph::gizmo_line_fragment", this->m_gizmo_line_shader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->m_grey_tf);
@@ -192,12 +196,16 @@ bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     return true;
 }
+
 void GlyphRenderer::release(void) {
     // TODO: maybe use smart_ptr instead
+    // TODO: replace old shaderfactory with new sf
     this->m_box_shader.Release();
     this->m_ellipsoid_shader.Release();
     this->m_arrow_shader.Release();
     this->m_superquadric_shader.Release();
+    this->m_gizmo_arrowglyph_shader.Release();
+    this->m_gizmo_line_shader.Release();
     glDeleteTextures(1, &this->m_grey_tf);
 }
 
@@ -405,6 +413,16 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(true);
         break;
+    case Glyph::GIZMO_ARROWGLYPH:
+        shader = &this->m_gizmo_arrowglyph_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        break;
+    case Glyph::GIZMO_LINE:
+        shader = &this->m_gizmo_line_shader;
+        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        break;
     default:;
         shader = &this->m_ellipsoid_shader;
     }
@@ -598,6 +616,12 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 break;
             case Glyph::SUPERQUADRIC:
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
+                break;
+            case Glyph::GIZMO_ARROWGLYPH:
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
+                break;
+            case Glyph::GIZMO_LINE:
+                glDrawArraysInstanced(GL_LINES, 0, 2, static_cast<GLsizei>(actual_items) * 3);
                 break;
             default:;
             }

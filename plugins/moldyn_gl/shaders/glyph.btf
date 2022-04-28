@@ -91,4 +91,47 @@
         <snippet type="file">glyph/options.glsl</snippet>
         <snippet type="file">glyph/superquadric.frag</snippet>
     </shader>
+
+    <!--GIZMO_[ARROWGLYPH | LINE] SHADERS-->
+    <shader name="gizmo_arrowglyph_vertex">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/ssbo_data.glsl</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet type="file">glyph/flags.glsl</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
+        <snippet type="file">glyph/cube_geometry.glsl</snippet>
+        <snippet type="file">glyph/compute_color.glsl</snippet>
+        <snippet type="file">glyph/gizmo_arrowglyph.vert</snippet>
+    </shader>
+
+    <shader name="gizmo_arrowglyph_fragment">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/gizmo_arrowglyph.frag</snippet>
+    </shader>
+
+    <shader name="gizmo_line_vertex">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/ssbo_data.glsl</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet type="file">glyph/flags.glsl</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
+        <snippet type="file">glyph/cube_geometry.glsl</snippet>
+        <snippet type="file">glyph/compute_color.glsl</snippet>
+        <snippet type="file">glyph/gizmo_line.vert</snippet>
+    </shader>
+
+    <shader name="gizmo_line_fragment">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/gizmo_line.frag</snippet>
+    </shader>
 </btf>
