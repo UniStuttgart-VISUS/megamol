@@ -17,6 +17,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
@@ -77,24 +78,14 @@ bool VariantMatchRenderer::create(void) {
         return false;
     }
 
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
-        return false;
-    }
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-
-    if (!isExtAvailable("GL_ARB_texture_non_power_of_two")) {
-        return false;
-    }
-
     // Try to load the ssao shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix vertex shader source", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragment", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix fragment shader source", this->ClassName());
         return false;
@@ -109,12 +100,12 @@ bool VariantMatchRenderer::create(void) {
     }
 
     // Try to load the ssao shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
+    if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix vertex shader source", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
+    if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix fragment shader source", this->ClassName());
         return false;

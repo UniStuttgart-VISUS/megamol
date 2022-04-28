@@ -8,7 +8,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
 
@@ -17,7 +16,7 @@ namespace core {
 namespace view {
 namespace light {
 
-class MEGAMOLCORE_API AbstractLight : public core::Module {
+class AbstractLight : public core::Module {
 protected:
     /** Ctor. */
     AbstractLight(void);

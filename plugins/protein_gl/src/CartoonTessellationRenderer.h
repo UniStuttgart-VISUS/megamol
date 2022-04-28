@@ -10,13 +10,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "DeferredRenderingProvider.h"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 #include <map>
 #include <utility>
 
@@ -55,7 +55,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        return isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 3);
+        return true;
     }
 
     /** Ctor. */
@@ -161,6 +161,6 @@ private:
 };
 
 } // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol
 
 #endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */

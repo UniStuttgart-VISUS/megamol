@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
+#pragma once
 
 #include "BaseHistogramRenderer2D.h"
 
@@ -77,5 +76,3 @@ private:
 };
 
 } // namespace megamol::infovis_gl
-
-#endif // MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED

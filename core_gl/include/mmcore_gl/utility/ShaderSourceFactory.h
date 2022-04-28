@@ -11,8 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/Configuration.h"
 #include "mmcore_gl/utility/BTFParser.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
@@ -31,7 +29,7 @@ namespace utility {
  * similar to slots in the view graph. The first namespace identifies the
  * btf file name and must not be omitted in the function calls.
  */
-class MEGAMOLCORE_API ShaderSourceFactory {
+class ShaderSourceFactory {
 public:
     /** The btf parser has access to the internal data structure */
     friend class BTFParser;

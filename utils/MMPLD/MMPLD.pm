@@ -8,7 +8,7 @@ use Readonly;
 use POSIX;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT $COLOR_RGBA_USHORT $COLOR_INTENSITY_DOUBLE);
+our @EXPORT = qw( $VERTEX_XYZ_FLOAT $VERTEX_XYZR_FLOAT $VERTEX_XYZ_DOUBLE $COLOR_NONE $COLOR_INTENSITY_FLOAT $COLOR_RGBA_BYTE $COLOR_RGB_FLOAT $COLOR_RGBA_FLOAT $COLOR_RGBA_USHORT $COLOR_INTENSITY_DOUBLE @VERTEX_FORMAT_NAMES @COLOR_FORMAT_NAMES );
 
 Readonly my $NOTHINGGOES => 0;
 Readonly my $CANADDFRAME => 1;
@@ -21,6 +21,8 @@ Readonly our $VERTEX_XYZ_FLOAT => 0;
 Readonly our $VERTEX_XYZR_FLOAT => 1;
 Readonly our $VERTEX_XYZ_DOUBLE => 2;
 
+Readonly our @VERTEX_FORMAT_NAMES => ("xyz_float", "xyzr_float", "xyz_double");
+
 Readonly our $COLOR_NONE => 0;
 Readonly our $COLOR_INTENSITY_FLOAT => 1;
 Readonly our $COLOR_RGBA_BYTE => 2;
@@ -28,6 +30,8 @@ Readonly our $COLOR_RGB_FLOAT => 3;
 Readonly our $COLOR_RGBA_FLOAT => 4;
 Readonly our $COLOR_RGBA_USHORT => 5;
 Readonly our $COLOR_INTENSITY_DOUBLE => 6;
+
+Readonly our @COLOR_FORMAT_NAMES => ("none", "int_float", "rgba_byte", "rgb_float", "rgba_float", "rgba_ushort", "int_double");
 
 sub _closeAndDie {
     my $self = shift;

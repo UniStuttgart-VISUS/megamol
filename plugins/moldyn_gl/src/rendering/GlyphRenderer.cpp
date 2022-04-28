@@ -16,7 +16,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "stdafx.h"
@@ -466,7 +466,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
         // TODO HAZARD BUG this is not in sync with the buffer arrays for all other attributes and a design flaw of the
         // flag storage!!!!
-        flags->flags->bind(4);
+        flags->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 4);
         //glBindBufferRange(
         //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }

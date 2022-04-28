@@ -76,7 +76,6 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     using geocalls::MultiParticleDataCall;
 
-    // TODO BUG no proper dirty checking and no own hash. In practice this will blow up on several occasions!
     bool overrideAll = this->overrideAllListSlot.Param<core::param::BoolParam>()->Value();
     int listId = this->overrideListSlot.Param<core::param::IntParam>()->Value();
     bool overrideRadius = this->overrideRadiusSlot.Param<core::param::BoolParam>()->Value();
@@ -95,6 +94,12 @@ bool datatools::OverrideParticleGlobals::manipulateData(
 
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
+
+    if (anythingDirty()) {
+        myHash++;
+        resetAllDirty();
+    }
+    outData.SetDataHash(myHash);
 
     if (!overrideColor && !overrideRadius && !overrideInt)
         return true;
@@ -127,4 +132,23 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     }
 
     return true;
+}
+
+bool megamol::datatools::OverrideParticleGlobals::anythingDirty() {
+    return this->overrideAllListSlot.IsDirty() || this->overrideListSlot.IsDirty() ||
+           this->overrideRadiusSlot.IsDirty() || this->radiusSlot.IsDirty() || this->overrideColorSlot.IsDirty() ||
+           this->minIntSlot.IsDirty() || this->maxIntSlot.IsDirty() || this->overrideIntensityRangeSlot.IsDirty() ||
+           this->colorSlot.IsDirty();
+}
+
+void megamol::datatools::OverrideParticleGlobals::resetAllDirty() {
+    this->overrideAllListSlot.ResetDirty();
+    this->overrideListSlot.ResetDirty();
+    this->overrideRadiusSlot.ResetDirty();
+    this->radiusSlot.ResetDirty();
+    this->overrideColorSlot.ResetDirty();
+    this->minIntSlot.ResetDirty();
+    this->maxIntSlot.ResetDirty();
+    this->overrideIntensityRangeSlot.ResetDirty();
+    this->colorSlot.ResetDirty();
 }

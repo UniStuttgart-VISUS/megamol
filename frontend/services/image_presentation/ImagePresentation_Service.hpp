@@ -101,10 +101,19 @@ private:
     using EntryPoint = frontend_resources::EntryPoint;
     std::list<EntryPoint> m_entry_points;
 
-    bool add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point);
-    bool remove_entry_point(std::string name);
-    bool rename_entry_point(std::string oldName, std::string newName);
+    bool add_entry_point(std::string const& name, EntryPointRenderFunctions const& entry_point);
+    bool set_entry_point_priority(std::string const& name, const int priority);
+    bool remove_entry_point(std::string const& name);
+    bool rename_entry_point(std::string const& oldName, std::string const& newName);
     bool clear_entry_points();
+
+    void subscribe_to_entry_point_changes(
+        frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber);
+    bool tell_subscribers(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event,
+        std::vector<std::any> const& args);
+    std::list<frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> m_entry_point_subscribers;
+
+    frontend_resources::optional<EntryPoint> get_entry_point(std::string const& name);
 
     std::list<ImagePresentationSink> m_presentation_sinks;
 

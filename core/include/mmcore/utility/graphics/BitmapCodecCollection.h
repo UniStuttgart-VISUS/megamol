@@ -15,8 +15,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
@@ -34,7 +32,7 @@ namespace graphics {
  * Bitmap codec collections are used to automatically choose the codec
  * for a file to load as a BitmapImage
  */
-class MEGAMOLCORE_API BitmapCodecCollection {
+class BitmapCodecCollection {
 public:
     /** Array of codecs */
     typedef Array<SmartPtr<AbstractBitmapCodec>> CodecArray;

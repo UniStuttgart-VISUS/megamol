@@ -19,7 +19,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API TransferFunction : public Module, public AbstractTransferFunction {
+class TransferFunction : public Module, public AbstractTransferFunction {
 public:
     /**
      * Answer the name of this module.
@@ -81,6 +81,9 @@ private:
      * @return 'true' on success, 'false' otherwise.
      */
     bool requestTF(core::Call& call);
+
+    /** A flag that signals whether the tf range from the project file should be ignored */
+    bool ignore_project_range = true;
 };
 
 

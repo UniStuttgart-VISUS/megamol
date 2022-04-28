@@ -57,7 +57,7 @@ view::AbstractView::AbstractView(void)
         , _showViewCubeParam("view::showViewCube", "Shows view cube.")
         , _hooks()
         , _timeCtrl()
-        , _bkgndColSlot("backCol", "The views background colour") {
+        , _backgroundColSlot("backCol", "The views background colour") {
     // InputCall
     this->_lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
@@ -119,13 +119,14 @@ view::AbstractView::AbstractView(void)
     // this triggers the initialization
     this->_bboxs.Clear();
 
-    this->_bkgndCol[0] = 0.0f;
-    this->_bkgndCol[1] = 0.0f;
-    this->_bkgndCol[2] = 0.125f;
-    this->_bkgndCol[3] = 0.0f;
+    this->_backgroundCol[0] = 0.0f;
+    this->_backgroundCol[1] = 0.0f;
+    this->_backgroundCol[2] = 0.125f;
+    this->_backgroundCol[3] = 1.0f;
 
-    this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
-    this->MakeSlotAvailable(&this->_bkgndColSlot);
+    this->_backgroundColSlot << new param::ColorParam(
+        this->_backgroundCol[0], this->_backgroundCol[1], this->_backgroundCol[2], this->_backgroundCol[3]);
+    this->MakeSlotAvailable(&this->_backgroundColSlot);
 }
 
 
@@ -255,13 +256,13 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
 
     AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
 
-    auto bkgndCol = this->BkgndColour();
+    auto bgCol = this->BackgroundColor();
 
     if (cr == NULL) {
         return; // empty enough
     }
 
-    cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
+    cr->SetBackgroundColor(glm::vec4(bgCol[0], bgCol[1], bgCol[2], bgCol[3]));
 
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
@@ -493,19 +494,14 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
  */
 std::string view::AbstractView::determineCameraFilePath(void) const {
     std::string path;
-    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-        // new frontend
-        const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
-        if (!paths.empty()) {
-            path = paths[0];
-        } else {
-            return path;
-        }
+
+    const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
+    if (!paths.empty()) {
+        path = paths[0];
     } else {
-        path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
-        if (path.empty())
-            return path; // early exit for mmprj projects
+        return path;
     }
+
     const auto dotpos = path.find_last_of('.');
     path = path.substr(0, dotpos);
     path.append("_cam.json");
@@ -513,12 +509,13 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
 }
 
 /*
- * view::AbstractView::BkgndColour
+ * view::AbstractView::BackgroundColor
  */
-glm::vec4 view::AbstractView::BkgndColour(void) const {
-    if (this->_bkgndColSlot.IsDirty()) {
-        this->_bkgndColSlot.ResetDirty();
-        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b);
+glm::vec4 view::AbstractView::BackgroundColor() const {
+    if (this->_backgroundColSlot.IsDirty()) {
+        this->_backgroundColSlot.ResetDirty();
+        this->_backgroundColSlot.Param<param::ColorParam>()->Value(
+            this->_backgroundCol.r, this->_backgroundCol.g, this->_backgroundCol.b, this->_backgroundCol.a);
     }
-    return this->_bkgndCol;
+    return this->_backgroundCol;
 }

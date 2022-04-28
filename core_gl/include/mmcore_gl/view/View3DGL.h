@@ -19,8 +19,7 @@ namespace megamol {
 namespace core_gl {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL
-        : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
+class View3DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
 
 public:
     /**

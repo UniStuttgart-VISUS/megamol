@@ -16,8 +16,8 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 //#include "vislib_vector_typedefs.h"
 #include "VBODataCall.h"
 #include "mmcore/param/ParamSlot.h"
@@ -25,7 +25,7 @@
 namespace megamol {
 namespace protein_cuda {
 
-class SurfacePotentialRendererSlave : public core::view::Renderer3DModuleDS {
+class SurfacePotentialRendererSlave : public core_gl::view::Renderer3DModuleGL {
 
 public:
     /**
@@ -54,9 +54,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
-            return false;
-        }
         return true;
     }
 
@@ -87,7 +84,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
 
     /**
@@ -102,7 +99,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Renders the isosurface using different rendering modes and surface
@@ -126,7 +123,7 @@ private:
     core::BoundingBoxes bbox;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
 };
 
 } // namespace protein_cuda

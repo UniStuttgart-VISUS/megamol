@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/BoundingBoxes.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/math/Cuboid.h"
 
 namespace megamol {
@@ -23,7 +22,7 @@ namespace core {
  * has been removed. Therefore, the scale value is now neither necessary nor wanted.
  *
  */
-class MEGAMOLCORE_API BoundingBoxes_2 {
+class BoundingBoxes_2 {
 public:
     /**
      * Constructor

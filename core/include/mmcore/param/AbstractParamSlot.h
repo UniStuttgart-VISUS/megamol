@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/SmartPtr.h"
 
 
@@ -24,7 +23,7 @@ namespace param {
 /**
  * Abstract base class for all parameter slot classes
  */
-class MEGAMOLCORE_API AbstractParamSlot {
+class AbstractParamSlot {
 public:
     friend class AbstractParam;
 

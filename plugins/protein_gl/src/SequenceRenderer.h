@@ -206,7 +206,7 @@ private:
     // the secondary structure element type of the residue
     vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> colorTable;
+    std::vector<glm::vec3> colorTable;
 
     vislib::Array<vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>> markerTextures;
 

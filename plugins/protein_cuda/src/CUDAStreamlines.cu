@@ -7,7 +7,7 @@
 
 #include "CUDAStreamlines.h"
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"

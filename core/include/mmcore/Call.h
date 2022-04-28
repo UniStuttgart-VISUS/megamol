@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallCapabilities.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #ifdef PROFILING
 #include "PerformanceManager.h"
 #endif
@@ -36,7 +35,7 @@ class CallDescription;
 /**
  * Base class of rendering graph calls
  */
-class MEGAMOLCORE_API Call : public std::enable_shared_from_this<Call> {
+class Call : public std::enable_shared_from_this<Call> {
 public:
     /** The description generates the function map */
     friend class ::megamol::core::factories::CallDescription;

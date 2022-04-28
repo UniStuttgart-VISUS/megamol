@@ -16,6 +16,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Vector.h"
+#include <random>
 
 namespace megamol::moldyn::io {
 
@@ -93,19 +94,23 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
     auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
     auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
     frm->data = new float[8 * sphereCount];
+    std::mt19937 twister;
+    auto new_rand = [&twister]() -> int32_t { return twister() & RAND_MAX; };
+    auto new_seed = [&twister](uint32_t i) { twister.seed(i); };
     for (unsigned int i = 0; i < sphereCount; i++) {
         vislib::math::ShallowVector<float, 3> pos(&frm->data[i * 8]);
-        ::srand(i); // stablize values for particles
+        new_seed(i); // stablize values for particles
         float& r = frm->data[i * 8 + 3];
         float& cr = frm->data[i * 8 + 4];
         float& cg = frm->data[i * 8 + 5];
         float& cb = frm->data[i * 8 + 6];
         float& ca = frm->data[i * 8 + 7];
-        vislib::math::Vector<float, 3> X(static_cast<float>((::rand() % 2) * 2 - 1), 0.0f, 0.0f);
-        vislib::math::Vector<float, 3> Y(0.0f, static_cast<float>((::rand() % 2) * 2 - 1), 0.0f);
-        vislib::math::Vector<float, 3> Z(static_cast<float>(1000 - ::rand() % 2001) * 0.001f,
-            static_cast<float>(1000 - ::rand() % 2001) * 0.001f, static_cast<float>(1000 - ::rand() % 2001) * 0.001f);
-        switch (::rand() % 6) {
+        vislib::math::Vector<float, 3> X(static_cast<float>((new_rand() % 2) * 2 - 1), 0.0f, 0.0f);
+        vislib::math::Vector<float, 3> Y(0.0f, static_cast<float>((new_rand() % 2) * 2 - 1), 0.0f);
+        vislib::math::Vector<float, 3> Z(static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f);
+        switch (new_rand() % 6) {
         case 0:
             Z.SetX(1.0f);
             break;
@@ -126,10 +131,10 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
             break;
         }
         Z.Normalise();
-        vislib::math::Quaternion<float> rot(static_cast<float>((::rand() % 2) * 2 - 1) * static_cast<float>(M_PI) *
-                                                static_cast<float>(::rand() % 2000) * 0.001f,
+        vislib::math::Quaternion<float> rot(static_cast<float>((new_rand() % 2) * 2 - 1) * static_cast<float>(M_PI) *
+                                                static_cast<float>(new_rand() % 2000) * 0.001f,
             Z);
-        float dist = static_cast<float>(::rand() % 1001) * 0.001f;
+        float dist = static_cast<float>(new_rand() % 1001) * 0.001f;
         dist = ::pow(dist, 0.333f) * 0.9f;
         float a = (static_cast<float>(2 * idx) / static_cast<float>(frameCount)) * static_cast<float>(M_PI);
         X = rot * X;
@@ -140,11 +145,12 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
         pos = X;
         pos += Y;
 
-        r = 0.05f + static_cast<float>(::rand() % 501) * 0.0001f;
+        r = 0.05f + static_cast<float>(new_rand() % 501) * 0.0001f;
 
-        Z.Set(static_cast<float>(1000 - ::rand() % 2001) * 0.001f, static_cast<float>(1000 - ::rand() % 2001) * 0.001f,
-            static_cast<float>(1000 - ::rand() % 2001) * 0.001f);
-        switch (::rand() % 6) {
+        Z.Set(static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f,
+            static_cast<float>(1000 - new_rand() % 2001) * 0.001f);
+        switch (new_rand() % 6) {
         case 0:
             Z.SetX(1.0f);
             break;

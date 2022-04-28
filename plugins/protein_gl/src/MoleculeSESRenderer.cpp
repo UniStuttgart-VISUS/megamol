@@ -24,7 +24,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
@@ -55,20 +55,14 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
         , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
-        , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
         , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-        , silhouettecolorParam("silhouetteColor", "Silhouette Color: ")
-        , sigmaParam("SSAOsigma", "Sigma value for SSAO: ")
-        , lambdaParam("SSAOlambda", "Lambda value for SSAO: ")
         , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
         , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
         , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
-        , debugParam("drawRS", "Draw the Reduced Surface: ")
         , drawSESParam("drawSES", "Draw the SES: ")
         , drawSASParam("drawSAS", "Draw the SAS: ")
-        , fogstartParam("fogStart", "Fog Start: ")
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , probeRadiusSlot("probeRadius", "The probe radius for the surface computation")
@@ -93,7 +87,8 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , triaAttribTexCoord2Buffer_(nullptr)
         , triaAttribTexCoord3Buffer_(nullptr)
         , pointLightBuffer_(nullptr)
-        , directionalLightBuffer_(nullptr) {
+        , directionalLightBuffer_(nullptr)
+        , atomCount_(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -107,57 +102,23 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->epsilon = vislib::math::FLOAT_EPSILON;
     // set probe radius
     this->probeRadius = 1.4f;
-    // set transparency
-    this->transparency = 0.5f;
 
     this->probeRadiusSlot.SetParameter(new param::FloatParam(1.4f, 0.1f));
     this->MakeSlotAvailable(&this->probeRadiusSlot);
 
-    // ----- en-/disable postprocessing -----
-    this->postprocessing = NONE;
-    // this->postprocessing = AMBIENT_OCCLUSION;
-    // this->postprocessing = SILHOUETTE;
-    // this->postprocessing = TRANSPARENCY;
-    param::EnumParam* ppm = new param::EnumParam(int(this->postprocessing));
-    ppm->SetTypePair(NONE, "None");
-    ppm->SetTypePair(AMBIENT_OCCLUSION, "Screen Space Ambient Occlusion");
-    ppm->SetTypePair(SILHOUETTE, "Silhouette");
-    // ppm->SetTypePair( TRANSPARENCY, "Transparency");
-    this->postprocessingParam << ppm;
-
-    // ----- set the default color for the silhouette -----
-    this->SetSilhouetteColor(1.0f, 1.0f, 1.0f);
-    param::IntParam* sc = new param::IntParam(this->codedSilhouetteColor, 0, 255255255);
-    this->silhouettecolorParam << sc;
-
-    // ----- set sigma for screen space ambient occlusion (SSAO) -----
-    this->sigma = 5.0f;
-    param::FloatParam* ssaos = new param::FloatParam(this->sigma);
-    this->sigmaParam << ssaos;
-
-    // ----- set lambda for screen space ambient occlusion (SSAO) -----
-    this->lambda = 10.0f;
-    param::FloatParam* ssaol = new param::FloatParam(this->lambda);
-    this->lambdaParam << ssaol;
-
-    // ----- set start value for fogging -----
-    this->fogStart = 0.5f;
-    param::FloatParam* fs = new param::FloatParam(this->fogStart, 0.0f);
-    this->fogstartParam << fs;
-
     // coloring modes
-    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
-    this->currentColoringMode1 = Color::ColoringMode::ELEMENT;
+    this->currentColoringMode0 = ProteinColor::ColoringMode::CHAIN;
+    this->currentColoringMode1 = ProteinColor::ColoringMode::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<uint32_t>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -182,11 +143,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
-    // ----- draw RS param -----
-    this->drawRS = false;
-    param::BoolParam* bpm = new param::BoolParam(this->drawRS);
-    this->debugParam << bpm;
-
     // ----- draw SES param -----
     this->drawSES = true;
     param::BoolParam* sespm = new param::BoolParam(this->drawSES);
@@ -204,23 +160,14 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
-    // set the FBOs and textures for post processing
-    this->colorFBO = 0;
-    this->blendFBO = 0;
-    this->horizontalFilterFBO = 0;
-    this->verticalFilterFBO = 0;
-    this->texture0 = 0;
-    this->depthTex0 = 0;
-    this->hFilter = 0;
-    this->vFilter = 0;
     // width and height of the screen
     this->width = 0;
     this->height = 0;
@@ -233,14 +180,13 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->preComputationDone = false;
 
     // export parameters
-    this->MakeSlotAvailable(&this->postprocessingParam);
-    this->MakeSlotAvailable(&this->silhouettecolorParam);
-    this->MakeSlotAvailable(&this->sigmaParam);
-    this->MakeSlotAvailable(&this->lambdaParam);
-    this->MakeSlotAvailable(&this->fogstartParam);
-    this->MakeSlotAvailable(&this->debugParam);
     this->MakeSlotAvailable(&this->drawSESParam);
     this->MakeSlotAvailable(&this->drawSASParam);
+
+    auto defparams = deferredProvider_.getUsedParamSlots();
+    for (const auto& param : defparams) {
+        this->MakeSlotAvailable(param);
+    }
 }
 
 
@@ -248,30 +194,9 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
  * MoleculeSESRenderer::~MoleculeSESRenderer
  */
 MoleculeSESRenderer::~MoleculeSESRenderer(void) {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
-    // release
-    this->cylinderShader.Release();
-    this->sphereShader.Release();
-    this->sphereClipInteriorShader.Release();
-    this->lightShader.Release();
-    this->hfilterShader.Release();
-    this->vfilterShader.Release();
-    this->silhouetteShader.Release();
-    this->transparencyShader.Release();
 
     this->Release();
 }
@@ -287,11 +212,6 @@ void MoleculeSESRenderer::release(void) {}
  * MoleculeSESRenderer::create
  */
 bool MoleculeSESRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float"))
-        return false;
-
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
 
     // glEnable( GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
@@ -299,17 +219,6 @@ bool MoleculeSESRenderer::create(void) {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
-    float spec[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
-
-    using namespace vislib_gl::graphics::gl;
-
-    ShaderSource compSrc;
-    ShaderSource vertSrc;
-    ShaderSource geomSrc;
-    ShaderSource fragSrc;
 
     CoreInstance* ci = this->GetCoreInstance();
     if (!ci)
@@ -331,152 +240,13 @@ bool MoleculeSESRenderer::create(void) {
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeSESRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+            "[MoleculeSESRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
-    }
-
-    ////////////////////////////////////////////////////
-    // load the shader source for the sphere renderer //
-    ////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphereFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
-        return false;
-    }
-
-    try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    //////////////////////////////////////////////////////
-    // load the shader files for the per pixel lighting //
-    //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->lightShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // load the shader files for horizontal 1D gaussian filtering  //
-    /////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::hfilterVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for horizontal 1D gaussian filter shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::hfilterFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for horizontal 1D gaussian filter shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->hfilterShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create horizontal 1D gaussian filter shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    ///////////////////////////////////////////////////////////////
-    // load the shader files for vertical 1D gaussian filtering  //
-    ///////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::vfilterVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for vertical 1D gaussian filter shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::vfilterFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for vertical 1D gaussian filter shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->vfilterShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create vertical 1D gaussian filter shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    //////////////////////////////////////////////////////
-    // load the shader files for silhouette drawing     //
-    //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::silhouetteVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for silhouette drawing shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::silhouetteFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for silhouette drawing shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->silhouetteShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create vertical 1D gaussian filter shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    //////////////////////////////////////////////////////
-    // load the shader source for the cylinder renderer //
-    //////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for cylinder shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
+            "[MoleculeSESRenderer] Unable to compile shader: Unknown exception.");
     }
 
     // create the buffer objects
@@ -524,7 +294,7 @@ bool MoleculeSESRenderer::create(void) {
 
     torusVertexBuffer_->bind();
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     torusColorBuffer_->bind();
     glEnableVertexAttribArray(1);
@@ -593,6 +363,8 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
+    deferredProvider_.setup(this->GetCoreInstance());
+
     return true;
 }
 
@@ -611,45 +383,6 @@ bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     call.SetTimeFramesCount(mol->FrameCount());
 
     return true;
-}
-
-void MoleculeSESRenderer::UpdateLights(void) {
-    auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
-    bool lighting_available = false;
-    if (call_light != nullptr) {
-        if ((*call_light)(0)) {
-            lighting_available = true;
-        }
-    }
-
-    if (!lighting_available) {
-        pointLights_.clear();
-        directionalLights_.clear();
-    }
-
-    if (lighting_available && call_light->hasUpdate()) {
-        auto& lights = call_light->getData();
-        pointLights_.clear();
-        directionalLights_.clear();
-
-        auto point_lights = lights.get<core::view::light::PointLightType>();
-        auto directional_lights = lights.get<core::view::light::DistantLightType>();
-
-        for (auto& pl : point_lights) {
-            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
-        }
-
-        for (auto& dl : directional_lights) {
-            if (dl.eye_direction) {
-                auto cam_dir = glm::normalize(this->camera.getPose().direction);
-                directionalLights_.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
-            } else {
-                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
-            }
-        }
-    }
-    pointLightBuffer_->rebuffer(pointLights_);
-    directionalLightBuffer_->rebuffer(directionalLights_);
 }
 
 /*
@@ -671,17 +404,10 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     mvpinverse_ = glm::inverse(mvp_);
     mvptranspose_ = glm::transpose(mvp_);
 
-    std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
+    fbo_ = call.GetFramebuffer();
+    deferredProvider_.setFramebufferExtents(fbo_->getWidth(), fbo_->getHeight());
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(proj_));
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(view_));
+    std::array<int, 2> resolution = {fbo_->getWidth(), fbo_->getHeight()};
 
     float callTime = call.Time();
 
@@ -702,11 +428,17 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
         (*bs)(BindingSiteCall::CallForGetData);
     }
 
-    fbo = call.GetFramebuffer();
+    fbo_->bind();
+
+    bool externalfbo = false;
+    if (fbo_->getNumColorAttachments() == 3) {
+        externalfbo = true;
+    } else {
+        deferredProvider_.bindDeferredFramebufferToDraw();
+    }
 
     // ==================== check parameters ====================
     this->UpdateParameters(mol, bs);
-    this->UpdateLights();
 
     // ==================== Precomputations ====================
     this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
@@ -746,14 +478,16 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     if (!this->preComputationDone) {
+        this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
         // compute the color table
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable,
+            this->colorLookupTable, this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
+
         // compute the data needed for the current render mode
         this->ComputeRaycastingArrays();
         // set the precomputation of the data as done
@@ -768,72 +502,19 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
         virtualViewportChanged = true;
     }
 
-    if (this->postprocessing != NONE && virtualViewportChanged)
-        this->CreateFBO();
-
-    // ==================== Scale & Translate ====================
-
-    glPushMatrix();
-
     // ==================== Start actual rendering ====================
 
-    glDisable(GL_BLEND);
-    // glEnable( GL_NORMALIZE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
-    if (this->postprocessing == TRANSPARENCY) {
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->blendFBO);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (this->drawRS)
-            this->RenderDebugStuff(mol);
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    } else {
-        if (this->drawRS) {
-            this->RenderDebugStuff(mol);
-            // DEMO
-            glPopMatrix();
-            return true;
-        }
-    }
-
-    // start rendering to frame buffer object
-    if (this->postprocessing != NONE) {
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    // render the SES
     this->RenderSESGpuRaycasting(mol);
 
-    //////////////////////////////////
-    // apply postprocessing effects //
-    //////////////////////////////////
-    if (this->postprocessing != NONE) {
-        // stop rendering to frame buffer object
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-        if (this->postprocessing == AMBIENT_OCCLUSION)
-            this->PostprocessingSSAO();
-        else if (this->postprocessing == SILHOUETTE)
-            this->PostprocessingSilhouette();
-        else if (this->postprocessing == TRANSPARENCY)
-            this->PostprocessingTransparency(0.5f);
+    if (externalfbo) {
+        fbo_->bind();
+    } else {
+        deferredProvider_.resetToPreviousFramebuffer();
+        deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>());
     }
-
-    glPopMatrix();
 
     // unlock the current frame
     mol->Unlock();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glLoadIdentity();
 
     return true;
 }
@@ -845,50 +526,33 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
 void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const BindingSiteCall* bs) {
     // variables
     bool recomputeColors = false;
-    // ==================== check parameters ====================
-    if (this->postprocessingParam.IsDirty()) {
-        this->postprocessing =
-            static_cast<PostprocessingMode>(this->postprocessingParam.Param<param::EnumParam>()->Value());
-        this->postprocessingParam.ResetDirty();
+
+    if (atomCount_ != mol->AtomCount()) {
+        atomCount_ = mol->AtomCount();
+        reducedSurface.clear();
+        this->preComputationDone = false;
     }
+
+    // ==================== check parameters ====================
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
+            static_cast<ProteinColor::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
 
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+        this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable,
+            this->colorLookupTable, this->fileLookupTable, this->rainbowColors, nullptr, nullptr, true);
 
         this->preComputationDone = false;
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
-    }
-    if (this->silhouettecolorParam.IsDirty()) {
-        this->SetSilhouetteColor(this->DecodeColor(this->silhouettecolorParam.Param<param::IntParam>()->Value()));
-        this->silhouettecolorParam.ResetDirty();
-    }
-    if (this->sigmaParam.IsDirty()) {
-        this->sigma = this->sigmaParam.Param<param::FloatParam>()->Value();
-        this->sigmaParam.ResetDirty();
-    }
-    if (this->lambdaParam.IsDirty()) {
-        this->lambda = this->lambdaParam.Param<param::FloatParam>()->Value();
-        this->lambdaParam.ResetDirty();
-    }
-    if (this->fogstartParam.IsDirty()) {
-        this->fogStart = this->fogstartParam.Param<param::FloatParam>()->Value();
-        this->fogstartParam.ResetDirty();
-    }
-    if (this->debugParam.IsDirty()) {
-        this->drawRS = this->debugParam.Param<param::BoolParam>()->Value();
-        this->debugParam.ResetDirty();
     }
     if (this->drawSESParam.IsDirty()) {
         this->drawSES = this->drawSESParam.Param<param::BoolParam>()->Value();
@@ -906,8 +570,8 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     }
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;
     }
@@ -924,306 +588,16 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
 }
 
 /*
- * postprocessing: use screen space ambient occlusion
- */
-void MoleculeSESRenderer::PostprocessingSSAO() {
-    // START draw overlay
-    glBindTexture(GL_TEXTURE_2D, this->depthTex0);
-    // --> this seems to be unnecessary since no mipmap but the original resolution is used
-    // glGenerateMipmapEXT( GL_TEXTURE_2D);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-    glPushAttrib(GL_LIGHTING_BIT);
-    glDisable(GL_LIGHTING);
-
-    // ----- START gaussian filtering + SSAO -----
-    // apply horizontal filter
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
-
-    this->hfilterShader.Enable();
-
-    glUniform1fARB(this->hfilterShader.ParameterLocation("sigma"), this->sigma);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    this->hfilterShader.Disable();
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-    // apply vertical filter to horizontally filtered image and compute colors
-    glBindTexture(GL_TEXTURE_2D, this->hFilter);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->texture0);
-
-    this->vfilterShader.Enable();
-
-    glUniform1iARB(this->vfilterShader.ParameterLocation("tex"), 0);
-    glUniform1iARB(this->vfilterShader.ParameterLocation("colorTex"), 1);
-    glUniform1fARB(this->vfilterShader.ParameterLocation("sigma"), this->sigma);
-    glUniform1fARB(this->vfilterShader.ParameterLocation("lambda"), this->lambda);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    this->vfilterShader.Disable();
-    // ----- END gaussian filtering + SSAO -----
-
-    glPopAttrib();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    // END draw overlay
-}
-
-
-/*
- * postprocessing: use silhouette shader
- */
-void MoleculeSESRenderer::PostprocessingSilhouette() {
-    // START draw overlay
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-    glPushAttrib(GL_LIGHTING_BIT);
-    glDisable(GL_LIGHTING);
-
-    // ----- START -----
-    glBindTexture(GL_TEXTURE_2D, this->depthTex0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->texture0);
-
-    this->silhouetteShader.Enable();
-
-    glUniform1iARB(this->silhouetteShader.ParameterLocation("tex"), 0);
-    glUniform1iARB(this->silhouetteShader.ParameterLocation("colorTex"), 1);
-    glUniform1fARB(this->silhouetteShader.ParameterLocation("difference"), 0.025f);
-    glColor4f(this->silhouetteColor.GetX(), this->silhouetteColor.GetY(), this->silhouetteColor.GetZ(), 1.0f);
-    glBegin(GL_QUADS);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    this->silhouetteShader.Disable();
-    // ----- END -----
-
-    glPopAttrib();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    // END draw overlay
-}
-
-
-/*
- * postprocessing: transparency (blend two images)
- */
-void MoleculeSESRenderer::PostprocessingTransparency(float transparency) {
-    // START draw overlay
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-    glPushAttrib(GL_LIGHTING_BIT);
-    glDisable(GL_LIGHTING);
-
-    // ----- START -----
-    glBindTexture(GL_TEXTURE_2D, this->depthTex0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->texture0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->depthTex1);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, this->texture1);
-
-    this->transparencyShader.Enable();
-
-    glUniform1iARB(this->transparencyShader.ParameterLocation("depthTex0"), 0);
-    glUniform1iARB(this->transparencyShader.ParameterLocation("colorTex0"), 1);
-    glUniform1iARB(this->transparencyShader.ParameterLocation("depthTex1"), 2);
-    glUniform1iARB(this->transparencyShader.ParameterLocation("colorTex1"), 3);
-    glUniform1fARB(this->transparencyShader.ParameterLocation("transparency"), transparency);
-    glBegin(GL_QUADS);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    this->transparencyShader.Disable();
-    // ----- END -----
-
-    glPopAttrib();
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    // END draw overlay
-}
-
-
-/*
- * Create the fbo and texture needed for offscreen rendering
- */
-void MoleculeSESRenderer::CreateFBO() {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
-    glGenFramebuffersEXT(1, &colorFBO);
-    glGenFramebuffersEXT(1, &blendFBO);
-    glGenFramebuffersEXT(1, &horizontalFilterFBO);
-    glGenFramebuffersEXT(1, &verticalFilterFBO);
-    glGenTextures(1, &texture0);
-    glGenTextures(1, &depthTex0);
-    glGenTextures(1, &texture1);
-    glGenTextures(1, &depthTex1);
-    glGenTextures(1, &hFilter);
-    glGenTextures(1, &vFilter);
-
-    // color and depth FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->colorFBO);
-    // init texture0 (color)
-    glBindTexture(GL_TEXTURE_2D, texture0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texture0, 0);
-    // init depth texture
-    glBindTexture(GL_TEXTURE_2D, depthTex0);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->width, this->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, this->depthTex0, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // color and depth FBO for blending (transparency)
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->blendFBO);
-    // init texture1 (color)
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, texture1, 0);
-    // init depth texture
-    glBindTexture(GL_TEXTURE_2D, depthTex1);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->width, this->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, this->depthTex1, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // horizontal filter FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->horizontalFilterFBO);
-    glBindTexture(GL_TEXTURE_2D, this->hFilter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, hFilter, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // vertical filter FBO
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, this->verticalFilterFBO);
-    glBindTexture(GL_TEXTURE_2D, this->vFilter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, vFilter, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-}
-
-
-/*
  * Render the molecular surface using GPU raycasting
  */
 void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     // TODO: attribute locations nicht jedes mal neu abfragen!
 
     bool virtualViewportChanged = false;
-    if (static_cast<unsigned int>(fbo->getWidth()) != this->width ||
-        static_cast<unsigned int>(fbo->getHeight()) != this->height) {
-        this->width = static_cast<unsigned int>(fbo->getWidth());
-        this->height = static_cast<unsigned int>(fbo->getHeight());
+    if (static_cast<unsigned int>(fbo_->getWidth()) != this->width ||
+        static_cast<unsigned int>(fbo_->getHeight()) != this->height) {
+        this->width = static_cast<unsigned int>(fbo_->getWidth());
+        this->height = static_cast<unsigned int>(fbo_->getHeight());
         virtualViewportChanged = true;
     }
 
@@ -1231,8 +605,8 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->getWidth());
-    viewportStuff[3] = static_cast<float>(fbo->getHeight());
+    viewportStuff[2] = static_cast<float>(fbo_->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo_->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -1245,11 +619,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
     float nearplane = camera.get<core::view::Camera::NearPlane>();
     float farplane = camera.get<core::view::Camera::FarPlane>();
-
-    // get clear color (i.e. background color) for fogging
-    float* clearColor = new float[4];
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, clearColor);
-    vislib::math::Vector<float, 3> fogCol(clearColor[0], clearColor[1], clearColor[2]);
 
     unsigned int cntRS;
 
@@ -1285,9 +654,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             torusShader_->setUniform("camIn", camdir);
             torusShader_->setUniform("camRight", right);
             torusShader_->setUniform("camUp", up);
-            torusShader_->setUniform("zValues", fogStart, nearplane, farplane);
-            torusShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-            torusShader_->setUniform("alpha", this->transparency);
+            torusShader_->setUniform("zValues", nearplane, farplane);
             torusShader_->setUniform("view", view_);
             torusShader_->setUniform("proj", proj_);
             torusShader_->setUniform("viewInverse", invview_);
@@ -1338,11 +705,9 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             sphericalTriangleShader_->setUniform("camIn", camdir);
             sphericalTriangleShader_->setUniform("camRight", right);
             sphericalTriangleShader_->setUniform("camUp", up);
-            sphericalTriangleShader_->setUniform("zValues", fogStart, nearplane, farplane);
-            sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            sphericalTriangleShader_->setUniform("zValues", nearplane, farplane);
             sphericalTriangleShader_->setUniform(
                 "texOffset", 1.0f / (float)this->singTexWidth[cntRS], 1.0f / (float)this->singTexHeight[cntRS]);
-            sphericalTriangleShader_->setUniform("alpha", this->transparency);
             sphericalTriangleShader_->setUniform("view", view_);
             sphericalTriangleShader_->setUniform("proj", proj_);
             sphericalTriangleShader_->setUniform("viewInverse", invview_);
@@ -1375,9 +740,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         sphereShader_->setUniform("camIn", camdir);
         sphereShader_->setUniform("camRight", right);
         sphereShader_->setUniform("camUp", up);
-        sphereShader_->setUniform("zValues", fogStart, nearplane, farplane);
-        sphereShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-        sphereShader_->setUniform("alpha", this->transparency);
+        sphereShader_->setUniform("zValues", nearplane, farplane);
         sphereShader_->setUniform("view", view_);
         sphereShader_->setUniform("proj", proj_);
         sphereShader_->setUniform("viewInverse", invview_);
@@ -1391,120 +754,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         glUseProgram(0);
         glBindVertexArray(0);
     }
-
-    // delete pointers
-    delete[] clearColor;
 }
-
-
-/*
- * Render debug stuff
- */
-void MoleculeSESRenderer::RenderDebugStuff(const MolecularDataCall* mol) {
-    // --> USAGE: UNCOMMENT THE NEEDED PARTS
-
-    // temporary variables
-    unsigned int max1, max2;
-    max1 = max2 = 0;
-    vislib::math::Vector<float, 3> v1, v2, v3, n1;
-    v1.Set(0, 0, 0);
-    v2 = v3 = n1 = v1;
-
-    //////////////////////////////////////////////////////////////////////////
-    // Draw reduced surface
-    //////////////////////////////////////////////////////////////////////////
-    this->RenderAtomsGPU(mol, 0.2f);
-    vislib::math::Quaternion<float> quatC;
-    quatC.Set(0, 0, 0, 1);
-    vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
-    vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
-    float angle;
-    // set viewport
-    glm::vec4 viewportStuff;
-    viewportStuff[0] = 0.0f;
-    viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->getWidth());
-    viewportStuff[3] = static_cast<float>(fbo->getHeight());
-    if (viewportStuff[2] < 1.0f)
-        viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f)
-        viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
-    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
-    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
-    // enable cylinder shader
-    this->cylinderShader.Enable();
-    // set shader variables
-    glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-    // get the attribute locations
-    GLint attribLocInParams = glGetAttribLocation(this->cylinderShader, "inParams");
-    GLint attribLocQuatC = glGetAttribLocation(this->cylinderShader, "quatC");
-    GLint attribLocColor1 = glGetAttribLocation(this->cylinderShader, "color1");
-    GLint attribLocColor2 = glGetAttribLocation(this->cylinderShader, "color2");
-    glBegin(GL_POINTS);
-    max1 = (unsigned int)this->reducedSurface.size();
-    for (unsigned int cntRS = 0; cntRS < max1; ++cntRS) {
-        max2 = this->reducedSurface[cntRS]->GetRSEdgeCount();
-        for (unsigned int j = 0; j < max2; ++j) {
-            firstAtomPos = this->reducedSurface[cntRS]->GetRSEdge(j)->GetVertex1()->GetPosition();
-            secondAtomPos = this->reducedSurface[cntRS]->GetRSEdge(j)->GetVertex2()->GetPosition();
-
-            // compute the quaternion for the rotation of the cylinder
-            dir = secondAtomPos - firstAtomPos;
-            tmpVec.Set(1.0f, 0.0f, 0.0f);
-            angle = -tmpVec.Angle(dir);
-            ortho = tmpVec.Cross(dir);
-            ortho.Normalise();
-            quatC.Set(angle, ortho);
-            // compute the absolute position 'position' of the cylinder (center point)
-            position = firstAtomPos + (dir / 2.0f);
-
-            // draw vertex and attributes
-            glVertexAttrib2f(attribLocInParams, 0.12f, (firstAtomPos - secondAtomPos).Length());
-            glVertexAttrib4fv(attribLocQuatC, quatC.PeekComponents());
-            glVertexAttrib3f(attribLocColor1, 1.0f, 0.5f, 0.0f);
-            glVertexAttrib3f(attribLocColor2, 1.0f, 0.5f, 0.0f);
-            glVertex4f(position.GetX(), position.GetY(), position.GetZ(), 1.0f);
-        }
-    }
-    glEnd(); // GL_POINTS
-    // disable cylinder shader
-    this->cylinderShader.Disable();
-
-    glEnable(GL_COLOR_MATERIAL);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-    glDisable(GL_CULL_FACE);
-    this->lightShader.Enable();
-    unsigned int i;
-    for (unsigned int cntRS = 0; cntRS < max1; ++cntRS) {
-        max2 = this->reducedSurface[cntRS]->GetRSFaceCount();
-        for (i = 0; i < max2; ++i) {
-            n1 = this->reducedSurface[cntRS]->GetRSFace(i)->GetFaceNormal();
-            v1 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetPosition();
-            v2 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetPosition();
-            v3 = this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetPosition();
-
-            glBegin(GL_TRIANGLES);
-            glNormal3fv(n1.PeekComponents());
-            glColor3f(1.0f, 0.8f, 0.0f);
-            glVertex3fv(v1.PeekComponents());
-            // glColor3f( 0.0f, 0.7f, 0.7f);
-            glVertex3fv(v2.PeekComponents());
-            // glColor3f( 0.7f, 0.0f, 0.7f);
-            glVertex3fv(v3.PeekComponents());
-            glEnd(); // GL_TRIANGLES
-        }
-    }
-    this->lightShader.Disable();
-    glDisable(GL_COLOR_MATERIAL);
-}
-
 
 /*
  * Compute the vertex and attribute arrays for the raycasting shaders
@@ -1605,12 +855,12 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->sphericTriaTexCoord3[cntRS][i * 3 + 2] =
                 (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
             // colors
-            this->sphericTriaColors[cntRS][i * 3 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex() * 3]);
-            this->sphericTriaColors[cntRS][i * 3 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex() * 3]);
-            this->sphericTriaColors[cntRS][i * 3 + 2] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex() * 3]);
+            this->sphericTriaColors[cntRS][i * 3 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
+            this->sphericTriaColors[cntRS][i * 3 + 2] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
             // sphere center
             this->sphericTriaVertexArray[cntRS][i * 4 + 0] =
                 this->reducedSurface[cntRS]->GetRSFace(i)->GetProbeCenter().GetX();
@@ -1710,10 +960,10 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->torusInSphereArray[cntRS][i * 4 + 2] = C.GetZ();
             this->torusInSphereArray[cntRS][i * 4 + 3] = distance;
             // colors
-            this->torusColors[cntRS][i * 4 + 0] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex() * 3]);
-            this->torusColors[cntRS][i * 4 + 1] = CodeColor(
-                &this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex() * 3]);
+            this->torusColors[cntRS][i * 4 + 0] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
+            this->torusColors[cntRS][i * 4 + 1] =
+                CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
             this->torusColors[cntRS][i * 4 + 2] = d;
             // this->torusColors[cntRS][i*4+3] = ( X2 - X1).Length();
             this->torusColors[cntRS][i * 4 + 3] =
@@ -1753,11 +1003,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
                 continue;
             // set vertex color
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 0]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].x);
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 1]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].y);
             this->sphereColors[cntRS].Append(
-                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex() * 3 + 2]);
+                this->atomColorTable[this->reducedSurface[cntRS]->GetRSVertex(i)->GetIndex()].z);
             // set vertex position
             this->sphereVertexArray[cntRS].Append(this->reducedSurface[cntRS]->GetRSVertex(i)->GetPosition().GetX());
             this->sphereVertexArray[cntRS].Append(this->reducedSurface[cntRS]->GetRSVertex(i)->GetPosition().GetY());
@@ -1880,11 +1130,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
             (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
         // colors
         this->sphericTriaColors[idxRS][i * 3 + 0] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex1()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
         this->sphericTriaColors[idxRS][i * 3 + 1] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex2()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex2()->GetIndex()].x);
         this->sphericTriaColors[idxRS][i * 3 + 2] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex3()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex3()->GetIndex()].x);
         // sphere center
         this->sphericTriaVertexArray[idxRS][i * 4 + 0] =
             this->reducedSurface[idxRS]->GetRSFace(i)->GetProbeCenter().GetX();
@@ -1985,9 +1235,9 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
         this->torusInSphereArray[idxRS][i * 4 + 3] = distance;
         // colors
         this->torusColors[idxRS][i * 4 + 0] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex1()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex1()->GetIndex()].x);
         this->torusColors[idxRS][i * 4 + 1] =
-            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetIndex() * 3]);
+            CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetIndex()].x);
         this->torusColors[idxRS][i * 4 + 2] = d;
         this->torusColors[idxRS][i * 4 + 3] =
             (X2 + this->reducedSurface[idxRS]->GetRSEdge(i)->GetVertex2()->GetPosition() -
@@ -2019,11 +1269,11 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
             continue;
         // set vertex color
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 0]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].x);
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 1]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].y);
         this->sphereColors[idxRS].Append(
-            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex() * 3 + 2]);
+            this->atomColorTable[this->reducedSurface[idxRS]->GetRSVertex(i)->GetIndex()].z);
         // set vertex position
         this->sphereVertexArray[idxRS].Append(this->reducedSurface[idxRS]->GetRSVertex(i)->GetPosition().GetX());
         this->sphereVertexArray[idxRS].Append(this->reducedSurface[idxRS]->GetRSVertex(i)->GetPosition().GetY());
@@ -2266,169 +1516,11 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-/*
- * Render all atoms
- */
-void MoleculeSESRenderer::RenderAtomsGPU(const MolecularDataCall* mol, const float scale) {
-    unsigned int cnt, cntRS, max1, max2;
-
-    // set viewport
-    glm::vec4 viewportStuff;
-    viewportStuff[0] = 0.0f;
-    viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->getWidth());
-    viewportStuff[3] = static_cast<float>(fbo->getHeight());
-    if (viewportStuff[2] < 1.0f)
-        viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f)
-        viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
-    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
-    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
-
-    // enable sphere shader
-    this->sphereShader.Enable();
-    // set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-
-    glBegin(GL_POINTS);
-
-    glColor3f(1.0f, 0.0f, 0.0f);
-    max1 = (unsigned int)this->reducedSurface.size();
-    for (cntRS = 0; cntRS < max1; ++cntRS) {
-        max2 = this->reducedSurface[cntRS]->GetRSVertexCount();
-        // loop over all protein atoms
-        for (cnt = 0; cnt < max2; ++cnt) {
-            if (this->reducedSurface[cntRS]->GetRSVertex(cnt)->IsBuried())
-                continue;
-            // glColor3ubv( protein->AtomTypes()[protein->ProteinAtomData()[this->reducedSurface[cntRS]->GetRSVertex(
-            // cnt)->GetIndex()].TypeIndex()].Colour());
-            glColor3f(1.0f, 0.0f, 0.0f);
-            glVertex4f(this->reducedSurface[cntRS]->GetRSVertex(cnt)->GetPosition().GetX(),
-                this->reducedSurface[cntRS]->GetRSVertex(cnt)->GetPosition().GetY(),
-                this->reducedSurface[cntRS]->GetRSVertex(cnt)->GetPosition().GetZ(),
-                this->reducedSurface[cntRS]->GetRSVertex(cnt)->GetRadius() * scale);
-        }
-    }
-
-    glEnd(); // GL_POINTS
-
-    // disable sphere shader
-    this->sphereShader.Disable();
-}
-
-
-/*
- * Renders the probe at postion 'm'
- */
-/*
-void MoleculeSESRenderer::RenderProbe(const vislib::math::Vector<float, 3> m) {
-    GLUquadricObj* sphere = gluNewQuadric();
-    gluQuadricNormals(sphere, GL_SMOOTH);
-
-    this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    glPushMatrix();
-    glTranslatef(m.GetX(), m.GetY(), m.GetZ());
-    glColor4f(1.0f, 1.0f, 1.0f, 0.6f);
-    gluSphere(sphere, probeRadius, 16, 8);
-    glPopMatrix();
-
-    glDisable(GL_BLEND);
-}
-*/
-
-
-/*
- * Renders the probe at postion 'm'
- */
-void MoleculeSESRenderer::RenderProbeGPU(const vislib::math::Vector<float, 3> m) {
-    // set viewport
-    glm::vec4 viewportStuff;
-    viewportStuff[0] = 0.0f;
-    viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->getWidth());
-    viewportStuff[3] = static_cast<float>(fbo->getHeight());
-    if (viewportStuff[2] < 1.0f)
-        viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f)
-        viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
-    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
-    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
-
-    // enable sphere shader
-    this->sphereShader.Enable();
-    // set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-
-    this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
-
-    glBegin(GL_POINTS);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex4f(m.GetX(), m.GetY(), m.GetZ(), probeRadius);
-    glEnd();
-
-    // disable sphere shader
-    this->sphereShader.Disable();
-}
-
-
 /*
  * MoleculeSESRenderer::deinitialise
  */
 void MoleculeSESRenderer::deinitialise(void) {
-    if (colorFBO) {
-        glDeleteFramebuffersEXT(1, &colorFBO);
-        glDeleteFramebuffersEXT(1, &blendFBO);
-        glDeleteFramebuffersEXT(1, &horizontalFilterFBO);
-        glDeleteFramebuffersEXT(1, &verticalFilterFBO);
-        glDeleteTextures(1, &texture0);
-        glDeleteTextures(1, &depthTex0);
-        glDeleteTextures(1, &texture1);
-        glDeleteTextures(1, &depthTex1);
-        glDeleteTextures(1, &hFilter);
-        glDeleteTextures(1, &vFilter);
-    }
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
-    // release shaders
-    this->cylinderShader.Release();
-    this->sphereShader.Release();
-    this->sphereClipInteriorShader.Release();
-    this->lightShader.Release();
-    this->hfilterShader.Release();
-    this->vfilterShader.Release();
-    this->silhouetteShader.Release();
-    this->transparencyShader.Release();
-}
-
-
-/*
- * returns the color of the atom 'idx' for the current coloring mode
- */
-vislib::math::Vector<float, 3> MoleculeSESRenderer::GetProteinAtomColor(unsigned int idx) {
-    if (idx < this->atomColorTable.Count() / 3)
-        // return this->atomColorTable[idx];
-        return vislib::math::Vector<float, 3>(
-            this->atomColorTable[idx * 3 + 0], this->atomColorTable[idx * 3 + 1], this->atomColorTable[idx * 3 + 0]);
-    else
-        return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
 }

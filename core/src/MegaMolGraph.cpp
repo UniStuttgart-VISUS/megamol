@@ -600,7 +600,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }
@@ -620,7 +620,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }

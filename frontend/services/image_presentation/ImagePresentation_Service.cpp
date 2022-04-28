@@ -16,6 +16,7 @@
 
 #include "LuaCallbacksCollection.h"
 #include "RenderInput.h"
+#include "ViewRenderInputs.h"
 
 #include <any>
 #include <filesystem>
@@ -60,29 +61,46 @@ bool ImagePresentation_Service::init(void* configPtr) {
 
 bool ImagePresentation_Service::init(const Config& config) {
 
-    m_entry_points_registry_resource.add_entry_point = [&](std::string name,
+    using ev = frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent;
+
+    m_entry_points_registry_resource.add_entry_point = [&](std::string const& name,
                                                            EntryPointRenderFunctions const& entry_point) -> bool {
-        return add_entry_point(name, entry_point);
+        return add_entry_point(name, entry_point) && tell_subscribers(ev::Add, {name, entry_point});
     };
-    m_entry_points_registry_resource.remove_entry_point = [&](std::string name) -> bool {
-        return remove_entry_point(name);
+    m_entry_points_registry_resource.set_entry_point_priority =
+        [&](std::string const& name, const int priority) -> bool { return set_entry_point_priority(name, priority); };
+    m_entry_points_registry_resource.remove_entry_point = [&](std::string const& name) -> bool {
+        return remove_entry_point(name) && tell_subscribers(ev::Remove, {name});
     };
-    m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool {
-        return rename_entry_point(oldName, newName);
+    m_entry_points_registry_resource.rename_entry_point = [&](std::string const& oldName,
+                                                              std::string const& newName) -> bool {
+        return rename_entry_point(oldName, newName) && tell_subscribers(ev::Rename, {oldName, newName});
     };
-    m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
+    m_entry_points_registry_resource.clear_entry_points = [&]() {
+        clear_entry_points();
+        tell_subscribers(ev::Clear, {});
+    };
+    m_entry_points_registry_resource.subscribe_to_entry_point_changes =
+        [&](frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber) {
+            subscribe_to_entry_point_changes(subscriber);
+        };
+    m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
-    this->m_providedResourceReferences = {{"ImagePresentationEntryPoints", m_entry_points_registry_resource}
-        // used by MegaMolGraph to set entry points
-        ,
+    this->m_providedResourceReferences = {
+        {"ImagePresentationEntryPoints", m_entry_points_registry_resource}, // used by MegaMolGraph to set entry points
         {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger},
-        {"FramebufferEvents", m_global_framebuffer_events}};
+        {"FramebufferEvents", m_global_framebuffer_events},
+    };
 
-    this->m_requestedResourcesNames = {"FrontendResources" // std::vector<FrontendResource>
-        ,
-        "optional<WindowManipulation>", "FramebufferEvents", "optional<GUIState>" // TODO: unused?
-        ,
-        "RegisterLuaCallbacks", "optional<OpenGL_Context>", "ImageWrapperToPNG_ScreenshotTrigger"};
+    this->m_requestedResourcesNames = {
+        "FrontendResources", // std::vector<FrontendResource>
+        "optional<WindowManipulation>",
+        "FramebufferEvents",
+        "optional<GUIState>", // TODO: unused?
+        "RegisterLuaCallbacks",
+        "optional<OpenGL_Context>",
+        "ImageWrapperToPNG_ScreenshotTrigger",
+    };
 
     m_framebuffer_size_handler = [&]() -> UintPair {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
@@ -201,45 +219,22 @@ void ImagePresentation_Service::PresentRenderedImages() {
 }
 
 namespace {
-struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
-    static constexpr const char* Name = "ViewRenderInputs";
-
-    // individual inputs used by view for rendering of next frame
-    megamol::frontend_resources::RenderInput render_input;
-
-    // sets (local) fbo resolution of render_input from various sources
-    std::function<ImagePresentation_Service::UintPair()> render_input_framebuffer_size_handler;
-    std::function<ImagePresentation_Service::ViewportTile()> render_input_tile_handler;
-
-    void update() override {
-        auto fbo_size = render_input_framebuffer_size_handler();
-        render_input.local_view_framebuffer_resolution = {fbo_size.first, fbo_size.second};
-
-        auto tile = render_input_tile_handler();
-        render_input.global_framebuffer_resolution = {tile.global_resolution.first, tile.global_resolution.second};
-        render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
-        render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
-    }
-
-    FrontendResource get_resource() override {
-        return {Name, render_input};
-    };
-};
-#define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
-
 // this is a somewhat improvised factory to abstract away instantiation of different RenderInputUpdate types
 struct RenderInputsFactory {
     std::tuple<std::string, std::unique_ptr<frontend_resources::RenderInputsUpdate>> get(std::string const& request) {
         auto renderinputs = std::make_unique<frontend_resources::RenderInputsUpdate>();
 
-        if (request == ViewRenderInputs::Name) {
-            renderinputs = std::make_unique<ViewRenderInputs>();
+        if (request == frontend_resources::ViewRenderInputs::Name) {
+            renderinputs = std::make_unique<frontend_resources::ViewRenderInputs>();
             accessViewRenderInput(renderinputs).render_input_framebuffer_size_handler =
                 fromservice<std::function<ImagePresentation_Service::UintPair()>>(0);
-            accessViewRenderInput(renderinputs).render_input_tile_handler =
-                fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1);
+            accessViewRenderInput(renderinputs).render_input_tile_handler = [&]() {
+                auto tile = fromservice<std::function<ImagePresentation_Service::ViewportTile()>>(1)();
+                return frontend_resources::ViewportTile{
+                    tile.global_resolution, tile.tile_start_normalized, tile.tile_end_normalized};
+            };
 
-            return {ViewRenderInputs::Name, std::move(renderinputs)};
+            return {frontend_resources::ViewRenderInputs::Name, std::move(renderinputs)};
         }
     }
 
@@ -311,7 +306,7 @@ std::
     return {success, resources, std::move(unique_data)};
 }
 
-bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRenderFunctions const& entry_point) {
+bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPointRenderFunctions const& entry_point) {
     auto [module_ptr, execute_etry, entry_resource_requests] = entry_point;
 
     auto resource_requests = entry_resource_requests();
@@ -324,22 +319,45 @@ bool ImagePresentation_Service::add_entry_point(std::string name, EntryPointRend
     }
 
     m_entry_points.emplace_back(EntryPoint{
-        name, module_ptr, resources,
+        name,
+        module_ptr,
+        resources,
         std::move(unique_data), // render inputs and their update
-        execute_etry, {name}    // image
+        execute_etry,
+        {name}, // image
+        0,
     });
+
+    // ensure sorting of entry points according to priorities
+    set_entry_point_priority(name, 0);
 
     return true;
 }
 
-bool ImagePresentation_Service::remove_entry_point(std::string name) {
+bool ImagePresentation_Service::set_entry_point_priority(std::string const& name, const int priority) {
+    auto ep_it =
+        std::find_if(m_entry_points.begin(), m_entry_points.end(), [&](auto& ep) { return ep.moduleName == name; });
+
+    if (ep_it == m_entry_points.end()) {
+        log_error("could not find entry point to set priority: " + name);
+        return false;
+    }
+
+    ep_it->priority = priority;
+
+    m_entry_points.sort([](auto const& left, auto const& right) { return left.priority < right.priority; });
+
+    return true;
+}
+
+bool ImagePresentation_Service::remove_entry_point(std::string const& name) {
 
     m_entry_points.remove_if([&](auto& entry) { return entry.moduleName == name; });
 
     return true;
 }
 
-bool ImagePresentation_Service::rename_entry_point(std::string oldName, std::string newName) {
+bool ImagePresentation_Service::rename_entry_point(std::string const& oldName, std::string const& newName) {
 
     auto entry_it = std::find_if(
         m_entry_points.begin(), m_entry_points.end(), [&](auto& entry) { return entry.moduleName == oldName; });
@@ -370,6 +388,32 @@ void ImagePresentation_Service::add_glfw_sink() {
 
     m_presentation_sinks.push_back(
         {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+}
+
+void ImagePresentation_Service::subscribe_to_entry_point_changes(
+    frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber) {
+    m_entry_point_subscribers.push_back(subscriber);
+}
+
+bool ImagePresentation_Service::tell_subscribers(
+    frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event,
+    std::vector<std::any> const& args) {
+
+    for (auto& subscriber : m_entry_point_subscribers)
+        subscriber(event, args);
+
+    return true;
+}
+
+frontend_resources::optional<ImagePresentation_Service::EntryPoint> ImagePresentation_Service::get_entry_point(
+    std::string const& name) {
+    auto find =
+        std::find_if(m_entry_points.begin(), m_entry_points.end(), [&](auto& ep) { return ep.moduleName == name; });
+
+    if (find == m_entry_points.end())
+        return std::nullopt;
+
+    return std::optional{std::reference_wrapper<ImagePresentation_Service::EntryPoint>{*find}};
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {

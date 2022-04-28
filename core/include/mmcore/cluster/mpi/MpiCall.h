@@ -28,7 +28,7 @@ namespace mpi {
  * This call requests MpiProvider to initialise MPI and to return a
  * communicator that a partition of the comm world can use.
  */
-class MEGAMOLCORE_API MpiCall : public Call {
+class MpiCall : public Call {
 
 public:
     /**

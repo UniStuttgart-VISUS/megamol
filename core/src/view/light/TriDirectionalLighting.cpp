@@ -42,11 +42,11 @@ TriDirectionalLighting::TriDirectionalLighting(void)
     this->MakeSlotAvailable(&this->m_in_view_space);
 
     this->m_key_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
     this->m_fill_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
     this->m_back_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
 }
 
 /*

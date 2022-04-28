@@ -13,7 +13,6 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/BoundingBoxes.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 
@@ -24,7 +23,7 @@ namespace core {
 /**
  * Abstract base class for calls for data
  */
-class MEGAMOLCORE_API AbstractGetData3DCall : public AbstractGetDataCall {
+class AbstractGetData3DCall : public AbstractGetDataCall {
 public:
     /** Ctor. */
     AbstractGetData3DCall(void);

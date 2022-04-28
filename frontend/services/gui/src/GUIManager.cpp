@@ -97,6 +97,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.stat_averaged_ms = 0.0f;
     this->gui_state.stat_frame_count = 0;
     this->gui_state.load_docking_preset = true;
+    this->gui_state.window_alpha = 1.0f;
 }
 
 
@@ -206,6 +207,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
+        style.Colors[ImGuiCol_WindowBg].w = this->gui_state.window_alpha;
+        style.Colors[ImGuiCol_ChildBg].w = this->gui_state.window_alpha;
+
         // Set tesselation error: Smaller value => better tesselation of circles and round corners.
         style.CircleTessellationMaxError = 0.3f;
         // Scale all ImGui style options with current scaling factor
@@ -961,6 +965,20 @@ void GUIManager::draw_menu() {
             this->gui_state.load_docking_preset = true;
         }
 #endif
+
+        ImGui::Separator();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("Transparency");
+        this->tooltip.Marker("Alpha value of window background");
+        ImGui::SameLine();
+        if (ImGui::SliderFloat("###window_transparency", &this->gui_state.window_alpha, 0.0f, 1.0f, "%.2f")) {
+            ImGuiStyle& style = ImGui::GetStyle();
+            style.Colors[ImGuiCol_WindowBg].w = this->gui_state.window_alpha;
+            style.Colors[ImGuiCol_ChildBg].w = this->gui_state.window_alpha;
+            ;
+        }
+
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -986,8 +1004,8 @@ void GUIManager::draw_menu() {
 
                 bool running = graph_ptr->IsRunning();
                 std::string button_label = "graph_running_button" + label_id;
-                if (megamol::gui::ButtonWidgets::OptionButton(
-                        button_label, ((running) ? ("Running") : ("Run")), running, running)) {
+                if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, button_label,
+                        ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
                         this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
                     }
@@ -1460,6 +1478,8 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
+                megamol::core::utility::get_json_value<float>(
+                    state_str, {"global_win_background_alpha"}, &this->gui_state.window_alpha);
             }
         }
 
@@ -1490,6 +1510,7 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
+        json_state[GUI_JSON_TAG_GUI]["global_win_background_alpha"] = this->gui_state.window_alpha;
 
         // Write window configurations
         this->win_collection.StateToJSON(json_state);

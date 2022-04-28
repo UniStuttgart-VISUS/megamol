@@ -317,6 +317,7 @@ private:
         float stat_averaged_ms;               // current average fps value
         size_t stat_frame_count;              // current fame count
         bool load_docking_preset;             // Flag indicating docking preset loading
+        float window_alpha;                   // Global transparency value for window background
     };
 
     // VARIABLES --------------------------------------------------------------

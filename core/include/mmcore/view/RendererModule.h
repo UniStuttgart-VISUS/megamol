@@ -14,7 +14,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
@@ -28,7 +27,7 @@ namespace view {
  * Base class of rendering modules.
  */
 template<class C, class M>
-class MEGAMOLCORE_API RendererModule : public M, public megamol::frontend_resources::AbstractInputScope {
+class RendererModule : public M, public megamol::frontend_resources::AbstractInputScope {
 public:
     /** Ctor. */
     RendererModule()

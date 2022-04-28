@@ -54,30 +54,34 @@ bool megamol::frontend::Remote_Service::MpiNode::init(int broadcast_rank) {
     int isInitialised = 0;
     MPI_Initialized(&isInitialised);
 
+    auto& comm = mpi_comm.mpi_comm;
+    auto& comm_size = mpi_comm.mpi_comm_size;
+    auto& rank = mpi_comm.rank;
+
     if (isInitialised) {
         log_warning("MPI has already been initialised");
         return true;
     }
-    if (comm_ != MPI_COMM_NULL) {
+    if (comm != MPI_COMM_NULL) {
         log_error("MPI has not been initialised but my communicator is not MPI_COMM_NULL");
         return true;
     }
     log("Initialising MPI");
 
-    broadcast_rank_ = broadcast_rank;
-    comm_ = MPI_COMM_NULL;
-    rank_ = 0;
+    mpi_comm.broadcast_rank = broadcast_rank;
+    comm = MPI_COMM_NULL;
+    rank = 0;
 
     auto init_status = MPI_Init(NULL, NULL);
     if (init_status != MPI_SUCCESS) {
         log_error("Failed to initialize MPI");
         return false;
     }
-    comm_ = MPI_COMM_WORLD;
+    comm = MPI_COMM_WORLD;
 
     log("MPI is ready, retrieving communicator properties");
-    MPI_Comm_size(comm_, &comm_size_);
-    MPI_Comm_rank(comm_, &rank_);
+    MPI_Comm_size(comm, &comm_size);
+    MPI_Comm_rank(comm, &rank);
 
     // old colouring code
     //    /* Now, perform the node colouring and obtain the communicator. */
@@ -88,19 +92,21 @@ bool megamol::frontend::Remote_Service::MpiNode::init(int broadcast_rank) {
     //    this->comm.store(comm);
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::MpiNode on %hs is %d of %d.",
-        vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), rank_, comm_size_);
+        vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), rank, comm_size);
 
     return true;
 }
 
 bool megamol::frontend::Remote_Service::MpiNode::close() {
-    if (comm_ == MPI_COMM_NULL)
+    auto& comm = mpi_comm.mpi_comm;
+
+    if (comm == MPI_COMM_NULL)
         return true;
 
     log("Releasing MPI communicator");
-    if (comm_ != MPI_COMM_WORLD) // can not free world
-        MPI_Comm_free(&comm_);
-    comm_ = MPI_COMM_NULL;
+    if (comm != MPI_COMM_WORLD) // can not free world
+        MPI_Comm_free(&comm);
+    comm = MPI_COMM_NULL;
 
     log("Finalising MPI");
     MPI_Finalize();
@@ -109,26 +115,26 @@ bool megamol::frontend::Remote_Service::MpiNode::close() {
 }
 
 bool megamol::frontend::Remote_Service::MpiNode::get_broadcast_message(megamol::remote::Message_t& message) {
-    if (broadcast_rank_ < 0) {
-        log_error("(" + std::to_string(rank_) + ") Broadcast rank not set. Skipping.");
+    if (mpi_comm.broadcast_rank < 0) {
+        log_error("(" + std::to_string(mpi_comm.rank) + ") Broadcast rank not set. Skipping.");
         return false;
     }
 
     const auto i_broadcast = i_do_broadcast();
 
     uint64_t msg_size = (i_broadcast ? message.size() : 0);
-    MPI_Bcast(&msg_size, 1, MPI_UINT64_T, broadcast_rank_, comm_);
+    MPI_Bcast(&msg_size, 1, MPI_UINT64_T, mpi_comm.broadcast_rank, mpi_comm.mpi_comm);
 
     if (!i_broadcast)
         message.resize(msg_size);
 
-    MPI_Bcast(message.data(), msg_size, MPI_UNSIGNED_CHAR, broadcast_rank_, comm_);
+    MPI_Bcast(message.data(), msg_size, MPI_UNSIGNED_CHAR, mpi_comm.broadcast_rank, mpi_comm.mpi_comm);
 
     return true;
 }
 
 void megamol::frontend::Remote_Service::MpiNode::sync_barrier() {
-    MPI_Barrier(comm_);
+    MPI_Barrier(mpi_comm.mpi_comm);
 }
 
 #endif // WITH_MPI

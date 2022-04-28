@@ -9,6 +9,7 @@
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/ColorPalettes.h"
 
 #ifdef PROFILING
 #include "ProfilingUtils.h"
@@ -157,15 +158,33 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             this->caller_slot_name = callerslot_ptr->Name();
             this->callee_slot_name = calleeslot_ptr->Name();
 
-            // Calls lie only completely inside or outside groups
             bool hidden = false;
             bool connect_interface_slot = true;
+            size_t curve_color_index = 0;
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
+
+                // Calls lie only completely inside or outside groups
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
                     hidden = callerslot_ptr->GetParentModule()->IsHidden();
                 }
+
+                if (state.interact.call_coloring_mode == 0) {
+                    // Get curve color index depending on callee slot index
+                    for (auto cs_ptr :
+                        calleeslot_ptr->GetParentModule()->CallSlots(megamol::gui::CallSlotType::CALLEE)) {
+                        if (cs_ptr->UID() != calleeslot_ptr->UID()) {
+                            curve_color_index++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else if (state.interact.call_coloring_mode == 1) {
+                    // Get curve color index depending on calling module
+                    curve_color_index = callerslot_ptr->GetParentModule()->UID();
+                }
             }
+
             if (!hidden) {
 
                 ImVec2 caller_pos = callerslot_ptr->Position();
@@ -192,6 +211,19 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 /// COLOR_CALL_CURVE
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+                /// See ColorPalettes.h for all predefined color palettes:
+                if (state.interact.call_coloring_map == 1) {
+                    // Set3Map(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(Set3Map[(curve_color_index % map_size)][0],
+                        Set3Map[(curve_color_index % map_size)][1], Set3Map[(curve_color_index % map_size)][2], 1.0f);
+                } else if (state.interact.call_coloring_map == 2) {
+                    // PairedMap(12):
+                    const size_t map_size = 12;
+                    tmpcol = ImVec4(PairedMap[(curve_color_index % map_size)][0],
+                        PairedMap[(curve_color_index % map_size)][1], PairedMap[(curve_color_index % map_size)][2],
+                        1.0f);
+                }
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 /// COLOR_CALL_CURVE_HIGHLIGHT
                 tmpcol = style.Colors[ImGuiCol_ButtonActive];
@@ -204,25 +236,11 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 /// COLOR_TEXT
                 const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
-                if (phase == megamol::gui::PresentPhase::RENDERING) {
-                    bool hovered = (state.interact.button_hovered_uid == this->uid);
-
-                    // Draw Curve
-                    ImU32 color_curve = COLOR_CALL_CURVE;
-                    if (hovered || this->gui_selected) {
-                        color_curve = COLOR_CALL_CURVE_HIGHLIGHT;
-                    }
-                    /// Draw simple line if zooming is too small for nice bezier curves.
-                    if (state.canvas.zooming < 0.25f) {
-                        draw_list->AddLine(
-                            caller_pos, callee_pos, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
-                    } else {
-                        draw_list->AddBezierCubic(caller_pos,
-                            caller_pos + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
-                            callee_pos + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), callee_pos,
-                            color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
-                    }
-                }
+                auto bez_p1 = caller_pos;
+                auto bez_p2 = caller_pos + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f);
+                auto bez_p3 = callee_pos + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f);
+                auto bez_p4 = callee_pos;
+                auto bez_linewidth = GUI_LINE_THICKNESS * state.canvas.zooming;
 
                 if (state.interact.call_show_label || state.interact.call_show_slots_label) {
                     std::string slots_label = this->SlotsLabel();
@@ -261,7 +279,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 #endif // PROFILING
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
-                    std::string button_label = "call_" + std::to_string(this->uid);
+                    const float min_curve_zoom = 0.2f;
+                    const std::string button_label = "call_" + std::to_string(this->uid);
 
                     if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
@@ -270,17 +289,34 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         ImGui::SetItemAllowOverlap();
                         ImGui::InvisibleButton(button_label.c_str(), rect_size);
                         ImGui::SetItemAllowOverlap();
-                        if (ImGui::IsItemActivated()) {
+
+                        /// Draw simple line if zooming is too small for nice bezier curves.
+                        auto mouse_pos = ImGui::GetMousePos();
+                        ImVec2 diff_vec = mouse_pos;
+                        if (state.canvas.zooming < min_curve_zoom) {
+                            diff_vec -= ImLineClosestPoint(bez_p1, bez_p4, mouse_pos);
+                        } else {
+                            diff_vec -= ImBezierCubicClosestPoint(bez_p1, bez_p2, bez_p3, bez_p4, mouse_pos, 10.0f);
+                        }
+                        auto curve_hovered = (fabs(diff_vec.x) <= std::max(1.0f, bez_linewidth / 2.0f)) &&
+                                             (fabs(diff_vec.y) <= std::max(1.0f, bez_linewidth / 2.0f));
+
+                        if (ImGui::IsItemActivated() ||
+                            (curve_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left))) {
                             state.interact.button_active_uid = this->uid;
                         }
-                        if (ImGui::IsItemHovered()) {
+                        if (ImGui::IsItemHovered() || curve_hovered) {
                             state.interact.button_hovered_uid = this->uid;
                         }
 
-                        ImGui::PushFont(state.canvas.gui_font_ptr);
-
                         // Context Menu
-                        if (ImGui::BeginPopupContextItem()) {
+                        ImGui::PushFont(state.canvas.gui_font_ptr);
+                        const std::string call_context_menu = "call_context_menu";
+                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+                            (ImGui::IsItemHovered() || curve_hovered)) {
+                            ImGui::OpenPopup(call_context_menu.c_str());
+                        }
+                        if (ImGui::BeginPopup(call_context_menu.c_str())) {
                             state.interact.button_active_uid = this->uid;
 
                             ImGui::TextDisabled("Call");
@@ -308,7 +344,6 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 this->gui_tooltip.Reset();
                             }
                         }
-
                         ImGui::PopFont();
 
                     } else if (phase == megamol::gui::PresentPhase::RENDERING) {
@@ -316,6 +351,18 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         bool active = (state.interact.button_active_uid == this->uid);
                         bool hovered = (state.interact.button_hovered_uid == this->uid);
                         bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+
+                        // Draw Curve
+                        ImU32 color_curve = COLOR_CALL_CURVE;
+                        if (hovered || this->gui_selected) {
+                            color_curve = COLOR_CALL_CURVE_HIGHLIGHT;
+                        }
+                        /// Draw simple line if zooming is too small for nice bezier curves.
+                        if (state.canvas.zooming < min_curve_zoom) {
+                            draw_list->AddLine(caller_pos, callee_pos, color_curve, bez_linewidth);
+                        } else {
+                            draw_list->AddBezierCubic(bez_p1, bez_p2, bez_p3, bez_p4, color_curve, bez_linewidth, 0);
+                        }
 
                         // Selection
                         if (!this->gui_selected && active) {

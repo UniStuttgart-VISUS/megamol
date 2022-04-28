@@ -20,7 +20,7 @@ namespace view {
 /**
  * Module defining a transfer function.
  */
-class MEGAMOLCORE_API TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
+class TransferFunctionGL : public ModuleGL, public core::view::AbstractTransferFunction {
 public:
     /**
      * Answer the name of this module.
@@ -83,6 +83,9 @@ private:
 
     /** The OpenGL texture object id */
     unsigned int texID;
+
+    /** A flag that signals whether the tf range from the project file should be ignored */
+    bool ignore_project_range = true;
 };
 
 

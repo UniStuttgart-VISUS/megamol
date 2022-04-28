@@ -22,6 +22,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "Screenshot_Service.hpp"
+#include "VR_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -63,8 +64,7 @@ int main(const int argc, const char** argv) {
     megamol::core::CoreInstance core;
     core.SetConfigurationPaths_Frontend3000Compatibility(
         config.application_directory, config.shader_directories, config.resource_directories);
-    core.Initialise(
-        false); // false means the core ignores some mmconsole legacy features, e.g. we don't collide on Lua host ports
+    core.Initialise();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -93,6 +93,8 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.noDec = config.window_mode & RuntimeConfig::WindowMode::nodecoration;
     openglConfig.windowPlacement.topMost = config.window_mode & RuntimeConfig::WindowMode::topmost;
     openglConfig.windowPlacement.noCursor = config.window_mode & RuntimeConfig::WindowMode::nocursor;
+    openglConfig.windowPlacement.hidden = config.window_mode & RuntimeConfig::WindowMode::hidden;
+    openglConfig.forceWindowSize = config.force_window_size;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -152,6 +154,12 @@ int main(const int argc, const char** argv) {
             : std::nullopt;
     imagepresentation_service.setPriority(3);
 
+    megamol::frontend::VR_Service vr_service;
+    vr_service.setPriority(imagepresentation_service.getPriority() - 1);
+    megamol::frontend::VR_Service::Config vrConfig;
+    vrConfig.mode = megamol::frontend::VR_Service::Config::Mode(static_cast<int>(config.vr_mode));
+    const bool with_vr = vrConfig.mode != megamol::frontend::VR_Service::Config::Mode::Off;
+
     megamol::frontend::Command_Service command_service;
     // Should be applied after gui service to process only keyboard events not used by gui.
     command_service.setPriority(24);
@@ -190,6 +198,11 @@ int main(const int argc, const char** argv) {
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
+
+    if (with_vr) {
+        services.add(vr_service, &vrConfig);
+    }
+
 #ifdef PROFILING
     services.add(profiling_service, &profiling_config);
 #endif
@@ -250,7 +263,7 @@ int main(const int argc, const char** argv) {
         // e.g. graph updates, module and call creation via lua and GUI happen here
         services.digestChangedRequestedResources();
 
-        // services tell us wheter we should shut down megamol
+        // services tell us whether we should shut down megamol
         if (services.shouldShutdown())
             return false;
 
@@ -280,6 +293,8 @@ int main(const int argc, const char** argv) {
     auto& frontend_resources = services.getProvidedResources();
     services.getProvidedResources().push_back({"FrontendResources", frontend_resources});
 
+    int ret = 0;
+
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
     // for each service we call their resource callbacks here:
@@ -289,12 +304,14 @@ int main(const int argc, const char** argv) {
     if (!resources_ok) {
         log_error("Frontend could not assign requested service resources. Abort.");
         run_megamol = false;
+        ret += 1;
     }
 
     bool graph_resources_ok = graph.AddFrontendResources(frontend_resources);
     if (!graph_resources_ok) {
         log_error("Graph did not get resources he needs from frontend. Abort.");
         run_megamol = false;
+        ret += 2;
     }
 
     // load project files via lua
@@ -303,6 +320,7 @@ int main(const int argc, const char** argv) {
             if (!projectloader_service.load_file(file)) {
                 log_error("Project file \"" + file + "\" did not execute correctly");
                 run_megamol = false;
+                ret += 4;
 
                 // if interactive, continue to run MegaMol
                 if (config.interactive) {
@@ -319,6 +337,7 @@ int main(const int argc, const char** argv) {
             bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
             if (!cli_lua_ok) {
                 run_megamol = false;
+                ret += 8;
                 log_error("Error in CLI Lua command: " + lua_result);
             }
         }
@@ -332,5 +351,5 @@ int main(const int argc, const char** argv) {
     // close glfw context, network connections, other system resources
     services.close();
 
-    return 0;
+    return ret;
 }

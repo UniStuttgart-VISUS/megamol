@@ -84,7 +84,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
+      GIT_TAG "dafee75f11c5d759df30ff651d6763e4e674dd0e"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
@@ -248,6 +248,28 @@ function(require_external NAME)
       DEPENDS asmjit
       INCLUDE_DIR "include"
       LIBRARY ${BLEND2D_LIB})
+
+  # chemfiles
+  elseif(NAME STREQUAL "chemfiles")
+    if (TARGET chemfiles)
+      return()
+    endif()
+
+    if (WIN32)
+      set(CHEMFILES_LIB "lib/chemfiles.lib")
+    else ()
+      set(CHEMFILES_LIB "lib/chemfiles.a")
+    endif ()
+
+    add_external_project(chemfiles STATIC
+      GIT_REPOSITORY https://github.com/chemfiles/chemfiles.git
+      GIT_TAG "0.10.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${CHEMFILES_LIB}"
+    )
+
+    add_external_library(chemfiles
+      INCLUDE_DIR "include"
+      LIBRARY ${CHEMFILES_LIB})
 
   # Corsair CUE SDK
   elseif (NAME STREQUAL "CUESDK")
@@ -1037,6 +1059,45 @@ function(require_external NAME)
     mark_as_advanced(FORCE ZLIB_VERSION_MINOR)
     mark_as_advanced(FORCE ZLIB_VERSION_PATCH)
     mark_as_advanced(FORCE ZLIB_VERSION_TWEAK)
+
+  # vr interop mwk-mint
+  elseif(NAME STREQUAL "mwk-mint")
+    if(TARGET mwk-mint)
+      return()
+    endif()
+
+    if (MSVC_IDE)
+      set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
+    else ()
+      set(MSVC_TOOLSET "")
+    endif ()
+
+    if(WIN32)
+      set(MWKMint_LIB "${CMAKE_INSTALL_LIBDIR}/interop.lib")
+      set(MWKMint_Spout_LIB "${CMAKE_INSTALL_LIBDIR}/Spout2.lib")
+      set(MWKMint_ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq${MSVC_TOOLSET}-mt-sgd-4_3_5.lib")
+    else()
+      set(MWKMint_LIB "")
+    endif()
+
+    add_external_project(mwk-mint STATIC
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/MWK-mint/
+      GIT_TAG "master"
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${MWKMint_LIB}"
+        "<INSTALL_DIR>/${MWKMint_Spout_LIB}"
+        "<INSTALL_DIR>/${MWKMint_ZMQ_LIB}"
+    )
+
+    add_external_library(interop
+      PROJECT mwk-mint
+      LIBRARY ${MWKMint_LIB}
+    )
+
+    add_external_library(Spout2
+      PROJECT mwk-mint
+      LIBRARY ${MWKMint_Spout_LIB}
+    )
 
   else ()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")

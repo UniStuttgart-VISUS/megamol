@@ -15,7 +15,6 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
 
@@ -27,7 +26,7 @@ namespace graphics {
  * Bitmap codec for png images
  * Currently loading only
  */
-class MEGAMOLCORE_API PngBitmapCodec
+class PngBitmapCodec
 #ifdef _WIN32
 #pragma warning(disable : 4275)
 #endif /* _WIN32 */

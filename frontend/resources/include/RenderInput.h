@@ -30,6 +30,33 @@ struct RenderInput {
     std::optional<CameraMatrices> camera_matrices_override =
         std::nullopt; //< if camera matrices are overridden, this view still needs to render in local resolution
 
+    // this is a rude copy-paste of the camera parameters from
+    // Camera.h to avoid linking and including the core/view in the resources CMakeLists.txt
+    // when things break or in doubt do as the Camera says or needs! the frontend is not here to be served, but to serve.
+    struct CameraViewProjectionParameters {
+        enum class ProjectionType { PERSPECTIVE, ORTHOGRAPHIC };
+
+        struct Pose {
+            glm::vec3 position;
+            glm::vec3 direction;
+            glm::vec3 up;
+        };
+
+        struct Projection {
+            ProjectionType type;
+            float
+                fovy; //< vertical field of view / orthographic frustrum_height: vertical size of the orthographic frustrum in world space
+            float aspect;     //< aspect ratio of the camera frustrum
+            float near_plane; //< near clipping plane
+            float far_plane;  //< far clipping plane
+        };
+
+        Pose pose;
+        Projection projection;
+    };
+    std::optional<CameraViewProjectionParameters> camera_view_projection_parameters_override =
+        std::nullopt; //< if camera matrices are overridden, this view still needs to render in local resolution
+
     double instanceTime_sec =
         0.0;               //< monotone high resolution time in seconds since first frame rendering of some (any) view
     double time_sec = 0.0; //< time computed by view::TimeControl(instanceTime)

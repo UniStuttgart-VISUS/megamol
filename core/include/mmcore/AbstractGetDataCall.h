@@ -13,7 +13,6 @@
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 
@@ -24,7 +23,7 @@ namespace core {
 /**
  * Abstract base class for calls for data
  */
-class MEGAMOLCORE_API AbstractGetDataCall : public Call {
+class AbstractGetDataCall : public Call {
 public:
     /**
      * Nested class interface for data unlockers. If data is returned with

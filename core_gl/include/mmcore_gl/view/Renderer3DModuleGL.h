@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
@@ -23,7 +22,7 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModuleGL : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
+class Renderer3DModuleGL : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
     /** Ctor. */
     Renderer3DModuleGL(void);
