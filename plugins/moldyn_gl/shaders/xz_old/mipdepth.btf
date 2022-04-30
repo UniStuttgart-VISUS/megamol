@@ -10,7 +10,7 @@
 
     <namespace name="init">
 
-        <shader name="vertex">
+        <!-- <shader name="vertex">
             <snippet type="version">110</snippet>
             <snippet name="common::defines" />
             <snippet name="attributes" type="string">
@@ -71,7 +71,7 @@ void main(void) {
             <snippet name="posTrans" type="string">
 <![CDATA[
 
-    // object pivot point in object space    
+    // object pivot point in object space
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
@@ -102,9 +102,9 @@ void main(void) {
 ]]>
             </snippet>
 
-        </shader>
+        </shader> -->
 
-        <shader name="fragment">
+        <!-- <shader name="fragment">
             <snippet type="version">110</snippet>
             <snippet name="common::defines"/>
             <snippet type="string">
@@ -131,8 +131,8 @@ void main(void) {
     float lambda;
 
     // transform fragment coordinates from window coordinates to view coordinates.
-    coord = gl_FragCoord 
-        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+    coord = gl_FragCoord
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.
@@ -147,8 +147,8 @@ void main(void) {
     float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
     float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
-    if (radicand < 0.0) { 
-        discard; 
+    if (radicand < 0.0) {
+        discard;
     }
 
     gl_FragColor = gl_Color;
@@ -158,13 +158,13 @@ void main(void) {
             </snippet>
         </shader>
 
-    </namespace>
+    </namespace> -->
 
     <namespace name="depthmap">
-        <shader name="initvert">
+        <!-- <shader name="initvert">
             <snippet name="init" type="string">
 <![CDATA[
-#version 120 
+#version 120
 #extension GL_EXT_gpu_shader4 : enable
 ]]>
             </snippet>
@@ -190,9 +190,9 @@ void main(void) {
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
 
-        <shader name="mipfrag">
+        <!-- <shader name="mipfrag">
             <snippet name="initvert::init" />
             <snippet type="string">
 <![CDATA[
@@ -212,12 +212,12 @@ void main(void) {
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
 
     </namespace>
 
     <namespace name="point">
-        <shader name="vert">
+        <!-- <shader name="vert">
             <snippet type="string">
 <![CDATA[
 uniform vec4 inConsts1;
@@ -237,10 +237,10 @@ void main(void) {
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
-        
+
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
-        
+
         gl_FrontColor = texture1D(colTab, cid);
     }
 
@@ -264,13 +264,13 @@ void main(void) {
     float fac = 0.5 + 0.45 * rand(gl_FragCoord.xy + gl_FragCoord.zz);
     float light = max(0.0, rand(gl_FragCoord.yx + gl_FragCoord.zz) * 9.5 - 9.0);
     gl_FragColor = vec4(gl_Color.rgb * fac + vec3(1.0, 1.0, 1.0) * light, gl_Color.a);
-    
+
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
 
-        <shader name="simplevert">
+        <!-- <shader name="simplevert">
             <snippet type="string">
 <![CDATA[
 uniform mat4 mvp;
@@ -291,15 +291,15 @@ void main(void) {
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
 
     </namespace>
 
 
-    <shader name="theOtherSphereVertex">
+    <!-- <shader name="theOtherSphereVertex">
       <shader name="mipdepth6::theOtherSphereVertex" />
-    </shader>
-   
+    </shader> -->
+
     <namespace name="geospheres">
         <shader name="vertex">
             <shader name="mipdepth2::geospheres::vertex" />
@@ -374,7 +374,7 @@ void main(void) {
 
     <namespace name="point2">
 
-    <shader name="lesssimplevert">
+    <!-- <shader name="lesssimplevert">
         <snippet type="version">120</snippet>
         <snippet type="string">
 <![CDATA[
@@ -451,10 +451,10 @@ void main(void) {
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
-        
+
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
-        
+
         gl_FrontColor = texture1D(colTab, cid);
     }
 
@@ -465,11 +465,11 @@ void main(void) {
     squarRad = rad * rad;
 ]]>
         </snippet>
-        
+
         <snippet name="posTrans" type="string">
  <![CDATA[
 
-    // object pivot point in object space    
+    // object pivot point in object space
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
@@ -492,7 +492,7 @@ void main(void) {
 
 ]]>
         </snippet>
-        
+
         <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
 
         <snippet name="Output" type="string">
@@ -511,7 +511,7 @@ void main(void) {
 #else
     lightDir.w = 1.0;
 #endif // SMALL_SPRITE_LIGHTING
-    
+
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;
 #endif // RETICLE
@@ -572,32 +572,32 @@ void main(void) {
 }
 ]]>
         </snippet>
-    </shader>
-        
+    </shader> -->
+
     </namespace>
 
     <namespace name="deferred">
-        <shader name="spherevertex">
+        <!-- <shader name="spherevertex">
             <shader name="mipdepth6::spherevertex" />
-        </shader>
-        <shader name="otherSphereVertex">
+        </shader> -->
+        <!-- <shader name="otherSphereVertex">
             <shader name="mipdepth6::otherSphereVertex" />
-        </shader>
-            <shader name="spherefragment">
+        </shader> -->
+            <!-- <shader name="spherefragment">
         <shader name="mipdepth6::spherefragment" />
-        </shader>
-        <shader name="pointfragment">
+        </shader> -->
+        <!-- <shader name="pointfragment">
             <shader name="mipdepth6::pointfragment" />
-        </shader>
+        </shader> -->
     </namespace>
 
-    <namespace name="simplesphere">
+    <!-- <namespace name="simplesphere">
         <shader name="vertex">
             <shader name="mipdepth6::spherevertex" />
         </shader>
         <shader name="fragment">
             <shader name="mipdepth6::spherefragment" />
         </shader>
-    </namespace>
+    </namespace> -->
 
 </btf>

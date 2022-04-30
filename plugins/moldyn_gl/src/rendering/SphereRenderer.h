@@ -37,10 +37,6 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -63,7 +59,8 @@
 #include <string>
 #include <vector>
 
-//#include "TimeMeasure.h"
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 
 // Minimum GLSL version for all render modes
@@ -311,8 +308,6 @@ private:
     glm::vec2 ambConeConstants;
     misc::MDAOVolumeGenerator* volGen;
     bool triggerRebuildGBuffer;
-
-    //TimeMeasure                            timer;
 
 #ifdef PROFILING
     frontend_resources::PerformanceManager::handle_vector timers;

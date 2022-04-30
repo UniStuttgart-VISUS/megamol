@@ -1,7 +1,7 @@
 /*
  * GlyphRenderer.cpp
  *
- * Copyright (C) 2022 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -17,16 +17,18 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/flags/FlagCallsGL.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "stdafx.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstring>
 #include <iostream>
+
+#ifdef PROFILING
+#include "PerformanceManager.h"
+#endif
 
 using namespace megamol;
 using namespace megamol::core;
@@ -37,32 +39,32 @@ using namespace megamol::moldyn_gl::rendering;
 
 GlyphRenderer::GlyphRenderer(void)
         : core_gl::view::Renderer3DModuleGL()
-        , m_get_data_slot("getData", "The slot to fetch the data")
-        , m_get_tf_slot("getTF", "The slot for the transfer function")
-        , m_get_clip_plane_slot("getClipPlane", "The slot for the clip plane")
-        , m_read_flags_slot("readFlags", "The slot for reading the selection flags")
-        , m_glyph_param("glyph", "Which glyph to render")
-        , m_scale_param("scaling", "TODO: scales the box??")
-        , m_radius_scale_param("radius_scaling", "scales the glyph radii")
-        , m_orientation_param("Orientation", "Selects along which axis the arrows are aligned")
-        , m_length_filter_param("lengthFilter", "Filters the arrows by length")
-        , m_color_interpolation_param(
+        , get_data_slot_("getData", "The slot to fetch the data")
+        , get_tf_slot_("getTF", "The slot for the transfer function")
+        , get_clip_plane_slot_("getClipPlane", "The slot for the clip plane")
+        , read_flags_slot_("readFlags", "The slot for reading the selection flags")
+        , glyph_param_("glyph", "Which glyph to render")
+        , scale_param_("scaling", "TODO: scales the box??")
+        , radius_scale_param_("radius_scaling", "scales the glyph radii")
+        , orientation_param_("Orientation", "Selects along which axis the arrows are aligned")
+        , length_filter_param_("lengthFilter", "Filters the arrows by length")
+        , color_interpolation_param_(
               "colorInterpolation", "Interpolate between directional coloring (0) and glyph color (1)")
-        , m_min_radius_param("minRadius", "Sets the minimum radius length. Applied to each axis.")
-        , m_color_mode_param("colorMode", "Switch between global glyph and per axis color")
-        , m_superquadric_exponent_param("exponent", "Sets the exponent used in the implicit superquadric equation") {
+        , min_radius_param_("minRadius", "Sets the minimum radius length. Applied to each axis.")
+        , color_mode_param_("colorMode", "Switch between global glyph and per axis color")
+        , superquadric_exponent_param_("exponent", "Sets the exponent used in the implicit superquadric equation") {
 
-    this->m_get_data_slot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
-    this->MakeSlotAvailable(&this->m_get_data_slot);
+    this->get_data_slot_.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
+    this->MakeSlotAvailable(&this->get_data_slot_);
 
-    this->m_get_tf_slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
-    this->MakeSlotAvailable(&this->m_get_tf_slot);
+    this->get_tf_slot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->MakeSlotAvailable(&this->get_tf_slot_);
 
-    this->m_get_clip_plane_slot.SetCompatibleCall<view::CallClipPlaneDescription>();
-    this->MakeSlotAvailable(&this->m_get_clip_plane_slot);
+    this->get_clip_plane_slot_.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->get_clip_plane_slot_);
 
-    this->m_read_flags_slot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
-    this->MakeSlotAvailable(&this->m_read_flags_slot);
+    this->read_flags_slot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->read_flags_slot_);
 
     param::EnumParam* gp = new param::EnumParam(0);
     gp->SetTypePair(Glyph::BOX, "Box");
@@ -71,14 +73,14 @@ GlyphRenderer::GlyphRenderer(void)
     gp->SetTypePair(Glyph::SUPERQUADRIC, "Superquadric");
     gp->SetTypePair(Glyph::GIZMO_ARROWGLYPH, "Gizmo");
     gp->SetTypePair(Glyph::GIZMO_LINE, "Line");
-    this->m_glyph_param << gp;
-    this->MakeSlotAvailable(&this->m_glyph_param);
+    this->glyph_param_ << gp;
+    this->MakeSlotAvailable(&this->glyph_param_);
 
-    m_scale_param << new param::FloatParam(1.0f, 0.0f, 100.0f);
-    this->MakeSlotAvailable(&this->m_scale_param);
+    scale_param_ << new param::FloatParam(1.0f, 0.0f, 100.0f);
+    this->MakeSlotAvailable(&this->scale_param_);
 
-    m_radius_scale_param << new param::FloatParam(1.0f, 0.0f, 100.0f, 0.1f);
-    this->MakeSlotAvailable(&this->m_radius_scale_param);
+    radius_scale_param_ << new param::FloatParam(1.0f, 0.0f, 100.0f, 0.1f);
+    this->MakeSlotAvailable(&this->radius_scale_param_);
 
     // currently only needed for arrow
     param::EnumParam* op = new param::EnumParam(3);
@@ -86,26 +88,26 @@ GlyphRenderer::GlyphRenderer(void)
     op->SetTypePair(1, "y");
     op->SetTypePair(2, "z");
     op->SetTypePair(3, "largest radius");
-    this->m_orientation_param << op;
-    this->MakeSlotAvailable(&this->m_orientation_param);
+    this->orientation_param_ << op;
+    this->MakeSlotAvailable(&this->orientation_param_);
 
-    m_length_filter_param << new param::FloatParam(0.0f, 0.0f);
-    this->MakeSlotAvailable(&this->m_length_filter_param);
+    length_filter_param_ << new param::FloatParam(0.0f, 0.0f);
+    this->MakeSlotAvailable(&this->length_filter_param_);
 
-    m_color_interpolation_param << new param::FloatParam(1.0f, 0.0, 1.0f);
-    this->MakeSlotAvailable(&this->m_color_interpolation_param);
+    color_interpolation_param_ << new param::FloatParam(1.0f, 0.0, 1.0f);
+    this->MakeSlotAvailable(&this->color_interpolation_param_);
 
-    m_min_radius_param << new param::FloatParam(0.1f, 0.f, 2.f, 0.01f);
-    this->MakeSlotAvailable(&this->m_min_radius_param);
+    min_radius_param_ << new param::FloatParam(0.1f, 0.f, 2.f, 0.01f);
+    this->MakeSlotAvailable(&this->min_radius_param_);
 
     param::EnumParam* gcm = new param::EnumParam(0);
     gcm->SetTypePair(0, "GlyphGlobal");
     gcm->SetTypePair(1, "PerAxis");
-    this->m_color_mode_param << gcm;
-    this->MakeSlotAvailable(&this->m_color_mode_param);
+    this->color_mode_param_ << gcm;
+    this->MakeSlotAvailable(&this->color_mode_param_);
 
-    m_superquadric_exponent_param << new param::FloatParam(1.0f, -100.0f, 100.0f, 0.1f);
-    this->MakeSlotAvailable(&this->m_superquadric_exponent_param);
+    superquadric_exponent_param_ << new param::FloatParam(1.0f, -100.0f, 100.0f, 0.1f);
+    this->MakeSlotAvailable(&this->superquadric_exponent_param_);
 }
 
 
@@ -115,22 +117,50 @@ GlyphRenderer::~GlyphRenderer(void) {
 
 
 bool GlyphRenderer::create(void) {
+    // profiling
+#ifdef PROFILING
+    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+
+    frontend_resources::PerformanceManager::basic_timer_config render_timer;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timers_ = perf_manager_->add_timers(this, {render_timer});
+#endif
+
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
-    bool ret_val = true;
-    ret_val = ret_val && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->m_box_shader);
-    ret_val = ret_val && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->m_ellipsoid_shader);
-    ret_val = ret_val && this->makeShader("glyph::arrow_vertex", "glyph::arrow_fragment", this->m_arrow_shader);
-    ret_val = ret_val && this->makeShader("glyph::superquadric_vertex", "glyph::superquadric_fragment", this->m_superquadric_shader);
-    ret_val = ret_val && this->makeShader("glyph::gizmo_arrowglyph_vertex", "glyph::gizmo_arrowglyph_fragment", this->m_gizmo_arrowglyph_shader);
-    ret_val = ret_val && this->makeShader("glyph::gizmo_line_vertex", "glyph::gizmo_line_fragment", this->m_gizmo_line_shader);
+    // create shader programs
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
+    try {
+        // TODO: use std::filesystem::path?
+        box_prgm_ = core::utility::make_glowl_shader("box", shader_options, "glyph_renderer/box.vert.glsl", "glyph_renderer/box.frag.glsl");
+
+        ellipsoid_prgm_ =
+            core::utility::make_glowl_shader("ellipsoid", shader_options, "glyph_renderer/ellipsoid.vert.glsl", "glyph_renderer/ellipsoid.frag.glsl");
+
+        arrow_prgm_ = core::utility::make_glowl_shader("arrow", shader_options, "glyph_renderer/arrow.vert.glsl", "glyph_renderer/arrow.frag.glsl");
+
+        superquadric_prgm_ = core::utility::make_glowl_shader(
+            "superquadric", shader_options, "glyph_renderer/superquadric.vert.glsl", "glyph_renderer/superquadric.frag.glsl");
+
+        gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader(
+            "gizmo_arrowglyph", shader_options, "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
+
+        gizmo_line_prgm_ = core::utility::make_glowl_shader(
+            "gizmo_line", shader_options, "glyph_renderer/gizmo_line.vert.glsl", "glyph_renderer/gizmo_line.frag.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("GlyphRenderer: " + std::string(e.what())).c_str());
+    }
 
     glEnable(GL_TEXTURE_1D);
-    glGenTextures(1, &this->m_grey_tf);
+    glGenTextures(1, &this->grey_tf_);
     unsigned char tex[6] = {0, 0, 0, 255, 255, 255};
-    glBindTexture(GL_TEXTURE_1D, this->m_grey_tf);
+    glBindTexture(GL_TEXTURE_1D, this->grey_tf_);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -138,54 +168,12 @@ bool GlyphRenderer::create(void) {
     glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
 
-    return ret_val;
-}
-
-bool GlyphRenderer::makeShader(
-    std::string vertex_name, std::string fragment_name, vislib_gl::graphics::gl::GLSLShader& shader) {
-    using namespace megamol::core::utility::log;
-    using namespace vislib_gl::graphics::gl;
-
-    ShaderSource vert_src;
-    ShaderSource frag_src;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource(vertex_name.c_str(), vert_src)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertex_name.c_str());
-        return false;
-    }
-    if (!ssf->MakeShaderSource(fragment_name.c_str(), frag_src)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragment_name.c_str());
-        return false;
-    }
-    try {
-        if (!shader.Create(vert_src.Code(), vert_src.Count(), frag_src.Code(), frag_src.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "GlyphRenderer: unable to compile shader: unknown error\n");
-            return false;
-        }
-    } catch (AbstractOpenGLShader::CompileException& ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "GlyphRenderer: unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "GlyphRenderer: unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "GlyphRenderer: unable to compile shader: unknown exception\n");
-        return false;
-    }
     return true;
 }
 
 bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    auto* rhs_epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
+    auto* rhs_epdc = this->get_data_slot_.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if ((rhs_epdc != NULL) && ((*rhs_epdc)(1))) {
         call.SetTimeFramesCount(rhs_epdc->FrameCount());
         call.AccessBoundingBoxes() = rhs_epdc->AccessBoundingBoxes();
@@ -198,47 +186,43 @@ bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 }
 
 void GlyphRenderer::release(void) {
-    // TODO: maybe use smart_ptr instead
-    // TODO: replace old shaderfactory with new sf
-    this->m_box_shader.Release();
-    this->m_ellipsoid_shader.Release();
-    this->m_arrow_shader.Release();
-    this->m_superquadric_shader.Release();
-    this->m_gizmo_arrowglyph_shader.Release();
-    this->m_gizmo_line_shader.Release();
-    glDeleteTextures(1, &this->m_grey_tf);
+    glDeleteTextures(1, &this->grey_tf_);
+
+#ifdef PROFILING
+    perf_manager_->remove_timers(timers_);
+#endif
 }
 
 bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::EllipsoidalParticleDataCall* rhs_edc) {
 
-    if (this->m_last_hash != rhs_edc->DataHash() || this->m_last_frame_id != rhs_edc->FrameID()) {
-        this->m_position_buffers.reserve(rhs_edc->GetParticleListCount());
-        this->m_radius_buffers.reserve(rhs_edc->GetParticleListCount());
-        this->m_direction_buffers.reserve(rhs_edc->GetParticleListCount());
-        this->m_color_buffers.reserve(rhs_edc->GetParticleListCount());
-        
+    if (this->last_hash_ != rhs_edc->DataHash() || this->last_frame_id_ != rhs_edc->FrameID()) {
+        this->position_buffers_.reserve(rhs_edc->GetParticleListCount());
+        this->radius_buffers_.reserve(rhs_edc->GetParticleListCount());
+        this->direction_buffers_.reserve(rhs_edc->GetParticleListCount());
+        this->color_buffers_.reserve(rhs_edc->GetParticleListCount());
+
         for (uint32_t x = 0; x < rhs_edc->GetParticleListCount(); ++x) {
             auto& l = rhs_edc->AccessParticles(x);
-            this->m_position_buffers.emplace_back(utility::SSBOBufferArray("position_buffer" + std::to_string(x)));
-            this->m_radius_buffers.emplace_back(utility::SSBOBufferArray("radius_buffer" + std::to_string(x)));
-            this->m_direction_buffers.emplace_back(utility::SSBOBufferArray("direction_buffer" + std::to_string(x)));
-            this->m_color_buffers.emplace_back(utility::SSBOBufferArray("color_buffer" + std::to_string(x)));
+            this->position_buffers_.emplace_back(utility::SSBOBufferArray("position_buffer" + std::to_string(x)));
+            this->radius_buffers_.emplace_back(utility::SSBOBufferArray("radius_buffer" + std::to_string(x)));
+            this->direction_buffers_.emplace_back(utility::SSBOBufferArray("direction_buffer" + std::to_string(x)));
+            this->color_buffers_.emplace_back(utility::SSBOBufferArray("color_buffer" + std::to_string(x)));
 
-            this->m_direction_buffers[x].SetData(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float), l.GetCount(),
+            this->direction_buffers_[x].SetData(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float), l.GetCount(),
                 [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
-            const auto num_items_per_chunk = this->m_direction_buffers[x].GetMaxNumItemsPerChunk();
+            const auto num_items_per_chunk = this->direction_buffers_[x].GetMaxNumItemsPerChunk();
 
             switch (l.GetVertexDataType()) {
             case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
             case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
                 // radius is skipped automatically by memcpy width
-                this->m_position_buffers[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
+                this->position_buffers_[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
                     3 * sizeof(float), l.GetCount(), num_items_per_chunk,
                     [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
                 break;
             case geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ:
                 // narrow double to float
-                this->m_position_buffers[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
+                this->position_buffers_[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
                     3 * sizeof(float), l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
                         const auto* s = static_cast<const double*>(src);
@@ -265,7 +249,7 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
                 return false;
             case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
                 // extend to floats
-                this->m_color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
+                this->color_buffers_[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
                         const auto* s = static_cast<const unsigned char*>(src);
@@ -275,7 +259,7 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
                     });
                 break;
             case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB:
-                this->m_color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
+                this->color_buffers_[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         memcpy(dst, src, sizeof(float) * 3);
                         auto* d = static_cast<float*>(dst);
@@ -284,12 +268,12 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
                 break;
             case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
                 // this is paranoid and could be avoided for cases where data is NOT interleaved
-                this->m_color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
+                this->color_buffers_[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk,
                     [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
                 break;
             case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I:
-                this->m_color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
+                this->color_buffers_[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
                         const auto* s = static_cast<const float*>(src);
@@ -302,7 +286,7 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
                     "GlyphRenderer: COLDATA_USHORT_RGBA is unsupported");
                 return false;
             case geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I:
-                this->m_color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
+                this->color_buffers_[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
                         const auto* s = static_cast<const double*>(src);
@@ -313,18 +297,18 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
             default:;
             }
 
-            this->m_radius_buffers[x].SetDataWithItems(l.GetRadiiData(), l.GetRadiiDataStride(), sizeof(float) * 3,
+            this->radius_buffers_[x].SetDataWithItems(l.GetRadiiData(), l.GetRadiiDataStride(), sizeof(float) * 3,
                 l.GetCount(), num_items_per_chunk,
                 [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
         }
-        this->m_last_hash = rhs_edc->DataHash();
-        this->m_last_frame_id = rhs_edc->FrameID();
+        this->last_hash_ = rhs_edc->DataHash();
+        this->last_frame_id_ = rhs_edc->FrameID();
     }
     return true;
 }
 
 bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    auto* rhs_epdc = this->m_get_data_slot.CallAs<geocalls::EllipsoidalParticleDataCall>();
+    auto* rhs_epdc = this->get_data_slot_.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if (rhs_epdc == nullptr)
         return false;
 
@@ -339,18 +323,18 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     if (!this->validateData(rhs_epdc))
         return false;
 
-    auto* rhs_tfc = this->m_get_tf_slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
-    auto* rhs_flagsc = this->m_read_flags_slot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* rhs_tfc = this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto* rhs_flagsc = this->read_flags_slot_.CallAs<core_gl::FlagCallRead_GL>();
     bool use_flags = (rhs_flagsc != nullptr);
 
     bool use_clip = false;
-    auto rhs_clipc = this->m_get_clip_plane_slot.CallAs<view::CallClipPlane>();
+    auto rhs_clipc = this->get_clip_plane_slot_.CallAs<view::CallClipPlane>();
     if (rhs_clipc != nullptr && (*rhs_clipc)(0)) {
         use_clip = true;
     }
 
     bool use_per_axis_color = false;
-    switch (this->m_color_mode_param.Param<core::param::EnumParam>()->Value()) {
+    switch (this->color_mode_param_.Param<core::param::EnumParam>()->Value()) {
     case 0:
         use_per_axis_color = false;
         break;
@@ -391,58 +375,60 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
 
-    vislib_gl::graphics::gl::GLSLShader* shader;
-    switch (this->m_glyph_param.Param<core::param::EnumParam>()->Value()) {
+    std::shared_ptr<glowl::GLSLProgram> shader;
+    switch (this->glyph_param_.Param<core::param::EnumParam>()->Value()) {
     case Glyph::BOX:
-        shader = &this->m_box_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        shader = this->box_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ELLIPSOID:
-        shader = &this->m_ellipsoid_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        shader = this->ellipsoid_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ARROW:
-        shader = &this->m_arrow_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(true);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        shader = this->arrow_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(true);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::SUPERQUADRIC:
-        shader = &this->m_superquadric_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        shader = this->superquadric_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(true);
         break;
     case Glyph::GIZMO_ARROWGLYPH:
-        shader = &this->m_gizmo_arrowglyph_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        shader = this->gizmo_arrowglyph_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::GIZMO_LINE:
-        shader = &this->m_gizmo_line_shader;
-        m_orientation_param.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        m_superquadric_exponent_param.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        shader = this->gizmo_line_prgm_;
+        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     default:;
-        shader = &this->m_ellipsoid_shader;
+        shader = this->ellipsoid_prgm_;
     }
-    shader->Enable();
+    shader->use();
 
-    glUniform4fv(shader->ParameterLocation("view_attr"), 1, glm::value_ptr(viewport_stuff));
-    glUniformMatrix4fv(shader->ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(shader->ParameterLocation("mv_i"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
-    glUniformMatrix4fv(shader->ParameterLocation("mvp_t"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(shader->ParameterLocation("mvp_i"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
-    glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(cam_pos));
-    glUniform1f(shader->ParameterLocation("scaling"), this->m_scale_param.Param<param::FloatParam>()->Value());
-    glUniform1f(shader->ParameterLocation("radius_scaling"), this->m_radius_scale_param.Param<param::FloatParam>()->Value());
-    glUniform1i(shader->ParameterLocation("orientation"), this->m_orientation_param.Param<param::EnumParam>()->Value());
-    glUniform1f(shader->ParameterLocation("min_radius"), this->m_min_radius_param.Param<param::FloatParam>()->Value());
-    glUniform1f(shader->ParameterLocation("color_interpolation"),
-        this->m_color_interpolation_param.Param<param::FloatParam>()->Value());
-    glUniform1f(shader->ParameterLocation("length_filter"), this->m_length_filter_param.Param<param::FloatParam>()->Value());
+    glUniform4fv(shader->getUniformLocation("view_attr"), 1, glm::value_ptr(viewport_stuff));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("mv_i"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp_t"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp_i"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
+    glUniform4fv(shader->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
+    glUniform1f(shader->getUniformLocation("scaling"), this->scale_param_.Param<param::FloatParam>()->Value());
     glUniform1f(
-        shader->ParameterLocation("exponent"), this->m_superquadric_exponent_param.Param<param::FloatParam>()->Value());
+        shader->getUniformLocation("radius_scaling"), this->radius_scale_param_.Param<param::FloatParam>()->Value());
+    glUniform1i(shader->getUniformLocation("orientation"), this->orientation_param_.Param<param::EnumParam>()->Value());
+    glUniform1f(shader->getUniformLocation("min_radius"), this->min_radius_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(shader->getUniformLocation("color_interpolation"),
+        this->color_interpolation_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(
+        shader->getUniformLocation("length_filter"), this->length_filter_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(
+        shader->getUniformLocation("exponent"), this->superquadric_exponent_param_.Param<param::FloatParam>()->Value());
 
 
     uint32_t num_total_glyphs = 0;
@@ -470,8 +456,8 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         //glBindBufferRange(
         //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }
-    glUniform4f(shader->ParameterLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
-    glUniform4f(shader->ParameterLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
+    glUniform4f(shader->getUniformLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
+    glUniform4f(shader->getUniformLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
 
     if (use_clip) {
         auto clip_point_coords = rhs_clipc->GetPlane().Point();
@@ -482,7 +468,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         std::array<float, 4> clip_data = {rhs_clipc->GetPlane().Normal().X(), rhs_clipc->GetPlane().Normal().Y(),
             rhs_clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
-        glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
+        glUniform4fv(shader->getUniformLocation("clip_data"), 1, clip_data.data());
         auto c = rhs_clipc->GetColour();
         /*glUniform4f(shader->ParameterLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
             static_cast<float>(c[1]) / 255.f, static_cast<float>(c[2]) / 255.f, static_cast<float>(c[3]) / 255.f);*/
@@ -506,7 +492,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             const auto gc = el_parts.GetGlobalColour();
             const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
                 static_cast<float>(gc[2]) / 255.0f, static_cast<float>(gc[3]) / 255.0f};
-            glUniform4fv(shader->ParameterLocation("global_color"), 1, gcf.data());
+            glUniform4fv(shader->getUniformLocation("global_color"), 1, gcf.data());
             bind_color = false;
         } break;
         case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -525,12 +511,12 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             options = GlyphOptions::USE_TRANSFER_FUNCTION;
             glActiveTexture(GL_TEXTURE0);
             if (rhs_tfc == nullptr) {
-                glBindTexture(GL_TEXTURE_1D, this->m_grey_tf);
-                glUniform2f(shader->ParameterLocation("tf_range"), el_parts.GetMinColourIndexValue(),
+                glBindTexture(GL_TEXTURE_1D, this->grey_tf_);
+                glUniform2f(shader->getUniformLocation("tf_range"), el_parts.GetMinColourIndexValue(),
                     el_parts.GetMaxColourIndexValue());
             } else if ((*rhs_tfc)(0)) {
                 glBindTexture(GL_TEXTURE_1D, rhs_tfc->OpenGLTexture());
-                glUniform2fv(shader->ParameterLocation("tf_range"), 1, rhs_tfc->Range().data());
+                glUniform2fv(shader->getUniformLocation("tf_range"), 1, rhs_tfc->Range().data());
                 //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
                 //    elParts.GetMaxColourIndexValue());
             } else {
@@ -538,7 +524,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     "GlyphRenderer: could not retrieve transfer function!");
                 return false;
             }
-            glUniform1i(shader->ParameterLocation("tf_texture"), 0);
+            glUniform1i(shader->getUniformLocation("tf_texture"), 0);
             break;
         case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
@@ -556,7 +542,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             options = options | GlyphOptions::USE_CLIP;
         if (use_per_axis_color)
             options = options | GlyphOptions::USE_PER_AXIS;
-        glUniform1ui(shader->ParameterLocation("options"), options);
+        glUniform1ui(shader->getUniformLocation("options"), options);
 
         switch (el_parts.GetVertexDataType()) {
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
@@ -574,10 +560,10 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             continue;
         }
 
-        auto& the_pos = m_position_buffers[i];
-        auto& the_quat = m_direction_buffers[i];
-        auto& the_rad = m_radius_buffers[i];
-        auto& the_col = m_color_buffers[i];
+        auto& the_pos = position_buffers_[i];
+        auto& the_quat = direction_buffers_[i];
+        auto& the_rad = radius_buffers_[i];
+        auto& the_col = color_buffers_[i];
 
         const auto num_chunks = the_pos.GetNumChunks();
         for (GLuint x = 0; x < num_chunks; ++x) {
@@ -598,10 +584,14 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             }
 
             if (use_flags) {
-                glUniform1ui(shader->ParameterLocation("flag_offset"), curr_glyph_offset);
+                glUniform1ui(shader->getUniformLocation("flag_offset"), curr_glyph_offset);
             }
 
-            switch (this->m_glyph_param.Param<core::param::EnumParam>()->Value()) {
+#ifdef PROFILING
+            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+#endif
+
+            switch (this->glyph_param_.Param<core::param::EnumParam>()->Value()) {
             case Glyph::BOX:
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
                 //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
@@ -625,11 +615,16 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 break;
             default:;
             }
+
+#ifdef PROFILING
+            perf_manager_->stop_timer(timers_[0]);
+#endif
+
             curr_glyph_offset += el_parts.GetCount();
         }
     }
     rhs_epdc->Unlock();
-    shader->Disable();
+    glUseProgram(0);
 
     // todo if you implement selection, write flags back :)
     //

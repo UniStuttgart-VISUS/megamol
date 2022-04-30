@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_flags">
- 
+
 <!-- Vertex Shader Snippets -->
 
-    <snippet name="vertex_attributes" type="string">
+    <!-- <snippet name="vertex_attributes" type="string">
         <![CDATA[
 
 #define SSBO_FLAGS_BINDING_POINT 2
@@ -17,47 +17,47 @@ uniform uint flags_offset;
     layout(std430, binding = SSBO_FLAGS_BINDING_POINT) buffer flags {
         uint inFlags[];
     };
-#endif // FLAGS_AVAILABLE 
+#endif // FLAGS_AVAILABLE
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 
-    <snippet name="vertex_getflag" type="string">
+    <!-- <snippet name="vertex_getflag" type="string">
         <![CDATA[
 
 uint flag = uint(0);
 
 #ifdef FLAGS_AVAILABLE
-    if (bool(flags_enabled)) {    
+    if (bool(flags_enabled)) {
         flag = inFlags[(flags_offset + uint(gl_VertexID))];
     }
 #endif // FLAGS_AVAILABLE
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 
-    <snippet name="vertex_attributes_geo" type="string">
+    <!-- <snippet name="vertex_attributes_geo" type="string">
         <![CDATA[
 
 out uint currentFlag;
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 
-    <snippet name="vertex_getflag_geometry" type="string">
+    <!-- <snippet name="vertex_getflag_geometry" type="string">
         <![CDATA[
 
 currentFlag = flag;
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 <!-- Geometry Shader Snippets -->
 
-    <snippet name="geometry_attributes" type="string">
+    <!-- <snippet name="geometry_attributes" type="string">
         <![CDATA[
 
 in uint currentFlag[1];
@@ -67,15 +67,15 @@ uniform vec4 flag_selected_col;
 uniform vec4 flag_softselected_col;
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 
-    <snippet name="geometry_getflag" type="string">
+    <!-- <snippet name="geometry_getflag" type="string">
         <![CDATA[
 
 uint flag = currentFlag[0];
 
         ]]>
-    </snippet>
+    </snippet> -->
 
 </btf>

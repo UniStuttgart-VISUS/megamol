@@ -15,8 +15,6 @@
 
 #include "OpenGL_Context.h"
 
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-
 
 using namespace megamol::core;
 using namespace megamol::moldyn_gl::rendering;
@@ -128,206 +126,58 @@ bool GrimRenderer::create(void) {
     ASSERT(IsAvailable());
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    // TODO: RequiredExtensions for glowl::GLSLProgram and glowl::FBO
     if (!ogl_ctx.isExtAvailable("GL_NV_occlusion_query") || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
         !ogl_ctx.isExtAvailable("GL_ARB_vertex_buffer_object") ||
         !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
         !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
         return false;
 
-    vislib_gl::graphics::gl::ShaderSource vert, geom, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
-    const char* shaderName = "sphere";
     try {
-
-        shaderName = "sphereShader";
-        if (!ssf->MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::simplesphere::fragment", frag)) {
-            return false;
-        }
-        //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
-        //    vert.WholeCode().PeekBuffer(),
-        //    frag.WholeCode().PeekBuffer());
-        if (!this->sphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "vanillaSphereShader";
-        if (!ssf->MakeShaderSource("mipdepth::simplesphere::vertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::simplesphere::fragment", frag)) {
-            return false;
-        }
-        if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "initDepthShader";
-        if (!ssf->MakeShaderSource("mipdepth::init::vertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::init::fragment", frag)) {
-            return false;
-        }
-        if (!this->initDepthShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "initDepthMapShader";
-        if (!ssf->MakeShaderSource("mipdepth::depthmap::initvert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::depthmap::initfrag", frag)) {
-            return false;
-        }
-        if (!this->initDepthMapShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "depthMipShader";
-        if (!ssf->MakeShaderSource("mipdepth::depthmap::initvert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::depthmap::mipfrag", frag)) {
-            return false;
-        }
-        if (!this->depthMipShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "pointShader";
-        if (!ssf->MakeShaderSource("mipdepth::point::vert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::point::frag", frag)) {
-            return false;
-        }
-        if (!this->pointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "initDepthPointShader";
-        if (!ssf->MakeShaderSource("mipdepth::point::simplevert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) {
-            return false;
-        }
-        if (!this->initDepthPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "vertCntShader";
-        if (!ssf->MakeShaderSource("mipdepth::point::simplevert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) {
-            return false;
-        }
-        if (!this->vertCntShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "vertCntShade2r";
-        if (!ssf->MakeShaderSource("mipdepth::point2::lesssimplevert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::point::simplefrag", frag)) {
-            return false;
-        }
-        if (!this->vertCntShade2r.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-
-        shaderName = "deferredSphereShader";
-        if (!ssf->MakeShaderSource("mipdepth::deferred::otherSphereVertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::deferred::spherefragment", frag)) {
-            return false;
-        }
-        if (!this->deferredSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "deferredVanillaSphereShader";
-        if (!ssf->MakeShaderSource("mipdepth::deferred::spherevertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::deferred::spherefragment", frag)) {
-            return false;
-        }
-        if (!this->deferredVanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "deferredPointShader";
-        if (!ssf->MakeShaderSource("mipdepth6::pointvertex", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth::deferred::pointfragment", frag)) {
-            return false;
-        }
-        if (!this->deferredPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-        shaderName = "deferredShader";
-        if (!ssf->MakeShaderSource("mipdepth6::deferredShader::vert", vert)) {
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mipdepth6::deferredShader::frag", frag)) {
-            return false;
-        }
-        if (!this->deferredShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
-            return false;
-        }
-
-
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s shader (@%s): %s\n", shaderName,
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: Unknown exception\n", shaderName);
-        return false;
+        sphereShader = core::utility::make_glowl_shader(
+            "sphereShader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
+        
+        vanillaSphereShader = core::utility::make_glowl_shader(
+            "vanillaSphereShader", shader_options, "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");
+        
+        initDepthShader = core::utility::make_glowl_shader("initDepthShader", shader_options,
+            "grim_renderer/init_depth.vert.glsl", "grim_renderer/init_depth.frag.glsl");
+        
+        initDepthMapShader = core::utility::make_glowl_shader("initDepthMapShader", shader_options,
+            "grim_renderer/init_depth_map.vert.glsl", "grim_renderer/init_depth_map.frag.glsl");
+        
+        depthMipShader = core::utility::make_glowl_shader("depthMipShader", shader_options,
+            "grim_renderer/depth_mip.vert.glsl", "grim_renderer/depth_mip.frag.glsl");
+        
+        pointShader = core::utility::make_glowl_shader("pointShader", shader_options,
+            "grim_renderer/point.vert.glsl", "grim_renderer/point.frag.glsl");
+        
+        initDepthPointShader = core::utility::make_glowl_shader("initDepthPointShader", shader_options,
+            "grim_renderer/init_depth_point.vert.glsl", "grim_renderer/init_depth_point.frag.glsl");
+        
+        vertCntShader = core::utility::make_glowl_shader("vertCntShader", shader_options,
+            "grim_renderer/vert_cnt.vert.glsl", "grim_renderer/vert_cnt.frag.glsl");
+        
+        vertCntShade2r = core::utility::make_glowl_shader("vertCntShade2r", shader_options,
+            "grim_renderer/vert_cnt_2.vert.glsl", "grim_renderer/vert_cnt_2.frag.glsl");
+        
+        deferredSphereShader = core::utility::make_glowl_shader("deferredSphereShader", shader_options,
+            "grim_renderer/deferred_sphere.vert.glsl", "grim_renderer/deferred_sphere.frag.glsl");
+        
+        deferredVanillaSphereShader = core::utility::make_glowl_shader("deferredVanillaSphereShader", shader_options,
+            "grim_renderer/deferred_vanilla_sphere.vert.glsl", "grim_renderer/deferred_vanilla_sphere.frag.glsl");
+        
+        deferredPointShader = core::utility::make_glowl_shader("deferredPointShader", shader_options,
+            "grim_renderer/deferred_point.vert.glsl", "grim_renderer/deferred_point.frag.glsl");
+        
+        deferredShader = core::utility::make_glowl_shader("deferredShader", shader_options,
+            "grim_renderer/deferred.vert.glsl", "grim_renderer/deferred.frag.glsl");
+        
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("GrimRenderer: " + std::string(e.what())).c_str());
     }
 
     // Fallback transfer function texture
@@ -368,36 +218,28 @@ bool GrimRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
 
 
 void GrimRenderer::release(void) {
-
-    this->sphereShader.Release();
-    this->initDepthMapShader.Release();
-    this->initDepthShader.Release();
-    this->depthMipShader.Release();
-    this->pointShader.Release();
-    this->fbo.Release();
-    this->depthmap[0].Release();
-    this->depthmap[1].Release();
+    fbo.Release();
+    depthmap[0].Release();
+    depthmap[1].Release();
+    dsFBO.Release();
     glDeleteTextures(1, &this->greyTF);
     this->cellDists.clear();
     this->cellInfos.clear();
-    this->deferredSphereShader.Release();
-    this->deferredVanillaSphereShader.Release();
-    this->deferredPointShader.Release();
-    this->deferredShader.Release();
 }
 
 
-void GrimRenderer::set_cam_uniforms(vislib_gl::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+void GrimRenderer::set_cam_uniforms(std::shared_ptr<glowl::GLSLProgram> shader, glm::mat4 view_matrix_inv,
     glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
     glm::vec4 camPos, glm::vec4 curlightDir) {
 
-    glUniformMatrix4fv(shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
-    glUniformMatrix4fv(shader.ParameterLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
-    glUniformMatrix4fv(shader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(shader.ParameterLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
-    glUniformMatrix4fv(shader.ParameterLocation("mvp_inv"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_inv));
-    glUniform4fv(shader.ParameterLocation("light_dir"), 1, glm::value_ptr(curlightDir));
-    glUniform4fv(shader.ParameterLocation("cam_pos"), 1, glm::value_ptr(camPos));
+    glUniformMatrix4fv(shader->getUniformLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
+    glUniformMatrix4fv(
+        shader->getUniformLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
+    glUniformMatrix4fv(shader->getUniformLocation("mvp_inv"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_inv));
+    glUniform4fv(shader->getUniformLocation("light_dir"), 1, glm::value_ptr(curlightDir));
+    glUniform4fv(shader->getUniformLocation("cam_pos"), 1, glm::value_ptr(camPos));
 }
 
 
@@ -424,15 +266,14 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     bool speakCellPerc = speak /*&& useCellCull*/ && this->speakCellPercSlot.Param<param::BoolParam>()->Value();
     bool speakVertCount = /*speak && */ this->speakVertCountSlot.Param<param::BoolParam>()->Value();
     bool deferredShading = this->deferredShadingSlot.Param<param::BoolParam>()->Value();
-    vislib_gl::graphics::gl::GLSLShader* daSphereShader =
-        useVertCull ? &this->sphereShader : &this->vanillaSphereShader;
-    vislib_gl::graphics::gl::GLSLShader* daPointShader = &this->pointShader;
+    auto daSphereShader = useVertCull ? this->sphereShader : this->vanillaSphereShader;
+    auto daPointShader = this->pointShader;
     if (deferredShading) {
-        daSphereShader = useVertCull ? &this->deferredSphereShader : &this->deferredVanillaSphereShader;
-        daPointShader = &this->deferredPointShader;
+        daSphereShader = useVertCull ? this->deferredSphereShader : this->deferredVanillaSphereShader;
+        daPointShader = this->deferredPointShader;
     }
-    unsigned int cial = glGetAttribLocationARB(*daSphereShader, "colIdx");
-    unsigned int cial2 = glGetAttribLocationARB(*daPointShader, "colIdx");
+    unsigned int cial = glGetAttribLocationARB(daSphereShader->getHandle(), "colIdx");
+    unsigned int cial2 = glGetAttribLocationARB(daPointShader->getHandle(), "colIdx");
 
     // ask for extend to calculate the data scaling
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -657,7 +498,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 #ifdef SPEAK_CELL_USAGE
     printf("[initd1");
 #endif
-    this->initDepthPointShader.Enable();
+    this->initDepthPointShader->use();
     set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
         mvp_matrix_inv, camPos, curlightDir);
     glPointSize(1.0f);
@@ -799,7 +640,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 #ifdef SPEAK_CELL_USAGE
     printf("]\n");
 #endif
-    this->initDepthPointShader.Disable();
+    glUseProgram(0); //this->initDepthPointShader.Disable();
     glPopDebugGroup();
 
     // init depth disks ///////////////////////////////////////////////////////
@@ -816,14 +657,14 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
     glPointSize(defaultPointSize);
 
-    this->initDepthShader.Enable();
+    this->initDepthShader->use();
     set_cam_uniforms(this->initDepthShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
         mvp_matrix_inv, camPos, curlightDir);
 
-    glUniform4fv(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
-    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
-    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+    glUniform4fv(this->initDepthShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->initDepthShader->getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(this->initDepthShader->getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(this->initDepthShader->getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
 
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
@@ -947,7 +788,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glUniform4f(
-                    this->initDepthShader.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
+                    this->initDepthShader->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                 if (ci.data[0] != 0) {
                     glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                     glVertexPointer(3, GL_FLOAT, 0, NULL);
@@ -957,7 +798,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 break;
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
+                glUniform4f(this->initDepthShader->getUniformLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                 if (ci.data[0] != 0) {
                     glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                     glVertexPointer(4, GL_FLOAT, 0, NULL);
@@ -993,7 +834,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     printf("]\n");
 #endif
 
-    this->initDepthShader.Disable();
+    glUseProgram(0); // this->initDepthShader.Disable();
     glPopDebugGroup();
 
 #ifdef _WIN32
@@ -1014,7 +855,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glDisable(GL_CULL_FACE);
 
         // this shader is so simple it should also work for the boxes.
-        this->initDepthPointShader.Enable();
+        this->initDepthPointShader->use();
         set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
@@ -1108,10 +949,10 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glPushMatrix();
         glLoadIdentity();
 
-        this->initDepthMapShader.Enable();
+        this->initDepthMapShader->use();
         set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
-        this->initDepthMapShader.SetParameter("datex", 0);
+        this->initDepthMapShader->setUniform("datex", 0);
 
         glBegin(GL_QUADS);
         float xf = float(this->fbo.GetWidth()) / float(this->depthmap[0].GetWidth());
@@ -1122,19 +963,19 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glVertex2f(-1.0f, -1.0f + 2.0f * yf);
         glEnd();
 
-        this->initDepthMapShader.Disable();
+        glUseProgram(0); // this->initDepthMapShader.Disable();
 
         int lw = this->depthmap[0].GetWidth() / 2;
         int ly = this->depthmap[0].GetHeight() * 2 / 3;
         int lh = ly / 2;
         int ls = vislib::math::Min(lh, lw);
 
-        this->depthMipShader.Enable();
+        this->depthMipShader->use();
         set_cam_uniforms(this->depthMipShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
             mvp_matrix_inv, camPos, curlightDir);
-        this->depthMipShader.SetParameter("datex", 0);
-        this->depthMipShader.SetParameter("src", 0, 0);
-        this->depthMipShader.SetParameter("dst", 0, ly);
+        this->depthMipShader->setUniform("datex", 0);
+        this->depthMipShader->setUniform("src", 0, 0);
+        this->depthMipShader->setUniform("dst", 0, ly);
 
         maxLevel = 1; // we created one! hui!
         glBegin(GL_QUADS);
@@ -1154,8 +995,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             this->depthmap[maxLevel % 2].Enable();
             this->depthmap[1 - (maxLevel % 2)].BindColourTexture();
 
-            this->depthMipShader.SetParameter("src", lx - lw, ly);
-            this->depthMipShader.SetParameter("dst", lx, ly);
+            this->depthMipShader->setUniform("src", lx - lw, ly);
+            this->depthMipShader->setUniform("dst", lx, ly);
 
             lw /= 2;
             lh /= 2;
@@ -1182,13 +1023,13 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             maxLevel++;
         }
 
-        this->depthMipShader.Disable();
+        glUseProgram(0); // this->depthMipShader.Disable();
 
         this->depthmap[0].Enable();
-        this->initDepthMapShader.Enable();
+        this->initDepthMapShader->use();
         set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
-        this->initDepthMapShader.SetParameter("datex", 0);
+        this->initDepthMapShader->setUniform("datex", 0);
         this->depthmap[1].BindColourTexture();
 
         lw = this->depthmap[0].GetWidth() / 2;
@@ -1225,7 +1066,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             lx += lw;
         }
 
-        this->initDepthMapShader.Disable();
+        glUseProgram(0); // this->initDepthMapShader.Disable();
         this->depthmap[0].Disable();
 
         glMatrixMode(GL_PROJECTION);
@@ -1269,27 +1110,27 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
         glPointSize(1.0f);
         if (useVertCull) {
-            this->vertCntShade2r.Enable();
+            this->vertCntShade2r->use();
             set_cam_uniforms(this->vertCntShade2r, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
                 mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
-            glUniform4fv(this->vertCntShade2r.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
-            this->vertCntShade2r.SetParameter(
-                "depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
+            glUniform4fv(this->vertCntShade2r->getUniformLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fv(this->vertCntShade2r->getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+            glUniform3fv(this->vertCntShade2r->getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+            glUniform3fv(this->vertCntShade2r->getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
+            this->vertCntShade2r->setUniform("depthTexParams", (GLint)this->depthmap[0].GetWidth(),
+                (GLint)(this->depthmap[0].GetHeight() * 2 / 3), (GLint)maxLevel);
 
             glEnable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE2_ARB);
             this->depthmap[0].BindColourTexture();
-            this->vertCntShade2r.SetParameter("depthTex", 2);
+            this->vertCntShade2r->setUniform("depthTex", 2);
             glActiveTextureARB(GL_TEXTURE0_ARB);
 
             glColor3ub(128, 128, 128);
             glDisableClientState(GL_COLOR_ARRAY);
         } else {
-            this->vertCntShader.Enable();
+            this->vertCntShader->use();
             set_cam_uniforms(this->vertCntShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
                 mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         }
@@ -1333,7 +1174,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (useVertCull) {
-                        glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), minC,
+                        glUniform4f(this->vertCntShade2r->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), minC,
                             maxC, float(colTabSize));
                     }
                     if (ci.data[0] != 0) {
@@ -1346,8 +1187,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (useVertCull) {
-                        glUniform4f(
-                            this->vertCntShade2r.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                        glUniform4f(this->vertCntShade2r->getUniformLocation("inConsts1"), -1.0f, minC, maxC,
+                            float(colTabSize));
                     }
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1371,7 +1212,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 glDisableClientState(GL_VERTEX_ARRAY);
             }
         }
-        (useVertCull ? this->vertCntShade2r : this->vertCntShader).Disable();
+        glUseProgram(0); // (useVertCull ? this->vertCntShade2r : this->vertCntShader).Disable();
 #ifdef SPEAK_CELL_USAGE
         printf("]\n");
 #endif
@@ -1431,8 +1272,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 #endif
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, -1, "grim-draw-dots");
         // draw visible data (dots)
-        daPointShader->Enable();
-        set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        daPointShader->use();
+        set_cam_uniforms(daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
             mvp_matrix_inv, camPos, curlightDir);
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
@@ -1528,7 +1369,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                         colTabSize = 2;
                     }
 
-                    glUniform1i(daPointShader->ParameterLocation("colTab"), 0);
+                    glUniform1i(daPointShader->getUniformLocation("colTab"), 0);
                     minC = ptype.GetMinColourIndexValue();
                     maxC = ptype.GetMaxColourIndexValue();
                     glColor3ub(127, 127, 127);
@@ -1544,7 +1385,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     continue;
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(daPointShader->ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), minC, maxC,
+                    glUniform4f(daPointShader->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), minC, maxC,
                         float(colTabSize));
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1555,7 +1396,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     break;
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(daPointShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                    glUniform4f(daPointShader->getUniformLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                         glVertexPointer(3, GL_FLOAT, 16, NULL);
@@ -1583,7 +1424,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("]\n");
 #endif
-        daPointShader->Disable();
+        glUseProgram(0); // daPointShader->Disable();
         glPopDebugGroup();
 
         // draw spheres ///////////////////////////////////////////////////////
@@ -1592,30 +1433,30 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 #endif
         // draw visible data (spheres)
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 7, -1, "grim-draw-spheres");
-        daSphereShader->Enable();
-        set_cam_uniforms(*daSphereShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        daSphereShader->use();
+        set_cam_uniforms(daSphereShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
             mvp_matrix_inv, camPos, curlightDir);
 #ifdef SUPSAMP_LOOP
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
 #endif // SUPSAMP_LOOP
 
-            glUniform4fv(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
-            glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
-            glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
-            glUniform1i(daSphereShader->ParameterLocation("use_shading"), static_cast<int>(!deferredShading));
+            glUniform4fv(daSphereShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fv(daSphereShader->getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+            glUniform3fv(daSphereShader->getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+            glUniform3fv(daSphereShader->getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
+            glUniform1i(daSphereShader->getUniformLocation("use_shading"), static_cast<int>(!deferredShading));
 
             if (useVertCull) {
-                daSphereShader->SetParameter(
-                    "depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
+                daSphereShader->setUniform("depthTexParams", (GLint)this->depthmap[0].GetWidth(),
+                    (GLint)(this->depthmap[0].GetHeight() * 2 / 3), (GLint)maxLevel);
                 glEnable(GL_TEXTURE_2D);
                 glActiveTextureARB(GL_TEXTURE2_ARB);
                 this->depthmap[0].BindColourTexture();
-                daSphereShader->SetParameter("depthTex", 2);
+                daSphereShader->setUniform("depthTex", 2);
                 glActiveTextureARB(GL_TEXTURE0_ARB);
             } else {
-                daSphereShader->SetParameter("clipDat", 0.0f, 0.0f, 0.0f, 0.0f);
-                daSphereShader->SetParameter("clipCol", 0.0f, 0.0f, 0.0f);
+                daSphereShader->setUniform("clipDat", 0.0f, 0.0f, 0.0f, 0.0f);
+                daSphereShader->setUniform("clipCol", 0.0f, 0.0f, 0.0f);
             }
             glPointSize(defaultPointSize);
 
@@ -1715,7 +1556,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                             colTabSize = 2;
                         }
 
-                        glUniform1i(daSphereShader->ParameterLocation("colTab"), 0);
+                        glUniform1i(daSphereShader->getUniformLocation("colTab"), 0);
                         minC = ptype.GetMinColourIndexValue();
                         maxC = ptype.GetMaxColourIndexValue();
                         glColor3ub(127, 127, 127);
@@ -1731,7 +1572,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                         continue;
                     case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), minC, maxC,
+                        glUniform4f(daSphereShader->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), minC,
+                            maxC,
                             float(colTabSize));
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1743,7 +1585,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(
-                            daSphereShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                            daSphereShader->getUniformLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                             glVertexPointer(4, GL_FLOAT, 0, NULL);
@@ -1780,7 +1622,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             this->dsFBO.Disable();
         }
 
-        daSphereShader->Disable();
+        glUseProgram(0); // daSphereShader->Disable();
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         glDisable(GL_TEXTURE_2D);
 
@@ -1865,7 +1707,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
 
-        this->deferredShader.Enable();
+        this->deferredShader->use();
         // useless, everything is identity here
         //set_cam_uniforms(this->deferredShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
         //    mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
@@ -1877,14 +1719,15 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glActiveTextureARB(GL_TEXTURE2_ARB);
         this->dsFBO.BindColourTexture(2);
 
-        this->deferredShader.SetParameter("colour", 0);
-        this->deferredShader.SetParameter("normal", 1);
-        this->deferredShader.SetParameter("pos", 2);
+        this->deferredShader->setUniform("colour", 0);
+        this->deferredShader->setUniform("normal", 1);
+        this->deferredShader->setUniform("pos", 2);
 
+        glm::vec3 test = camView;
 
-        vislib::math::Vector<float, 3> ray(glm::value_ptr(camView));
-        vislib::math::Vector<float, 3> up(glm::value_ptr(camUp));
-        vislib::math::Vector<float, 3> right(glm::value_ptr(camRight));
+        glm::vec3 ray(camView);
+        glm::vec3 up(camUp);
+        glm::vec3 right(camRight);
 
         //vislib::math::Vector<float, 4> lightDir;
         //vislib::math::ShallowVector<float, 3> lp(lightDir.PeekComponents());
@@ -1894,12 +1737,12 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         //lp += up;
         //lightDir[3] = 0.0f;
         //this->deferredShader.SetParameterArray3("lightDir", 1, lightDir.PeekComponents());
-        this->deferredShader.SetParameterArray4("lightDir", 1, glm::value_ptr(curlightDir));
+        this->deferredShader->setUniform("lightDir", curlightDir);
 
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle) * static_cast<float>(fbo->getWidth()) / static_cast<float>(fbo->getHeight());
 
-        this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
+        this->deferredShader->setUniform("ray", camView);
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -1909,16 +1752,16 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glLoadIdentity();
         glColor3ub(255, 255, 255);
         glBegin(GL_QUADS);
-        glNormal3fv((ray - right - up).PeekComponents());
+        glNormal3fv(glm::value_ptr(ray - right - up));
         glTexCoord2f(0.0f, 0.0f);
         glVertex2i(-1, -1);
-        glNormal3fv((ray + right - up).PeekComponents());
+        glNormal3fv(glm::value_ptr(ray + right - up));
         glTexCoord2f(1.0f, 0.0f);
         glVertex2i(1, -1);
-        glNormal3fv((ray + right + up).PeekComponents());
+        glNormal3fv(glm::value_ptr(ray + right + up));
         glTexCoord2f(1.0f, 1.0f);
         glVertex2i(1, 1);
-        glNormal3fv((ray - right + up).PeekComponents());
+        glNormal3fv(glm::value_ptr(ray - right + up));
         glTexCoord2f(0.0f, 1.0f);
         glVertex2i(-1, 1);
         glEnd();
@@ -1936,7 +1779,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTextureARB(GL_TEXTURE0_ARB);
 
-        this->deferredShader.Disable();
+        glUseProgram(0); // this->deferredShader.Disable();
         glPopDebugGroup();
     }
 

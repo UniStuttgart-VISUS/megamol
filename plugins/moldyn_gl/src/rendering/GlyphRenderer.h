@@ -1,7 +1,7 @@
 /*
  * GlyphRenderer.h
  *
- * Copyright (C) 2022 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -17,8 +17,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 namespace megamol {
 namespace moldyn_gl {
@@ -57,6 +58,14 @@ public:
         return true;
     }
 
+#ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
+
     /** Ctor. */
     GlyphRenderer(void);
 
@@ -70,8 +79,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create(void) override;
-
-    bool makeShader(std::string vertex_name, std::string fragment_name, vislib_gl::graphics::gl::GLSLShader& shader);
 
     /**
      * The get extents callback. The module should set the members of
@@ -100,6 +107,11 @@ protected:
     bool Render(core_gl::view::CallRender3DGL& call) override;
 
 private:
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
+#endif
+
     enum Glyph {
         BOX = 0,
         ELLIPSOID = 1,
@@ -118,37 +130,38 @@ private:
     };
 
     /**The ellipsoid shader*/
-    vislib_gl::graphics::gl::GLSLShader m_box_shader;
-    vislib_gl::graphics::gl::GLSLShader m_ellipsoid_shader;
-    vislib_gl::graphics::gl::GLSLShader m_arrow_shader;
-    vislib_gl::graphics::gl::GLSLShader m_superquadric_shader;
-    vislib_gl::graphics::gl::GLSLShader m_gizmo_arrowglyph_shader;
-    vislib_gl::graphics::gl::GLSLShader m_gizmo_line_shader;
+    std::shared_ptr<glowl::GLSLProgram> box_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> ellipsoid_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> arrow_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> superquadric_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> gizmo_arrowglyph_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> gizmo_line_prgm_;
 
-    std::vector<core::utility::SSBOBufferArray> m_position_buffers;
-    std::vector<core::utility::SSBOBufferArray> m_radius_buffers;
-    std::vector<core::utility::SSBOBufferArray> m_direction_buffers;
-    std::vector<core::utility::SSBOBufferArray> m_color_buffers;
+    std::vector<core::utility::SSBOBufferArray> position_buffers_;
+    std::vector<core::utility::SSBOBufferArray> radius_buffers_;
+    std::vector<core::utility::SSBOBufferArray> direction_buffers_;
+    std::vector<core::utility::SSBOBufferArray> color_buffers_;
 
     /** The slot to fetch the data */
-    megamol::core::CallerSlot m_get_data_slot;
-    megamol::core::CallerSlot m_get_tf_slot;
-    megamol::core::CallerSlot m_get_clip_plane_slot;
-    megamol::core::CallerSlot m_read_flags_slot;
+    megamol::core::CallerSlot get_data_slot_;
+    megamol::core::CallerSlot get_tf_slot_;
+    megamol::core::CallerSlot get_clip_plane_slot_;
+    megamol::core::CallerSlot read_flags_slot_;
 
-    megamol::core::param::ParamSlot m_glyph_param;
-    megamol::core::param::ParamSlot m_scale_param;
-    megamol::core::param::ParamSlot m_radius_scale_param;
-    megamol::core::param::ParamSlot m_orientation_param;
-    megamol::core::param::ParamSlot m_length_filter_param;
-    megamol::core::param::ParamSlot m_color_interpolation_param;
-    megamol::core::param::ParamSlot m_min_radius_param;
-    megamol::core::param::ParamSlot m_color_mode_param;
-    megamol::core::param::ParamSlot m_superquadric_exponent_param;
+    megamol::core::param::ParamSlot glyph_param_;
+    megamol::core::param::ParamSlot scale_param_;
+    megamol::core::param::ParamSlot radius_scale_param_;
+    megamol::core::param::ParamSlot orientation_param_;
+    megamol::core::param::ParamSlot length_filter_param_;
+    megamol::core::param::ParamSlot color_interpolation_param_;
+    megamol::core::param::ParamSlot min_radius_param_;
+    megamol::core::param::ParamSlot color_mode_param_;
+    megamol::core::param::ParamSlot superquadric_exponent_param_;
 
-    SIZE_T m_last_hash = -1;
-    uint32_t m_last_frame_id = -1;
-    GLuint m_grey_tf;
+    SIZE_T last_hash_ = -1;
+    uint32_t last_frame_id_ = -1;
+    // TODO: glowl/Texture1D?
+    GLuint grey_tf_;
 };
 
 } // namespace rendering

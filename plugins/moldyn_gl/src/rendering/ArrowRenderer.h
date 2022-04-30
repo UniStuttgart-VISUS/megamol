@@ -20,9 +20,10 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+
 #include "vislib/assert.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {
@@ -64,6 +65,14 @@ public:
         return true;
     }
 
+#ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
+
     /** Ctor. */
     ArrowRenderer(void);
 
@@ -104,32 +113,37 @@ protected:
     virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
+#endif
+
     /** The call for data */
-    CallerSlot getDataSlot;
+    CallerSlot get_data_slot_;
 
     /** The call for Transfer function */
-    CallerSlot getTFSlot;
+    CallerSlot get_tf_slot_;
 
     /** The call for selection flags */
-    CallerSlot getFlagsSlot;
+    CallerSlot get_flags_slot_;
 
     /** The call for clipping plane */
-    CallerSlot getClipPlaneSlot;
+    CallerSlot get_clip_plane_slot_;
 
     /** The call for light sources */
-    core::CallerSlot getLightsSlot;
+    core::CallerSlot get_lights_slot_;
 
     /** The arrow shader */
-    vislib_gl::graphics::gl::GLSLShader arrowShader;
+    std::unique_ptr<glowl::GLSLProgram> arrow_pgrm_;
 
     /** A simple black-to-white transfer function texture as fallback */
-    unsigned int greyTF;
+    unsigned int grey_tf_;
 
     /** Scaling factor for arrow lengths */
-    param::ParamSlot lengthScaleSlot;
+    param::ParamSlot length_scale_slot_;
 
     /** Length filter for arrow lengths */
-    param::ParamSlot lengthFilterSlot;
+    param::ParamSlot length_filter_slot_;
 };
 
 } /* end namespace rendering */

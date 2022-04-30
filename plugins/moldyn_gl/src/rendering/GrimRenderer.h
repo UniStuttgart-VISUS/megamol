@@ -33,9 +33,10 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/mathtypes.h"
 #include "vislib/sys/sysfunctions.h"
+
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <climits>
 
@@ -198,36 +199,36 @@ private:
      */
     static bool depthSort(const vislib::Pair<unsigned int, float>& lhs, const vislib::Pair<unsigned int, float>& rhs);
 
-    void set_cam_uniforms(vislib_gl::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+    void set_cam_uniforms(std::shared_ptr<glowl::GLSLProgram> shader, glm::mat4 view_matrix_inv,
         glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
         glm::vec4 camPos, glm::vec4 curlightDir);
 
     /** The sphere shader */
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
+    std::shared_ptr<glowl::GLSLProgram> sphereShader;
 
     /** The vanilla sphere shader */
-    vislib_gl::graphics::gl::GLSLShader vanillaSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> vanillaSphereShader;
 
     /** The shader to init the depth fbo */
-    vislib_gl::graphics::gl::GLSLShader initDepthShader;
+    std::shared_ptr<glowl::GLSLProgram> initDepthShader;
 
     /** The shader to init the depth mip-map generation */
-    vislib_gl::graphics::gl::GLSLShader initDepthMapShader;
+    std::shared_ptr<glowl::GLSLProgram> initDepthMapShader;
 
     /** The shader for the depth mip-mapping ping-ponging */
-    vislib_gl::graphics::gl::GLSLShader depthMipShader;
+    std::shared_ptr<glowl::GLSLProgram> depthMipShader;
 
     /** The shader to render far-away, solid-coloured points */
-    vislib_gl::graphics::gl::GLSLShader pointShader;
+    std::shared_ptr<glowl::GLSLProgram> pointShader;
 
     /** The shader to init the depth buffer with points */
-    vislib_gl::graphics::gl::GLSLShader initDepthPointShader;
+    std::shared_ptr<glowl::GLSLProgram> initDepthPointShader;
 
     /** Von Guido aus */
-    vislib_gl::graphics::gl::GLSLShader vertCntShader;
+    std::shared_ptr<glowl::GLSLProgram> vertCntShader;
 
     /** Von Guido aus */
-    vislib_gl::graphics::gl::GLSLShader vertCntShade2r;
+    std::shared_ptr<glowl::GLSLProgram> vertCntShade2r;
 
     /** The frame buffer object for the depth estimate */
     vislib_gl::graphics::gl::FramebufferObject fbo;
@@ -278,16 +279,16 @@ private:
     vislib_gl::graphics::gl::FramebufferObject dsFBO;
 
     /** The sphere shader */
-    vislib_gl::graphics::gl::GLSLShader deferredSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> deferredSphereShader;
 
     /** The vanilla sphere shader */
-    vislib_gl::graphics::gl::GLSLShader deferredVanillaSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> deferredVanillaSphereShader;
 
     /** The shader to render far-away, solid-coloured points */
-    vislib_gl::graphics::gl::GLSLShader deferredPointShader;
+    std::shared_ptr<glowl::GLSLProgram> deferredPointShader;
 
     /** The deferred shader */
-    vislib_gl::graphics::gl::GLSLShader deferredShader;
+    std::shared_ptr<glowl::GLSLProgram> deferredShader;
 
     /** The hash of the incoming data */
     SIZE_T inhash;

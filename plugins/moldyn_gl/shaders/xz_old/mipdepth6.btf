@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="mipdepth6">
 
-    <shader name="spherevertex">
+    <!-- <shader name="spherevertex">
         <snippet type="version">110</snippet>
         <snippet name="common::defines"/>
         <snippet type="string">
@@ -67,23 +67,23 @@ void main(void) {
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
-        
+
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
-        
+
         gl_FrontColor = texture1D(colTab, cid);
     }
 #ifdef WITH_SCALING
     rad *= scaling;
 #endif // WITH_SCALING
-    
+
     squarRad = rad * rad;
 ]]>
         </snippet>
 
         <snippet name="posTrans" type="string">
 <![CDATA[
-    // object pivot point in object space    
+    // object pivot point in object space
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
     // calculate cam position
     camPos = cam_pos;
@@ -121,10 +121,10 @@ void main(void) {
 }
 ]]>
         </snippet>
-    </shader>
+    </shader> -->
 
 
-    <shader name="theOtherSphereVertex">
+    <!-- <shader name="theOtherSphereVertex">
         <snippet type="version">120</snippet>
         <snippet type="string">
 <![CDATA[
@@ -206,10 +206,10 @@ void main(void) {
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
-        
+
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
-        
+
         gl_FrontColor = texture1D(colTab, cid);
     }
 
@@ -224,7 +224,7 @@ void main(void) {
         <snippet name="posTrans" type="string">
 <![CDATA[
 
-    // object pivot point in object space    
+    // object pivot point in object space
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
@@ -268,7 +268,7 @@ void main(void) {
 #else
     lightDir.w = 1.0;
 #endif // SMALL_SPRITE_LIGHTING
-    
+
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;
 #endif // RETICLE
@@ -329,9 +329,9 @@ void main(void) {
 }
 ]]>
         </snippet>
-    </shader>
+    </shader> -->
 
-    <shader name="otherSphereVertex">
+    <!-- <shader name="otherSphereVertex">
         <snippet type="version">120</snippet>
         <snippet type="string">
 <![CDATA[
@@ -347,9 +347,9 @@ void main(void) {
         <snippet name="theOtherSphereVertex::SphereTouchPlane" />
         <snippet name="theOtherSphereVertex::Output" />
         <snippet name="theOtherSphereVertex::culling" />
-    </shader>
+    </shader> -->
 
-    <shader name="spherefragment">
+    <!-- <shader name="spherefragment">
         <snippet type="version">120</snippet>
         <snippet type="string">
 <![CDATA[
@@ -360,7 +360,7 @@ void main(void) {
         <snippet name="common::defines" />
 
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
-        
+
         <snippet type="string">
 <![CDATA[
 varying float pointSize;
@@ -399,15 +399,15 @@ void main(void) {
     vec3 ray;
     float lambda;
     // transform fragment coordinates from window coordinates to view coordinates.
-    coord = gl_FragCoord 
-        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+    coord = gl_FragCoord
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
-    
+
     // transform fragment coordinates from view coordinates to object coordinates.
     coord = mvp_inv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
-    
+
     // calc the viewing ray
     ray = normalize(coord.xyz - camPos.xyz);
     // chose color for lighting
@@ -418,11 +418,11 @@ void main(void) {
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
     float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
 #ifdef CLIP
-    if (radicand < 0.0) { 
+    if (radicand < 0.0) {
 #ifdef DISCARD_COLOR_MARKER
-        color = vec3(1.0, 0.0, 0.0);       
+        color = vec3(1.0, 0.0, 0.0);
 #else // DISCARD_COLOR_MARKER
-        discard; 
+        discard;
 #endif // DISCARD_COLOR_MARKER
     }
 #endif // CLIP
@@ -503,16 +503,16 @@ void main(void) {
   } else {
     gl_FragData[0] = vec4(color.rgb, 1.0);
   }
-  
+
   //normal = normalize((mv_inv_transp * vec4(normal, 1.0)).xyz);
   gl_FragData[1] = vec4(normal.xyz, clamp((pointSize - 4.0) * 0.25, 0.0, 1.0));
   gl_FragData[2] = vec4(sphereintersection.xyz + objPos.xyz, 1.0);
 }
 ]]>
         </snippet>
-    </shader>
+    </shader> -->
 
-    <shader name="pointvertex">
+    <!-- <shader name="pointvertex">
         <snippet type="string">
 <![CDATA[
 uniform vec4 inConsts1;
@@ -533,10 +533,10 @@ void main(void) {
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
-        
+
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
-        
+
         gl_FrontColor = texture1D(colTab, cid);
     }
 
@@ -546,9 +546,9 @@ void main(void) {
 }
 ]]>
         </snippet>
-    </shader>
+    </shader> -->
 
-    <shader name="pointfragment">
+    <!-- <shader name="pointfragment">
         <snippet type="version">120</snippet>
         <snippet type="string">
 <![CDATA[
@@ -563,10 +563,10 @@ void main(void) {
 }
 ]]>
         </snippet>
-    </shader>
+    </shader> -->
 
     <namespace name="deferredShader">
-        <shader name="vert">
+        <!-- <shader name="vert">
             <snippet type="version">120</snippet>
             <snippet type="string">
 <![CDATA[
@@ -580,9 +580,9 @@ void main(void) {
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
 
-        <shader name="frag">
+        <!-- <shader name="frag">
             <snippet type="version">120</snippet>
             <snippet type="string">
 <![CDATA[
@@ -599,7 +599,7 @@ varying vec3 interpolRay;
 
 ]]>
             </snippet>
-            
+
             <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
 
             <snippet type="string">
@@ -697,7 +697,7 @@ void main(void) {
 }
 ]]>
             </snippet>
-        </shader>
+        </shader> -->
     </namespace>
 
 </btf>
