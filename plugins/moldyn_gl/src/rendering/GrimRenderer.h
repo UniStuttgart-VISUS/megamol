@@ -201,97 +201,97 @@ private:
 
     void set_cam_uniforms(std::shared_ptr<glowl::GLSLProgram> shader, glm::mat4 view_matrix_inv,
         glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
-        glm::vec4 camPos, glm::vec4 curlightDir);
+        glm::vec4 cam_pos, glm::vec4 curlight_dir);
 
     /** The sphere shader */
-    std::shared_ptr<glowl::GLSLProgram> sphereShader;
+    std::shared_ptr<glowl::GLSLProgram> sphere_shader_;
 
     /** The vanilla sphere shader */
-    std::shared_ptr<glowl::GLSLProgram> vanillaSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> vanilla_sphere_shader_;
 
     /** The shader to init the depth fbo */
-    std::shared_ptr<glowl::GLSLProgram> initDepthShader;
+    std::shared_ptr<glowl::GLSLProgram> init_depth_shader_;
 
     /** The shader to init the depth mip-map generation */
-    std::shared_ptr<glowl::GLSLProgram> initDepthMapShader;
+    std::shared_ptr<glowl::GLSLProgram> init_depth_map_shader_;
 
     /** The shader for the depth mip-mapping ping-ponging */
-    std::shared_ptr<glowl::GLSLProgram> depthMipShader;
+    std::shared_ptr<glowl::GLSLProgram> depth_mip_shader_;
 
     /** The shader to render far-away, solid-coloured points */
-    std::shared_ptr<glowl::GLSLProgram> pointShader;
+    std::shared_ptr<glowl::GLSLProgram> point_shader_;
 
     /** The shader to init the depth buffer with points */
-    std::shared_ptr<glowl::GLSLProgram> initDepthPointShader;
+    std::shared_ptr<glowl::GLSLProgram> init_depth_point_shader_;
 
     /** Von Guido aus */
-    std::shared_ptr<glowl::GLSLProgram> vertCntShader;
+    std::shared_ptr<glowl::GLSLProgram> vert_cnt_shader_;
 
     /** Von Guido aus */
-    std::shared_ptr<glowl::GLSLProgram> vertCntShade2r;
+    std::shared_ptr<glowl::GLSLProgram> vert_cnt_shader_2_;
 
     /** The frame buffer object for the depth estimate */
-    vislib_gl::graphics::gl::FramebufferObject fbo;
+    vislib_gl::graphics::gl::FramebufferObject fbo_;
 
     /** buffers for depth-max mip map */
-    vislib_gl::graphics::gl::FramebufferObject depthmap[2];
+    vislib_gl::graphics::gl::FramebufferObject depthmap_[2];
 
     /** The call for data */
-    core::CallerSlot getDataSlot;
+    core::CallerSlot get_data_slot_;
 
     /** The call for Transfer function */
-    core::CallerSlot getTFSlot;
+    core::CallerSlot get_tf_slot_;
 
     /** The call for light sources */
-    core::CallerSlot getLightsSlot;
+    core::CallerSlot get_lights_slot_;
 
     /** Flag to activate per cell culling */
-    core::param::ParamSlot useCellCullSlot;
+    core::param::ParamSlot use_cell_cull_slot_;
 
     /** Flag to activate per vertex culling */
-    core::param::ParamSlot useVertCullSlot;
+    core::param::ParamSlot use_vert_cull_slot_;
 
     /** Flag to activate output of percentage of culled cells */
-    core::param::ParamSlot speakCellPercSlot;
+    core::param::ParamSlot speak_cell_perc_slot_;
 
     /** Flag to activate output of number of vertices */
-    core::param::ParamSlot speakVertCountSlot;
+    core::param::ParamSlot speak_vert_count_slot_;
 
     /** De-/Activates deferred shading with normal generation */
-    core::param::ParamSlot deferredShadingSlot;
+    core::param::ParamSlot deferred_shading_slot_;
 
     /** A simple black-to-white transfer function texture as fallback */
-    unsigned int greyTF;
+    unsigned int grey_tf_;
 
     /** Cell distances */
-    std::vector<vislib::Pair<unsigned int, float>> cellDists;
+    std::vector<vislib::Pair<unsigned int, float>> cell_dists_;
 
     /** Cell rendering informations */
-    std::vector<CellInfo> cellInfos;
+    std::vector<CellInfo> cell_infos_;
 
     /** Bytes of the GPU-Memory available for caching */
-    SIZE_T cacheSize;
+    SIZE_T cache_size_;
 
     /** Bytes of the GPU-Memory used by the caching */
-    SIZE_T cacheSizeUsed;
+    SIZE_T cache_size_used_;
 
     /** Frame buffer object used for deferred shading */
-    vislib_gl::graphics::gl::FramebufferObject dsFBO;
+    vislib_gl::graphics::gl::FramebufferObject ds_fbo_;
 
     /** The sphere shader */
-    std::shared_ptr<glowl::GLSLProgram> deferredSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> deferred_sphere_shader_;
 
     /** The vanilla sphere shader */
-    std::shared_ptr<glowl::GLSLProgram> deferredVanillaSphereShader;
+    std::shared_ptr<glowl::GLSLProgram> deferred_vanilla_sphere_shader_;
 
     /** The shader to render far-away, solid-coloured points */
-    std::shared_ptr<glowl::GLSLProgram> deferredPointShader;
+    std::shared_ptr<glowl::GLSLProgram> deferred_point_shader_;
 
     /** The deferred shader */
-    std::shared_ptr<glowl::GLSLProgram> deferredShader;
+    std::shared_ptr<glowl::GLSLProgram> deferred_shader_;
 
     /** The hash of the incoming data */
-    SIZE_T inhash;
+    SIZE_T inhash_;
 };
 
 } /* end namespace rendering */
