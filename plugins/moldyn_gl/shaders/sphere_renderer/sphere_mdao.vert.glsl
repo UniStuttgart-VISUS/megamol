@@ -1,6 +1,7 @@
 #version 430
 
 #include "sphere_renderer/inc/mdao_vertex_extensions.inc.glsl"
+#include "sphere_renderer/inc/flags_snippet.inc.glsl"
 #include "commondefines.glsl"
 #include "sphere_renderer/inc/vertex_attributes.inc.glsl"
 #include "core/bitflags.inc.glsl"

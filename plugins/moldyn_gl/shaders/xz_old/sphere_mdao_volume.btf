@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao_volume">
 
     <shader name="vertex">
@@ -16,4 +16,4 @@
         <snippet name="Main"    type="file">sphere/mdao_volume_fragment_main.glsl</snippet>
     </shader>
 
-</btf>
+</btf> -->
