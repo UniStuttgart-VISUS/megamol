@@ -1,6 +1,7 @@
 #include "SequenceRenderer.h"
 #include "stdafx.h"
 
+#include "RuntimeConfig.h"
 #include "SequenceRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -9,7 +10,9 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
@@ -47,12 +50,11 @@ SequenceRenderer::SequenceRenderer(void)
         , resCols(0)
         , resRows(0)
         , rowHeight(3.0f)
-        ,
 #ifndef USE_SIMPLE_FONT
-        theFont(FontInfo_Verdana)
-        ,
+        , theFont(FontInfo_Verdana)
 #endif // USE_SIMPLE_FONT
-        markerTextures(0)
+        , markerTextures(0)
+        , markerTextures_{}
         , resSelectionCall(nullptr)
         , leftMouseDown(false) {
 
@@ -94,6 +96,13 @@ SequenceRenderer::SequenceRenderer(void)
 SequenceRenderer::~SequenceRenderer(void) {
     this->Release();
 }
+
+std::vector<std::string> SequenceRenderer::requested_lifetime_resources() {
+    auto lr = Module::requested_lifetime_resources();
+    lr.push_back("RuntimeConfig");
+    return lr;
+}
+
 
 /*
  * SequenceRenderer::create
@@ -248,30 +257,38 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         for (unsigned int i = 0; i < this->resIndex.Count(); i++) {
-            markerTextures[0]->Bind();
+            //markerTextures[0]->Bind();
+            markerTextures_[0]->bindTexture();
             if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX) {
                 glColor3f(1.0f, 0.0f, 0.0f);
                 if (i > 0 && this->resSecStructType[i - 1] != this->resSecStructType[i]) {
-                    markerTextures[4]->Bind();
+                    //markerTextures[4]->Bind();
+                    markerTextures_[4]->bindTexture();
                 } else if ((i + 1) < this->resIndex.Count() &&
                            this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    markerTextures[6]->Bind();
+                    //markerTextures[6]->Bind();
+                    markerTextures_[6]->bindTexture();
                 } else {
-                    markerTextures[5]->Bind();
+                    //markerTextures[5]->Bind();
+                    markerTextures_[5]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET) {
                 glColor3f(0.0f, 0.0f, 1.0f);
                 if ((i + 1) < this->resIndex.Count() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    markerTextures[3]->Bind();
+                    //markerTextures[3]->Bind();
+                    markerTextures_[3]->bindTexture();
                 } else {
-                    markerTextures[2]->Bind();
+                    //markerTextures[2]->Bind();
+                    markerTextures_[2]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN) {
                 glColor3f(1.0f, 1.0f, 0.0f);
-                markerTextures[1]->Bind();
+                //markerTextures[1]->Bind();
+                markerTextures_[1]->bindTexture();
             } else { // TYPE_COIL
                 glColor3f(0.5f, 0.5f, 0.5f);
-                markerTextures[1]->Bind();
+                //markerTextures[1]->Bind();
+                markerTextures_[1]->bindTexture();
             }
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
@@ -770,44 +787,23 @@ char SequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resName) {
 }
 
 
-bool SequenceRenderer::LoadTexture(vislib::StringA filename) {
-    static vislib::graphics::BitmapImage img;
-    static sg::graphics::PngBitmapCodec pbc;
-    pbc.Image() = &img;
-    ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = NULL;
-    SIZE_T size = 0;
-
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
-            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-            for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
-                BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
-                BYTE g = img.PeekDataAs<BYTE>()[i * 4 + 1];
-                BYTE b = img.PeekDataAs<BYTE>()[i * 4 + 2];
-                if (r + g + b > 0) {
-                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 255;
-                } else {
-                    img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
-                }
-            }
-            markerTextures.Add(vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>());
-            markerTextures.Last() = new vislib_gl::graphics::gl::OpenGLTexture2D();
-            if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) !=
-                GL_NO_ERROR) {
-                Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
-                return false;
-            }
-            markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
-            return true;
-        } else {
-            Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
+bool SequenceRenderer::LoadTexture(const std::string filename) {
+    // find the texture filepath
+    std::string texture_filepath;
+    const auto resource_directories =
+        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+    for (const auto& cur_dir : resource_directories) {
+        auto found_filepath = core::utility::FileUtils::SearchFileRecursive(cur_dir, filename);
+        if (!found_filepath.empty()) {
+            texture_filepath = found_filepath;
         }
+    }
+    // load the actual texture
+    markerTextures_.push_back(nullptr);
+    if (core_gl::utility::RenderUtils::LoadTextureFromFile(markerTextures_.back(), texture_filepath)) {
+        return true;
     } else {
-        Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
+        markerTextures_.pop_back();
     }
     return false;
 }

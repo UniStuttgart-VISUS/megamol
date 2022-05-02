@@ -63,6 +63,8 @@ public:
         return true;
     }
 
+    std::vector<std::string> requested_lifetime_resources() override;
+
     /** ctor */
     SequenceRenderer(void);
 
@@ -102,7 +104,7 @@ protected:
     /**
      * TODO
      */
-    bool LoadTexture(vislib::StringA filename);
+    bool LoadTexture(const std::string filename);
 
 private:
     /**
@@ -209,6 +211,7 @@ private:
     std::vector<glm::vec3> colorTable;
 
     vislib::Array<vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>> markerTextures;
+    std::vector<std::shared_ptr<glowl::Texture2D>> markerTextures_;
 
     // mouse hover
     vislib::math::Vector<float, 2> mousePos;
