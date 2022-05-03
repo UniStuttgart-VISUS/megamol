@@ -204,7 +204,6 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(view));
 
-
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
     if (this->resSelectionCall != NULL) {
         (*this->resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
@@ -256,42 +255,35 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         // draw tiles for structure
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
+        glActiveTexture(GL_TEXTURE0);
         for (unsigned int i = 0; i < this->resIndex.Count(); i++) {
-            //markerTextures[0]->Bind();
             markerTextures_[0]->bindTexture();
             if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX) {
                 glColor3f(1.0f, 0.0f, 0.0f);
                 if (i > 0 && this->resSecStructType[i - 1] != this->resSecStructType[i]) {
-                    //markerTextures[4]->Bind();
                     markerTextures_[4]->bindTexture();
                 } else if ((i + 1) < this->resIndex.Count() &&
                            this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    //markerTextures[6]->Bind();
                     markerTextures_[6]->bindTexture();
                 } else {
-                    //markerTextures[5]->Bind();
                     markerTextures_[5]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET) {
                 glColor3f(0.0f, 0.0f, 1.0f);
                 if ((i + 1) < this->resIndex.Count() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    //markerTextures[3]->Bind();
                     markerTextures_[3]->bindTexture();
                 } else {
-                    //markerTextures[2]->Bind();
                     markerTextures_[2]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN) {
                 glColor3f(1.0f, 1.0f, 0.0f);
-                //markerTextures[1]->Bind();
                 markerTextures_[1]->bindTexture();
             } else { // TYPE_COIL
                 glColor3f(0.5f, 0.5f, 0.5f);
-                //markerTextures[1]->Bind();
                 markerTextures_[1]->bindTexture();
             }
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            /*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);*/
             glBegin(GL_QUADS);
             glTexCoord2f(eps, eps);
             glVertex2f(this->vertices[2 * i], -this->vertices[2 * i + 1]);
@@ -305,6 +297,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         }
         glDisable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
+
         // draw tiles for binding sites
         glBegin(GL_QUADS);
         for (unsigned int i = 0; i < this->bsIndices.Count(); i++) {
@@ -427,6 +420,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
             }
         }
         glDisable(GL_BLEND);
+
         // draw frames for selected amino acids
         fgColor[3] = 1.0f;
         glColor3fv(fgColor);
