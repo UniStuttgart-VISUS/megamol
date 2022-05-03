@@ -23,6 +23,7 @@
 #include "RamachandranPlot.h"
 #include "SequenceRenderer.h"
 #include "SplitMergeRenderer.h"
+#include "UncertaintySequenceRenderer.h"
 
 // modules depending on GL calls
 #include "MSMSCavityFinder.h"
@@ -56,6 +57,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SplitMergeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::RamachandranPlot>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VariantMatchRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UncertaintySequenceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
