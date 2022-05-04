@@ -34,10 +34,12 @@ file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_MINOR "${PROJECT_VERSION_MINOR}
 file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 file(WRITE ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION "${PROJECT_VERSION}")
 
+option("MM_BUILD_INFO_EXACT_TIME" "Use exact time instead of just hourly timestamps." OFF)
+
 # Run build time script
 add_custom_target(megamol_build_info_script
   BYPRODUCTS ${BUILD_INFO_BUILD_TIME_FILES}
-  COMMAND ${CMAKE_COMMAND} -P ${INFO_SCRIPT_DIR}/megamol_build_info_script.cmake)
+  COMMAND ${CMAKE_COMMAND} -D BUILD_INFO_EXACT_TIME=${MM_BUILD_INFO_EXACT_TIME} -P ${INFO_SCRIPT_DIR}/megamol_build_info_script.cmake)
 
 # Resources
 cmrc_add_resource_library(megamol_build_info_rc WHENCE ${CMAKE_BINARY_DIR}/megamol_build_info

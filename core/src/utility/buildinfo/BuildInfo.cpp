@@ -66,6 +66,11 @@ std::string const& megamol::core::utility::buildinfo::MEGAMOL_BUILD_TIME() {
     return res;
 }
 
+bool megamol::core::utility::buildinfo::MEGAMOL_BUILD_TIME_IS_EXACT() {
+    static bool res = static_cast<bool>(loadIntResource("MEGAMOL_BUILD_TIME_IS_EXACT"));
+    return res;
+}
+
 std::string const& megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() {
     static auto res = loadStringResource("MEGAMOL_GIT_HASH");
     return res;
