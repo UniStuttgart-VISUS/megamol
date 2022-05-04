@@ -114,9 +114,11 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
 
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, tex_format, GL_FLOAT, this->tex.data());
 
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        // Always keep both at linear! UV-Coords here are data values, so OpenGL
+        // cannot correctly decide if min or mag is the correct operation.
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
         glBindTexture(GL_TEXTURE_1D, otid);
 
