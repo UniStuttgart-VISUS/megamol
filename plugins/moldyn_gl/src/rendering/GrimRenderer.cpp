@@ -137,7 +137,7 @@ bool GrimRenderer::create(void) {
 
     try {
         sphere_shader_ = core::utility::make_glowl_shader(
-            "sphere_hader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
+            "sphere_shader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
         
         vanilla_sphere_shader_ = core::utility::make_glowl_shader(
             "vanilla_sphere_shader", shader_options, "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");

@@ -271,7 +271,8 @@ private:
     vislib::math::Cuboid<float> cur_clip_box_;
 
     // --------------------------------------------------------------------
-
+    std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
+    
     bool init_resources_;
     RenderMode render_mode_;
     GLuint grey_tf_;
@@ -283,6 +284,8 @@ private:
     std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
     std::shared_ptr<glowl::GLSLProgram> sphere_geometry_prgm_;
     std::shared_ptr<glowl::GLSLProgram> lighting_prgm_;
+
+    std::unique_ptr<glowl::BufferObject> ao_dir_ubo_;
 
     GLuint vert_array_;
     SimpleSphericalParticles::ColourDataType col_type_;
@@ -405,11 +408,9 @@ private:
     /**
      * Check if specified render mode or all render mode are available.
      *
-     * @param out_flag_snippet   The vertex shader snippet defining the usage of the flag storage depending on its availability.
-     *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool isFlagStorageAvailable(std::string& out_flag_snippet);
+    bool isFlagStorageAvailable();
 
     /**
      * Create shaders for given render mode.

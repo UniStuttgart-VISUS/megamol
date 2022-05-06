@@ -1,3 +1,4 @@
+
     vec4 depthPos; // ass of sphere in object space
 
     vec3 v = objPos.xyz - cam_pos.xyz;

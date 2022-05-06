@@ -1,1 +1,2 @@
+
 varying float pointSize;

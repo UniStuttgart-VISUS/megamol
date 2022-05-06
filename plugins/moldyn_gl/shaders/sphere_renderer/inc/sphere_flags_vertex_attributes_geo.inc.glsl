@@ -1,1 +1,2 @@
+
 out uint currentFlag;

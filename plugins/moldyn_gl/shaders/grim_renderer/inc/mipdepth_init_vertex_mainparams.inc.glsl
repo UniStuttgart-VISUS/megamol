@@ -1,3 +1,4 @@
+
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings

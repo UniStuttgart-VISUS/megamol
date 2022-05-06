@@ -1,3 +1,4 @@
+
 #define SSBO_FLAGS_BINDING_POINT 2
 
 uniform uint flags_enabled;

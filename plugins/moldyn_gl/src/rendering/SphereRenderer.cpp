@@ -27,10 +27,14 @@ using namespace vislib_gl::graphics::gl;
 
 #define SSBO_GENERATED_SHADER_INSTANCE "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "std430"     // "std430"
+#define AO_DIR_UBO_BINDING_POINT 0
 
+
+// Beware of changing the binding points
+// Need to be changed in shaders accordingly
 const GLuint ssbo_flags_binding_point = 2;
 const GLuint ssbo_vertex_binding_point = 3;
-const GLuint ssb0_color_binding_point = 4;
+const GLuint ssbo_color_binding_point = 4;
 
 SphereRenderer::SphereRenderer(void)
         : core_gl::view::Renderer3DModuleGL()
@@ -53,6 +57,7 @@ SphereRenderer::SphereRenderer(void)
         , cur_mvp_()
         , cur_mvp_inv_()
         , cur_mvp_transp_()
+        , shader_options_flags_(nullptr)
         , init_resources_(true)
         , render_mode_(RenderMode::SIMPLE)
         , grey_tf_(0)
@@ -62,6 +67,7 @@ SphereRenderer::SphereRenderer(void)
         , sphere_prgm_()
         , sphere_geometry_prgm_()
         , lighting_prgm_()
+        , ao_dir_ubo_(nullptr)
         , vert_array_()
         , col_type_(SimpleSphericalParticles::ColourDataType::COLDATA_NONE)
         , vert_type_(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
@@ -341,6 +347,9 @@ bool SphereRenderer::create(void) {
     timers_ = perf_manager_->add_timers(this, {upload_timer, render_timer});
 #endif
 
+    std::vector<float> dummy = {0};
+    ao_dir_ubo_ = std::make_unique<glowl::BufferObject>(GL_UNIFORM_BUFFER, dummy);
+
     return true;
 }
 
@@ -481,19 +490,25 @@ bool SphereRenderer::createResources() {
     glBindTexture(GL_TEXTURE_1D, 0);
 
     // Check for flag storage availability and get specific shader snippet
-    std::string flags_shader_snippet;
-    this->isFlagStorageAvailable(flags_shader_snippet);
-    this->generateShaderFile("flag_snippet", flags_shader_snippet);
+    // TODO: test flags!
     // create shader programs
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
+    
+    std::string flags_shader_snippet;
+    if (this->flags_available_) {
+        shader_options_flags_->addDefinition("flags_available");
+    }
+
     try {
         switch (this->render_mode_) {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED):
         {
-            sphere_prgm_ = core::utility::make_glowl_shader(
-                "sphere_simple", shader_options, "sphere_renderer/sphere_simple.vert.glsl", "sphere_renderer/sphere_simple.frag.glsl");
+            sphere_prgm_.reset();
+            sphere_prgm_ = core::utility::make_glowl_shader("sphere_simple", *shader_options_flags_,
+                "sphere_renderer/sphere_simple.vert.glsl", "sphere_renderer/sphere_simple.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
@@ -503,8 +518,9 @@ bool SphereRenderer::createResources() {
 
         case (RenderMode::GEOMETRY_SHADER):
         {
-            sphere_geometry_prgm_ =
-                core::utility::make_glowl_shader("sphere_geometry", shader_options, "sphere_renderer/sphere_geometry.vert.glsl",
+            sphere_geometry_prgm_.reset();
+            sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_geometry", *shader_options_flags_,
+                "sphere_renderer/sphere_geometry.vert.glsl",
                     "sphere_renderer/sphere_geometry.geom.glsl", "sphere_renderer/sphere_geometry.frag.glsl");
 
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 0, "inPosition");
@@ -513,15 +529,18 @@ bool SphereRenderer::createResources() {
         }
         break;
 
-        case (RenderMode::SSBO_STREAM): {
+        case (RenderMode::SSBO_STREAM):
+        {
             this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
             glGenVertexArrays(1, &this->vert_array_);
             glBindVertexArray(this->vert_array_);
             glBindVertexArray(0);
-        } break;
+        }
+        break;
 
-        case (RenderMode::SPLAT): {
+        case (RenderMode::SPLAT):
+        {
             this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
@@ -535,17 +554,19 @@ bool SphereRenderer::createResources() {
                 this->the_single_buffer_, 0, this->buf_size_ * this->num_buffers_, single_buffer_mapping_bits_);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glBindVertexArray(0);
-        } break;
+        }
+        break;
 
         case (RenderMode::BUFFER_ARRAY):
         {
-            sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", shader_options,
+            sphere_prgm_.reset();
+            sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", *shader_options_flags_,
                 "sphere_renderer/sphere_bufferarray.vert.glsl", "sphere_renderer/sphere_bufferarray.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
-
+            
             glGenVertexArrays(1, &this->vert_array_);
             glBindVertexArray(this->vert_array_);
             glGenBuffers(1, &this->the_single_buffer_);
@@ -557,7 +578,7 @@ bool SphereRenderer::createResources() {
             glBindVertexArray(0);
         }
         break;
-
+        
         case (RenderMode::AMBIENT_OCCLUSION):
         {
             this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
@@ -579,7 +600,8 @@ bool SphereRenderer::createResources() {
             glGenFramebuffers(1, &(this->g_buffer_.fbo));
 
             // Create the sphere shader
-            sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", shader_options,
+            sphere_prgm_.reset();
+            sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", *shader_options_flags_,
                 "sphere_renderer/sphere_mdao.vert.glsl", "sphere_renderer/sphere_mdao.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
@@ -587,7 +609,8 @@ bool SphereRenderer::createResources() {
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
 
             // Create the geometry shader
-            sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_mdao_geometry", shader_options,
+            sphere_geometry_prgm_.reset();
+            sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_mdao_geometry", *shader_options_flags_,
                 "sphere_renderer/sphere_mdao_geometry.vert.glsl", "sphere_renderer/sphere_mdao_geometry.geom.glsl",
                 "sphere_renderer/sphere_mdao_geometry.frag.glsl");
 
@@ -604,11 +627,17 @@ bool SphereRenderer::createResources() {
             float apex = this->ao_cone_apex_slot_.Param<param::FloatParam>()->Value();
             std::vector<glm::vec4> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
-            std::string directions_code = this->generateDirectionShaderArrayString(directions, "coneDirs");
-            this->generateShaderFile("mdao_deferred_directions", directions_code);
+            lighting_so.addDefinition("NUM_CONEDIRS", std::to_string(directions.size()));
 
-            lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", shader_options,
+            ao_dir_ubo_->rebuffer(directions);
+
+            lighting_prgm_.reset();
+            lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
                 "sphere_renderer/sphere_mdao_deferred.vert.glsl", "sphere_renderer/sphere_mdao_deferred.frag.glsl");
+
+            // TODO glowl implementation of GLSLprogram misses this functionality
+            auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
+            glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
 
             // Init volume generator
             this->vol_gen_ = new misc::MDAOVolumeGenerator();
@@ -628,7 +657,7 @@ bool SphereRenderer::createResources() {
             this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
 
             // Create the sphere shader
-            sphere_prgm_ = core::utility::make_glowl_shader("sphere_outline", shader_options,
+            sphere_prgm_ = core::utility::make_glowl_shader("sphere_outline", *shader_options_flags_,
                 "sphere_renderer/sphere_outline.vert.glsl", "sphere_renderer/sphere_outline.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
@@ -817,13 +846,9 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 }
 
 
-bool SphereRenderer::isFlagStorageAvailable(std::string& out_flag_snippet) {
+bool SphereRenderer::isFlagStorageAvailable() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
-    if (!out_flag_snippet.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "String for flag snippet is not empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
     auto flagc = this->read_flags_slot_.CallAs<core_gl::FlagCallRead_GL>();
 
     // Update parameter visibility
@@ -832,7 +857,7 @@ bool SphereRenderer::isFlagStorageAvailable(std::string& out_flag_snippet) {
 
     if (flagc == nullptr) {
         this->flags_available_ = false;
-        out_flag_snippet = "";
+
         return false;
     }
 
@@ -858,13 +883,6 @@ bool SphereRenderer::isFlagStorageAvailable(std::string& out_flag_snippet) {
         warnstr += "[SphereRenderer] Flag Storage is not available. Extension "
                    "GL_ARB_shader_storage_buffer_object is required. \n";
         this->flags_available_ = false;
-    }
-
-    std::string flag_snippet_str = "";
-    if (this->flags_available_) {
-        out_flag_snippet = "#define flags_available_ \n"
-                           "#extension GL_ARB_shader_storage_buffer_object : require \n"
-                           "#extension GL_ARB_gpu_shader_fp64 : enable \n";
     }
 
     if (!warnstr.empty()) {
@@ -1302,8 +1320,8 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, buf_a.GetHandle(x), 0,
                         buf_a.GetMaxNumItemsPerChunk() * vert_stride);
                     glBindBuffer(GL_SHADER_STORAGE_BUFFER, col_a.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssb0_color_binding_point, col_a.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssb0_color_binding_point, col_a.GetHandle(x), 0,
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point, col_a.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point, col_a.GetHandle(x), 0,
                         col_a.GetMaxNumItemsPerChunk() * col_stride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actual_items));
                     //bufA.SignalCompletion();
@@ -1317,7 +1335,7 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->col_streamer_.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssb0_color_binding_point, this->col_streamer_.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point, this->col_streamer_.GetHandle());
 
                 for (GLuint x = 0; x < num_chunks; ++x) {
                     GLuint num_items, num_items2, sync, sync2;
@@ -1329,7 +1347,7 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                     glBindBufferRange(
                         GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle(), dst_off, dst_len);
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssb0_color_binding_point, this->col_streamer_.GetHandle(),
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point, this->col_streamer_.GetHandle(),
                         dst_off2, dst_len2);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(num_items));
                     this->streamer_.SignalCompletion(sync);
@@ -2268,15 +2286,15 @@ bool SphereRenderer::makeVertexString(const MultiParticleDataCall::Particles& pa
 std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
     const std::string& prgm_name) {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-
     std::shared_ptr<glowl::GLSLProgram> sh;
 
     try {
         std::string vert_path = "sphere_renderer/" + prgm_name + ".vert.glsl";
         std::string frag_path = "sphere_renderer/" + prgm_name + ".frag.glsl";
 
-        sh = core::utility::make_glowl_shader(prgm_name, shader_options, vert_path, frag_path);
+        // should be safe to use shader_options_flags_ since only ssbo and splat use call makeShader
+        // and both use shader_options_flags_
+        sh = core::utility::make_glowl_shader(prgm_name, *shader_options_flags_, vert_path, frag_path);
     }
     catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -2335,7 +2353,7 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::generateShader(
                     ") buffer shader_data {\n"
                     "    SpherePosParams thePosBuffer[];\n"
                     "};\n";
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(ssb0_color_binding_point) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(ssbo_color_binding_point) +
                     ") buffer shader_data2 {\n"
                     "    SphereColParams theColBuffer[];\n"
                     "};\n";
@@ -2590,6 +2608,8 @@ void SphereRenderer::renderDeferredPass(core_gl::view::CallRender3DGL& call) {
 
     this->lighting_prgm_->use();
 
+    ao_dir_ubo_->bind((GLuint)AO_DIR_UBO_BINDING_POINT);
+
     this->lighting_prgm_->setUniform("inColorTex", static_cast<int>(0));
     this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));
     this->lighting_prgm_->setUniform("inDepthTex", static_cast<int>(2));
@@ -2665,8 +2685,8 @@ std::string SphereRenderer::generateDirectionShaderArrayString(
     std::string upper_dir_name = directions_name;
     std::transform(upper_dir_name.begin(), upper_dir_name.end(), upper_dir_name.begin(), ::toupper);
 
-    result << "#define NUM_" << upper_dir_name << " " << directions.size() << std::endl;
-    result << "const vec4 " << directions_name << "[NUM_" << upper_dir_name << "] = vec4[NUM_" << upper_dir_name << "]("
+    result << "\n#define NUM_" << upper_dir_name << " " << directions.size() << std::endl;
+    result << "\nconst vec4 " << directions_name << "[NUM_" << upper_dir_name << "] = vec4[NUM_" << upper_dir_name << "]("
            << std::endl;
 
     for (auto iter = directions.begin(); iter != directions.end(); iter++) {
@@ -2681,7 +2701,8 @@ std::string SphereRenderer::generateDirectionShaderArrayString(
 }
 
 bool SphereRenderer::generateShaderFile(const std::string& file_name, const std::string& code) {
-    std::string full_path = "shaders/sphere_renderer/inc/" + file_name + ".inc.glsl";
+    //std::string full_path = "shaders/sphere_renderer/inc/" + file_name + ".inc.glsl";
+    std::string full_path = "../../../plugins/moldyn_gl/shaders/sphere_renderer/inc/" + file_name + ".inc.glsl";
 
     std::ofstream shader_file;
     shader_file.open(full_path);

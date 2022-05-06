@@ -1,3 +1,4 @@
+
 uniform vec4 viewAttr;
 #ifdef WITH_SCALING
 uniform float scaling;

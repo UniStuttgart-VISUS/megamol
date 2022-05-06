@@ -1,3 +1,4 @@
+
 in uint currentFlag[1];
 
 uniform uint flags_enabled;

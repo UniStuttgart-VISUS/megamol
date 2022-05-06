@@ -1,3 +1,4 @@
+
 #ifdef SMALL_SPRITE_LIGHTING
     // for normal crowbaring on very small sprites
     lightDir.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;

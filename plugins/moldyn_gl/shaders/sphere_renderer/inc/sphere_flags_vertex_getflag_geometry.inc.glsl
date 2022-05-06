@@ -1,1 +1,2 @@
+
 currentFlag = flag;

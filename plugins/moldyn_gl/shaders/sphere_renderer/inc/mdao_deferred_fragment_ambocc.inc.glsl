@@ -3,11 +3,10 @@
 vec3 perp(vec3 v)
 {
     vec3 b = cross(v, vec3(1, 0, 0));
-    return normalize(b); 
+    return normalize(b);
 }
 
-
-float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal) 
+float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal)
 {
     // Number of samples per ray
     const int samplesPerRay = 5;
@@ -22,12 +21,12 @@ float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal)
     mat3 dirRot = (mat3(new_x, new_y, new_z));
 
     float ambient = 0.0;
-    
+
     // Convert the object position to a normalized position
     vec3 normalizedPos = (objPos-inBoundsMin)/inBoundsSize;
 
     // Calculate the ambient factors
-    
+
     for (int i=0; i<NUM_CONEDIRS; ++i) {
         vec3 dir = (dirRot * coneDirs[i].xyz);
 
@@ -39,21 +38,21 @@ float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal)
         do {
 
             float lod = clamp(log2(t*coneDirs[i].w*inAmbVolShortestEdge), 0.0, inAmbVolMaxLod);
-            
+
             vec3 pos = normalizedPos + t*dir;
-            
+
             float vis = textureLod(inDensityTex, pos, lod).r;
-            
+
             ambientCone += (1.0 - ambientCone) * vis;
-            if (ambientCone > 0.99) 
+            if (ambientCone > 0.99)
                 break;
 
             t += t * coneDirs[i].w;
-        } while (t<inAOConeLength); 
-        
+        } while (t<inAOConeLength);
+
         ambient += ambientCone;
-    } 
-    
+    }
+
 
     ambient = 1.0 - clamp(inAOStrength * ambient / float(NUM_CONEDIRS), 0.0, 1.0);
 

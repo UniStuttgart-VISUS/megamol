@@ -1,3 +1,4 @@
+
 uint flag = uint(0);
 
 #ifdef FLAGS_AVAILABLE

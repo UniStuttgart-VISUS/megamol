@@ -1,3 +1,4 @@
+
 // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);

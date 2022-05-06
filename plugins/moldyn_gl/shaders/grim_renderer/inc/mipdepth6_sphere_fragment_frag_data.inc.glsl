@@ -1,3 +1,4 @@
+
 if (bool(use_shading)) {
     gl_FragData[0] = vec4(LocalLighting(ray, normal, lightDir.xyz, color.rgb), 1.0);
   } else {
