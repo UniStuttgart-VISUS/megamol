@@ -21,7 +21,6 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
@@ -29,7 +28,6 @@
 #include "vislib_gl/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include "protein_calls/ResidueSelectionCall.h"
-#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -108,18 +106,6 @@ protected:
 
 private:
     /**
-     * Returns the single letter code for an amino acid given the three letter code.
-     *
-     * @param resName The name of the residue as three letter code.
-     * @return The single letter code for the amino acid.
-     */
-    char GetAminoAcidOneLetterCode(vislib::StringA resName);
-
-    /**********************************************************************
-     * 'render'-functions
-     **********************************************************************/
-
-    /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
      * and times).
@@ -181,45 +167,44 @@ private:
     vislib_gl::graphics::gl::OutlineFont theFont;
 #endif
     // the array of amino acid 1-letter codes
-    vislib::Array<vislib::StringA> aminoAcidStrings;
+    std::vector<std::string> aminoAcidStrings;
     // the array of amino acid chain name and index
-    vislib::Array<vislib::Array<vislib::Pair<char, int>>> aminoAcidIndexStrings;
+    std::vector<std::vector<std::pair<char, int>>> aminoAcidIndexStrings;
     // the array of binding site names
-    vislib::Array<vislib::StringA> bindingSiteNames;
+    std::vector<std::string> bindingSiteNames;
     // the array of descriptons for the binding sites
-    vislib::Array<vislib::StringA> bindingSiteDescription;
+    std::vector<std::string> bindingSiteDescription;
 
     // the vertex buffer array for the tiles
-    vislib::Array<float> vertices;
+    std::vector<glm::vec2> vertices;
     // the vertex buffer array for the chain tiles
-    vislib::Array<float> chainVertices;
+    std::vector<glm::vec2> chainVertices;
     // the color buffer array for the chain tiles
-    vislib::Array<float> chainColors;
+    std::vector<glm::vec3> chainColors;
     // the vertex buffer array for the chain separator lines
-    vislib::Array<float> chainSeparatorVertices;
+    std::vector<glm::vec2> chainSeparatorVertices;
     // the vertex buffer array for the binding site tiles
-    vislib::Array<float> bsVertices;
+    std::vector<glm::vec2> bsVertices;
     // the index array for the binding site tiles
-    vislib::Array<unsigned int> bsIndices;
+    std::vector<unsigned int> bsIndices;
     // the color array for the binding site tiles
-    vislib::Array<vislib::math::Vector<float, 3>> bsColors;
+    std::vector<glm::vec3> bsColors;
     // the index of the residue
-    vislib::Array<unsigned int> resIndex;
+    std::vector<unsigned int> resIndex;
     // the secondary structure element type of the residue
-    vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
+    std::vector<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
     // color table
     std::vector<glm::vec3> colorTable;
 
-    vislib::Array<vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>> markerTextures;
     std::vector<std::shared_ptr<glowl::Texture2D>> markerTextures_;
 
     // mouse hover
-    vislib::math::Vector<float, 2> mousePos;
+    glm::vec2 mousePos;
     int mousePosResIdx;
     bool leftMouseDown;
     bool initialClickSelection;
     // selection
-    vislib::Array<bool> selection;
+    std::vector<bool> selection;
     protein_calls::ResidueSelectionCall* resSelectionCall;
 };
 

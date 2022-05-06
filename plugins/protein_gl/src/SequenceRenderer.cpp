@@ -14,6 +14,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "protein_calls/ProteinColor.h"
+#include "protein_calls/ProteinHelpers.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -53,7 +54,6 @@ SequenceRenderer::SequenceRenderer(void)
 #ifndef USE_SIMPLE_FONT
         , theFont(FontInfo_Verdana)
 #endif // USE_SIMPLE_FONT
-        , markerTextures(0)
         , markerTextures_{}
         , resSelectionCall(nullptr)
         , leftMouseDown(false) {
@@ -213,14 +213,14 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         }
         unsigned int cnt = 0;
         vislib::Array<ResidueSelectionCall::Residue>* resSelPtr = resSelectionCall->GetSelectionPointer();
-        for (unsigned int i = 0; i < aminoAcidIndexStrings.Count(); i++) {
-            for (unsigned int j = 0; j < aminoAcidIndexStrings[i].Count(); j++) {
+        for (unsigned int i = 0; i < aminoAcidIndexStrings.size(); i++) {
+            for (unsigned int j = 0; j < aminoAcidIndexStrings[i].size(); j++) {
                 this->selection[cnt] = false;
                 if (resSelPtr) {
                     // loop over selections and try to match wit the current amino acid
                     for (unsigned int k = 0; k < resSelPtr->Count(); k++) {
-                        if ((*resSelPtr)[k].chainID == aminoAcidIndexStrings[i][j].First() &&
-                            (*resSelPtr)[k].resNum == aminoAcidIndexStrings[i][j].Second()) {
+                        if ((*resSelPtr)[k].chainID == aminoAcidIndexStrings[i][j].first &&
+                            (*resSelPtr)[k].resNum == aminoAcidIndexStrings[i][j].second) {
                             this->selection[cnt] = true;
                         }
                     }
@@ -256,13 +256,13 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glActiveTexture(GL_TEXTURE0);
-        for (unsigned int i = 0; i < this->resIndex.Count(); i++) {
+        for (unsigned int i = 0; i < this->resIndex.size(); i++) {
             markerTextures_[0]->bindTexture();
             if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX) {
                 glColor3f(1.0f, 0.0f, 0.0f);
                 if (i > 0 && this->resSecStructType[i - 1] != this->resSecStructType[i]) {
                     markerTextures_[4]->bindTexture();
-                } else if ((i + 1) < this->resIndex.Count() &&
+                } else if ((i + 1) < this->resIndex.size() &&
                            this->resSecStructType[i + 1] != this->resSecStructType[i]) {
                     markerTextures_[6]->bindTexture();
                 } else {
@@ -270,7 +270,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET) {
                 glColor3f(0.0f, 0.0f, 1.0f);
-                if ((i + 1) < this->resIndex.Count() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
+                if ((i + 1) < this->resIndex.size() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
                     markerTextures_[3]->bindTexture();
                 } else {
                     markerTextures_[2]->bindTexture();
@@ -282,17 +282,15 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 glColor3f(0.5f, 0.5f, 0.5f);
                 markerTextures_[1]->bindTexture();
             }
-            /*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);*/
             glBegin(GL_QUADS);
             glTexCoord2f(eps, eps);
-            glVertex2f(this->vertices[2 * i], -this->vertices[2 * i + 1]);
+            glVertex2f(this->vertices[i].x, -this->vertices[i].y);
             glTexCoord2f(eps, 1.0f - eps);
-            glVertex2f(this->vertices[2 * i], -this->vertices[2 * i + 1] - 1.0f);
+            glVertex2f(this->vertices[i].x, -this->vertices[i].y - 1.0f);
             glTexCoord2f(1.0f - eps, 1.0f - eps);
-            glVertex2f(this->vertices[2 * i] + 1.0f, -this->vertices[2 * i + 1] - 1.0f);
+            glVertex2f(this->vertices[i].x + 1.0f, -this->vertices[i].y - 1.0f);
             glTexCoord2f(1.0f - eps, eps);
-            glVertex2f(this->vertices[2 * i] + 1.0f, -this->vertices[2 * i + 1]);
+            glVertex2f(this->vertices[i].x + 1.0f, -this->vertices[i].y);
             glEnd();
         }
         glDisable(GL_BLEND);
@@ -300,47 +298,47 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
         // draw tiles for binding sites
         glBegin(GL_QUADS);
-        for (unsigned int i = 0; i < this->bsIndices.Count(); i++) {
+        for (unsigned int i = 0; i < this->bsIndices.size(); i++) {
             // glColor3fv( this->colorTable[this->bsIndices[i] + mol->ChainCount()].PeekComponents());
-            glColor3fv(this->bsColors[this->bsIndices[i]].PeekComponents());
-            glVertex2f(this->bsVertices[2 * i] + 0.1f, -this->bsVertices[2 * i + 1]);
-            glVertex2f(this->bsVertices[2 * i] + 0.1f, -this->bsVertices[2 * i + 1] - 0.4f);
-            glVertex2f(this->bsVertices[2 * i] + 0.9f, -this->bsVertices[2 * i + 1] - 0.4f);
-            glVertex2f(this->bsVertices[2 * i] + 0.9f, -this->bsVertices[2 * i + 1]);
+            glColor3fv(&this->bsColors[this->bsIndices[i]].x);
+            glVertex2f(this->bsVertices[i].x + 0.1f, -this->bsVertices[i].y);
+            glVertex2f(this->bsVertices[i].x + 0.1f, -this->bsVertices[i].y - 0.4f);
+            glVertex2f(this->bsVertices[i].x + 0.9f, -this->bsVertices[i].y - 0.4f);
+            glVertex2f(this->bsVertices[i].x + 0.9f, -this->bsVertices[i].y);
         }
         glEnd();
         // draw tiles for chains
         glBegin(GL_QUADS);
-        for (unsigned int i = 0; i < this->chainVertices.Count() / 2; i++) {
-            glColor3fv((&this->chainColors[i * 3]));
-            glVertex2f(this->chainVertices[2 * i], -this->chainVertices[2 * i + 1] - 0.2f);
-            glVertex2f(this->chainVertices[2 * i], -this->chainVertices[2 * i + 1] - 0.3f);
-            glVertex2f(this->chainVertices[2 * i] + 1.0f, -this->chainVertices[2 * i + 1] - 0.3f);
-            glVertex2f(this->chainVertices[2 * i] + 1.0f, -this->chainVertices[2 * i + 1] - 0.2f);
+        for (unsigned int i = 0; i < this->chainVertices.size(); i++) {
+            glColor3fv((&this->chainColors[i].x));
+            glVertex2f(this->chainVertices[i].x, -this->chainVertices[i].y - 0.2f);
+            glVertex2f(this->chainVertices[i].x, -this->chainVertices[i].y - 0.3f);
+            glVertex2f(this->chainVertices[i].x + 1.0f, -this->chainVertices[i].y - 0.3f);
+            glVertex2f(this->chainVertices[i].x + 1.0f, -this->chainVertices[i].y - 0.2f);
         }
         glEnd();
 
         // draw chain separators
         glColor3fv(fgColor);
         glEnable(GL_VERTEX_ARRAY);
-        glVertexPointer(2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
-        glDrawArrays(GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 - 2);
+        glVertexPointer(2, GL_FLOAT, 0, this->chainSeparatorVertices.data());
+        glDrawArrays(GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.size());
         glDisable(GL_VERTEX_ARRAY);
 
         // labeling
         glColor3fv(fgColor);
         if (theFont.Initialise()) {
-            for (unsigned int i = 0; i < this->aminoAcidStrings.Count(); i++) {
-                for (unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].Length(); j++) {
+            for (unsigned int i = 0; i < this->aminoAcidStrings.size(); i++) {
+                for (unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].size(); j++) {
                     // draw the one-letter amino acid code
                     theFont.DrawString(static_cast<float>(j), -(static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
-                        1.0f, true, this->aminoAcidStrings[i].Substring(j, 1),
+                        1.0f, true, this->aminoAcidStrings[i].substr(j, 1).c_str(),
                         vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                     // draw the chain name and amino acid index
                     // theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight +
                     // this->rowHeight - 0.5f), 1.0f, 0.5f,
                     tmpStr.Format(
-                        "%c %i", this->aminoAcidIndexStrings[i][j].First(), this->aminoAcidIndexStrings[i][j].Second());
+                        "%c %i", this->aminoAcidIndexStrings[i][j].first, this->aminoAcidIndexStrings[i][j].second);
                     theFont.DrawString(static_cast<float>(j), -(static_cast<float>(i) * this->rowHeight + 2.5f), 1.0f,
                         0.5f, 0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
                     // 0.35f, true, this->aminoAcidIndexStrings[i][j],
@@ -356,21 +354,21 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
             float fontSize = 1.0f;
             if (theFont.Initialise()) {
                 // draw binding site legend
-                if (!this->bindingSiteNames.IsEmpty()) {
+                if (!this->bindingSiteNames.empty()) {
                     tmpStr = "Binding Sites: ";
                     wordlength = theFont.LineWidth(fontSize, tmpStr);
                     theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -1.0f, wordlength, 1.0f, fontSize,
                         true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-                    for (unsigned int i = 0; i < this->bindingSiteNames.Count(); i++) {
+                    for (unsigned int i = 0; i < this->bindingSiteNames.size(); i++) {
                         // draw the binding site names
-                        glColor3fv(this->bsColors[i].PeekComponents());
+                        glColor3fv(&this->bsColors[i].x);
                         theFont.DrawString(static_cast<float>(this->resCols) + 1.0f,
                             -(static_cast<float>(i) * 2.0f + 2.0f), wordlength, 1.0f, fontSize, true,
-                            this->bindingSiteNames[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-                        wordlength = theFont.LineWidth(fontSize, this->bindingSiteDescription[i]);
+                            this->bindingSiteNames[i].c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                        wordlength = theFont.LineWidth(fontSize, this->bindingSiteDescription[i].c_str());
                         theFont.DrawString(static_cast<float>(this->resCols) + 1.0f,
                             -(static_cast<float>(i) * 2.0f + 3.0f), wordlength, 1.0f, fontSize * 0.5f, true,
-                            this->bindingSiteDescription[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                            this->bindingSiteDescription[i].c_str(), vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
                     }
                 }
                 // draw diagram legend
@@ -392,7 +390,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                 theFont.DrawString(-wordlength, -3.0f, wordlength, 0.5f, fontSize, true, tmpStr,
                     vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                if (!this->bindingSiteNames.IsEmpty()) {
+                if (!this->bindingSiteNames.empty()) {
                     tmpStr = "Binding Sites";
                     wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                     theFont.DrawString(-wordlength, -this->rowHeight, wordlength, this->rowHeight - 3.0f, fontSize,
@@ -408,7 +406,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnable(GL_BLEND);
         fgColor[3] = 0.3f;
         glColor4fv(fgColor);
-        for (unsigned int i = 0; i < this->selection.Count(); i++) {
+        for (unsigned int i = 0; i < this->selection.size(); i++) {
             if (this->selection[i]) {
                 pos.Set(static_cast<float>(i % this->resCols), floorf(static_cast<float>(i) / this->resCols) + 1.0f);
                 glBegin(GL_QUADS);
@@ -425,7 +423,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         fgColor[3] = 1.0f;
         glColor3fv(fgColor);
         glBegin(GL_LINES);
-        for (unsigned int i = 0; i < this->selection.Count(); i++) {
+        for (unsigned int i = 0; i < this->selection.size(); i++) {
             if (this->selection[i]) {
                 pos.Set(static_cast<float>(i % this->resCols), floorf(static_cast<float>(i) / this->resCols) + 1.0f);
                 // left (only draw if left neighbor ist not selected)
@@ -437,7 +435,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 glVertex2f(pos.X(), -this->rowHeight * (pos.Y()) + 0.5f);
                 glVertex2f(pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
                 // right (only draw if right neighbor ist not selected)
-                if (i == (this->selection.Count() - 1) || !this->selection[i + 1]) {
+                if (i == (this->selection.size() - 1) || !this->selection[i + 1]) {
                     glVertex2f(pos.X() + 1.0f, -this->rowHeight * (pos.Y()) + 0.5f);
                     glVertex2f(pos.X() + 1.0f, -this->rowHeight * (pos.Y() - 1.0f));
                 }
@@ -449,16 +447,16 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnd();
 
         // render mouse hover
-        if (this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
-            this->mousePos.Y() > 0.0f && this->mousePos.Y() < static_cast<float>(this->resRows + 1) &&
+        if (this->mousePos.x > -1.0f && this->mousePos.x < static_cast<float>(this->resCols) &&
+            this->mousePos.y > 0.0f && this->mousePos.y < static_cast<float>(this->resRows + 1) &&
             this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
             glColor3f(1.0f, 0.75f, 0.0f);
             glBegin(GL_LINE_STRIP);
-            glVertex2f(this->mousePos.X(), -this->rowHeight * (this->mousePos.Y() - 1.0f));
-            glVertex2f(this->mousePos.X(), -this->rowHeight * (this->mousePos.Y()) + 0.5f);
-            glVertex2f(this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()) + 0.5f);
-            glVertex2f(this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
-            glVertex2f(this->mousePos.X(), -this->rowHeight * (this->mousePos.Y() - 1.0f));
+            glVertex2f(this->mousePos.x, -this->rowHeight * (this->mousePos.y - 1.0f));
+            glVertex2f(this->mousePos.x, -this->rowHeight * (this->mousePos.y) + 0.5f);
+            glVertex2f(this->mousePos.x + 1.0f, -this->rowHeight * (this->mousePos.y) + 0.5f);
+            glVertex2f(this->mousePos.x + 1.0f, -this->rowHeight * (this->mousePos.y - 1.0f));
+            glVertex2f(this->mousePos.x, -this->rowHeight * (this->mousePos.y - 1.0f));
             glEnd();
         }
         glEnable(GL_DEPTH_TEST);
@@ -479,11 +477,11 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
  */
 bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
-    this->mousePos.Set(floorf(x), fabsf(floorf(y / this->rowHeight)));
-    this->mousePosResIdx = static_cast<int>(this->mousePos.X() + (this->resCols * (this->mousePos.Y() - 1)));
+    this->mousePos = glm::vec2(floorf(x), fabsf(floorf(y / this->rowHeight)));
+    this->mousePosResIdx = static_cast<int>(this->mousePos.x + (this->resCols * (this->mousePos.y - 1)));
     // do nothing else if mouse is outside bounding box
-    if (this->mousePos.X() < 0.0f || this->mousePos.X() > this->resCols || this->mousePos.Y() < 0.0f ||
-        this->mousePos.Y() > this->resRows) {
+    if (this->mousePos.x < 0.0f || this->mousePos.x > this->resCols || this->mousePos.y < 0.0f ||
+        this->mousePos.y > this->resRows) {
         return consumeEvent;
     }
 
@@ -508,13 +506,13 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     // propagate selection to selection module
     if (this->resSelectionCall != NULL) {
         vislib::Array<ResidueSelectionCall::Residue> selectedRes;
-        for (unsigned int i = 0; i < this->selection.Count(); i++) {
+        for (unsigned int i = 0; i < this->selection.size(); i++) {
             if (this->selection[i]) {
                 unsigned int x = i % this->resCols;
                 unsigned int y = i / this->resCols;
                 selectedRes.Add(ResidueSelectionCall::Residue());
-                selectedRes.Last().chainID = this->aminoAcidIndexStrings[y][x].First();
-                selectedRes.Last().resNum = this->aminoAcidIndexStrings[y][x].Second();
+                selectedRes.Last().chainID = this->aminoAcidIndexStrings[y][x].first;
+                selectedRes.Last().resNum = this->aminoAcidIndexStrings[y][x].second;
                 selectedRes.Last().id = -1;
             }
         }
@@ -542,37 +540,37 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
     // initialization
     unsigned int oldResCount = this->resCount;
     this->resCount = 0;
-    this->vertices.Clear();
-    this->vertices.AssertCapacity(mol->ResidueCount() * 2);
-    this->chainVertices.Clear();
-    this->chainVertices.AssertCapacity(mol->ResidueCount() * 2);
-    this->chainSeparatorVertices.Clear();
-    this->chainSeparatorVertices.AssertCapacity(mol->ChainCount() * 4);
-    this->chainColors.Clear();
-    this->chainColors.AssertCapacity(mol->ResidueCount() * 3);
-    this->bsVertices.Clear();
-    this->bsVertices.AssertCapacity(mol->ResidueCount() * 2);
-    this->bsIndices.Clear();
-    this->bsIndices.AssertCapacity(mol->ResidueCount());
-    this->bsColors.Clear();
-    this->resIndex.Clear();
-    this->resIndex.AssertCapacity(mol->ResidueCount());
+    this->vertices.clear();
+    this->vertices.reserve(mol->ResidueCount());
+    this->chainVertices.clear();
+    this->chainVertices.reserve(mol->ResidueCount());
+    this->chainSeparatorVertices.clear();
+    this->chainSeparatorVertices.reserve(mol->ChainCount() * 4);
+    this->chainColors.clear();
+    this->chainColors.reserve(mol->ResidueCount());
+    this->bsVertices.clear();
+    this->bsVertices.reserve(mol->ResidueCount());
+    this->bsIndices.clear();
+    this->bsIndices.reserve(mol->ResidueCount());
+    this->bsColors.clear();
+    this->resIndex.clear();
+    this->resIndex.reserve(mol->ResidueCount());
     this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
-    this->aminoAcidStrings.Clear();
-    this->aminoAcidStrings.AssertCapacity(mol->ResidueCount() / this->resCols + 1);
-    this->aminoAcidIndexStrings.Clear();
-    this->aminoAcidIndexStrings.AssertCapacity(mol->ResidueCount() / this->resCols + 1);
-    this->bindingSiteDescription.Clear();
-    this->bindingSiteNames.Clear();
+    this->aminoAcidStrings.clear();
+    this->aminoAcidStrings.reserve(mol->ResidueCount() / this->resCols + 1);
+    this->aminoAcidIndexStrings.clear();
+    this->aminoAcidIndexStrings.reserve(mol->ResidueCount() / this->resCols + 1);
+    this->bindingSiteDescription.clear();
+    this->bindingSiteNames.clear();
     if (bs) {
-        this->bindingSiteDescription.SetCount(bs->GetBindingSiteCount());
-        this->bindingSiteNames.AssertCapacity(bs->GetBindingSiteCount());
-        this->bsColors.SetCount(bs->GetBindingSiteCount());
+        this->bindingSiteDescription.resize(bs->GetBindingSiteCount());
+        this->bindingSiteNames.reserve(bs->GetBindingSiteCount());
+        this->bsColors.resize(bs->GetBindingSiteCount());
         // copy binding site names
         for (unsigned int i = 0; i < bs->GetBindingSiteCount(); i++) {
-            this->bindingSiteDescription[i].Clear();
-            this->bindingSiteNames.Add(bs->GetBindingSiteName(i));
-            this->bsColors[i] = bs->GetBindingSiteColor(i);
+            this->bindingSiteDescription[i].clear();
+            this->bindingSiteNames.push_back(bs->GetBindingSiteName(i).PeekBuffer());
+            this->bsColors[i] = glm::make_vec3(bs->GetBindingSiteColor(i).PeekComponents());
         }
     }
     unsigned int currentRow = 0;
@@ -587,62 +585,50 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
                 for (unsigned int rCnt = 0; rCnt < mol->SecondaryStructures()[firstStruct + sCnt].AminoAcidCount();
                      rCnt++) {
                     // store the original index of the current residue
-                    this->resIndex.Add(mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
+                    this->resIndex.push_back(
+                        mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
                     // store the secondary structure element type of the current residue
-                    this->resSecStructType.Add(mol->SecondaryStructures()[firstStruct + sCnt].Type());
+                    this->resSecStructType.push_back(mol->SecondaryStructures()[firstStruct + sCnt].Type());
                     // compute the position of the residue icon
                     if (this->resCount == 0) {
                         // structure vertices
-                        this->vertices.Add(0.0f);
-                        this->vertices.Add(0.0f);
-                        this->aminoAcidStrings.Add("");
-                        // this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
-                        this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int>>());
+                        this->vertices.push_back(glm::vec2(0.0f));
+                        this->aminoAcidStrings.push_back("");
+                        this->aminoAcidIndexStrings.push_back(std::vector<std::pair<char, int>>());
                         // chain tile vertices and colors
-                        this->chainVertices.Add(0.0f);
-                        // this->chainVertices.Add( this->rowHeight - 0.5f);
-                        this->chainVertices.Add(2.5f);
-                        this->chainColors.Add(this->colorTable[cCnt].x);
-                        this->chainColors.Add(this->colorTable[cCnt].y);
-                        this->chainColors.Add(this->colorTable[cCnt].z);
+                        this->chainVertices.push_back(glm::vec2(0.0f, 2.5f));
+                        this->chainColors.push_back(this->colorTable[cCnt]);
                     } else {
                         if (this->resCount % static_cast<unsigned int>(
                                                  this->resCountPerRowParam.Param<param::IntParam>()->Value()) !=
                             0) {
                             // structure vertices
-                            this->vertices.Add(this->vertices[this->resCount * 2 - 2] + 1.0f);
-                            this->vertices.Add(this->vertices[this->resCount * 2 - 1]);
+                            this->vertices.push_back(glm::vec2(
+                                this->vertices[this->resCount - 1].x + 1.0f, this->vertices[this->resCount - 1].y));
                             // chain tile vertices and colors
-                            this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 2] + 1.0f);
-                            this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 1]);
-                            this->chainColors.Add(this->colorTable[cCnt].x);
-                            this->chainColors.Add(this->colorTable[cCnt].y);
-                            this->chainColors.Add(this->colorTable[cCnt].z);
+                            this->chainVertices.push_back(glm::vec2(this->chainVertices[this->resCount - 1].x + 1.0f,
+                                this->chainVertices[this->resCount - 1].y));
+                            this->chainColors.push_back(this->colorTable[cCnt]);
                         } else {
                             // structure vertices
-                            this->vertices.Add(0.0f);
-                            this->vertices.Add(this->vertices[this->resCount * 2 - 1] + this->rowHeight);
+                            this->vertices.push_back(
+                                glm::vec2(0.0f, this->vertices[this->resCount - 1].y + this->rowHeight));
                             currentRow++;
-                            this->aminoAcidStrings.Add("");
+                            this->aminoAcidStrings.push_back("");
                             // this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
-                            this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int>>());
+                            this->aminoAcidIndexStrings.push_back(std::vector<std::pair<char, int>>());
                             // chain tile vertices and colors
-                            this->chainVertices.Add(0.0f);
-                            this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 1] + this->rowHeight);
-                            this->chainColors.Add(this->colorTable[cCnt].x);
-                            this->chainColors.Add(this->colorTable[cCnt].y);
-                            this->chainColors.Add(this->colorTable[cCnt].z);
+                            this->chainVertices.push_back(
+                                glm::vec2(0.0f, this->chainVertices[this->resCount - 1].y + this->rowHeight));
+                            this->chainColors.push_back(this->colorTable[cCnt]);
                         }
                     }
                     // store the amino acid name
-                    this->aminoAcidStrings[currentRow].Append(this->GetAminoAcidOneLetterCode(
-                        mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()]));
+                    this->aminoAcidStrings[currentRow] += protein_calls::GetAminoAcidOneLetterCode(
+                        mol->ResidueTypeNames()[mol->Residues()[this->resIndex.back()]->Type()].PeekBuffer());
                     // store the chain name and residue index
-                    // tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(),
-                    // mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
-                    // this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
-                    this->aminoAcidIndexStrings[currentRow].Add(vislib::Pair<char, int>(
-                        mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex()));
+                    this->aminoAcidIndexStrings[currentRow].push_back(std::pair<char, int>(
+                        mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.back()]->OriginalResIndex()));
 
                     // try to match binding sites
                     if (bs) {
@@ -653,18 +639,16 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
                             for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
                                 bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
                                 if (mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                    mol->Residues()[this->resIndex.Last()]->OriginalResIndex() == bsRes.Second() &&
-                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()] ==
+                                    mol->Residues()[this->resIndex.back()]->OriginalResIndex() == bsRes.Second() &&
+                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.back()]->Type()] ==
                                         bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
-                                    // this->aminoAcidIndexStrings[currentRow].Last().Append(" *");
-                                    this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
-                                    this->bsVertices.Add(
-                                        this->vertices[this->vertices.Count() - 1] + 3.0f + numBS * 0.5f);
-                                    this->bsIndices.Add(bsCnt);
-                                    if (!this->bindingSiteDescription[bsCnt].IsEmpty()) {
-                                        this->bindingSiteDescription[bsCnt].Append(", ");
+                                    this->bsVertices.push_back(glm::vec2(this->vertices[this->vertices.size() - 1].x,
+                                        this->vertices[this->vertices.size() - 1].y + 3.0f + numBS * 0.5f));
+                                    this->bsIndices.push_back(bsCnt);
+                                    if (!this->bindingSiteDescription[bsCnt].empty()) {
+                                        this->bindingSiteDescription[bsCnt].append(", ");
                                     }
-                                    this->bindingSiteDescription[bsCnt].Append(tmpStr);
+                                    this->bindingSiteDescription[bsCnt].append(tmpStr);
                                     numBS++;
                                     maxNumBindingSitesPerRes = vislib::math::Max(maxNumBindingSitesPerRes, numBS);
                                 }
@@ -677,25 +661,24 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
             }     // secondary structures
         }         // molecules
         // add chain separator vertices
-        this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
-        this->chainSeparatorVertices.Add(-this->vertices[this->vertices.Count() - 1]);
-        this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
-        this->chainSeparatorVertices.Add(-(this->chainVertices[this->chainVertices.Count() - 1] + 0.5f));
+        this->chainSeparatorVertices.push_back(glm::vec2(
+            this->vertices[this->vertices.size() - 1].x + 1.0f, -this->vertices[this->vertices.size() - 1].y));
+        this->chainSeparatorVertices.push_back(glm::vec2(this->vertices[this->vertices.size() - 1].x + 1.0f,
+            -(this->chainVertices[this->chainVertices.size() - 1].y + 0.5f)));
     } // chains
 
     // check if residue count changed and adjust selection array
     if (oldResCount != this->resCount) {
-        this->selection.SetCount(this->resCount);
-        for (unsigned int i = 0; i < this->selection.Count(); i++) {
-            this->selection[i] = false;
-        }
+        this->selection.clear();
+        this->selection.resize(this->resCount, false);
     }
 
     // loop over all binding sites and add binding site descriptions
     if (bs) {
         for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-            this->bindingSiteDescription[bsCnt].Prepend("\n");
-            this->bindingSiteDescription[bsCnt].Prepend(bs->GetBindingSiteDescription(bsCnt));
+            this->bindingSiteDescription[bsCnt] = "\n" + this->bindingSiteDescription[bsCnt];
+            this->bindingSiteDescription[bsCnt] =
+                bs->GetBindingSiteDescription(bsCnt).PeekBuffer() + this->bindingSiteDescription[bsCnt];
         }
     }
 
@@ -711,75 +694,6 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
 
     return true;
 }
-
-/*
- * Check if the residue is an amino acid.
- */
-char SequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resName) {
-    if (resName.Equals("ALA"))
-        return 'A';
-    else if (resName.Equals("ARG"))
-        return 'R';
-    else if (resName.Equals("ASN"))
-        return 'N';
-    else if (resName.Equals("ASP"))
-        return 'D';
-    else if (resName.Equals("CYS"))
-        return 'C';
-    else if (resName.Equals("GLN"))
-        return 'Q';
-    else if (resName.Equals("GLU"))
-        return 'E';
-    else if (resName.Equals("GLY"))
-        return 'G';
-    else if (resName.Equals("HIS"))
-        return 'H';
-    else if (resName.Equals("ILE"))
-        return 'I';
-    else if (resName.Equals("LEU"))
-        return 'L';
-    else if (resName.Equals("LYS"))
-        return 'K';
-    else if (resName.Equals("MET"))
-        return 'M';
-    else if (resName.Equals("PHE"))
-        return 'F';
-    else if (resName.Equals("PRO"))
-        return 'P';
-    else if (resName.Equals("SER"))
-        return 'S';
-    else if (resName.Equals("THR"))
-        return 'T';
-    else if (resName.Equals("TRP"))
-        return 'W';
-    else if (resName.Equals("TYR"))
-        return 'Y';
-    else if (resName.Equals("VAL"))
-        return 'V';
-    else if (resName.Equals("ASH"))
-        return 'D';
-    else if (resName.Equals("CYX"))
-        return 'C';
-    else if (resName.Equals("CYM"))
-        return 'C';
-    else if (resName.Equals("GLH"))
-        return 'E';
-    else if (resName.Equals("HID"))
-        return 'H';
-    else if (resName.Equals("HIE"))
-        return 'H';
-    else if (resName.Equals("HIP"))
-        return 'H';
-    else if (resName.Equals("MSE"))
-        return 'M';
-    else if (resName.Equals("LYN"))
-        return 'K';
-    else if (resName.Equals("TYM"))
-        return 'Y';
-    else
-        return '?';
-}
-
 
 bool SequenceRenderer::LoadTexture(const std::string filename) {
     // find the texture filepath

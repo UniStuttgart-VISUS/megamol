@@ -111,12 +111,85 @@ inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(
 }
 
 /**
+ * Gets the one letter amino acid code for a given three letter code
+ *
+ * @param resName The 3 letter code of the amino acid
+ * @return The one letter code of the amino acid
+ */
+inline char GetAminoAcidOneLetterCode(const std::string& resName) {
+    std::string name = resName;
+    std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
+    if (name.compare("ALA") == 0)
+        return 'A';
+    else if (name.compare("ARG") == 0)
+        return 'R';
+    else if (name.compare("ASN") == 0)
+        return 'N';
+    else if (name.compare("ASP") == 0)
+        return 'D';
+    else if (name.compare("CYS") == 0)
+        return 'C';
+    else if (name.compare("GLN") == 0)
+        return 'Q';
+    else if (name.compare("GLU") == 0)
+        return 'E';
+    else if (name.compare("GLY") == 0)
+        return 'G';
+    else if (name.compare("HIS") == 0)
+        return 'H';
+    else if (name.compare("ILE") == 0)
+        return 'I';
+    else if (name.compare("LEU") == 0)
+        return 'L';
+    else if (name.compare("LYS") == 0)
+        return 'K';
+    else if (name.compare("MET") == 0)
+        return 'M';
+    else if (name.compare("PHE") == 0)
+        return 'F';
+    else if (name.compare("PRO") == 0)
+        return 'P';
+    else if (name.compare("SER") == 0)
+        return 'S';
+    else if (name.compare("THR") == 0)
+        return 'T';
+    else if (name.compare("TRP") == 0)
+        return 'W';
+    else if (name.compare("TYR") == 0)
+        return 'Y';
+    else if (name.compare("VAL") == 0)
+        return 'V';
+    else if (name.compare("ASH") == 0)
+        return 'D';
+    else if (name.compare("CYX") == 0)
+        return 'C';
+    else if (name.compare("CYM") == 0)
+        return 'C';
+    else if (name.compare("GLH") == 0)
+        return 'E';
+    else if (name.compare("HID") == 0)
+        return 'H';
+    else if (name.compare("HIE") == 0)
+        return 'H';
+    else if (name.compare("HIP") == 0)
+        return 'H';
+    else if (name.compare("MSE") == 0)
+        return 'M';
+    else if (name.compare("LYN") == 0)
+        return 'K';
+    else if (name.compare("TYM") == 0)
+        return 'Y';
+    else
+        return '?';
+}
+
+/**
  * Get the hydrophobicity value for an amino acid according to the method of Monera et al.
  *
  * @param resName The 3 letter code of the amino acid
  * @return The hydrophicity value of the amino acid
  */
-inline float GetHydrophobicityByResNameMonera(std::string resName) {
+inline float GetHydrophobicityByResNameMonera(const std::string& resName) {
     std::string name = resName;
     std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
     // O.D.Monera, T.J.Sereda, N.E.Zhou, C.M.Kay, R.S.Hodges
