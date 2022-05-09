@@ -13,6 +13,7 @@
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/RenderUtils.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/ProteinHelpers.h"
 #include "vislib/math/Rectangle.h"
@@ -45,6 +46,13 @@ SequenceRenderer::SequenceRenderer(void)
         , clearResSelectionParam(
               "clearResidueSelection", "Clears the current selection (everything will be deselected).")
         , dataPrepared(false)
+        , texture_shader_(nullptr)
+        , passthrough_shader_(nullptr)
+        , position_buffer_(nullptr)
+        , color_buffer_(nullptr)
+        , texposition_buffer_(nullptr)
+        , pass_vao_(0)
+        , tex_vao_(0)
         , atomCount(0)
         , bindingSiteCount(0)
         , resCount(0)
@@ -54,7 +62,8 @@ SequenceRenderer::SequenceRenderer(void)
 #ifndef USE_SIMPLE_FONT
         , theFont(FontInfo_Verdana)
 #endif // USE_SIMPLE_FONT
-        , markerTextures_{}
+        , font_(core::utility::SDFFont::PRESET_ROBOTO_SANS, utility::SDFFont::RENDERMODE_FILL)
+        , marker_textures_{}
         , resSelectionCall(nullptr)
         , leftMouseDown(false) {
 
@@ -115,6 +124,57 @@ bool SequenceRenderer::create() {
     this->LoadTexture("stride-helix-left.png");
     this->LoadTexture("stride-helix2.png");
     this->LoadTexture("stride-helix-right.png");
+
+    try {
+        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(instance()->GetShaderPaths());
+        passthrough_shader_ = core::utility::make_glowl_shader("passthr", shdr_options,
+            std::filesystem::path("protein_gl/render2d/passthrough.vert.glsl"),
+            std::filesystem::path("protein_gl/render2d/passthrough.frag.glsl"));
+
+        texture_shader_ = core::utility::make_glowl_shader("texture", shdr_options,
+            std::filesystem::path("protein_gl/render2d/texture.vert.glsl"),
+            std::filesystem::path("protein_gl/render2d/texture.frag.glsl"));
+
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[SequenceRenderer] %s", ex.what());
+        return false;
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SequenceRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+        return false;
+    }
+
+    position_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    color_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    texposition_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    glGenVertexArrays(1, &pass_vao_);
+    glBindVertexArray(pass_vao_);
+
+    position_buffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    color_buffer_->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
+    glGenVertexArrays(1, &tex_vao_);
+    glBindVertexArray(tex_vao_);
+
+    texposition_buffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
 
     return true;
 }
@@ -190,19 +250,12 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
     if (!(*mol)(MolecularDataCall::CallForGetData))
         return false;
 
+    cam_ = call.GetCamera();
+    screen_ = call.GetViewResolution();
+
     auto proj = call.GetCamera().getProjectionMatrix();
     auto view = call.GetCamera().getViewMatrix();
-
-    glDisable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(proj));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(view));
+    auto mvp = proj * view;
 
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
     if (this->resSelectionCall != NULL) {
@@ -237,18 +290,29 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         this->colorTableFileParam.ResetDirty();
     }
 
-    glDisable(GL_CULL_FACE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    // get the text color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-
     if (this->dataPrepared) {
+        glDisable(GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // get the text color (inverse background color)
+        float bgColor[4];
+        float fgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+        glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+        for (unsigned int i = 0; i < 4; i++) {
+            fgColor[i] -= bgColor[i];
+        }
+
+        glDisable(GL_DEPTH_TEST);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glLoadMatrixf(glm::value_ptr(proj));
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+        glLoadMatrixf(glm::value_ptr(view));
+
         // temporary variables and constants
         const float eps = 0.0f;
         vislib::StringA tmpStr;
@@ -257,30 +321,30 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         glEnable(GL_BLEND);
         glActiveTexture(GL_TEXTURE0);
         for (unsigned int i = 0; i < this->resIndex.size(); i++) {
-            markerTextures_[0]->bindTexture();
+            marker_textures_[0]->bindTexture();
             if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX) {
                 glColor3f(1.0f, 0.0f, 0.0f);
                 if (i > 0 && this->resSecStructType[i - 1] != this->resSecStructType[i]) {
-                    markerTextures_[4]->bindTexture();
+                    marker_textures_[4]->bindTexture();
                 } else if ((i + 1) < this->resIndex.size() &&
                            this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    markerTextures_[6]->bindTexture();
+                    marker_textures_[6]->bindTexture();
                 } else {
-                    markerTextures_[5]->bindTexture();
+                    marker_textures_[5]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET) {
                 glColor3f(0.0f, 0.0f, 1.0f);
                 if ((i + 1) < this->resIndex.size() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
-                    markerTextures_[3]->bindTexture();
+                    marker_textures_[3]->bindTexture();
                 } else {
-                    markerTextures_[2]->bindTexture();
+                    marker_textures_[2]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN) {
                 glColor3f(1.0f, 1.0f, 0.0f);
-                markerTextures_[1]->bindTexture();
+                marker_textures_[1]->bindTexture();
             } else { // TYPE_COIL
                 glColor3f(0.5f, 0.5f, 0.5f);
-                markerTextures_[1]->bindTexture();
+                marker_textures_[1]->bindTexture();
             }
             glBegin(GL_QUADS);
             glTexCoord2f(eps, eps);
@@ -461,12 +525,11 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         }
         glEnable(GL_DEPTH_TEST);
 
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
     } // dataPrepared
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
 
     return true;
 }
@@ -477,7 +540,18 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
  */
 bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
-    this->mousePos = glm::vec2(floorf(x), fabsf(floorf(y / this->rowHeight)));
+
+    auto cam_pose = cam_.getPose();
+    view::Camera::OrthographicParameters cam_intrin;
+    try {
+        cam_intrin = cam_.get<core::view::Camera::OrthographicParameters>();
+    } catch (...) { return consumeEvent; }
+    double world_x = ((x * 2.0 / static_cast<double>(screen_.x)) - 1.0);
+    double world_y = 1.0 - (y * 2.0 / static_cast<double>(screen_.y));
+    world_x = world_x * 0.5 * cam_intrin.frustrum_height * cam_intrin.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5 * cam_intrin.frustrum_height + cam_pose.position.y;
+
+    this->mousePos = glm::vec2(floorf(world_x), fabsf(floorf(world_y / this->rowHeight)));
     this->mousePosResIdx = static_cast<int>(this->mousePos.x + (this->resCols * (this->mousePos.y - 1)));
     // do nothing else if mouse is outside bounding box
     if (this->mousePos.x < 0.0f || this->mousePos.x > this->resCols || this->mousePos.y < 0.0f ||
@@ -488,10 +562,12 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     // left click
     if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
         if (flags & view::MOUSEFLAG_MODKEY_ALT_DOWN) {
-            if (!this->leftMouseDown) {
-                this->initialClickSelection = !this->selection[this->mousePosResIdx];
+            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
+                if (!this->leftMouseDown) {
+                    this->initialClickSelection = !this->selection[this->mousePosResIdx];
+                }
+                this->selection[this->mousePosResIdx] = this->initialClickSelection;
             }
-            this->selection[this->mousePosResIdx] = this->initialClickSelection;
             consumeEvent = true;
         } else {
             if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
@@ -519,7 +595,6 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
         this->resSelectionCall->SetSelectionPointer(&selectedRes);
         (*this->resSelectionCall)(ResidueSelectionCall::CallForSetSelection);
     }
-
 
     return consumeEvent;
 }
@@ -707,11 +782,11 @@ bool SequenceRenderer::LoadTexture(const std::string filename) {
         }
     }
     // load the actual texture
-    markerTextures_.push_back(nullptr);
-    if (core_gl::utility::RenderUtils::LoadTextureFromFile(markerTextures_.back(), texture_filepath)) {
+    marker_textures_.push_back(nullptr);
+    if (core_gl::utility::RenderUtils::LoadTextureFromFile(marker_textures_.back(), texture_filepath)) {
         return true;
     } else {
-        markerTextures_.pop_back();
+        marker_textures_.pop_back();
     }
     return false;
 }

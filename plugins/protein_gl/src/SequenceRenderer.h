@@ -18,6 +18,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Input.h"
+#include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -28,6 +29,7 @@
 #include "vislib_gl/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include "protein_calls/ResidueSelectionCall.h"
+#include <glowl/GLSLProgram.hpp>
 
 namespace megamol {
 namespace protein_gl {
@@ -89,7 +91,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
     /**
      * Prepares the data for rendering.
@@ -166,6 +168,8 @@ private:
 #else
     vislib_gl::graphics::gl::OutlineFont theFont;
 #endif
+    // font class
+    core::utility::SDFFont font_;
     // the array of amino acid 1-letter codes
     std::vector<std::string> aminoAcidStrings;
     // the array of amino acid chain name and index
@@ -196,7 +200,17 @@ private:
     // color table
     std::vector<glm::vec3> colorTable;
 
-    std::vector<std::shared_ptr<glowl::Texture2D>> markerTextures_;
+    std::vector<std::shared_ptr<glowl::Texture2D>> marker_textures_;
+    std::unique_ptr<glowl::GLSLProgram> texture_shader_;
+    std::unique_ptr<glowl::GLSLProgram> passthrough_shader_;
+    std::unique_ptr<glowl::BufferObject> position_buffer_;
+    std::unique_ptr<glowl::BufferObject> color_buffer_;
+    std::unique_ptr<glowl::BufferObject> texposition_buffer_;
+    GLuint pass_vao_;
+    GLuint tex_vao_;
+
+    core::view::Camera cam_;
+    glm::ivec2 screen_;
 
     // mouse hover
     glm::vec2 mousePos;
