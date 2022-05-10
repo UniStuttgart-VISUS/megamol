@@ -757,9 +757,6 @@ PDBLoader::PDBLoader(void)
     this->capFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->capFilenameSlot);
 
-    this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
-    this->MakeSlotAvailable(&this->forceDataCallerSlot);
-
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
         MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &PDBLoader::getData);
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),

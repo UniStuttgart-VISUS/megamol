@@ -20,10 +20,10 @@
 #define FILTER_BOUNDARY 0
 
 #include "CUDACurl.cuh"
-#include "CUDAMarchingCubes.h"
-#include "CUDAQuickSurf.h"
 #include "CritPoints.h"
 #include "LIC.h"
+#include "quicksurf/CUDAMarchingCubes.h"
+#include "quicksurf/CUDAQuickSurf.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -764,12 +764,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
 
         int rc = cqs->calc_map(static_cast<long>(gridPos.Count() / 4), gridPos.PeekElements(), gridCol.PeekElements(),
             true, // Use 'color' array
-            gridOrg.PeekComponents(), gridDim.PeekComponents(),
+            CUDAQuickSurf::VolTexFormat::RGB3F, gridOrg.PeekComponents(), gridDim.PeekComponents(),
             maxLenDiff,        // Maximum radius
             this->densGridRad, // Radius scaling
             this->densGridSpacing,
             this->volIsoVal, // Iso value
-            gausslim);
+            gausslim, false);
 
         if (rc != 0) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1087,12 +1087,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
     CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
     int rc = cqs->calc_map(dataCnt, &gridDataPos[0], &gridData[0],
         true, // Use seperate 'color' array
-        gridOrg.PeekComponents(), gridDim.PeekComponents(),
+        CUDAQuickSurf::VolTexFormat::RGB3F, gridOrg.PeekComponents(), gridDim.PeekComponents(),
         this->gridDataRad, // Maximum radius
         1.0f,              // Radius scaling
         this->gridSpacing,
         1.0f, // Iso value TODO ?
-        gausslim);
+        gausslim, false);
 
 
     if (rc != 0) {
@@ -3046,12 +3046,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     }
     if (!this->cudaMC->SetVolumeData(
             //this->gridCurlMagD,
-            cqs->getMap(), NULL, gridDimAlt, gridOrgAlt, gridBBox, true)) {
+            cqs->getMap(), (float3*)nullptr, gridDimAlt, gridOrgAlt, gridBBox, true)) {
         return false;
     }
     this->cudaMC->SetSubVolume(subVolStart, subVolEnd);
     this->cudaMC->SetIsovalue(this->volIsoVal);
-    this->cudaMC->computeIsosurface(this->mcVertOut_D, this->mcNormOut_D, NULL, nVerticesMC);
+    this->cudaMC->computeIsosurface(this->mcVertOut_D, this->mcNormOut_D, (float3*)nullptr, nVerticesMC);
     this->cudaMC->Cleanup();
 
     //printf("Number of vertices %u\n", this->cudaMC->GetVertexCount());

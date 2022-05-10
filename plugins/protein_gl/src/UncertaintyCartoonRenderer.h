@@ -21,10 +21,10 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "DeferredRenderingProvider.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/UncertaintyDataCall.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 
 
 namespace megamol {
