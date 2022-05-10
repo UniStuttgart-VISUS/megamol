@@ -3148,8 +3148,8 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
     //    useCol, origin, numvoxels, maxrad,
     //    radscale, gridspacing, gausslim,
     //    gpunumverts, gv, gn, gc, gpunumfacets, gf);
-    int rc = cqs->calc_map(mol->AtomCount(), &xyzr[0], (useCol) ? &colors[0] : NULL, useCol, origin, numvoxels, maxrad,
-        radscale, gridspacing, isoval, gausslim, true);
+    int rc = cqs->calc_map(mol->AtomCount(), &xyzr[0], (useCol) ? &colors[0] : NULL, useCol,
+        CUDAQuickSurf::VolTexFormat::RGB3F, origin, numvoxels, maxrad, radscale, gridspacing, isoval, gausslim, true);
 
     if (rc == 0) {
         free(xyzr);

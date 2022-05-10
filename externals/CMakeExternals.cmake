@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 if (NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.3 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.5 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif ()
@@ -593,6 +593,9 @@ function(require_external NAME)
     add_external_project(libpng STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
+      # libpng CMake executes awk, if available on the system, which fails on Windows if "scripts/pnglibconf.dfa" has CR LF line endings,
+      # see https://github.com/glennrp/libpng/issues/363
+      GIT_CONFIG "core.autocrlf=false;core.eol=lf"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
       DEBUG_SUFFIX d
       DEPENDS zlib
@@ -709,7 +712,7 @@ function(require_external NAME)
 
     add_external_project(megamol-shader-factory STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-      GIT_TAG "v0.5"
+      GIT_TAG "v0.7"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
       DEPENDS glad)
 

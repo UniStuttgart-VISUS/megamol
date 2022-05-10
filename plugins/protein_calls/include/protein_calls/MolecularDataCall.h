@@ -1675,6 +1675,7 @@ public:
         this->SetFrameID(s.FrameID());
         this->SetDataHash(s.DataHash());
         this->atomCount = s.atomCount;
+        this->atomFilter = s.atomFilter;
         this->atomPos = s.atomPos;
         this->atomTypeCount = s.atomTypeCount;
         this->atomTypeIdx = s.atomTypeIdx;

@@ -16,6 +16,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Point.h"
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace protein {
@@ -95,7 +96,7 @@ private:
      * @param input The input protein call
      * @param cAlphaPositions Will contain the retrieved c alpha positions
      */
-    void getCAlphaPosList(const protein_calls::MolecularDataCall& input, std::vector<float>& cAlphaPositions);
+    void getCAlphaPosList(const protein_calls::MolecularDataCall& input, std::vector<glm::vec3>& cAlphaPositions);
 
     /** Output slot for the moved and rotated protein */
     core::CalleeSlot dataOutSlot;
